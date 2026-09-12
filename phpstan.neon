@@ -1,0 +1,14 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+
+    paths:
+        - app/
+
+    # Level 1 static analysis for standard Laravel dynamic Eloquent models & relations
+    level: 1
+
+    excludePaths:
+        - storage/
+        - vendor/

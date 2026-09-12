@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'stripe' => [
+        'price_basic' => env('STRIPE_PRICE_BASIC', 'price_stripe_basic_demo'),
+        'price_pro' => env('STRIPE_PRICE_PRO', 'price_stripe_pro_demo'),
+    ],
+
+    'paddle' => [
+        'price_basic' => env('PADDLE_PRICE_BASIC', 'pri_paddle_basic_demo'),
+        'price_pro' => env('PADDLE_PRICE_PRO', 'pri_paddle_pro_demo'),
+    ],
 ];
