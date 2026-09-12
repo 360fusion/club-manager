@@ -102,6 +102,11 @@ class ClubSeeder extends Seeder
         $oxfordRowing->users()->attach($treasurerUser->id, ['role' => 'treasurer', 'member_number' => 'OUBC-015', 'status' => 'active']);
         $oxfordRowing->users()->attach($pendingUser->id, ['role' => 'member', 'member_number' => 'OUBC-999', 'status' => 'pending']);
 
+        $bathRugby->users()->attach($adminUser->id, ['role' => 'admin', 'member_number' => 'BATH-001', 'status' => 'active']);
+        $bathRugby->users()->attach($memberUser->id, ['role' => 'member', 'member_number' => 'BATH-105', 'status' => 'active']);
+        $bathRugby->users()->attach($coachUser->id, ['role' => 'coach', 'member_number' => 'BATH-007', 'status' => 'active']);
+        $bathRugby->users()->attach($treasurerUser->id, ['role' => 'treasurer', 'member_number' => 'BATH-012', 'status' => 'active']);
+
         // 5. Membership Plans
         MembershipPlan::create([
             'club_id' => $oxfordRowing->id,
@@ -111,26 +116,136 @@ class ClubSeeder extends Seeder
             'billing_period' => 'monthly',
         ]);
 
-        // 6. Seed Posts (News / Blog)
+        MembershipPlan::create([
+            'club_id' => $bathRugby->id,
+            'name' => 'Full Senior Playing Member',
+            'description' => 'Matchday selection, training access, physiotherapy support, and clubhouse benefits.',
+            'price' => 30.00,
+            'billing_period' => 'monthly',
+        ]);
+
+        // 6. Seed Posts (News / Blog) for Oxford University Boat Club
         Post::create([
             'club_id' => $oxfordRowing->id,
             'author_id' => $adminUser->id,
             'title' => 'Torpids Regatta Lineups & Training Schedule Announced',
             'slug' => 'torpids-regatta-lineups',
             'excerpt' => 'Preparations for the upcoming Isis races are underway with squad trials complete.',
-            'content' => 'We are thrilled to publish the official boat assignments for the upcoming Torpids week. Training outings will commence at 06:30 AM daily.',
+            'content' => '<p>We are thrilled to publish the official boat assignments for the upcoming Torpids week. Training outings will commence at 06:30 AM daily from Godstow and the Main Boathouse.</p><p>Please ensure all crew members report 15 minutes before launch time for rigging checks.</p>',
             'status' => 'published',
             'published_at' => now()->subDays(2),
         ]);
 
-        // 7. Seed Newsletters
+        Post::create([
+            'club_id' => $oxfordRowing->id,
+            'author_id' => $coachUser->id,
+            'title' => 'Boathouse Ergometer Suite Renovation Completed',
+            'slug' => 'boathouse-ergometer-renovation',
+            'excerpt' => 'Our updated training gym now features 24 new Concept2 PM5 ergometers and full telemetry integration.',
+            'content' => '<p>Phase 1 of the boathouse redevelopment is officially complete! Squad members can now utilize 24 new Concept2 ergometers with live Bluetooth performance monitoring.</p><p>Erg testing for the Senior and Lightweight squads begins next Monday morning.</p>',
+            'status' => 'published',
+            'published_at' => now()->subDays(5),
+        ]);
+
+        Post::create([
+            'club_id' => $oxfordRowing->id,
+            'author_id' => $adminUser->id,
+            'title' => 'Isis vs Goldie Mock Race Results & Squad Selection',
+            'slug' => 'isis-goldie-mock-race-results',
+            'excerpt' => 'Outstanding performances across all Senior 8+ crews during Saturday\'s trial races on the Tideway.',
+            'content' => '<p>Saturday\'s 4.2-mile trial race provided invaluable race-tempo experience for our Men\'s and Women\'s Blue Boats. Crew performance metrics showed a 3.4% improvement in average split times compared to last season.</p>',
+            'status' => 'published',
+            'published_at' => now()->subDays(9),
+        ]);
+
+        // Seed Posts (News / Blog) for Bath RFC Community Club
+        Post::create([
+            'club_id' => $bathRugby->id,
+            'author_id' => $adminUser->id,
+            'title' => 'Bath RFC Secures Bonus-Point Victory in County Championship',
+            'slug' => 'bath-rfc-bonus-point-victory',
+            'excerpt' => 'A brilliant performance at The Rec saw the 1st XV score five tries in a thriller against Bristol Barbarians.',
+            'content' => '<p>Bath RFC\'s 1st XV extended their unbeaten run on Saturday with a commanding 34-19 win over Bristol Barbarians. Flanker Tom Hughes picked up Man of the Match with two first-half tries.</p><p>Head to the Clubhouse this Thursday to rewatch match highlights during squad video analysis.</p>',
+            'status' => 'published',
+            'published_at' => now()->subDays(1),
+        ]);
+
+        Post::create([
+            'club_id' => $bathRugby->id,
+            'author_id' => $coachUser->id,
+            'title' => 'Junior Academy Spring Selection Trials Open',
+            'slug' => 'junior-academy-selection-trials',
+            'excerpt' => 'Registration for U12-U18 squad trials for the upcoming 2026/27 season is now open online.',
+            'content' => '<p>We are delighted to invite all aspiring young players to register for our Junior Academy trials. Our RFU-certified coaches will run session assessments across speed, ball handling, and game management.</p><p>Registration forms can be submitted via the club portal.</p>',
+            'status' => 'published',
+            'published_at' => now()->subDays(3),
+        ]);
+
+        Post::create([
+            'club_id' => $bathRugby->id,
+            'author_id' => $adminUser->id,
+            'title' => 'Pitch 2 LED Floodlight Upgrade Complete',
+            'slug' => 'pitch-2-floodlight-upgrade',
+            'excerpt' => 'Evening training for all senior and social squads now has state-of-the-art 500-lux LED lighting.',
+            'content' => '<p>Thanks to member fundraising and local sports council grants, Pitch 2 is now fully equipped with eco-friendly LED floodlights. Tuesday and Thursday evening training will run uninterrupted throughout winter.</p>',
+            'status' => 'published',
+            'published_at' => now()->subDays(7),
+        ]);
+
+        // 7. Seed Newsletters for Oxford University Boat Club
         Newsletter::create([
             'club_id' => $oxfordRowing->id,
             'subject' => 'March Newsletter: Annual Dinner & Regatta Updates',
-            'content' => 'Dear Members, Please find attached the monthly update regarding our boathouse expansion project.',
-            'target_roles' => ['admin', 'member'],
+            'content' => 'Dear Members, Please find attached the monthly update regarding our boathouse expansion project, Torpids regatta logistics, and ticket releases for our upcoming Black-Tie Dinner at Christ Church.',
+            'target_roles' => ['admin', 'member', 'coach'],
             'status' => 'sent',
             'sent_at' => now()->subDay(),
+        ]);
+
+        Newsletter::create([
+            'club_id' => $oxfordRowing->id,
+            'subject' => 'Water Safety & Launch Outing Guidelines (Spring 2026)',
+            'content' => 'Attention all Athletes & Coxswains: Please review the updated river safety rules for outings between Iffley Lock and Sandford. High stream flags require mandatory high-visibility tops and stern light installations.',
+            'target_roles' => ['admin', 'member', 'coach'],
+            'status' => 'sent',
+            'sent_at' => now()->subDays(4),
+        ]);
+
+        Newsletter::create([
+            'club_id' => $oxfordRowing->id,
+            'subject' => 'Alumni Bulletin: Racing Shell Campaign Reaches £24,500 Goal',
+            'content' => 'We are thrilled to announce that our fundraising drive for the new custom Empacher 8+ has surpassed 70% of its target! A huge thank you to all former Blue Boat captains and supporters who contributed.',
+            'target_roles' => ['admin', 'member'],
+            'status' => 'sent',
+            'sent_at' => now()->subDays(8),
+        ]);
+
+        // Seed Newsletters for Bath RFC Community Club
+        Newsletter::create([
+            'club_id' => $bathRugby->id,
+            'subject' => 'Bath RFC Monthly Digest: Matchday Results & Social Night',
+            'content' => 'Dear Bath RFC Family, What a fantastic month on and off the field! Read about our 1st XV win streak, upcoming Six Nations Watch Party at the Clubhouse Bar, and volunteer opportunities for youth matchdays.',
+            'target_roles' => ['admin', 'member', 'coach'],
+            'status' => 'sent',
+            'sent_at' => now()->subDays(2),
+        ]);
+
+        Newsletter::create([
+            'club_id' => $bathRugby->id,
+            'subject' => 'Player Welfare & RFU Concussion Protocol Guidelines 2026',
+            'content' => 'Important update for all coaches, players, and parents: Bath RFC is committed to player safety. Please take 5 minutes to read our updated 23-day HEADCASE return-to-play protocol and medical clearance steps.',
+            'target_roles' => ['admin', 'member', 'coach'],
+            'status' => 'sent',
+            'sent_at' => now()->subDays(5),
+        ]);
+
+        Newsletter::create([
+            'club_id' => $bathRugby->id,
+            'subject' => 'Clubhouse Bar Loyalty Cards & Member Dues Reminder',
+            'content' => 'All active playing and social members can now collect their 2026 digital membership cards at the Clubhouse Bar to receive 15% off matchday food, draught beers, and club merchandise.',
+            'target_roles' => ['admin', 'member'],
+            'status' => 'sent',
+            'sent_at' => now()->subDays(10),
         ]);
 
         // 8. Seed Events & Menu Items
