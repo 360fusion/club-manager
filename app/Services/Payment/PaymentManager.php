@@ -11,8 +11,8 @@ class PaymentManager
 
     public function __construct()
     {
-        $this->gateways['stripe'] = new StripePaymentGateway();
-        $this->gateways['paddle'] = new PaddlePaymentGateway();
+        $this->gateways['stripe'] = new StripePaymentGateway;
+        $this->gateways['paddle'] = new PaddlePaymentGateway;
     }
 
     /**
@@ -20,7 +20,7 @@ class PaymentManager
      */
     public function driver(string $driver = 'stripe'): PaymentGatewayInterface
     {
-        if (!isset($this->gateways[$driver])) {
+        if (! isset($this->gateways[$driver])) {
             throw new InvalidArgumentException("Unsupported payment driver [{$driver}].");
         }
 
@@ -33,6 +33,7 @@ class PaymentManager
     public function forClub(Club $club): PaymentGatewayInterface
     {
         $preferredDriver = $club->settings['payment_provider'] ?? 'stripe';
+
         return $this->driver($preferredDriver);
     }
 }

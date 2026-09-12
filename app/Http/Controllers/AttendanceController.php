@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\Event;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,11 +42,11 @@ class AttendanceController extends Controller
                     'name' => $attendee->name,
                     'email' => $attendee->email,
                     'attendance_status' => $attendee->attendance_status,
-                    'attending_dining' => (bool)$attendee->attending_dining,
+                    'attending_dining' => (bool) $attendee->attending_dining,
                     'menu_selections' => json_decode($attendee->menu_selections ?? '{}', true),
                     'dietary_requirements' => $attendee->dietary_requirements,
                     'payment_status' => $attendee->payment_status,
-                    'checked_in_at' => $attendee->checked_in_at ? \Carbon\Carbon::parse($attendee->checked_in_at)->format('H:i:s') : null,
+                    'checked_in_at' => $attendee->checked_in_at ? Carbon::parse($attendee->checked_in_at)->format('H:i:s') : null,
                 ];
             });
 

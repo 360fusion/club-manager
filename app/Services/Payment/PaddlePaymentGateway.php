@@ -34,7 +34,7 @@ class PaddlePaymentGateway implements PaymentGatewayInterface
     {
         $subscription = $customer->subscription($name);
 
-        if (!$subscription) {
+        if (! $subscription) {
             return 'none';
         }
 
@@ -58,6 +58,7 @@ class PaddlePaymentGateway implements PaymentGatewayInterface
         $subscription = $customer->subscription($name);
         if ($subscription) {
             $subscription->cancel();
+
             return true;
         }
 

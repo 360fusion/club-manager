@@ -28,14 +28,18 @@ class MemberImportExportController extends Controller
         $imported = 0;
 
         while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) < 2) continue;
+            if (count($row) < 2) {
+                continue;
+            }
 
             $name = trim($row[0] ?? '');
             $email = strtolower(trim($row[1] ?? ''));
             $role = trim($row[2] ?? 'member');
-            $memberNumber = trim($row[3] ?? 'MEM-' . rand(100, 999));
+            $memberNumber = trim($row[3] ?? 'MEM-'.rand(100, 999));
 
-            if (empty($name) || empty($email)) continue;
+            if (empty($name) || empty($email)) {
+                continue;
+            }
 
             // Find or create User
             $user = User::firstOrCreate(
@@ -71,7 +75,7 @@ class MemberImportExportController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $club->slug . '-members-roster.csv"',
+            'Content-Disposition' => 'attachment; filename="'.$club->slug.'-members-roster.csv"',
         ];
 
         return response()->stream(function () use ($club) {

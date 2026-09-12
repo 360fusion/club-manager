@@ -7,14 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
 use Laravel\Cashier\Billable as StripeBillable;
 use Laravel\Paddle\Billable as PaddleBillable;
 
 class Club extends Model
 {
     use HasFactory;
-    use StripeBillable, PaddleBillable {
+    use PaddleBillable, StripeBillable {
         StripeBillable::subscription insteadof PaddleBillable;
         StripeBillable::subscriptions insteadof PaddleBillable;
         StripeBillable::onTrial insteadof PaddleBillable;

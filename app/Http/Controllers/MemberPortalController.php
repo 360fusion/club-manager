@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\Event;
+use App\Models\Invoice;
+use App\Models\Newsletter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,7 +30,7 @@ class MemberPortalController extends Controller
         $isPending = $memberPivot && $memberPivot->status === 'pending';
 
         // Attendance stats
-        $userRsvps = \Illuminate\Support\Facades\DB::table('event_user')
+        $userRsvps = DB::table('event_user')
             ->join('events', 'events.id', '=', 'event_user.event_id')
             ->where('events.club_id', $club->id)
             ->where('event_user.user_id', $user?->id ?? 0)
@@ -43,7 +46,7 @@ class MemberPortalController extends Controller
             ->orderBy('starts_at', 'asc')
             ->get()
             ->map(function ($event) use ($user) {
-                $userPivot = $user ? \Illuminate\Support\Facades\DB::table('event_user')
+                $userPivot = $user ? DB::table('event_user')
                     ->where('event_id', $event->id)
                     ->where('user_id', $user->id)
                     ->first() : null;
@@ -61,7 +64,7 @@ class MemberPortalController extends Controller
                     'menu_items' => $event->menuItems,
                     'user_rsvp' => $userPivot ? [
                         'attendance_status' => $userPivot->attendance_status,
-                        'attending_dining' => (bool)$userPivot->attending_dining,
+                        'attending_dining' => (bool) $userPivot->attending_dining,
                         'menu_selections' => json_decode($userPivot->menu_selections ?? '{}', true),
                         'dietary_requirements' => $userPivot->dietary_requirements,
                         'payment_status' => $userPivot->payment_status,
@@ -72,12 +75,13 @@ class MemberPortalController extends Controller
 
         // Published Newsletters for member role
         $role = $memberPivot->role ?? 'member';
-        $newsletters = \App\Models\Newsletter::where('club_id', $club->id)
+        $newsletters = Newsletter::where('club_id', $club->id)
             ->where('status', 'sent')
             ->orderByDesc('sent_at')
             ->get()
             ->filter(function ($n) use ($role) {
                 $target = $n->target_roles ?? [];
+
                 return empty($target) || in_array($role, $target);
             })
             ->map(fn ($n) => [
@@ -148,7 +152,7 @@ class MemberPortalController extends Controller
             ->orderBy('starts_at', 'asc')
             ->get()
             ->map(function ($event) use ($user) {
-                $userPivot = $user ? \Illuminate\Support\Facades\DB::table('event_user')
+                $userPivot = $user ? DB::table('event_user')
                     ->where('event_id', $event->id)
                     ->where('user_id', $user->id)
                     ->first() : null;
@@ -171,7 +175,7 @@ class MemberPortalController extends Controller
                     ]),
                     'user_rsvp' => $userPivot ? [
                         'attendance_status' => $userPivot->attendance_status,
-                        'attending_dining' => (bool)$userPivot->attending_dining,
+                        'attending_dining' => (bool) $userPivot->attending_dining,
                         'menu_selections' => json_decode($userPivot->menu_selections ?? '{}', true),
                         'dietary_requirements' => $userPivot->dietary_requirements,
                         'payment_status' => $userPivot->payment_status,
@@ -199,7 +203,7 @@ class MemberPortalController extends Controller
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 
-        $invoices = $user ? \App\Models\Invoice::where('club_id', $club->id)
+        $invoices = $user ? Invoice::where('club_id', $club->id)
             ->where('user_id', $user->id)
             ->orderByDesc('created_at')
             ->get()
@@ -269,7 +273,7 @@ class MemberPortalController extends Controller
             'dietary_requirements' => 'nullable|string|max:500',
         ]);
 
-        \Illuminate\Support\Facades\DB::table('event_user')->updateOrInsert(
+        DB::table('event_user')->updateOrInsert(
             ['event_id' => $event->id, 'user_id' => $user->id],
             [
                 'attendance_status' => $validated['attendance_status'],

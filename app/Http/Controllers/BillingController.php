@@ -20,8 +20,8 @@ class BillingController extends Controller
         return Inertia::render('Admin/Billing/Index', [
             'club' => $club,
             'activeProvider' => $provider,
-            'stripeConfigured' => !empty(config('cashier.key')) && !empty(config('cashier.secret')),
-            'paddleConfigured' => !empty(config('cashier.vendor_id')) || !empty(config('cashier.api_key')),
+            'stripeConfigured' => ! empty(config('cashier.key')) && ! empty(config('cashier.secret')),
+            'paddleConfigured' => ! empty(config('cashier.vendor_id')) || ! empty(config('cashier.api_key')),
             'plans' => [
                 [
                     'id' => 'plan_basic',
@@ -56,7 +56,7 @@ class BillingController extends Controller
         $club->settings = $settings;
         $club->save();
 
-        return redirect()->back()->with('success', 'Active payment provider updated to ' . strtoupper($request->provider));
+        return redirect()->back()->with('success', 'Active payment provider updated to '.strtoupper($request->provider));
     }
 
     public function checkout(Request $request, PaymentManager $paymentManager): RedirectResponse
@@ -70,9 +70,10 @@ class BillingController extends Controller
 
         try {
             $checkoutUrl = $gateway->createCheckoutSession($club, $request->price_id);
+
             return redirect()->away($checkoutUrl);
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Checkout initialization notice: Gateway API keys pending. ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Checkout initialization notice: Gateway API keys pending. '.$e->getMessage());
         }
     }
 
@@ -83,6 +84,7 @@ class BillingController extends Controller
 
         try {
             $portalUrl = $gateway->createCustomerPortalSession($club, route('billing.index'));
+
             return redirect()->away($portalUrl);
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', 'Customer Portal unavailable until active subscription exists.');

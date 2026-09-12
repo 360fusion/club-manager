@@ -7,9 +7,10 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
 use Laravel\Cashier\Billable as StripeBillable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Paddle\Billable as PaddleBillable;
@@ -20,8 +21,9 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, TwoFactorAuthenticatable;
-    use StripeBillable, PaddleBillable {
+    use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    use PaddleBillable, StripeBillable {
         StripeBillable::subscription insteadof PaddleBillable;
         StripeBillable::subscriptions insteadof PaddleBillable;
         StripeBillable::onTrial insteadof PaddleBillable;
@@ -68,14 +70,14 @@ class User extends Authenticatable
         ];
     }
 
-    public function clubs(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function clubs(): BelongsToMany
     {
         return $this->belongsToMany(Club::class)
             ->withPivot(['role', 'member_number', 'status'])
             ->withTimestamps();
     }
 
-    public function memberships(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
     }

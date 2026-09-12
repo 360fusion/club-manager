@@ -13,6 +13,7 @@ class UserAdminTest extends TestCase
     use RefreshDatabase;
 
     private Club $club;
+
     private User $adminUser;
 
     protected function setUp(): void
@@ -43,7 +44,8 @@ class UserAdminTest extends TestCase
 
     public function test_can_display_user_roster_page(): void
     {
-        $response = $this->get(route('admin.users.index', ['clubSlug' => $this->club->slug]));
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('admin.users.index', ['clubSlug' => $this->club->slug]));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -54,12 +56,13 @@ class UserAdminTest extends TestCase
 
     public function test_can_add_new_member_to_roster(): void
     {
-        $response = $this->post(route('admin.users.store', ['clubSlug' => $this->club->slug]), [
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
-            'role' => 'coach',
-            'member_number' => 'OUBC-055',
-        ]);
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.users.store', ['clubSlug' => $this->club->slug]), [
+                'name' => 'John Doe',
+                'email' => 'john@example.com',
+                'role' => 'coach',
+                'member_number' => 'OUBC-055',
+            ]);
 
         $response->assertRedirect();
 
@@ -76,12 +79,13 @@ class UserAdminTest extends TestCase
         $member = User::factory()->create();
         $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
 
-        $response = $this->post(route('admin.users.role.update', [
-            'clubSlug' => $this->club->slug,
-            'userId' => $member->id,
-        ]), [
-            'role' => 'treasurer',
-        ]);
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.users.role.update', [
+                'clubSlug' => $this->club->slug,
+                'userId' => $member->id,
+            ]), [
+                'role' => 'treasurer',
+            ]);
 
         $response->assertRedirect();
 
@@ -97,10 +101,11 @@ class UserAdminTest extends TestCase
         $member = User::factory()->create();
         $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
 
-        $response = $this->delete(route('admin.users.destroy', [
-            'clubSlug' => $this->club->slug,
-            'userId' => $member->id,
-        ]));
+        $response = $this->actingAs($this->adminUser)
+            ->delete(route('admin.users.destroy', [
+                'clubSlug' => $this->club->slug,
+                'userId' => $member->id,
+            ]));
 
         $response->assertRedirect();
 

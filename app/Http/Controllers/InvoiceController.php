@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\Invoice;
-use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
@@ -48,7 +47,7 @@ class InvoiceController extends Controller
                     <div class='details'>
                         <p><strong>Receipt Number:</strong> {$invoice->invoice_number}</p>
                         <p><strong>Issued To:</strong> {$invoice->user->name} ({$invoice->user->email})</p>
-                        <p><strong>Date:</strong> " . ($invoice->paid_at ? $invoice->paid_at->format('F d, Y @ H:i') : date('F d, Y')) . "</p>
+                        <p><strong>Date:</strong> ".($invoice->paid_at ? $invoice->paid_at->format('F d, Y @ H:i') : date('F d, Y'))."</p>
                     </div>
 
                     <table class='table'>
@@ -61,13 +60,13 @@ class InvoiceController extends Controller
                         <tbody>
                             <tr>
                                 <td>{$invoice->title}</td>
-                                <td style='text-align: right;'>£" . number_format($invoice->amount, 2) . "</td>
+                                <td style='text-align: right;'>£".number_format($invoice->amount, 2)."</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <div class='total'>
-                        Total Paid: £" . number_format($invoice->amount, 2) . "
+                        Total Paid: £".number_format($invoice->amount, 2)."
                     </div>
 
                     <div class='footer'>

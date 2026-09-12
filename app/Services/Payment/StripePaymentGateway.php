@@ -32,7 +32,7 @@ class StripePaymentGateway implements PaymentGatewayInterface
     {
         $subscription = $customer->subscription($name);
 
-        if (!$subscription) {
+        if (! $subscription) {
             return 'none';
         }
 
@@ -56,6 +56,7 @@ class StripePaymentGateway implements PaymentGatewayInterface
         $subscription = $customer->subscription($name);
         if ($subscription) {
             $subscription->cancel();
+
             return true;
         }
 

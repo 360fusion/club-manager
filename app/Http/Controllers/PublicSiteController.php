@@ -24,7 +24,7 @@ class PublicSiteController extends Controller
         if ($pageSlug) {
             $page = $query->where('slug', $pageSlug)->firstOrFail();
         } else {
-            $page = $query->where('is_homepage', true)->first() 
+            $page = $query->where('is_homepage', true)->first()
                 ?? $query->orderBy('sort_order')->firstOrFail();
         }
 

@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Donation;
-use App\Models\DonationContribution;
 use App\Models\Event;
 use App\Models\EventMenuItem;
 use App\Models\EventPromo;

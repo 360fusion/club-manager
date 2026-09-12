@@ -25,7 +25,7 @@ class ApiController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials provided.'], 401);
         }
 
@@ -37,7 +37,7 @@ class ApiController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-            ]
+            ],
         ]);
     }
 
@@ -60,7 +60,7 @@ class ApiController extends Controller
                 'dining_menu' => Feature::for($club)->active('3-course-dining'),
                 'custom_domain' => Feature::for($club)->active('custom-domain'),
                 'executive_analytics' => Feature::for($club)->active('executive-analytics'),
-            ]
+            ],
         ]);
     }
 }

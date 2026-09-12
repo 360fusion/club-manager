@@ -99,7 +99,7 @@ class EventAdminController extends Controller
         if (isset($validated['ticket_tiers'])) {
             $event->ticketTiers()->delete();
             foreach ($validated['ticket_tiers'] as $tier) {
-                if (!empty($tier['name'])) {
+                if (! empty($tier['name'])) {
                     EventTicketTier::create([
                         'event_id' => $event->id,
                         'name' => $tier['name'],
@@ -115,7 +115,7 @@ class EventAdminController extends Controller
         if (isset($validated['promos'])) {
             $event->promos()->delete();
             foreach ($validated['promos'] as $promo) {
-                if (!empty($promo['code'])) {
+                if (! empty($promo['code'])) {
                     EventPromo::create([
                         'event_id' => $event->id,
                         'code' => strtoupper($promo['code']),
@@ -131,7 +131,7 @@ class EventAdminController extends Controller
         if (isset($validated['menu_items']) && $event->has_dining) {
             $event->menuItems()->delete();
             foreach ($validated['menu_items'] as $item) {
-                if (!empty($item['name'])) {
+                if (! empty($item['name'])) {
                     EventMenuItem::create([
                         'event_id' => $event->id,
                         'category' => $item['category'] ?? 'main',

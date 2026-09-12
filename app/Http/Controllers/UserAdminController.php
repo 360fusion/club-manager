@@ -27,7 +27,7 @@ class UserAdminController extends Controller
                 'name' => $u->name,
                 'email' => $u->email,
                 'role' => $u->pivot->role ?? 'member',
-                'member_number' => $u->pivot->member_number ?? ('MEM-' . $u->id),
+                'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
                 'status' => $u->pivot->status ?? 'active',
                 'joined_at' => $u->pivot->created_at?->format('M d, Y') ?? 'Recent',
             ];
@@ -67,7 +67,7 @@ class UserAdminController extends Controller
 
         $club->users()->attach($user->id, [
             'role' => $validated['role'],
-            'member_number' => $validated['member_number'] ?: ('MEM-' . rand(1000, 9999)),
+            'member_number' => $validated['member_number'] ?: ('MEM-'.rand(1000, 9999)),
             'status' => 'active',
         ]);
 
@@ -87,7 +87,7 @@ class UserAdminController extends Controller
 
         $club->users()->updateExistingPivot($userId, ['role' => $validated['role']]);
 
-        return redirect()->back()->with('success', 'Member role updated to ' . strtoupper($validated['role']));
+        return redirect()->back()->with('success', 'Member role updated to '.strtoupper($validated['role']));
     }
 
     /**

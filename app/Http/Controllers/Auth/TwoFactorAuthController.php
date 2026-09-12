@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,8 +23,8 @@ class TwoFactorAuthController extends Controller
     public function show(Request $request): Response
     {
         $user = $request->user();
-        $enabled = !empty($user->two_factor_secret);
-        $confirmed = !empty($user->two_factor_confirmed_at);
+        $enabled = ! empty($user->two_factor_secret);
+        $confirmed = ! empty($user->two_factor_confirmed_at);
 
         $qrCodeSvg = null;
         $secretKey = null;
@@ -38,7 +39,7 @@ class TwoFactorAuthController extends Controller
         return Inertia::render('Admin/Profile/TwoFactorSetting', [
             'user' => $user,
             'twoFactorEnabled' => $enabled && $confirmed,
-            'twoFactorPending' => $enabled && !$confirmed,
+            'twoFactorPending' => $enabled && ! $confirmed,
             'qrCodeSvg' => $qrCodeSvg,
             'secretKey' => $secretKey,
             'recoveryCodes' => $recoveryCodes,
@@ -51,6 +52,7 @@ class TwoFactorAuthController extends Controller
     public function enable(Request $request, EnableTwoFactorAuthentication $enable): RedirectResponse
     {
         $enable($request->user());
+
         return redirect()->back()->with('success', 'Two-Factor Authentication initiated. Scan QR code to confirm.');
     }
 
@@ -64,6 +66,7 @@ class TwoFactorAuthController extends Controller
         ]);
 
         $confirm($request->user(), $request->code);
+
         return redirect()->back()->with('success', 'Two-Factor Authentication confirmed and activated!');
     }
 
@@ -73,6 +76,7 @@ class TwoFactorAuthController extends Controller
     public function disable(Request $request, DisableTwoFactorAuthentication $disable): RedirectResponse
     {
         $disable($request->user());
+
         return redirect()->back()->with('success', 'Two-Factor Authentication disabled.');
     }
 
@@ -82,6 +86,7 @@ class TwoFactorAuthController extends Controller
     public function generateRecoveryCodes(Request $request, GenerateNewRecoveryCodes $generate): RedirectResponse
     {
         $generate($request->user());
+
         return redirect()->back()->with('success', 'New recovery codes generated.');
     }
 
@@ -90,7 +95,7 @@ class TwoFactorAuthController extends Controller
      */
     public function showChallenge(Request $request): Response|RedirectResponse
     {
-        if (!$request->session()->has('login.id')) {
+        if (! $request->session()->has('login.id')) {
             return redirect()->route('login');
         }
 
@@ -103,12 +108,12 @@ class TwoFactorAuthController extends Controller
     public function verifyChallenge(Request $request, TwoFactorAuthenticationProvider $provider): RedirectResponse
     {
         $userId = $request->session()->get('login.id');
-        if (!$userId) {
+        if (! $userId) {
             return redirect()->route('login');
         }
 
-        $user = \App\Models\User::find($userId);
-        if (!$user) {
+        $user = User::find($userId);
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -123,7 +128,7 @@ class TwoFactorAuthController extends Controller
             $valid = in_array($recoveryCode, $user->recoveryCodes(), true);
         }
 
-        if (!$valid) {
+        if (! $valid) {
             return redirect()->back()->withErrors(['code' => 'The provided two-factor authentication code was invalid.']);
         }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Club;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,11 +35,11 @@ class RegisterController extends Controller
 
         $clubSlug = $request->input('club') ?? $request->input('club_slug');
         if ($clubSlug) {
-            $club = \App\Models\Club::where('slug', $clubSlug)->first();
+            $club = Club::where('slug', $clubSlug)->first();
             if ($club) {
                 $user->clubs()->attach($club->id, [
                     'role' => 'member',
-                    'member_number' => 'MEM-' . strtoupper(substr(uniqid(), -5)),
+                    'member_number' => 'MEM-'.strtoupper(substr(uniqid(), -5)),
                     'status' => 'pending',
                 ]);
             }

@@ -31,7 +31,7 @@ class PageAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
-        $page = $id 
+        $page = $id
             ? Page::where('club_id', $club->id)->findOrFail($id)
             : new Page(['club_id' => $club->id, 'is_published' => true, 'show_in_navigation' => true, 'blocks' => []]);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -29,9 +30,9 @@ class LoginController extends Controller
         ]);
 
         if (Auth::validate($credentials)) {
-            $user = \App\Models\User::where('email', $request->email)->first();
+            $user = User::where('email', $request->email)->first();
 
-            if (!empty($user->two_factor_secret) && !empty($user->two_factor_confirmed_at)) {
+            if (! empty($user->two_factor_secret) && ! empty($user->two_factor_confirmed_at)) {
                 $request->session()->put('login.id', $user->id);
                 $request->session()->put('login.remember', $request->boolean('remember'));
 

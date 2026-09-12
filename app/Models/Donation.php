@@ -40,7 +40,10 @@ class Donation extends Model
 
     public function getPercentageAttribute(): float
     {
-        if ($this->target_amount <= 0) return 100;
+        if ($this->target_amount <= 0) {
+            return 100;
+        }
+
         return min(100, round(($this->current_amount / $this->target_amount) * 100, 1));
     }
 }

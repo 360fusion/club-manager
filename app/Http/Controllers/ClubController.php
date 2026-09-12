@@ -4,9 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\ClubType;
-use App\Models\Event;
-use App\Models\EventPromo;
-use App\Models\EventTicketTier;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -201,7 +198,7 @@ class ClubController extends Controller
                         'dietary_requirements' => $u->pivot->dietary_requirements,
                         'payment_status' => $u->pivot->payment_status,
                         'amount_paid' => number_format($u->pivot->amount_paid, 2),
-                        'ticket_qr_code' => $u->pivot->ticket_qr_code ?? 'TICKET-' . strtoupper($club->slug) . '-' . $u->id,
+                        'ticket_qr_code' => $u->pivot->ticket_qr_code ?? 'TICKET-'.strtoupper($club->slug).'-'.$u->id,
                     ]),
                 ]),
             ],
@@ -216,7 +213,7 @@ class ClubController extends Controller
         $club = Club::where('slug', $slug)->firstOrFail();
 
         $validated = $request->validate([
-            'custom_domain' => 'nullable|string|max:255|unique:clubs,custom_domain,' . $club->id,
+            'custom_domain' => 'nullable|string|max:255|unique:clubs,custom_domain,'.$club->id,
         ]);
 
         $domain = $validated['custom_domain'] ? strtolower(trim($validated['custom_domain'])) : null;
