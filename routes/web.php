@@ -1,0 +1,155 @@
+<?php
+
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\Api\ApiController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\TwoFactorAuthController;
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\ClubController;
+use App\Http\Controllers\DonationController;
+use App\Http\Controllers\EventAdminController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\MemberImportExportController;
+use App\Http\Controllers\MembershipAdminController;
+use App\Http\Controllers\PageAdminController;
+use App\Http\Controllers\PostAdminController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\MemberPortalController;
+use App\Http\Controllers\NewsletterAdminController;
+use App\Http\Controllers\PublicSiteController;
+use App\Http\Controllers\UserAdminController;
+use Illuminate\Support\Facades\Route;
+
+// Authentication Routes
+Route::get('/login', [LoginController::class, 'create'])->name('login');
+Route::post('/login', [LoginController::class, 'store']);
+Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+// Public Member Registration Routes
+Route::get('/register', [RegisterController::class, 'create'])->name('register');
+Route::post('/register', [RegisterController::class, 'store']);
+
+// Password Reset Routes
+Route::get('/forgot-password', [ForgotPasswordController::class, 'create'])->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
+Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
+
+// Profile & Password Management Routes
+Route::get('/admin/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+Route::put('/admin/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::put('/admin/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+
+// Multi-Tenant Admin & Workspace Routes
+Route::get('/', [ClubController::class, 'index'])->name('home');
+Route::get('/admin/clubs', [ClubController::class, 'myClubs'])->name('admin.clubs.index');
+Route::get('/clubs/{slug}', [ClubController::class, 'show'])->name('clubs.show');
+Route::post('/clubs/{slug}/domain', [ClubController::class, 'updateDomain'])->name('clubs.domain.update');
+
+// CSV Member Import & Export Routes
+Route::post('/clubs/{slug}/members/import', [MemberImportExportController::class, 'import'])->name('clubs.members.import');
+Route::get('/clubs/{slug}/members/export', [MemberImportExportController::class, 'export'])->name('clubs.members.export');
+
+// Executive Analytics Route
+Route::get('/clubs/{slug}/admin/analytics', [AnalyticsController::class, 'show'])->name('admin.analytics');
+
+// Invoice & Receipt Routes
+Route::get('/clubs/{slug}/invoices/{id}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+
+// Online Donation Contribution Route
+Route::post('/site/{slug}/donations/{id}', [DonationController::class, 'contribute'])->name('donations.contribute');
+
+// Admin Website Builder Routes
+Route::get('/clubs/{clubSlug}/admin/pages', [PageAdminController::class, 'index'])->name('admin.pages.index');
+Route::get('/clubs/{clubSlug}/admin/pages/create', [PageAdminController::class, 'edit'])->name('admin.pages.create');
+Route::get('/clubs/{clubSlug}/admin/pages/{id}/edit', [PageAdminController::class, 'edit'])->name('admin.pages.edit');
+Route::post('/clubs/{clubSlug}/admin/pages', [PageAdminController::class, 'store'])->name('admin.pages.store');
+
+// Admin Event Management Routes
+Route::get('/clubs/{clubSlug}/admin/events', [EventAdminController::class, 'index'])->name('admin.events.index');
+Route::get('/clubs/{clubSlug}/admin/events/create', [EventAdminController::class, 'edit'])->name('admin.events.create');
+Route::get('/clubs/{clubSlug}/admin/events/{id}/edit', [EventAdminController::class, 'edit'])->name('admin.events.edit');
+Route::post('/clubs/{clubSlug}/admin/events', [EventAdminController::class, 'store'])->name('admin.events.store');
+Route::delete('/clubs/{clubSlug}/admin/events/{id}', [EventAdminController::class, 'destroy'])->name('admin.events.destroy');
+
+// Admin Blog & News Posts Routes
+Route::get('/clubs/{clubSlug}/admin/posts', [PostAdminController::class, 'index'])->name('admin.posts.index');
+Route::get('/clubs/{clubSlug}/admin/posts/create', [PostAdminController::class, 'edit'])->name('admin.posts.create');
+Route::get('/clubs/{clubSlug}/admin/posts/{id}/edit', [PostAdminController::class, 'edit'])->name('admin.posts.edit');
+Route::post('/clubs/{clubSlug}/admin/posts', [PostAdminController::class, 'store'])->name('admin.posts.store');
+Route::delete('/clubs/{clubSlug}/admin/posts/{id}', [PostAdminController::class, 'destroy'])->name('admin.posts.destroy');
+
+// Admin Newsletter Broadcast Routes
+Route::get('/clubs/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'index'])->name('admin.newsletters.index');
+Route::get('/clubs/{clubSlug}/admin/newsletters/create', [NewsletterAdminController::class, 'edit'])->name('admin.newsletters.create');
+Route::get('/clubs/{clubSlug}/admin/newsletters/{id}/edit', [NewsletterAdminController::class, 'edit'])->name('admin.newsletters.edit');
+Route::post('/clubs/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'store'])->name('admin.newsletters.store');
+Route::post('/clubs/{clubSlug}/admin/newsletters/{id}/send', [NewsletterAdminController::class, 'send'])->name('admin.newsletters.send');
+Route::delete('/clubs/{clubSlug}/admin/newsletters/{id}', [NewsletterAdminController::class, 'destroy'])->name('admin.newsletters.destroy');
+
+// Admin Membership Plans Routes
+Route::get('/clubs/{clubSlug}/admin/memberships', [MembershipAdminController::class, 'index'])->name('admin.memberships.index');
+Route::get('/clubs/{clubSlug}/admin/memberships/create', [MembershipAdminController::class, 'edit'])->name('admin.memberships.create');
+Route::get('/clubs/{clubSlug}/admin/memberships/{id}/edit', [MembershipAdminController::class, 'edit'])->name('admin.memberships.edit');
+Route::post('/clubs/{clubSlug}/admin/memberships', [MembershipAdminController::class, 'store'])->name('admin.memberships.store');
+Route::delete('/clubs/{clubSlug}/admin/memberships/{id}', [MembershipAdminController::class, 'destroy'])->name('admin.memberships.destroy');
+
+// Admin Members Routes
+Route::get('/clubs/{clubSlug}/admin/users', [UserAdminController::class, 'index'])->name('admin.users.index');
+Route::post('/clubs/{clubSlug}/admin/users', [UserAdminController::class, 'storeMember'])->name('admin.users.store');
+Route::post('/clubs/{clubSlug}/admin/users/{userId}/role', [UserAdminController::class, 'updateRole'])->name('admin.users.role.update');
+Route::delete('/clubs/{clubSlug}/admin/users/{userId}', [UserAdminController::class, 'removeMember'])->name('admin.users.destroy');
+
+// Public Club Website Renderer Routes
+Route::get('/site/{clubSlug}', [PublicSiteController::class, 'showPage'])->name('site.home');
+Route::get('/site/{clubSlug}/{pageSlug}', [PublicSiteController::class, 'showPage'])->name('site.page');
+
+// Billing & Subscription Management Routes
+Route::get('/admin/billing', [BillingController::class, 'index'])->name('billing.index');
+Route::post('/admin/billing/provider', [BillingController::class, 'updateProvider'])->name('billing.provider.update');
+Route::post('/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+Route::get('/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
+
+// 2FA Challenge Authentication Routes
+Route::get('/two-factor-challenge', [TwoFactorAuthController::class, 'showChallenge'])->name('two-factor.challenge');
+Route::post('/two-factor-challenge', [TwoFactorAuthController::class, 'verifyChallenge']);
+
+// 2FA Profile Settings Routes
+Route::get('/admin/profile/two-factor', [TwoFactorAuthController::class, 'show'])->name('admin.profile.two-factor');
+Route::post('/admin/profile/two-factor/enable', [TwoFactorAuthController::class, 'enable'])->name('two-factor.enable');
+Route::post('/admin/profile/two-factor/confirm', [TwoFactorAuthController::class, 'confirm'])->name('two-factor.confirm');
+Route::delete('/admin/profile/two-factor/disable', [TwoFactorAuthController::class, 'disable'])->name('two-factor.disable');
+Route::post('/admin/profile/two-factor/recovery-codes', [TwoFactorAuthController::class, 'generateRecoveryCodes'])->name('two-factor.recovery-codes');
+
+// Member Portal & Self-Service Routes
+Route::get('/clubs/{slug}/portal', [MemberPortalController::class, 'show'])->name('member.dashboard');
+Route::get('/clubs/{slug}/portal/clubs', [MemberPortalController::class, 'myClubs'])->name('member.clubs');
+Route::get('/clubs/{slug}/portal/events', [MemberPortalController::class, 'events'])->name('member.events');
+Route::get('/clubs/{slug}/portal/dues', [MemberPortalController::class, 'dues'])->name('member.dues');
+Route::get('/clubs/{slug}/portal/profile', [MemberPortalController::class, 'profile'])->name('member.profile');
+Route::post('/clubs/{slug}/portal/events/{id}/rsvp', [MemberPortalController::class, 'updateRsvp'])->name('member.rsvp');
+
+// Invite-Only Member Approval & Rejection Routes
+Route::post('/clubs/{slug}/members/{userId}/approve', [ClubController::class, 'approveMember'])->name('clubs.members.approve');
+Route::post('/clubs/{slug}/members/{userId}/reject', [ClubController::class, 'rejectMember'])->name('clubs.members.reject');
+
+// Admin Attendance Check-In Routes
+Route::get('/clubs/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'show'])->name('admin.events.checkin');
+Route::post('/clubs/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'checkIn'])->name('admin.events.checkin.store');
+
+// Sanctum API Token & Pennant Feature Routes
+Route::prefix('api/v1')->group(function () {
+    Route::post('/tokens/create', [ApiController::class, 'issueToken'])->name('api.tokens.create');
+    Route::get('/clubs/{slug}/info', [ApiController::class, 'getClubInfo'])->name('api.clubs.info');
+
+    Route::middleware('auth:sanctum')->get('/user', function (\Illuminate\Http\Request $request) {
+        return $request->user();
+    });
+});
+
+
+
