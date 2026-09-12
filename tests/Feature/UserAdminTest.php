@@ -114,4 +114,23 @@ class UserAdminTest extends TestCase
             'user_id' => $member->id,
         ]);
     }
+
+    public function test_can_display_member_details_profile_page(): void
+    {
+        $member = User::factory()->create(['name' => 'Sarah Connor', 'email' => 'sarah@example.com']);
+        $this->club->users()->attach($member->id, ['role' => 'member', 'member_number' => 'OUBC-777', 'status' => 'active']);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('admin.users.show', [
+                'clubSlug' => $this->club->slug,
+                'userId' => $member->id,
+            ]));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('Admin/Users/Show')
+            ->where('member.name', 'Sarah Connor')
+            ->where('member.member_number', 'OUBC-777')
+        );
+    }
 }

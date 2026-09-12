@@ -100,6 +100,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin Members Routes
     Route::get('/clubs/{clubSlug}/admin/users', [UserAdminController::class, 'index'])->name('admin.users.index');
+    Route::get('/clubs/{clubSlug}/admin/users/{userId}', [UserAdminController::class, 'show'])->name('admin.users.show');
     Route::post('/clubs/{clubSlug}/admin/users', [UserAdminController::class, 'storeMember'])->name('admin.users.store');
     Route::post('/clubs/{clubSlug}/admin/users/{userId}/role', [UserAdminController::class, 'updateRole'])->name('admin.users.role.update');
     Route::delete('/clubs/{clubSlug}/admin/users/{userId}', [UserAdminController::class, 'removeMember'])->name('admin.users.destroy');

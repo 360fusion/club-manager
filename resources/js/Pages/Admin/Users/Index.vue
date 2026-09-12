@@ -270,15 +270,15 @@ const submitImportCsv = () => {
               >
                 <!-- Name & Email -->
                 <td class="py-4 px-6">
-                  <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-sm uppercase">
+                  <Link :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })" class="flex items-center gap-3 group">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-sm uppercase group-hover:scale-105 transition-transform">
                       {{ m.name.substring(0, 2) }}
                     </div>
                     <div>
-                      <div class="font-bold text-slate-900 text-sm">{{ m.name }}</div>
+                      <div class="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors">{{ m.name }}</div>
                       <div class="text-[11px] text-slate-400 font-normal">{{ m.email }}</div>
                     </div>
-                  </div>
+                  </Link>
                 </td>
 
                 <!-- Member Number -->
@@ -326,6 +326,12 @@ const submitImportCsv = () => {
 
                 <!-- Actions -->
                 <td class="py-4 px-6 text-right space-x-2">
+                  <Link
+                    :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
+                    class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-lg transition-all inline-block"
+                  >
+                    View Profile
+                  </Link>
                   <button
                     @click="removeMember(m.id, m.name)"
                     class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold rounded-lg transition-all"
