@@ -91,16 +91,9 @@ const submit = () => {
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
           <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Event General Details</h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Event Title</label>
-              <input v-model="form.title" type="text" required placeholder="Annual Boat Club Dinner" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">URL Slug</label>
-              <input v-model="form.slug" type="text" required placeholder="annual-boat-club-dinner" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
-            </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Event Title</label>
+            <input v-model="form.title" type="text" required placeholder="Annual Boat Club Dinner" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
           </div>
 
           <div>

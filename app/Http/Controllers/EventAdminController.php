@@ -9,6 +9,7 @@ use App\Models\EventPromo;
 use App\Models\EventTicketTier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -65,7 +66,7 @@ class EventAdminController extends Controller
         $validated = $request->validate([
             'id' => 'nullable|integer',
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'location' => 'nullable|string|max:255',
             'address_line_1' => 'nullable|string|max:255',
@@ -93,12 +94,13 @@ class EventAdminController extends Controller
             $validated['postcode'] ?? null,
         ]);
         $location = ! empty($addressParts) ? implode(', ', $addressParts) : ($validated['location'] ?? '');
+        $slug = ! empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['title']);
 
         $event = Event::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
             [
                 'title' => $validated['title'],
-                'slug' => $validated['slug'],
+                'slug' => $slug ?: Str::slug($validated['title']),
                 'description' => $validated['description'] ?? '',
                 'location' => $location,
                 'address_line_1' => $validated['address_line_1'] ?? null,
