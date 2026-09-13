@@ -10,6 +10,77 @@ const props = defineProps({
 });
 
 const showSeasonModal = ref(false);
+const activeTab = ref('upcoming');
+const selectedYear = ref('all');
+const searchQuery = ref('');
+const startDate = ref('');
+const endDate = ref('');
+
+const todayStr = new Date().toISOString().split('T')[0];
+
+const upcomingMeetings = computed(() => {
+  return (props.meetings || []).filter(m => {
+    const d = String(m.meeting_date).split('T')[0];
+    return d >= todayStr;
+  });
+});
+
+const pastMeetings = computed(() => {
+  return (props.meetings || []).filter(m => {
+    const d = String(m.meeting_date).split('T')[0];
+    return d < todayStr;
+  }).sort((a, b) => String(b.meeting_date).localeCompare(String(a.meeting_date)));
+});
+
+const availableYears = computed(() => {
+  const years = new Set();
+  (props.meetings || []).forEach(m => {
+    if (m.meeting_date) {
+      const year = String(m.meeting_date).substring(0, 4);
+      if (year && year.length === 4) years.add(year);
+    }
+  });
+  return Array.from(years).sort();
+});
+
+const filteredMeetings = computed(() => {
+  let list = [];
+  if (activeTab.value === 'upcoming') {
+    list = [...upcomingMeetings.value];
+  } else if (activeTab.value === 'past') {
+    list = [...pastMeetings.value];
+  } else {
+    list = [...(props.meetings || [])];
+  }
+
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.toLowerCase();
+    list = list.filter(m => 
+      (m.title && m.title.toLowerCase().includes(q)) || 
+      (m.venue && m.venue.toLowerCase().includes(q))
+    );
+  }
+
+  if (selectedYear.value !== 'all') {
+    list = list.filter(m => String(m.meeting_date).startsWith(selectedYear.value));
+  }
+
+  if (startDate.value) {
+    list = list.filter(m => String(m.meeting_date).split('T')[0] >= startDate.value);
+  }
+  if (endDate.value) {
+    list = list.filter(m => String(m.meeting_date).split('T')[0] <= endDate.value);
+  }
+
+  return list;
+});
+
+const clearFilters = () => {
+  selectedYear.value = 'all';
+  searchQuery.value = '';
+  startDate.value = '';
+  endDate.value = '';
+};
 
 const seasonForm = useForm({
   year: 2026,
@@ -77,9 +148,79 @@ const duplicateMeeting = (id) => {
         </div>
       </div>
 
+      <!-- Tabs & Search Filter Bar -->
+      <div v-if="meetings.length" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
+        
+        <!-- Tabs Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div class="flex items-center gap-2 overflow-x-auto">
+            <button @click="activeTab = 'upcoming'" :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2', activeTab === 'upcoming' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100']">
+              <span>📅 Upcoming / Future Meetings</span>
+              <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', activeTab === 'upcoming' ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-700']">
+                {{ upcomingMeetings.length }}
+              </span>
+            </button>
+
+            <button @click="activeTab = 'past'" :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2', activeTab === 'past' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100']">
+              <span>🏛️ Past Meetings</span>
+              <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', activeTab === 'past' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700']">
+                {{ pastMeetings.length }}
+              </span>
+            </button>
+
+            <button @click="activeTab = 'all'" :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2', activeTab === 'all' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100']">
+              <span>All Meetings</span>
+              <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700']">
+                {{ meetings.length }}
+              </span>
+            </button>
+          </div>
+
+          <div class="text-xs text-slate-500 font-medium">
+            Showing <strong class="text-slate-900">{{ filteredMeetings.length }}</strong> of {{ meetings.length }} meetings
+          </div>
+        </div>
+
+        <!-- Date & Text Filters Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+          <!-- Text Search -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Search Title / Venue</label>
+            <input type="text" v-model="searchQuery" placeholder="Search..." class="w-full text-xs rounded-xl border-slate-300 focus:ring-indigo-500 p-2 bg-slate-50" />
+          </div>
+
+          <!-- Year Dropdown -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filter by Year</label>
+            <select v-model="selectedYear" class="w-full text-xs rounded-xl border-slate-300 focus:ring-indigo-500 p-2 bg-slate-50 font-medium">
+              <option value="all">All Years</option>
+              <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
+            </select>
+          </div>
+
+          <!-- Start Date -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">From Date</label>
+            <input type="date" v-model="startDate" class="w-full text-xs rounded-xl border-slate-300 focus:ring-indigo-500 p-2 bg-slate-50" />
+          </div>
+
+          <!-- End Date -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">To Date</label>
+            <div class="flex items-center gap-2">
+              <input type="date" v-model="endDate" class="w-full text-xs rounded-xl border-slate-300 focus:ring-indigo-500 p-2 bg-slate-50" />
+              <button v-if="searchQuery || selectedYear !== 'all' || startDate || endDate" @click="clearFilters" title="Clear Filters" class="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 cursor-pointer flex-shrink-0">
+                ✕ Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
       <!-- Meetings Roster Grid -->
-      <div v-if="meetings.length" class="grid grid-cols-1 gap-4">
-        <div v-for="meeting in meetings" :key="meeting.id" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 hover:border-indigo-200 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div v-if="filteredMeetings.length" class="grid grid-cols-1 gap-4">
+        <div v-for="meeting in filteredMeetings" :key="meeting.id" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 hover:border-indigo-200 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div class="space-y-2">
             <h3 class="text-lg font-bold text-slate-900">
               {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formatDate(meeting.meeting_date) }} at {{ formatTime(meeting.starts_at) }}
@@ -137,6 +278,16 @@ const duplicateMeeting = (id) => {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Empty Filter State -->
+      <div v-else-if="meetings.length" class="bg-white rounded-2xl p-12 text-center shadow-sm border border-slate-200/80 space-y-3">
+        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl mx-auto">🔍</div>
+        <h3 class="text-base font-bold text-slate-900">No Meetings Match Selected Filters</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">Try switching tabs, clearing search terms, or resetting date filters.</p>
+        <button @click="clearFilters" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 cursor-pointer">
+          Reset All Filters
+        </button>
       </div>
 
       <!-- Blank Slate State -->
