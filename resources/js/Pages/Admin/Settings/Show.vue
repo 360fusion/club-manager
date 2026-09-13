@@ -141,16 +141,113 @@ const removeRank = (index) => {
 const editingRankIndex = ref(null);
 const editingRankValue = ref('');
 
+// Deletion Warning & Undo State
+const showDeleteWarningModal = ref(false);
+const pendingDeleteRank = ref(null);
+const showUndoToast = ref(false);
+const lastDeletedRank = ref(null);
+const undoTimer = ref(null);
+
+const getMemberCountForRank = (rankName) => {
+  return props.members.filter(m => m.rank === rankName).length;
+};
+
+const initiateRemoveRank = (index) => {
+  const rankToDelete = form.member_ranks[index];
+  const affectedMembers = props.members.filter(m => m.rank === rankToDelete);
+
+  if (affectedMembers.length > 0) {
+    pendingDeleteRank.value = {
+      index,
+      rank: rankToDelete,
+      affectedMembers,
+      reassignRank: '', // default to unassigned
+    };
+    showDeleteWarningModal.value = true;
+  } else {
+    executeRemoveRank(index, rankToDelete, []);
+  }
+};
+
+const confirmDeleteRank = () => {
+  if (!pendingDeleteRank.value) return;
+  const { index, rank, affectedMembers, reassignRank } = pendingDeleteRank.value;
+
+  const affectedMemberRanks = affectedMembers.map(m => ({
+    id: m.id,
+    oldRank: m.rank,
+  }));
+
+  // Reassign or clear rank for affected members locally
+  affectedMembers.forEach(m => {
+    m.rank = reassignRank;
+    updateMemberRank(m.id, reassignRank);
+  });
+
+  executeRemoveRank(index, rank, affectedMemberRanks);
+  showDeleteWarningModal.value = false;
+  pendingDeleteRank.value = null;
+};
+
+const executeRemoveRank = (index, rankToDelete, affectedMemberRanks) => {
+  form.member_ranks.splice(index, 1);
+
+  lastDeletedRank.value = {
+    index,
+    rank: rankToDelete,
+    affectedMemberRanks,
+  };
+
+  showUndoToast.value = true;
+  if (undoTimer.value) clearTimeout(undoTimer.value);
+  undoTimer.value = setTimeout(() => {
+    showUndoToast.value = false;
+  }, 10000);
+};
+
+const undoDeleteRank = () => {
+  if (!lastDeletedRank.value) return;
+  const { index, rank, affectedMemberRanks } = lastDeletedRank.value;
+
+  if (!form.member_ranks.includes(rank)) {
+    form.member_ranks.splice(Math.min(index, form.member_ranks.length), 0, rank);
+  }
+
+  if (affectedMemberRanks && affectedMemberRanks.length > 0) {
+    affectedMemberRanks.forEach(item => {
+      const member = props.members.find(m => m.id === item.id);
+      if (member) {
+        member.rank = item.oldRank;
+        updateMemberRank(member.id, item.oldRank);
+      }
+    });
+  }
+
+  showUndoToast.value = false;
+  lastDeletedRank.value = null;
+};
+
 const startEditRank = (index) => {
   editingRankIndex.value = index;
   editingRankValue.value = form.member_ranks[index];
 };
 
 const saveEditRank = (index) => {
+  const oldRank = form.member_ranks[index];
   const trimmed = editingRankValue.value.trim();
-  if (trimmed) {
+
+  if (trimmed && trimmed !== oldRank) {
     form.member_ranks[index] = trimmed;
+
+    // Update members using oldRank
+    props.members.forEach(m => {
+      if (m.rank === oldRank) {
+        m.rank = trimmed;
+        updateMemberRank(m.id, trimmed);
+      }
+    });
   }
+
   editingRankIndex.value = null;
   editingRankValue.value = '';
 };
@@ -479,6 +576,12 @@ const updateMemberRank = (userId, newRank) => {
                         🏅
                       </span>
                       <span class="text-xs font-bold text-slate-800">{{ rank }}</span>
+                      <span
+                        v-if="getMemberCountForRank(rank) > 0"
+                        class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-extrabold border border-indigo-200/60"
+                      >
+                        {{ getMemberCountForRank(rank) }} assigned
+                      </span>
                     </div>
 
                     <div class="flex items-center gap-1.5">
@@ -491,7 +594,7 @@ const updateMemberRank = (userId, newRank) => {
                       </button>
                       <button
                         type="button"
-                        @click="removeRank(idx)"
+                        @click="initiateRemoveRank(idx)"
                         class="px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all cursor-pointer"
                       >
                         Remove
@@ -1003,6 +1106,94 @@ const updateMemberRank = (userId, newRank) => {
         </div>
       </div>
 
+    </div>
+
+    <!-- Modal: Position Deletion Warning Modal -->
+    <div
+      v-if="showDeleteWarningModal"
+      class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-100">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2 text-amber-600 font-bold text-sm">
+            <span class="text-base">⚠️</span>
+            <h3>Position Assigned to Active Members</h3>
+          </div>
+          <button @click="showDeleteWarningModal = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">
+            &times;
+          </button>
+        </div>
+
+        <div v-if="pendingDeleteRank" class="space-y-4 text-xs">
+          <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900">
+            <p class="font-bold">
+              The position <span class="font-black text-slate-900">"{{ pendingDeleteRank.rank }}"</span> is assigned to {{ pendingDeleteRank.affectedMembers.length }} member(s).
+            </p>
+            <p class="text-[11px] text-amber-700 mt-1">
+              Affected members: <span class="font-semibold">{{ pendingDeleteRank.affectedMembers.map(m => m.name).slice(0, 4).join(', ') }}{{ pendingDeleteRank.affectedMembers.length > 4 ? ` +${pendingDeleteRank.affectedMembers.length - 4} more` : '' }}</span>.
+            </p>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1.5">Action for Affected Members</label>
+            <select
+              v-model="pendingDeleteRank.reassignRank"
+              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">Clear Position (Unassign Rank)</option>
+              <option
+                v-for="r in form.member_ranks.filter(r => r !== pendingDeleteRank.rank)"
+                :key="r"
+                :value="r"
+              >
+                Reassign to: 🏅 {{ r }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 text-xs">
+          <button
+            type="button"
+            @click="showDeleteWarningModal = false"
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            @click="confirmDeleteRank"
+            class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md shadow-rose-600/20 cursor-pointer"
+          >
+            Confirm & Delete Position
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Banner: Undo Position Deletion -->
+    <div
+      v-if="showUndoToast && lastDeletedRank"
+      class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-4 text-xs"
+    >
+      <div class="flex items-center gap-2.5">
+        <span class="text-sm">🗑️</span>
+        <span>Position <strong class="text-amber-400">"{{ lastDeletedRank.rank }}"</strong> was removed.</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button
+          @click="undoDeleteRank"
+          class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+        >
+          <span>↩️</span> Undo
+        </button>
+        <button
+          @click="showUndoToast = false"
+          class="text-slate-400 hover:text-white font-bold text-sm"
+        >
+          &times;
+        </button>
+      </div>
     </div>
   </AdminLayout>
 </template>
