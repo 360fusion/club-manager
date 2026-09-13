@@ -100,6 +100,8 @@ class ClubSettingsController extends Controller
             'registration_mode' => 'open',
             'member_prefix' => strtoupper(substr($club->slug, 0, 4)).'-',
             'default_role' => 'member',
+            'enable_member_ranks' => true,
+            'member_ranks' => ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'],
 
             // Subscriptions & Dues
             'dues_grace_period_days' => 14,
@@ -154,6 +156,7 @@ class ClubSettingsController extends Controller
             'name' => $u->name,
             'email' => $u->email,
             'role' => $u->pivot->role ?? 'member',
+            'rank' => $u->pivot->rank ?? '',
             'member_number' => $u->pivot->member_number ?? '',
             'status' => $u->pivot->status ?? 'active',
         ]);
@@ -197,6 +200,8 @@ class ClubSettingsController extends Controller
             'registration_mode' => 'nullable|in:open,invite_only',
             'member_prefix' => 'nullable|string|max:50',
             'default_role' => 'nullable|in:member,coach,treasurer,admin',
+            'enable_member_ranks' => 'nullable|boolean',
+            'member_ranks' => 'nullable|array',
             'custom_domain' => 'nullable|string|max:255',
             'enabled_modules' => 'nullable|array',
             'permission_matrix' => 'nullable|array',

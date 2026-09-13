@@ -73,7 +73,7 @@ class User extends Authenticatable
     public function clubs(): BelongsToMany
     {
         return $this->belongsToMany(Club::class)
-            ->withPivot(['role', 'member_number', 'status', 'phone', 'emergency_contact', 'dietary_notes'])
+            ->withPivot(['role', 'rank', 'member_number', 'status', 'phone', 'emergency_contact', 'dietary_notes'])
             ->withTimestamps();
     }
 

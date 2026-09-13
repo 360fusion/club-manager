@@ -30,15 +30,21 @@ class UserAdminController extends Controller
                 'name' => $u->name,
                 'email' => $u->email,
                 'role' => $u->pivot->role ?? 'member',
+                'rank' => $u->pivot->rank ?? '',
                 'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
                 'status' => $u->pivot->status ?? 'active',
                 'joined_at' => $u->pivot->created_at?->format('M d, Y') ?? 'Recent',
             ];
         });
 
+        $enableMemberRanks = $club->settings['enable_member_ranks'] ?? true;
+        $memberRanks = $club->settings['member_ranks'] ?? ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'];
+
         return Inertia::render('Admin/Users/Index', [
             'club' => $club,
             'members' => $members,
+            'enableMemberRanks' => $enableMemberRanks,
+            'memberRanks' => $memberRanks,
         ]);
     }
 
@@ -107,6 +113,7 @@ class UserAdminController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'role' => $memberPivot->role ?? 'member',
+            'rank' => $memberPivot->rank ?? '',
             'member_number' => $memberPivot->member_number ?? ('MEM-'.$user->id),
             'status' => $memberPivot->status ?? 'active',
             'joined_at' => $memberPivot->created_at?->format('M d, Y') ?? 'Recent',
@@ -139,6 +146,7 @@ class UserAdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'role' => 'required|in:owner,admin,coach,member,treasurer',
+            'rank' => 'nullable|string|max:100',
             'member_number' => 'nullable|string|max:100',
         ]);
 
@@ -156,6 +164,7 @@ class UserAdminController extends Controller
 
         $club->users()->attach($user->id, [
             'role' => $validated['role'],
+            'rank' => $validated['rank'] ?? null,
             'member_number' => $validated['member_number'] ?: ('MEM-'.rand(1000, 9999)),
             'status' => 'active',
         ]);
@@ -177,6 +186,22 @@ class UserAdminController extends Controller
         $club->users()->updateExistingPivot($userId, ['role' => $validated['role']]);
 
         return redirect()->back()->with('success', 'Member role updated to '.strtoupper($validated['role']));
+    }
+
+    /**
+     * Update a member's rank in the club.
+     */
+    public function updateRank(Request $request, string $clubSlug, int $userId): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $validated = $request->validate([
+            'rank' => 'nullable|string|max:100',
+        ]);
+
+        $club->users()->updateExistingPivot($userId, ['rank' => $validated['rank']]);
+
+        return redirect()->back()->with('success', 'Member rank updated.');
     }
 
     /**

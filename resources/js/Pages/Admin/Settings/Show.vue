@@ -46,6 +46,8 @@ const form = useForm({
   registration_mode: props.settings.registration_mode || 'open',
   member_prefix: props.settings.member_prefix || '',
   default_role: props.settings.default_role || 'member',
+  enable_member_ranks: props.settings.enable_member_ranks ?? true,
+  member_ranks: props.settings.member_ranks || ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'],
   custom_domain: props.club.custom_domain || '',
   enabled_modules: props.settings.enabled_modules || [],
   permission_matrix: props.settings.permission_matrix || {},
@@ -118,6 +120,28 @@ const updateMemberRole = (userId, newRole) => {
   router.post(
     route('admin.users.role.update', { clubSlug: props.club.slug, userId }),
     { role: newRole },
+    { preserveScroll: true }
+  );
+};
+
+const newRankInput = ref('');
+
+const addRank = () => {
+  const val = newRankInput.value.trim();
+  if (val && !form.member_ranks.includes(val)) {
+    form.member_ranks.push(val);
+    newRankInput.value = '';
+  }
+};
+
+const removeRank = (index) => {
+  form.member_ranks.splice(index, 1);
+};
+
+const updateMemberRank = (userId, newRank) => {
+  router.post(
+    route('admin.users.rank.update', { clubSlug: props.club.slug, userId }),
+    { rank: newRank },
     { preserveScroll: true }
   );
 };
@@ -379,6 +403,34 @@ const updateMemberRole = (userId, newRole) => {
               </select>
             </div>
           </div>
+
+          <!-- Member Ranks Settings -->
+          <div class="pt-6 border-t border-slate-100 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">🎖️ Enable Member Ranks & Skill Levels</h3>
+                <p class="text-xs text-slate-500">Enable customized member ranks (e.g. Novice, Captain, Veteran) to filter and select members across the platform.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" v-model="form.enable_member_ranks" class="sr-only peer" />
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+
+            <div v-if="form.enable_member_ranks" class="space-y-3 pt-2">
+              <label class="block text-xs font-bold text-slate-700">Configured Ranks</label>
+              <div class="flex flex-wrap gap-2 mb-2">
+                <span v-for="(rank, idx) in form.member_ranks" :key="idx" class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold">
+                  🏅 {{ rank }}
+                  <button type="button" @click="removeRank(idx)" class="text-indigo-400 hover:text-indigo-900 font-extrabold ml-1">&times;</button>
+                </span>
+              </div>
+              <div class="flex gap-2 max-w-md">
+                <input v-model="newRankInput" @keydown.enter.prevent="addRank" type="text" placeholder="Add a new rank (e.g. Master, Coxswain)..." class="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+                <button type="button" @click="addRank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition">Add Rank</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -510,17 +562,31 @@ const updateMemberRole = (userId, newRole) => {
                 <div class="text-[11px] text-slate-400 truncate">{{ m.email }} • <span class="font-mono">{{ m.member_number }}</span></div>
               </div>
 
-              <select
-                :value="m.role"
-                @change="updateMemberRole(m.id, $event.target.value)"
-                class="px-3 py-1.5 font-bold rounded-xl border border-slate-200 bg-slate-50 text-xs cursor-pointer outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="member">Member</option>
-                <option value="coach">Coach</option>
-                <option value="treasurer">Treasurer</option>
-                <option value="admin">Admin</option>
-                <option value="owner">Owner</option>
-              </select>
+              <div class="flex items-center gap-2">
+                <select
+                  v-if="form.enable_member_ranks"
+                  :value="m.rank"
+                  @change="updateMemberRank(m.id, $event.target.value)"
+                  class="px-3 py-1.5 font-bold rounded-xl border border-indigo-200 bg-indigo-50/50 text-indigo-700 text-xs cursor-pointer outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">No Rank Assigned</option>
+                  <option v-for="r in form.member_ranks" :key="r" :value="r">
+                    🏅 {{ r }}
+                  </option>
+                </select>
+
+                <select
+                  :value="m.role"
+                  @change="updateMemberRole(m.id, $event.target.value)"
+                  class="px-3 py-1.5 font-bold rounded-xl border border-slate-200 bg-slate-50 text-xs cursor-pointer outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="member">Member</option>
+                  <option value="coach">Coach</option>
+                  <option value="treasurer">Treasurer</option>
+                  <option value="admin">Admin</option>
+                  <option value="owner">Owner</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

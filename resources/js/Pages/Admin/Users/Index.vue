@@ -12,11 +12,20 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  enableMemberRanks: {
+    type: Boolean,
+    default: true,
+  },
+  memberRanks: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 // Search and filtering state
 const searchQuery = ref('');
 const roleFilter = ref('');
+const rankFilter = ref('');
 const statusFilter = ref('');
 
 // Modals state
@@ -28,6 +37,7 @@ const addForm = useForm({
   name: '',
   email: '',
   role: 'member',
+  rank: '',
   member_number: '',
 });
 
@@ -63,9 +73,10 @@ const filteredMembers = computed(() => {
       (m.member_number && m.member_number.toLowerCase().includes(searchQuery.value.toLowerCase()));
 
     const matchesRole = roleFilter.value ? m.role === roleFilter.value : true;
+    const matchesRank = rankFilter.value ? m.rank === rankFilter.value : true;
     const matchesStatus = statusFilter.value ? m.status === statusFilter.value : true;
 
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesRole && matchesRank && matchesStatus;
   });
 });
 
@@ -74,6 +85,14 @@ const updateRole = (userId, newRole) => {
   router.post(
     route('admin.users.role.update', { clubSlug: props.club.slug, userId }),
     { role: newRole },
+    { preserveScroll: true }
+  );
+};
+
+const updateRank = (userId, newRank) => {
+  router.post(
+    route('admin.users.rank.update', { clubSlug: props.club.slug, userId }),
+    { rank: newRank },
     { preserveScroll: true }
   );
 };
@@ -225,7 +244,16 @@ const submitImportCsv = () => {
         </div>
 
         <!-- Filters -->
-        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+          <select
+            v-if="enableMemberRanks"
+            v-model="rankFilter"
+            class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium"
+          >
+            <option value="">All Ranks</option>
+            <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
+          </select>
+
           <select
             v-model="roleFilter"
             class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
@@ -256,6 +284,7 @@ const submitImportCsv = () => {
               <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                 <th class="py-3.5 px-6">Member Name & Email</th>
                 <th class="py-3.5 px-4">Member ID #</th>
+                <th v-if="enableMemberRanks" class="py-3.5 px-4">Rank</th>
                 <th class="py-3.5 px-4">Club Role</th>
                 <th class="py-3.5 px-4">Status</th>
                 <th class="py-3.5 px-4">Joined Date</th>
@@ -286,6 +315,18 @@ const submitImportCsv = () => {
                   <span class="font-mono text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg border border-slate-200">
                     {{ m.member_number }}
                   </span>
+                </td>
+
+                <!-- Rank Selector -->
+                <td v-if="enableMemberRanks" class="py-4 px-4">
+                  <select
+                    :value="m.rank"
+                    @change="updateRank(m.id, $event.target.value)"
+                    class="px-2.5 py-1 text-xs font-bold rounded-lg border border-indigo-200 bg-indigo-50/60 text-indigo-700 outline-none cursor-pointer"
+                  >
+                    <option value="">No Rank</option>
+                    <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
+                  </select>
                 </td>
 
                 <!-- Role Selector -->
@@ -342,7 +383,7 @@ const submitImportCsv = () => {
               </tr>
 
               <tr v-if="filteredMembers.length === 0">
-                <td colspan="6" class="py-12 text-center text-slate-400">
+                <td :colspan="enableMemberRanks ? 7 : 6" class="py-12 text-center text-slate-400">
                   <p class="text-sm font-medium">No members found matching your search or filters.</p>
                 </td>
               </tr>
@@ -403,7 +444,18 @@ const submitImportCsv = () => {
               </select>
             </div>
 
-            <div>
+            <div v-if="enableMemberRanks">
+              <label class="block text-xs font-bold text-slate-700 mb-1">Member Rank</label>
+              <select
+                v-model="addForm.rank"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">No Rank Assigned</option>
+                <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
+              </select>
+            </div>
+
+            <div :class="enableMemberRanks ? 'col-span-2' : 'col-span-1'">
               <label class="block text-xs font-bold text-slate-700 mb-1">Member Number</label>
               <input
                 v-model="addForm.member_number"
