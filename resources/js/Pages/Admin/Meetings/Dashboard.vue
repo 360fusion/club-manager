@@ -61,16 +61,16 @@ const copyApologiesText = () => {
         </div>
 
         <div class="flex items-center gap-3">
-          <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition-all flex items-center gap-1">
+          <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" title="Download or Print Summons PDF" aria-label="Download or Print Summons PDF" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition-all flex items-center gap-1">
             🖨️ PDF
           </a>
-          <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
+          <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" title="Edit Summons Details" aria-label="Edit Summons Details" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
             📜 Edit Summons
           </Link>
-          <button @click="showApologiesModal = true" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
+          <button @click="showApologiesModal = true" title="Copy Apologies for Minutes" aria-label="Copy Apologies for Minutes" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer">
             📋 Copy Minutes Apologies
           </button>
-          <button v-if="meeting.status !== 'published'" @click="publishSummons" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all">
+          <button v-if="meeting.status !== 'published'" @click="publishSummons" title="Publish & Dispatch Passwordless RSVPs" aria-label="Publish & Dispatch Passwordless RSVPs" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer">
             ✉️ Publish & Dispatch Summons
           </button>
         </div>

@@ -86,26 +86,26 @@ const duplicateMeeting = (id) => {
             </h3>
 
             <div class="flex items-center gap-3 text-xs pt-1">
-              <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
+              <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']" title="Meeting Status" aria-label="Meeting Status">
                 {{ meeting.status }}
               </span>
-              <span class="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">🍽️ {{ meeting.dining_count }} Dining</span>
-              <span class="text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded border border-rose-200">✉️ {{ meeting.apologies_count }} Apologies</span>
-              <span class="text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">🏛️ {{ meeting.visitors_count || 0 }} Visitors</span>
+              <span class="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200" title="Members Dining" aria-label="Members Dining">🍽️ {{ meeting.dining_count }} Dining</span>
+              <span class="text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded border border-rose-200" title="Members Apologies" aria-label="Members Apologies">✉️ {{ meeting.apologies_count }} Apologies</span>
+              <span class="text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded border border-purple-200" title="Visiting Brethren" aria-label="Visiting Brethren">🏛️ {{ meeting.visitors_count || 0 }} Visitors</span>
             </div>
           </div>
 
           <div class="flex items-center gap-2.5 self-start md:self-auto">
-            <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
+            <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" title="Edit Summons Details" aria-label="Edit Summons Details" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
               📜 Edit Summons
             </Link>
-            <Link :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all">
+            <Link :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })" title="Secretary Dashboard" aria-label="Secretary Dashboard" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all">
               📊 Secretary Dashboard
             </Link>
-            <button @click="duplicateMeeting(meeting.id)" title="Duplicate Meeting" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer">
+            <button @click="duplicateMeeting(meeting.id)" title="Duplicate Meeting" aria-label="Duplicate Meeting" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer">
               📋
             </button>
-            <button @click="deleteMeeting(meeting.id)" title="Delete Meeting" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-xl border border-rose-200 transition-all cursor-pointer">
+            <button @click="deleteMeeting(meeting.id)" title="Delete Meeting" aria-label="Delete Meeting" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-xl border border-rose-200 transition-all cursor-pointer">
               🗑️
             </button>
           </div>
