@@ -180,6 +180,16 @@ const submitMeetingRsvp = () => {
                     <span v-else class="w-full text-center justify-center px-3 py-1.5 rounded-xl text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 block truncate">
                       ⚠️ RSVP AWAITING
                     </span>
+
+                    <span v-if="m.user_rsvp?.payment_status === 'paid'" class="w-full text-center justify-center px-3 py-1 rounded-xl text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 block truncate">
+                      ✅ PAID
+                    </span>
+                    <span v-else-if="m.user_rsvp?.payment_status === 'waived'" class="w-full text-center justify-center px-3 py-1 rounded-xl text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300 block truncate">
+                      🎁 WAIVED
+                    </span>
+                    <span v-else-if="m.user_rsvp?.attendance_status === 'attending_dining'" class="w-full text-center justify-center px-3 py-1 rounded-xl text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 block truncate">
+                      💳 UNPAID
+                    </span>
                     
                     <span v-if="m.is_cutoff_passed" class="w-full text-center justify-center px-3 py-1 rounded-xl text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 block truncate">
                       CUTOFF PASSED

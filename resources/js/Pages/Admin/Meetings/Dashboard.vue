@@ -22,6 +22,7 @@ const manualRsvpForm = useForm({
   attendance_status: 'attending_dining',
   dietary_requirements: '',
   apology_reason: '',
+  payment_status: 'unpaid',
   guests: [],
 });
 
@@ -34,6 +35,7 @@ const openManualRsvpModal = (userId = null) => {
       manualRsvpForm.attendance_status = existingRsvp.attendance_status || 'attending_dining';
       manualRsvpForm.dietary_requirements = existingRsvp.dietary_requirements || '';
       manualRsvpForm.apology_reason = existingRsvp.apology_reason || '';
+      manualRsvpForm.payment_status = existingRsvp.payment_status || 'unpaid';
       manualRsvpForm.guests = (existingRsvp.guests || []).map(g => ({
         guest_name: g.guest_name,
         dietary_requirements: g.dietary_requirements || '',
@@ -43,16 +45,27 @@ const openManualRsvpModal = (userId = null) => {
       manualRsvpForm.attendance_status = 'attending_dining';
       manualRsvpForm.dietary_requirements = '';
       manualRsvpForm.apology_reason = '';
+      manualRsvpForm.payment_status = 'unpaid';
       manualRsvpForm.guests = [];
     }
   } else {
     selectedUserId.value = null;
     manualRsvpForm.reset();
     manualRsvpForm.attendance_status = 'attending_dining';
+    manualRsvpForm.payment_status = 'unpaid';
     manualRsvpForm.user_id = (props.allClubUsers || [])[0]?.id || '';
     manualRsvpForm.guests = [];
   }
   showManualRsvpModal.value = true;
+};
+
+const setPaymentStatus = (userId, status) => {
+  router.post(route('admin.meetings.rsvp.payment_status', { clubSlug: props.club.slug, id: props.meeting.id }), {
+    user_id: userId,
+    payment_status: status,
+  }, {
+    preserveScroll: true,
+  });
 };
 
 const addGuestRow = () => {
@@ -249,7 +262,7 @@ const formattedMeetingDate = computed(() => {
                 <th class="p-3">Email Address</th>
                 <th class="p-3">Summons & Attendance Status</th>
                 <th class="p-3">Dietary Notes</th>
-                <th class="p-3">Payment Ref</th>
+                <th class="p-3">Payment Status & Ref</th>
                 <th class="p-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -281,9 +294,25 @@ const formattedMeetingDate = computed(() => {
                   </span>
                 </td>
                 <td class="p-3 text-slate-600">{{ v.dietary_notes || 'Standard' }}</td>
-                <td class="p-3 font-mono text-[11px] text-indigo-600">{{ v.payment_reference || '-' }}</td>
+                <td class="p-3">
+                  <button 
+                    @click="setPaymentStatus(v.id, v.payment_status === 'paid' ? 'unpaid' : 'paid')"
+                    :class="['px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border cursor-pointer transition-all flex items-center gap-1 w-fit', 
+                      v.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' :
+                      v.payment_status === 'waived' ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100' :
+                      v.payment_status === 'refunded' ? 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100' :
+                      'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100']"
+                    :title="'Click to toggle paid/unpaid status'"
+                  >
+                    <span v-if="v.payment_status === 'paid'">✅ Paid</span>
+                    <span v-else-if="v.payment_status === 'waived'">🎁 Waived</span>
+                    <span v-else-if="v.payment_status === 'refunded'">↩️ Refunded</span>
+                    <span v-else>💳 Unpaid</span>
+                  </button>
+                  <div class="font-mono text-[10px] text-slate-400 mt-0.5">{{ v.payment_reference || '-' }}</div>
+                </td>
                 <td class="p-3 text-right">
-                  <button @click="openManualRsvpModal(v.user_id)" class="px-2.5 py-1 text-[11px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-all cursor-pointer">
+                  <button @click="openManualRsvpModal(v.id)" class="px-2.5 py-1 text-[11px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-all cursor-pointer">
                     ✏️ Edit
                   </button>
                 </td>
@@ -302,7 +331,7 @@ const formattedMeetingDate = computed(() => {
                 <th class="p-3">Attendance</th>
                 <th class="p-3">Dietary Requirements</th>
                 <th class="p-3">Registered Visitors / Guests</th>
-                <th class="p-3">Payment Ref</th>
+                <th class="p-3">Payment Status & Ref</th>
                 <th class="p-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -325,7 +354,23 @@ const formattedMeetingDate = computed(() => {
                   </div>
                   <span v-else class="text-slate-400">-</span>
                 </td>
-                <td class="p-3 font-mono text-[11px] text-indigo-600">{{ r.payment_reference || '-' }}</td>
+                <td class="p-3">
+                  <button 
+                    @click="setPaymentStatus(r.user_id, r.payment_status === 'paid' ? 'unpaid' : 'paid')"
+                    :class="['px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border cursor-pointer transition-all flex items-center gap-1 w-fit', 
+                      r.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' :
+                      r.payment_status === 'waived' ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100' :
+                      r.payment_status === 'refunded' ? 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100' :
+                      'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100']"
+                    :title="'Click to toggle paid/unpaid status'"
+                  >
+                    <span v-if="r.payment_status === 'paid'">✅ Paid</span>
+                    <span v-else-if="r.payment_status === 'waived'">🎁 Waived</span>
+                    <span v-else-if="r.payment_status === 'refunded'">↩️ Refunded</span>
+                    <span v-else>💳 Unpaid</span>
+                  </button>
+                  <div class="font-mono text-[10px] text-slate-400 mt-0.5">{{ r.payment_reference || '-' }}</div>
+                </td>
                 <td class="p-3 text-right">
                   <button @click="openManualRsvpModal(r.user_id)" class="px-2.5 py-1 text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-all cursor-pointer">
                     ✏️ Edit
@@ -412,6 +457,29 @@ const formattedMeetingDate = computed(() => {
                 <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'apologies' ? 'bg-rose-50 border-rose-500 text-rose-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
                   <input type="radio" v-model="manualRsvpForm.attendance_status" value="apologies" class="sr-only" />
                   🔴 Apologies
+                </label>
+              </div>
+            </div>
+
+            <!-- Payment Status -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Payment Status</label>
+              <div class="grid grid-cols-4 gap-2">
+                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'unpaid' ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                  <input type="radio" v-model="manualRsvpForm.payment_status" value="unpaid" class="sr-only" />
+                  💳 Unpaid
+                </label>
+                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'paid' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                  <input type="radio" v-model="manualRsvpForm.payment_status" value="paid" class="sr-only" />
+                  ✅ Paid
+                </label>
+                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'waived' ? 'bg-purple-50 border-purple-500 text-purple-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                  <input type="radio" v-model="manualRsvpForm.payment_status" value="waived" class="sr-only" />
+                  🎁 Waived
+                </label>
+                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'refunded' ? 'bg-rose-50 border-rose-500 text-rose-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                  <input type="radio" v-model="manualRsvpForm.payment_status" value="refunded" class="sr-only" />
+                  ↩️ Refunded
                 </label>
               </div>
             </div>

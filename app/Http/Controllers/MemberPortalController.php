@@ -74,6 +74,7 @@ class MemberPortalController extends Controller
                         'attendance_status' => $userRsvp->attendance_status,
                         'dietary_requirements' => $userRsvp->dietary_requirements,
                         'apology_reason' => $userRsvp->apology_reason,
+                        'payment_status' => $userRsvp->payment_status ?? 'unpaid',
                         'payment_reference' => $userRsvp->payment_reference,
                         'guests' => $userRsvp->guests,
                     ] : null,

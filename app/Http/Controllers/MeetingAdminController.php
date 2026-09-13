@@ -355,6 +355,7 @@ class MeetingAdminController extends Controller
                 'summons_sent' => $summonsSent,
                 'responded_at' => $rsvp?->responded_at?->format('d M Y H:i'),
                 'payment_reference' => $rsvp?->payment_reference,
+                'payment_status' => $rsvp?->payment_status ?? 'unpaid',
             ];
         });
 
@@ -554,22 +555,39 @@ class MeetingAdminController extends Controller
             'attendance_status' => 'required|in:attending_dining,attending_meeting_only,apologies',
             'apology_reason' => 'nullable|string',
             'dietary_requirements' => 'nullable|string',
+            'payment_status' => 'nullable|in:unpaid,paid,waived,refunded',
+            'payment_reference' => 'nullable|string',
             'guests' => 'nullable|array',
             'guests.*.guest_name' => 'nullable|string',
             'guests.*.dietary_requirements' => 'nullable|string',
             'guests.*.attending_dining' => 'nullable|boolean',
         ]);
 
+        $user = User::find($validated['user_id']);
+        $surname = $user ? strtoupper(last(explode(' ', $user->name))) : 'MEMBER';
+        $defaultRef = ($meeting->payment_reference_prefix ?: 'SUMMONS') . '-' . $meeting->id . '-' . $surname;
+
+        $updateData = [
+            'token_hash' => Str::random(40),
+            'token_expires_at' => now()->addDays(30),
+            'attendance_status' => $validated['attendance_status'],
+            'apology_reason' => $validated['apology_reason'] ?? null,
+            'dietary_requirements' => $validated['dietary_requirements'] ?? null,
+            'responded_at' => now(),
+        ];
+
+        if (isset($validated['payment_status'])) {
+            $updateData['payment_status'] = $validated['payment_status'];
+        }
+        if (isset($validated['payment_reference'])) {
+            $updateData['payment_reference'] = $validated['payment_reference'];
+        } else {
+            $updateData['payment_reference'] = $defaultRef;
+        }
+
         $rsvp = MeetingRsvp::updateOrCreate(
             ['meeting_id' => $meeting->id, 'user_id' => $validated['user_id']],
-            [
-                'token_hash' => Str::random(40),
-                'token_expires_at' => now()->addDays(30),
-                'attendance_status' => $validated['attendance_status'],
-                'apology_reason' => $validated['apology_reason'] ?? null,
-                'dietary_requirements' => $validated['dietary_requirements'] ?? null,
-                'responded_at' => now(),
-            ]
+            $updateData
         );
 
         if (array_key_exists('guests', $validated)) {
@@ -589,5 +607,46 @@ class MeetingAdminController extends Controller
         }
 
         return redirect()->back()->with('success', 'RSVP record updated successfully.');
+    }
+
+    /**
+     * Quickly toggle or set RSVP payment status for a member/visitor.
+     */
+    public function updatePaymentStatus(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'payment_status' => 'required|in:unpaid,paid,waived,refunded',
+            'payment_reference' => 'nullable|string',
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+        $surname = strtoupper(last(explode(' ', $user->name)));
+        $paymentRef = $validated['payment_reference'] ?? (($meeting->payment_reference_prefix ?: 'SUMMONS') . '-' . $meeting->id . '-' . $surname);
+
+        $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $user->id)->first();
+        if ($rsvp) {
+            $rsvp->update([
+                'payment_status' => $validated['payment_status'],
+                'payment_reference' => $paymentRef,
+            ]);
+        } else {
+            MeetingRsvp::create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'token_hash' => Str::random(40),
+                'token_expires_at' => now()->addDays(30),
+                'attendance_status' => 'attending_dining',
+                'payment_status' => $validated['payment_status'],
+                'payment_reference' => $paymentRef,
+                'responded_at' => now(),
+            ]);
+        }
+
+        $statusLabel = ucfirst($validated['payment_status']);
+        return redirect()->back()->with('success', "Payment status marked as {$statusLabel} for {$user->name}.");
     }
 }

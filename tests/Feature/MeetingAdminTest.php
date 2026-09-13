@@ -237,4 +237,51 @@ class MeetingAdminTest extends TestCase
         $this->assertEquals(1, $duplicated->agendaItems->count());
         $this->assertEquals(0, \App\Models\MeetingRsvp::where('meeting_id', $duplicated->id)->count());
     }
+
+    public function test_admin_can_update_rsvp_payment_status()
+    {
+        $clubType = \App\Models\ClubType::create([
+            'name' => 'Masonic Lodge',
+            'code' => 'masonic',
+            'available_modules' => ['meetings'],
+            'default_settings' => [],
+        ]);
+
+        $club = Club::create([
+            'club_type_id' => $clubType->id,
+            'name' => 'Apollo Lodge No. 357',
+            'slug' => 'oxford-lodge-payment-test',
+            'status' => 'active',
+        ]);
+
+        $adminUser = User::factory()->create();
+        $memberUser = User::factory()->create();
+        $club->users()->attach($adminUser->id, ['role' => 'admin']);
+        $club->users()->attach($memberUser->id, ['role' => 'member']);
+
+        $this->actingAs($adminUser);
+
+        $meeting = Meeting::create([
+            'club_id' => $club->id,
+            'title' => 'Regular Meeting',
+            'meeting_date' => '2026-11-20',
+            'starts_at' => '18:30',
+            'venue' => 'Masonic Hall, Oxford',
+            'dress_code' => 'Dark Suit',
+            'status' => 'published',
+            'rsvp_cutoff_at' => Carbon::now()->addDays(10),
+        ]);
+
+        $response = $this->post(route('admin.meetings.rsvp.payment_status', ['clubSlug' => $club->slug, 'id' => $meeting->id]), [
+            'user_id' => $memberUser->id,
+            'payment_status' => 'paid',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('meeting_rsvps', [
+            'meeting_id' => $meeting->id,
+            'user_id' => $memberUser->id,
+            'payment_status' => 'paid',
+        ]);
+    }
 }
