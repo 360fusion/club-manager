@@ -51,7 +51,7 @@ const copyInviteLink = () => {
     </div>
 
     <!-- Second Row Metric Cards Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       
       <!-- Metric 1: Active users -->
       <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-2">
@@ -71,31 +71,6 @@ const copyInviteLink = () => {
       <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-2">
         <div class="text-xs font-semibold text-slate-500">Open invoices</div>
         <div class="text-2xl font-extrabold text-slate-900">5</div>
-      </div>
-
-      <!-- Metric 4: Invite users to register -->
-      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-2 flex flex-col justify-between">
-        <div class="text-xs font-semibold text-slate-500">Invite users to register</div>
-        <div class="flex items-center gap-1.5 pt-1">
-          <input 
-            type="text" 
-            readonly 
-            :value="`https://club-manager.test/register?club=${club.slug}`" 
-            class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-mono text-slate-600 truncate focus:outline-none"
-          />
-          <button 
-            @click="copyInviteLink" 
-            class="p-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all flex-shrink-0"
-            title="Copy Invite Link"
-          >
-            <svg v-if="!inviteCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-            </svg>
-            <svg v-else class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-          </button>
-        </div>
       </div>
 
     </div>

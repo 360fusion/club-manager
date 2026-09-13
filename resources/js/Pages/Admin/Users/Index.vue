@@ -28,6 +28,51 @@ const roleFilter = ref('');
 const rankFilter = ref('');
 const statusFilter = ref('');
 const activeRosterTab = ref('all'); // 'all', 'active', 'invited_pending', 'deactivated', 'past'
+const inviteCopied = ref(false);
+
+const registrationUrl = computed(() => {
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/register?club=${props.club.slug}`;
+  }
+  return `/register?club=${props.club.slug}`;
+});
+
+const copyRegistrationLink = () => {
+  const url = registrationUrl.value;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(() => {
+      inviteCopied.value = true;
+      setTimeout(() => (inviteCopied.value = false), 2500);
+    }).catch(() => {
+      fallbackCopyText(url);
+    });
+  } else {
+    fallbackCopyText(url);
+  }
+};
+
+const fallbackCopyText = (text) => {
+  try {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    if (successful) {
+      inviteCopied.value = true;
+      setTimeout(() => (inviteCopied.value = false), 2500);
+    } else {
+      prompt('Copy your public registration link:', text);
+    }
+  } catch (err) {
+    prompt('Copy your public registration link:', text);
+  }
+};
 
 // Modals state
 const showAddModal = ref(false);
@@ -225,6 +270,23 @@ const submitImportCsv = () => {
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5">
+          <button
+            @click="copyRegistrationLink"
+            :class="[
+              'px-3.5 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer',
+              inviteCopied ? 'bg-emerald-600 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white'
+            ]"
+            :title="inviteCopied ? 'Copied to clipboard!' : 'Copy public registration URL'"
+          >
+            <svg v-if="!inviteCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            <svg v-else class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ inviteCopied ? 'Copied Link!' : 'Copy Invite Link' }}</span>
+          </button>
+
           <a
             :href="route('clubs.members.export', { slug: club.slug })"
             class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
@@ -253,6 +315,42 @@ const submitImportCsv = () => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
             <span>Add Member</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Public Registration Link Widget Card -->
+      <div class="bg-gradient-to-r from-indigo-50/90 via-sky-50/70 to-white p-5 rounded-2xl border border-indigo-100/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🔗</span>
+            <h3 class="text-sm font-bold text-slate-900">Public Member Registration Link</h3>
+            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-indigo-100 text-indigo-700">Invite Link</span>
+          </div>
+          <p class="text-xs text-slate-500">Share this direct URL with prospective members so they can register or submit membership requests.</p>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <input
+            type="text"
+            readonly
+            :value="registrationUrl"
+            class="w-full sm:w-80 px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-mono text-slate-700 truncate outline-none select-all shadow-sm"
+          />
+          <button
+            @click="copyRegistrationLink"
+            :class="[
+              'px-4 py-2 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm whitespace-nowrap cursor-pointer',
+              inviteCopied ? 'bg-emerald-600 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white'
+            ]"
+          >
+            <svg v-if="!inviteCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            <svg v-else class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ inviteCopied ? 'Copied!' : 'Copy Link' }}</span>
           </button>
         </div>
       </div>
