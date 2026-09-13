@@ -230,13 +230,21 @@ function numberFormat(val) {
           </div>
 
           <!-- Bank Details & Payment Reference -->
-          <div v-if="meeting.bank_sort_code || meeting.bank_account_number" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-2">
-            <div class="font-bold text-slate-900">🏦 Direct Bank Transfer Payment Details</div>
+          <div v-if="(meeting.bank_sort_code || meeting.bank_account_number) && (user_rsvp?.attendance_status === 'attending_dining' || user_rsvp?.guests?.some(g => g.attending_dining))" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-2">
+            <div class="font-bold text-slate-900 flex items-center justify-between">
+              <span>🏦 Direct Bank Transfer Payment Details</span>
+              <span v-if="user_rsvp?.payment_status === 'paid'" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ PAID</span>
+              <span v-else-if="user_rsvp?.payment_status === 'waived'" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300">🎁 WAIVED</span>
+              <span v-else class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">💳 UNPAID</span>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-slate-700 font-mono text-[11px]">
               <div>Sort Code: <strong class="text-slate-900">{{ meeting.bank_sort_code }}</strong></div>
               <div>Account No: <strong class="text-slate-900">{{ meeting.bank_account_number }}</strong></div>
               <div>Bank Ref Prefix: <strong class="text-indigo-600">{{ meeting.payment_reference_prefix || 'SUMMONS' }}</strong></div>
             </div>
+          </div>
+          <div v-else-if="user_rsvp && user_rsvp.attendance_status !== 'attending_dining'" class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs text-slate-500 font-medium">
+            ℹ️ No dining fee required for Meeting-Only attendance or Apologies.
           </div>
         </div>
 
