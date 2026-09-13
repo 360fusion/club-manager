@@ -6,6 +6,7 @@ import MemberLayout from '@/Layouts/MemberLayout.vue';
 const props = defineProps({
   club: { type: Object, required: true },
   meeting: { type: Object, required: true },
+  members: { type: Array, default: () => [] },
   userRsvp: { type: Object, default: null },
   secretaryUser: { type: Object, default: null },
   worshipfulMaster: { type: Object, default: null },
@@ -245,6 +246,95 @@ function numberFormat(val) {
           </div>
           <div v-else-if="user_rsvp && user_rsvp.attendance_status !== 'attending_dining'" class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs text-slate-500 font-medium">
             ℹ️ No dining fee required for Meeting-Only attendance or Apologies.
+          </div>
+        </div>
+        <!-- Provincial Executive Leadership & Grand Officers -->
+        <div v-if="meeting.provincial_grand_master || meeting.deputy_provincial_grand_master || meeting.assistant_provincial_grand_masters" class="space-y-4 pt-2 border-t border-slate-100">
+          <h3 class="text-base font-extrabold text-slate-900 border-b border-slate-200 pb-2">
+            👑 {{ meeting.front_page_title || 'Provincial Grand Lodge Leadership' }}
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div v-if="meeting.provincial_grand_master" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-1">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Provincial Grand Master</div>
+              <div class="text-sm font-extrabold text-slate-900">{{ meeting.provincial_grand_master }}</div>
+            </div>
+
+            <div v-if="meeting.deputy_provincial_grand_master" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-1">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Deputy Provincial Grand Master</div>
+              <div class="text-sm font-extrabold text-slate-900">{{ meeting.deputy_provincial_grand_master }}</div>
+            </div>
+
+            <div v-if="meeting.assistant_provincial_grand_masters" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-1">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Assistant Provincial Grand Masters</div>
+              <div class="text-xs font-semibold text-slate-800 whitespace-pre-line leading-relaxed">{{ meeting.assistant_provincial_grand_masters }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fraternal Visits & Delegations -->
+        <div v-if="meeting.fraternal_visits?.length || meeting.fraternal_visits_text" class="space-y-4 pt-2 border-t border-slate-100">
+          <h3 class="text-base font-extrabold text-slate-900 border-b border-slate-200 pb-2">
+            🤝 Fraternal Visits & Official Delegations
+          </h3>
+
+          <div v-if="meeting.fraternal_visits_text" class="p-4 bg-indigo-50/60 border border-indigo-200/80 rounded-2xl text-xs text-indigo-900 leading-relaxed whitespace-pre-line">
+            {{ meeting.fraternal_visits_text }}
+          </div>
+
+          <div v-if="meeting.fraternal_visits?.length" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div v-for="visit in meeting.fraternal_visits" :key="visit.id" class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+              <div class="font-bold text-slate-900">🏛️ {{ visit.visiting_club_name || visit.lodge_name }} <span v-if="visit.visiting_club_number || visit.lodge_number">No. {{ visit.visiting_club_number || visit.lodge_number }}</span></div>
+              <div v-if="visit.leader_name" class="text-slate-600 font-medium">Delegation Leader: {{ visit.leader_name }}</div>
+              <div v-if="visit.notes" class="text-slate-500 italic text-[11px]">{{ visit.notes }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Members Enrolled Roll -->
+        <div v-if="members?.length" class="space-y-4 pt-2 border-t border-slate-100">
+          <h3 class="text-base font-extrabold text-slate-900 border-b border-slate-200 pb-2 flex items-center justify-between">
+            <span>👥 Subscribing Members Roll</span>
+            <span class="text-xs font-semibold text-slate-500">{{ members.length }} Enrolled</span>
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+            <div v-for="m in members" :key="m.id" class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs flex items-center justify-between">
+              <div class="flex items-center gap-2 truncate">
+                <span class="text-[10px] font-bold text-slate-400 font-mono shrink-0">{{ m.joined_year || '•' }}</span>
+                <span class="font-bold text-slate-900 truncate">{{ m.name }}</span>
+              </div>
+              <span v-if="m.rank" class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 shrink-0 ml-1">
+                {{ m.rank }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Honorary Members & Welfare Notices -->
+        <div v-if="meeting.honorary_members_text || meeting.sick_distressed_notes || meeting.almoner_notice" class="space-y-4 pt-2 border-t border-slate-100">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div v-if="meeting.honorary_members_text" class="p-4 bg-amber-50/60 border border-amber-200/80 rounded-2xl text-xs text-amber-900 space-y-1">
+              <div class="font-bold text-amber-950 uppercase tracking-wider text-[10px]">🎖️ Honorary Members</div>
+              <p class="whitespace-pre-line leading-relaxed">{{ meeting.honorary_members_text }}</p>
+            </div>
+
+            <div v-if="meeting.sick_distressed_notes || meeting.almoner_notice" class="p-4 bg-rose-50/60 border border-rose-200/80 rounded-2xl text-xs text-rose-900 space-y-1">
+              <div class="font-bold text-rose-950 uppercase tracking-wider text-[10px]">❤️ Almoner & Sick/Distressed Notice</div>
+              <p class="whitespace-pre-line leading-relaxed">{{ meeting.sick_distressed_notes || meeting.almoner_notice }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secretary Contact Footer -->
+        <div class="p-4 bg-slate-900 text-white rounded-2xl text-xs flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <span class="text-slate-400 font-medium">Lodge Secretary: </span>
+            <strong class="text-white">{{ secretaryUser?.name || 'Secretary' }}</strong>
+          </div>
+          <div class="flex items-center gap-4 text-slate-300 font-mono text-[11px]">
+            <span>📧 {{ secretaryUser?.email || club.email }}</span>
+            <span v-if="club.settings?.phone">📞 {{ club.settings.phone }}</span>
           </div>
         </div>
 

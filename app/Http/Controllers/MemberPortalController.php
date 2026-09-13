@@ -451,8 +451,17 @@ class MemberPortalController extends Controller
         $club = Club::where('slug', $slug)->firstOrFail();
         $meeting = Meeting::where('club_id', $club->id)
             ->where('id', $id)
-            ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user'])
+            ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user', 'fraternalVisits'])
             ->firstOrFail();
+
+        $members = $club->users()->wherePivot('role', '!=', 'visitor')->get()->map(function ($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'rank' => $u->pivot->rank ?? '',
+                'joined_year' => $u->pivot->joined_year ?? $u->created_at?->format('Y'),
+            ];
+        });
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 
@@ -467,6 +476,7 @@ class MemberPortalController extends Controller
         return Inertia::render('Member/Meetings/Summons', [
             'club' => $club,
             'meeting' => $meeting,
+            'members' => $members,
             'userRsvp' => $userRsvp,
             'secretaryUser' => $secretaryUser,
             'worshipfulMaster' => $worshipfulMaster,
