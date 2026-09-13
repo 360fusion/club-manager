@@ -29,7 +29,7 @@ return new class extends Migration
             $table->foreignId('club_id')->constrained('clubs')->onDelete('cascade');
             $table->string('subject');
             $table->longText('content');
-            $table->jsonb('target_roles')->default('["member", "admin"]');
+            $table->json('target_roles')->nullable();
             $table->string('status')->default('sent'); // draft, queued, sent
             $table->timestamp('sent_at')->nullable();
             $table->timestamps();

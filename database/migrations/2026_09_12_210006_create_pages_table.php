@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('club_id')->constrained('clubs')->onDelete('cascade');
             $table->string('title');
             $table->string('slug');
-            $table->jsonb('blocks')->default('[]');
+            $table->json('blocks')->nullable();
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();
             $table->boolean('is_published')->default(true);

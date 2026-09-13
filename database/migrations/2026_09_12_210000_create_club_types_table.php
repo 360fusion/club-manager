@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('code')->unique();
-            $table->jsonb('available_modules')->default('[]');
-            $table->jsonb('default_settings')->default('{}');
+            $table->json('available_modules')->nullable();
+            $table->json('default_settings')->nullable();
             $table->timestamps();
         });
     }

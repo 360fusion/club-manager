@@ -53,7 +53,7 @@ return new class extends Migration
             $table->timestamp('summons_sent_at')->nullable();
             $table->timestamp('reminder_sent_at')->nullable();
             $table->boolean('attending_dining')->default(false);
-            $table->jsonb('menu_selections')->default('{}');
+            $table->json('menu_selections')->nullable();
             $table->text('dietary_requirements')->nullable();
             $table->string('payment_status')->default('unpaid'); // unpaid, paid, waived, refunded
             $table->decimal('amount_paid', 10, 2)->default(0.00);
