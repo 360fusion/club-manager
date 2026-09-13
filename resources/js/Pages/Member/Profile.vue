@@ -26,14 +26,6 @@ const passwordForm = useForm({
   password_confirmation: '',
 });
 
-const presetAvatars = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&auto=format&fit=crop&q=80',
-];
-
 const handleFileChange = (e) => {
   const file = e.target.files[0];
   if (file) {
@@ -42,10 +34,10 @@ const handleFileChange = (e) => {
   }
 };
 
-const selectPreset = (url) => {
-  profileForm.avatar_url = url;
+const removePhoto = () => {
+  profileForm.avatar_url = '';
   profileForm.avatar = null;
-  avatarPreview.value = url;
+  avatarPreview.value = null;
 };
 
 const submitProfile = () => {
@@ -90,15 +82,15 @@ const submitPassword = () => {
               #{{ memberNumber }}
             </span>
           </div>
-          <p class="text-xs text-slate-500 mt-1">Manage your account information, profile photo, security credentials, and review 2FA status.</p>
+          <p class="text-xs text-slate-500 mt-1">Manage your account information, upload your profile photo, security credentials, and review 2FA status.</p>
         </div>
       </div>
 
       <!-- Section 1: Profile Information & Photo -->
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-6">
         <div class="border-b border-slate-100 pb-3">
-          <h3 class="text-base font-bold text-slate-900">Profile Information & Photo</h3>
-          <p class="text-xs text-slate-500">Update your account's profile photo, name, and email address.</p>
+          <h3 class="text-base font-bold text-slate-900">Profile Photo & Personal Info</h3>
+          <p class="text-xs text-slate-500">Upload a photo of yourself to personalize your member account across the club.</p>
         </div>
 
         <form @submit.prevent="submitProfile" class="space-y-6 max-w-xl">
@@ -107,7 +99,7 @@ const submitPassword = () => {
           <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100">
             <div class="relative group">
               <div v-if="avatarPreview" class="w-20 h-20 rounded-full overflow-hidden border-2 border-emerald-500 shadow-md">
-                <img :src="avatarPreview" alt="Profile Avatar" class="w-full h-full object-cover" />
+                <img :src="avatarPreview" alt="Profile Photo" class="w-full h-full object-cover" />
               </div>
               <div v-else class="w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-2xl flex items-center justify-center border-2 border-emerald-500 shadow-md">
                 {{ profileForm.name ? profileForm.name.substring(0, 2).toUpperCase() : 'MP' }}
@@ -136,34 +128,13 @@ const submitPassword = () => {
                 <button 
                   v-if="avatarPreview"
                   type="button" 
-                  @click="selectPreset('')" 
+                  @click="removePhoto" 
                   class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all"
                 >
                   Remove Photo
                 </button>
               </div>
-              <p class="text-[11px] text-slate-500">Supports JPG, PNG, GIF, or WebP up to 4MB.</p>
-            </div>
-          </div>
-
-          <!-- Preset Avatar Gallery -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-              Or Choose Preset Avatar
-            </label>
-            <div class="flex items-center gap-3 overflow-x-auto pb-2">
-              <button
-                v-for="(url, idx) in presetAvatars"
-                :key="idx"
-                type="button"
-                @click="selectPreset(url)"
-                :class="[
-                  'w-12 h-12 rounded-full overflow-hidden border-2 transition-all flex-shrink-0',
-                  avatarPreview === url ? 'border-emerald-600 ring-2 ring-emerald-500/30 scale-105' : 'border-slate-200 hover:border-slate-400'
-                ]"
-              >
-                <img :src="url" class="w-full h-full object-cover" />
-              </button>
+              <p class="text-[11px] text-slate-500">Upload a headshot photo (JPG, PNG, GIF, or WebP up to 4MB).</p>
             </div>
           </div>
 
