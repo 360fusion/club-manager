@@ -106,6 +106,16 @@ const sendInviteEmail = (userId) => {
   );
 };
 
+const revokeInviteEmail = (userId, name) => {
+  if (confirm(`Are you sure you want to revoke the account invitation for ${name}?`)) {
+    router.post(
+      route('admin.users.revoke_invite', { clubSlug: props.club.slug, userId }),
+      {},
+      { preserveScroll: true }
+    );
+  }
+};
+
 const removeMember = (userId, name) => {
   if (confirm(`Are you sure you want to remove ${name} from the club roster?`)) {
     router.delete(route('admin.users.destroy', { clubSlug: props.club.slug, userId }), {
@@ -376,15 +386,24 @@ const submitImportCsv = () => {
 
                 <!-- Actions -->
                 <td class="py-4 px-6 text-right space-x-2">
-                  <button
-                    v-if="!m.invitation_accepted_at"
-                    @click="sendInviteEmail(m.id)"
-                    class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
-                    :title="m.invitation_token ? `Invited on ${m.invited_at}` : 'Send activation email'"
-                  >
-                    <span>✉️</span>
-                    <span>{{ m.invitation_token ? 'Resend Invite' : 'Send Invite' }}</span>
-                  </button>
+                  <template v-if="!m.invitation_accepted_at">
+                    <button
+                      @click="sendInviteEmail(m.id)"
+                      class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                      :title="m.invitation_token ? `Invited on ${m.invited_at}` : 'Send activation email'"
+                    >
+                      <span>✉️</span>
+                      <span>{{ m.invitation_token ? 'Resend Invite' : 'Send Invite' }}</span>
+                    </button>
+                    <button
+                      v-if="m.invitation_token || m.invited_at"
+                      @click="revokeInviteEmail(m.id, m.name)"
+                      class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                      title="Revoke active invitation token"
+                    >
+                      <span>Revoke</span>
+                    </button>
+                  </template>
                   <span
                     v-else
                     class="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-extrabold rounded-lg inline-block"

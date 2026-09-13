@@ -250,6 +250,22 @@ class UserAdminController extends Controller
     }
 
     /**
+     * Revoke an active invitation for a member.
+     */
+    public function revokeInvite(string $clubSlug, int $userId): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $user = User::findOrFail($userId);
+
+        $club->users()->updateExistingPivot($userId, [
+            'invitation_token' => null,
+            'invited_at' => null,
+        ]);
+
+        return redirect()->back()->with('success', "Invitation revoked for {$user->name}.");
+    }
+
+    /**
      * Remove a member from the club.
      */
     public function removeMember(string $clubSlug, int $userId): RedirectResponse

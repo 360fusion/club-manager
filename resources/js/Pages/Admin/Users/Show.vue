@@ -62,6 +62,16 @@ const sendInvite = () => {
   );
 };
 
+const revokeInvite = () => {
+  if (confirm(`Are you sure you want to revoke the account invitation for ${props.member.name}?`)) {
+    router.post(
+      route('admin.users.revoke_invite', { clubSlug: props.club.slug, userId: props.member.id }),
+      {},
+      { preserveScroll: true }
+    );
+  }
+};
+
 const roleBadgeClass = (role) => {
   switch (role) {
     case 'owner':
@@ -141,27 +151,41 @@ const roleBadgeClass = (role) => {
 
           <div class="space-y-1">
             <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Account Invitation</label>
-            <button
-              v-if="member.invitation_accepted_at"
-              type="button"
-              disabled
-              class="px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs rounded-xl flex items-center gap-1.5 opacity-90 cursor-default"
-            >
-              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Account Active</span>
-            </button>
-            <button
-              v-else
-              @click="sendInvite"
-              class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
-            >
-              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              <span>{{ member.invited_at ? 'Resend Invite' : 'Send Email Invite' }}</span>
-            </button>
+            <div class="flex items-center gap-1.5">
+              <button
+                v-if="member.invitation_accepted_at"
+                type="button"
+                disabled
+                class="px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs rounded-xl flex items-center gap-1.5 opacity-90 cursor-default"
+              >
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Account Active</span>
+              </button>
+              <template v-else>
+                <button
+                  @click="sendInvite"
+                  class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span>{{ member.invited_at ? 'Resend Invite' : 'Send Email Invite' }}</span>
+                </button>
+                <button
+                  v-if="member.invited_at || member.invitation_token"
+                  @click="revokeInvite"
+                  class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                  title="Revoke active invitation token"
+                >
+                  <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Revoke</span>
+                </button>
+              </template>
+            </div>
           </div>
 
           <button

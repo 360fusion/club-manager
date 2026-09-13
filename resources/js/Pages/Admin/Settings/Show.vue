@@ -46,6 +46,7 @@ const form = useForm({
   registration_mode: props.settings.registration_mode || 'open',
   member_prefix: props.settings.member_prefix || '',
   default_role: props.settings.default_role || 'member',
+  invite_expiration_days: props.settings.invite_expiration_days ?? 14,
   enable_member_ranks: props.settings.enable_member_ranks ?? true,
   member_ranks: props.settings.member_ranks || ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'],
   custom_domain: props.club.custom_domain || '',
@@ -505,7 +506,7 @@ const updateMemberRank = (userId, newRank) => {
         <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
           <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">⚙️ Onboarding & Access Control</h2>
           
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs">
             <div>
               <label class="block font-bold text-slate-700 mb-1">Registration Mode</label>
               <select v-model="form.registration_mode" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
@@ -527,6 +528,11 @@ const updateMemberRank = (userId, newRank) => {
                 <option value="treasurer">Treasurer</option>
                 <option value="admin">Admin</option>
               </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Invite Expiry (Days)</label>
+              <input v-model="form.invite_expiration_days" type="number" min="1" max="365" placeholder="14" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
             </div>
           </div>
         </div>

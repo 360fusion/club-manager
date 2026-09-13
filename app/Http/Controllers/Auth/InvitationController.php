@@ -21,13 +21,17 @@ class InvitationController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
-        $user = User::whereHas('clubs', function ($query) use ($club, $token) {
-            $query->where('clubs.id', $club->id)
-                  ->where('club_user.invitation_token', $token);
-        })->first();
+        $user = $club->users()
+            ->where('club_user.invitation_token', $token)
+            ->first();
 
         if (! $user) {
             return redirect()->route('login')->with('error', 'Invitation link is invalid or has already been used.');
+        }
+
+        $expiryDays = (int) ($club->settings['invite_expiration_days'] ?? 14);
+        if ($user->pivot->invited_at && \Carbon\Carbon::parse($user->pivot->invited_at)->addDays($expiryDays)->isPast()) {
+            return redirect()->route('login')->with('error', "This invitation link expired after {$expiryDays} days. Please request a new invitation from your club administrator.");
         }
 
         return Inertia::render('Auth/AcceptInvitation', [
@@ -53,13 +57,17 @@ class InvitationController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
-        $user = User::whereHas('clubs', function ($query) use ($club, $token) {
-            $query->where('clubs.id', $club->id)
-                  ->where('club_user.invitation_token', $token);
-        })->first();
+        $user = $club->users()
+            ->where('club_user.invitation_token', $token)
+            ->first();
 
         if (! $user) {
             return redirect()->route('login')->with('error', 'Invitation link is invalid or has already been used.');
+        }
+
+        $expiryDays = (int) ($club->settings['invite_expiration_days'] ?? 14);
+        if ($user->pivot->invited_at && \Carbon\Carbon::parse($user->pivot->invited_at)->addDays($expiryDays)->isPast()) {
+            return redirect()->route('login')->with('error', "This invitation link expired after {$expiryDays} days. Please request a new invitation from your club administrator.");
         }
 
         $request->validate([

@@ -117,4 +117,46 @@ class MemberInvitationTest extends TestCase
         $this->assertNull($pivot->invitation_token);
         $this->assertNotNull($pivot->invitation_accepted_at);
     }
+
+    public function test_admin_can_revoke_member_invitation(): void
+    {
+        $admin = User::factory()->create();
+        $this->club->users()->attach($admin->id, ['role' => 'admin', 'status' => 'active']);
+
+        $member = User::factory()->create();
+        $token = 'revoke-token-123';
+        $this->club->users()->attach($member->id, [
+            'role' => 'member',
+            'invitation_token' => $token,
+            'invited_at' => now(),
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.users.revoke_invite', ['clubSlug' => $this->club->slug, 'userId' => $member->id]));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $pivot = $member->clubs()->where('clubs.id', $this->club->id)->first()->pivot;
+        $this->assertNull($pivot->invitation_token);
+        $this->assertNull($pivot->invited_at);
+    }
+
+    public function test_expired_invitation_link_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        $token = 'expired-token-456';
+
+        // Set invited_at to 15 days ago (default limit is 14 days)
+        $this->club->users()->attach($user->id, [
+            'role' => 'member',
+            'invitation_token' => $token,
+            'invited_at' => now()->subDays(15),
+        ]);
+
+        $response = $this->get(route('invitation.accept', ['slug' => $this->club->slug, 'token' => $token]));
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHas('error');
+    }
 }

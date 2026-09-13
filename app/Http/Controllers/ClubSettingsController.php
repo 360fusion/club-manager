@@ -100,6 +100,7 @@ class ClubSettingsController extends Controller
             'registration_mode' => 'open',
             'member_prefix' => strtoupper(substr($club->slug, 0, 4)).'-',
             'default_role' => 'member',
+            'invite_expiration_days' => 14,
             'enable_member_ranks' => true,
             'member_ranks' => ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'],
 
@@ -200,6 +201,7 @@ class ClubSettingsController extends Controller
             'registration_mode' => 'nullable|in:open,invite_only',
             'member_prefix' => 'nullable|string|max:50',
             'default_role' => 'nullable|in:member,coach,treasurer,admin',
+            'invite_expiration_days' => 'nullable|integer|min:1|max:365',
             'enable_member_ranks' => 'nullable|boolean',
             'member_ranks' => 'nullable|array',
             'custom_domain' => 'nullable|string|max:255',
