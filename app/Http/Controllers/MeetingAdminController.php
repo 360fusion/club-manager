@@ -207,8 +207,8 @@ class MeetingAdminController extends Controller
                 ],
                 [
                     'recurring_rule_id' => $rule->id,
-                    'meeting_number' => 450 + $index,
-                    'title' => "Regular Meeting No. " . (450 + $index),
+                    'meeting_number' => null,
+                    'title' => 'Meeting - ' . $date->format('jS F Y'),
                     'starts_at' => '18:30',
                     'rehearsal_starts_at' => '17:30',
                     'venue' => 'Masonic Hall, Oxford',

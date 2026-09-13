@@ -120,4 +120,38 @@ class MeetingAdminTest extends TestCase
             'guest_name' => 'Bro. Mark Smith',
         ]);
     }
+
+    public function test_generate_season_titles_use_date_format_without_meeting_number()
+    {
+        $clubType = \App\Models\ClubType::create([
+            'name' => 'Masonic Lodge',
+            'code' => 'masonic',
+            'available_modules' => ['meetings'],
+            'default_settings' => [],
+        ]);
+
+        $club = Club::create([
+            'club_type_id' => $clubType->id,
+            'name' => 'Apollo Lodge No. 357',
+            'slug' => 'oxford-lodge-season',
+            'status' => 'active',
+        ]);
+
+        $adminUser = User::factory()->create();
+        $this->actingAs($adminUser);
+
+        $response = $this->post(route('admin.meetings.generate_season', ['clubSlug' => $club->slug]), [
+            'year' => 2026,
+            'occurrence' => '3rd',
+            'day_of_week' => 'Tuesday',
+            'active_months' => [10],
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('meetings', [
+            'club_id' => $club->id,
+            'title' => 'Meeting - 20th October 2026',
+            'meeting_number' => null,
+        ]);
+    }
 }
