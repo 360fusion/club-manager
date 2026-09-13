@@ -120,9 +120,17 @@ const form = useForm({
   require_score_verification: props.settings.require_score_verification ?? false,
 });
 
+const isSavedSuccess = ref(false);
+
 const submitSettings = () => {
   form.put(route('admin.settings.update', { clubSlug: props.club.slug }), {
     preserveScroll: true,
+    onSuccess: () => {
+      isSavedSuccess.value = true;
+      setTimeout(() => {
+        isSavedSuccess.value = false;
+      }, 3500);
+    },
   });
 };
 
@@ -325,12 +333,24 @@ const updateMemberRank = (userId, newRank) => {
         <button
           @click="submitSettings"
           :disabled="form.processing"
-          class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+          :class="[
+            'px-5 py-2.5 font-bold text-xs rounded-xl shadow-md transition-all duration-300 flex items-center gap-2 self-start sm:self-auto cursor-pointer',
+            form.processing ? 'bg-indigo-500 text-white cursor-wait opacity-80' :
+            isSavedSuccess ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 scale-105 ring-2 ring-emerald-400/50' :
+            'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+          ]"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-if="form.processing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <svg v-else-if="isSavedSuccess" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+          </svg>
+          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
-          <span>Save Changes</span>
+          <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved Successfully!' : 'Save Changes') }}</span>
         </button>
       </div>
 
@@ -1326,5 +1346,23 @@ const updateMemberRank = (userId, newRank) => {
         </button>
       </div>
     </div>
+
+    <!-- Toast Feedback Banner -->
+    <Transition
+      enter-active-class="transform ease-out duration-300 transition"
+      enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+      enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+      leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div v-if="isSavedSuccess" class="fixed bottom-6 right-6 z-50 bg-emerald-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-emerald-700/80 flex items-center gap-3.5">
+        <span class="w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-xs shadow-md">✓</span>
+        <div>
+          <div class="text-xs font-extrabold text-white">Club Settings Saved!</div>
+          <div class="text-[11px] text-emerald-200">Your organization configuration has been updated.</div>
+        </div>
+      </div>
+    </Transition>
   </AdminLayout>
 </template>
