@@ -154,4 +154,40 @@ class MeetingAdminTest extends TestCase
             'meeting_number' => null,
         ]);
     }
+
+    public function test_admin_can_view_and_download_summons_pdf()
+    {
+        $clubType = \App\Models\ClubType::create([
+            'name' => 'Masonic Lodge',
+            'code' => 'masonic',
+            'available_modules' => ['meetings'],
+            'default_settings' => [],
+        ]);
+
+        $club = Club::create([
+            'club_type_id' => $clubType->id,
+            'name' => 'Apollo Lodge No. 357',
+            'slug' => 'oxford-lodge-pdf',
+            'status' => 'active',
+        ]);
+
+        $adminUser = User::factory()->create();
+        $this->actingAs($adminUser);
+
+        $meeting = Meeting::create([
+            'club_id' => $club->id,
+            'title' => 'Meeting - 20th October 2026',
+            'meeting_date' => '2026-10-20',
+            'starts_at' => '18:30',
+            'venue' => 'Masonic Hall',
+            'dress_code' => 'Dark Suit',
+            'rsvp_cutoff_at' => Carbon::now()->addDays(10),
+        ]);
+
+        $viewResponse = $this->get(route('admin.meetings.pdf', ['clubSlug' => $club->slug, 'id' => $meeting->id]));
+        $viewResponse->assertOk();
+
+        $downloadResponse = $this->get(route('admin.meetings.pdf', ['clubSlug' => $club->slug, 'id' => $meeting->id, 'download' => 1]));
+        $downloadResponse->assertOk();
+    }
 }

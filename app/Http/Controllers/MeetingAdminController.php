@@ -201,9 +201,9 @@ class MeetingAdminController extends Controller
         if (request()->has('download')) {
             $filename = 'Summons-' . \Illuminate\Support\Str::slug($club->name) . '-' . $meeting->meeting_date->format('Y-m-d') . '.pdf';
 
-            return \Spatie\LaravelPdf\Facades\Pdf::view('summons.pdf', $viewData)
-                ->landscape()
-                ->name($filename);
+            return \Barryvdh\DomPDF\Facade\Pdf::loadView('summons.pdf', $viewData)
+                ->setPaper('a4', 'landscape')
+                ->download($filename);
         }
 
         return view('summons.pdf', $viewData);
