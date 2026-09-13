@@ -53,9 +53,9 @@ const copyInviteLink = () => {
     <!-- Second Row Metric Cards Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       
-      <!-- Metric 1: Active users -->
+      <!-- Metric 1: Members -->
       <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-2">
-        <div class="text-xs font-semibold text-slate-500">Active users</div>
+        <div class="text-xs font-semibold text-slate-500">Members</div>
         <div class="text-2xl font-extrabold text-slate-900">
           {{ metrics.total_members || 300 }}
         </div>
