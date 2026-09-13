@@ -6,7 +6,7 @@
 <style>
   @page {
     size: A4 landscape;
-    margin: 8mm 10mm;
+    margin: 14mm 18mm;
   }
 
   body {
@@ -14,7 +14,7 @@
     color: #111111;
     background: #ffffff;
     font-size: 9.5pt;
-    line-height: 1.25;
+    line-height: 1.3;
     margin: 0;
     padding: 0;
   }
@@ -22,7 +22,7 @@
   .page-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 25px;
+    gap: 40px;
     height: 100vh;
     box-sizing: border-box;
     page-break-after: always;
@@ -33,13 +33,13 @@
   }
 
   .column {
-    padding: 5px;
+    padding: 10px 15px;
     overflow: hidden;
   }
 
   .border-right {
     border-right: 1px solid #333333;
-    padding-right: 20px;
+    padding-right: 30px;
   }
 
   /* Typography Utilities */
@@ -100,7 +100,7 @@
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
-    padding: 20px 10px;
+    padding: 25px 20px;
     box-sizing: border-box;
     border: 1.5px solid #222;
   }
