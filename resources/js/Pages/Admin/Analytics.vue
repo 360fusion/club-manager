@@ -176,8 +176,8 @@ const copyInviteLink = () => {
           <div class="text-2xl">📜</div>
           <div class="font-bold text-slate-700 text-sm">No Upcoming Meetings Scheduled</div>
           <p class="text-slate-400 max-w-xs mx-auto">Generate season schedules or create individual summonses for your club.</p>
-          <Link :href="route('admin.meetings.index', { clubSlug: club.slug })" class="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition-all">
-            + Manage & Schedule Meetings
+          <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition-all">
+            📜 + Create Meeting
           </Link>
         </div>
       </div>

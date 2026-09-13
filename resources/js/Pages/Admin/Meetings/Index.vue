@@ -143,10 +143,15 @@ const duplicateMeeting = (id) => {
       <div v-else class="bg-white rounded-2xl p-12 text-center shadow-sm border border-slate-200/80">
         <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">📜</div>
         <h3 class="text-lg font-bold text-slate-900">No Meetings Scheduled Yet</h3>
-        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Use the rule-based recurring engine to automatically calculate and generate your 8 annual meeting dates for the upcoming season.</p>
-        <button @click="showSeasonModal = true" class="mt-6 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all">
-          ⚡ Generate Season Meetings
-        </button>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Use the rule-based recurring engine to automatically calculate and generate your annual meeting dates, or create a single meeting summons manually.</p>
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
+            📜 + Create Meeting
+          </Link>
+          <button @click="showSeasonModal = true" class="px-5 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all">
+            ⚡ Generate Season Meetings
+          </button>
+        </div>
       </div>
 
       <!-- Batch Season Generator Modal -->
