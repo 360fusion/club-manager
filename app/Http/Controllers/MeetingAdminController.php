@@ -201,9 +201,52 @@ class MeetingAdminController extends Controller
         if (request()->has('download')) {
             $filename = 'Summons-' . \Illuminate\Support\Str::slug($club->name) . '-' . $meeting->meeting_date->format('Y-m-d') . '.pdf';
 
-            return \Spatie\LaravelPdf\Facades\Pdf::view('summons.pdf', $viewData)
-                ->landscape()
-                ->name($filename);
+            // Detect Node & Npm paths for Laravel Herd / macOS / Linux environments
+            $nodeBinary = trim((string) shell_exec('which node 2>/dev/null'));
+            $npmBinary = trim((string) shell_exec('which npm 2>/dev/null'));
+
+            if (! $nodeBinary || ! file_exists($nodeBinary)) {
+                $nodeCandidates = glob('/Users/*/Library/Application Support/Herd/config/nvm/versions/node/*/bin/node') ?: [];
+                $nodeCandidates = array_merge($nodeCandidates, ['/opt/homebrew/bin/node', '/usr/local/bin/node', '/usr/bin/node']);
+                foreach ($nodeCandidates as $candidate) {
+                    if (file_exists($candidate)) {
+                        $nodeBinary = $candidate;
+                        break;
+                    }
+                }
+            }
+
+            if (! $npmBinary || ! file_exists($npmBinary)) {
+                $npmCandidates = glob('/Users/*/Library/Application Support/Herd/config/nvm/versions/node/*/bin/npm') ?: [];
+                $npmCandidates = array_merge($npmCandidates, ['/opt/homebrew/bin/npm', '/usr/local/bin/npm', '/usr/bin/npm']);
+                foreach ($npmCandidates as $candidate) {
+                    if (file_exists($candidate)) {
+                        $npmBinary = $candidate;
+                        break;
+                    }
+                }
+            }
+
+            try {
+                return \Spatie\LaravelPdf\Facades\Pdf::view('summons.pdf', $viewData)
+                    ->landscape()
+                    ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
+                        if ($nodeBinary && file_exists($nodeBinary)) {
+                            $browsershot->setNodeBinary($nodeBinary);
+                            $binDir = str_replace(' ', '\ ', dirname($nodeBinary));
+                            $browsershot->setIncludePath($binDir . ':/opt/homebrew/bin:/usr/local/bin:/usr/bin');
+                        }
+                        if ($npmBinary && file_exists($npmBinary)) {
+                            $browsershot->setNpmBinary($npmBinary);
+                        }
+                    })
+                    ->name($filename);
+            } catch (\Throwable $e) {
+                // Fallback gracefully to DomPDF if Node/Browsershot fails in specific PHP-FPM environments
+                return \Barryvdh\DomPDF\Facade\Pdf::loadView('summons.pdf', $viewData)
+                    ->setPaper('a4', 'landscape')
+                    ->download($filename);
+            }
         }
 
         return view('summons.pdf', $viewData);
