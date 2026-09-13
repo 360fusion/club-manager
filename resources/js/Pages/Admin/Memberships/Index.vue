@@ -15,7 +15,7 @@ const deletePlan = (planId) => {
 </script>
 
 <template>
-  <AdminLayout title="Groups & Dues" :club="club" active-tab="memberships">
+  <AdminLayout title="Subscriptions" :club="club" active-tab="memberships">
     
     <div class="space-y-6">
       

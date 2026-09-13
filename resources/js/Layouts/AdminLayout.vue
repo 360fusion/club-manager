@@ -134,7 +134,7 @@ const copyInviteLink = () => {
             </div>
 
             <div class="pt-2 border-t border-slate-800 space-y-1">
-              <Link :href="route('home')" class="block w-full text-center py-2 px-3 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-300 rounded-xl transition-all">
+              <Link :href="route('admin.clubs.index')" class="block w-full text-center py-2 px-3 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-300 rounded-xl transition-all">
                 + View All Joined Clubs
               </Link>
             </div>
@@ -191,7 +191,7 @@ const copyInviteLink = () => {
             <span>Classes & Events</span>
           </Link>
 
-          <!-- 3. Groups & Memberships -->
+          <!-- 3. Subscriptions -->
           <Link 
             :href="route('admin.memberships.index', { clubSlug })" 
             :class="[
@@ -204,7 +204,7 @@ const copyInviteLink = () => {
             <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            <span>Groups & Dues</span>
+            <span>Subscriptions</span>
           </Link>
 
           <!-- 4. Members -->
@@ -287,66 +287,7 @@ const copyInviteLink = () => {
             <span>Forms & CMS Pages</span>
           </Link>
 
-          <!-- 8. MY CLUBS & WORKSPACES SECTION -->
-          <div v-if="userClubs.length > 0" class="pt-4 pb-2 border-t border-slate-800 space-y-2">
-            <div class="px-4 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-              My Clubs ({{ userClubs.length }})
-            </div>
-
-            <!-- Admin Clubs -->
-            <div v-if="adminClubs.length > 0" class="space-y-1">
-              <div class="px-4 text-[9px] font-bold uppercase tracking-wider text-indigo-400">Admin Role</div>
-              <button
-                v-for="c in adminClubs"
-                :key="c.id"
-                @click="switchWorkspace(c)"
-                :class="[
-                  'w-full flex items-center justify-between px-4 py-2 rounded-xl text-left transition-all text-xs',
-                  c.slug === clubSlug 
-                    ? 'bg-indigo-600/30 text-white font-bold border-l-2 border-indigo-400' 
-                    : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
-                ]"
-              >
-                <div class="flex items-center gap-2.5 overflow-hidden">
-                  <div class="w-5 h-5 rounded bg-indigo-500/20 text-indigo-300 font-bold text-[9px] flex items-center justify-center uppercase flex-shrink-0">
-                    {{ c.name.substring(0, 2) }}
-                  </div>
-                  <span class="truncate">{{ c.name }}</span>
-                </div>
-                <span class="text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  Admin
-                </span>
-              </button>
-            </div>
-
-            <!-- Member Clubs -->
-            <div v-if="memberClubs.length > 0" class="space-y-1 pt-1">
-              <div class="px-4 text-[9px] font-bold uppercase tracking-wider text-emerald-400">Member Role</div>
-              <button
-                v-for="c in memberClubs"
-                :key="c.id"
-                @click="switchWorkspace(c)"
-                :class="[
-                  'w-full flex items-center justify-between px-4 py-2 rounded-xl text-left transition-all text-xs',
-                  c.slug === clubSlug 
-                    ? 'bg-emerald-600/30 text-white font-bold border-l-2 border-emerald-400' 
-                    : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
-                ]"
-              >
-                <div class="flex items-center gap-2.5 overflow-hidden">
-                  <div class="w-5 h-5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[9px] flex items-center justify-center uppercase flex-shrink-0">
-                    {{ c.name.substring(0, 2) }}
-                  </div>
-                  <span class="truncate">{{ c.name }}</span>
-                </div>
-                <span class="text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  {{ c.role }}
-                </span>
-              </button>
-            </div>
-          </div>
-
-          <!-- 9. Settings & Profile -->
+          <!-- 8. Settings & Profile -->
           <Link 
             :href="route('profile.edit')" 
             :class="[
@@ -376,10 +317,6 @@ const copyInviteLink = () => {
             <div class="text-[10px] text-slate-400 truncate">{{ page.props.auth?.user?.email || 'admin@oxford.edu' }}</div>
           </div>
         </div>
-
-        <Link :href="route('home')" class="block text-center py-2 px-3 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded-lg transition-all">
-          &larr; Switch Workspace
-        </Link>
       </div>
     </aside>
 
@@ -401,7 +338,7 @@ const copyInviteLink = () => {
             </svg>
             <span>Switch to Member Portal</span>
           </Link>
-          <Link :href="route('site.home', clubSlug)" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5">
+          <Link :href="route('clubs.show', clubSlug)" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5">
             <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>

@@ -91,12 +91,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/newsletters/{id}/send', [NewsletterAdminController::class, 'send'])->name('admin.newsletters.send');
     Route::delete('/clubs/{clubSlug}/admin/newsletters/{id}', [NewsletterAdminController::class, 'destroy'])->name('admin.newsletters.destroy');
 
-    // Admin Membership Plans Routes
-    Route::get('/clubs/{clubSlug}/admin/memberships', [MembershipAdminController::class, 'index'])->name('admin.memberships.index');
-    Route::get('/clubs/{clubSlug}/admin/memberships/create', [MembershipAdminController::class, 'edit'])->name('admin.memberships.create');
-    Route::get('/clubs/{clubSlug}/admin/memberships/{id}/edit', [MembershipAdminController::class, 'edit'])->name('admin.memberships.edit');
-    Route::post('/clubs/{clubSlug}/admin/memberships', [MembershipAdminController::class, 'store'])->name('admin.memberships.store');
-    Route::delete('/clubs/{clubSlug}/admin/memberships/{id}', [MembershipAdminController::class, 'destroy'])->name('admin.memberships.destroy');
+    // Admin Subscriptions Plans Routes
+    Route::get('/clubs/{clubSlug}/admin/subscriptions', [MembershipAdminController::class, 'index'])->name('admin.memberships.index');
+    Route::get('/clubs/{clubSlug}/admin/subscriptions/create', [MembershipAdminController::class, 'edit'])->name('admin.memberships.create');
+    Route::get('/clubs/{clubSlug}/admin/subscriptions/{id}/edit', [MembershipAdminController::class, 'edit'])->name('admin.memberships.edit');
+    Route::post('/clubs/{clubSlug}/admin/subscriptions', [MembershipAdminController::class, 'store'])->name('admin.memberships.store');
+    Route::delete('/clubs/{clubSlug}/admin/subscriptions/{id}', [MembershipAdminController::class, 'destroy'])->name('admin.memberships.destroy');
 
     // Admin Members Routes
     Route::get('/clubs/{clubSlug}/admin/users', [UserAdminController::class, 'index'])->name('admin.users.index');
