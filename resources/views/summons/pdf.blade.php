@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <title>Summons — {{ $club->name }} No. {{ $club->lodge_number ?? '1418' }}</title>
 <style>
+<style>
   @page {
     size: A4 landscape;
-    margin: 14mm 18mm;
+    margin: 10mm 12mm;
   }
 
   body {
@@ -22,27 +23,67 @@
   .page-container {
     display: flex;
     flex-direction: row;
-    gap: 36px;
-    height: 100vh;
+    gap: 32px;
+    height: 186mm;
+    max-height: 186mm;
     box-sizing: border-box;
     page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    position: relative;
+    margin-bottom: 20px;
   }
 
   .page-container:last-child {
     page-break-after: avoid;
+    break-after: avoid;
+    margin-bottom: 0;
   }
 
   .column {
     flex: 1;
     width: 50%;
-    padding: 15px 20px;
+    padding: 12px 18px;
     box-sizing: border-box;
     overflow: hidden;
   }
 
   .border-right {
     border-right: 1px solid #333333;
-    padding-right: 25px;
+    padding-right: 22px;
+  }
+
+  .side-banner {
+    background: #334155;
+    color: #f8fafc;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .side-banner span {
+    font-size: 11px;
+    font-weight: 500;
+    color: #cbd5e1;
+  }
+
+  .side-print-tag {
+    position: absolute;
+    bottom: -6mm;
+    right: 0;
+    font-size: 7.5pt;
+    font-family: sans-serif;
+    color: #666666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   /* Typography Utilities */
@@ -58,7 +99,7 @@
     font-size: 10pt;
     font-weight: bold;
     text-transform: uppercase;
-    margin-top: 14px;
+    margin-top: 12px;
     margin-bottom: 4px;
     letter-spacing: 0.5px;
   }
@@ -68,7 +109,7 @@
     font-size: 10.5pt;
     font-weight: bold;
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .member-table {
@@ -103,56 +144,56 @@
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
-    padding: 20px 15px;
+    padding: 18px 14px;
     box-sizing: border-box;
     border: 1.5px solid #222222;
   }
 
   .emblem-svg {
-    width: 70px;
-    height: 70px;
-    margin: 0 auto 10px auto;
+    width: 65px;
+    height: 65px;
+    margin: 0 auto 8px auto;
   }
 
   .prov-title {
-    font-size: 12pt;
+    font-size: 11.5pt;
     font-weight: bold;
     letter-spacing: 1px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .prov-officer {
-    font-size: 9.5pt;
+    font-size: 9pt;
     margin-bottom: 4px;
   }
 
   .prov-officer strong {
     display: block;
-    font-size: 10pt;
+    font-size: 9.5pt;
     margin-top: 2px;
   }
 
   .lodge-title-block {
-    margin: 25px 0 15px 0;
+    margin: 18px 0 12px 0;
   }
 
   .lodge-main-name {
-    font-size: 20pt;
+    font-size: 19pt;
     font-weight: bold;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
   }
 
   .lodge-number {
-    font-size: 13pt;
+    font-size: 12.5pt;
     font-weight: bold;
     margin-top: 4px;
   }
 
   .motto {
     font-style: italic;
-    font-size: 11pt;
-    margin-top: 10px;
+    font-size: 10.5pt;
+    margin-top: 8px;
   }
 
   /* Officer List (Page 2 Left) */
@@ -177,14 +218,14 @@
 
   /* Business / Agenda Styling (Page 2 Right) */
   .business-list {
-    margin: 6px 0 12px 0;
+    margin: 6px 0 10px 0;
     padding: 0;
     list-style: none;
   }
 
   .business-item {
     display: flex;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     font-size: 9.5pt;
   }
 
@@ -199,14 +240,15 @@
   }
 
   .notice-box {
-    margin-top: 10px;
-    font-size: 9pt;
+    margin-top: 8px;
+    font-size: 8.5pt;
     line-height: 1.3;
   }
 
   @media print {
     body { background: none; margin-top: 0 !important; }
     .no-print { display: none !important; }
+    .page-container { margin-bottom: 0; }
   }
 </style>
 </head>
@@ -216,12 +258,12 @@
   <div class="no-print" style="position: fixed; top: 0; left: 0; right: 0; background: #0f172a; color: #ffffff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; z-index: 99999; box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, sans-serif;">
     <div style="display: flex; align-items: center; gap: 12px;">
       <span style="font-weight: 800; font-size: 14px; color: #f8fafc;">📜 {{ $meeting->title }} — Summons PDF Preview</span>
-      <span style="background: #1e293b; color: #94a3b8; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600;">2-Page A4 Landscape</span>
+      <span style="background: #1e293b; color: #94a3b8; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600;">Double-Sided A4 Landscape Duplex</span>
     </div>
 
     <div style="display: flex; align-items: center; gap: 10px;">
       <button onclick="window.print()" style="background: #3b82f6; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all;">
-        🖨️ Print / Save as PDF
+        🖨️ Print Double-Sided (Duplex A4)
       </button>
       <a href="{{ route('admin.meetings.pdf', ['clubSlug' => $club->slug, 'id' => $meeting->id, 'download' => 1]) }}" style="background: #10b981; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: all;">
         📥 Download Summons (.html / .pdf)
@@ -231,8 +273,14 @@
   
   <div class="no-print" style="height: 55px;"></div>
 
-  <!-- PAGE 1: Membership Roll & Lodge Cover Page -->
+  <!-- SIDE 1 (FRONT / OUTER SHEET) -->
+  <div class="no-print side-banner">
+    <div>📄 SIDE 1 (FRONT / OUTER SHEET)</div>
+    <span>Double-Sided Print Side A: Right Half = Front Cover | Left Half = Membership Roll</span>
+  </div>
+
   <div class="page-container">
+    <div class="side-print-tag">[ SIDE 1: FRONT (OUTER SHEET) ]</div>
     
     <!-- Page 1 Left: Full Membership Roll -->
     <div class="column border-right">
@@ -310,8 +358,14 @@
   </div>
 
 
-  <!-- PAGE 2: Officers Roll & Meeting Summons Agenda -->
+  <!-- SIDE 2 (BACK / INSIDE SHEET) -->
+  <div class="no-print side-banner">
+    <div>📄 SIDE 2 (BACK / INNER SHEET)</div>
+    <span>Double-Sided Print Side B: Left Half = Officers for Year | Right Half = Summons Letter & Agenda</span>
+  </div>
+
   <div class="page-container">
+    <div class="side-print-tag">[ SIDE 2: BACK (INNER SHEET) ]</div>
     
     <!-- Page 2 Left: Officers Roster, Honorary Members, & Secretary Contacts -->
     <div class="column border-right">
