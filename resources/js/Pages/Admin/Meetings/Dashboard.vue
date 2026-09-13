@@ -54,7 +54,7 @@ const copyApologiesText = () => {
           <h2 class="text-xl font-bold text-slate-900 mt-1">
             {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + meeting.meeting_date }} at {{ meeting.starts_at ? meeting.starts_at.substring(0, 5) : '18:30' }}
           </h2>
-          <p class="text-xs text-slate-500">📍 {{ meeting.venue }} • 🕒 Starts: {{ meeting.starts_at }} (Rehearsal: {{ meeting.rehearsal_starts_at }})</p>
+          <p class="text-xs text-slate-500">📍 {{ meeting.venue }} • Rehearsal: {{ meeting.rehearsal_starts_at }}</p>
         </div>
 
         <div class="flex items-center gap-3">
