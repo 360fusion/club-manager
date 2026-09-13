@@ -15,6 +15,8 @@ const seasonForm = useForm({
   year: 2026,
   occurrence: '3rd',
   day_of_week: 'Tuesday',
+  starts_at: '18:30',
+  rehearsal_starts_at: '17:30',
   active_months: [1, 2, 3, 4, 5, 10, 11, 12], // 8 active meeting months (skipping recess)
 });
 
@@ -142,17 +144,29 @@ const deleteMeeting = (id) => {
               </div>
             </div>
 
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Day of Week</label>
+                <select v-model="seasonForm.day_of_week" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs">
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
+                  <option value="Saturday">Saturday</option>
+                  <option value="Sunday">Sunday</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Meeting Start Time</label>
+                <input v-model="seasonForm.starts_at" type="text" placeholder="18:30" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+              </div>
+            </div>
+
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Day of Week</label>
-              <select v-model="seasonForm.day_of_week" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs">
-                <option value="Monday">Monday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Wednesday">Wednesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Friday">Friday</option>
-                <option value="Saturday">Saturday</option>
-                <option value="Sunday">Sunday</option>
-              </select>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Rehearsal Start Time (Optional)</label>
+              <input v-model="seasonForm.rehearsal_starts_at" type="text" placeholder="17:30" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
             </div>
 
             <div>

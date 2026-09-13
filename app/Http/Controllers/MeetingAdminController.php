@@ -258,8 +258,13 @@ class MeetingAdminController extends Controller
             'year' => 'required|integer|min:2025|max:2035',
             'occurrence' => 'required|in:1st,2nd,3rd,4th,last',
             'day_of_week' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'starts_at' => 'nullable|string',
+            'rehearsal_starts_at' => 'nullable|string',
             'active_months' => 'required|array|min:1',
         ]);
+
+        $startTime = $request->starts_at ?: '18:30';
+        $rehearsalTime = $request->rehearsal_starts_at ?: '17:30';
 
         $rule = RecurringRule::create([
             'club_id' => $club->id,
@@ -267,8 +272,8 @@ class MeetingAdminController extends Controller
             'occurrence' => $request->occurrence,
             'day_of_week' => $request->day_of_week,
             'active_months' => $request->active_months,
-            'default_start_time' => '18:30:00',
-            'default_rehearsal_time' => '17:30:00',
+            'default_start_time' => $startTime,
+            'default_rehearsal_time' => $rehearsalTime,
             'default_venue' => 'Masonic Hall, Oxford',
             'default_dress_code' => 'Dark Suit, Craft Regalia',
         ]);
@@ -291,8 +296,8 @@ class MeetingAdminController extends Controller
                     'recurring_rule_id' => $rule->id,
                     'meeting_number' => null,
                     'title' => 'Meeting - ' . $date->format('jS F Y'),
-                    'starts_at' => '18:30',
-                    'rehearsal_starts_at' => '17:30',
+                    'starts_at' => $startTime,
+                    'rehearsal_starts_at' => $rehearsalTime,
                     'venue' => 'Masonic Hall, Oxford',
                     'dress_code' => 'Dark Suit, Craft Regalia',
                     'dining_cost_member' => 35.00,
