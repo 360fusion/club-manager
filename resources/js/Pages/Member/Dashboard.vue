@@ -160,7 +160,7 @@ const submitMeetingRsvp = () => {
             <div v-for="m in meetings" :key="m.id" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 hover:border-slate-300 transition-all space-y-4">
               <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div class="space-y-1 flex-1">
-                  <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">{{ club.name }}</div>
+                  <div class="text-xs sm:text-sm font-black text-indigo-600 uppercase tracking-wide">{{ club.name }}</div>
                   <h3 class="text-lg font-bold text-slate-900">{{ m.title }}</h3>
                   <p class="text-xs text-slate-500">📍 {{ m.venue }} • 🕒 Start: {{ m.starts_at }} <span v-if="m.rehearsal_starts_at">(Rehearsal: {{ m.rehearsal_starts_at }})</span></p>
                   <p v-if="m.rsvp_cutoff_at" class="text-[11px] text-amber-700 font-semibold">⏰ Catering Deadline: {{ m.rsvp_cutoff_at }}</p>
