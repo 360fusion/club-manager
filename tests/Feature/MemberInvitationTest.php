@@ -159,4 +159,64 @@ class MemberInvitationTest extends TestCase
         $response->assertRedirect(route('login'));
         $response->assertSessionHas('error');
     }
+
+    public function test_existing_platform_user_shares_single_account_and_accesses_multiple_clubs(): void
+    {
+        // 1. Existing user with established password in Club A
+        $user = User::factory()->create([
+            'email' => 'existing.member@example.com',
+            'password' => Hash::make('original-secret-123'),
+        ]);
+
+        $this->club->users()->attach($user->id, [
+            'role' => 'member',
+            'invitation_accepted_at' => now(),
+            'status' => 'active',
+        ]);
+
+        // 2. Create second Club B
+        $clubB = Club::create([
+            'club_type_id' => $this->club->club_type_id,
+            'name' => 'Cambridge Boat Club',
+            'slug' => 'cambridge-boating',
+            'status' => 'active',
+        ]);
+
+        // 3. Admin of Club B adds existing user
+        $adminB = User::factory()->create();
+        $clubB->users()->attach($adminB->id, ['role' => 'admin', 'status' => 'active']);
+
+        $response = $this->actingAs($adminB)
+            ->post(route('admin.users.store', ['clubSlug' => $clubB->slug]), [
+                'name' => 'Existing Member',
+                'email' => 'existing.member@example.com',
+                'role' => 'member',
+                'send_invite' => true,
+            ]);
+
+        $response->assertRedirect();
+
+        // 4. Verify user was attached to Club B without duplicating user record
+        $userCount = User::where('email', 'existing.member@example.com')->count();
+        $this->assertEquals(1, $userCount, 'Existing platform user should only have 1 single account.');
+
+        // 5. Verify user now belongs to 2 clubs
+        $this->assertCount(2, $user->fresh()->clubs);
+
+        // 6. Test logging in via invitation for Club B with existing password
+        $pivotB = $user->clubs()->where('clubs.id', $clubB->id)->first()->pivot;
+        $token = $pivotB->invitation_token;
+
+        $acceptResponse = $this->post(route('invitation.submit', ['slug' => $clubB->slug, 'token' => $token]), [
+            'password' => 'original-secret-123',
+        ]);
+
+        $acceptResponse->assertRedirect(route('member.dashboard', ['slug' => $clubB->slug]));
+        $this->assertAuthenticatedAs($user);
+
+        // Verify pivot is active
+        $pivotBUpdated = $user->fresh()->clubs()->where('clubs.id', $clubB->id)->first()->pivot;
+        $this->assertNotNull($pivotBUpdated->invitation_accepted_at);
+        $this->assertNull($pivotBUpdated->invitation_token);
+    }
 }

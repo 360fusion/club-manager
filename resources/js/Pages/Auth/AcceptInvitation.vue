@@ -14,6 +14,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  isExistingUser: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const form = useForm({
@@ -45,10 +49,10 @@ const submit = () => {
 
         <div>
           <span class="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-            Official Member Invitation
+            {{ isExistingUser ? 'Existing Account Access' : 'Official Member Invitation' }}
           </span>
           <h1 class="text-2xl font-black text-white mt-2">
-            Welcome to {{ club.name }}!
+            {{ isExistingUser ? `Welcome back, ${user.name}!` : `Welcome to ${club.name}!` }}
           </h1>
           <p v-if="club.tagline" class="text-xs text-slate-400 mt-0.5">
             {{ club.tagline }}
@@ -58,9 +62,14 @@ const submit = () => {
 
       <!-- Invited User Context Box -->
       <div class="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-1">
-        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Invited Member</div>
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          {{ isExistingUser ? 'Confirm Access For' : 'Invited Member' }}
+        </div>
         <div class="font-bold text-sm text-slate-100">{{ user.name }}</div>
         <div class="text-xs font-mono text-indigo-400">{{ user.email }}</div>
+        <p v-if="isExistingUser" class="text-[11px] text-slate-400 pt-1">
+          You already have an active Club Manager account. Enter your password to log in and access <strong>{{ club.name }}</strong>.
+        </p>
       </div>
 
       <!-- Errors -->
@@ -68,23 +77,23 @@ const submit = () => {
         <div v-for="(error, key) in form.errors" :key="key">{{ error }}</div>
       </div>
 
-      <!-- Password Creation Form -->
+      <!-- Password Form -->
       <form @submit.prevent="submit" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-            Choose Account Password
+            {{ isExistingUser ? 'Enter Account Password' : 'Choose Account Password' }}
           </label>
           <input
             v-model="form.password"
             type="password"
             required
             autofocus
-            placeholder="Min. 8 characters..."
+            :placeholder="isExistingUser ? 'Your account password...' : 'Min. 8 characters...'"
             class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
           />
         </div>
 
-        <div>
+        <div v-if="!isExistingUser">
           <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
             Confirm Password
           </label>
@@ -102,7 +111,7 @@ const submit = () => {
           :disabled="form.processing"
           class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 mt-2 cursor-pointer flex items-center justify-center gap-2"
         >
-          <span>Activate Account & Enter Member Portal</span>
+          <span>{{ isExistingUser ? `Log In & Access ${club.name}` : 'Activate Account & Enter Member Portal' }}</span>
           <span>&rarr;</span>
         </button>
       </form>

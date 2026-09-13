@@ -34,6 +34,20 @@ class InvitationController extends Controller
             return redirect()->route('login')->with('error', "This invitation link expired after {$expiryDays} days. Please request a new invitation from your club administrator.");
         }
 
+        // If currently logged in as the invited user, automatically activate and grant access
+        if (Auth::check() && Auth::id() === $user->id) {
+            $club->users()->updateExistingPivot($user->id, [
+                'invitation_accepted_at' => now(),
+                'invitation_token' => null,
+                'status' => 'active',
+            ]);
+
+            return redirect()->route('member.dashboard', ['slug' => $club->slug])
+                ->with('success', "Welcome to {$club->name}! You now have access to your new club portal.");
+        }
+
+        $isExistingUser = ! empty($user->password) && $user->clubs()->wherePivotNotNull('invitation_accepted_at')->exists();
+
         return Inertia::render('Auth/AcceptInvitation', [
             'club' => [
                 'name' => $club->name,
@@ -47,6 +61,7 @@ class InvitationController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
             ],
+            'isExistingUser' => $isExistingUser,
         ]);
     }
 
@@ -70,12 +85,24 @@ class InvitationController extends Controller
             return redirect()->route('login')->with('error', "This invitation link expired after {$expiryDays} days. Please request a new invitation from your club administrator.");
         }
 
-        $request->validate([
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        $isExistingUser = ! empty($user->password) && $user->clubs()->wherePivotNotNull('invitation_accepted_at')->exists();
 
-        $user->password = Hash::make($request->password);
-        $user->save();
+        if ($isExistingUser) {
+            $request->validate([
+                'password' => 'required|string',
+            ]);
+
+            if (! Hash::check($request->password, $user->password)) {
+                return back()->withErrors(['password' => 'Incorrect password for your existing account.']);
+            }
+        } else {
+            $request->validate([
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+
+            $user->password = Hash::make($request->password);
+            $user->save();
+        }
 
         $club->users()->updateExistingPivot($user->id, [
             'invitation_accepted_at' => now(),
@@ -86,6 +113,6 @@ class InvitationController extends Controller
         Auth::login($user);
 
         return redirect()->route('member.dashboard', ['slug' => $club->slug])
-            ->with('success', "Welcome to {$club->name}! Your account has been activated.");
+            ->with('success', "Welcome to {$club->name}! Your access has been confirmed.");
     }
 }

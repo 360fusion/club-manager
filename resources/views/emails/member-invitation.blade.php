@@ -38,23 +38,43 @@
                             <h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 800; color: #0f172a;">
                                 Welcome, {{ $user->name }}! 👋
                             </h2>
-                            <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: #475569;">
-                                You have been invited to join the official member portal for <strong>{{ $club->name }}</strong>.
-                            </p>
-                            <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #475569;">
-                                Click the button below to set up your account password, manage your roster details, view events, and access club communications.
-                            </p>
+                            @if(!empty($isExistingUser))
+                                <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: #475569;">
+                                    You have been granted access to the official member portal for <strong>{{ $club->name }}</strong>.
+                                </p>
+                                <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #475569;">
+                                    Since you already have a Club Manager account for <strong>{{ $user->email }}</strong>, click below to log in and access <strong>{{ $club->name }}</strong>.
+                                </p>
 
-                            <!-- CTA Button -->
-                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 28px 0 32px;">
-                                <tr>
-                                    <td align="center">
-                                        <a href="{{ $acceptUrl }}" target="_blank" style="display: inline-block; background-color: {{ $club->settings['primary_color'] ?? '#4f46e5' }}; color: #ffffff; font-size: 14px; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 14px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                                            Activate Account & Set Password &rarr;
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
+                                <!-- CTA Button -->
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 28px 0 32px;">
+                                    <tr>
+                                        <td align="center">
+                                            <a href="{{ $acceptUrl }}" target="_blank" style="display: inline-block; background-color: {{ $club->settings['primary_color'] ?? '#4f46e5' }}; color: #ffffff; font-size: 14px; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 14px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                                                Log In & Access {{ $club->name }} &rarr;
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            @else
+                                <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: #475569;">
+                                    You have been invited to join the official member portal for <strong>{{ $club->name }}</strong>.
+                                </p>
+                                <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #475569;">
+                                    Click the button below to set up your account password, manage your roster details, view events, and access club communications.
+                                </p>
+
+                                <!-- CTA Button -->
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 28px 0 32px;">
+                                    <tr>
+                                        <td align="center">
+                                            <a href="{{ $acceptUrl }}" target="_blank" style="display: inline-block; background-color: {{ $club->settings['primary_color'] ?? '#4f46e5' }}; color: #ffffff; font-size: 14px; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 14px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                                                Activate Account & Set Password &rarr;
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            @endif
 
                             <!-- Alternative Link -->
                             <div style="padding: 16px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 12px; color: #64748b; word-break: break-all;">

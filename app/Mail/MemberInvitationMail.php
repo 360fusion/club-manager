@@ -26,9 +26,14 @@ class MemberInvitationMail extends Mailable
     {
         $fromName = $this->club->settings['email_from_name'] ?? $this->club->name;
         $replyTo = $this->club->settings['email_reply_to'] ?? null;
+        $isExistingUser = ! empty($this->user->password) && $this->user->clubs()->where('clubs.id', '!=', $this->club->id)->exists();
+
+        $subject = $isExistingUser
+            ? "Access granted to {$this->club->name} on Club Manager"
+            : "You're invited to join {$this->club->name}!";
 
         $envelope = new Envelope(
-            subject: "You're invited to join {$this->club->name}!",
+            subject: $subject,
             from: new Address(config('mail.from.address'), $fromName)
         );
 
@@ -41,8 +46,13 @@ class MemberInvitationMail extends Mailable
 
     public function content(): Content
     {
+        $isExistingUser = ! empty($this->user->password) && $this->user->clubs()->where('clubs.id', '!=', $this->club->id)->exists();
+
         return new Content(
             html: 'emails.member-invitation',
+            with: [
+                'isExistingUser' => $isExistingUser,
+            ]
         );
     }
 }
