@@ -14,7 +14,7 @@ class MembershipAdminController extends Controller
     /**
      * Display a listing of club membership plans.
      */
-    public function index(string $clubSlug): Response
+    public function index(Request $request, string $clubSlug): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $plans = MembershipPlan::where('club_id', $club->id)
@@ -22,9 +22,15 @@ class MembershipAdminController extends Controller
             ->orderBy('price')
             ->get();
 
+        $provider = $club->settings['payment_provider'] ?? 'stripe';
+
         return Inertia::render('Admin/Memberships/Index', [
             'club' => $club,
             'plans' => $plans,
+            'activeProvider' => $provider,
+            'stripeConfigured' => ! empty(config('cashier.key')) && ! empty(config('cashier.secret')),
+            'paddleConfigured' => ! empty(config('cashier.vendor_id')) || ! empty(config('cashier.api_key')),
+            'flashStatus' => $request->query('status'),
         ]);
     }
 

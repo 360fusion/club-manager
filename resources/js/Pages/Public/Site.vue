@@ -70,8 +70,8 @@ const submitDonation = () => {
                         {{ item.title }}
                     </Link>
 
-                    <Link href="/admin/billing" class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white">
-                        💳 Billing
+                    <Link :href="`/clubs/${club.slug}/admin/subscriptions`" class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white">
+                        💳 Subscriptions
                     </Link>
 
                     <Link href="/admin/profile" class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white">

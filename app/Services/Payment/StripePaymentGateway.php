@@ -16,8 +16,8 @@ class StripePaymentGateway implements PaymentGatewayInterface
     {
         // Stripe Cashier checkout session creation
         $checkout = $customer->checkout([$priceId => 1], array_merge([
-            'success_url' => route('billing.index', ['clubSlug' => $customer->slug, 'status' => 'success']),
-            'cancel_url' => route('billing.index', ['clubSlug' => $customer->slug, 'status' => 'cancelled']),
+            'success_url' => route('admin.memberships.index', ['clubSlug' => $customer->slug, 'status' => 'success']),
+            'cancel_url' => route('admin.memberships.index', ['clubSlug' => $customer->slug, 'status' => 'cancelled']),
         ], $options));
 
         return $checkout->url;

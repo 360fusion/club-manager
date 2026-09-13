@@ -83,11 +83,11 @@ class MultiClubWorkspaceTest extends TestCase
         $user = User::factory()->create();
         $club->users()->attach($user->id, ['role' => 'admin', 'member_number' => 'OUBC-001', 'status' => 'active']);
 
-        $response = $this->actingAs($user)->get(route('billing.index', ['clubSlug' => $club->slug]));
+        $response = $this->actingAs($user)->get(route('admin.memberships.index', ['clubSlug' => $club->slug]));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
-            ->component('Admin/Billing/Index')
+            ->component('Admin/Memberships/Index')
             ->has('club')
             ->has('activeProvider')
             ->has('plans')

@@ -72,8 +72,8 @@ const getIcon = (typeCode) => {
                     <Link href="/site/oxford-boating" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         🌐 Live Site
                     </Link>
-                    <Link href="/admin/billing" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
-                        💳 Billing
+                    <Link href="/clubs/oxford-boating/admin/subscriptions" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                        💳 Subscriptions
                     </Link>
                     <Link href="/admin/profile" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         ⚙️ Profile & 2FA

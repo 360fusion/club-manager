@@ -11,36 +11,11 @@ use Inertia\Response;
 
 class BillingController extends Controller
 {
-    public function index(Request $request, string $clubSlug, PaymentManager $paymentManager): Response
+    public function index(Request $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $provider = $club->settings['payment_provider'] ?? 'stripe';
-        $gateway = $paymentManager->driver($provider);
-
-        return Inertia::render('Admin/Billing/Index', [
-            'club' => $club,
-            'activeProvider' => $provider,
-            'stripeConfigured' => ! empty(config('cashier.key')) && ! empty(config('cashier.secret')),
-            'paddleConfigured' => ! empty(config('cashier.vendor_id')) || ! empty(config('cashier.api_key')),
-            'plans' => [
-                [
-                    'id' => 'plan_basic',
-                    'name' => 'Basic Tier',
-                    'price' => '£29/mo',
-                    'stripe_price_id' => config('services.stripe.price_basic', 'price_stripe_basic_demo'),
-                    'paddle_price_id' => config('services.paddle.price_basic', 'pri_paddle_basic_demo'),
-                    'features' => ['Up to 100 Members', 'Basic Event Management', 'Standard CMS'],
-                ],
-                [
-                    'id' => 'plan_pro',
-                    'name' => 'Pro Club Tier',
-                    'price' => '£79/mo',
-                    'stripe_price_id' => config('services.stripe.price_pro', 'price_stripe_pro_demo'),
-                    'paddle_price_id' => config('services.paddle.price_pro', 'pri_paddle_pro_demo'),
-                    'features' => ['Unlimited Members', '3-Course Dining & Dietary', 'Custom Domain CMS', 'Newsletter & SMS'],
-                ],
-            ],
-            'flashStatus' => $request->query('status'),
+        return redirect()->route('admin.memberships.index', [
+            'clubSlug' => $clubSlug,
+            'status' => $request->query('status'),
         ]);
     }
 
@@ -83,7 +58,7 @@ class BillingController extends Controller
         $gateway = $paymentManager->forClub($club);
 
         try {
-            $portalUrl = $gateway->createCustomerPortalSession($club, route('billing.index', ['clubSlug' => $club->slug]));
+            $portalUrl = $gateway->createCustomerPortalSession($club, route('admin.memberships.index', ['clubSlug' => $club->slug]));
 
             return redirect()->away($portalUrl);
         } catch (\Throwable $e) {
