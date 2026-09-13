@@ -49,18 +49,16 @@
   .column {
     flex: 1;
     width: 50%;
-    padding: 14px 20px;
+    padding: 14px 24px;
     box-sizing: border-box;
     overflow: hidden;
   }
 
   .column-left {
-    padding-right: 24px;
     border-right: 1px solid #333333;
   }
 
   .column-right {
-    padding-left: 24px;
   }
 
   .side-banner {
