@@ -163,22 +163,6 @@ const copyInviteLink = () => {
             <span>Dashboard</span>
           </Link>
 
-          <!-- 1b. Clubs -->
-          <Link 
-            :href="route('admin.clubs.index')" 
-            :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
-              activeTab === 'clubs' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
-            ]"
-          >
-            <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0V7m0 4h4m-4 0H7" />
-            </svg>
-            <span>Clubs</span>
-          </Link>
-
           <!-- 2. Classes & Events -->
           <Link 
             :href="route('admin.events.index', { clubSlug })" 
