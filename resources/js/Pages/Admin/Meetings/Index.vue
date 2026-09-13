@@ -81,7 +81,6 @@ const deleteMeeting = (id) => {
             <h3 class="text-lg font-bold text-slate-900">
               {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formatDate(meeting.meeting_date) }}
             </h3>
-            <p class="text-xs text-slate-500">📍 {{ meeting.venue }} • 👔 {{ meeting.dress_code }}</p>
 
             <div class="flex items-center gap-4 text-xs pt-1">
               <span class="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">🍽️ {{ meeting.dining_count }} Dining</span>
