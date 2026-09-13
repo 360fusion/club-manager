@@ -47,6 +47,7 @@ const form = useForm({
   member_prefix: props.settings.member_prefix || '',
   default_role: props.settings.default_role || 'member',
   invite_expiration_days: props.settings.invite_expiration_days ?? 14,
+  membership_year_start: props.settings.membership_year_start || '2026-10-01',
   enable_member_ranks: props.settings.enable_member_ranks ?? true,
   member_ranks: props.settings.member_ranks || ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'],
   custom_domain: props.club.custom_domain || '',
@@ -534,6 +535,11 @@ const updateMemberRank = (userId, newRank) => {
               <label class="block font-bold text-slate-700 mb-1">Invite Expiry (Days)</label>
               <input v-model="form.invite_expiration_days" type="number" min="1" max="365" placeholder="14" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
             </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Membership Year Start Date</label>
+              <input v-model="form.membership_year_start" type="date" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+            </div>
           </div>
         </div>
       </div>
@@ -840,6 +846,12 @@ const updateMemberRank = (userId, newRank) => {
               <label class="block font-bold text-slate-700 mb-1">Auto-Invoice Lead Time (Days Before Cycle)</label>
               <input v-model.number="form.auto_invoice_days_before" type="number" min="0" max="90" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
               <p class="text-[11px] text-slate-400 mt-1">Days prior to membership renewal to dispatch automated invoices.</p>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Membership Year Start Date</label>
+              <input v-model="form.membership_year_start" type="date" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+              <p class="text-[11px] text-slate-400 mt-1">Official annual start date for club membership dues and subscription billing.</p>
             </div>
 
             <div>
