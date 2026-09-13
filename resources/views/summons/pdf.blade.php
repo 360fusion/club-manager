@@ -280,7 +280,7 @@
         🖨️ Print Double-Sided (Duplex A4)
       </button>
       <a href="{{ route('admin.meetings.pdf', ['clubSlug' => $club->slug, 'id' => $meeting->id, 'download' => 1]) }}" style="background: #10b981; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: all;">
-        📥 Download Summons (.html / .pdf)
+        📥 Download Summons (.pdf)
       </a>
     </div>
   </div>

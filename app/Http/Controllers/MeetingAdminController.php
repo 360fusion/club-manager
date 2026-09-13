@@ -199,12 +199,11 @@ class MeetingAdminController extends Controller
         ];
 
         if (request()->has('download')) {
-            $html = view('summons.pdf', $viewData)->render();
-            $filename = 'Summons-' . \Illuminate\Support\Str::slug($club->name) . '-' . $meeting->meeting_date->format('Y-m-d') . '.html';
+            $filename = 'Summons-' . \Illuminate\Support\Str::slug($club->name) . '-' . $meeting->meeting_date->format('Y-m-d') . '.pdf';
 
-            return response($html)
-                ->header('Content-Type', 'text/html')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            return \Spatie\LaravelPdf\Facades\Pdf::view('summons.pdf', $viewData)
+                ->landscape()
+                ->name($filename);
         }
 
         return view('summons.pdf', $viewData);
