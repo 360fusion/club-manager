@@ -188,6 +188,7 @@ const updateMemberRank = (userId, newRank) => {
             <select v-model="activeTab" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
               <optgroup label="Workspace & Security">
                 <option value="general">🏢 General Profile & Access</option>
+                <option value="positions">🎖️ Club Positions & Ranks</option>
                 <option value="branding">🎨 Branding & Custom Domain</option>
                 <option value="roles">🛡️ Roles & Permissions</option>
                 <option value="modules">⚡ Active Feature Modules</option>
@@ -221,6 +222,16 @@ const updateMemberRank = (userId, newRank) => {
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>🏢</span> General</span>
+                </button>
+
+                <button
+                  @click="activeTab = 'positions'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'positions' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🎖️</span> Club Positions</span>
                 </button>
 
                 <button
@@ -403,12 +414,21 @@ const updateMemberRank = (userId, newRank) => {
               </select>
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Member Ranks Settings -->
-          <div class="pt-6 border-t border-slate-100 space-y-4">
+      <!-- TAB: CLUB POSITIONS & RANKS -->
+      <div v-if="activeTab === 'positions'" class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">🎖️ Club Positions & Member Ranks</h2>
+            <p class="text-xs text-slate-500 mt-1">Configure customizable member positions, ranks, and skill levels to categorize, select, and filter club members across the platform.</p>
+          </div>
+
+          <div class="space-y-4">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-sm font-bold text-slate-900">🎖️ Enable Member Ranks & Skill Levels</h3>
+                <h3 class="text-sm font-bold text-slate-900">Enable Member Ranks & Skill Levels</h3>
                 <p class="text-xs text-slate-500">Enable customized member ranks (e.g. Novice, Captain, Veteran) to filter and select members across the platform.</p>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
@@ -418,7 +438,7 @@ const updateMemberRank = (userId, newRank) => {
             </div>
 
             <div v-if="form.enable_member_ranks" class="space-y-3 pt-2">
-              <label class="block text-xs font-bold text-slate-700">Configured Ranks</label>
+              <label class="block text-xs font-bold text-slate-700">Configured Ranks & Positions</label>
               <div class="flex flex-wrap gap-2 mb-2">
                 <span v-for="(rank, idx) in form.member_ranks" :key="idx" class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold">
                   🏅 {{ rank }}
