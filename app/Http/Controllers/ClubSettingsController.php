@@ -16,35 +16,50 @@ class ClubSettingsController extends Controller
     public static function defaultPermissionMatrix(): array
     {
         return [
-            'manage_roster' => [
-                'label' => 'Manage Roster & Approve Members',
-                'description' => 'Add, approve, reject, or remove members from roster',
-                'roles' => ['owner', 'admin'],
+            'view_dashboard' => [
+                'label' => 'Dashboard',
+                'description' => 'Access analytics dashboard, revenue reports, and attendance statistics',
+                'roles' => ['owner', 'admin', 'treasurer'],
             ],
             'manage_events' => [
-                'label' => 'Create & Edit Events / Check-Ins',
-                'description' => 'Publish classes, events, dining summons, and take attendance',
+                'label' => 'Classes & Events',
+                'description' => 'Create, edit, and publish classes, events, and attendance check-ins',
                 'roles' => ['owner', 'admin', 'coach'],
             ],
             'manage_subscriptions' => [
-                'label' => 'Manage Subscriptions & Invoicing',
-                'description' => 'Configure dues tiers, generate receipts, and issue refunds',
+                'label' => 'Subscriptions',
+                'description' => 'Configure membership dues tiers, pricing, and recurring subscription plans',
                 'roles' => ['owner', 'admin', 'treasurer'],
             ],
-            'send_broadcasts' => [
-                'label' => 'Send Newsletters & Broadcast Messages',
-                'description' => 'Create and dispatch email broadcasts and news posts',
+            'manage_members' => [
+                'label' => 'Members',
+                'description' => 'View member roster, approve new join applications, and manage member roles',
+                'roles' => ['owner', 'admin'],
+            ],
+            'manage_billing' => [
+                'label' => 'Billing',
+                'description' => 'Access payment history, issue receipts, and manage club platform billing',
+                'roles' => ['owner', 'admin', 'treasurer'],
+            ],
+            'manage_communications' => [
+                'label' => 'Communications',
+                'description' => 'Create and publish community announcements, posts, and news updates',
+                'roles' => ['owner', 'admin', 'coach'],
+            ],
+            'send_newsletters' => [
+                'label' => 'Newsletters',
+                'description' => 'Draft, preview, and dispatch bulk email newsletters to members',
                 'roles' => ['owner', 'admin', 'coach'],
             ],
             'edit_website' => [
-                'label' => 'Edit Website & CMS Pages',
+                'label' => 'Website Builder',
                 'description' => 'Build CMS pages, customize navigation, and update site content',
                 'roles' => ['owner', 'admin'],
             ],
-            'view_analytics' => [
-                'label' => 'Access Financial Reports & Exports',
-                'description' => 'View revenue analytics, attendance rates, and export CSV data',
-                'roles' => ['owner', 'admin', 'treasurer'],
+            'manage_settings' => [
+                'label' => 'Club Settings',
+                'description' => 'Configure organization profile, branding, custom domain, and permission matrix',
+                'roles' => ['owner', 'admin'],
             ],
         ];
     }
@@ -127,6 +142,12 @@ class ClubSettingsController extends Controller
             'enabled_modules' => $club->clubType->available_modules ?? [],
             'permission_matrix' => self::defaultPermissionMatrix(),
         ], $club->settings ?? []);
+
+        // Ensure permission matrix has all navigation page keys
+        $settings['permission_matrix'] = array_merge(
+            self::defaultPermissionMatrix(),
+            $club->settings['permission_matrix'] ?? []
+        );
 
         $members = $club->users->map(fn ($u) => [
             'id' => $u->id,
