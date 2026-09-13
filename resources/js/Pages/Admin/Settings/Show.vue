@@ -40,6 +40,12 @@ const form = useForm({
   contact_email: props.settings.contact_email || '',
   phone: props.settings.phone || '',
   address: props.settings.address || '',
+  address_line_1: props.settings.address_line_1 || '',
+  address_line_2: props.settings.address_line_2 || '',
+  city: props.settings.city || '',
+  county: props.settings.county || '',
+  postcode: props.settings.postcode || '',
+  country: props.settings.country || 'United Kingdom',
   social_facebook: props.settings.social_facebook || '',
   social_instagram: props.settings.social_instagram || '',
   social_twitter: props.settings.social_twitter || '',
@@ -530,9 +536,42 @@ const updateMemberRank = (userId, newRank) => {
               <input v-model="form.phone" type="text" placeholder="+44 20 7946 0912" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
 
-            <div class="sm:col-span-2">
-              <label class="block font-bold text-slate-700 mb-1">Club Headquarters / Address</label>
-              <input v-model="form.address" type="text" placeholder="100 Boathouse Way, Oxford, UK" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+            <div class="sm:col-span-2 border-t border-slate-100 pt-4 mt-2">
+              <label class="block font-bold text-slate-900 mb-3 text-xs flex items-center gap-1.5">
+                <span>📍</span> Club Headquarters & Physical Address
+              </label>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="sm:col-span-2">
+                  <label class="block font-semibold text-slate-600 mb-1">Address Line 1</label>
+                  <input v-model="form.address_line_1" type="text" placeholder="Building name, street number & name" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+
+                <div class="sm:col-span-2">
+                  <label class="block font-semibold text-slate-600 mb-1">Address Line 2 (Optional)</label>
+                  <input v-model="form.address_line_2" type="text" placeholder="Suite, unit, floor, or department" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+
+                <div>
+                  <label class="block font-semibold text-slate-600 mb-1">Town / City</label>
+                  <input v-model="form.city" type="text" placeholder="e.g. Oxford" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+
+                <div>
+                  <label class="block font-semibold text-slate-600 mb-1">County / State / Region</label>
+                  <input v-model="form.county" type="text" placeholder="e.g. Oxfordshire" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+
+                <div>
+                  <label class="block font-semibold text-slate-600 mb-1">Postcode / ZIP Code</label>
+                  <input v-model="form.postcode" type="text" placeholder="e.g. OX1 1AA" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 uppercase font-mono" />
+                </div>
+
+                <div>
+                  <label class="block font-semibold text-slate-600 mb-1">Country</label>
+                  <input v-model="form.country" type="text" placeholder="e.g. United Kingdom" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+              </div>
             </div>
           </div>
         </div>

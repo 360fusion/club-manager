@@ -99,7 +99,13 @@ class ClubSettingsController extends Controller
             'timezone' => 'Europe/London',
             'contact_email' => 'admin@'.$club->slug.'.org',
             'phone' => '+44 20 7946 0912',
-            'address' => '100 Boathouse Way, Oxford, UK',
+            'address' => '100 Boathouse Way, Oxford, Oxfordshire, OX1 1AA, United Kingdom',
+            'address_line_1' => '100 Boathouse Way',
+            'address_line_2' => '',
+            'city' => 'Oxford',
+            'county' => 'Oxfordshire',
+            'postcode' => 'OX1 1AA',
+            'country' => 'United Kingdom',
             'social_facebook' => 'https://facebook.com',
             'social_instagram' => 'https://instagram.com',
             'social_twitter' => 'https://x.com',
@@ -223,6 +229,12 @@ class ClubSettingsController extends Controller
             'contact_email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:100',
             'address' => 'nullable|string|max:500',
+            'address_line_1' => 'nullable|string|max:255',
+            'address_line_2' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'county' => 'nullable|string|max:255',
+            'postcode' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:255',
             'social_facebook' => 'nullable|string|max:500',
             'social_instagram' => 'nullable|string|max:500',
             'social_twitter' => 'nullable|string|max:500',
@@ -287,6 +299,18 @@ class ClubSettingsController extends Controller
             $club->custom_domain = strtolower(trim($validated['custom_domain']));
             $club->domain_status = 'pending';
             $club->domain_verified_at = null;
+        }
+
+        $addressParts = array_filter([
+            $validated['address_line_1'] ?? null,
+            $validated['address_line_2'] ?? null,
+            $validated['city'] ?? null,
+            $validated['county'] ?? null,
+            $validated['postcode'] ?? null,
+            $validated['country'] ?? null,
+        ]);
+        if (!empty($addressParts)) {
+            $validated['address'] = implode(', ', $addressParts);
         }
 
         $existingSettings = $club->settings ?? [];
