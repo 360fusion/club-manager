@@ -39,6 +39,7 @@ const form = useForm({
 
   // Front Page Cover Fields
   front_page_logo: props.meeting.front_page_logo || '',
+  front_page_logo_file: null,
   front_page_title: props.meeting.front_page_title || 'PROVINCIAL GRAND LODGE',
   provincial_grand_master: props.meeting.provincial_grand_master || 'R WBro John David Watts',
   deputy_provincial_grand_master: props.meeting.deputy_provincial_grand_master || 'WBro Andrew Peter Faul Foster PSGD',
@@ -55,6 +56,22 @@ const form = useForm({
     { title: 'To transact any other lawful Masonic Business.', description: '' },
   ],
 });
+
+const logoPreview = ref(props.meeting.front_page_logo || '');
+
+const handleLogoUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    form.front_page_logo_file = file;
+    logoPreview.value = URL.createObjectURL(file);
+  }
+};
+
+const clearLogo = () => {
+  form.front_page_logo = '';
+  form.front_page_logo_file = null;
+  logoPreview.value = '';
+};
 
 const addAgendaItem = () => {
   form.agenda_items.push({ title: '', description: '' });
@@ -198,12 +215,33 @@ const submit = () => {
               <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">🏛️ Front Page — PDF Cover Configuration</h3>
               <p class="text-xs text-slate-500">Configure the emblem, province header, lodge title, motto, and Worshipful Master details rendered on Page 1 (Cover Page).</p>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Logo / Emblem Image URL</label>
-                  <input v-model="form.front_page_logo" type="url" placeholder="https://example.com/logo.png (Leave blank for default emblem)" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
-                </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Logo / Emblem Image Upload</label>
+                
+                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div class="w-16 h-16 rounded-xl border border-slate-300 bg-white flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
+                    <img v-if="logoPreview" :src="logoPreview" class="w-full h-full object-contain p-1" alt="Logo Preview" />
+                    <span v-else class="text-2xl text-slate-400">🏛️</span>
+                  </div>
 
+                  <div class="space-y-1.5 flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      @change="handleLogoUpload"
+                      class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"
+                    />
+                    <div class="flex items-center gap-3 text-[11px] text-slate-400">
+                      <span>Upload logo image (PNG, JPG, SVG, WEBP up to 5MB)</span>
+                      <button v-if="logoPreview" type="button" @click="clearLogo" class="text-rose-600 font-bold hover:underline">
+                        Remove Logo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Title (Province / Organization Header)</label>
                   <input v-model="form.front_page_title" type="text" placeholder="PROVINCIAL GRAND LODGE" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />

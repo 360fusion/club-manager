@@ -240,7 +240,7 @@
         
         <!-- Logo / Emblem -->
         <div>
-          @if($meeting->front_page_logo && filter_var($meeting->front_page_logo, FILTER_VALIDATE_URL))
+          @if($meeting->front_page_logo)
             <img src="{{ $meeting->front_page_logo }}" style="max-height: 75px; width: auto; margin: 0 auto 10px auto; display: block;" alt="Logo" />
           @else
             <svg class="emblem-svg" viewBox="0 0 100 100" fill="none" stroke="#111" stroke-width="2">

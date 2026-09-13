@@ -130,7 +130,8 @@ class MeetingAdminController extends Controller
             'provincial_header_text' => 'nullable|string',
             'fraternal_visits_text' => 'nullable|string',
             'officers_year_label' => 'nullable|string|max:255',
-            'front_page_logo' => 'nullable|string|max:255',
+            'front_page_logo' => 'nullable|string|max:1000',
+            'front_page_logo_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
             'front_page_title' => 'nullable|string|max:255',
             'provincial_grand_master' => 'nullable|string|max:255',
             'deputy_provincial_grand_master' => 'nullable|string|max:255',
@@ -142,6 +143,12 @@ class MeetingAdminController extends Controller
             'status' => 'required|in:draft,published,completed,cancelled',
             'agenda_items' => 'nullable|array',
         ]);
+
+        if ($request->hasFile('front_page_logo_file')) {
+            $path = $request->file('front_page_logo_file')->store('summons_logos', 'public');
+            $validated['front_page_logo'] = asset('storage/' . $path);
+        }
+        unset($validated['front_page_logo_file']);
 
         $validated['club_id'] = $club->id;
         $validated['rsvp_cutoff_at'] = Carbon::parse($validated['meeting_date'])->subDays(5)->endOfDay();
