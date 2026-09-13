@@ -12,6 +12,7 @@ use App\Services\RsvpTokenService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -359,11 +360,20 @@ class MeetingAdminController extends Controller
 
         $totalCatererHeadcount = $memberAttendingDining->count() + $visitorAttendingDining->count() + $guestMealsCount;
 
+        $allClubUsers = $club->users->unique('id')->map(fn ($u) => [
+            'id' => $u->id,
+            'name' => $u->name,
+            'email' => $u->email,
+            'role' => $u->pivot->role ?? 'member',
+            'rank' => $u->pivot->rank ?? '',
+        ])->values();
+
         return Inertia::render('Admin/Meetings/Dashboard', [
             'club' => $club,
             'meeting' => $meeting,
             'rsvps' => $rsvps,
             'visitorsList' => $visitorsList,
+            'allClubUsers' => $allClubUsers,
             'stats' => [
                 'total_members' => $subscribingMembers->count(),
                 'attending_dining' => $memberAttendingDining->count(),
@@ -529,5 +539,55 @@ class MeetingAdminController extends Controller
 
         return redirect()->route('admin.meetings.index', ['clubSlug' => $club->slug])
             ->with('success', 'Meeting removed successfully.');
+    }
+
+    /**
+     * Manually record or update an RSVP on behalf of a member/visitor.
+     */
+    public function updateRsvp(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'attendance_status' => 'required|in:attending_dining,attending_meeting_only,apologies',
+            'apology_reason' => 'nullable|string',
+            'dietary_requirements' => 'nullable|string',
+            'guests' => 'nullable|array',
+            'guests.*.guest_name' => 'nullable|string',
+            'guests.*.dietary_requirements' => 'nullable|string',
+            'guests.*.attending_dining' => 'nullable|boolean',
+        ]);
+
+        $rsvp = MeetingRsvp::updateOrCreate(
+            ['meeting_id' => $meeting->id, 'user_id' => $validated['user_id']],
+            [
+                'token_hash' => Str::random(40),
+                'token_expires_at' => now()->addDays(30),
+                'attendance_status' => $validated['attendance_status'],
+                'apology_reason' => $validated['apology_reason'] ?? null,
+                'dietary_requirements' => $validated['dietary_requirements'] ?? null,
+                'responded_at' => now(),
+            ]
+        );
+
+        if (array_key_exists('guests', $validated)) {
+            $rsvp->guests()->delete();
+            if (is_array($validated['guests'])) {
+                foreach ($validated['guests'] as $g) {
+                    if (!empty($g['guest_name'])) {
+                        $rsvp->guests()->create([
+                            'guest_name' => $g['guest_name'],
+                            'dietary_requirements' => $g['dietary_requirements'] ?? null,
+                            'attending_dining' => $g['attending_dining'] ?? true,
+                            'dining_fee' => $meeting->dining_cost_guest,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        return redirect()->back()->with('success', 'RSVP record updated successfully.');
     }
 }

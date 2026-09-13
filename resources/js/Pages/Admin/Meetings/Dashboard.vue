@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -8,11 +8,73 @@ const props = defineProps({
   meeting: Object,
   rsvps: Array,
   visitorsList: Array,
+  allClubUsers: Array,
   stats: Object,
 });
 
 const activeTab = ref('all');
 const showApologiesModal = ref(false);
+const showManualRsvpModal = ref(false);
+const selectedUserId = ref(null);
+
+const manualRsvpForm = useForm({
+  user_id: '',
+  attendance_status: 'attending_dining',
+  dietary_requirements: '',
+  apology_reason: '',
+  guests: [],
+});
+
+const openManualRsvpModal = (userId = null) => {
+  if (userId) {
+    selectedUserId.value = userId;
+    manualRsvpForm.user_id = userId;
+    const existingRsvp = (props.rsvps || []).find(r => r.user_id === userId);
+    if (existingRsvp) {
+      manualRsvpForm.attendance_status = existingRsvp.attendance_status || 'attending_dining';
+      manualRsvpForm.dietary_requirements = existingRsvp.dietary_requirements || '';
+      manualRsvpForm.apology_reason = existingRsvp.apology_reason || '';
+      manualRsvpForm.guests = (existingRsvp.guests || []).map(g => ({
+        guest_name: g.guest_name,
+        dietary_requirements: g.dietary_requirements || '',
+        attending_dining: g.attending_dining ?? true,
+      }));
+    } else {
+      manualRsvpForm.attendance_status = 'attending_dining';
+      manualRsvpForm.dietary_requirements = '';
+      manualRsvpForm.apology_reason = '';
+      manualRsvpForm.guests = [];
+    }
+  } else {
+    selectedUserId.value = null;
+    manualRsvpForm.reset();
+    manualRsvpForm.attendance_status = 'attending_dining';
+    manualRsvpForm.user_id = (props.allClubUsers || [])[0]?.id || '';
+    manualRsvpForm.guests = [];
+  }
+  showManualRsvpModal.value = true;
+};
+
+const addGuestRow = () => {
+  manualRsvpForm.guests.push({
+    guest_name: '',
+    dietary_requirements: '',
+    attending_dining: true,
+  });
+};
+
+const removeGuestRow = (index) => {
+  manualRsvpForm.guests.splice(index, 1);
+};
+
+const submitManualRsvp = () => {
+  manualRsvpForm.post(route('admin.meetings.rsvp.update', { clubSlug: props.club.slug, id: props.meeting.id }), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showManualRsvpModal.value = false;
+    },
+  });
+};
 
 const memberRsvps = computed(() => (props.rsvps || []).filter(r => !r.is_visitor));
 
@@ -77,6 +139,16 @@ const copyApologiesText = () => {
             </Link>
             <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
               Edit Summons Details
+              <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <button @click="openManualRsvpModal(null)" title="Record or Update Member RSVP" aria-label="Record or Update Member RSVP" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all cursor-pointer flex items-center gap-1">
+              ✍️ Record RSVP
+            </button>
+            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              Record / Edit Member RSVP
               <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
             </div>
           </div>
@@ -173,6 +245,7 @@ const copyApologiesText = () => {
                 <th class="p-3">Summons & Attendance Status</th>
                 <th class="p-3">Dietary Notes</th>
                 <th class="p-3">Payment Ref</th>
+                <th class="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -204,9 +277,14 @@ const copyApologiesText = () => {
                 </td>
                 <td class="p-3 text-slate-600">{{ v.dietary_notes || 'Standard' }}</td>
                 <td class="p-3 font-mono text-[11px] text-indigo-600">{{ v.payment_reference || '-' }}</td>
+                <td class="p-3 text-right">
+                  <button @click="openManualRsvpModal(v.user_id)" class="px-2.5 py-1 text-[11px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-all cursor-pointer">
+                    ✏️ Edit
+                  </button>
+                </td>
               </tr>
               <tr v-if="!visitorsList?.length">
-                <td colspan="6" class="p-6 text-center text-slate-400">No visitors have registered for this club yet.</td>
+                <td colspan="7" class="p-6 text-center text-slate-400">No visitors have registered for this club yet.</td>
               </tr>
             </tbody>
           </table>
@@ -220,6 +298,7 @@ const copyApologiesText = () => {
                 <th class="p-3">Dietary Requirements</th>
                 <th class="p-3">Registered Visitors / Guests</th>
                 <th class="p-3">Payment Ref</th>
+                <th class="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -229,7 +308,7 @@ const copyApologiesText = () => {
                 </td>
                 <td class="p-3">
                   <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', r.attendance_status === 'attending_dining' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : r.attendance_status === 'apologies' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-sky-50 text-sky-700 border-sky-200']">
-                    {{ r.attendance_status.replace('_', ' ') }}
+                    {{ r.attendance_status ? r.attendance_status.replace('_', ' ') : 'awaiting' }}
                   </span>
                 </td>
                 <td class="p-3 text-slate-600">{{ r.dietary_requirements || 'Standard' }}</td>
@@ -242,6 +321,14 @@ const copyApologiesText = () => {
                   <span v-else class="text-slate-400">-</span>
                 </td>
                 <td class="p-3 font-mono text-[11px] text-indigo-600">{{ r.payment_reference || '-' }}</td>
+                <td class="p-3 text-right">
+                  <button @click="openManualRsvpModal(r.user_id)" class="px-2.5 py-1 text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-all cursor-pointer">
+                    ✏️ Edit
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="!filteredRsvps?.length">
+                <td colspan="6" class="p-6 text-center text-slate-400">No member responses in this filter.</td>
               </tr>
             </tbody>
           </table>
@@ -279,6 +366,92 @@ const copyApologiesText = () => {
               📋 Copy to Clipboard
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Manual Admin RSVP Modal -->
+      <div v-if="showManualRsvpModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900">
+              {{ selectedUserId ? '✏️ Edit Attendance & Dining RSVP' : '✍️ Record Manual RSVP' }}
+            </h3>
+            <button @click="showManualRsvpModal = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+          </div>
+
+          <form @submit.prevent="submitManualRsvp" class="space-y-4">
+            <!-- Member / Visitor Select -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Select Member / Visitor</label>
+              <select v-model="manualRsvpForm.user_id" :disabled="!!selectedUserId" class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50 p-2.5 font-medium">
+                <option value="" disabled>-- Select a member or visitor --</option>
+                <option v-for="u in allClubUsers" :key="u.id" :value="u.id">
+                  {{ u.name }} ({{ u.email }}) {{ u.is_visitor ? '• Visitor' : '' }}
+                </option>
+              </select>
+              <div v-if="manualRsvpForm.errors.user_id" class="text-rose-600 text-[11px] mt-1">{{ manualRsvpForm.errors.user_id }}</div>
+            </div>
+
+            <!-- Attendance Status -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Attendance Status</label>
+              <div class="grid grid-cols-3 gap-2">
+                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'attending_dining' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                  <input type="radio" v-model="manualRsvpForm.attendance_status" value="attending_dining" class="sr-only" />
+                  🟢 Dining & Meeting
+                </label>
+                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'attending_meeting_only' ? 'bg-sky-50 border-sky-500 text-sky-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                  <input type="radio" v-model="manualRsvpForm.attendance_status" value="attending_meeting_only" class="sr-only" />
+                  🔵 Meeting Only
+                </label>
+                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'apologies' ? 'bg-rose-50 border-rose-500 text-rose-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                  <input type="radio" v-model="manualRsvpForm.attendance_status" value="apologies" class="sr-only" />
+                  🔴 Apologies
+                </label>
+              </div>
+            </div>
+
+            <!-- Dietary Requirements (if dining) -->
+            <div v-if="manualRsvpForm.attendance_status === 'attending_dining'">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Member Dietary Requirements</label>
+              <input type="text" v-model="manualRsvpForm.dietary_requirements" placeholder="e.g. Vegetarian, Gluten-free, Nut allergy" class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 p-2.5" />
+            </div>
+
+            <!-- Apology Reason (if apologies) -->
+            <div v-if="manualRsvpForm.attendance_status === 'apologies'">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Apology Reason / Notes</label>
+              <textarea v-model="manualRsvpForm.apology_reason" rows="2" placeholder="e.g. Away on business, unwell" class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 p-2.5"></textarea>
+            </div>
+
+            <!-- Guests Section (if dining) -->
+            <div v-if="manualRsvpForm.attendance_status === 'attending_dining'" class="space-y-2 pt-2 border-t border-slate-100">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Accompanying Guests</label>
+                <button type="button" @click="addGuestRow" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200">
+                  + Add Guest
+                </button>
+              </div>
+
+              <div v-for="(g, idx) in manualRsvpForm.guests" :key="idx" class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-700">Guest #{{ idx + 1 }}</span>
+                  <button type="button" @click="removeGuestRow(idx)" class="text-rose-600 hover:text-rose-800 text-xs font-bold">Remove</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input type="text" v-model="g.guest_name" placeholder="Guest Full Name" class="text-xs rounded-lg border-slate-300 p-2" required />
+                  <input type="text" v-model="g.dietary_requirements" placeholder="Dietary notes (optional)" class="text-xs rounded-lg border-slate-300 p-2" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit buttons -->
+            <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <button type="button" @click="showManualRsvpModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancel</button>
+              <button type="submit" :disabled="manualRsvpForm.processing" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50">
+                Save RSVP
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
