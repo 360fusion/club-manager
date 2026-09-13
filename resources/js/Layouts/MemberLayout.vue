@@ -336,24 +336,57 @@ const switchWorkspace = (targetClub) => {
                 </div>
               </div>
 
-              <!-- Quick Links -->
+              <!-- Global Account Links -->
               <div class="py-1 space-y-1">
+                <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  Global Account
+                </div>
+
                 <Link 
-                  :href="route('member.profile', { slug: clubSlug })" 
+                  :href="route('profile.edit')" 
                   @click="userMenuOpen = false"
-                  class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
                 >
                   <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <span>Edit Profile & Photo</span>
+                  <span>Global Account & Photo</span>
+                </Link>
+
+                <Link 
+                  :href="route('admin.profile.two-factor')" 
+                  @click="userMenuOpen = false"
+                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+                >
+                  <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span>Password & 2FA Security</span>
+                </Link>
+              </div>
+
+              <!-- Active Club Links -->
+              <div class="py-1 border-t border-slate-100 space-y-1">
+                <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  Active Club Context
+                </div>
+
+                <Link 
+                  :href="route('member.profile', { slug: clubSlug })" 
+                  @click="userMenuOpen = false"
+                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+                >
+                  <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>My Club Membership</span>
                 </Link>
 
                 <Link 
                   v-if="isUserAdmin"
                   :href="route('admin.analytics', { slug: adminTargetSlug })" 
                   @click="userMenuOpen = false"
-                  class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all"
+                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all"
                 >
                   <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />

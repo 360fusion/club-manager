@@ -257,11 +257,18 @@ class MemberPortalController extends Controller
             ] : null,
             'memberRole' => $memberPivot->role ?? 'member',
             'memberNumber' => $memberPivot->member_number ?? 'MEM-1001',
+            'memberProfile' => [
+                'role' => $memberPivot->role ?? 'member',
+                'member_number' => $memberPivot->member_number ?? 'MEM-1001',
+                'phone' => $memberPivot->phone ?? '',
+                'emergency_contact' => $memberPivot->emergency_contact ?? '',
+                'dietary_notes' => $memberPivot->dietary_notes ?? '',
+            ],
         ]);
     }
 
     /**
-     * Update member profile information and avatar photo.
+     * Update member profile information, avatar photo, and club-specific preferences.
      */
     public function updateProfile(Request $request, string $slug): RedirectResponse
     {
@@ -270,11 +277,16 @@ class MemberPortalController extends Controller
             abort(401);
         }
 
+        $club = Club::where('slug', $slug)->firstOrFail();
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'avatar_url' => ['nullable', 'string', 'max:1000'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp,svg', 'max:4096'],
+            'phone' => ['nullable', 'string', 'max:100'],
+            'emergency_contact' => ['nullable', 'string', 'max:255'],
+            'dietary_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $user->fill($request->only('name', 'email'));
@@ -292,7 +304,14 @@ class MemberPortalController extends Controller
 
         $user->save();
 
-        return redirect()->back()->with('success', 'Profile and avatar updated successfully.');
+        // Update club-specific member pivot attributes
+        $user->clubs()->updateExistingPivot($club->id, [
+            'phone' => $request->input('phone'),
+            'emergency_contact' => $request->input('emergency_contact'),
+            'dietary_notes' => $request->input('dietary_notes'),
+        ]);
+
+        return redirect()->back()->with('success', 'Profile and club membership preferences updated successfully.');
     }
 
     /**

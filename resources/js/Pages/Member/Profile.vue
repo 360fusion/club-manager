@@ -8,6 +8,7 @@ const props = defineProps({
   user: { type: Object, default: () => null },
   memberRole: { type: String, default: 'member' },
   memberNumber: { type: String, default: 'MEM-1001' },
+  memberProfile: { type: Object, default: () => ({}) },
 });
 
 const avatarPreview = ref(props.user?.avatar_url || null);
@@ -16,14 +17,11 @@ const fileInput = ref(null);
 const profileForm = useForm({
   name: props.user?.name || '',
   email: props.user?.email || '',
+  phone: props.memberProfile?.phone || '',
+  emergency_contact: props.memberProfile?.emergency_contact || '',
+  dietary_notes: props.memberProfile?.dietary_notes || '',
   avatar_url: props.user?.avatar_url || '',
   avatar: null,
-});
-
-const passwordForm = useForm({
-  current_password: '',
-  password: '',
-  password_confirmation: '',
 });
 
 const handleFileChange = (e) => {
@@ -46,6 +44,9 @@ const submitProfile = () => {
       _method: 'post',
       name: profileForm.name,
       email: profileForm.email,
+      phone: profileForm.phone,
+      emergency_contact: profileForm.emergency_contact,
+      dietary_notes: profileForm.dietary_notes,
       avatar: profileForm.avatar,
     }, {
       preserveScroll: true,
@@ -59,13 +60,6 @@ const submitProfile = () => {
     });
   }
 };
-
-const submitPassword = () => {
-  passwordForm.put(route('profile.password.update'), {
-    onSuccess: () => passwordForm.reset(),
-    preserveScroll: true,
-  });
-};
 </script>
 
 <template>
@@ -73,24 +67,33 @@ const submitPassword = () => {
     
     <div class="space-y-6 max-w-4xl">
       
-      <!-- Header -->
+      <!-- Top Header & Member Badge -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
           <div class="flex items-center gap-3">
-            <h2 class="text-xl font-bold text-slate-900">Member Profile Settings</h2>
+            <h2 class="text-xl font-bold text-slate-900">{{ club.name }} Membership Profile</h2>
             <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
               #{{ memberNumber }}
             </span>
           </div>
-          <p class="text-xs text-slate-500 mt-1">Manage your account information, upload your profile photo, security credentials, and review 2FA status.</p>
+          <p class="text-xs text-slate-500 mt-1">Manage your roster information, emergency details, and dietary notes for {{ club.name }}.</p>
         </div>
+
+        <Link :href="route('profile.edit')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-all flex items-center gap-1.5 justify-center self-start sm:self-auto">
+          <span>⚙️ Global Account & 2FA</span>
+        </Link>
       </div>
 
-      <!-- Section 1: Profile Information & Photo -->
+      <!-- Section 1: Member Identity & Club Preferences -->
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-6">
-        <div class="border-b border-slate-100 pb-3">
-          <h3 class="text-base font-bold text-slate-900">Profile Photo & Personal Info</h3>
-          <p class="text-xs text-slate-500">Upload a photo of yourself to personalize your member account across the club.</p>
+        <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Member Identity & Preferences</h3>
+            <p class="text-xs text-slate-500">Your profile information and preferences for this club.</p>
+          </div>
+          <span class="px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+            {{ memberRole }}
+          </span>
         </div>
 
         <form @submit.prevent="submitProfile" class="space-y-6 max-w-xl">
@@ -138,7 +141,7 @@ const submitPassword = () => {
             </div>
           </div>
 
-          <!-- Inputs -->
+          <!-- Basic Info Inputs -->
           <div class="space-y-4">
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
@@ -161,95 +164,73 @@ const submitPassword = () => {
             </div>
           </div>
 
+          <!-- Club Specific Details (Phone, Emergency Contact, Dietary) -->
+          <div class="pt-4 border-t border-slate-100 space-y-4">
+            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider text-emerald-800">
+              {{ club.name }} Roster & Event Details
+            </h4>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Contact Phone Number</label>
+              <input
+                v-model="profileForm.phone"
+                type="text"
+                placeholder="+44 7700 900123"
+                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Emergency Contact (Name & Phone)</label>
+              <input
+                v-model="profileForm.emergency_contact"
+                type="text"
+                placeholder="Sarah Kenyon (+44 7700 900999)"
+                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Dietary Requirements & Allergies (For Dining RSVPs)</label>
+              <textarea
+                v-model="profileForm.dietary_notes"
+                rows="3"
+                placeholder="e.g. Vegetarian, Gluten-Free, Peanut Allergy..."
+                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none"
+              ></textarea>
+            </div>
+          </div>
+
           <div class="pt-2">
             <button
               type="submit"
               :disabled="profileForm.processing"
               class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all"
             >
-              Save Profile Changes & Photo
+              {{ profileForm.processing ? 'Saving...' : 'Save Membership Profile' }}
             </button>
           </div>
         </form>
       </div>
 
-      <!-- Section 2: Update Password -->
-      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-        <div class="border-b border-slate-100 pb-3">
-          <h3 class="text-base font-bold text-slate-900">Update Password</h3>
-          <p class="text-xs text-slate-500">Ensure your account is using a long, secure password.</p>
-        </div>
-
-        <form @submit.prevent="submitPassword" class="space-y-4 max-w-lg">
+      <!-- Section 2: Global Account & Security Banner -->
+      <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-lg space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Current Password</label>
-            <input
-              v-model="passwordForm.current_password"
-              type="password"
-              required
-              class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none"
-            />
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🔐</span>
+              <h3 class="text-base font-bold">Global Account & Password Security</h3>
+            </div>
+            <p class="text-xs text-slate-300 mt-1 max-w-xl">
+              Your login password, 2FA credentials, and global profile identity apply across all joined clubs.
+            </p>
           </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">New Password</label>
-            <input
-              v-model="passwordForm.password"
-              type="password"
-              required
-              class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none"
-            />
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Confirm New Password</label>
-            <input
-              v-model="passwordForm.password_confirmation"
-              type="password"
-              required
-              class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none"
-            />
-          </div>
-
-          <div class="pt-2">
-            <button
-              type="submit"
-              :disabled="passwordForm.processing"
-              class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all"
-            >
-              Update Security Password
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Section 3: Two-Factor Authentication Status -->
-      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div>
-            <h3 class="text-base font-bold text-slate-900">Two-Factor Authentication (2FA)</h3>
-            <p class="text-xs text-slate-500 mt-0.5">Add additional security to your member account using two-factor authentication.</p>
-          </div>
-
-          <span
-            :class="[
-              'px-3 py-1 rounded-full text-xs font-bold uppercase border tracking-wider',
-              user?.two_factor_enabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-700 border-slate-200'
-            ]"
-          >
-            {{ user?.two_factor_enabled ? 'Enabled' : 'Disabled' }}
-          </span>
-        </div>
-
-        <div class="flex items-center justify-between pt-2">
-          <p class="text-xs text-slate-500">
-            When 2FA is enabled, you will be prompted for a secure, random token during authentication.
-          </p>
           <Link
-            :href="route('admin.profile.two-factor')"
-            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-all"
+            :href="route('profile.edit')"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/30 transition-all text-center shrink-0"
           >
-            Configure 2FA Settings
+            Manage Security & 2FA &rarr;
           </Link>
         </div>
       </div>
