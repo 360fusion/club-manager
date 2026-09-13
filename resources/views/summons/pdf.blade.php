@@ -238,50 +238,50 @@
     <div class="column">
       <div class="cover-container">
         
-        <!-- Square & Compasses Emblem -->
+        <!-- Logo / Emblem -->
         <div>
-          <svg class="emblem-svg" viewBox="0 0 100 100" fill="none" stroke="#111" stroke-width="2">
-            <!-- Compass -->
-            <path d="M50 15 L20 85 M50 15 L80 85" stroke-width="3"/>
-            <circle cx="50" cy="15" r="5" fill="#111"/>
-            <!-- Square -->
-            <path d="M25 45 L50 70 L75 45 M50 70 L50 95" stroke-width="3"/>
-          </svg>
+          @if($meeting->front_page_logo && filter_var($meeting->front_page_logo, FILTER_VALIDATE_URL))
+            <img src="{{ $meeting->front_page_logo }}" style="max-height: 75px; width: auto; margin: 0 auto 10px auto; display: block;" alt="Logo" />
+          @else
+            <svg class="emblem-svg" viewBox="0 0 100 100" fill="none" stroke="#111" stroke-width="2">
+              <!-- Compass -->
+              <path d="M50 15 L20 85 M50 15 L80 85" stroke-width="3"/>
+              <circle cx="50" cy="15" r="5" fill="#111"/>
+              <!-- Square -->
+              <path d="M25 45 L50 70 L75 45 M50 70 L50 95" stroke-width="3"/>
+            </svg>
+          @endif
 
-          <div class="prov-title">PROVINCIAL GRAND LODGE</div>
+          <div class="prov-title">{{ $meeting->front_page_title ?? 'PROVINCIAL GRAND LODGE' }}</div>
           
           <div class="prov-officer">
             Provincial Grand Master
-            <strong>R WBro John David Watts</strong>
+            <strong>{{ $meeting->provincial_grand_master ?? 'R WBro John David Watts' }}</strong>
           </div>
 
           <div class="prov-officer" style="margin-top: 6px;">
             Deputy Provincial Grand Master
-            <strong>WBro Andrew Peter Faul Foster PSGD</strong>
+            <strong>{{ $meeting->deputy_provincial_grand_master ?? 'WBro Andrew Peter Faul Foster PSGD' }}</strong>
           </div>
 
           <div class="prov-officer" style="margin-top: 6px;">
             Assistant Provincial Grand Masters
             <div style="font-size: 8.5pt; margin-top: 2px;">
-              WBro Dr. Rakesh Bhalla PSGD<br>
-              WBro Thomas Fred Gittins PSGD<br>
-              WBro Martin Rankin PJGD<br>
-              WBro Michael Stuart Shaw PJGD<br>
-              WBro Lt Col John William Henry
+              {!! nl2br(e($meeting->assistant_provincial_grand_masters ?? "WBro Dr. Rakesh Bhalla PSGD\nWBro Thomas Fred Gittins PSGD\nWBro Martin Rankin PJGD\nWBro Michael Stuart Shaw PJGD\nWBro Lt Col John William Henry")) !!}
             </div>
           </div>
         </div>
 
         <!-- Lodge Main Name & Motto -->
         <div class="lodge-title-block">
-          <div class="lodge-main-name">{{ strtoupper($club->name) }}</div>
-          <div class="lodge-number">No {{ $club->lodge_number ?? '1418' }}</div>
-          <div class="motto">{{ $club->motto ?? 'Fraternus Amor Maneto' }}</div>
+          <div class="lodge-main-name">{{ strtoupper($meeting->cover_club_name ?? $club->name) }}</div>
+          <div class="lodge-number">No {{ $meeting->cover_club_number ?? ($club->lodge_number ?? '1418') }}</div>
+          <div class="motto">{{ $meeting->cover_motto ?? ($club->motto ?? 'Fraternus Amor Maneto') }}</div>
         </div>
 
         <!-- Master Name -->
         <div style="font-size: 11pt; font-weight: bold;">
-          WBro {{ $worshipfulMaster->name ?? 'KD Lord' }}<br>
+          {{ $meeting->cover_worshipful_master ?? ('WBro ' . ($worshipfulMaster->name ?? 'KD Lord')) }}<br>
           <span style="font-size: 10pt; font-weight: normal; letter-spacing: 1px;">MASTER</span>
         </div>
 

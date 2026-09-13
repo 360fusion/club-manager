@@ -39,6 +39,15 @@ class Meeting extends Model
         'fraternal_visits_text',
         'officers_year_label',
         'payment_link',
+        'front_page_logo',
+        'front_page_title',
+        'provincial_grand_master',
+        'deputy_provincial_grand_master',
+        'assistant_provincial_grand_masters',
+        'cover_club_name',
+        'cover_club_number',
+        'cover_motto',
+        'cover_worshipful_master',
     ];
 
     protected $casts = [

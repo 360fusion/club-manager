@@ -9,7 +9,7 @@ const props = defineProps({
   members: Array,
 });
 
-const activeSection = ref('general');
+const activeSection = ref('front_page');
 
 const form = useForm({
   id: props.meeting.id || null,
@@ -36,6 +36,18 @@ const form = useForm({
   provincial_header_text: props.meeting.provincial_header_text || 'PROVINCIAL GRAND LODGE\nProvincial Grand Master\nR WBro John David Watts',
   fraternal_visits_text: props.meeting.fraternal_visits_text || 'The Worshipful Master and Brethren of Haven of Rest Lodge No 4350 will be making their fraternal visit.',
   officers_year_label: props.meeting.officers_year_label || 'OFFICERS FOR 2025-2026',
+
+  // Front Page Cover Fields
+  front_page_logo: props.meeting.front_page_logo || '',
+  front_page_title: props.meeting.front_page_title || 'PROVINCIAL GRAND LODGE',
+  provincial_grand_master: props.meeting.provincial_grand_master || 'R WBro John David Watts',
+  deputy_provincial_grand_master: props.meeting.deputy_provincial_grand_master || 'WBro Andrew Peter Faul Foster PSGD',
+  assistant_provincial_grand_masters: props.meeting.assistant_provincial_grand_masters || "WBro Dr. Rakesh Bhalla PSGD\nWBro Thomas Fred Gittins PSGD\nWBro Martin Rankin PJGD\nWBro Michael Stuart Shaw PJGD\nWBro Lt Col John William Henry",
+  cover_club_name: props.meeting.cover_club_name || props.club.name,
+  cover_club_number: props.meeting.cover_club_number || (props.club.lodge_number || '1418'),
+  cover_motto: props.meeting.cover_motto || (props.club.motto || 'Fraternus Amor Maneto'),
+  cover_worshipful_master: props.meeting.cover_worshipful_master || '',
+
   status: props.meeting.status || 'draft',
   agenda_items: props.meeting.agenda_items?.length ? props.meeting.agenda_items : [
     { title: 'To confirm the minutes of the Regular Meeting held previously.', description: '' },
@@ -91,6 +103,7 @@ const submit = () => {
           <div class="lg:hidden bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
             <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Summons Section</label>
             <select v-model="activeSection" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+              <option value="front_page">🏛️ Front page</option>
               <option value="general">📜 1. General & Intro Letter</option>
               <option value="agenda">📋 2. Order of Business (Agenda)</option>
               <option value="officers">👔 3. Officers for Year</option>
@@ -105,6 +118,17 @@ const submit = () => {
               <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Summons Sections</div>
               <div class="space-y-0.5 text-xs font-bold">
                 
+                <button
+                  type="button"
+                  @click="activeSection = 'front_page'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeSection === 'front_page' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🏛️</span> Front page</span>
+                </button>
+
                 <button
                   type="button"
                   @click="activeSection = 'general'"
@@ -169,6 +193,75 @@ const submit = () => {
         <div class="lg:col-span-3 space-y-6">
           <form @submit.prevent="submit" class="space-y-6">
             
+            <!-- SECTION 0: Front Page Cover Page -->
+            <div v-show="activeSection === 'front_page'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
+              <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">🏛️ Front Page — PDF Cover Configuration</h3>
+              <p class="text-xs text-slate-500">Configure the emblem, province header, lodge title, motto, and Worshipful Master details rendered on Page 1 (Cover Page).</p>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Logo / Emblem Image URL</label>
+                  <input v-model="form.front_page_logo" type="url" placeholder="https://example.com/logo.png (Leave blank for default emblem)" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Title (Province / Organization Header)</label>
+                  <input v-model="form.front_page_title" type="text" placeholder="PROVINCIAL GRAND LODGE" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Provincial Grand Master</label>
+                  <input v-model="form.provincial_grand_master" type="text" placeholder="R WBro John David Watts" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Deputy Provincial Grand Master</label>
+                  <input v-model="form.deputy_provincial_grand_master" type="text" placeholder="WBro Andrew Peter Faul Foster PSGD" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Assistant Provincial Grand Masters (One per line)</label>
+                <textarea v-model="form.assistant_provincial_grand_masters" rows="4" placeholder="WBro Dr. Rakesh Bhalla PSGD..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono"></textarea>
+              </div>
+
+              <div class="border-t border-slate-100 pt-4 space-y-4">
+                <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Lodge / Club Branding Header</h4>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Club Name (Large Text)</label>
+                    <input v-model="form.cover_club_name" type="text" placeholder="LODGE OF FRATERNITY" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold" />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Club Number (Smaller Text)</label>
+                    <input v-model="form.cover_club_number" type="text" placeholder="1418" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Club Motto</label>
+                  <input v-model="form.cover_motto" type="text" placeholder="Fraternus Amor Maneto" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs italic" />
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Worshipful Master (Pull from Rank / Master Name)</label>
+                  <div class="flex items-center gap-2">
+                    <input v-model="form.cover_worshipful_master" type="text" placeholder="WBro KD Lord" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold" />
+                    <select @change="e => form.cover_worshipful_master = e.target.value" class="px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-medium cursor-pointer">
+                      <option value="">Pull from Member Rank...</option>
+                      <option v-for="m in members" :key="m.id" :value="`${m.pivot?.rank_prefix || 'WBro'} ${m.name}`">
+                        {{ m.pivot?.rank_prefix || 'WBro' }} {{ m.name }} ({{ m.pivot?.rank || 'Member' }})
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- SECTION 1: General & Intro Letter -->
             <div v-show="activeSection === 'general'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
               <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">📜 Meeting Intro & Schedule Details</h3>
