@@ -36,6 +36,15 @@ class MeetingAdminController extends Controller
             ->orderBy('meeting_date', 'asc')
             ->get();
 
+        // Convert any existing legacy meeting titles with numbers to date-based titles
+        foreach ($meetings as $m) {
+            if (str_contains($m->title, 'Regular Meeting No.')) {
+                $m->title = 'Meeting - ' . Carbon::parse($m->meeting_date)->format('jS F Y');
+                $m->meeting_number = null;
+                $m->save();
+            }
+        }
+
         $recurringRules = RecurringRule::where('club_id', $club->id)->get();
 
         return Inertia::render('Admin/Meetings/Index', [

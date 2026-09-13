@@ -26,6 +26,17 @@ const generateSeason = () => {
   });
 };
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const cleanStr = String(dateStr).split('T')[0];
+  const parts = cleanStr.split('-');
+  if (parts.length === 3) {
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  return dateStr;
+};
+
 const deleteMeeting = (id) => {
   if (confirm('Are you sure you want to remove this meeting record?')) {
     router.delete(route('admin.meetings.destroy', { clubSlug: props.club.slug, id }));
@@ -63,11 +74,13 @@ const deleteMeeting = (id) => {
               <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
                 {{ meeting.status }}
               </span>
-              <span class="text-xs text-slate-400">📅 {{ meeting.meeting_date }}</span>
+              <span class="text-xs text-slate-400">📅 {{ formatDate(meeting.meeting_date) }}</span>
               <span class="text-xs text-slate-400">🕒 {{ meeting.starts_at }}</span>
             </div>
 
-            <h3 class="text-lg font-bold text-slate-900">{{ meeting.title }}</h3>
+            <h3 class="text-lg font-bold text-slate-900">
+              {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formatDate(meeting.meeting_date) }}
+            </h3>
             <p class="text-xs text-slate-500">📍 {{ meeting.venue }} • 👔 {{ meeting.dress_code }}</p>
 
             <div class="flex items-center gap-4 text-xs pt-1">
