@@ -91,6 +91,7 @@ const duplicateMeeting = (id) => {
               </span>
               <span class="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">🍽️ {{ meeting.dining_count }} Dining</span>
               <span class="text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded border border-rose-200">✉️ {{ meeting.apologies_count }} Apologies</span>
+              <span class="text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">🏛️ {{ meeting.visitors_count || 0 }} Visitors</span>
             </div>
           </div>
 

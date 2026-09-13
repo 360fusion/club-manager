@@ -24,24 +24,42 @@ class MeetingAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
+        $visitorUserIds = $club->users()->wherePivot('role', 'visitor')->pluck('users.id');
+
         $meetings = Meeting::where('club_id', $club->id)
             ->withCount([
-                'rsvps as dining_count' => function ($query) {
+                'rsvps as dining_count' => function ($query) use ($visitorUserIds) {
+                    if ($visitorUserIds->isNotEmpty()) {
+                        $query->whereNotIn('user_id', $visitorUserIds);
+                    }
                     $query->where('attendance_status', 'attending_dining');
                 },
-                'rsvps as apologies_count' => function ($query) {
+                'rsvps as apologies_count' => function ($query) use ($visitorUserIds) {
+                    if ($visitorUserIds->isNotEmpty()) {
+                        $query->whereNotIn('user_id', $visitorUserIds);
+                    }
                     $query->where('attendance_status', 'apologies');
+                },
+                'rsvps as visitors_count' => function ($query) use ($visitorUserIds) {
+                    if ($visitorUserIds->isNotEmpty()) {
+                        $query->whereIn('user_id', $visitorUserIds);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
                 },
             ])
             ->orderBy('meeting_date', 'asc')
             ->get();
 
-        // Convert any existing legacy meeting titles with numbers to date-based titles
+        // Convert any existing legacy meeting titles with numbers to date-based titles & compute visitor counts
         foreach ($meetings as $m) {
             if ($m->title && str_contains($m->title, 'Regular Meeting No.')) {
                 $m->title = 'Meeting - ' . Carbon::parse($m->meeting_date)->format('jS F Y');
                 $m->meeting_number = null;
                 $m->save();
+            }
+            if ($visitorUserIds->isNotEmpty() && $m->status === 'published' && $m->visitors_count === 0) {
+                $m->visitors_count = $visitorUserIds->count();
             }
         }
 
