@@ -184,12 +184,12 @@ const submitMeetingRsvp = () => {
                   <p v-if="m.rsvp_cutoff_at" class="text-[11px] text-amber-700 font-semibold">⏰ Catering Deadline: {{ m.rsvp_cutoff_at }}</p>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2">
-                  <button @click="openMeetingRsvpModal(m)" :disabled="m.is_cutoff_passed" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer">
+                <div class="flex flex-col gap-2 w-full sm:w-auto">
+                  <button @click="openMeetingRsvpModal(m)" :disabled="m.is_cutoff_passed" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer text-center justify-center flex items-center gap-1">
                     ✍️ {{ m.user_rsvp ? 'Edit Response' : 'Respond' }}
                   </button>
 
-                  <Link :href="route('member.meetings.summons', { slug: club.slug, id: m.id })" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-all flex items-center gap-1">
+                  <Link :href="route('member.meetings.summons', { slug: club.slug, id: m.id })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-1 text-center">
                     📄 View Summons
                   </Link>
                 </div>
