@@ -138,7 +138,7 @@ const copyApologiesText = () => {
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Awaiting RSVP</div>
           <div class="text-2xl font-black text-amber-600">{{ stats.awaiting }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Subscribing members pending</div>
+          <div class="text-[11px] text-slate-500 font-medium">{{ meeting.status === 'published' ? 'Emailed members pending' : 'Invites not sent yet' }}</div>
         </div>
       </div>
 

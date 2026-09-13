@@ -305,8 +305,10 @@ class MeetingAdminController extends Controller
         $visitorAttendingDining = $visitorRsvps->where('attendance_status', 'attending_dining');
         $visitingAttendingCount = $visitorRsvps->whereIn('attendance_status', ['attending_dining', 'attending_meeting_only'])->count();
 
-        // Calculate awaiting RSVPs strictly for subscribing members (excluding visitors)
-        $awaitingSubscribingMembers = max(0, $subscribingMembers->count() - $memberRsvps->count());
+        // Calculate awaiting RSVPs strictly for subscribing members (0 until invites dispatched)
+        $awaitingSubscribingMembers = ($meeting->status === 'published')
+            ? max(0, $subscribingMembers->count() - $memberRsvps->count())
+            : 0;
 
         // Caterer headcount calculations
         $guestMealsCount = 0;
