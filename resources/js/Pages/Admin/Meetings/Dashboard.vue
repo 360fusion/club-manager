@@ -7,6 +7,7 @@ const props = defineProps({
   club: Object,
   meeting: Object,
   rsvps: Array,
+  visitorsList: Array,
   stats: Object,
 });
 
@@ -141,7 +142,56 @@ const copyApologiesText = () => {
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full text-xs text-left text-slate-700">
+          <!-- Invited Visitors Roster Table -->
+          <table v-if="activeTab === 'visitors'" class="w-full text-xs text-left text-slate-700">
+            <thead class="bg-purple-50/80 text-purple-900 uppercase font-bold text-[10px] tracking-wider">
+              <tr>
+                <th class="p-3">Visitor Name & Rank</th>
+                <th class="p-3">Home Lodge / Club</th>
+                <th class="p-3">Email Address</th>
+                <th class="p-3">Summons & Attendance Status</th>
+                <th class="p-3">Dietary Notes</th>
+                <th class="p-3">Payment Ref</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr v-for="v in visitorsList" :key="v.id" class="hover:bg-purple-50/30 transition-all">
+                <td class="p-3 font-bold text-slate-900">
+                  <span v-if="v.rank" class="text-slate-500 font-normal mr-1">{{ v.rank }}</span>
+                  {{ v.name }}
+                </td>
+                <td class="p-3 font-semibold text-purple-900">
+                  🏛️ {{ v.home_club_info || 'Visitor' }}
+                </td>
+                <td class="p-3 text-slate-600 font-mono text-[11px]">{{ v.email }}</td>
+                <td class="p-3">
+                  <span v-if="v.attendance_status === 'attending_dining'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    🟢 Attending (Dining)
+                  </span>
+                  <span v-else-if="v.attendance_status === 'attending_meeting_only'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-sky-50 text-sky-700 border border-sky-200">
+                    🔵 Attending (Meeting Only)
+                  </span>
+                  <span v-else-if="v.attendance_status === 'apologies'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200">
+                    🔴 Apologies Received
+                  </span>
+                  <span v-else-if="v.summons_sent" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+                    ✉️ Summons Sent (Awaiting Response)
+                  </span>
+                  <span v-else class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                    Registered Visitor
+                  </span>
+                </td>
+                <td class="p-3 text-slate-600">{{ v.dietary_notes || 'Standard' }}</td>
+                <td class="p-3 font-mono text-[11px] text-indigo-600">{{ v.payment_reference || '-' }}</td>
+              </tr>
+              <tr v-if="!visitorsList?.length">
+                <td colspan="6" class="p-6 text-center text-slate-400">No visitors have registered for this club yet.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Standard Responses Table -->
+          <table v-else class="w-full text-xs text-left text-slate-700">
             <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
               <tr>
                 <th class="p-3">Member Name</th>

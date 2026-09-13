@@ -311,19 +311,43 @@ class MeetingAdminController extends Controller
             }
         }
 
+        $visitorUsers = $club->users()->wherePivot('role', 'visitor')->get();
+        $visitorsList = $visitorUsers->map(function ($visitor) use ($meeting) {
+            $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $visitor->id)->first();
+            $pivot = $visitor->pivot;
+            $summonsSent = $rsvp ? true : ($meeting->status === 'published');
+
+            return [
+                'id' => $visitor->id,
+                'name' => $visitor->name,
+                'email' => $visitor->email,
+                'rank' => $pivot->rank ?? null,
+                'home_club_name' => $pivot->home_club_name,
+                'home_club_number' => $pivot->home_club_number,
+                'home_club_info' => trim(($pivot->home_club_name ?? '') . ($pivot->home_club_number ? ' No ' . $pivot->home_club_number : '')),
+                'phone' => $pivot->phone,
+                'dietary_notes' => $rsvp?->dietary_requirements ?? $pivot->dietary_notes,
+                'attendance_status' => $rsvp?->attendance_status ?: ($summonsSent ? 'awaiting' : 'not_sent'),
+                'summons_sent' => $summonsSent,
+                'responded_at' => $rsvp?->responded_at?->format('d M Y H:i'),
+                'payment_reference' => $rsvp?->payment_reference,
+            ];
+        });
+
         $totalCatererHeadcount = $attendingDining->count() + $guestMealsCount;
 
         return Inertia::render('Admin/Meetings/Dashboard', [
             'club' => $club,
             'meeting' => $meeting,
             'rsvps' => $rsvps,
+            'visitorsList' => $visitorsList,
             'stats' => [
                 'total_members' => $subscribingMembers->count(),
                 'attending_dining' => $attendingDining->count(),
                 'attending_meeting_only' => $attendingMeetingOnly->count(),
                 'apologies' => $apologies->count(),
                 'awaiting' => $awaitingSubscribingMembers,
-                'visiting_count' => $visitorRsvps->count(),
+                'visiting_count' => $visitorsList->count(),
                 'visiting_attending' => $visitingAttendingCount,
                 'guest_meals' => $guestMealsCount,
                 'total_caterer_headcount' => $totalCatererHeadcount,
