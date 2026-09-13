@@ -23,7 +23,7 @@
   .page-container {
     display: flex;
     flex-direction: row;
-    gap: 32px;
+    gap: 0;
     height: 186mm;
     max-height: 186mm;
     width: 273mm;
@@ -49,14 +49,18 @@
   .column {
     flex: 1;
     width: 50%;
-    padding: 12px 18px;
+    padding: 14px 20px;
     box-sizing: border-box;
     overflow: hidden;
   }
 
-  .border-right {
+  .column-left {
+    padding-right: 24px;
     border-right: 1px solid #333333;
-    padding-right: 22px;
+  }
+
+  .column-right {
+    padding-left: 24px;
   }
 
   .side-banner {
@@ -295,7 +299,7 @@
     <div class="side-print-tag">[ SIDE 1: FRONT (OUTER SHEET) ]</div>
     
     <!-- Page 1 Left: Full Membership Roll -->
-    <div class="column border-right">
+    <div class="column column-left">
       <div class="member-roll-header">
         {{ $club->name }} No {{ $club->lodge_number ?? '1418' }} Members
       </div>
@@ -314,7 +318,7 @@
     </div>
 
     <!-- Page 1 Right: Cover Page Header -->
-    <div class="column">
+    <div class="column column-right">
       <div class="cover-container">
         
         <!-- Logo / Emblem -->
@@ -380,7 +384,7 @@
     <div class="side-print-tag">[ SIDE 2: BACK (INNER SHEET) ]</div>
     
     <!-- Page 2 Left: Officers Roster, Honorary Members, & Secretary Contacts -->
-    <div class="column border-right">
+    <div class="column column-left">
       
       <h2>{{ $meeting->officers_year_label ?? 'OFFICERS FOR 2025-2026' }}</h2>
       
@@ -432,7 +436,7 @@
     </div>
 
     <!-- Page 2 Right: Formal Request Letter, Business Agenda, Festive Board, & Fraternal Visits -->
-    <div class="column">
+    <div class="column column-right">
       
       <div style="display: flex; justify-content: space-between; font-size: 9.5pt; font-weight: bold; margin-bottom: 8px;">
         <span>{{ $meeting->salutation ?? 'Dear Sir and Brother,' }}</span>
