@@ -100,7 +100,7 @@ const duplicateMeeting = () => {
       <!-- Top Action Bar -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80">
         <div>
-          <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Summons Page Builder</h2>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Edit Summons</h2>
           <p class="text-xs sm:text-sm text-slate-500 mt-1">Customize formal summons sections, business agenda, officers, festive board, and fraternal visits.</p>
         </div>
         
