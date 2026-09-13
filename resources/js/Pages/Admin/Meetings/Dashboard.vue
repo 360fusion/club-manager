@@ -14,10 +14,11 @@ const props = defineProps({
 const activeTab = ref('all');
 const showApologiesModal = ref(false);
 
+const memberRsvps = computed(() => (props.rsvps || []).filter(r => !r.is_visitor));
+
 const filteredRsvps = computed(() => {
-  if (activeTab.value === 'all') return props.rsvps;
-  if (activeTab.value === 'visitors') return props.rsvps.filter(r => r.is_visitor);
-  return props.rsvps.filter(r => r.attendance_status === activeTab.value);
+  if (activeTab.value === 'all') return memberRsvps.value;
+  return memberRsvps.value.filter(r => r.attendance_status === activeTab.value);
 });
 
 const publishSummons = () => {
@@ -31,7 +32,7 @@ const duplicateMeeting = () => {
 };
 
 const apologiesFormattedText = computed(() => {
-  const list = props.rsvps.filter(r => r.attendance_status === 'apologies');
+  const list = memberRsvps.value.filter(r => r.attendance_status === 'apologies');
   if (!list.length) return 'No apologies have been received for this meeting.';
   
   const names = list.map(r => r.user ? r.user.name : 'Member').join(', ');
@@ -125,7 +126,7 @@ const copyApologiesText = () => {
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
         <div class="flex items-center gap-2 border-b border-slate-100 pb-3 overflow-x-auto">
           <button @click="activeTab = 'all'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100']">
-            All Responses ({{ rsvps.length }})
+            All Responses ({{ memberRsvps.length }})
           </button>
           <button @click="activeTab = 'attending_dining'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'attending_dining' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-slate-100']">
             Attending Dining ({{ stats.attending_dining }})
@@ -205,9 +206,6 @@ const copyApologiesText = () => {
               <tr v-for="r in filteredRsvps" :key="r.id" class="hover:bg-slate-50/80 transition-all">
                 <td class="p-3 font-bold text-slate-900">
                   {{ r.user ? r.user.name : 'Member' }}
-                  <span v-if="r.is_visitor" class="ml-1.5 px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold rounded-md">
-                    Visitor <span v-if="r.visitor_home_club">({{ r.visitor_home_club }})</span>
-                  </span>
                 </td>
                 <td class="p-3">
                   <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', r.attendance_status === 'attending_dining' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : r.attendance_status === 'apologies' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-sky-50 text-sky-700 border-sky-200']">

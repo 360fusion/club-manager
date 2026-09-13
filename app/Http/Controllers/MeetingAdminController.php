@@ -263,11 +263,12 @@ class MeetingAdminController extends Controller
             ->with(['agendaItems', 'officerAssignments.user', 'officerAssignments.officerRole', 'fraternalVisits', 'rsvps.user', 'rsvps.guests'])
             ->firstOrFail();
 
-        $subscribingMembers = $club->users()->wherePivot('role', '!=', 'visitor')->get();
+        $subscribingMembers = $club->users()->wherePivot('role', '!=', 'visitor')->get()->unique('id');
 
         $rsvps = MeetingRsvp::where('meeting_id', $meeting->id)
             ->with(['user.clubs', 'guests'])
             ->get()
+            ->unique('user_id')
             ->map(function ($rsvp) use ($club) {
                 $clubUser = $rsvp->user ? $rsvp->user->clubs->firstWhere('id', $club->id)?->pivot : null;
                 $rsvp->is_visitor = $clubUser && $clubUser->role === 'visitor';
@@ -275,17 +276,19 @@ class MeetingAdminController extends Controller
                 return $rsvp;
             });
 
-        $attendingDining = $rsvps->where('attendance_status', 'attending_dining');
-        $attendingMeetingOnly = $rsvps->where('attendance_status', 'attending_meeting_only');
-        $apologies = $rsvps->where('attendance_status', 'apologies');
-
-        // Filter visitor RSVPs
+        // Separate subscribing member RSVPs from visitor RSVPs
+        $memberRsvps = $rsvps->where('is_visitor', false);
         $visitorRsvps = $rsvps->where('is_visitor', true);
+
+        $memberAttendingDining = $memberRsvps->where('attendance_status', 'attending_dining');
+        $memberAttendingMeetingOnly = $memberRsvps->where('attendance_status', 'attending_meeting_only');
+        $memberApologies = $memberRsvps->where('attendance_status', 'apologies');
+
+        $visitorAttendingDining = $visitorRsvps->where('attendance_status', 'attending_dining');
         $visitingAttendingCount = $visitorRsvps->whereIn('attendance_status', ['attending_dining', 'attending_meeting_only'])->count();
 
         // Calculate awaiting RSVPs strictly for subscribing members (excluding visitors)
-        $subscribingMemberRsvpsCount = $rsvps->where('is_visitor', false)->count();
-        $awaitingSubscribingMembers = max(0, $subscribingMembers->count() - $subscribingMemberRsvpsCount);
+        $awaitingSubscribingMembers = max(0, $subscribingMembers->count() - $memberRsvps->count());
 
         // Caterer headcount calculations
         $guestMealsCount = 0;
@@ -311,7 +314,7 @@ class MeetingAdminController extends Controller
             }
         }
 
-        $visitorUsers = $club->users()->wherePivot('role', 'visitor')->get();
+        $visitorUsers = $club->users()->wherePivot('role', 'visitor')->get()->unique('id');
         $visitorsList = $visitorUsers->map(function ($visitor) use ($meeting) {
             $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $visitor->id)->first();
             $pivot = $visitor->pivot;
@@ -334,7 +337,7 @@ class MeetingAdminController extends Controller
             ];
         });
 
-        $totalCatererHeadcount = $attendingDining->count() + $guestMealsCount;
+        $totalCatererHeadcount = $memberAttendingDining->count() + $visitorAttendingDining->count() + $guestMealsCount;
 
         return Inertia::render('Admin/Meetings/Dashboard', [
             'club' => $club,
@@ -343,12 +346,13 @@ class MeetingAdminController extends Controller
             'visitorsList' => $visitorsList,
             'stats' => [
                 'total_members' => $subscribingMembers->count(),
-                'attending_dining' => $attendingDining->count(),
-                'attending_meeting_only' => $attendingMeetingOnly->count(),
-                'apologies' => $apologies->count(),
+                'attending_dining' => $memberAttendingDining->count(),
+                'attending_meeting_only' => $memberAttendingMeetingOnly->count(),
+                'apologies' => $memberApologies->count(),
                 'awaiting' => $awaitingSubscribingMembers,
                 'visiting_count' => $visitorsList->count(),
                 'visiting_attending' => $visitingAttendingCount,
+                'visiting_dining' => $visitorAttendingDining->count(),
                 'guest_meals' => $guestMealsCount,
                 'total_caterer_headcount' => $totalCatererHeadcount,
                 'dietary_constraints' => $dietaryConstraints,
