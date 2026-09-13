@@ -96,13 +96,71 @@ class UserAdminTest extends TestCase
         ]);
     }
 
-    public function test_can_remove_member_from_roster(): void
+    public function test_can_archive_member_to_past_members(): void
     {
         $member = User::factory()->create();
         $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
 
         $response = $this->actingAs($this->adminUser)
             ->delete(route('admin.users.destroy', [
+                'clubSlug' => $this->club->slug,
+                'userId' => $member->id,
+            ]));
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('club_user', [
+            'club_id' => $this->club->id,
+            'user_id' => $member->id,
+            'status' => 'past',
+        ]);
+    }
+
+    public function test_can_update_member_status(): void
+    {
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+
+        // Deactivate
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.users.status.update', [
+                'clubSlug' => $this->club->slug,
+                'userId' => $member->id,
+            ]), [
+                'status' => 'inactive',
+            ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('club_user', [
+            'club_id' => $this->club->id,
+            'user_id' => $member->id,
+            'status' => 'inactive',
+        ]);
+
+        // Restore to Active
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.users.status.update', [
+                'clubSlug' => $this->club->slug,
+                'userId' => $member->id,
+            ]), [
+                'status' => 'active',
+            ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('club_user', [
+            'club_id' => $this->club->id,
+            'user_id' => $member->id,
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_can_permanently_delete_member(): void
+    {
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'past']);
+
+        $response = $this->actingAs($this->adminUser)
+            ->delete(route('admin.users.force_delete', [
                 'clubSlug' => $this->club->slug,
                 'userId' => $member->id,
             ]));

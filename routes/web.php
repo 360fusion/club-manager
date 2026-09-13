@@ -110,9 +110,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/users', [UserAdminController::class, 'storeMember'])->name('admin.users.store');
     Route::post('/clubs/{clubSlug}/admin/users/{userId}/invite', [UserAdminController::class, 'sendInvite'])->name('admin.users.invite');
     Route::post('/clubs/{clubSlug}/admin/users/{userId}/revoke-invite', [UserAdminController::class, 'revokeInvite'])->name('admin.users.revoke_invite');
+    Route::post('/clubs/{clubSlug}/admin/users/{userId}/status', [UserAdminController::class, 'updateStatus'])->name('admin.users.status.update');
     Route::post('/clubs/{clubSlug}/admin/users/{userId}/role', [UserAdminController::class, 'updateRole'])->name('admin.users.role.update');
     Route::post('/clubs/{clubSlug}/admin/users/{userId}/rank', [UserAdminController::class, 'updateRank'])->name('admin.users.rank.update');
     Route::delete('/clubs/{clubSlug}/admin/users/{userId}', [UserAdminController::class, 'removeMember'])->name('admin.users.destroy');
+    Route::delete('/clubs/{clubSlug}/admin/users/{userId}/force', [UserAdminController::class, 'forceDeleteMember'])->name('admin.users.force_delete');
 
     // Billing & Subscription Management Routes
     Route::get('/clubs/{clubSlug}/admin/billing', [BillingController::class, 'index'])->name('billing.index');

@@ -27,6 +27,7 @@ const searchQuery = ref('');
 const roleFilter = ref('');
 const rankFilter = ref('');
 const statusFilter = ref('');
+const activeRosterTab = ref('all'); // 'all', 'active', 'invited_pending', 'deactivated', 'past'
 
 // Modals state
 const showAddModal = ref(false);
@@ -61,13 +62,36 @@ const roleBadgeClass = (role) => {
   }
 };
 
-// Computed lists
+// Computed counts for tabs
 const pendingMembers = computed(() => {
   return props.members.filter((m) => m.status === 'pending');
 });
 
+const counts = computed(() => {
+  return {
+    all: props.members.length,
+    active: props.members.filter((m) => m.status === 'active').length,
+    invited_pending: props.members.filter((m) => !m.invitation_accepted_at || m.status === 'pending').length,
+    deactivated: props.members.filter((m) => m.status === 'inactive').length,
+    past: props.members.filter((m) => m.status === 'past').length,
+  };
+});
+
 const filteredMembers = computed(() => {
   return props.members.filter((m) => {
+    // 1. Tab Filter
+    let matchesTab = true;
+    if (activeRosterTab.value === 'active') {
+      matchesTab = m.status === 'active';
+    } else if (activeRosterTab.value === 'invited_pending') {
+      matchesTab = !m.invitation_accepted_at || m.status === 'pending';
+    } else if (activeRosterTab.value === 'deactivated') {
+      matchesTab = m.status === 'inactive';
+    } else if (activeRosterTab.value === 'past') {
+      matchesTab = m.status === 'past';
+    }
+
+    // 2. Search & Dropdown Filters
     const matchesSearch =
       m.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       m.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -77,7 +101,7 @@ const filteredMembers = computed(() => {
     const matchesRank = rankFilter.value ? m.rank === rankFilter.value : true;
     const matchesStatus = statusFilter.value ? m.status === statusFilter.value : true;
 
-    return matchesSearch && matchesRole && matchesRank && matchesStatus;
+    return matchesTab && matchesSearch && matchesRole && matchesRank && matchesStatus;
   });
 });
 
@@ -96,6 +120,42 @@ const updateRank = (userId, newRank) => {
     { rank: newRank },
     { preserveScroll: true }
   );
+};
+
+const updateStatus = (userId, status) => {
+  router.post(
+    route('admin.users.status.update', { clubSlug: props.club.slug, userId }),
+    { status },
+    { preserveScroll: true }
+  );
+};
+
+const deactivateMember = (userId, name) => {
+  if (confirm(`Deactivate ${name}? Their club access will be paused, but their record will be retained.`)) {
+    updateStatus(userId, 'inactive');
+  }
+};
+
+const restoreMember = (userId, name) => {
+  if (confirm(`Restore ${name} to active member status?`)) {
+    updateStatus(userId, 'active');
+  }
+};
+
+const archiveMember = (userId, name) => {
+  if (confirm(`Move ${name} to Past Members list?`)) {
+    router.delete(route('admin.users.destroy', { clubSlug: props.club.slug, userId }), {
+      preserveScroll: true,
+    });
+  }
+};
+
+const forceDeleteMember = (userId, name) => {
+  if (confirm(`PERMANENT DELETE: Are you sure you want to permanently delete ${name} from the club database? This cannot be undone.`)) {
+    router.delete(route('admin.users.force_delete', { clubSlug: props.club.slug, userId }), {
+      preserveScroll: true,
+    });
+  }
 };
 
 const sendInviteEmail = (userId) => {
@@ -247,6 +307,84 @@ const submitImportCsv = () => {
         </div>
       </div>
 
+      <!-- Navigation Tabs along top of Roster -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200/80">
+        <button
+          @click="activeRosterTab = 'all'"
+          :class="[
+            'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
+            activeRosterTab === 'all'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+          ]"
+        >
+          <span>👥 All Members</span>
+          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700']">
+            {{ counts.all }}
+          </span>
+        </button>
+
+        <button
+          @click="activeRosterTab = 'active'"
+          :class="[
+            'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
+            activeRosterTab === 'active'
+              ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
+              : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+          ]"
+        >
+          <span>✅ Active</span>
+          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200']">
+            {{ counts.active }}
+          </span>
+        </button>
+
+        <button
+          @click="activeRosterTab = 'invited_pending'"
+          :class="[
+            'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
+            activeRosterTab === 'invited_pending'
+              ? 'bg-amber-600 text-white shadow-sm shadow-amber-600/20'
+              : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+          ]"
+        >
+          <span>✉️ Invited & Pending</span>
+          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'invited_pending' ? 'bg-amber-700 text-white' : 'bg-amber-50 text-amber-700 border border-amber-200']">
+            {{ counts.invited_pending }}
+          </span>
+        </button>
+
+        <button
+          @click="activeRosterTab = 'deactivated'"
+          :class="[
+            'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
+            activeRosterTab === 'deactivated'
+              ? 'bg-slate-700 text-white shadow-sm'
+              : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+          ]"
+        >
+          <span>⏸️ Deactivated</span>
+          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'deactivated' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200']">
+            {{ counts.deactivated }}
+          </span>
+        </button>
+
+        <button
+          @click="activeRosterTab = 'past'"
+          :class="[
+            'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
+            activeRosterTab === 'past'
+              ? 'bg-rose-600 text-white shadow-sm shadow-rose-600/20'
+              : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+          ]"
+        >
+          <span>📜 Past Members</span>
+          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'past' ? 'bg-rose-700 text-white' : 'bg-rose-50 text-rose-700 border border-rose-200']">
+            {{ counts.past }}
+          </span>
+        </button>
+      </div>
+
       <!-- Filter & Search Controls -->
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row gap-3 items-center justify-between">
         <!-- Search Input -->
@@ -290,6 +428,8 @@ const submitImportCsv = () => {
           >
             <option value="">All Statuses</option>
             <option value="active">Active</option>
+            <option value="inactive">Deactivated</option>
+            <option value="past">Past Member</option>
             <option value="pending">Pending</option>
           </select>
         </div>
@@ -318,22 +458,20 @@ const submitImportCsv = () => {
               >
                 <!-- Name & Email -->
                 <td class="py-4 px-6">
-                  <Link :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })" class="flex items-center gap-3 group">
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-sm uppercase group-hover:scale-105 transition-transform">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-sky-400 text-white font-bold flex items-center justify-center text-xs uppercase flex-shrink-0 shadow-sm">
                       {{ m.name.substring(0, 2) }}
                     </div>
-                    <div>
-                      <div class="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors">{{ m.name }}</div>
-                      <div class="text-[11px] text-slate-400 font-normal">{{ m.email }}</div>
+                    <div class="overflow-hidden">
+                      <div class="font-bold text-slate-900 truncate">{{ m.name }}</div>
+                      <div class="text-[11px] text-slate-500 truncate">{{ m.email }}</div>
                     </div>
-                  </Link>
+                  </div>
                 </td>
 
                 <!-- Member Number -->
-                <td class="py-4 px-4">
-                  <span class="font-mono text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg border border-slate-200">
-                    {{ m.member_number }}
-                  </span>
+                <td class="py-4 px-4 font-mono font-bold text-slate-800">
+                  {{ m.member_number }}
                 </td>
 
                 <!-- Rank Selector -->
@@ -341,7 +479,7 @@ const submitImportCsv = () => {
                   <select
                     :value="m.rank"
                     @change="updateRank(m.id, $event.target.value)"
-                    class="px-2.5 py-1 text-xs font-bold rounded-lg border border-indigo-200 bg-indigo-50/60 text-indigo-700 outline-none cursor-pointer"
+                    class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-slate-50 text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-all"
                   >
                     <option value="">No Rank</option>
                     <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
@@ -372,10 +510,14 @@ const submitImportCsv = () => {
                       'px-2.5 py-0.5 rounded-full text-[11px] font-bold border uppercase tracking-wider',
                       m.status === 'active'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : m.status === 'inactive'
+                        ? 'bg-slate-100 text-slate-700 border-slate-300'
+                        : m.status === 'past'
+                        ? 'bg-rose-50 text-rose-700 border-rose-200'
                         : 'bg-amber-50 text-amber-700 border-amber-200'
                     ]"
                   >
-                    {{ m.status }}
+                    {{ m.status === 'inactive' ? 'Deactivated' : m.status === 'past' ? 'Past Member' : m.status }}
                   </span>
                 </td>
 
@@ -385,44 +527,85 @@ const submitImportCsv = () => {
                 </td>
 
                 <!-- Actions -->
-                <td class="py-4 px-6 text-right space-x-2">
-                  <template v-if="!m.invitation_accepted_at">
+                <td class="py-4 px-6 text-right space-x-1.5 whitespace-nowrap">
+                  <!-- 1. Invitation Actions if not accepted -->
+                  <template v-if="!m.invitation_accepted_at && m.status !== 'past' && m.status !== 'inactive'">
                     <button
                       @click="sendInviteEmail(m.id)"
-                      class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                      class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
                       :title="m.invitation_token ? `Invited on ${m.invited_at}` : 'Send activation email'"
                     >
                       <span>✉️</span>
-                      <span>{{ m.invitation_token ? 'Resend Invite' : 'Send Invite' }}</span>
+                      <span>{{ m.invitation_token ? 'Resend' : 'Invite' }}</span>
                     </button>
                     <button
                       v-if="m.invitation_token || m.invited_at"
                       @click="revokeInviteEmail(m.id, m.name)"
-                      class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                      class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold rounded-lg transition-all cursor-pointer"
                       title="Revoke active invitation token"
                     >
                       <span>Revoke</span>
                     </button>
                   </template>
-                  <span
-                    v-else
-                    class="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-extrabold rounded-lg inline-block"
-                  >
-                    ✓ Account Active
-                  </span>
+
+                  <!-- 2. Status Actions depending on member status -->
+                  <!-- Active Member -->
+                  <template v-if="m.status === 'active'">
+                    <button
+                      @click="deactivateMember(m.id, m.name)"
+                      class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                      title="Pause club portal access"
+                    >
+                      Deactivate
+                    </button>
+                    <button
+                      @click="archiveMember(m.id, m.name)"
+                      class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                      title="Move to Past Members list"
+                    >
+                      Archive
+                    </button>
+                  </template>
+
+                  <!-- Deactivated Member -->
+                  <template v-else-if="m.status === 'inactive'">
+                    <button
+                      @click="restoreMember(m.id, m.name)"
+                      class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                    >
+                      ✓ Restore Access
+                    </button>
+                    <button
+                      @click="archiveMember(m.id, m.name)"
+                      class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                    >
+                      Archive
+                    </button>
+                  </template>
+
+                  <!-- Past Member -->
+                  <template v-else-if="m.status === 'past'">
+                    <button
+                      @click="restoreMember(m.id, m.name)"
+                      class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                    >
+                      ↺ Restore Member
+                    </button>
+                    <button
+                      @click="forceDeleteMember(m.id, m.name)"
+                      class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all cursor-pointer shadow-sm"
+                      title="Permanently remove from database"
+                    >
+                      Permanent Delete
+                    </button>
+                  </template>
 
                   <Link
                     :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
-                    class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-lg transition-all inline-block"
+                    class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-lg transition-all inline-block"
                   >
-                    View Profile
+                    Profile
                   </Link>
-                  <button
-                    @click="removeMember(m.id, m.name)"
-                    class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold rounded-lg transition-all"
-                  >
-                    Remove
-                  </button>
                 </td>
               </tr>
 

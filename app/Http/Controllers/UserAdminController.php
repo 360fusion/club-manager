@@ -266,13 +266,52 @@ class UserAdminController extends Controller
     }
 
     /**
-     * Remove a member from the club.
+     * Update member status (active, inactive, past, pending).
+     */
+    public function updateStatus(Request $request, string $clubSlug, int $userId): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $user = User::findOrFail($userId);
+
+        $validated = $request->validate([
+            'status' => 'required|in:active,inactive,past,pending',
+        ]);
+
+        $club->users()->updateExistingPivot($userId, ['status' => $validated['status']]);
+
+        $messages = [
+            'active' => "{$user->name} has been restored and reactivated on the active roster.",
+            'inactive' => "{$user->name} status set to Deactivated (access paused).",
+            'past' => "{$user->name} moved to Past Members list.",
+            'pending' => "{$user->name} status set to pending.",
+        ];
+
+        return redirect()->back()->with('success', $messages[$validated['status']] ?? 'Member status updated.');
+    }
+
+    /**
+     * Remove a member from active roster to Past Members.
      */
     public function removeMember(string $clubSlug, int $userId): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $user = User::findOrFail($userId);
+
+        $club->users()->updateExistingPivot($userId, ['status' => 'past']);
+
+        return redirect()->back()->with('success', "{$user->name} moved to Past Members list.");
+    }
+
+    /**
+     * Permanently delete a member from the club database.
+     */
+    public function forceDeleteMember(string $clubSlug, int $userId): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $user = User::findOrFail($userId);
+
         $club->users()->detach($userId);
 
-        return redirect()->back()->with('success', 'Member removed from roster.');
+        return redirect()->back()->with('success', "{$user->name} permanently removed from club database.");
     }
 }

@@ -40,9 +40,28 @@ const updateRole = (newRole) => {
   );
 };
 
-const removeMember = () => {
-  if (confirm(`Are you sure you want to remove ${props.member.name} from the club roster?`)) {
-    router.delete(route('admin.users.destroy', { clubSlug: props.club.slug, userId: props.member.id }));
+const updateStatus = (newStatus) => {
+  router.post(
+    route('admin.users.status.update', { clubSlug: props.club.slug, userId: props.member.id }),
+    { status: newStatus },
+    { preserveScroll: true }
+  );
+};
+
+const archiveMember = () => {
+  if (confirm(`Move ${props.member.name} to Past Members? Historical records (RSVPs, dues) will be retained.`)) {
+    router.delete(
+      route('admin.users.destroy', { clubSlug: props.club.slug, userId: props.member.id }),
+      { preserveScroll: true }
+    );
+  }
+};
+
+const forceDeleteMember = () => {
+  if (confirm(`Are you sure you want to PERMANENTLY remove ${props.member.name} from the club? This action cannot be undone.`)) {
+    router.delete(
+      route('admin.users.force_delete', { clubSlug: props.club.slug, userId: props.member.id })
+    );
   }
 };
 
@@ -85,6 +104,21 @@ const roleBadgeClass = (role) => {
       return 'bg-slate-100 text-slate-700 border-slate-200';
   }
 };
+
+const statusBadgeClass = (status) => {
+  switch (status) {
+    case 'active':
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    case 'inactive':
+      return 'bg-amber-50 text-amber-700 border-amber-200';
+    case 'past':
+      return 'bg-slate-100 text-slate-600 border-slate-200';
+    case 'pending':
+      return 'bg-sky-50 text-sky-700 border-sky-200';
+    default:
+      return 'bg-slate-100 text-slate-600 border-slate-200';
+  }
+};
 </script>
 
 <template>
@@ -115,7 +149,7 @@ const roleBadgeClass = (role) => {
               <span 
                 :class="[
                   'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider',
-                  member.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                  statusBadgeClass(member.status)
                 ]"
               >
                 {{ member.status }}
@@ -188,20 +222,60 @@ const roleBadgeClass = (role) => {
             </div>
           </div>
 
-          <button
-            v-if="member.status === 'pending'"
-            @click="approveMember"
-            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all self-end"
-          >
-            Approve Member
-          </button>
+          <!-- Lifecycle Actions -->
+          <div class="space-y-1">
+            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Member Lifecycle</label>
+            <div class="flex items-center gap-1.5">
+              <button
+                v-if="member.status === 'pending'"
+                @click="approveMember"
+                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+              >
+                Approve
+              </button>
 
-          <button
-            @click="removeMember"
-            class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-xs rounded-xl transition-all self-end"
-          >
-            Remove
-          </button>
+              <button
+                v-if="member.status === 'inactive'"
+                @click="updateStatus('active')"
+                class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Reactivate
+              </button>
+
+              <button
+                v-if="member.status === 'active'"
+                @click="updateStatus('inactive')"
+                class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Deactivate
+              </button>
+
+              <button
+                v-if="member.status === 'past'"
+                @click="updateStatus('active')"
+                class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Restore Member
+              </button>
+
+              <button
+                v-if="member.status !== 'past'"
+                @click="archiveMember"
+                class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                title="Archive member to Past Members list"
+              >
+                Move to Past
+              </button>
+
+              <button
+                @click="forceDeleteMember"
+                class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                title="Permanently remove member from club"
+              >
+                Delete Permanently
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
