@@ -21,9 +21,14 @@ class ClubSettingsController extends Controller
                 'description' => 'Access analytics dashboard, revenue reports, and attendance statistics',
                 'roles' => ['owner', 'admin', 'treasurer'],
             ],
+            'manage_meetings' => [
+                'label' => 'Meetings & Summonses',
+                'description' => 'Create, edit, generate recurring rules, and publish summonses for lodge/club meetings',
+                'roles' => ['owner', 'admin', 'secretary'],
+            ],
             'manage_events' => [
-                'label' => 'Meetings',
-                'description' => 'Create, edit, and publish meetings and attendance check-ins',
+                'label' => 'Events',
+                'description' => 'Create, edit, and publish social events, ticketing tiers, and dining options',
                 'roles' => ['owner', 'admin', 'coach'],
             ],
             'manage_subscriptions' => [
@@ -76,7 +81,8 @@ class ClubSettingsController extends Controller
         $allModules = [
             ['code' => 'website_builder', 'name' => 'Website Builder & CMS Pages', 'description' => 'Custom pages, hero banners, and site navigation', 'icon' => '🌐'],
             ['code' => 'memberships', 'name' => 'Subscriptions & Dues', 'description' => 'Recurring membership tiers, pricing, and receipts', 'icon' => '💳'],
-            ['code' => 'events', 'name' => 'Meetings', 'description' => 'Meeting schedules, summons, RSVPs, and attendance check-in', 'icon' => '📅'],
+            ['code' => 'meetings', 'name' => 'Meetings & Summonses', 'description' => 'Meeting schedules, nth-weekday rules, summonses, and passwordless RSVPs', 'icon' => '📜'],
+            ['code' => 'events', 'name' => 'Events & Ticketing', 'description' => 'Event schedules, ticket tiers, promos, and 3-course dining menus', 'icon' => '🎟️'],
             ['code' => 'dining_and_summons', 'name' => 'Dining & Menu Selections', 'description' => 'Dinner RSVPs, meal choices, and dietary notes', 'icon' => '🍽️'],
             ['code' => 'boat_reservations', 'name' => 'Equipment & Pitch Bookings', 'description' => 'Boat bay, pitch, or facility reservations', 'icon' => '🚣'],
             ['code' => 'erg_scores', 'name' => 'Athletic & Performance Log', 'description' => 'Erg scores, fitness tests, and leaderboards', 'icon' => '📊'],

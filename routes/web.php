@@ -42,6 +42,10 @@ Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name(
 Route::get('/clubs/{slug}/invite/{token}', [\App\Http\Controllers\Auth\InvitationController::class, 'showForm'])->name('invitation.accept');
 Route::post('/clubs/{slug}/invite/{token}', [\App\Http\Controllers\Auth\InvitationController::class, 'accept'])->name('invitation.submit');
 
+// Passwordless Summons Email RSVP Routes
+Route::get('/summons/rsvp/{token}', [\App\Http\Controllers\PasswordlessRsvpController::class, 'show'])->name('summons.rsvp.show');
+Route::post('/summons/rsvp/{token}', [\App\Http\Controllers\PasswordlessRsvpController::class, 'store'])->name('summons.rsvp.store');
+
 // Multi-Tenant Public Admin & Workspace Landing Routes
 Route::get('/', [ClubController::class, 'index'])->name('home');
 Route::get('/clubs/{slug}', [ClubController::class, 'show'])->name('clubs.show');
@@ -81,6 +85,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/events/{id}/edit', [EventAdminController::class, 'edit'])->name('admin.events.edit');
     Route::post('/clubs/{clubSlug}/admin/events', [EventAdminController::class, 'store'])->name('admin.events.store');
     Route::delete('/clubs/{clubSlug}/admin/events/{id}', [EventAdminController::class, 'destroy'])->name('admin.events.destroy');
+
+    // Admin Meeting & Summons Management Routes
+    Route::get('/clubs/{clubSlug}/admin/meetings', [\App\Http\Controllers\MeetingAdminController::class, 'index'])->name('admin.meetings.index');
+    Route::get('/clubs/{clubSlug}/admin/meetings/create', [\App\Http\Controllers\MeetingAdminController::class, 'create'])->name('admin.meetings.create');
+    Route::post('/clubs/{clubSlug}/admin/meetings', [\App\Http\Controllers\MeetingAdminController::class, 'store'])->name('admin.meetings.store');
+    Route::get('/clubs/{clubSlug}/admin/meetings/{id}', [\App\Http\Controllers\MeetingAdminController::class, 'show'])->name('admin.meetings.show');
+    Route::post('/clubs/{clubSlug}/admin/meetings/generate-season', [\App\Http\Controllers\MeetingAdminController::class, 'generateSeason'])->name('admin.meetings.generate_season');
+    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/publish', [\App\Http\Controllers\MeetingAdminController::class, 'publishSummons'])->name('admin.meetings.publish');
+    Route::delete('/clubs/{clubSlug}/admin/meetings/{id}', [\App\Http\Controllers\MeetingAdminController::class, 'destroy'])->name('admin.meetings.destroy');
 
     // Admin Blog & News Posts Routes
     Route::get('/clubs/{clubSlug}/admin/posts', [PostAdminController::class, 'index'])->name('admin.posts.index');

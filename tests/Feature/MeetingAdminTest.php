@@ -1,0 +1,123 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Club;
+use App\Models\Meeting;
+use App\Models\User;
+use App\Services\MeetingScheduleService;
+use App\Services\RsvpTokenService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Tests\TestCase;
+
+class MeetingAdminTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_nth_weekday_calculation_algorithm()
+    {
+        $service = new MeetingScheduleService();
+
+        // 3rd Tuesday of October 2026 -> Oct 1, 2026 is Thursday. 1st Tue is Oct 6. 2nd Tue is Oct 13. 3rd Tue is Oct 20.
+        $date = $service->calculateNthWeekday(2026, 10, '3rd', 'Tuesday');
+        $this->assertEquals('2026-10-20', $date->format('Y-m-d'));
+
+        // Last Friday of May 2026 -> May 31, 2026 is Sunday. Last Friday is May 29.
+        $lastFriday = $service->calculateNthWeekday(2026, 5, 'last', 'Friday');
+        $this->assertEquals('2026-05-29', $lastFriday->format('Y-m-d'));
+    }
+
+    public function test_rsvp_token_generation_and_validation()
+    {
+        $clubType = \App\Models\ClubType::create([
+            'name' => 'Masonic Lodge',
+            'code' => 'masonic',
+            'available_modules' => ['meetings'],
+            'default_settings' => [],
+        ]);
+
+        $club = Club::create([
+            'club_type_id' => $clubType->id,
+            'name' => 'Apollo Lodge No. 357',
+            'slug' => 'oxford-lodge',
+            'status' => 'active',
+        ]);
+        $user = User::factory()->create();
+        $meeting = Meeting::create([
+            'club_id' => $club->id,
+            'title' => 'Regular Meeting No. 452',
+            'meeting_date' => '2026-10-20',
+            'starts_at' => '18:30',
+            'venue' => 'Masonic Hall',
+            'dress_code' => 'Dark Suit',
+            'rsvp_cutoff_at' => Carbon::now()->addDays(10),
+        ]);
+
+        $tokenService = new RsvpTokenService();
+        $rawToken = $tokenService->createTokenForUser($meeting, $user, Carbon::now()->addDays(5));
+
+        $this->assertNotEmpty($rawToken);
+
+        $validatedRsvp = $tokenService->validateToken($rawToken);
+        $this->assertNotNull($validatedRsvp);
+        $this->assertEquals($meeting->id, $validatedRsvp->meeting_id);
+        $this->assertEquals($user->id, $validatedRsvp->user_id);
+    }
+
+    public function test_passwordless_rsvp_submission()
+    {
+        $clubType = \App\Models\ClubType::create([
+            'name' => 'Masonic Lodge',
+            'code' => 'masonic',
+            'available_modules' => ['meetings'],
+            'default_settings' => [],
+        ]);
+
+        $club = Club::create([
+            'club_type_id' => $clubType->id,
+            'name' => 'Apollo Lodge No. 357',
+            'slug' => 'oxford-lodge',
+            'status' => 'active',
+        ]);
+        $user = User::factory()->create(['name' => 'John Doe']);
+        $meeting = Meeting::create([
+            'club_id' => $club->id,
+            'title' => 'Regular Meeting No. 452',
+            'meeting_date' => '2026-10-20',
+            'starts_at' => '18:30',
+            'venue' => 'Masonic Hall',
+            'dress_code' => 'Dark Suit',
+            'dining_cost_member' => 35.00,
+            'dining_cost_guest' => 35.00,
+            'payment_reference_prefix' => 'SUMMONS',
+            'rsvp_cutoff_at' => Carbon::now()->addDays(10),
+        ]);
+
+        $tokenService = new RsvpTokenService();
+        $rawToken = $tokenService->createTokenForUser($meeting, $user, Carbon::now()->addDays(5));
+
+        $response = $this->post(route('summons.rsvp.store', ['token' => $rawToken]), [
+            'attendance_status' => 'attending_dining',
+            'dietary_requirements' => 'Vegetarian',
+            'guests' => [
+                [
+                    'guest_name' => 'Bro. Mark Smith',
+                    'home_club_lodge' => 'Apollo Lodge',
+                    'attending_dining' => true,
+                ]
+            ]
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('meeting_rsvps', [
+            'meeting_id' => $meeting->id,
+            'user_id' => $user->id,
+            'attendance_status' => 'attending_dining',
+            'dietary_requirements' => 'Vegetarian',
+        ]);
+        $this->assertDatabaseHas('meeting_rsvp_guests', [
+            'guest_name' => 'Bro. Mark Smith',
+        ]);
+    }
+}

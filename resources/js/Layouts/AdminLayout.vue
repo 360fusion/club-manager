@@ -163,7 +163,23 @@ const copyInviteLink = () => {
             <span>Dashboard</span>
           </Link>
 
-          <!-- 2. Events -->
+          <!-- 2. Meetings & Summonses -->
+          <Link 
+            :href="route('admin.meetings.index', { clubSlug })" 
+            :class="[
+              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              activeTab === 'meetings' 
+                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
+                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+            ]"
+          >
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>Meetings</span>
+          </Link>
+
+          <!-- 3. Events -->
           <Link 
             :href="route('admin.events.index', { clubSlug })" 
             :class="[
@@ -174,9 +190,9 @@ const copyInviteLink = () => {
             ]"
           >
             <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
             </svg>
-            <span>Meetings</span>
+            <span>Events</span>
           </Link>
 
           <!-- 3. Subscriptions -->
