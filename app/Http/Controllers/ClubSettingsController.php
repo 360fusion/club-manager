@@ -22,8 +22,8 @@ class ClubSettingsController extends Controller
                 'roles' => ['owner', 'admin', 'treasurer'],
             ],
             'manage_events' => [
-                'label' => 'Classes & Events',
-                'description' => 'Create, edit, and publish classes, events, and attendance check-ins',
+                'label' => 'Events',
+                'description' => 'Create, edit, and publish events and attendance check-ins',
                 'roles' => ['owner', 'admin', 'coach'],
             ],
             'manage_subscriptions' => [
@@ -76,7 +76,7 @@ class ClubSettingsController extends Controller
         $allModules = [
             ['code' => 'website_builder', 'name' => 'Website Builder & CMS Pages', 'description' => 'Custom pages, hero banners, and site navigation', 'icon' => '🌐'],
             ['code' => 'memberships', 'name' => 'Subscriptions & Dues', 'description' => 'Recurring membership tiers, pricing, and receipts', 'icon' => '💳'],
-            ['code' => 'events', 'name' => 'Classes & Events', 'description' => 'Event schedules, RSVPs, and attendance check-in', 'icon' => '📅'],
+            ['code' => 'events', 'name' => 'Events', 'description' => 'Event schedules, RSVPs, and attendance check-in', 'icon' => '📅'],
             ['code' => 'dining_and_summons', 'name' => 'Dining & Menu Selections', 'description' => 'Dinner RSVPs, meal choices, and dietary notes', 'icon' => '🍽️'],
             ['code' => 'boat_reservations', 'name' => 'Equipment & Pitch Bookings', 'description' => 'Boat bay, pitch, or facility reservations', 'icon' => '🚣'],
             ['code' => 'erg_scores', 'name' => 'Athletic & Performance Log', 'description' => 'Erg scores, fitness tests, and leaderboards', 'icon' => '📊'],
