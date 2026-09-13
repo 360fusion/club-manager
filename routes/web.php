@@ -113,10 +113,10 @@ Route::middleware(['auth'])->group(function () {
 
     // 2FA Profile Settings Routes
     Route::get('/admin/profile/two-factor', [TwoFactorAuthController::class, 'show'])->name('admin.profile.two-factor');
-    Route::post('/admin/profile/two-factor/enable', [TwoFactorAuthController::class, 'enable'])->name('two-factor.enable');
-    Route::post('/admin/profile/two-factor/confirm', [TwoFactorAuthController::class, 'confirm'])->name('two-factor.confirm');
-    Route::delete('/admin/profile/two-factor/disable', [TwoFactorAuthController::class, 'disable'])->name('two-factor.disable');
-    Route::post('/admin/profile/two-factor/recovery-codes', [TwoFactorAuthController::class, 'generateRecoveryCodes'])->name('two-factor.recovery-codes');
+    Route::post('/admin/profile/two-factor/enable', [TwoFactorAuthController::class, 'enable'])->name('admin.two-factor.enable');
+    Route::post('/admin/profile/two-factor/confirm', [TwoFactorAuthController::class, 'confirm'])->name('admin.two-factor.confirm');
+    Route::delete('/admin/profile/two-factor/disable', [TwoFactorAuthController::class, 'disable'])->name('admin.two-factor.disable');
+    Route::post('/admin/profile/two-factor/recovery-codes', [TwoFactorAuthController::class, 'generateRecoveryCodes'])->name('admin.two-factor.recovery-codes');
 
     // Member Portal & Self-Service Routes
     Route::get('/clubs/{slug}/portal', [MemberPortalController::class, 'show'])->name('member.dashboard');

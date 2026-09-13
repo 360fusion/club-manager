@@ -16,21 +16,21 @@ const confirmForm = useForm({
 });
 
 const enable2FA = () => {
-  router.post(route('two-factor.enable'));
+  router.post(route('admin.two-factor.enable'));
 };
 
 const confirm2FA = () => {
-  confirmForm.post(route('two-factor.confirm'), {
+  confirmForm.post(route('admin.two-factor.confirm'), {
     onSuccess: () => confirmForm.reset(),
   });
 };
 
 const disable2FA = () => {
-  router.delete(route('two-factor.disable'));
+  router.delete(route('admin.two-factor.disable'));
 };
 
 const generateNewRecoveryCodes = () => {
-  router.post(route('two-factor.recovery-codes'));
+  router.post(route('admin.two-factor.recovery-codes'));
 };
 </script>
 
