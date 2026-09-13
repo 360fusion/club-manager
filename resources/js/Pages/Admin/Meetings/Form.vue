@@ -207,20 +207,9 @@ const submit = () => {
                 <input v-model="form.venue" type="text" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
               </div>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Formal Salutation</label>
-                  <input v-model="form.salutation" type="text" placeholder="Dear Sir and Brother," class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
-                </div>
-
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Publish Status</label>
-                  <select v-model="form.status" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold">
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Formal Salutation</label>
+                <input v-model="form.salutation" type="text" placeholder="Dear Sir and Brother," class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
               </div>
 
               <div>
