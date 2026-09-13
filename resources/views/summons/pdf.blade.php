@@ -20,9 +20,9 @@
   }
 
   .page-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
+    display: flex;
+    flex-direction: row;
+    gap: 36px;
     height: 100vh;
     box-sizing: border-box;
     page-break-after: always;
@@ -33,13 +33,16 @@
   }
 
   .column {
-    padding: 10px 15px;
+    flex: 1;
+    width: 50%;
+    padding: 15px 20px;
+    box-sizing: border-box;
     overflow: hidden;
   }
 
   .border-right {
     border-right: 1px solid #333333;
-    padding-right: 30px;
+    padding-right: 25px;
   }
 
   /* Typography Utilities */
@@ -100,9 +103,9 @@
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
-    padding: 25px 20px;
+    padding: 20px 15px;
     box-sizing: border-box;
-    border: 1.5px solid #222;
+    border: 1.5px solid #222222;
   }
 
   .emblem-svg {
