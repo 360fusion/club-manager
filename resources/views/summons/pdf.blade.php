@@ -13,11 +13,11 @@
   body {
     font-family: "Times New Roman", Times, Georgia, serif;
     color: #111111;
-    background: #ffffff;
+    background: #334155;
     font-size: 9.5pt;
     line-height: 1.3;
     margin: 0;
-    padding: 0;
+    padding: 0 20px 40px 20px;
   }
 
   .page-container {
@@ -26,13 +26,18 @@
     gap: 32px;
     height: 186mm;
     max-height: 186mm;
+    width: 273mm;
+    max-width: 100%;
+    margin: 0 auto 30px auto;
+    background: #ffffff;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 3px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
     box-sizing: border-box;
     page-break-after: always;
     break-after: page;
     page-break-inside: avoid;
     break-inside: avoid;
     position: relative;
-    margin-bottom: 20px;
   }
 
   .page-container:last-child {
@@ -55,18 +60,19 @@
   }
 
   .side-banner {
-    background: #334155;
+    background: #1e293b;
     color: #f8fafc;
-    padding: 8px 16px;
-    border-radius: 10px;
+    padding: 10px 20px;
+    border-radius: 12px;
     font-family: system-ui, -apple-system, sans-serif;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    margin-bottom: 12px;
-    margin-top: 24px;
+    margin: 24px auto 14px auto;
+    max-width: 273mm;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   }
 
   .side-banner span {
@@ -246,9 +252,15 @@
   }
 
   @media print {
-    body { background: none; margin-top: 0 !important; }
+    body { background: none !important; margin: 0 !important; padding: 0 !important; }
     .no-print { display: none !important; }
-    .page-container { margin-bottom: 0; }
+    .page-container {
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      max-width: none !important;
+    }
   }
 </style>
 </head>
