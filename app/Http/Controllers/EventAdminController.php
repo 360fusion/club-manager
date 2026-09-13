@@ -9,6 +9,8 @@ use App\Models\EventPromo;
 use App\Models\EventTicketTier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,6 +33,110 @@ class EventAdminController extends Controller
             'club' => $club,
             'events' => $events,
         ]);
+    }
+
+    /**
+     * Display subscribers/RSVPs for a specific event.
+     */
+    public function subscribers(string $clubSlug, int $id): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $event = Event::where('club_id', $club->id)
+            ->with(['ticketTiers', 'menuItems'])
+            ->findOrFail($id);
+
+        $subscribers = DB::table('event_user')
+            ->join('users', 'users.id', '=', 'event_user.user_id')
+            ->leftJoin('club_user', function ($join) use ($club) {
+                $join->on('club_user.user_id', '=', 'users.id')
+                    ->where('club_user.club_id', '=', $club->id);
+            })
+            ->leftJoin('event_ticket_tiers', 'event_ticket_tiers.id', '=', 'event_user.ticket_tier_id')
+            ->where('event_user.event_id', '=', $event->id)
+            ->select([
+                'users.id as user_id',
+                'users.name',
+                'users.email',
+                'club_user.rank',
+                'club_user.role as member_role',
+                'club_user.home_club_name as home_club_lodge',
+                'club_user.member_number',
+                'event_user.attendance_status',
+                'event_user.attending_dining',
+                'event_user.menu_selections',
+                'event_user.dietary_requirements',
+                'event_user.payment_status',
+                'event_user.amount_paid',
+                'event_user.checked_in_at',
+                'event_user.updated_at as registered_at',
+                'event_ticket_tiers.name as ticket_tier_name',
+                'event_ticket_tiers.price as ticket_tier_price',
+            ])
+            ->orderBy('users.name', 'asc')
+            ->get()
+            ->map(function ($sub) {
+                $menuSelections = json_decode($sub->menu_selections ?? '{}', true);
+
+                return [
+                    'user_id' => $sub->user_id,
+                    'name' => $sub->name,
+                    'email' => $sub->email,
+                    'rank' => $sub->rank ?? '',
+                    'role' => $sub->member_role ?? 'member',
+                    'home_club_lodge' => $sub->home_club_lodge ?? '',
+                    'member_number' => $sub->member_number ?? '',
+                    'attendance_status' => $sub->attendance_status,
+                    'attending_dining' => (bool) $sub->attending_dining,
+                    'menu_selections' => is_array($menuSelections) ? $menuSelections : [],
+                    'dietary_requirements' => $sub->dietary_requirements ?? '',
+                    'payment_status' => $sub->payment_status ?? 'unpaid',
+                    'amount_paid' => number_format((float) $sub->amount_paid, 2),
+                    'checked_in_at' => $sub->checked_in_at ? Carbon::parse($sub->checked_in_at)->format('M d, Y @ H:i') : null,
+                    'registered_at' => $sub->registered_at ? Carbon::parse($sub->registered_at)->format('M d, Y @ H:i') : '',
+                    'ticket_tier' => $sub->ticket_tier_name ? [
+                        'name' => $sub->ticket_tier_name,
+                        'price' => number_format((float) $sub->ticket_tier_price, 2),
+                    ] : null,
+                ];
+            });
+
+        return Inertia::render('Admin/Events/Subscribers', [
+            'club' => $club,
+            'event' => [
+                'id' => $event->id,
+                'title' => $event->title,
+                'starts_at' => $event->starts_at?->format('M d, Y @ H:i'),
+                'location' => $event->formatted_location ?: $event->location,
+                'has_dining' => $event->has_dining,
+                'dining_price' => number_format((float) $event->dining_price, 2),
+                'price' => number_format((float) $event->price, 2),
+                'requires_payment' => $event->requires_payment,
+            ],
+            'subscribers' => $subscribers,
+        ]);
+    }
+
+    /**
+     * Update payment status of a specific event subscriber.
+     */
+    public function updateSubscriberPaymentStatus(Request $request, string $clubSlug, int $id, int $userId): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $event = Event::where('club_id', $club->id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'payment_status' => 'required|in:paid,unpaid,waived,refunded',
+        ]);
+
+        DB::table('event_user')
+            ->where('event_id', $event->id)
+            ->where('user_id', $userId)
+            ->update([
+                'payment_status' => $validated['payment_status'],
+                'updated_at' => now(),
+            ]);
+
+        return redirect()->back()->with('success', 'Subscriber payment status updated successfully.');
     }
 
     /**

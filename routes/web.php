@@ -85,6 +85,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/events', [EventAdminController::class, 'index'])->name('admin.events.index');
     Route::get('/clubs/{clubSlug}/admin/events/create', [EventAdminController::class, 'edit'])->name('admin.events.create');
     Route::get('/clubs/{clubSlug}/admin/events/{id}/edit', [EventAdminController::class, 'edit'])->name('admin.events.edit');
+    Route::get('/clubs/{clubSlug}/admin/events/{id}/subscribers', [EventAdminController::class, 'subscribers'])->name('admin.events.subscribers');
+    Route::post('/clubs/{clubSlug}/admin/events/{id}/subscribers/{userId}/payment-status', [EventAdminController::class, 'updateSubscriberPaymentStatus'])->name('admin.events.subscribers.payment_status');
     Route::post('/clubs/{clubSlug}/admin/events', [EventAdminController::class, 'store'])->name('admin.events.store');
     Route::delete('/clubs/{clubSlug}/admin/events/{id}', [EventAdminController::class, 'destroy'])->name('admin.events.destroy');
 

@@ -54,6 +54,9 @@ const deleteEvent = (eventId) => {
           </div>
 
           <div class="flex items-center gap-3 self-start md:self-auto">
+            <Link :href="route('admin.events.subscribers', { clubSlug: club.slug, id: event.id })" class="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-xl border border-blue-200 transition-all">
+              👥 View Subscriptions ({{ event.attendees_count || 0 }})
+            </Link>
             <Link :href="route('admin.events.edit', { clubSlug: club.slug, id: event.id })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition-all">
               ✏️ Edit Event & Tiers
             </Link>
