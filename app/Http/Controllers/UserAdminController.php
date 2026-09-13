@@ -45,7 +45,29 @@ class UserAdminController extends Controller
             });
 
         $enableMemberRanks = $club->settings['enable_member_ranks'] ?? true;
-        $memberRanks = $club->settings['member_ranks'] ?? ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'];
+        $defaultRanks = [
+            'Worshipful Master',
+            'Senior Warden',
+            'Junior Warden',
+            'Chaplain',
+            'Treasurer',
+            'Secretary',
+            'Director of Ceremonies',
+            'Almoner',
+            'Charity Steward',
+            'Membership Officer',
+            'Mentor',
+            'Senior Deacon',
+            'Junior Deacon',
+            'Asst Dir of Ceremonies',
+            'Organist',
+            'Assistant Secretary',
+            'Inner Guard',
+            'Stewards',
+            'Tyler',
+            'Immediate Past Master',
+        ];
+        $memberRanks = $club->settings['member_ranks'] ?? $defaultRanks;
 
         return Inertia::render('Admin/Users/Index', [
             'club' => $club,
