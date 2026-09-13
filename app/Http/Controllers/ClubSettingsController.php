@@ -70,6 +70,7 @@ class ClubSettingsController extends Controller
         ];
 
         $settings = array_merge([
+            // General & Access
             'tagline' => 'Excellence in Club Management',
             'primary_color' => '#0369a1',
             'sidebar_theme' => 'dark_slate',
@@ -84,11 +85,47 @@ class ClubSettingsController extends Controller
             'registration_mode' => 'open',
             'member_prefix' => strtoupper(substr($club->slug, 0, 4)).'-',
             'default_role' => 'member',
+
+            // Subscriptions & Dues
+            'dues_grace_period_days' => 14,
+            'auto_invoice_days_before' => 7,
+            'tax_registration_number' => 'GB 987 6543 21',
+            'receipt_footer_notes' => 'Thank you for supporting our club. Fees support equipment & clubhouse operations.',
+
+            // Events & Check-Ins
+            'event_rsvp_cutoff_hours' => 24,
+            'max_guests_per_member' => 2,
+            'qr_code_expiry_minutes' => 60,
+            'notify_event_reminders' => true,
+
+            // Dining & Catering
+            'dining_rsvp_cutoff_hours' => 48,
+            'require_dietary_allergens' => true,
+            'allow_guest_meals' => true,
+
+            // Newsletters & Communications
+            'email_from_name' => $club->name,
+            'email_reply_to' => 'admin@'.$club->slug.'.org',
+            'email_footer_address' => '100 Boathouse Way, Oxford, UK',
+            'notify_dues_overdue' => true,
+
+            // Website Builder & SEO
+            'seo_title_suffix' => '| '.$club->name,
+            'seo_meta_description' => 'Official hub and member portal for '.$club->name,
+            'custom_domain' => $club->custom_domain,
+
+            // Equipment & Pitch Bookings
+            'booking_window_days' => 14,
+            'max_booking_hours' => 4,
+            'require_coach_approval_equipment' => true,
+
+            // Athletic Performance & Erg Scores
+            'leaderboard_visibility' => 'public',
+            'default_distance_unit' => 'meters',
+            'require_score_verification' => false,
+
             'enabled_modules' => $club->clubType->available_modules ?? [],
             'permission_matrix' => self::defaultPermissionMatrix(),
-            'notify_event_reminders' => true,
-            'notify_dues_overdue' => true,
-            'email_from_name' => $club->name,
         ], $club->settings ?? []);
 
         $members = $club->users->map(fn ($u) => [
@@ -142,9 +179,43 @@ class ClubSettingsController extends Controller
             'custom_domain' => 'nullable|string|max:255',
             'enabled_modules' => 'nullable|array',
             'permission_matrix' => 'nullable|array',
+
+            // Subscriptions & Dues
+            'dues_grace_period_days' => 'nullable|integer|min:0|max:180',
+            'auto_invoice_days_before' => 'nullable|integer|min:0|max:90',
+            'tax_registration_number' => 'nullable|string|max:100',
+            'receipt_footer_notes' => 'nullable|string|max:1000',
+
+            // Events & Check-Ins
+            'event_rsvp_cutoff_hours' => 'nullable|integer|min:0|max:168',
+            'max_guests_per_member' => 'nullable|integer|min:0|max:20',
+            'qr_code_expiry_minutes' => 'nullable|integer|min:5|max:1440',
             'notify_event_reminders' => 'nullable|boolean',
-            'notify_dues_overdue' => 'nullable|boolean',
+
+            // Dining & Catering
+            'dining_rsvp_cutoff_hours' => 'nullable|integer|min:0|max:168',
+            'require_dietary_allergens' => 'nullable|boolean',
+            'allow_guest_meals' => 'nullable|boolean',
+
+            // Newsletters & Communications
             'email_from_name' => 'nullable|string|max:255',
+            'email_reply_to' => 'nullable|email|max:255',
+            'email_footer_address' => 'nullable|string|max:500',
+            'notify_dues_overdue' => 'nullable|boolean',
+
+            // Website Builder & SEO
+            'seo_title_suffix' => 'nullable|string|max:255',
+            'seo_meta_description' => 'nullable|string|max:500',
+
+            // Equipment & Pitch Bookings
+            'booking_window_days' => 'nullable|integer|min:1|max:365',
+            'max_booking_hours' => 'nullable|integer|min:1|max:24',
+            'require_coach_approval_equipment' => 'nullable|boolean',
+
+            // Athletic Performance & Erg Scores
+            'leaderboard_visibility' => 'nullable|in:public,private,coaches_only',
+            'default_distance_unit' => 'nullable|string|max:50',
+            'require_score_verification' => 'nullable|boolean',
         ]);
 
         if (isset($validated['name'])) {

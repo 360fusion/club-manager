@@ -49,9 +49,43 @@ const form = useForm({
   custom_domain: props.club.custom_domain || '',
   enabled_modules: props.settings.enabled_modules || [],
   permission_matrix: props.settings.permission_matrix || {},
+
+  // Subscriptions & Dues
+  dues_grace_period_days: props.settings.dues_grace_period_days ?? 14,
+  auto_invoice_days_before: props.settings.auto_invoice_days_before ?? 7,
+  tax_registration_number: props.settings.tax_registration_number || '',
+  receipt_footer_notes: props.settings.receipt_footer_notes || '',
+
+  // Events & Check-Ins
+  event_rsvp_cutoff_hours: props.settings.event_rsvp_cutoff_hours ?? 24,
+  max_guests_per_member: props.settings.max_guests_per_member ?? 2,
+  qr_code_expiry_minutes: props.settings.qr_code_expiry_minutes ?? 60,
   notify_event_reminders: props.settings.notify_event_reminders ?? true,
-  notify_dues_overdue: props.settings.notify_dues_overdue ?? true,
+
+  // Dining & Catering
+  dining_rsvp_cutoff_hours: props.settings.dining_rsvp_cutoff_hours ?? 48,
+  require_dietary_allergens: props.settings.require_dietary_allergens ?? true,
+  allow_guest_meals: props.settings.allow_guest_meals ?? true,
+
+  // Newsletters & Communications
   email_from_name: props.settings.email_from_name || props.club.name,
+  email_reply_to: props.settings.email_reply_to || '',
+  email_footer_address: props.settings.email_footer_address || '',
+  notify_dues_overdue: props.settings.notify_dues_overdue ?? true,
+
+  // Website Builder & SEO
+  seo_title_suffix: props.settings.seo_title_suffix || `| ${props.club.name}`,
+  seo_meta_description: props.settings.seo_meta_description || '',
+
+  // Equipment & Pitch Bookings
+  booking_window_days: props.settings.booking_window_days ?? 14,
+  max_booking_hours: props.settings.max_booking_hours ?? 4,
+  require_coach_approval_equipment: props.settings.require_coach_approval_equipment ?? true,
+
+  // Athletic Performance & Erg Log
+  leaderboard_visibility: props.settings.leaderboard_visibility || 'public',
+  default_distance_unit: props.settings.default_distance_unit || 'meters',
+  require_score_verification: props.settings.require_score_verification ?? false,
 });
 
 const submitSettings = () => {
@@ -99,18 +133,18 @@ const updateMemberRole = (userId, newRole) => {
       <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-3">
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Club Configuration Settings</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Club Feature & Configuration Settings</h1>
             <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
               {{ club.slug }}
             </span>
           </div>
-          <p class="text-xs sm:text-sm text-slate-500 mt-1">Manage organization details, user admin roles, feature modules, branding, and custom domains.</p>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1">Configure policies, feature modules, branding, automated notifications, and permission matrices for your club.</p>
         </div>
 
         <button
           @click="submitSettings"
           :disabled="form.processing"
-          class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-2 self-start sm:self-auto"
+          class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-2 self-start sm:self-auto cursor-pointer"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -124,7 +158,7 @@ const updateMemberRole = (userId, newRole) => {
         <button
           @click="activeTab = 'general'"
           :class="[
-            'px-4 py-3 rounded-xl transition-all flex items-center gap-2 flex-shrink-0',
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
             activeTab === 'general' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           ]"
         >
@@ -135,18 +169,18 @@ const updateMemberRole = (userId, newRole) => {
         <button
           @click="activeTab = 'branding'"
           :class="[
-            'px-4 py-3 rounded-xl transition-all flex items-center gap-2 flex-shrink-0',
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
             activeTab === 'branding' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           ]"
         >
           <span>🎨</span>
-          <span>Branding & Theme</span>
+          <span>Branding & Domain</span>
         </button>
 
         <button
           @click="activeTab = 'roles'"
           :class="[
-            'px-4 py-3 rounded-xl transition-all flex items-center gap-2 flex-shrink-0',
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
             activeTab === 'roles' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           ]"
         >
@@ -155,36 +189,91 @@ const updateMemberRole = (userId, newRole) => {
         </button>
 
         <button
+          @click="activeTab = 'subscriptions'"
+          :class="[
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
+            activeTab === 'subscriptions' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          ]"
+        >
+          <span>💳</span>
+          <span>Subscriptions & Dues</span>
+        </button>
+
+        <button
+          @click="activeTab = 'events'"
+          :class="[
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
+            activeTab === 'events' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          ]"
+        >
+          <span>📅</span>
+          <span>Events & Check-Ins</span>
+        </button>
+
+        <button
+          @click="activeTab = 'dining'"
+          :class="[
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
+            activeTab === 'dining' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          ]"
+        >
+          <span>🍽️</span>
+          <span>Dining & RSVPs</span>
+        </button>
+
+        <button
+          @click="activeTab = 'communications'"
+          :class="[
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
+            activeTab === 'communications' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          ]"
+        >
+          <span>✉️</span>
+          <span>Communications</span>
+        </button>
+
+        <button
+          @click="activeTab = 'website'"
+          :class="[
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
+            activeTab === 'website' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          ]"
+        >
+          <span>🌐</span>
+          <span>Website Builder</span>
+        </button>
+
+        <button
+          @click="activeTab = 'bookings'"
+          :class="[
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
+            activeTab === 'bookings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          ]"
+        >
+          <span>🚣</span>
+          <span>Bookings</span>
+        </button>
+
+        <button
+          @click="activeTab = 'performance'"
+          :class="[
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
+            activeTab === 'performance' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          ]"
+        >
+          <span>📊</span>
+          <span>Performance Logs</span>
+        </button>
+
+        <button
           @click="activeTab = 'modules'"
           :class="[
-            'px-4 py-3 rounded-xl transition-all flex items-center gap-2 flex-shrink-0',
+            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
             activeTab === 'modules' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           ]"
         >
           <span>⚡</span>
-          <span>Feature Modules</span>
-        </button>
-
-        <button
-          @click="activeTab = 'domain'"
-          :class="[
-            'px-4 py-3 rounded-xl transition-all flex items-center gap-2 flex-shrink-0',
-            activeTab === 'domain' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>🌐</span>
-          <span>Custom Domain</span>
-        </button>
-
-        <button
-          @click="activeTab = 'notifications'"
-          :class="[
-            'px-4 py-3 rounded-xl transition-all flex items-center gap-2 flex-shrink-0',
-            activeTab === 'notifications' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>🔔</span>
-          <span>Notifications</span>
+          <span>Modules</span>
         </button>
       </div>
 
@@ -297,6 +386,28 @@ const updateMemberRole = (userId, newRole) => {
             </div>
           </div>
         </div>
+
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🌐 Custom Domain Setup</h2>
+            <p class="text-xs text-slate-500 mt-1">Connect your custom branded domain (e.g. <code class="bg-slate-100 text-slate-700 px-1 py-0.5 rounded">members.oxfordboating.org</code>) to this club portal.</p>
+          </div>
+
+          <div class="space-y-4 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Custom Domain Name</label>
+              <input v-model="form.custom_domain" type="text" placeholder="members.oxfordboating.org" class="w-full sm:w-96 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+            </div>
+
+            <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2 text-amber-900">
+              <div class="font-bold text-xs">DNS Configuration Instructions:</div>
+              <p class="text-[11px]">Add a CNAME record at your DNS provider pointing your subdomain to this server's target hostname.</p>
+              <div class="font-mono text-[11px] bg-white p-2.5 rounded-xl border border-amber-200 font-bold">
+                Host: members • Type: CNAME • Target: manager.360fusionhosting.co.uk
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- TAB 3: ROLES & PERMISSIONS -->
@@ -374,7 +485,241 @@ const updateMemberRole = (userId, newRole) => {
 
       </div>
 
-      <!-- TAB 4: FEATURE MODULES -->
+      <!-- TAB 4: SUBSCRIPTIONS & DUES -->
+      <div v-if="activeTab === 'subscriptions'" class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">💳 Subscriptions & Billing Settings</h2>
+            <p class="text-xs text-slate-500 mt-1">Configure grace periods, automated dues invoicing, and payment receipt footers.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Overdue Grace Period (Days)</label>
+              <input v-model.number="form.dues_grace_period_days" type="number" min="0" max="180" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+              <p class="text-[11px] text-slate-400 mt-1">Days after due date before member status defaults to overdue.</p>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Auto-Invoice Lead Time (Days Before Cycle)</label>
+              <input v-model.number="form.auto_invoice_days_before" type="number" min="0" max="90" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+              <p class="text-[11px] text-slate-400 mt-1">Days prior to membership renewal to dispatch automated invoices.</p>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">VAT / Tax Registration Number</label>
+              <input v-model="form.tax_registration_number" type="text" placeholder="GB 987 6543 21" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono" />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">Receipt & Invoice Footer Notes</label>
+              <textarea v-model="form.receipt_footer_notes" rows="3" placeholder="Thank you for supporting our club." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: EVENTS & CHECK-INS -->
+      <div v-if="activeTab === 'events'" class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">📅 Events & Attendance Policy</h2>
+            <p class="text-xs text-slate-500 mt-1">Set RSVP deadlines, guest policies, and attendance QR code expiration limits.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Default RSVP Cutoff (Hours Before Event)</label>
+              <input v-model.number="form.event_rsvp_cutoff_hours" type="number" min="0" max="168" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Max Guests Per Member</label>
+              <input v-model.number="form.max_guests_per_member" type="number" min="0" max="20" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Attendance QR Code Expiry (Minutes)</label>
+              <input v-model.number="form.qr_code_expiry_minutes" type="number" min="5" max="1440" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <label class="flex items-center gap-3 cursor-pointer text-xs">
+              <input type="checkbox" v-model="form.notify_event_reminders" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <div class="font-bold text-slate-900">Automated Event Reminders</div>
+                <div class="text-[11px] text-slate-500">Send automated email reminders to confirmed attendees 48 hours before events.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: DINING & RSVPs -->
+      <div v-if="activeTab === 'dining'" class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🍽️ Dining & Menu RSVP Policy</h2>
+            <p class="text-xs text-slate-500 mt-1">Configure catering deadlines, dietary restriction prompts, and guest meals.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Catering RSVP Cutoff (Hours Prior)</label>
+              <input v-model.number="form.dining_rsvp_cutoff_hours" type="number" min="0" max="168" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+              <p class="text-[11px] text-slate-400 mt-1">Locks meal selections for kitchen headcount preparation.</p>
+            </div>
+          </div>
+
+          <div class="space-y-3 pt-2 text-xs">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" v-model="form.require_dietary_allergens" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <div class="font-bold text-slate-900">Prompt for Dietary Requirements</div>
+                <div class="text-[11px] text-slate-500">Require members to specify vegetarian/vegan/allergen preferences during dining checkout.</div>
+              </div>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" v-model="form.allow_guest_meals" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <div class="font-bold text-slate-900">Allow Guest Meal RSVPs</div>
+                <div class="text-[11px] text-slate-500">Permit members to purchase additional guest dining tickets.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 7: COMMUNICATIONS -->
+      <div v-if="activeTab === 'communications'" class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">✉️ Email Broadcasts & Sender Settings</h2>
+            <p class="text-xs text-slate-500 mt-1">Set default email signatures, reply-to addresses, and notification dispatch rules.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Email Sender From Name</label>
+              <input v-model="form.email_from_name" type="text" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Reply-To Email Address</label>
+              <input v-model="form.email_reply_to" type="email" placeholder="admin@club.org" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">Email Footer Physical Address / Compliance Text</label>
+              <input v-model="form.email_footer_address" type="text" placeholder="100 Boathouse Way, Oxford, UK" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+          </div>
+
+          <div class="pt-2 text-xs">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" v-model="form.notify_dues_overdue" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <div class="font-bold text-slate-900">Automated Overdue Dues Notices</div>
+                <div class="text-[11px] text-slate-500">Send reminder emails when membership dues invoices pass their grace period.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 8: WEBSITE BUILDER -->
+      <div v-if="activeTab === 'website'" class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🌐 Public Website & SEO Metadata</h2>
+            <p class="text-xs text-slate-500 mt-1">Configure global search engine optimization (SEO) defaults for your public website.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Page Title Suffix</label>
+              <input v-model="form.seo_title_suffix" type="text" placeholder="| Oxford Boating Club" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">Default Meta Description</label>
+              <textarea v-model="form.seo_meta_description" rows="3" placeholder="Official homepage for Oxford Boating Club events, membership, and news." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 9: BOOKINGS -->
+      <div v-if="activeTab === 'bookings'" class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🚣 Equipment & Facility Bookings</h2>
+            <p class="text-xs text-slate-500 mt-1">Rules for boat bay, pitch, or clubhouse facility reservations.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Advance Booking Window (Days)</label>
+              <input v-model.number="form.booking_window_days" type="number" min="1" max="365" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Max Duration Per Reservation (Hours)</label>
+              <input v-model.number="form.max_booking_hours" type="number" min="1" max="24" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+            </div>
+          </div>
+
+          <div class="pt-2 text-xs">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" v-model="form.require_coach_approval_equipment" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <div class="font-bold text-slate-900">Require Coach Approval</div>
+                <div class="text-[11px] text-slate-500">Require coach sign-off before high-performance racing shells or specialized gear bookings are confirmed.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 10: PERFORMANCE LOGS -->
+      <div v-if="activeTab === 'performance'" class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">📊 Athletic Performance & Erg Scores</h2>
+            <p class="text-xs text-slate-500 mt-1">Configure leaderboard visibility and score verification standards.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Leaderboard Visibility</label>
+              <select v-model="form.leaderboard_visibility" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                <option value="public">🌐 Public to All Roster Members</option>
+                <option value="private">🔒 Private (Individual Members Only)</option>
+                <option value="coaches_only">🧢 Coaches & Admins Only</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Default Distance Metric</label>
+              <input v-model="form.default_distance_unit" type="text" placeholder="meters" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+            </div>
+          </div>
+
+          <div class="pt-2 text-xs">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" v-model="form.require_score_verification" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <div class="font-bold text-slate-900">Require Coach Score Verification</div>
+                <div class="text-[11px] text-slate-500">Require a coach or admin to verify erg score submissions before they appear on official rankings.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 11: FEATURE MODULES -->
       <div v-if="activeTab === 'modules'" class="space-y-6">
         <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
           <div>
@@ -410,72 +755,12 @@ const updateMemberRole = (userId, newRole) => {
         </div>
       </div>
 
-      <!-- TAB 5: CUSTOM DOMAIN -->
-      <div v-if="activeTab === 'domain'" class="space-y-6">
-        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900">🌐 Custom Domain Setup</h2>
-            <p class="text-xs text-slate-500 mt-1">Connect your custom branded domain (e.g. <code class="bg-slate-100 text-slate-700 px-1 py-0.5 rounded">members.oxfordboating.org</code>) to this club portal.</p>
-          </div>
-
-          <div class="space-y-4 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Custom Domain Name</label>
-              <input v-model="form.custom_domain" type="text" placeholder="members.oxfordboating.org" class="w-full sm:w-96 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
-            </div>
-
-            <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2 text-amber-900">
-              <div class="font-bold text-xs">DNS Configuration Instructions:</div>
-              <p class="text-[11px]">Add an **A Record** or **CNAME** at your DNS provider pointing your subdomain to this server's IP address.</p>
-              <div class="font-mono text-[11px] bg-white p-2.5 rounded-xl border border-amber-200 font-bold">
-                Host: members • Type: CNAME • Value: manager.360fusionhosting.co.uk
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 6: NOTIFICATIONS -->
-      <div v-if="activeTab === 'notifications'" class="space-y-6">
-        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900">🔔 Email Broadcasts & Automatic Reminders</h2>
-            <p class="text-xs text-slate-500 mt-1">Configure automated notifications sent to club members.</p>
-          </div>
-
-          <div class="space-y-4 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Email Sender From Name</label>
-              <input v-model="form.email_from_name" type="text" class="w-full sm:w-96 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
-            </div>
-
-            <div class="space-y-3 pt-2">
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" v-model="form.notify_event_reminders" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
-                <div>
-                  <div class="font-bold text-slate-900">Automated Event Reminders</div>
-                  <div class="text-[11px] text-slate-500">Send automated email reminders to attendees 48 hours before an event.</div>
-                </div>
-              </label>
-
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" v-model="form.notify_dues_overdue" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
-                <div>
-                  <div class="font-bold text-slate-900">Automated Overdue Dues Notices</div>
-                  <div class="text-[11px] text-slate-500">Automatically notify members when membership dues invoices are overdue.</div>
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Bottom Save Action Bar -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
         <button
           @click="submitSettings"
           :disabled="form.processing"
-          class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2"
+          class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2 cursor-pointer"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
