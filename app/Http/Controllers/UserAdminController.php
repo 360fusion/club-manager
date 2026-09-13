@@ -169,7 +169,7 @@ class UserAdminController extends Controller
             'role' => $validated['role'],
             'rank' => $validated['rank'] ?? null,
             'member_number' => ($validated['member_number'] ?? null) ?: ('MEM-'.rand(1000, 9999)),
-            'status' => 'active',
+            'status' => $sendInvite ? 'pending' : 'active',
             'invitation_token' => $token,
             'invited_at' => $sendInvite ? now() : null,
         ]);

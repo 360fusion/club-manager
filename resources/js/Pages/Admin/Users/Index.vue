@@ -71,7 +71,7 @@ const counts = computed(() => {
   return {
     all: props.members.length,
     active: props.members.filter((m) => m.status === 'active').length,
-    invited_pending: props.members.filter((m) => !m.invitation_accepted_at || m.status === 'pending').length,
+    invited_pending: props.members.filter((m) => m.status === 'pending').length,
     deactivated: props.members.filter((m) => m.status === 'inactive').length,
     past: props.members.filter((m) => m.status === 'past').length,
   };
@@ -84,7 +84,7 @@ const filteredMembers = computed(() => {
     if (activeRosterTab.value === 'active') {
       matchesTab = m.status === 'active';
     } else if (activeRosterTab.value === 'invited_pending') {
-      matchesTab = !m.invitation_accepted_at || m.status === 'pending';
+      matchesTab = m.status === 'pending';
     } else if (activeRosterTab.value === 'deactivated') {
       matchesTab = m.status === 'inactive';
     } else if (activeRosterTab.value === 'past') {
