@@ -291,25 +291,6 @@ function numberFormat(val) {
           </div>
         </div>
 
-        <!-- Members Enrolled Roll -->
-        <div v-if="members?.length" class="space-y-4 pt-2 border-t border-slate-100">
-          <h3 class="text-base font-extrabold text-slate-900 border-b border-slate-200 pb-2 flex items-center justify-between">
-            <span>👥 Subscribing Members Roll</span>
-            <span class="text-xs font-semibold text-slate-500">{{ members.length }} Enrolled</span>
-          </h3>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-            <div v-for="m in members" :key="m.id" class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs flex items-center justify-between">
-              <div class="flex items-center gap-2 truncate">
-                <span class="text-[10px] font-bold text-slate-400 font-mono shrink-0">{{ m.joined_year || '•' }}</span>
-                <span class="font-bold text-slate-900 truncate">{{ m.name }}</span>
-              </div>
-              <span v-if="m.rank" class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 shrink-0 ml-1">
-                {{ m.rank }}
-              </span>
-            </div>
-          </div>
-        </div>
 
         <!-- Honorary Members & Welfare Notices -->
         <div v-if="meeting.honorary_members_text || meeting.sick_distressed_notes || meeting.almoner_notice" class="space-y-4 pt-2 border-t border-slate-100">
