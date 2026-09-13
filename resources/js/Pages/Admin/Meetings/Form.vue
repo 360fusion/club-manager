@@ -9,7 +9,7 @@ const props = defineProps({
   members: Array,
 });
 
-const activeSection = ref('front_page');
+const activeSection = ref('general');
 
 const form = useForm({
   id: props.meeting.id || null,
@@ -120,12 +120,12 @@ const submit = () => {
           <div class="lg:hidden bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
             <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Summons Section</label>
             <select v-model="activeSection" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-              <option value="front_page">🏛️ Front page</option>
               <option value="general">📜 1. General & Intro Letter</option>
-              <option value="agenda">📋 2. Order of Business (Agenda)</option>
-              <option value="officers">👔 3. Officers for Year</option>
-              <option value="festive">🍽️ 4. Festive Board & Banking</option>
-              <option value="visits">🏛️ 5. Fraternal Visits & Honorary</option>
+              <option value="front_page">🏛️ 2. Front page</option>
+              <option value="agenda">📋 3. Order of Business (Agenda)</option>
+              <option value="officers">👔 4. Officers for Year</option>
+              <option value="festive">🍽️ 5. Festive Board & Banking</option>
+              <option value="visits">🏛️ 6. Fraternal Visits & Honorary</option>
             </select>
           </div>
 
@@ -137,17 +137,6 @@ const submit = () => {
                 
                 <button
                   type="button"
-                  @click="activeSection = 'front_page'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'front_page' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🏛️</span> Front page</span>
-                </button>
-
-                <button
-                  type="button"
                   @click="activeSection = 'general'"
                   :class="[
                     'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
@@ -155,6 +144,17 @@ const submit = () => {
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>📜</span> General & Intro</span>
+                </button>
+
+                <button
+                  type="button"
+                  @click="activeSection = 'front_page'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeSection === 'front_page' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🏛️</span> Front page</span>
                 </button>
 
                 <button
