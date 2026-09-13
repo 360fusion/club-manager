@@ -15,7 +15,7 @@ const deleteEvent = (eventId) => {
 </script>
 
 <template>
-  <AdminLayout title="Events" :club="club" active-tab="events">
+  <AdminLayout title="Meetings" :club="club" active-tab="events">
     
     <div class="space-y-6">
       
