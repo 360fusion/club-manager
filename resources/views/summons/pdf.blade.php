@@ -294,7 +294,7 @@
   </div>
 
   <div class="page-container">
-    <div class="side-print-tag">[ SIDE 1: FRONT (OUTER SHEET) ]</div>
+    <div class="no-print side-print-tag">[ SIDE 1: FRONT (OUTER SHEET) ]</div>
     
     <!-- Page 1 Left: Full Membership Roll -->
     <div class="column column-left">
@@ -379,7 +379,7 @@
   </div>
 
   <div class="page-container">
-    <div class="side-print-tag">[ SIDE 2: BACK (INNER SHEET) ]</div>
+    <div class="no-print side-print-tag">[ SIDE 2: BACK (INNER SHEET) ]</div>
     
     <!-- Page 2 Left: Officers Roster, Honorary Members, & Secretary Contacts -->
     <div class="column column-left">
