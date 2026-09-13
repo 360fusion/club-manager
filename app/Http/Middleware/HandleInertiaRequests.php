@@ -44,6 +44,7 @@ class HandleInertiaRequests extends Middleware
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'avatar_url' => $user->avatar_url ? (str_starts_with($user->avatar_url, 'http') ? $user->avatar_url : asset('storage/'.$user->avatar_url)) : null,
                 ] : null,
                 'clubs' => $user ? $user->clubs->map(fn ($c) => [
                     'id' => $c->id,

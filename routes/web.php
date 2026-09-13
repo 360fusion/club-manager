@@ -126,6 +126,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{slug}/portal/events', [MemberPortalController::class, 'events'])->name('member.events');
     Route::get('/clubs/{slug}/portal/dues', [MemberPortalController::class, 'dues'])->name('member.dues');
     Route::get('/clubs/{slug}/portal/profile', [MemberPortalController::class, 'profile'])->name('member.profile');
+    Route::post('/clubs/{slug}/portal/profile', [MemberPortalController::class, 'updateProfile'])->name('member.profile.update');
     Route::post('/clubs/{slug}/portal/events/{id}/rsvp', [MemberPortalController::class, 'updateRsvp'])->name('member.rsvp');
 
     // Invite-Only Member Approval & Rejection Routes

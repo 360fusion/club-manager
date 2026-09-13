@@ -1,5 +1,6 @@
 <script setup>
-import { useForm, Head, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { useForm, router, Head, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -7,9 +8,14 @@ const props = defineProps({
   status: String,
 });
 
+const avatarPreview = ref(props.user?.avatar_url || null);
+const fileInput = ref(null);
+
 const profileForm = useForm({
   name: props.user.name,
   email: props.user.email,
+  avatar_url: props.user.avatar_url || '',
+  avatar: null,
 });
 
 const passwordForm = useForm({
@@ -18,8 +24,46 @@ const passwordForm = useForm({
   password_confirmation: '',
 });
 
+const presetAvatars = [
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&auto=format&fit=crop&q=80',
+];
+
+const handleFileChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    profileForm.avatar = file;
+    avatarPreview.value = URL.createObjectURL(file);
+  }
+};
+
+const selectPreset = (url) => {
+  profileForm.avatar_url = url;
+  profileForm.avatar = null;
+  avatarPreview.value = url;
+};
+
 const updateProfile = () => {
-  profileForm.put(route('profile.update'));
+  if (profileForm.avatar) {
+    router.post(route('profile.update'), {
+      _method: 'put',
+      name: profileForm.name,
+      email: profileForm.email,
+      avatar: profileForm.avatar,
+    }, {
+      preserveScroll: true,
+      onSuccess: () => {
+        profileForm.avatar = null;
+      }
+    });
+  } else {
+    profileForm.put(route('profile.update'), {
+      preserveScroll: true,
+    });
+  }
 };
 
 const updatePassword = () => {
@@ -38,7 +82,7 @@ const updatePassword = () => {
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
           <h2 class="text-xl font-bold text-slate-900">Profile & Security Settings</h2>
-          <p class="text-xs text-slate-500 mt-1">Manage your administrator account details, password, and two-factor authentication.</p>
+          <p class="text-xs text-slate-500 mt-1">Manage your administrator account details, profile photo, password, and two-factor authentication.</p>
         </div>
         <Link :href="route('admin.profile.two-factor')" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all text-center flex items-center gap-1.5 justify-center">
           <span>🔐 2FA Settings</span>
@@ -50,38 +94,106 @@ const updatePassword = () => {
         {{ status }}
       </div>
 
-      <!-- Profile Information Card -->
+      <!-- Profile Information & Avatar Card -->
       <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 space-y-6">
         <div>
-          <h3 class="text-base font-bold text-slate-900">Profile Information</h3>
-          <p class="text-xs text-slate-500 mt-0.5">Update your account's name and email address.</p>
+          <h3 class="text-base font-bold text-slate-900">Profile & Avatar Photo</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Upload a custom profile photo or choose from preset club avatars.</p>
         </div>
 
-        <form @submit.prevent="updateProfile" class="space-y-4 max-w-lg">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-              Name
-            </label>
-            <input
-              v-model="profileForm.name"
-              type="text"
-              required
-              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
-            />
-            <div v-if="profileForm.errors.name" class="text-xs text-rose-600 mt-1">{{ profileForm.errors.name }}</div>
+        <form @submit.prevent="updateProfile" class="space-y-6 max-w-xl">
+          
+          <!-- Avatar Preview & Upload Controls -->
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <div class="relative group">
+              <div v-if="avatarPreview" class="w-20 h-20 rounded-full overflow-hidden border-2 border-indigo-500 shadow-md">
+                <img :src="avatarPreview" alt="Profile Avatar" class="w-full h-full object-cover" />
+              </div>
+              <div v-else class="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-600 to-sky-500 text-white font-black text-2xl flex items-center justify-center border-2 border-indigo-500 shadow-md">
+                {{ profileForm.name ? profileForm.name.substring(0, 2).toUpperCase() : 'ME' }}
+              </div>
+            </div>
+
+            <div class="space-y-2 flex-1">
+              <div class="flex items-center gap-3">
+                <input 
+                  type="file" 
+                  ref="fileInput" 
+                  @change="handleFileChange" 
+                  accept="image/*" 
+                  class="hidden" 
+                />
+                <button 
+                  type="button" 
+                  @click="$refs.fileInput.click()" 
+                  class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span>Upload Photo</span>
+                </button>
+                <button 
+                  v-if="avatarPreview"
+                  type="button" 
+                  @click="selectPreset('')" 
+                  class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all"
+                >
+                  Remove Photo
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-500">Supports JPG, PNG, GIF, or WebP up to 4MB.</p>
+            </div>
           </div>
 
+          <!-- Preset Avatar Gallery -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
-              Email Address
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+              Or Choose Preset Avatar
             </label>
-            <input
-              v-model="profileForm.email"
-              type="email"
-              required
-              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
-            />
-            <div v-if="profileForm.errors.email" class="text-xs text-rose-600 mt-1">{{ profileForm.errors.email }}</div>
+            <div class="flex items-center gap-3 overflow-x-auto pb-2">
+              <button
+                v-for="(url, idx) in presetAvatars"
+                :key="idx"
+                type="button"
+                @click="selectPreset(url)"
+                :class="[
+                  'w-12 h-12 rounded-full overflow-hidden border-2 transition-all flex-shrink-0',
+                  avatarPreview === url ? 'border-indigo-600 ring-2 ring-indigo-500/30 scale-105' : 'border-slate-200 hover:border-slate-400'
+                ]"
+              >
+                <img :src="url" class="w-full h-full object-cover" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Name & Email Inputs -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                Name
+              </label>
+              <input
+                v-model="profileForm.name"
+                type="text"
+                required
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
+              />
+              <div v-if="profileForm.errors.name" class="text-xs text-rose-600 mt-1">{{ profileForm.errors.name }}</div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                Email Address
+              </label>
+              <input
+                v-model="profileForm.email"
+                type="email"
+                required
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
+              />
+              <div v-if="profileForm.errors.email" class="text-xs text-rose-600 mt-1">{{ profileForm.errors.email }}</div>
+            </div>
           </div>
 
           <button
@@ -89,7 +201,7 @@ const updatePassword = () => {
             :disabled="profileForm.processing"
             class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-indigo-600/20"
           >
-            {{ profileForm.processing ? 'Saving...' : 'Save Profile Changes' }}
+            {{ profileForm.processing ? 'Saving...' : 'Save Profile & Photo' }}
           </button>
         </form>
       </div>

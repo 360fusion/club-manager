@@ -23,6 +23,7 @@ const clubName = props.club?.name || page.props.club?.name || 'Oxford University
 
 const sidebarOpen = ref(false);
 const switcherOpen = ref(false);
+const userMenuOpen = ref(false);
 
 const userClubs = computed(() => page.props.auth?.clubs || []);
 const adminClubs = computed(() => userClubs.value.filter(c => ['admin', 'owner'].includes(c.role)));
@@ -308,15 +309,16 @@ const copyInviteLink = () => {
 
       <!-- Footer Quick Action / User Profile -->
       <div class="p-4 border-t border-slate-800 space-y-3">
-        <div class="flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 border border-slate-800">
-          <div class="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-xs">
-            OU
+        <Link :href="route('profile.edit')" class="flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 transition-all group">
+          <div class="w-8 h-8 rounded-full overflow-hidden border border-slate-700 flex-shrink-0 bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-xs">
+            <img v-if="page.props.auth?.user?.avatar_url" :src="page.props.auth.user.avatar_url" class="w-full h-full object-cover" />
+            <span v-else>{{ page.props.auth?.user?.name ? page.props.auth.user.name.substring(0, 2).toUpperCase() : 'CA' }}</span>
           </div>
-          <div class="overflow-hidden">
-            <div class="text-xs font-bold text-white truncate">{{ page.props.auth?.user?.name || 'Club Administrator' }}</div>
+          <div class="overflow-hidden text-left">
+            <div class="text-xs font-bold text-white truncate group-hover:text-indigo-300 transition-colors">{{ page.props.auth?.user?.name || 'Club Administrator' }}</div>
             <div class="text-[10px] text-slate-400 truncate">{{ page.props.auth?.user?.email || 'admin@oxford.edu' }}</div>
           </div>
-        </div>
+        </Link>
       </div>
     </aside>
 
@@ -324,15 +326,15 @@ const copyInviteLink = () => {
     <main class="flex-1 overflow-y-auto flex flex-col min-w-0">
       
       <!-- Top Title Bar -->
-      <header class="bg-white border-b border-slate-200 px-6 md:px-10 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+      <header class="bg-white border-b border-slate-200 px-6 md:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
         <div>
           <h1 class="text-2xl font-black text-slate-900 tracking-tight">{{ title }}</h1>
           <p class="text-xs text-slate-500 font-medium mt-0.5">Managing {{ clubName }}</p>
         </div>
 
-        <!-- Quick Actions & Links -->
+        <!-- Quick Actions & User Profile Dropdown -->
         <div class="flex items-center gap-3">
-          <Link :href="route('member.dashboard', clubSlug)" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm">
+          <Link :href="route('member.dashboard', clubSlug)" class="hidden lg:flex px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold rounded-xl transition-all items-center gap-1.5 shadow-sm">
             <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
@@ -342,14 +344,103 @@ const copyInviteLink = () => {
             <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            <span>Live Website</span>
+            <span>Live Site</span>
           </Link>
-          <button @click="copyInviteLink" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-            <span>Invite Members</span>
-          </button>
+
+          <!-- Top-Right User Profile Avatar & Dropdown -->
+          <div class="relative">
+            <button 
+              @click="userMenuOpen = !userMenuOpen"
+              class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 border border-slate-200 transition-all group focus:outline-none"
+            >
+              <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-600 shadow-sm bg-gradient-to-tr from-indigo-600 to-sky-500 text-white font-black text-xs flex items-center justify-center">
+                <img v-if="page.props.auth?.user?.avatar_url" :src="page.props.auth.user.avatar_url" class="w-full h-full object-cover" />
+                <span v-else>{{ page.props.auth?.user?.name ? page.props.auth.user.name.substring(0, 2).toUpperCase() : 'ME' }}</span>
+              </div>
+              <span class="text-xs font-bold text-slate-700 group-hover:text-indigo-600 hidden sm:inline-block max-w-[120px] truncate">
+                {{ page.props.auth?.user?.name || 'Account' }}
+              </span>
+              <svg class="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-transform" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- User Menu Dropdown -->
+            <div 
+              v-if="userMenuOpen" 
+              class="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-2 space-y-1 text-slate-700 animate-in fade-in slide-in-from-top-2"
+            >
+              <!-- Header User Info -->
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div class="text-xs font-black text-slate-900 truncate">{{ page.props.auth?.user?.name || 'Administrator' }}</div>
+                <div class="text-[11px] text-slate-500 truncate">{{ page.props.auth?.user?.email || 'admin@oxford.edu' }}</div>
+                <div class="mt-2 flex items-center gap-1.5">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-indigo-100 text-indigo-800 border border-indigo-200">
+                    {{ currentClubRole }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Quick Links -->
+              <div class="py-1 space-y-1">
+                <Link 
+                  :href="route('profile.edit')" 
+                  @click="userMenuOpen = false"
+                  class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
+                >
+                  <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>Edit Profile & Photo</span>
+                </Link>
+
+                <Link 
+                  :href="route('admin.settings.show', { clubSlug })" 
+                  @click="userMenuOpen = false"
+                  class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
+                >
+                  <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  </svg>
+                  <span>Club Settings</span>
+                </Link>
+
+                <Link 
+                  :href="route('admin.profile.two-factor')" 
+                  @click="userMenuOpen = false"
+                  class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
+                >
+                  <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span>Security & 2FA</span>
+                </Link>
+
+                <Link 
+                  :href="route('member.dashboard', clubSlug)" 
+                  @click="userMenuOpen = false"
+                  class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all"
+                >
+                  <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                  <span>Switch to Member Portal</span>
+                </Link>
+              </div>
+
+              <!-- Logout -->
+              <div class="pt-1 border-t border-slate-100">
+                <form method="POST" action="/logout" class="block">
+                  <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left">
+                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Log Out</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
