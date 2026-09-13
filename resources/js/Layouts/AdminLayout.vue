@@ -102,6 +102,9 @@ const copyInviteLink = () => {
             </svg>
           </button>
 
+          <!-- Backdrop to close dropdown on click outside -->
+          <div v-if="switcherOpen" @click="switcherOpen = false" class="fixed inset-0 z-40 bg-transparent"></div>
+
           <!-- Dropdown Menu -->
           <div 
             v-if="switcherOpen" 
@@ -349,6 +352,9 @@ const copyInviteLink = () => {
 
           <!-- Top-Right User Profile Avatar & Dropdown -->
           <div class="relative">
+            <!-- Backdrop to close dropdown on click outside -->
+            <div v-if="userMenuOpen" @click="userMenuOpen = false" class="fixed inset-0 z-40 bg-transparent"></div>
+
             <button 
               @click="userMenuOpen = !userMenuOpen"
               class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 border border-slate-200 transition-all group focus:outline-none"
