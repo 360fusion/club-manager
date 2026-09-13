@@ -6,6 +6,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 const props = defineProps({
   club: Object,
   metrics: Object,
+  upcomingMeetings: Array,
 });
 
 const inviteCopied = ref(false);
@@ -135,57 +136,49 @@ const copyInviteLink = () => {
         </div>
       </div>
 
-      <!-- Right Panel: Events Summary -->
+      <!-- Right Panel: Meetings Summary -->
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-6">
         <div class="flex items-center justify-between">
-          <h2 class="text-xl font-bold text-slate-900">Events</h2>
-          <Link :href="route('admin.events.index', { clubSlug: club.slug })" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-            View all →
+          <h2 class="text-xl font-bold text-slate-900">Meetings</h2>
+          <Link :href="route('admin.meetings.index', { clubSlug: club.slug })" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+            View all meetings →
           </Link>
         </div>
 
-        <div class="space-y-4">
-          
-          <!-- Event Card 1 -->
-          <div class="p-4 bg-slate-50/60 rounded-xl border border-slate-200/80 space-y-3">
-            <div class="font-bold text-slate-800 text-sm">Club members meeting</div>
-            <div class="flex items-center gap-4 text-xs text-slate-400">
-              <div class="flex items-center gap-1.5">
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span class="w-20 h-2.5 bg-slate-200 rounded-full inline-block"></span>
+        <div v-if="upcomingMeetings && upcomingMeetings.length" class="space-y-3">
+          <div v-for="m in upcomingMeetings" :key="m.id" class="p-4 bg-slate-50/70 hover:bg-slate-100/90 rounded-2xl border border-slate-200/80 transition-all space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <Link :href="route('admin.meetings.show', { clubSlug: club.slug, id: m.id })" title="Open Secretary Dashboard" aria-label="Open Secretary Dashboard" class="font-bold text-slate-900 text-sm hover:text-indigo-600 transition-colors flex items-center gap-2 group">
+                <span class="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-xs border border-indigo-200/60 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                  📜
+                </span>
+                <span class="hover:underline">{{ m.title }}</span>
+              </Link>
+              <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', m.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
+                {{ m.status }}
+              </span>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 font-medium pt-1 border-t border-slate-200/50">
+              <div class="flex items-center gap-3">
+                <span class="flex items-center gap-1">📅 {{ m.meeting_date }} at {{ m.starts_at }}</span>
+                <span v-if="m.venue" class="hidden sm:flex items-center gap-1 text-slate-400">📍 {{ m.venue }}</span>
               </div>
-              <div class="flex items-center gap-1.5">
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span class="w-24 h-2.5 bg-slate-200 rounded-full inline-block"></span>
+              <div class="flex items-center gap-2 text-[11px] font-bold">
+                <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">🍽️ {{ m.dining_count }} Dining</span>
+                <span class="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">✉️ {{ m.apologies_count }} Apologies</span>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Event Card 2 -->
-          <div class="p-4 bg-slate-50/60 rounded-xl border border-slate-200/80 space-y-3">
-            <div class="font-bold text-slate-800 text-sm">Cheer & dance</div>
-            <div class="flex items-center gap-4 text-xs text-slate-400">
-              <div class="flex items-center gap-1.5">
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span class="w-20 h-2.5 bg-slate-200 rounded-full inline-block"></span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span class="w-24 h-2.5 bg-slate-200 rounded-full inline-block"></span>
-              </div>
-            </div>
-          </div>
-
+        <div v-else class="p-8 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl space-y-3">
+          <div class="text-2xl">📜</div>
+          <div class="font-bold text-slate-700 text-sm">No Upcoming Meetings Scheduled</div>
+          <p class="text-slate-400 max-w-xs mx-auto">Generate season schedules or create individual summonses for your club.</p>
+          <Link :href="route('admin.meetings.index', { clubSlug: club.slug })" class="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition-all">
+            + Manage & Schedule Meetings
+          </Link>
         </div>
       </div>
 

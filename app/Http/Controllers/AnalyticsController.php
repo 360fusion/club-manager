@@ -43,8 +43,34 @@ class AnalyticsController extends Controller
 
         $attendanceRate = $totalRSVPs > 0 ? round(($attendingRSVPs / $totalRSVPs) * 100, 1) : 0;
 
+        $upcomingMeetings = \App\Models\Meeting::where('club_id', $club->id)
+            ->withCount([
+                'rsvps as dining_count' => function ($query) {
+                    $query->where('attendance_status', 'attending_dining');
+                },
+                'rsvps as apologies_count' => function ($query) {
+                    $query->where('attendance_status', 'apologies');
+                },
+            ])
+            ->orderBy('meeting_date', 'asc')
+            ->limit(5)
+            ->get()
+            ->map(function ($m) {
+                return [
+                    'id' => $m->id,
+                    'title' => $m->title && !str_contains($m->title, 'Regular Meeting No.') ? $m->title : ('Meeting - ' . \Illuminate\Support\Carbon::parse($m->meeting_date)->format('jS F Y')),
+                    'meeting_date' => \Illuminate\Support\Carbon::parse($m->meeting_date)->format('D, jS M Y'),
+                    'starts_at' => $m->starts_at ? substr($m->starts_at, 0, 5) : '18:30',
+                    'venue' => $m->venue,
+                    'status' => $m->status,
+                    'dining_count' => $m->dining_count,
+                    'apologies_count' => $m->apologies_count,
+                ];
+            });
+
         return Inertia::render('Admin/Analytics', [
             'club' => $club,
+            'upcomingMeetings' => $upcomingMeetings,
             'metrics' => [
                 'total_members' => $club->users_count,
                 'monthly_dues_est' => number_format($monthlyDuesEst, 2),
