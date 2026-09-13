@@ -37,6 +37,11 @@ const formatDate = (dateStr) => {
   return dateStr;
 };
 
+const formatTime = (timeStr) => {
+  if (!timeStr) return '';
+  return timeStr.substring(0, 5);
+};
+
 const deleteMeeting = (id) => {
   if (confirm('Are you sure you want to remove this meeting record?')) {
     router.delete(route('admin.meetings.destroy', { clubSlug: props.club.slug, id }));
@@ -75,11 +80,12 @@ const deleteMeeting = (id) => {
                 {{ meeting.status }}
               </span>
               <span class="text-xs text-slate-400">📅 {{ formatDate(meeting.meeting_date) }}</span>
-              <span class="text-xs text-slate-400">🕒 {{ meeting.starts_at }}</span>
+              <span class="text-xs text-slate-400">🕒 {{ formatTime(meeting.starts_at) }}</span>
             </div>
 
             <h3 class="text-lg font-bold text-slate-900">
               {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formatDate(meeting.meeting_date) }}
+              <span class="text-slate-500 font-semibold text-base">at {{ formatTime(meeting.starts_at) }}</span>
             </h3>
 
             <div class="flex items-center gap-4 text-xs pt-1">
