@@ -46,15 +46,15 @@ const copyApologiesText = () => {
       <!-- Top Action Bar -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
-          <div class="flex items-center gap-2">
+          <h2 class="text-xl font-bold text-slate-900">
+            {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + meeting.meeting_date }} at {{ meeting.starts_at ? meeting.starts_at.substring(0, 5) : '18:30' }}
+          </h2>
+          <div class="flex items-center gap-3 text-xs mt-1.5">
             <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
               {{ meeting.status }}
             </span>
+            <span class="text-slate-500">📍 {{ meeting.venue }} • Rehearsal: {{ meeting.rehearsal_starts_at }}</span>
           </div>
-          <h2 class="text-xl font-bold text-slate-900 mt-1">
-            {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + meeting.meeting_date }} at {{ meeting.starts_at ? meeting.starts_at.substring(0, 5) : '18:30' }}
-          </h2>
-          <p class="text-xs text-slate-500">📍 {{ meeting.venue }} • Rehearsal: {{ meeting.rehearsal_starts_at }}</p>
         </div>
 
         <div class="flex items-center gap-3">
