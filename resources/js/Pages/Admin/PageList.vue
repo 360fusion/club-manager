@@ -9,7 +9,7 @@ const props = defineProps({
 </script>
 
 <template>
-    <AdminLayout title="Forms & CMS Pages" :club="club" active-tab="pages">
+    <AdminLayout title="Website Builder" :club="club" active-tab="pages">
         
         <div class="space-y-6">
             
