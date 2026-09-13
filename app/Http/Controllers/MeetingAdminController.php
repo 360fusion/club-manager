@@ -311,7 +311,8 @@ class MeetingAdminController extends Controller
             ? max(0, $subscribingMembers->count() - $memberRsvps->count())
             : 0;
 
-        // Caterer headcount calculations
+        // Caterer & Guest headcount calculations
+        $totalGuestsCount = 0;
         $guestMealsCount = 0;
         $dietaryConstraints = [];
 
@@ -323,6 +324,7 @@ class MeetingAdminController extends Controller
                 ];
             }
             foreach ($rsvp->guests as $guest) {
+                $totalGuestsCount++;
                 if ($guest->attending_dining) {
                     $guestMealsCount++;
                 }
@@ -360,6 +362,7 @@ class MeetingAdminController extends Controller
         });
 
         $totalCatererHeadcount = $memberAttendingDining->count() + $visitorAttendingDining->count() + $guestMealsCount;
+        $totalVisitorsAttending = $visitingAttendingCount + $totalGuestsCount;
 
         $allClubUsers = $club->users->unique('id')->map(fn ($u) => [
             'id' => $u->id,
@@ -377,7 +380,7 @@ class MeetingAdminController extends Controller
             'allClubUsers' => $allClubUsers,
             'stats' => [
                 'total_members' => $subscribingMembers->count(),
-                'total_attending' => $memberAttendingDining->count() + $memberAttendingMeetingOnly->count() + $visitingAttendingCount + $guestMealsCount,
+                'total_attending' => $memberAttendingDining->count() + $memberAttendingMeetingOnly->count() + $totalVisitorsAttending,
                 'total_dining' => $totalCatererHeadcount,
                 'dining_members_and_visitors' => $memberAttendingDining->count() + $visitorAttendingDining->count(),
                 'attending_dining' => $memberAttendingDining->count(),
@@ -385,9 +388,11 @@ class MeetingAdminController extends Controller
                 'apologies' => $memberApologies->count(),
                 'awaiting' => $awaitingSubscribingMembers,
                 'visiting_count' => $visitorsList->count(),
-                'visiting_attending' => $visitingAttendingCount,
+                'visiting_attending' => $totalVisitorsAttending,
+                'visiting_attending_users' => $visitingAttendingCount,
                 'visiting_dining' => $visitorAttendingDining->count(),
                 'guest_meals' => $guestMealsCount,
+                'total_guests' => $totalGuestsCount,
                 'total_caterer_headcount' => $totalCatererHeadcount,
                 'dietary_constraints' => $dietaryConstraints,
             ],

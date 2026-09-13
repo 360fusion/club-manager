@@ -222,7 +222,7 @@ const formattedMeetingDate = computed(() => {
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visitors Attending</div>
           <div class="text-2xl font-black text-purple-600">{{ stats.visiting_attending }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Visiting Brethren attending</div>
+          <div class="text-[11px] text-slate-500 font-medium">Visiting Brethren & Guests</div>
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
