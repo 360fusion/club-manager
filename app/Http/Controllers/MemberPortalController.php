@@ -189,6 +189,41 @@ class MemberPortalController extends Controller
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 
+        // Published Meetings & Summons for the member
+        $meetings = Meeting::where('club_id', $club->id)
+            ->where('status', 'published')
+            ->orderBy('meeting_date', 'asc')
+            ->get()
+            ->map(function ($meeting) use ($user) {
+                $userRsvp = $user ? MeetingRsvp::where('meeting_id', $meeting->id)
+                    ->where('user_id', $user->id)
+                    ->with('guests')
+                    ->first() : null;
+
+                return [
+                    'id' => $meeting->id,
+                    'title' => $meeting->title,
+                    'meeting_date' => $meeting->meeting_date ? Carbon::parse($meeting->meeting_date)->format('M d, Y') : '',
+                    'raw_meeting_date' => $meeting->meeting_date,
+                    'starts_at' => $meeting->starts_at,
+                    'rehearsal_starts_at' => $meeting->rehearsal_starts_at,
+                    'venue' => $meeting->venue,
+                    'dress_code' => $meeting->dress_code,
+                    'rsvp_cutoff_at' => $meeting->rsvp_cutoff_at ? Carbon::parse($meeting->rsvp_cutoff_at)->format('M d, Y @ H:i') : null,
+                    'is_cutoff_passed' => $meeting->rsvp_cutoff_at ? Carbon::now()->isAfter($meeting->rsvp_cutoff_at) : false,
+                    'dining_cost_member' => number_format($meeting->dining_cost_member, 2),
+                    'user_rsvp' => $userRsvp ? [
+                        'attendance_status' => $userRsvp->attendance_status,
+                        'dietary_requirements' => $userRsvp->dietary_requirements,
+                        'apology_reason' => $userRsvp->apology_reason,
+                        'payment_status' => $userRsvp->payment_status ?? 'unpaid',
+                        'payment_reference' => $userRsvp->payment_reference,
+                        'guests' => $userRsvp->guests,
+                    ] : null,
+                ];
+            });
+
+        // Upcoming Social Events
         $events = Event::where('club_id', $club->id)
             ->with(['menuItems', 'ticketTiers'])
             ->orderBy('starts_at', 'asc')
@@ -229,6 +264,7 @@ class MemberPortalController extends Controller
         return Inertia::render('Member/Events', [
             'club' => $club,
             'memberRole' => $memberPivot->role ?? 'member',
+            'meetings' => $meetings,
             'events' => $events,
         ]);
     }
