@@ -377,6 +377,9 @@ class MeetingAdminController extends Controller
             'allClubUsers' => $allClubUsers,
             'stats' => [
                 'total_members' => $subscribingMembers->count(),
+                'total_attending' => $memberAttendingDining->count() + $memberAttendingMeetingOnly->count() + $visitingAttendingCount + $guestMealsCount,
+                'total_dining' => $totalCatererHeadcount,
+                'dining_members_and_visitors' => $memberAttendingDining->count() + $visitorAttendingDining->count(),
                 'attending_dining' => $memberAttendingDining->count(),
                 'attending_meeting_only' => $memberAttendingMeetingOnly->count(),
                 'apologies' => $memberApologies->count(),

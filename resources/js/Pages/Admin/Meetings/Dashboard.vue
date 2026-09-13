@@ -196,15 +196,15 @@ const formattedMeetingDate = computed(() => {
       <!-- Live KPI Cards Grid -->
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Caterer Headcount</div>
-          <div class="text-2xl font-black text-indigo-600">{{ stats.total_caterer_headcount }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">{{ stats.attending_dining }} Dining + {{ stats.guest_meals }} Guests</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Attending</div>
+          <div class="text-2xl font-black text-indigo-600">{{ stats.total_attending ?? (stats.attending_dining + stats.attending_meeting_only + stats.visiting_attending + stats.guest_meals) }}</div>
+          <div class="text-[11px] text-slate-500 font-medium">Meeting attendees</div>
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Attending (Dining)</div>
-          <div class="text-2xl font-black text-emerald-600">{{ stats.attending_dining }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Festive Board confirmed</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Dining</div>
+          <div class="text-2xl font-black text-emerald-600">{{ stats.total_dining ?? stats.total_caterer_headcount }}</div>
+          <div class="text-[11px] text-slate-500 font-medium">{{ (stats.dining_members_and_visitors ?? (stats.attending_dining + stats.visiting_dining)) }} Dining + {{ stats.guest_meals }} Guests</div>
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
