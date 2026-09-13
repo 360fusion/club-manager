@@ -96,16 +96,16 @@ const duplicateMeeting = (id) => {
           </div>
 
           <div class="flex items-center gap-2.5 self-start md:self-auto">
-            <button @click="duplicateMeeting(meeting.id)" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
-              📋 Duplicate
-            </button>
             <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
               📜 Edit Summons
             </Link>
             <Link :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all">
               📊 Secretary Dashboard
             </Link>
-            <button @click="deleteMeeting(meeting.id)" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-xl border border-rose-200 transition-all">
+            <button @click="duplicateMeeting(meeting.id)" title="Duplicate Meeting" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer">
+              📋
+            </button>
+            <button @click="deleteMeeting(meeting.id)" title="Delete Meeting" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-xl border border-rose-200 transition-all cursor-pointer">
               🗑️
             </button>
           </div>
