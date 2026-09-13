@@ -146,7 +146,7 @@ const duplicateMeeting = (id) => {
         <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Use the rule-based recurring engine to automatically calculate and generate your annual meeting dates, or create a single meeting summons manually.</p>
         <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
-            📜 + Create Meeting
+            📜 + Add Meeting
           </Link>
           <button @click="showSeasonModal = true" class="px-5 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all">
             ⚡ Generate Season Meetings
