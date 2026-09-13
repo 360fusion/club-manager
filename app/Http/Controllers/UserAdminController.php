@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\MemberInvitationMail;
 use App\Models\Club;
 use App\Models\Invoice;
 use App\Models\User;
@@ -10,6 +11,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,6 +36,9 @@ class UserAdminController extends Controller
                 'rank' => $u->pivot->rank ?? '',
                 'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
                 'status' => $u->pivot->status ?? 'active',
+                'invitation_token' => $u->pivot->invitation_token ?? null,
+                'invited_at' => $u->pivot->invited_at?->format('M d, Y') ?? null,
+                'invitation_accepted_at' => $u->pivot->invitation_accepted_at?->format('M d, Y') ?? null,
                 'joined_at' => $u->pivot->created_at?->format('M d, Y') ?? 'Recent',
             ];
         });
@@ -58,55 +64,42 @@ class UserAdminController extends Controller
 
         $memberPivot = $user->clubs()->where('clubs.id', $club->id)->first()?->pivot;
 
-        // Joined clubs list for this user
-        $userClubs = $user->clubs()->with('clubType')->get()->map(function ($c) {
-            return [
-                'id' => $c->id,
-                'name' => $c->name,
-                'slug' => $c->slug,
-                'role' => $c->pivot->role ?? 'member',
-                'status' => $c->pivot->status ?? 'active',
-            ];
-        });
+        $invoices = Invoice::where('club_id', $club->id)
+            ->where('user_id', $userId)
+            ->latest()
+            ->get()
+            ->map(fn ($i) => [
+                'id' => $i->id,
+                'number' => $i->invoice_number,
+                'amount_formatted' => $i->currency.' '.number_format($i->amount, 2),
+                'status' => $i->status,
+                'due_date' => $i->due_date?->format('M d, Y') ?? 'Immediate',
+            ]);
 
-        // Event RSVPs for this club
         $rsvps = DB::table('event_user')
             ->join('events', 'events.id', '=', 'event_user.event_id')
             ->where('events.club_id', $club->id)
-            ->where('event_user.user_id', $user->id)
+            ->where('event_user.user_id', $userId)
             ->select('events.title', 'events.starts_at', 'events.location', 'event_user.*')
             ->orderByDesc('events.starts_at')
             ->get()
             ->map(fn ($r) => [
                 'event_title' => $r->title,
-                'starts_at' => $r->starts_at ? Carbon::parse($r->starts_at)->format('M d, Y @ H:i') : 'TBD',
+                'event_date' => $r->starts_at ? Carbon::parse($r->starts_at)->format('M d, Y @ H:i') : 'TBD',
                 'location' => $r->location,
-                'attendance_status' => $r->attendance_status,
-                'attending_dining' => (bool) $r->attending_dining,
-                'menu_selections' => json_decode($r->menu_selections ?? '{}', true),
-                'dietary_requirements' => $r->dietary_requirements,
-                'checked_in_at' => $r->checked_in_at ? Carbon::parse($r->checked_in_at)->format('M d, Y @ H:i') : null,
+                'rsvp_status' => $r->attendance_status ?? 'attending',
+                'attended' => ! empty($r->checked_in_at),
             ]);
 
-        // Attendance stats
         $totalRsvps = $rsvps->count();
-        $attendedCount = $rsvps->where('attendance_status', 'attending')->count();
-        $attendanceRate = $totalRsvps > 0 ? round(($attendedCount / $totalRsvps) * 100, 1) : 100.0;
+        $attendedCount = $rsvps->where('attended', true)->count();
+        $attendanceRate = $totalRsvps > 0 ? round(($attendedCount / $totalRsvps) * 100) : 100;
 
-        // Invoices & Dues for this club
-        $invoices = Invoice::where('club_id', $club->id)
-            ->where('user_id', $user->id)
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(fn ($inv) => [
-                'id' => $inv->id,
-                'invoice_number' => $inv->invoice_number,
-                'title' => $inv->title,
-                'amount' => number_format($inv->amount, 2),
-                'status' => $inv->status,
-                'paid_at' => $inv->paid_at?->format('M d, Y'),
-                'created_at' => $inv->created_at?->format('M d, Y'),
-            ]);
+        $userClubs = $user->clubs->map(fn ($c) => [
+            'name' => $c->name,
+            'slug' => $c->slug,
+            'role' => $c->pivot->role,
+        ]);
 
         $memberData = [
             'id' => $user->id,
@@ -116,6 +109,12 @@ class UserAdminController extends Controller
             'rank' => $memberPivot->rank ?? '',
             'member_number' => $memberPivot->member_number ?? ('MEM-'.$user->id),
             'status' => $memberPivot->status ?? 'active',
+            'phone' => $memberPivot->phone ?? '',
+            'emergency_contact' => $memberPivot->emergency_contact ?? '',
+            'dietary_notes' => $memberPivot->dietary_notes ?? '',
+            'invitation_token' => $memberPivot->invitation_token ?? null,
+            'invited_at' => $memberPivot->invited_at?->format('M d, Y') ?? null,
+            'invitation_accepted_at' => $memberPivot->invitation_accepted_at?->format('M d, Y') ?? null,
             'joined_at' => $memberPivot->created_at?->format('M d, Y') ?? 'Recent',
             'two_factor_enabled' => ! empty($user->two_factor_secret),
         ];
@@ -148,13 +147,17 @@ class UserAdminController extends Controller
             'role' => 'required|in:owner,admin,coach,member,treasurer',
             'rank' => 'nullable|string|max:100',
             'member_number' => 'nullable|string|max:100',
+            'send_invite' => 'nullable|boolean',
         ]);
+
+        $sendInvite = $request->boolean('send_invite', true);
+        $token = $sendInvite ? Str::random(40) : null;
 
         $user = User::firstOrCreate(
             ['email' => strtolower($validated['email'])],
             [
                 'name' => $validated['name'],
-                'password' => Hash::make('password123'),
+                'password' => Hash::make(Str::random(16)),
             ]
         );
 
@@ -165,11 +168,53 @@ class UserAdminController extends Controller
         $club->users()->attach($user->id, [
             'role' => $validated['role'],
             'rank' => $validated['rank'] ?? null,
-            'member_number' => $validated['member_number'] ?: ('MEM-'.rand(1000, 9999)),
+            'member_number' => ($validated['member_number'] ?? null) ?: ('MEM-'.rand(1000, 9999)),
             'status' => 'active',
+            'invitation_token' => $token,
+            'invited_at' => $sendInvite ? now() : null,
         ]);
 
+        if ($sendInvite && $token) {
+            $acceptUrl = route('invitation.accept', ['slug' => $club->slug, 'token' => $token]);
+            try {
+                Mail::to($user->email)->send(new MemberInvitationMail($club, $user, $token, $acceptUrl));
+                return redirect()->back()->with('success', "Member added to roster & invitation email sent to {$user->email}.");
+            } catch (\Exception $e) {
+                return redirect()->back()->with('success', "Member added to roster. Invitation link: {$acceptUrl}");
+            }
+        }
+
         return redirect()->back()->with('success', 'Member added successfully to roster.');
+    }
+
+    /**
+     * Send or resend an email invitation to a member.
+     */
+    public function sendInvite(Request $request, string $clubSlug, int $userId): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $user = User::findOrFail($userId);
+
+        $memberPivot = $user->clubs()->where('clubs.id', $club->id)->first()?->pivot;
+        if (! $memberPivot) {
+            return redirect()->back()->with('error', 'User is not a member of this club.');
+        }
+
+        $token = Str::random(40);
+
+        $club->users()->updateExistingPivot($userId, [
+            'invitation_token' => $token,
+            'invited_at' => now(),
+        ]);
+
+        $acceptUrl = route('invitation.accept', ['slug' => $club->slug, 'token' => $token]);
+
+        try {
+            Mail::to($user->email)->send(new MemberInvitationMail($club, $user, $token, $acceptUrl));
+            return redirect()->back()->with('success', "Invitation email sent successfully to {$user->email}.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('success', "Invitation token created. Share activation link: {$acceptUrl}");
+        }
     }
 
     /**

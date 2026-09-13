@@ -54,6 +54,14 @@ const approveMember = () => {
   );
 };
 
+const sendInvite = () => {
+  router.post(
+    route('admin.users.invite', { clubSlug: props.club.slug, userId: props.member.id }),
+    {},
+    { preserveScroll: true }
+  );
+};
+
 const roleBadgeClass = (role) => {
   switch (role) {
     case 'owner':
@@ -131,6 +139,31 @@ const roleBadgeClass = (role) => {
             </select>
           </div>
 
+          <div class="space-y-1">
+            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Account Invitation</label>
+            <button
+              v-if="member.invitation_accepted_at"
+              type="button"
+              disabled
+              class="px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs rounded-xl flex items-center gap-1.5 opacity-90 cursor-default"
+            >
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Account Active</span>
+            </button>
+            <button
+              v-else
+              @click="sendInvite"
+              class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+            >
+              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span>{{ member.invited_at ? 'Resend Invite' : 'Send Email Invite' }}</span>
+            </button>
+          </div>
+
           <button
             v-if="member.status === 'pending'"
             @click="approveMember"
@@ -193,6 +226,30 @@ const roleBadgeClass = (role) => {
               <div>
                 <div class="text-[10px] font-extrabold uppercase text-slate-400">Member Number</div>
                 <div class="font-mono text-slate-900 font-bold mt-0.5">{{ member.member_number }}</div>
+              </div>
+
+              <div>
+                <div class="text-[10px] font-extrabold uppercase text-slate-400">Account Invitation Status</div>
+                <div class="mt-1 flex items-center gap-2">
+                  <span 
+                    v-if="member.invitation_accepted_at" 
+                    class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase"
+                  >
+                    ✓ Accepted ({{ member.invitation_accepted_at }})
+                  </span>
+                  <span 
+                    v-else-if="member.invited_at" 
+                    class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 uppercase"
+                  >
+                    ✉ Invited on {{ member.invited_at }}
+                  </span>
+                  <span 
+                    v-else 
+                    class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200 uppercase"
+                  >
+                    Not Invited Yet
+                  </span>
+                </div>
               </div>
 
               <div>

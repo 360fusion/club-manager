@@ -39,6 +39,7 @@ const addForm = useForm({
   role: 'member',
   rank: '',
   member_number: '',
+  send_invite: true,
 });
 
 const importForm = useForm({
@@ -93,6 +94,14 @@ const updateRank = (userId, newRank) => {
   router.post(
     route('admin.users.rank.update', { clubSlug: props.club.slug, userId }),
     { rank: newRank },
+    { preserveScroll: true }
+  );
+};
+
+const sendInviteEmail = (userId) => {
+  router.post(
+    route('admin.users.invite', { clubSlug: props.club.slug, userId }),
+    {},
     { preserveScroll: true }
   );
 };
@@ -367,6 +376,22 @@ const submitImportCsv = () => {
 
                 <!-- Actions -->
                 <td class="py-4 px-6 text-right space-x-2">
+                  <button
+                    v-if="!m.invitation_accepted_at"
+                    @click="sendInviteEmail(m.id)"
+                    class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                    :title="m.invitation_token ? `Invited on ${m.invited_at}` : 'Send activation email'"
+                  >
+                    <span>✉️</span>
+                    <span>{{ m.invitation_token ? 'Resend Invite' : 'Send Invite' }}</span>
+                  </button>
+                  <span
+                    v-else
+                    class="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-extrabold rounded-lg inline-block"
+                  >
+                    ✓ Account Active
+                  </span>
+
                   <Link
                     :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
                     class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-lg transition-all inline-block"
@@ -465,6 +490,15 @@ const submitImportCsv = () => {
               />
             </div>
           </div>
+
+          <label class="flex items-center gap-2.5 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              v-model="addForm.send_invite"
+              class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            />
+            <span class="text-xs font-bold text-slate-700">Send email invitation to activate account</span>
+          </label>
 
           <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
             <button
