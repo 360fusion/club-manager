@@ -263,7 +263,7 @@ class MeetingAdminController extends Controller
             ->with(['agendaItems', 'officerAssignments.user', 'officerAssignments.officerRole', 'fraternalVisits', 'rsvps.user', 'rsvps.guests'])
             ->firstOrFail();
 
-        $allMembers = $club->users;
+        $subscribingMembers = $club->users()->wherePivot('role', '!=', 'visitor')->get();
 
         $rsvps = MeetingRsvp::where('meeting_id', $meeting->id)
             ->with(['user.clubs', 'guests'])
@@ -278,6 +278,14 @@ class MeetingAdminController extends Controller
         $attendingDining = $rsvps->where('attendance_status', 'attending_dining');
         $attendingMeetingOnly = $rsvps->where('attendance_status', 'attending_meeting_only');
         $apologies = $rsvps->where('attendance_status', 'apologies');
+
+        // Filter visitor RSVPs
+        $visitorRsvps = $rsvps->where('is_visitor', true);
+        $visitingAttendingCount = $visitorRsvps->whereIn('attendance_status', ['attending_dining', 'attending_meeting_only'])->count();
+
+        // Calculate awaiting RSVPs strictly for subscribing members (excluding visitors)
+        $subscribingMemberRsvpsCount = $rsvps->where('is_visitor', false)->count();
+        $awaitingSubscribingMembers = max(0, $subscribingMembers->count() - $subscribingMemberRsvpsCount);
 
         // Caterer headcount calculations
         $guestMealsCount = 0;
@@ -310,11 +318,12 @@ class MeetingAdminController extends Controller
             'meeting' => $meeting,
             'rsvps' => $rsvps,
             'stats' => [
-                'total_members' => $allMembers->count(),
+                'total_members' => $subscribingMembers->count(),
                 'attending_dining' => $attendingDining->count(),
                 'attending_meeting_only' => $attendingMeetingOnly->count(),
                 'apologies' => $apologies->count(),
-                'awaiting' => max(0, $allMembers->count() - $rsvps->count()),
+                'awaiting' => $awaitingSubscribingMembers,
+                'visiting_attending' => $visitingAttendingCount,
                 'guest_meals' => $guestMealsCount,
                 'total_caterer_headcount' => $totalCatererHeadcount,
                 'dietary_constraints' => $dietaryConstraints,

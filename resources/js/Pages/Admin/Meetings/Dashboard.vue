@@ -81,11 +81,11 @@ const copyApologiesText = () => {
       </div>
 
       <!-- Live KPI Cards Grid -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Caterer Headcount</div>
           <div class="text-2xl font-black text-indigo-600">{{ stats.total_caterer_headcount }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">{{ stats.attending_dining }} Members + {{ stats.guest_meals }} Guests</div>
+          <div class="text-[11px] text-slate-500 font-medium">{{ stats.attending_dining }} Dining + {{ stats.guest_meals }} Guests</div>
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
@@ -107,9 +107,15 @@ const copyApologiesText = () => {
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visitors Attending</div>
+          <div class="text-2xl font-black text-purple-600">{{ stats.visiting_attending }}</div>
+          <div class="text-[11px] text-slate-500 font-medium">Visiting Brethren attending</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Awaiting RSVP</div>
           <div class="text-2xl font-black text-amber-600">{{ stats.awaiting }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Pending token responses</div>
+          <div class="text-[11px] text-slate-500 font-medium">Subscribing members pending</div>
         </div>
       </div>
 
