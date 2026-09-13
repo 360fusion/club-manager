@@ -192,10 +192,6 @@ const submitMeetingRsvp = () => {
                   <Link :href="route('member.meetings.summons', { slug: club.slug, id: m.id })" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-all flex items-center gap-1">
                     📄 View Summons
                   </Link>
-
-                  <a :href="route('member.meetings.pdf', { slug: club.slug, id: m.id })" target="_blank" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl border border-emerald-200 transition-all flex items-center gap-1">
-                    🖨️ PDF
-                  </a>
                 </div>
               </div>
             </div>
