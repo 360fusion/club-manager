@@ -43,6 +43,27 @@ const copyBankRef = () => {
   navigator.clipboard.writeText(refText);
   alert(`Payment Reference "${refText}" copied to clipboard!`);
 };
+
+const formatDate = (dateVal) => {
+  if (!dateVal) return '';
+  const cleanStr = String(dateVal).split('T')[0];
+  const parts = cleanStr.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const d = new Date(year, month, day);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-GB', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    }
+  }
+  return dateVal;
+};
 </script>
 
 <template>
@@ -71,7 +92,7 @@ const copyBankRef = () => {
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-slate-500">📅 Date:</span>
-            <span class="font-bold text-slate-900">{{ meeting.meeting_date }}</span>
+            <span class="font-bold text-slate-900">{{ formatDate(meeting.meeting_date) }}</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-slate-500">🕒 Meeting Start:</span>

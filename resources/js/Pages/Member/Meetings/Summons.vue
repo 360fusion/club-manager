@@ -71,10 +71,44 @@ function numberFormat(val) {
   if (!val) return '0.00';
   return parseFloat(val).toFixed(2);
 }
+
+function formatDate(dateVal) {
+  if (!dateVal) return '';
+  const cleanStr = String(dateVal).split('T')[0];
+  const parts = cleanStr.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const d = new Date(year, month, day);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-GB', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    }
+  }
+  return dateVal;
+}
+
+function formatDateTime(dateTimeVal) {
+  if (!dateTimeVal) return '';
+  const d = new Date(dateTimeVal);
+  if (isNaN(d.getTime())) return dateTimeVal;
+  return d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 </script>
 
 <template>
-  <MemberLayout :title="`Summons — ${meeting.title || meeting.meeting_date}`" :club="club" :member-role="memberRole" active-tab="dashboard">
+  <MemberLayout :title="`Summons — ${meeting.title || formatDate(meeting.meeting_date)}`" :club="club" :member-role="memberRole" active-tab="dashboard">
     
     <div class="max-w-4xl mx-auto space-y-6">      <!-- Sticky Top Action Bar -->
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
@@ -137,7 +171,7 @@ function numberFormat(val) {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-slate-900 text-white rounded-2xl">
           <div>
             <div class="text-xs font-bold uppercase tracking-wider text-slate-400">📅 Date</div>
-            <div class="text-base font-extrabold text-white mt-1">{{ meeting.meeting_date }}</div>
+            <div class="text-base font-extrabold text-white mt-1">{{ formatDate(meeting.meeting_date) }}</div>
           </div>
           <div>
             <div class="text-xs font-bold uppercase tracking-wider text-slate-400">🕒 Timings</div>
@@ -224,7 +258,7 @@ function numberFormat(val) {
 
             <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-sm space-y-1">
               <div class="text-xs font-bold uppercase tracking-wider text-amber-700">Dining Cutoff Deadline</div>
-              <div class="text-base font-extrabold text-amber-900">{{ meeting.rsvp_cutoff_at || '5 Days Before Meeting' }}</div>
+              <div class="text-base font-extrabold text-amber-900">{{ meeting.rsvp_cutoff_at ? formatDateTime(meeting.rsvp_cutoff_at) : '5 Days Before Meeting' }}</div>
             </div>
           </div>
 
@@ -324,7 +358,7 @@ function numberFormat(val) {
         <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-lg font-bold text-slate-900">
-              ✍️ Respond to Summons — {{ meeting.title || meeting.meeting_date }}
+              ✍️ Respond to Summons — {{ meeting.title || formatDate(meeting.meeting_date) }}
             </h3>
             <button @click="showRsvpModal = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
           </div>
