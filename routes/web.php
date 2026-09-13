@@ -89,6 +89,7 @@ Route::middleware(['auth'])->group(function () {
     // Admin Meeting & Summons Management Routes
     Route::get('/clubs/{clubSlug}/admin/meetings', [\App\Http\Controllers\MeetingAdminController::class, 'index'])->name('admin.meetings.index');
     Route::get('/clubs/{clubSlug}/admin/meetings/create', [\App\Http\Controllers\MeetingAdminController::class, 'create'])->name('admin.meetings.create');
+    Route::get('/clubs/{clubSlug}/admin/meetings/{id}/edit', [\App\Http\Controllers\MeetingAdminController::class, 'edit'])->name('admin.meetings.edit');
     Route::post('/clubs/{clubSlug}/admin/meetings', [\App\Http\Controllers\MeetingAdminController::class, 'store'])->name('admin.meetings.store');
     Route::get('/clubs/{clubSlug}/admin/meetings/{id}', [\App\Http\Controllers\MeetingAdminController::class, 'show'])->name('admin.meetings.show');
     Route::get('/clubs/{clubSlug}/admin/meetings/{id}/pdf', [\App\Http\Controllers\MeetingAdminController::class, 'pdf'])->name('admin.meetings.pdf');

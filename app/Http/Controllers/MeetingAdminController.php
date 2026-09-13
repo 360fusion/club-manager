@@ -38,7 +38,7 @@ class MeetingAdminController extends Controller
 
         // Convert any existing legacy meeting titles with numbers to date-based titles
         foreach ($meetings as $m) {
-            if (str_contains($m->title, 'Regular Meeting No.')) {
+            if ($m->title && str_contains($m->title, 'Regular Meeting No.')) {
                 $m->title = 'Meeting - ' . Carbon::parse($m->meeting_date)->format('jS F Y');
                 $m->meeting_number = null;
                 $m->save();
