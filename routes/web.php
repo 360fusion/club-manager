@@ -49,6 +49,8 @@ Route::post('/summons/rsvp/{token}', [\App\Http\Controllers\PasswordlessRsvpCont
 // Multi-Tenant Public Admin & Workspace Landing Routes
 Route::get('/', [ClubController::class, 'index'])->name('home');
 Route::get('/clubs/{slug}', [ClubController::class, 'show'])->name('clubs.show');
+Route::get('/clubs/{slug}/visitor-register', [\App\Http\Controllers\VisitorRegistrationController::class, 'create'])->name('clubs.visitor.register');
+Route::post('/clubs/{slug}/visitor-register', [\App\Http\Controllers\VisitorRegistrationController::class, 'store'])->name('clubs.visitor.store');
 
 // Protected Authenticated Routes
 Route::middleware(['auth'])->group(function () {

@@ -30,6 +30,9 @@ class PasswordlessRsvpController extends Controller
         $club = $meeting->club;
         $user = $rsvp->user;
         $isCutoffPassed = Carbon::now()->isAfter($meeting->rsvp_cutoff_at);
+        $clubUser = $user->clubs()->where('club_id', $club->id)->first()?->pivot;
+        $isVisitor = $clubUser && $clubUser->role === 'visitor';
+        $visitorHomeClub = $isVisitor ? trim(($clubUser->home_club_name ?? '') . ($clubUser->home_club_number ? ' No ' . $clubUser->home_club_number : '')) : null;
 
         return Inertia::render('Summons/Rsvp', [
             'token' => $token,
@@ -38,6 +41,8 @@ class PasswordlessRsvpController extends Controller
             'meeting' => $meeting,
             'rsvp' => $rsvp->load('guests'),
             'isCutoffPassed' => $isCutoffPassed,
+            'isVisitor' => $isVisitor,
+            'visitorHomeClub' => $visitorHomeClub,
         ]);
     }
 
@@ -53,13 +58,20 @@ class PasswordlessRsvpController extends Controller
         }
 
         $meeting = $rsvp->meeting;
+        $user = $rsvp->user;
+        $club = $meeting->club;
 
         if (Carbon::now()->isAfter($meeting->rsvp_cutoff_at)) {
             return redirect()->back()->withErrors(['cutoff' => 'The dining deadline has passed. Please contact the Secretary directly.']);
         }
 
+        $clubUser = $user->clubs()->where('club_id', $club->id)->first()?->pivot;
+        $isVisitor = $clubUser && $clubUser->role === 'visitor';
+
+        $allowedStatuses = $isVisitor ? 'in:attending_dining,attending_meeting_only' : 'in:attending_dining,attending_meeting_only,apologies';
+
         $validated = $request->validate([
-            'attendance_status' => 'required|in:attending_dining,attending_meeting_only,apologies',
+            'attendance_status' => 'required|' . $allowedStatuses,
             'apology_reason' => 'nullable|string',
             'dietary_requirements' => 'nullable|string',
             'guests' => 'nullable|array',

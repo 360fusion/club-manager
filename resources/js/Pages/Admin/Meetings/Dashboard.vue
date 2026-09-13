@@ -136,7 +136,12 @@ const copyApologiesText = () => {
             </thead>
             <tbody class="divide-y divide-slate-100">
               <tr v-for="r in filteredRsvps" :key="r.id" class="hover:bg-slate-50/80 transition-all">
-                <td class="p-3 font-bold text-slate-900">{{ r.user ? r.user.name : 'Member' }}</td>
+                <td class="p-3 font-bold text-slate-900">
+                  {{ r.user ? r.user.name : 'Member' }}
+                  <span v-if="r.is_visitor" class="ml-1.5 px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold rounded-md">
+                    Visitor <span v-if="r.visitor_home_club">({{ r.visitor_home_club }})</span>
+                  </span>
+                </td>
                 <td class="p-3">
                   <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', r.attendance_status === 'attending_dining' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : r.attendance_status === 'apologies' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-sky-50 text-sky-700 border-sky-200']">
                     {{ r.attendance_status.replace('_', ' ') }}

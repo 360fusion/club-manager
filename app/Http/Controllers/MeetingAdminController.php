@@ -185,7 +185,7 @@ class MeetingAdminController extends Controller
             ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user'])
             ->firstOrFail();
 
-        $members = $club->users;
+        $members = $club->users()->wherePivot('role', '!=', 'visitor')->get();
         $secretaryUser = $club->users()->wherePivot('role', 'secretary')->first() ?: $club->users->first();
         $worshipfulMaster = $club->users()->wherePivot('role', 'master')->first() ?: $club->users->first();
 
@@ -266,8 +266,14 @@ class MeetingAdminController extends Controller
         $allMembers = $club->users;
 
         $rsvps = MeetingRsvp::where('meeting_id', $meeting->id)
-            ->with(['user', 'guests'])
-            ->get();
+            ->with(['user.clubs', 'guests'])
+            ->get()
+            ->map(function ($rsvp) use ($club) {
+                $clubUser = $rsvp->user ? $rsvp->user->clubs->firstWhere('id', $club->id)?->pivot : null;
+                $rsvp->is_visitor = $clubUser && $clubUser->role === 'visitor';
+                $rsvp->visitor_home_club = $rsvp->is_visitor ? trim(($clubUser->home_club_name ?? '') . ($clubUser->home_club_number ? ' No ' . $clubUser->home_club_number : '')) : null;
+                return $rsvp;
+            });
 
         $attendingDining = $rsvps->where('attendance_status', 'attending_dining');
         $attendingMeetingOnly = $rsvps->where('attendance_status', 'attending_meeting_only');

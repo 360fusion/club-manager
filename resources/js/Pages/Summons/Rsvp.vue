@@ -9,6 +9,8 @@ const props = defineProps({
   meeting: Object,
   rsvp: Object,
   isCutoffPassed: Boolean,
+  isVisitor: Boolean,
+  visitorHomeClub: String,
 });
 
 const form = useForm({
@@ -59,6 +61,10 @@ const copyBankRef = () => {
           </div>
           <h1 class="text-lg font-extrabold text-slate-900">{{ club.name }}</h1>
           <h2 class="text-xs font-bold text-indigo-600 mt-0.5 uppercase tracking-wider">{{ meeting.title }}</h2>
+          <div v-if="isVisitor" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold rounded-full">
+            <span>✨ Visiting Brother / Guest</span>
+            <span v-if="visitorHomeClub">({{ visitorHomeClub }})</span>
+          </div>
         </div>
 
         <!-- Meeting Schedule Details Banner -->
@@ -110,13 +116,19 @@ const copyBankRef = () => {
                 </div>
               </label>
 
-              <label :class="['flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all', form.attendance_status === 'apologies' ? 'bg-rose-50 border-rose-500 text-rose-900 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-700']">
+              <!-- Apologies Option (Subscribing Members Only) -->
+              <label v-if="!isVisitor" :class="['flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all', form.attendance_status === 'apologies' ? 'bg-rose-50 border-rose-500 text-rose-900 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-700']">
                 <input type="radio" value="apologies" v-model="form.attendance_status" class="text-rose-600 focus:ring-rose-500" />
                 <div class="text-xs">
                   <div>Send Apologies for Absence</div>
                   <div class="text-[10px] text-slate-500 font-normal">Unable to attend meeting</div>
                 </div>
               </label>
+
+              <!-- Visitor Note -->
+              <div v-else class="p-3 bg-purple-50/60 border border-purple-200/80 rounded-2xl text-[11px] text-purple-800 font-medium">
+                ℹ️ <strong>Visiting Brethren Note:</strong> As a visitor, apologies are not required if you are unable to attend.
+              </div>
             </div>
           </div>
 
