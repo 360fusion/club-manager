@@ -67,17 +67,32 @@ class EventAdminController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'location' => 'required|string|max:255',
+            'location' => 'nullable|string|max:255',
+            'address_line_1' => 'nullable|string|max:255',
+            'address_line_2' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'county' => 'nullable|string|max:255',
+            'postcode' => 'nullable|string|max:50',
             'starts_at' => 'required|date',
             'requires_payment' => 'boolean',
             'price' => 'nullable|numeric|min:0',
             'has_dining' => 'boolean',
             'dining_price' => 'nullable|numeric|min:0',
+            'booking_cutoff_days' => 'nullable|integer|min:0',
             'status' => 'required|in:upcoming,completed,cancelled',
             'ticket_tiers' => 'array',
             'promos' => 'array',
             'menu_items' => 'array',
         ]);
+
+        $addressParts = array_filter([
+            $validated['address_line_1'] ?? null,
+            $validated['address_line_2'] ?? null,
+            $validated['city'] ?? null,
+            $validated['county'] ?? null,
+            $validated['postcode'] ?? null,
+        ]);
+        $location = ! empty($addressParts) ? implode(', ', $addressParts) : ($validated['location'] ?? '');
 
         $event = Event::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
@@ -85,12 +100,18 @@ class EventAdminController extends Controller
                 'title' => $validated['title'],
                 'slug' => $validated['slug'],
                 'description' => $validated['description'] ?? '',
-                'location' => $validated['location'],
+                'location' => $location,
+                'address_line_1' => $validated['address_line_1'] ?? null,
+                'address_line_2' => $validated['address_line_2'] ?? null,
+                'city' => $validated['city'] ?? null,
+                'county' => $validated['county'] ?? null,
+                'postcode' => $validated['postcode'] ?? null,
                 'starts_at' => $validated['starts_at'],
                 'requires_payment' => $validated['requires_payment'] ?? true,
                 'price' => $validated['price'] ?? 0,
                 'has_dining' => $validated['has_dining'] ?? false,
                 'dining_price' => $validated['dining_price'] ?? 0,
+                'booking_cutoff_days' => isset($validated['booking_cutoff_days']) ? (int) $validated['booking_cutoff_days'] : null,
                 'status' => $validated['status'] ?? 'upcoming',
             ]
         );

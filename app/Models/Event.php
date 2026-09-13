@@ -18,6 +18,11 @@ class Event extends Model
         'slug',
         'description',
         'location',
+        'address_line_1',
+        'address_line_2',
+        'city',
+        'county',
+        'postcode',
         'starts_at',
         'ends_at',
         'is_recurring',
@@ -27,6 +32,7 @@ class Event extends Model
         'has_dining',
         'dining_price',
         'rsvp_deadline',
+        'booking_cutoff_days',
         'status',
     ];
 
@@ -36,12 +42,43 @@ class Event extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'rsvp_deadline' => 'datetime',
+            'booking_cutoff_days' => 'integer',
             'is_recurring' => 'boolean',
             'requires_payment' => 'boolean',
             'has_dining' => 'boolean',
             'price' => 'decimal:2',
             'dining_price' => 'decimal:2',
         ];
+    }
+
+    public function getFormattedLocationAttribute(): string
+    {
+        $parts = array_filter([
+            $this->address_line_1,
+            $this->address_line_2,
+            $this->city,
+            $this->county,
+            $this->postcode,
+        ]);
+
+        return ! empty($parts) ? implode(', ', $parts) : ($this->location ?? '');
+    }
+
+    public function getBookingCutoffAtAttribute(): ?\Illuminate\Support\Carbon
+    {
+        if ($this->rsvp_deadline) {
+            return \Illuminate\Support\Carbon::parse($this->rsvp_deadline);
+        }
+        if ($this->booking_cutoff_days !== null && $this->starts_at) {
+            return \Illuminate\Support\Carbon::parse($this->starts_at)->subDays((int) $this->booking_cutoff_days);
+        }
+        return null;
+    }
+
+    public function getIsBookingClosedAttribute(): bool
+    {
+        $cutoff = $this->booking_cutoff_at;
+        return $cutoff ? \Illuminate\Support\Carbon::now()->isAfter($cutoff) : false;
     }
 
     public function club(): BelongsTo

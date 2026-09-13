@@ -223,7 +223,6 @@ class MemberPortalController extends Controller
                 ];
             });
 
-        // Upcoming Social Events
         $events = Event::where('club_id', $club->id)
             ->with(['menuItems', 'ticketTiers'])
             ->orderBy('starts_at', 'asc')
@@ -234,13 +233,23 @@ class MemberPortalController extends Controller
                     ->where('user_id', $user->id)
                     ->first() : null;
 
+                $cutoffAt = $event->booking_cutoff_at;
+
                 return [
                     'id' => $event->id,
                     'title' => $event->title,
                     'slug' => $event->slug,
                     'description' => $event->description,
-                    'location' => $event->location,
+                    'location' => $event->formatted_location ?: $event->location,
+                    'address_line_1' => $event->address_line_1,
+                    'address_line_2' => $event->address_line_2,
+                    'city' => $event->city,
+                    'county' => $event->county,
+                    'postcode' => $event->postcode,
                     'starts_at' => $event->starts_at?->format('M d, Y @ H:i'),
+                    'booking_cutoff_days' => $event->booking_cutoff_days,
+                    'booking_cutoff_at' => $cutoffAt ? $cutoffAt->format('M d, Y @ H:i') : null,
+                    'is_booking_closed' => $event->is_booking_closed,
                     'has_dining' => $event->has_dining,
                     'dining_price' => number_format($event->dining_price, 2),
                     'price' => number_format($event->price, 2),
@@ -398,6 +407,12 @@ class MemberPortalController extends Controller
         $user = Auth::user();
         $club = Club::where('slug', $slug)->firstOrFail();
         $event = Event::where('club_id', $club->id)->findOrFail($eventId);
+
+        if ($event->is_booking_closed) {
+            return redirect()->back()->withErrors([
+                'booking_closed' => 'Bookings for this event closed ' . ($event->booking_cutoff_days ? $event->booking_cutoff_days . ' days' : '') . ' before the event date.',
+            ]);
+        }
 
         $validated = $request->validate([
             'attendance_status' => 'required|in:attending,declined,tentative',

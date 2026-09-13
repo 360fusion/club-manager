@@ -14,7 +14,13 @@ const form = useForm({
   slug: props.event.slug || '',
   description: props.event.description || '',
   location: props.event.location || '',
+  address_line_1: props.event.address_line_1 || '',
+  address_line_2: props.event.address_line_2 || '',
+  city: props.event.city || '',
+  county: props.event.county || '',
+  postcode: props.event.postcode || '',
   starts_at: props.event.starts_at || '',
+  booking_cutoff_days: props.event.booking_cutoff_days ?? 7,
   requires_payment: props.event.requires_payment ?? true,
   price: props.event.price || 0,
   has_dining: props.event.has_dining ?? false,
@@ -71,7 +77,7 @@ const submit = () => {
       <div class="flex items-center justify-between bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
           <h2 class="text-xl font-bold text-slate-900">{{ event.id ? 'Edit Event Details' : 'Create New Event' }}</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Configure event schedule, ticketing tiers, and menu items.</p>
+          <p class="text-xs text-slate-500 mt-0.5">Configure event schedule, address details, booking cutoff rules, ticketing tiers, and menu items.</p>
         </div>
         <Link :href="route('admin.events.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all">
           &larr; Back to Events
@@ -97,21 +103,61 @@ const submit = () => {
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Location</label>
-              <input v-model="form.location" type="text" required placeholder="Christ Church Great Hall, Oxford" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Start Date & Time</label>
-              <input v-model="form.starts_at" type="datetime-local" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
-            </div>
-          </div>
-
           <div>
             <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Description</label>
             <textarea v-model="form.description" rows="3" placeholder="Event details and RSVP instructions..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"></textarea>
+          </div>
+        </div>
+
+        <!-- Venue Address Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
+          <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">📍 Venue Address & Location Details</h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Venue / Building Name (Line 1)</label>
+              <input v-model="form.address_line_1" type="text" placeholder="e.g. Christ Church Great Hall" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Street Address (Line 2)</label>
+              <input v-model="form.address_line_2" type="text" placeholder="e.g. St Aldate's" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">City / Town</label>
+              <input v-model="form.city" type="text" placeholder="e.g. Oxford" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">County / Region</label>
+              <input v-model="form.county" type="text" placeholder="e.g. Oxfordshire" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Postcode</label>
+              <input v-model="form.postcode" type="text" placeholder="e.g. OX1 1DP" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule & Booking Cutoff Settings -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
+          <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">⏰ Schedule & Booking Cutoff Rules</h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Event Start Date & Time</label>
+              <input v-model="form.starts_at" type="datetime-local" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Booking Close Cutoff (Days Before Event)</label>
+              <input v-model="form.booking_cutoff_days" type="number" min="0" placeholder="e.g. 7" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+              <p class="text-[11px] text-slate-500 mt-1">Number of days prior to event start date after which new bookings & RSVPs are closed (e.g. 7 = no bookings within 7 days of event).</p>
+            </div>
           </div>
         </div>
 

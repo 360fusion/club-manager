@@ -44,6 +44,9 @@ const deleteEvent = (eventId) => {
               <span v-if="event.has_dining" class="px-2 py-0.5 rounded text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
                 🍽️ 3-Course Dining
               </span>
+              <span v-if="event.booking_cutoff_days" class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                ⏰ Cutoff: {{ event.booking_cutoff_days }} days before
+              </span>
             </div>
 
             <h3 class="text-lg font-bold text-slate-900">{{ event.title }}</h3>

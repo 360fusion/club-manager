@@ -256,7 +256,7 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
           >
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div class="space-y-1.5">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                   <span v-if="event.user_rsvp?.checked_in_at" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                     ✓ CHECKED IN @ {{ event.user_rsvp.checked_in_at }}
                   </span>
@@ -266,6 +266,9 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
                   <span v-if="event.has_dining" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
                     🍽️ 3-COURSE DINING
                   </span>
+                  <span v-if="event.booking_cutoff_days" class="px-2.5 py-0.5 rounded text-[10px] font-bold" :class="event.is_booking_closed ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'">
+                    {{ event.is_booking_closed ? '🔒 BOOKINGS CLOSED' : `⏰ Cutoff: ${event.booking_cutoff_days} days before` }}
+                  </span>
                 </div>
                 <h3 class="text-lg font-bold text-slate-900">{{ event.title }}</h3>
                 <p class="text-xs text-slate-500">📍 {{ event.location }} • 🕒 {{ event.starts_at }}</p>
@@ -273,11 +276,15 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
               </div>
 
               <button
+                v-if="!event.is_booking_closed"
                 @click="openRsvpModal(event)"
                 class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all self-start sm:self-auto cursor-pointer"
               >
                 {{ event.user_rsvp ? 'Edit RSVP & Dining' : 'RSVP & Select Menu' }}
               </button>
+              <span v-else class="px-4 py-2 bg-slate-100 text-slate-400 font-bold text-xs rounded-xl border border-slate-200 self-start sm:self-auto">
+                Bookings Closed
+              </span>
             </div>
           </div>
         </div>
