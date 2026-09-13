@@ -153,129 +153,171 @@ const updateMemberRole = (userId, newRole) => {
         </button>
       </div>
 
-      <!-- Horizontal Navigation Tabs Bar -->
-      <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200/80 flex overflow-x-auto gap-1 text-xs font-bold scrollbar-none">
-        <button
-          @click="activeTab = 'general'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'general' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>🏢</span>
-          <span>General</span>
-        </button>
+      <!-- 2-Column Responsive Settings Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+        
+        <!-- Left Settings Sidebar Navigation -->
+        <div class="lg:col-span-1 space-y-4">
+          <!-- Mobile Category Dropdown Selector -->
+          <div class="lg:hidden bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
+            <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Settings Category</label>
+            <select v-model="activeTab" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+              <optgroup label="Workspace & Security">
+                <option value="general">🏢 General Profile & Access</option>
+                <option value="branding">🎨 Branding & Custom Domain</option>
+                <option value="roles">🛡️ Roles & Permissions</option>
+                <option value="modules">⚡ Active Feature Modules</option>
+              </optgroup>
+              <optgroup label="Operations & Finance">
+                <option value="subscriptions">💳 Subscriptions & Dues</option>
+                <option value="events">📅 Events & Check-Ins</option>
+                <option value="dining">🍽️ Dining & Catering RSVPs</option>
+                <option value="communications">✉️ Communications & Emails</option>
+              </optgroup>
+              <optgroup label="Module Policies">
+                <option value="website">🌐 Website Builder & SEO</option>
+                <option value="bookings">🚣 Pitch & Equipment Bookings</option>
+                <option value="performance">📊 Athletic & Erg Logs</option>
+              </optgroup>
+            </select>
+          </div>
 
-        <button
-          @click="activeTab = 'branding'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'branding' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>🎨</span>
-          <span>Branding & Domain</span>
-        </button>
+          <!-- Desktop Vertical Sidebar Navigation Card -->
+          <div class="hidden lg:block bg-white p-3.5 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 sticky top-6">
+            
+            <!-- Group 1: Workspace -->
+            <div>
+              <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Workspace</div>
+              <div class="space-y-0.5 text-xs font-bold">
+                <button
+                  @click="activeTab = 'general'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'general' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🏢</span> General</span>
+                </button>
 
-        <button
-          @click="activeTab = 'roles'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'roles' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>🛡️</span>
-          <span>Roles & Permissions</span>
-        </button>
+                <button
+                  @click="activeTab = 'branding'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'branding' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🎨</span> Branding & Domain</span>
+                </button>
 
-        <button
-          @click="activeTab = 'subscriptions'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'subscriptions' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>💳</span>
-          <span>Subscriptions & Dues</span>
-        </button>
+                <button
+                  @click="activeTab = 'roles'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'roles' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🛡️</span> Roles & Permissions</span>
+                </button>
 
-        <button
-          @click="activeTab = 'events'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'events' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>📅</span>
-          <span>Events & Check-Ins</span>
-        </button>
+                <button
+                  @click="activeTab = 'modules'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'modules' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>⚡</span> Feature Modules</span>
+                </button>
+              </div>
+            </div>
 
-        <button
-          @click="activeTab = 'dining'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'dining' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>🍽️</span>
-          <span>Dining & RSVPs</span>
-        </button>
+            <!-- Group 2: Operations -->
+            <div>
+              <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Operations</div>
+              <div class="space-y-0.5 text-xs font-bold">
+                <button
+                  @click="activeTab = 'subscriptions'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'subscriptions' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>💳</span> Subscriptions & Dues</span>
+                </button>
 
-        <button
-          @click="activeTab = 'communications'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'communications' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>✉️</span>
-          <span>Communications</span>
-        </button>
+                <button
+                  @click="activeTab = 'events'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'events' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>📅</span> Events & Check-Ins</span>
+                </button>
 
-        <button
-          @click="activeTab = 'website'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'website' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>🌐</span>
-          <span>Website Builder</span>
-        </button>
+                <button
+                  @click="activeTab = 'dining'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'dining' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🍽️</span> Dining & RSVPs</span>
+                </button>
 
-        <button
-          @click="activeTab = 'bookings'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'bookings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>🚣</span>
-          <span>Bookings</span>
-        </button>
+                <button
+                  @click="activeTab = 'communications'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'communications' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>✉️</span> Communications</span>
+                </button>
+              </div>
+            </div>
 
-        <button
-          @click="activeTab = 'performance'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'performance' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>📊</span>
-          <span>Performance Logs</span>
-        </button>
+            <!-- Group 3: Module Policies -->
+            <div>
+              <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Module Policies</div>
+              <div class="space-y-0.5 text-xs font-bold">
+                <button
+                  @click="activeTab = 'website'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'website' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🌐</span> Website Builder</span>
+                </button>
 
-        <button
-          @click="activeTab = 'modules'"
-          :class="[
-            'px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer',
-            activeTab === 'modules' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          ]"
-        >
-          <span>⚡</span>
-          <span>Modules</span>
-        </button>
-      </div>
+                <button
+                  @click="activeTab = 'bookings'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'bookings' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🚣</span> Equipment Bookings</span>
+                </button>
+
+                <button
+                  @click="activeTab = 'performance'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'performance' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>📊</span> Performance Logs</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right Content Panel -->
+        <div class="lg:col-span-3 space-y-6">
 
       <!-- TAB 1: GENERAL SETTINGS -->
       <div v-if="activeTab === 'general'" class="space-y-6">
@@ -767,6 +809,9 @@ const updateMemberRole = (userId, newRole) => {
           </svg>
           <span>Save All Settings</span>
         </button>
+      </div>
+
+        </div>
       </div>
 
     </div>
