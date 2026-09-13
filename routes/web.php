@@ -51,6 +51,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Multi-Tenant Admin & Workspace Routes
     Route::get('/admin/clubs', [ClubController::class, 'myClubs'])->name('admin.clubs.index');
+    Route::get('/clubs/{clubSlug}/admin/settings', [\App\Http\Controllers\ClubSettingsController::class, 'show'])->name('admin.settings.show');
+    Route::put('/clubs/{clubSlug}/admin/settings', [\App\Http\Controllers\ClubSettingsController::class, 'update'])->name('admin.settings.update');
     Route::post('/clubs/{slug}/domain', [ClubController::class, 'updateDomain'])->name('clubs.domain.update');
 
     // CSV Member Import & Export Routes
