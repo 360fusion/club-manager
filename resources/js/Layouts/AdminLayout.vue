@@ -229,7 +229,7 @@ const copyInviteLink = () => {
 
           <!-- 5. Billing -->
           <Link 
-            :href="route('billing.index')" 
+            :href="route('billing.index', { clubSlug })" 
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'billing' 

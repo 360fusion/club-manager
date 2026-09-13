@@ -18,14 +18,14 @@ const processingProvider = ref(false);
 const switchProvider = (provider) => {
   selectedProvider.value = provider;
   processingProvider.value = true;
-  router.post(route('billing.provider.update'), { provider }, {
+  router.post(route('billing.provider.update', { clubSlug: props.club.slug }), { provider }, {
     onFinish: () => { processingProvider.value = false; }
   });
 };
 
 const initiateCheckout = (plan) => {
   const priceId = selectedProvider.value === 'stripe' ? plan.stripe_price_id : plan.paddle_price_id;
-  router.post(route('billing.checkout'), { price_id: priceId });
+  router.post(route('billing.checkout', { clubSlug: props.club.slug }), { price_id: priceId });
 };
 </script>
 
@@ -115,7 +115,7 @@ const initiateCheckout = (plan) => {
             <p class="text-xs text-slate-500">Active gateway: <strong class="text-indigo-600 uppercase font-mono">{{ selectedProvider }}</strong></p>
           </div>
 
-          <a :href="route('billing.portal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition-all flex items-center gap-2">
+          <a :href="route('billing.portal', { clubSlug: props.club.slug })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition-all flex items-center gap-2">
             <span>⚙️ Customer Portal</span>
           </a>
         </div>

@@ -108,10 +108,10 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/clubs/{clubSlug}/admin/users/{userId}', [UserAdminController::class, 'removeMember'])->name('admin.users.destroy');
 
     // Billing & Subscription Management Routes
-    Route::get('/admin/billing', [BillingController::class, 'index'])->name('billing.index');
-    Route::post('/admin/billing/provider', [BillingController::class, 'updateProvider'])->name('billing.provider.update');
-    Route::post('/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
-    Route::get('/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
+    Route::get('/clubs/{clubSlug}/admin/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/clubs/{clubSlug}/admin/billing/provider', [BillingController::class, 'updateProvider'])->name('billing.provider.update');
+    Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+    Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
     // 2FA Profile Settings Routes
     Route::get('/admin/profile/two-factor', [TwoFactorAuthController::class, 'show'])->name('admin.profile.two-factor');

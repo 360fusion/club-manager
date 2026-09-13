@@ -63,4 +63,34 @@ class MultiClubWorkspaceTest extends TestCase
             ->has('clubs')
         );
     }
+
+    public function test_can_render_tenant_billing_page(): void
+    {
+        $clubType = ClubType::create([
+            'name' => 'Water Sports',
+            'code' => 'rowing',
+            'available_modules' => ['memberships'],
+            'default_settings' => [],
+        ]);
+
+        $club = Club::create([
+            'club_type_id' => $clubType->id,
+            'name' => 'Oxford Boat Club',
+            'slug' => 'oxford-boating',
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create();
+        $club->users()->attach($user->id, ['role' => 'admin', 'member_number' => 'OUBC-001', 'status' => 'active']);
+
+        $response = $this->actingAs($user)->get(route('billing.index', ['clubSlug' => $club->slug]));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('Admin/Billing/Index')
+            ->has('club')
+            ->has('activeProvider')
+            ->has('plans')
+        );
+    }
 }

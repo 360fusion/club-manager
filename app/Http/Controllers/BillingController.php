@@ -11,9 +11,9 @@ use Inertia\Response;
 
 class BillingController extends Controller
 {
-    public function index(Request $request, PaymentManager $paymentManager): Response
+    public function index(Request $request, string $clubSlug, PaymentManager $paymentManager): Response
     {
-        $club = Club::first(); // Currently active tenant/club
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
         $provider = $club->settings['payment_provider'] ?? 'stripe';
         $gateway = $paymentManager->driver($provider);
 
@@ -26,7 +26,7 @@ class BillingController extends Controller
                 [
                     'id' => 'plan_basic',
                     'name' => 'Basic Tier',
-                    'price' => '$29/mo',
+                    'price' => '£29/mo',
                     'stripe_price_id' => config('services.stripe.price_basic', 'price_stripe_basic_demo'),
                     'paddle_price_id' => config('services.paddle.price_basic', 'pri_paddle_basic_demo'),
                     'features' => ['Up to 100 Members', 'Basic Event Management', 'Standard CMS'],
@@ -34,7 +34,7 @@ class BillingController extends Controller
                 [
                     'id' => 'plan_pro',
                     'name' => 'Pro Club Tier',
-                    'price' => '$79/mo',
+                    'price' => '£79/mo',
                     'stripe_price_id' => config('services.stripe.price_pro', 'price_stripe_pro_demo'),
                     'paddle_price_id' => config('services.paddle.price_pro', 'pri_paddle_pro_demo'),
                     'features' => ['Unlimited Members', '3-Course Dining & Dietary', 'Custom Domain CMS', 'Newsletter & SMS'],
@@ -44,13 +44,13 @@ class BillingController extends Controller
         ]);
     }
 
-    public function updateProvider(Request $request): RedirectResponse
+    public function updateProvider(Request $request, string $clubSlug): RedirectResponse
     {
         $request->validate([
             'provider' => 'required|in:stripe,paddle',
         ]);
 
-        $club = Club::first();
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
         $settings = $club->settings ?? [];
         $settings['payment_provider'] = $request->provider;
         $club->settings = $settings;
@@ -59,13 +59,13 @@ class BillingController extends Controller
         return redirect()->back()->with('success', 'Active payment provider updated to '.strtoupper($request->provider));
     }
 
-    public function checkout(Request $request, PaymentManager $paymentManager): RedirectResponse
+    public function checkout(Request $request, string $clubSlug, PaymentManager $paymentManager): RedirectResponse
     {
         $request->validate([
             'price_id' => 'required|string',
         ]);
 
-        $club = Club::first();
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
         $gateway = $paymentManager->forClub($club);
 
         try {
@@ -77,13 +77,13 @@ class BillingController extends Controller
         }
     }
 
-    public function portal(PaymentManager $paymentManager): RedirectResponse
+    public function portal(Request $request, string $clubSlug, PaymentManager $paymentManager): RedirectResponse
     {
-        $club = Club::first();
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
         $gateway = $paymentManager->forClub($club);
 
         try {
-            $portalUrl = $gateway->createCustomerPortalSession($club, route('billing.index'));
+            $portalUrl = $gateway->createCustomerPortalSession($club, route('billing.index', ['clubSlug' => $club->slug]));
 
             return redirect()->away($portalUrl);
         } catch (\Throwable $e) {
