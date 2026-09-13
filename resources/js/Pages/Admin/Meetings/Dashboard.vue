@@ -57,6 +57,12 @@ const copyApologiesText = () => {
         </div>
 
         <div class="flex items-center gap-3">
+          <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition-all flex items-center gap-1">
+            🖨️ PDF
+          </a>
+          <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
+            📜 Edit Summons Builder
+          </Link>
           <button @click="showApologiesModal = true" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
             📋 Copy Minutes Apologies
           </button>
