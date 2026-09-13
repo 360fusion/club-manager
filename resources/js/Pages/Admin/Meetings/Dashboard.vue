@@ -97,10 +97,15 @@ const apologiesFormattedText = computed(() => {
   return `APOLOGIES FOR ABSENCE:\nApologies were received and recorded from: ${names}.`;
 });
 
-const copyApologiesText = () => {
-  navigator.clipboard.writeText(apologiesFormattedText.value);
-  alert('Apologies text copied to clipboard! Ready to paste into meeting minutes.');
-};
+const formattedMeetingDate = computed(() => {
+  if (!props.meeting?.meeting_date) return '';
+  const parts = String(props.meeting.meeting_date).split('T')[0].split('-');
+  if (parts.length === 3) {
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  return props.meeting.meeting_date;
+});
 </script>
 
 <template>
@@ -112,13 +117,13 @@ const copyApologiesText = () => {
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
           <h2 class="text-xl font-bold text-slate-900">
-            {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + meeting.meeting_date }} at {{ meeting.starts_at ? meeting.starts_at.substring(0, 5) : '18:30' }}
+            {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formattedMeetingDate }} at {{ meeting.starts_at ? meeting.starts_at.substring(0, 5) : '18:30' }}
           </h2>
-          <div class="flex items-center gap-3 text-xs mt-1.5">
+          <div class="flex items-center gap-3 text-xs mt-1.5 flex-wrap">
             <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
               {{ meeting.status }}
             </span>
-            <span class="text-slate-500">📍 {{ meeting.venue }} • Rehearsal: {{ meeting.rehearsal_starts_at }}</span>
+            <span class="text-slate-500 font-medium">📅 {{ formattedMeetingDate }} • 📍 {{ meeting.venue }} • Rehearsal: {{ meeting.rehearsal_starts_at ? meeting.rehearsal_starts_at.substring(0, 5) : '-' }}</span>
           </div>
         </div>
 
