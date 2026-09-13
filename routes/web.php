@@ -156,6 +156,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{slug}/portal/profile', [MemberPortalController::class, 'profile'])->name('member.profile');
     Route::post('/clubs/{slug}/portal/profile', [MemberPortalController::class, 'updateProfile'])->name('member.profile.update');
     Route::post('/clubs/{slug}/portal/events/{id}/rsvp', [MemberPortalController::class, 'updateRsvp'])->name('member.rsvp');
+    Route::get('/clubs/{slug}/portal/meetings/{id}/summons', [MemberPortalController::class, 'summons'])->name('member.meetings.summons');
+    Route::post('/clubs/{slug}/portal/meetings/{id}/rsvp', [MemberPortalController::class, 'updateMeetingRsvp'])->name('member.meetings.rsvp');
+    Route::get('/clubs/{slug}/portal/meetings/{id}/pdf', [MemberPortalController::class, 'downloadMeetingPdf'])->name('member.meetings.pdf');
 
     // Invite-Only Member Approval & Rejection Routes
     Route::post('/clubs/{slug}/members/{userId}/approve', [ClubController::class, 'approveMember'])->name('clubs.members.approve');
