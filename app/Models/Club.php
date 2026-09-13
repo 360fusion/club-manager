@@ -57,6 +57,10 @@ class Club extends Model
         'domain_verified_at',
         'settings',
         'status',
+        'default_provincial_header_text',
+        'default_honorary_members_text',
+        'lodge_number',
+        'motto',
     ];
 
     protected function casts(): array

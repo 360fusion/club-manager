@@ -64,14 +64,37 @@ class MeetingAdminController extends Controller
         return Inertia::render('Admin/Meetings/Form', [
             'club' => $club,
             'meeting' => new Meeting([
+                'salutation' => 'Dear Sir and Brother,',
                 'starts_at' => '18:30',
                 'rehearsal_starts_at' => '17:30',
-                'venue' => 'Masonic Hall, Oxford',
-                'dress_code' => 'Dark Suit, Craft Regalia',
-                'dining_cost_member' => 35.00,
-                'dining_cost_guest' => 35.00,
+                'venue' => 'Masonic Hall, Wellington Street, Stockton-on-Tees',
+                'dress_code' => 'Dinner Jacket, White Gloves',
+                'dining_cost_member' => 20.00,
+                'dining_cost_guest' => 20.00,
+                'bank_sort_code' => '20-82-18',
+                'bank_account_number' => '80288373',
                 'status' => 'draft',
+                'officers_year_label' => 'OFFICERS FOR 2025-2026',
             ]),
+            'members' => $club->users,
+        ]);
+    }
+
+    /**
+     * Show form to edit an existing meeting.
+     */
+    public function edit(string $clubSlug, int $id): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)
+            ->where('id', $id)
+            ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user'])
+            ->firstOrFail();
+
+        return Inertia::render('Admin/Meetings/Form', [
+            'club' => $club,
+            'meeting' => $meeting,
+            'members' => $club->users,
         ]);
     }
 
@@ -91,23 +114,72 @@ class MeetingAdminController extends Controller
             'rehearsal_starts_at' => 'nullable|string',
             'venue' => 'required|string|max:255',
             'dress_code' => 'required|string|max:255',
-            'festive_board_theme' => 'nullable|string|max:255',
+            'salutation' => 'nullable|string|max:255',
+            'intro_text' => 'nullable|string',
+            'rehearsal_text' => 'nullable|string',
+            'festive_board_theme' => 'nullable|string',
             'dining_cost_member' => 'required|numeric|min:0',
             'dining_cost_guest' => 'required|numeric|min:0',
             'bank_sort_code' => 'nullable|string|max:20',
             'bank_account_number' => 'nullable|string|max:30',
             'payment_reference_prefix' => 'nullable|string|max:50',
             'almoner_notice' => 'nullable|string',
+            'sick_distressed_notes' => 'nullable|string',
+            'honorary_members_text' => 'nullable|string',
+            'provincial_header_text' => 'nullable|string',
+            'fraternal_visits_text' => 'nullable|string',
+            'officers_year_label' => 'nullable|string|max:255',
             'status' => 'required|in:draft,published,completed,cancelled',
+            'agenda_items' => 'nullable|array',
         ]);
 
         $validated['club_id'] = $club->id;
         $validated['rsvp_cutoff_at'] = Carbon::parse($validated['meeting_date'])->subDays(5)->endOfDay();
 
-        Meeting::updateOrCreate(['id' => $request->id], $validated);
+        $agendaData = $validated['agenda_items'] ?? [];
+        unset($validated['agenda_items']);
+
+        $meeting = Meeting::updateOrCreate(['id' => $request->id], $validated);
+
+        if (!empty($agendaData)) {
+            $meeting->agendaItems()->delete();
+            foreach ($agendaData as $idx => $item) {
+                if (!empty($item['title'])) {
+                    $meeting->agendaItems()->create([
+                        'item_number' => $idx + 1,
+                        'title' => $item['title'],
+                        'description' => $item['description'] ?? null,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('admin.meetings.index', ['clubSlug' => $club->slug])
-            ->with('success', 'Meeting details updated successfully.');
+            ->with('success', 'Meeting summons updated successfully.');
+    }
+
+    /**
+     * Render 2-page printable HTML/PDF summons view.
+     */
+    public function pdf(string $clubSlug, int $id)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)
+            ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user'])
+            ->firstOrFail();
+
+        $members = $club->users;
+        $secretaryUser = $club->users()->wherePivot('role', 'secretary')->first() ?: $club->users->first();
+        $worshipfulMaster = $club->users()->wherePivot('role', 'master')->first() ?: $club->users->first();
+
+        return view('summons.pdf', [
+            'club' => $club,
+            'meeting' => $meeting,
+            'members' => $members,
+            'officerAssignments' => $meeting->officerAssignments,
+            'secretaryUser' => $secretaryUser,
+            'worshipfulMaster' => $worshipfulMaster,
+        ]);
     }
 
     /**

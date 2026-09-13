@@ -31,6 +31,13 @@ class Meeting extends Model
         'almoner_notice',
         'sick_distressed_notes',
         'postal_batch_generated_at',
+        'salutation',
+        'intro_text',
+        'rehearsal_text',
+        'honorary_members_text',
+        'provincial_header_text',
+        'fraternal_visits_text',
+        'officers_year_label',
     ];
 
     protected $casts = [
