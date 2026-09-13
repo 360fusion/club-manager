@@ -37,9 +37,9 @@ class UserAdminController extends Controller
                 'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
                 'status' => $u->pivot->status ?? 'active',
                 'invitation_token' => $u->pivot->invitation_token ?? null,
-                'invited_at' => $u->pivot->invited_at?->format('M d, Y') ?? null,
-                'invitation_accepted_at' => $u->pivot->invitation_accepted_at?->format('M d, Y') ?? null,
-                'joined_at' => $u->pivot->created_at?->format('M d, Y') ?? 'Recent',
+                'invited_at' => $u->pivot->invited_at ? Carbon::parse($u->pivot->invited_at)->format('M d, Y') : null,
+                'invitation_accepted_at' => $u->pivot->invitation_accepted_at ? Carbon::parse($u->pivot->invitation_accepted_at)->format('M d, Y') : null,
+                'joined_at' => $u->pivot->created_at ? Carbon::parse($u->pivot->created_at)->format('M d, Y') : 'Recent',
             ];
         });
 
@@ -113,9 +113,9 @@ class UserAdminController extends Controller
             'emergency_contact' => $memberPivot->emergency_contact ?? '',
             'dietary_notes' => $memberPivot->dietary_notes ?? '',
             'invitation_token' => $memberPivot->invitation_token ?? null,
-            'invited_at' => $memberPivot->invited_at?->format('M d, Y') ?? null,
-            'invitation_accepted_at' => $memberPivot->invitation_accepted_at?->format('M d, Y') ?? null,
-            'joined_at' => $memberPivot->created_at?->format('M d, Y') ?? 'Recent',
+            'invited_at' => $memberPivot->invited_at ? Carbon::parse($memberPivot->invited_at)->format('M d, Y') : null,
+            'invitation_accepted_at' => $memberPivot->invitation_accepted_at ? Carbon::parse($memberPivot->invitation_accepted_at)->format('M d, Y') : null,
+            'joined_at' => $memberPivot->created_at ? Carbon::parse($memberPivot->created_at)->format('M d, Y') : 'Recent',
             'two_factor_enabled' => ! empty($user->two_factor_secret),
         ];
 
