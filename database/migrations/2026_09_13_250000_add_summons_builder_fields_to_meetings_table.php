@@ -28,7 +28,7 @@ return new class extends Migration
                 $table->text('fraternal_visits_text')->nullable();
             }
             if (!Schema::hasColumn('meetings', 'officers_year_label')) {
-                $table->text('officers_year_label')->nullable()->default('OFFICERS FOR 2025-2026');
+                $table->string('officers_year_label')->nullable()->default('OFFICERS FOR 2025-2026');
             }
         });
 
