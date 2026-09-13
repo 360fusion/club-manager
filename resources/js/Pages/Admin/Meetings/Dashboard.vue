@@ -50,9 +50,10 @@ const copyApologiesText = () => {
             <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
               {{ meeting.status }}
             </span>
-            <span class="text-xs text-slate-400">📅 {{ meeting.meeting_date }}</span>
           </div>
-          <h2 class="text-xl font-bold text-slate-900 mt-1">{{ meeting.title }}</h2>
+          <h2 class="text-xl font-bold text-slate-900 mt-1">
+            {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + meeting.meeting_date }} at {{ meeting.starts_at ? meeting.starts_at.substring(0, 5) : '18:30' }}
+          </h2>
           <p class="text-xs text-slate-500">📍 {{ meeting.venue }} • 🕒 Starts: {{ meeting.starts_at }} (Rehearsal: {{ meeting.rehearsal_starts_at }})</p>
         </div>
 

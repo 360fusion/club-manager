@@ -74,18 +74,15 @@ const deleteMeeting = (id) => {
       <!-- Meetings Roster Grid -->
       <div v-if="meetings.length" class="grid grid-cols-1 gap-4">
         <div v-for="meeting in meetings" :key="meeting.id" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 hover:border-indigo-200 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="space-y-2.5">
+          <div class="space-y-2">
             <div class="flex items-center gap-2">
               <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
                 {{ meeting.status }}
               </span>
-              <span class="text-xs text-slate-400">📅 {{ formatDate(meeting.meeting_date) }}</span>
-              <span class="text-xs text-slate-400">🕒 {{ formatTime(meeting.starts_at) }}</span>
             </div>
 
             <h3 class="text-lg font-bold text-slate-900">
-              {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formatDate(meeting.meeting_date) }}
-              <span class="text-slate-500 font-semibold text-base">at {{ formatTime(meeting.starts_at) }}</span>
+              {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formatDate(meeting.meeting_date) }} at {{ formatTime(meeting.starts_at) }}
             </h3>
 
             <div class="flex items-center gap-4 text-xs pt-1">
