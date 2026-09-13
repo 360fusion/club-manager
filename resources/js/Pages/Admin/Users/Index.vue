@@ -459,11 +459,19 @@ const submitImportCsv = () => {
                 <!-- Name & Email -->
                 <td class="py-4 px-6">
                   <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-sky-400 text-white font-bold flex items-center justify-center text-xs uppercase flex-shrink-0 shadow-sm">
+                    <Link 
+                      :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
+                      class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-sky-400 text-white font-bold flex items-center justify-center text-xs uppercase flex-shrink-0 shadow-sm hover:opacity-90 transition-opacity"
+                    >
                       {{ m.name.substring(0, 2) }}
-                    </div>
+                    </Link>
                     <div class="overflow-hidden">
-                      <div class="font-bold text-slate-900 truncate">{{ m.name }}</div>
+                      <Link 
+                        :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
+                        class="font-bold text-slate-900 hover:text-indigo-600 transition-colors truncate block"
+                      >
+                        {{ m.name }}
+                      </Link>
                       <div class="text-[11px] text-slate-500 truncate">{{ m.email }}</div>
                     </div>
                   </div>
@@ -599,13 +607,6 @@ const submitImportCsv = () => {
                       Permanent Delete
                     </button>
                   </template>
-
-                  <Link
-                    :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
-                    class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-lg transition-all inline-block"
-                  >
-                    Profile
-                  </Link>
                 </td>
               </tr>
 
