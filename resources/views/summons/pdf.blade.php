@@ -205,12 +205,31 @@
   }
 
   @media print {
-    body { background: none; }
-    .no-print { display: none; }
+    body { background: none; margin-top: 0 !important; }
+    .no-print { display: none !important; }
   }
 </style>
 </head>
 <body>
+
+  <!-- Top Floating Action Toolbar (Hidden during Print) -->
+  <div class="no-print" style="position: fixed; top: 0; left: 0; right: 0; background: #0f172a; color: #ffffff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; z-index: 99999; box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, sans-serif;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-weight: 800; font-size: 14px; color: #f8fafc;">📜 {{ $meeting->title }} — Summons PDF Preview</span>
+      <span style="background: #1e293b; color: #94a3b8; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600;">2-Page A4 Landscape</span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button onclick="window.print()" style="background: #3b82f6; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all;">
+        🖨️ Print / Save as PDF
+      </button>
+      <a href="{{ route('admin.meetings.pdf', ['clubSlug' => $club->slug, 'id' => $meeting->id, 'download' => 1]) }}" style="background: #10b981; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: all;">
+        📥 Download Summons (.html / .pdf)
+      </a>
+    </div>
+  </div>
+  
+  <div class="no-print" style="height: 55px;"></div>
 
   <!-- PAGE 1: Membership Roll & Lodge Cover Page -->
   <div class="page-container">

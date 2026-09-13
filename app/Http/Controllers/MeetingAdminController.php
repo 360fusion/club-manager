@@ -189,14 +189,25 @@ class MeetingAdminController extends Controller
         $secretaryUser = $club->users()->wherePivot('role', 'secretary')->first() ?: $club->users->first();
         $worshipfulMaster = $club->users()->wherePivot('role', 'master')->first() ?: $club->users->first();
 
-        return view('summons.pdf', [
+        $viewData = [
             'club' => $club,
             'meeting' => $meeting,
             'members' => $members,
             'officerAssignments' => $meeting->officerAssignments,
             'secretaryUser' => $secretaryUser,
             'worshipfulMaster' => $worshipfulMaster,
-        ]);
+        ];
+
+        if (request()->has('download')) {
+            $html = view('summons.pdf', $viewData)->render();
+            $filename = 'Summons-' . \Illuminate\Support\Str::slug($club->name) . '-' . $meeting->meeting_date->format('Y-m-d') . '.html';
+
+            return response($html)
+                ->header('Content-Type', 'text/html')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        }
+
+        return view('summons.pdf', $viewData);
     }
 
     /**
