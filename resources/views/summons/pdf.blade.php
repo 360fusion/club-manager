@@ -388,6 +388,9 @@
         Price: <strong>£{{ number_format($meeting->dining_cost_member, 2) }}</strong><br>
         Sort Code: <strong>{{ $meeting->bank_sort_code ?? '20-82-18' }}</strong> | Acc No: <strong>{{ $meeting->bank_account_number ?? '80288373' }}</strong><br>
         Reference: <strong>your name or names</strong>.<br>
+        @if($meeting->payment_link)
+          Pay Online: <strong><a href="{{ $meeting->payment_link }}" style="color: #000; text-decoration: underline;">{{ $meeting->payment_link }}</a></strong><br>
+        @endif
         Bookings must be made by {{ \Carbon\Carbon::parse($meeting->rsvp_cutoff_at)->format('jS F Y') }}.
       </div>
 

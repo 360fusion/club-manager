@@ -38,6 +38,7 @@ class Meeting extends Model
         'provincial_header_text',
         'fraternal_visits_text',
         'officers_year_label',
+        'payment_link',
     ];
 
     protected $casts = [

@@ -29,6 +29,7 @@ const form = useForm({
   bank_sort_code: props.meeting.bank_sort_code || '20-82-18',
   bank_account_number: props.meeting.bank_account_number || '80288373',
   payment_reference_prefix: props.meeting.payment_reference_prefix || 'SUMMONS',
+  payment_link: props.meeting.payment_link || '',
   almoner_notice: props.meeting.almoner_notice || '',
   sick_distressed_notes: props.meeting.sick_distressed_notes || 'Should you be aware of any illness or unusual circumstances, please contact the Almoner.',
   honorary_members_text: props.meeting.honorary_members_text || 'RW Bro Sir David Hugh Wootton Past Deputy Grand Master',
@@ -227,6 +228,12 @@ const submit = () => {
               <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Payment Reference Convention</label>
               <input v-model="form.payment_reference_prefix" type="text" placeholder="your name or names" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
             </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Direct Online Payment Link / URL (Optional)</label>
+            <input v-model="form.payment_link" type="url" placeholder="https://buy.stripe.com/..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+            <p class="text-[11px] text-slate-400 mt-1">If provided, members will see a direct "💳 Pay Online Now" button on their passwordless RSVP page.</p>
           </div>
         </div>
 

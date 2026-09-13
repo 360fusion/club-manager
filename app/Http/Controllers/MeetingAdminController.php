@@ -123,6 +123,7 @@ class MeetingAdminController extends Controller
             'bank_sort_code' => 'nullable|string|max:20',
             'bank_account_number' => 'nullable|string|max:30',
             'payment_reference_prefix' => 'nullable|string|max:50',
+            'payment_link' => 'nullable|string|max:500',
             'almoner_notice' => 'nullable|string',
             'sick_distressed_notes' => 'nullable|string',
             'honorary_members_text' => 'nullable|string',

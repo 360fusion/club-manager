@@ -150,6 +150,13 @@ const copyBankRef = () => {
               </div>
             </div>
 
+            <!-- Direct Online Payment Link Button -->
+            <div v-if="meeting.payment_link" class="pt-1">
+              <a :href="meeting.payment_link" target="_blank" class="block w-full text-center py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all">
+                💳 Pay Online Now (£{{ meeting.dining_cost_member }}) &rarr;
+              </a>
+            </div>
+
             <!-- Payment Details Card -->
             <div v-if="meeting.bank_sort_code" class="p-4 bg-indigo-50/70 border border-indigo-200 rounded-2xl text-xs space-y-2">
               <div class="font-bold text-indigo-950 flex items-center justify-between">
