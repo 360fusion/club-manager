@@ -23,25 +23,26 @@ class UserAdminController extends Controller
      */
     public function index(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)
-            ->with(['users'])
-            ->firstOrFail();
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
 
-        $members = $club->users->map(function ($u) {
-            return [
-                'id' => $u->id,
-                'name' => $u->name,
-                'email' => $u->email,
-                'role' => $u->pivot->role ?? 'member',
-                'rank' => $u->pivot->rank ?? '',
-                'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
-                'status' => $u->pivot->status ?? 'active',
-                'invitation_token' => $u->pivot->invitation_token ?? null,
-                'invited_at' => $u->pivot->invited_at ? Carbon::parse($u->pivot->invited_at)->format('M d, Y') : null,
-                'invitation_accepted_at' => $u->pivot->invitation_accepted_at ? Carbon::parse($u->pivot->invitation_accepted_at)->format('M d, Y') : null,
-                'joined_at' => $u->pivot->created_at ? Carbon::parse($u->pivot->created_at)->format('M d, Y') : 'Recent',
-            ];
-        });
+        $members = $club->users()
+            ->wherePivot('status', '!=', 'deleted')
+            ->get()
+            ->map(function ($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'role' => $u->pivot->role ?? 'member',
+                    'rank' => $u->pivot->rank ?? '',
+                    'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
+                    'status' => $u->pivot->status ?? 'active',
+                    'invitation_token' => $u->pivot->invitation_token ?? null,
+                    'invited_at' => $u->pivot->invited_at ? Carbon::parse($u->pivot->invited_at)->format('M d, Y') : null,
+                    'invitation_accepted_at' => $u->pivot->invitation_accepted_at ? Carbon::parse($u->pivot->invitation_accepted_at)->format('M d, Y') : null,
+                    'joined_at' => $u->pivot->created_at ? Carbon::parse($u->pivot->created_at)->format('M d, Y') : 'Recent',
+                ];
+            });
 
         $enableMemberRanks = $club->settings['enable_member_ranks'] ?? true;
         $memberRanks = $club->settings['member_ranks'] ?? ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'];
@@ -266,7 +267,7 @@ class UserAdminController extends Controller
     }
 
     /**
-     * Update member status (active, inactive, past, pending).
+     * Update member status (active, inactive, past, pending, deleted).
      */
     public function updateStatus(Request $request, string $clubSlug, int $userId): RedirectResponse
     {
@@ -274,7 +275,7 @@ class UserAdminController extends Controller
         $user = User::findOrFail($userId);
 
         $validated = $request->validate([
-            'status' => 'required|in:active,inactive,past,pending',
+            'status' => 'required|in:active,inactive,past,pending,deleted',
         ]);
 
         $club->users()->updateExistingPivot($userId, ['status' => $validated['status']]);
@@ -284,6 +285,7 @@ class UserAdminController extends Controller
             'inactive' => "{$user->name} status set to Deactivated (access paused).",
             'past' => "{$user->name} moved to Past Members list.",
             'pending' => "{$user->name} status set to pending.",
+            'deleted' => "{$user->name} has been deleted from the member directory.",
         ];
 
         return redirect()->back()->with('success', $messages[$validated['status']] ?? 'Member status updated.');
@@ -303,15 +305,17 @@ class UserAdminController extends Controller
     }
 
     /**
-     * Permanently delete a member from the club database.
+     * Delete a member from the admin directory (preserves historical database records).
      */
     public function forceDeleteMember(string $clubSlug, int $userId): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $user = User::findOrFail($userId);
 
-        $club->users()->detach($userId);
+        // Soft hide member by setting pivot status to 'deleted'
+        $club->users()->updateExistingPivot($userId, ['status' => 'deleted']);
 
-        return redirect()->back()->with('success', "{$user->name} permanently removed from club database.");
+        return redirect()->route('admin.users.index', ['clubSlug' => $clubSlug])
+            ->with('success', "{$user->name} has been deleted from the member directory. Historical records remain preserved.");
     }
 }

@@ -137,7 +137,7 @@ const restoreMember = (userId, name) => {
 };
 
 const forceDeleteMember = (userId, name) => {
-  if (confirm(`PERMANENT DELETE: Are you sure you want to permanently delete ${name} from the club database? This cannot be undone.`)) {
+  if (confirm(`Are you sure you want to delete ${name}? This will hide them from the member directory, but all historical records (RSVPs, dues) will be safely preserved.`)) {
     router.delete(route('admin.users.force_delete', { clubSlug: props.club.slug, userId }), {
       preserveScroll: true,
     });
@@ -564,9 +564,9 @@ const submitImportCsv = () => {
                     <button
                       @click="forceDeleteMember(m.id, m.name)"
                       class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all cursor-pointer shadow-sm"
-                      title="Permanently remove from database"
+                      title="Delete from member directory (preserves historical records)"
                     >
-                      Permanent Delete
+                      Delete
                     </button>
                   </template>
                 </td>

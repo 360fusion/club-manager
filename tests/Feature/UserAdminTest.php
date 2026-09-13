@@ -154,7 +154,7 @@ class UserAdminTest extends TestCase
         ]);
     }
 
-    public function test_can_permanently_delete_member(): void
+    public function test_can_delete_member_and_preserve_historical_records(): void
     {
         $member = User::factory()->create();
         $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'past']);
@@ -167,10 +167,21 @@ class UserAdminTest extends TestCase
 
         $response->assertRedirect();
 
-        $this->assertDatabaseMissing('club_user', [
+        // Database pivot record remains preserved with status='deleted' to retain historical records & roles
+        $this->assertDatabaseHas('club_user', [
             'club_id' => $this->club->id,
             'user_id' => $member->id,
+            'status' => 'deleted',
         ]);
+
+        // Verify member is hidden from admin member directory
+        $rosterResponse = $this->actingAs($this->adminUser)
+            ->get(route('admin.users.index', ['clubSlug' => $this->club->slug]));
+
+        $rosterResponse->assertInertia(fn ($page) => $page
+            ->component('Admin/Users/Index')
+            ->has('members', 1)
+        );
     }
 
     public function test_can_display_member_details_profile_page(): void
