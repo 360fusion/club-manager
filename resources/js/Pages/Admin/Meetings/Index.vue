@@ -49,6 +49,10 @@ const deleteMeeting = (id) => {
     router.delete(route('admin.meetings.destroy', { clubSlug: props.club.slug, id }));
   }
 };
+
+const duplicateMeeting = (id) => {
+  router.post(route('admin.meetings.duplicate', { clubSlug: props.club.slug, id }));
+};
 </script>
 
 <template>
@@ -91,6 +95,9 @@ const deleteMeeting = (id) => {
           </div>
 
           <div class="flex items-center gap-2.5 self-start md:self-auto">
+            <button @click="duplicateMeeting(meeting.id)" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
+              📋 Duplicate
+            </button>
             <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all">
               📜 Edit Summons
             </Link>

@@ -414,6 +414,53 @@ class MeetingAdminController extends Controller
     }
 
     /**
+     * Duplicate an existing meeting summons with its details, agenda items, and officer roles.
+     */
+    public function duplicate(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $original = Meeting::where('club_id', $club->id)
+            ->where('id', $id)
+            ->with(['agendaItems', 'officerAssignments'])
+            ->firstOrFail();
+
+        $newMeeting = $original->replicate([
+            'summons_published_at',
+            'created_at',
+            'updated_at',
+        ]);
+
+        $newMeeting->title = $original->title ? ($original->title . ' (Copy)') : ('Meeting Copy - ' . Carbon::parse($original->meeting_date)->format('jS F Y'));
+        $newMeeting->status = 'draft';
+        $newMeeting->meeting_date = Carbon::parse($original->meeting_date)->addMonth()->format('Y-m-d');
+        $newMeeting->rsvp_cutoff_at = Carbon::parse($newMeeting->meeting_date)->subDays(5)->endOfDay();
+        $newMeeting->save();
+
+        // Duplicate Agenda Items
+        foreach ($original->agendaItems as $item) {
+            $newMeeting->agendaItems()->create([
+                'item_number' => $item->item_number,
+                'title' => $item->title,
+                'description' => $item->description,
+            ]);
+        }
+
+        // Duplicate Officer Assignments
+        foreach ($original->officerAssignments as $assignment) {
+            $newMeeting->officerAssignments()->create([
+                'officer_role_id' => $assignment->officer_role_id,
+                'user_id' => $assignment->user_id,
+                'custom_name' => $assignment->custom_name,
+                'prefix_titles' => $assignment->prefix_titles,
+                'suffix_titles' => $assignment->suffix_titles,
+            ]);
+        }
+
+        return redirect()->route('admin.meetings.edit', ['clubSlug' => $club->slug, 'id' => $newMeeting->id])
+            ->with('success', 'Meeting summons duplicated successfully as draft! You can now adjust the date and details.');
+    }
+
+    /**
      * Delete a meeting.
      */
     public function destroy(string $clubSlug, int $id): RedirectResponse

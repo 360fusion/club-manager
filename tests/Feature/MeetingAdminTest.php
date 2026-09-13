@@ -190,4 +190,51 @@ class MeetingAdminTest extends TestCase
         $downloadResponse = $this->get(route('admin.meetings.pdf', ['clubSlug' => $club->slug, 'id' => $meeting->id, 'download' => 1]));
         $downloadResponse->assertOk();
     }
+
+    public function test_admin_can_duplicate_meeting_summons_without_rsvp_stats()
+    {
+        $clubType = \App\Models\ClubType::create([
+            'name' => 'Masonic Lodge',
+            'code' => 'masonic',
+            'available_modules' => ['meetings'],
+            'default_settings' => [],
+        ]);
+
+        $club = Club::create([
+            'club_type_id' => $clubType->id,
+            'name' => 'Apollo Lodge No. 357',
+            'slug' => 'oxford-lodge-duplicate',
+            'status' => 'active',
+        ]);
+
+        $adminUser = User::factory()->create();
+        $this->actingAs($adminUser);
+
+        $meeting = Meeting::create([
+            'club_id' => $club->id,
+            'title' => 'Meeting - 20th October 2026',
+            'meeting_date' => '2026-10-20',
+            'starts_at' => '18:30',
+            'venue' => 'Masonic Hall, Oxford',
+            'dress_code' => 'Dark Suit, Craft Regalia',
+            'status' => 'published',
+            'rsvp_cutoff_at' => Carbon::now()->addDays(10),
+        ]);
+
+        $meeting->agendaItems()->create([
+            'item_number' => 1,
+            'title' => 'To confirm minutes of previous meeting.',
+        ]);
+
+        $response = $this->post(route('admin.meetings.duplicate', ['clubSlug' => $club->slug, 'id' => $meeting->id]));
+
+        $response->assertSessionHasNoErrors();
+
+        $duplicated = Meeting::where('club_id', $club->id)->where('id', '!=', $meeting->id)->first();
+        $this->assertNotNull($duplicated);
+        $this->assertEquals('draft', $duplicated->status);
+        $this->assertEquals('Masonic Hall, Oxford', $duplicated->venue);
+        $this->assertEquals(1, $duplicated->agendaItems->count());
+        $this->assertEquals(0, \App\Models\MeetingRsvp::where('meeting_id', $duplicated->id)->count());
+    }
 }

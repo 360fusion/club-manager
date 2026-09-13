@@ -97,6 +97,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/meetings/{id}/pdf', [\App\Http\Controllers\MeetingAdminController::class, 'pdf'])->name('admin.meetings.pdf');
     Route::post('/clubs/{clubSlug}/admin/meetings/generate-season', [\App\Http\Controllers\MeetingAdminController::class, 'generateSeason'])->name('admin.meetings.generate_season');
     Route::post('/clubs/{clubSlug}/admin/meetings/{id}/publish', [\App\Http\Controllers\MeetingAdminController::class, 'publishSummons'])->name('admin.meetings.publish');
+    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/duplicate', [\App\Http\Controllers\MeetingAdminController::class, 'duplicate'])->name('admin.meetings.duplicate');
     Route::delete('/clubs/{clubSlug}/admin/meetings/{id}', [\App\Http\Controllers\MeetingAdminController::class, 'destroy'])->name('admin.meetings.destroy');
 
     // Admin Blog & News Posts Routes
