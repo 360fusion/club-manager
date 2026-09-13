@@ -15,6 +15,7 @@ const showApologiesModal = ref(false);
 
 const filteredRsvps = computed(() => {
   if (activeTab.value === 'all') return props.rsvps;
+  if (activeTab.value === 'visitors') return props.rsvps.filter(r => r.is_visitor);
   return props.rsvps.filter(r => r.attendance_status === activeTab.value);
 });
 
@@ -133,6 +134,9 @@ const copyApologiesText = () => {
           </button>
           <button @click="activeTab = 'apologies'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'apologies' ? 'bg-rose-600 text-white' : 'text-slate-600 hover:bg-slate-100']">
             Apologies ({{ stats.apologies }})
+          </button>
+          <button @click="activeTab = 'visitors'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'visitors' ? 'bg-purple-600 text-white' : 'text-slate-600 hover:bg-slate-100']">
+            Visitors ({{ stats.visiting_count || 0 }})
           </button>
         </div>
 

@@ -323,6 +323,7 @@ class MeetingAdminController extends Controller
                 'attending_meeting_only' => $attendingMeetingOnly->count(),
                 'apologies' => $apologies->count(),
                 'awaiting' => $awaitingSubscribingMembers,
+                'visiting_count' => $visitorRsvps->count(),
                 'visiting_attending' => $visitingAttendingCount,
                 'guest_meals' => $guestMealsCount,
                 'total_caterer_headcount' => $totalCatererHeadcount,
