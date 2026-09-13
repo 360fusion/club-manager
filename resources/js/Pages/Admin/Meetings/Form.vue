@@ -84,16 +84,10 @@ const removeAgendaItem = (index) => {
 const submit = () => {
   form.post(route('admin.meetings.store', { clubSlug: props.club.slug }));
 };
-
-const duplicateMeeting = () => {
-  if (props.meeting.id) {
-    router.post(route('admin.meetings.duplicate', { clubSlug: props.club.slug, id: props.meeting.id }));
-  }
-};
 </script>
 
 <template>
-  <AdminLayout :title="`${meeting.id ? 'Edit Summons Builder' : 'Create Summons'}`" :club="club" active-tab="meetings">
+  <AdminLayout :title="`${meeting.id ? 'Edit Summons' : 'Create Summons'}`" :club="club" active-tab="meetings">
     
     <div class="max-w-6xl mx-auto space-y-6">
       
@@ -105,9 +99,6 @@ const duplicateMeeting = () => {
         </div>
         
         <div class="flex flex-wrap items-center gap-3">
-          <button v-if="meeting.id" type="button" @click="duplicateMeeting" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer">
-            📋 Duplicate
-          </button>
           <a v-if="meeting.id" :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" class="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
             🖨️ Preview PDF
           </a>
