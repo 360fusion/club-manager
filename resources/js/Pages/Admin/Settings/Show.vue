@@ -437,17 +437,56 @@ const updateMemberRank = (userId, newRank) => {
               </label>
             </div>
 
-            <div v-if="form.enable_member_ranks" class="space-y-3 pt-2">
-              <label class="block text-xs font-bold text-slate-700">Configured Ranks & Positions</label>
-              <div class="flex flex-wrap gap-2 mb-2">
-                <span v-for="(rank, idx) in form.member_ranks" :key="idx" class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold">
-                  🏅 {{ rank }}
-                  <button type="button" @click="removeRank(idx)" class="text-indigo-400 hover:text-indigo-900 font-extrabold ml-1">&times;</button>
-                </span>
+            <div v-if="form.enable_member_ranks" class="space-y-4 pt-4 border-t border-slate-100">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-0.5">Configured Ranks & Positions List</label>
+                <p class="text-[11px] text-slate-400">Define the positions or skill ranks available for members in your organization.</p>
               </div>
-              <div class="flex gap-2 max-w-md">
-                <input v-model="newRankInput" @keydown.enter.prevent="addRank" type="text" placeholder="Add a new rank (e.g. Master, Coxswain)..." class="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
-                <button type="button" @click="addRank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition">Add Rank</button>
+
+              <!-- Vertical Ranks List Container -->
+              <div class="max-w-lg space-y-2">
+                <div
+                  v-for="(rank, idx) in form.member_ranks"
+                  :key="idx"
+                  class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200/90 rounded-2xl hover:border-slate-300 transition-all group"
+                >
+                  <div class="flex items-center gap-3">
+                    <span class="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/60 font-bold flex items-center justify-center text-xs shadow-xs">
+                      🏅
+                    </span>
+                    <span class="text-xs font-bold text-slate-800">{{ rank }}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    @click="removeRank(idx)"
+                    class="px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all opacity-80 group-hover:opacity-100 cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div v-if="form.member_ranks.length === 0" class="p-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl">
+                  No positions configured yet. Add your first position below.
+                </div>
+              </div>
+
+              <!-- Add New Rank Form Row -->
+              <div class="flex gap-2 max-w-lg pt-1">
+                <input
+                  v-model="newRankInput"
+                  @keydown.enter.prevent="addRank"
+                  type="text"
+                  placeholder="Add a new position/rank (e.g. Captain, Coxswain, Senior)..."
+                  class="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
+                />
+                <button
+                  type="button"
+                  @click="addRank"
+                  class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <span>+</span> Add Position
+                </button>
               </div>
             </div>
           </div>
