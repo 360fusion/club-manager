@@ -28,6 +28,14 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  enableMemberRanks: {
+    type: Boolean,
+    default: true,
+  },
+  memberRanks: {
+    type: Array,
+    default: () => ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'],
+  },
 });
 
 const activeTab = ref('overview');
@@ -36,6 +44,14 @@ const updateRole = (newRole) => {
   router.post(
     route('admin.users.role.update', { clubSlug: props.club.slug, userId: props.member.id }),
     { role: newRole },
+    { preserveScroll: true }
+  );
+};
+
+const updateRank = (newRank) => {
+  router.post(
+    route('admin.users.rank.update', { clubSlug: props.club.slug, userId: props.member.id }),
+    { rank: newRank },
     { preserveScroll: true }
   );
 };
@@ -166,6 +182,18 @@ const statusBadgeClass = (status) => {
 
         <!-- Role & Management Actions -->
         <div class="flex flex-wrap items-center gap-3 border-t md:border-t-0 border-slate-100 pt-4 md:pt-0">
+          <div v-if="enableMemberRanks" class="space-y-1">
+            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Member Rank</label>
+            <select
+              :value="member.rank"
+              @change="updateRank($event.target.value)"
+              class="px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-all shadow-sm"
+            >
+              <option value="">No Rank</option>
+              <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
+            </select>
+          </div>
+
           <div class="space-y-1">
             <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Club Role</label>
             <select
@@ -324,6 +352,15 @@ const statusBadgeClass = (status) => {
               <div>
                 <div class="text-[10px] font-extrabold uppercase text-slate-400">Member Number</div>
                 <div class="font-mono text-slate-900 font-bold mt-0.5">{{ member.member_number }}</div>
+              </div>
+
+              <div v-if="enableMemberRanks">
+                <div class="text-[10px] font-extrabold uppercase text-slate-400">Configured Rank</div>
+                <div class="mt-0.5 flex items-center gap-1.5">
+                  <span class="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-extrabold">
+                    🏅 {{ member.rank || 'No Rank Assigned' }}
+                  </span>
+                </div>
               </div>
 
               <div>

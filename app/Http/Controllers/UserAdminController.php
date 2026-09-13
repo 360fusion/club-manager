@@ -120,12 +120,17 @@ class UserAdminController extends Controller
             'two_factor_enabled' => ! empty($user->two_factor_secret),
         ];
 
+        $enableMemberRanks = $club->settings['enable_member_ranks'] ?? true;
+        $memberRanks = $club->settings['member_ranks'] ?? ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'];
+
         return Inertia::render('Admin/Users/Show', [
             'club' => $club,
             'member' => $memberData,
             'userClubs' => $userClubs,
             'rsvps' => $rsvps,
             'invoices' => $invoices,
+            'enableMemberRanks' => $enableMemberRanks,
+            'memberRanks' => $memberRanks,
             'stats' => [
                 'total_rsvps' => $totalRsvps,
                 'attended_count' => $attendedCount,
