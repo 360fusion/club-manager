@@ -161,6 +161,18 @@ const removeRank = (index) => {
   form.member_ranks.splice(index, 1);
 };
 
+const moveRankUp = (index) => {
+  if (index <= 0) return;
+  const item = form.member_ranks.splice(index, 1)[0];
+  form.member_ranks.splice(index - 1, 0, item);
+};
+
+const moveRankDown = (index) => {
+  if (index >= form.member_ranks.length - 1) return;
+  const item = form.member_ranks.splice(index, 1)[0];
+  form.member_ranks.splice(index + 1, 0, item);
+};
+
 const editingRankIndex = ref(null);
 const editingRankValue = ref('');
 
@@ -601,6 +613,30 @@ const updateMemberRank = (userId, newRank) => {
                   <!-- Viewing State -->
                   <template v-if="editingRankIndex !== idx">
                     <div class="flex items-center gap-3">
+                      <!-- Reorder Controls -->
+                      <div class="flex flex-col items-center justify-center gap-0.5 mr-0.5">
+                        <button
+                          type="button"
+                          @click="moveRankUp(idx)"
+                          :disabled="idx === 0"
+                          title="Move Up"
+                          aria-label="Move Up"
+                          class="w-5 h-4 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-indigo-600 hover:bg-slate-200/60 rounded disabled:opacity-20 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer transition-all"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          @click="moveRankDown(idx)"
+                          :disabled="idx === form.member_ranks.length - 1"
+                          title="Move Down"
+                          aria-label="Move Down"
+                          class="w-5 h-4 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-indigo-600 hover:bg-slate-200/60 rounded disabled:opacity-20 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer transition-all"
+                        >
+                          ▼
+                        </button>
+                      </div>
+
                       <span class="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/60 font-bold flex items-center justify-center text-xs shadow-xs">
                         🏅
                       </span>
