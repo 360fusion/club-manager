@@ -138,6 +138,28 @@ const removeRank = (index) => {
   form.member_ranks.splice(index, 1);
 };
 
+const editingRankIndex = ref(null);
+const editingRankValue = ref('');
+
+const startEditRank = (index) => {
+  editingRankIndex.value = index;
+  editingRankValue.value = form.member_ranks[index];
+};
+
+const saveEditRank = (index) => {
+  const trimmed = editingRankValue.value.trim();
+  if (trimmed) {
+    form.member_ranks[index] = trimmed;
+  }
+  editingRankIndex.value = null;
+  editingRankValue.value = '';
+};
+
+const cancelEditRank = () => {
+  editingRankIndex.value = null;
+  editingRankValue.value = '';
+};
+
 const updateMemberRank = (userId, newRank) => {
   router.post(
     route('admin.users.rank.update', { clubSlug: props.club.slug, userId }),
@@ -450,20 +472,62 @@ const updateMemberRank = (userId, newRank) => {
                   :key="idx"
                   class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200/90 rounded-2xl hover:border-slate-300 transition-all group"
                 >
-                  <div class="flex items-center gap-3">
-                    <span class="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/60 font-bold flex items-center justify-center text-xs shadow-xs">
-                      🏅
-                    </span>
-                    <span class="text-xs font-bold text-slate-800">{{ rank }}</span>
-                  </div>
+                  <!-- Viewing State -->
+                  <template v-if="editingRankIndex !== idx">
+                    <div class="flex items-center gap-3">
+                      <span class="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/60 font-bold flex items-center justify-center text-xs shadow-xs">
+                        🏅
+                      </span>
+                      <span class="text-xs font-bold text-slate-800">{{ rank }}</span>
+                    </div>
 
-                  <button
-                    type="button"
-                    @click="removeRank(idx)"
-                    class="px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all opacity-80 group-hover:opacity-100 cursor-pointer"
-                  >
-                    Remove
-                  </button>
+                    <div class="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        @click="startEditRank(idx)"
+                        class="px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:text-indigo-600 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        @click="removeRank(idx)"
+                        class="px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </template>
+
+                  <!-- Editing State -->
+                  <template v-else>
+                    <div class="flex items-center gap-2 w-full">
+                      <span class="w-7 h-7 rounded-xl bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                        ✏️
+                      </span>
+                      <input
+                        v-model="editingRankValue"
+                        @keydown.enter.prevent="saveEditRank(idx)"
+                        @keydown.esc="cancelEditRank"
+                        type="text"
+                        class="flex-1 px-3 py-1.5 bg-white border border-indigo-300 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <button
+                        type="button"
+                        @click="saveEditRank(idx)"
+                        class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        @click="cancelEditRank"
+                        class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </template>
                 </div>
 
                 <div v-if="form.member_ranks.length === 0" class="p-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl">
