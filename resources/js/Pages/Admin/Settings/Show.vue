@@ -156,17 +156,13 @@ const initiateRemoveRank = (index) => {
   const rankToDelete = form.member_ranks[index];
   const affectedMembers = props.members.filter(m => m.rank === rankToDelete);
 
-  if (affectedMembers.length > 0) {
-    pendingDeleteRank.value = {
-      index,
-      rank: rankToDelete,
-      affectedMembers,
-      reassignRank: '', // default to unassigned
-    };
-    showDeleteWarningModal.value = true;
-  } else {
-    executeRemoveRank(index, rankToDelete, []);
-  }
+  pendingDeleteRank.value = {
+    index,
+    rank: rankToDelete,
+    affectedMembers,
+    reassignRank: '', // default to unassigned
+  };
+  showDeleteWarningModal.value = true;
 };
 
 const confirmDeleteRank = () => {
@@ -1108,7 +1104,7 @@ const updateMemberRank = (userId, newRank) => {
 
     </div>
 
-    <!-- Modal: Position Deletion Warning Modal -->
+    <!-- Modal: Position Deletion Warning & Confirmation Modal -->
     <div
       v-if="showDeleteWarningModal"
       class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
@@ -1117,7 +1113,7 @@ const updateMemberRank = (userId, newRank) => {
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div class="flex items-center gap-2 text-amber-600 font-bold text-sm">
             <span class="text-base">⚠️</span>
-            <h3>Position Assigned to Active Members</h3>
+            <h3>Confirm Position Deletion</h3>
           </div>
           <button @click="showDeleteWarningModal = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">
             &times;
@@ -1125,31 +1121,46 @@ const updateMemberRank = (userId, newRank) => {
         </div>
 
         <div v-if="pendingDeleteRank" class="space-y-4 text-xs">
-          <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900">
-            <p class="font-bold">
-              The position <span class="font-black text-slate-900">"{{ pendingDeleteRank.rank }}"</span> is assigned to {{ pendingDeleteRank.affectedMembers.length }} member(s).
-            </p>
-            <p class="text-[11px] text-amber-700 mt-1">
-              Affected members: <span class="font-semibold">{{ pendingDeleteRank.affectedMembers.map(m => m.name).slice(0, 4).join(', ') }}{{ pendingDeleteRank.affectedMembers.length > 4 ? ` +${pendingDeleteRank.affectedMembers.length - 4} more` : '' }}</span>.
-            </p>
-          </div>
+          <!-- Case 1: Assigned to active members -->
+          <template v-if="pendingDeleteRank.affectedMembers.length > 0">
+            <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 space-y-1">
+              <p class="font-bold">
+                Warning: The position <span class="font-black text-slate-900">"{{ pendingDeleteRank.rank }}"</span> is assigned to {{ pendingDeleteRank.affectedMembers.length }} member(s).
+              </p>
+              <p class="text-[11px] text-amber-700">
+                Affected members: <span class="font-semibold">{{ pendingDeleteRank.affectedMembers.map(m => m.name).slice(0, 4).join(', ') }}{{ pendingDeleteRank.affectedMembers.length > 4 ? ` +${pendingDeleteRank.affectedMembers.length - 4} more` : '' }}</span>.
+              </p>
+            </div>
 
-          <div>
-            <label class="block font-bold text-slate-700 mb-1.5">Action for Affected Members</label>
-            <select
-              v-model="pendingDeleteRank.reassignRank"
-              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Clear Position (Unassign Rank)</option>
-              <option
-                v-for="r in form.member_ranks.filter(r => r !== pendingDeleteRank.rank)"
-                :key="r"
-                :value="r"
+            <div>
+              <label class="block font-bold text-slate-700 mb-1.5">Action for Affected Members</label>
+              <select
+                v-model="pendingDeleteRank.reassignRank"
+                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                Reassign to: 🏅 {{ r }}
-              </option>
-            </select>
-          </div>
+                <option value="">Clear Position (Unassign Rank)</option>
+                <option
+                  v-for="r in form.member_ranks.filter(r => r !== pendingDeleteRank.rank)"
+                  :key="r"
+                  :value="r"
+                >
+                  Reassign to: 🏅 {{ r }}
+                </option>
+              </select>
+            </div>
+          </template>
+
+          <!-- Case 2: 0 members assigned -->
+          <template v-else>
+            <div class="p-3.5 bg-amber-50/80 border border-amber-200 rounded-2xl text-amber-900">
+              <p class="font-bold">
+                Are you sure you want to delete the position <span class="font-black text-slate-900">"{{ pendingDeleteRank.rank }}"</span>?
+              </p>
+              <p class="text-[11px] text-amber-700 mt-1">
+                This position will be removed from your club's active positions list. You can undo this action immediately after deleting.
+              </p>
+            </div>
+          </template>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 text-xs">
@@ -1165,7 +1176,7 @@ const updateMemberRank = (userId, newRank) => {
             @click="confirmDeleteRank"
             class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md shadow-rose-600/20 cursor-pointer"
           >
-            Confirm & Delete Position
+            Confirm Delete
           </button>
         </div>
       </div>
