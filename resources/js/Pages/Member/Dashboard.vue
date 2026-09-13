@@ -158,38 +158,38 @@ const submitMeetingRsvp = () => {
 
           <div v-if="meetings.length" class="space-y-4">
             <div v-for="m in meetings" :key="m.id" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 hover:border-slate-300 transition-all space-y-4">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="space-y-1">
-                  <div class="flex items-center gap-2">
-                    <span v-if="m.user_rsvp?.attendance_status === 'attending_dining'" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      🟢 ATTENDING DINING
-                    </span>
-                    <span v-else-if="m.user_rsvp?.attendance_status === 'attending_meeting_only'" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
-                      🔵 ATTENDING MEETING ONLY
-                    </span>
-                    <span v-else-if="m.user_rsvp?.attendance_status === 'apologies'" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                      🔴 APOLOGIES SENT
-                    </span>
-                    <span v-else class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                      ⚠️ RSVP AWAITING
-                    </span>
-                    
-                    <span v-if="m.is_cutoff_passed" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                      CUTOFF PASSED
-                    </span>
-                  </div>
-
-                  <h3 class="text-lg font-bold text-slate-900 mt-1">{{ m.title }}</h3>
+              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div class="space-y-1.5 flex-1">
+                  <h3 class="text-lg font-bold text-slate-900">{{ m.title }}</h3>
                   <p class="text-xs text-slate-500">📍 {{ m.venue }} • 🕒 Start: {{ m.starts_at }} <span v-if="m.rehearsal_starts_at">(Rehearsal: {{ m.rehearsal_starts_at }})</span></p>
                   <p v-if="m.rsvp_cutoff_at" class="text-[11px] text-amber-700 font-semibold">⏰ Catering Deadline: {{ m.rsvp_cutoff_at }}</p>
                 </div>
 
-                <div class="flex flex-col gap-2 w-full sm:w-auto">
-                  <button @click="openMeetingRsvpModal(m)" :disabled="m.is_cutoff_passed" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer text-center justify-center flex items-center gap-1">
+                <div class="flex flex-col gap-2.5 w-full sm:w-auto sm:items-end flex-shrink-0">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span v-if="m.user_rsvp?.attendance_status === 'attending_dining'" class="px-3 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      🟢 ATTENDING DINING
+                    </span>
+                    <span v-else-if="m.user_rsvp?.attendance_status === 'attending_meeting_only'" class="px-3 py-1 rounded-lg text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                      🔵 ATTENDING MEETING ONLY
+                    </span>
+                    <span v-else-if="m.user_rsvp?.attendance_status === 'apologies'" class="px-3 py-1 rounded-lg text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                      🔴 APOLOGIES SENT
+                    </span>
+                    <span v-else class="px-3 py-1 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                      ⚠️ RSVP AWAITING
+                    </span>
+                    
+                    <span v-if="m.is_cutoff_passed" class="px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                      CUTOFF PASSED
+                    </span>
+                  </div>
+
+                  <button @click="openMeetingRsvpModal(m)" :disabled="m.is_cutoff_passed" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer text-center justify-center flex items-center gap-1">
                     ✍️ {{ m.user_rsvp ? 'Edit Response' : 'Respond' }}
                   </button>
 
-                  <Link :href="route('member.meetings.summons', { slug: club.slug, id: m.id })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-1 text-center">
+                  <Link :href="route('member.meetings.summons', { slug: club.slug, id: m.id })" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-1 text-center">
                     📄 View Summons
                   </Link>
                 </div>
