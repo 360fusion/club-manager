@@ -31,6 +31,7 @@ const activeTab = ref('general');
 // Primary Settings Form
 const form = useForm({
   name: props.club.name || '',
+  lodge_number: props.club.lodge_number || props.settings.lodge_number || '1418',
   tagline: props.settings.tagline || '',
   logo_url: props.club.logo_url || '',
   primary_color: props.settings.primary_color || '#0369a1',
@@ -519,6 +520,11 @@ const updateMemberRank = (userId, newRank) => {
             <div>
               <label class="block font-bold text-slate-700 mb-1">Club / Organization Name</label>
               <input v-model="form.name" type="text" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Lodge / Club Number</label>
+              <input v-model="form.lodge_number" type="text" placeholder="e.g. 1418" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
             </div>
 
             <div>

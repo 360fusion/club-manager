@@ -93,6 +93,7 @@ class ClubSettingsController extends Controller
         $settings = array_merge([
             // General & Access
             'tagline' => 'Excellence in Club Management',
+            'lodge_number' => $club->lodge_number ?? '1418',
             'primary_color' => '#0369a1',
             'sidebar_theme' => 'dark_slate',
             'currency' => 'GBP',
@@ -221,6 +222,7 @@ class ClubSettingsController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'tagline' => 'nullable|string|max:255',
+            'lodge_number' => 'nullable|string|max:100',
             'logo_url' => 'nullable|string|max:500',
             'primary_color' => 'nullable|string|max:50',
             'sidebar_theme' => 'nullable|string|max:50',
@@ -293,6 +295,10 @@ class ClubSettingsController extends Controller
 
         if (isset($validated['logo_url'])) {
             $club->logo_url = $validated['logo_url'];
+        }
+
+        if (isset($validated['lodge_number'])) {
+            $club->lodge_number = $validated['lodge_number'];
         }
 
         if (isset($validated['custom_domain']) && $validated['custom_domain'] !== $club->custom_domain) {
