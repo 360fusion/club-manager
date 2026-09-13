@@ -187,7 +187,7 @@ const statusBadgeClass = (status) => {
             <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Account Invitation</label>
             <div class="flex items-center gap-1.5">
               <button
-                v-if="member.invitation_accepted_at"
+                v-if="member.invitation_accepted_at || member.status === 'active'"
                 type="button"
                 disabled
                 class="px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs rounded-xl flex items-center gap-1.5 opacity-90 cursor-default"

@@ -522,8 +522,8 @@ const submitImportCsv = () => {
 
                 <!-- Actions -->
                 <td class="py-4 px-6 text-right space-x-1.5 whitespace-nowrap">
-                  <!-- 1. Invitation Actions if not accepted -->
-                  <template v-if="!m.invitation_accepted_at && m.status !== 'past' && m.status !== 'inactive'">
+                  <!-- 1. Invitation Actions for pending/unaccepted members -->
+                  <template v-if="m.status === 'pending' && !m.invitation_accepted_at">
                     <button
                       @click="sendInviteEmail(m.id)"
                       class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
