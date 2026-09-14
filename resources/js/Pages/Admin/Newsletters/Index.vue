@@ -128,53 +128,60 @@ const deleteNewsletter = (id) => {
 
       <!-- Filter Toolbar Card -->
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-        <!-- 5-Column Filter Toolbar -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
-          <!-- Search Keyword (Leftmost Column) -->
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search subject or text..."
-            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-          />
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <!-- Prominent Search Bar (Left) -->
+          <div class="relative w-full lg:w-96">
+            <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search broadcasts by subject line or content..."
+              class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all shadow-xs"
+            />
+          </div>
 
-          <!-- Status Dropdown -->
-          <select
-            v-model="selectedStatus"
-            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-          >
-            <option value="all">All Broadcasts ({{ newsletters.length }})</option>
-            <option value="sent">🚀 Sent ({{ newsletters.filter(n => n.status === 'sent').length }})</option>
-            <option value="draft">✏️ Drafts ({{ newsletters.filter(n => n.status === 'draft').length }})</option>
-          </select>
+          <!-- Dropdown Filters (Right) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs w-full lg:w-auto">
+            <!-- Status Dropdown -->
+            <select
+              v-model="selectedStatus"
+              class="px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+            >
+              <option value="all">All Statuses ({{ newsletters.length }})</option>
+              <option value="sent">🚀 Sent ({{ newsletters.filter(n => n.status === 'sent').length }})</option>
+              <option value="draft">✏️ Drafts ({{ newsletters.filter(n => n.status === 'draft').length }})</option>
+            </select>
 
-          <!-- Channel Filter -->
-          <select
-            v-model="selectedTypeId"
-            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-          >
-            <option value="all">All Channels</option>
-            <option v-for="t in types" :key="t.id" :value="t.id">{{ t.icon }} {{ t.name }}</option>
-          </select>
+            <!-- Channel Filter -->
+            <select
+              v-model="selectedTypeId"
+              class="px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+            >
+              <option value="all">All Channels</option>
+              <option v-for="t in types" :key="t.id" :value="t.id">{{ t.icon }} {{ t.name }}</option>
+            </select>
 
-          <!-- Target Role Filter -->
-          <select
-            v-model="selectedRole"
-            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-          >
-            <option value="all">All Target Roles</option>
-            <option v-for="r in availableRoles" :key="r.id" :value="r.id">{{ r.label }}</option>
-          </select>
+            <!-- Target Role Filter -->
+            <select
+              v-model="selectedRole"
+              class="px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+            >
+              <option value="all">All Target Roles</option>
+              <option v-for="r in availableRoles" :key="r.id" :value="r.id">{{ r.label }}</option>
+            </select>
 
-          <!-- Date Range Filter -->
-          <select
-            v-model="selectedDateRange"
-            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-          >
-            <option value="all">All Time</option>
-            <option value="30_days">Last 30 Days</option>
-            <option value="this_year">This Year</option>
-          </select>
+            <!-- Date Range Filter -->
+            <select
+              v-model="selectedDateRange"
+              class="px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+            >
+              <option value="all">All Time</option>
+              <option value="30_days">Last 30 Days</option>
+              <option value="this_year">This Year</option>
+            </select>
+          </div>
         </div>
 
         <!-- Newsletters List Grid -->
