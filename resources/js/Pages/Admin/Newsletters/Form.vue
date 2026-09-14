@@ -6,10 +6,12 @@ import RichTextEditor from '@/Components/RichTextEditor.vue';
 const props = defineProps({
   club: Object,
   newsletter: Object,
+  types: Array,
 });
 
 const form = useForm({
   id: props.newsletter.id || null,
+  newsletter_type_id: props.newsletter.newsletter_type_id || props.types?.[0]?.id || null,
   subject: props.newsletter.subject || '',
   content: props.newsletter.content || '',
   target_roles: props.newsletter.target_roles || ['member', 'admin', 'coach'],
@@ -17,8 +19,8 @@ const form = useForm({
 });
 
 const availableRoles = [
-  { id: 'member', label: 'Members / Athletes' },
-  { id: 'coach', label: 'Coaches & Captains' },
+  { id: 'member', label: 'Members / Brethren' },
+  { id: 'coach', label: 'Coaches & Officers' },
   { id: 'admin', label: 'Admins & Executive Board' },
   { id: 'treasurer', label: 'Treasurers' },
 ];
@@ -38,7 +40,7 @@ const saveDraft = () => {
 };
 
 const sendBroadcast = () => {
-  if (confirm('Send this email broadcast to all targeted members now?')) {
+  if (confirm('Send this email broadcast to all targeted members and external subscribers now?')) {
     form.status = 'sent';
     form.post(route('admin.newsletters.store', { clubSlug: props.club.slug }));
   }
@@ -54,7 +56,7 @@ const sendBroadcast = () => {
       <div class="flex items-center justify-between bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
           <h2 class="text-xl font-bold text-slate-900">{{ newsletter.id ? 'Edit Newsletter Broadcast' : 'Compose New Email Broadcast' }}</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Target specific member roles and send email broadcasts.</p>
+          <p class="text-xs text-slate-500 mt-0.5">Target specific channels, member roles, and visiting subscribers.</p>
         </div>
         <Link :href="route('admin.newsletters.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all">
           &larr; Back to Newsletters
@@ -64,14 +66,25 @@ const sendBroadcast = () => {
       <!-- Form -->
       <form class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-6">
         
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Email Subject Line</label>
-          <input v-model="form.subject" type="text" required placeholder="Summer Regatta Schedule & Dinner Invites" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500" />
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="col-span-1">
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Newsletter Channel *</label>
+            <select v-model="form.newsletter_type_id" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500">
+              <option v-for="t in types" :key="t.id" :value="t.id">
+                {{ t.icon }} {{ t.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Email Subject Line *</label>
+            <input v-model="form.subject" type="text" required placeholder="Summer Regatta Schedule & Summons Circular" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+          </div>
         </div>
 
         <!-- Target Roles Selector -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Target Member Roles</label>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Target Internal Member Roles</label>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div 
               v-for="role in availableRoles" 
@@ -80,12 +93,12 @@ const sendBroadcast = () => {
               :class="[
                 'p-3 rounded-xl border text-xs font-bold cursor-pointer transition-all flex items-center justify-between',
                 form.target_roles.includes(role.id)
-                  ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-sm'
+                  ? 'bg-indigo-50 border-indigo-300 text-indigo-900 shadow-sm'
                   : 'bg-slate-50 border-slate-200 text-slate-500'
               ]"
             >
               <span>{{ role.label }}</span>
-              <span v-if="form.target_roles.includes(role.id)" class="text-amber-600">✓</span>
+              <span v-if="form.target_roles.includes(role.id)" class="text-indigo-600">✓</span>
             </div>
           </div>
         </div>
@@ -100,7 +113,7 @@ const sendBroadcast = () => {
           <button type="button" @click="saveDraft" :disabled="form.processing" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs border border-slate-300 transition-all">
             💾 Save as Draft
           </button>
-          <button type="button" @click="sendBroadcast" :disabled="form.processing" class="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md shadow-amber-600/20 transition-all">
+          <button type="button" @click="sendBroadcast" :disabled="form.processing" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-600/20 transition-all">
             🚀 Send Email Broadcast Now
           </button>
         </div>

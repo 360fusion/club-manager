@@ -164,6 +164,38 @@ const switchWorkspace = (targetClub) => {
             <span>My Dues & Receipts</span>
           </Link>
 
+          <!-- 4. My Subscriptions & News -->
+          <Link 
+            :href="route('portal.subscriptions')" 
+            :class="[
+              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              activeTab === 'subscriptions' 
+                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-emerald-500' 
+                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+            ]"
+          >
+            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <span>My Subscriptions</span>
+          </Link>
+
+          <!-- 5. National Directory -->
+          <Link 
+            :href="route('directory.index')" 
+            :class="[
+              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              activeTab === 'directory' 
+                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-emerald-500' 
+                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+            ]"
+          >
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0V7m0 4h4m-4 0H7" />
+            </svg>
+            <span>Lodge Directory</span>
+          </Link>
+
           <!-- MY CLUBS & WORKSPACES SECTION -->
           <div v-if="userClubs.length > 0" class="pt-4 pb-2 border-t border-slate-800 space-y-2">
             <div class="px-4 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">

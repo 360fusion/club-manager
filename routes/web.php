@@ -16,7 +16,10 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MemberImportExportController;
 use App\Http\Controllers\MemberPortalController;
 use App\Http\Controllers\MembershipAdminController;
+use App\Http\Controllers\ClubDirectoryController;
+use App\Http\Controllers\MemberSubscriptionsController;
 use App\Http\Controllers\NewsletterAdminController;
+use App\Http\Controllers\NewsletterTypeAdminController;
 use App\Http\Controllers\PageAdminController;
 use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\UserAdminController;
@@ -111,13 +114,24 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/posts', [PostAdminController::class, 'store'])->name('admin.posts.store');
     Route::delete('/clubs/{clubSlug}/admin/posts/{id}', [PostAdminController::class, 'destroy'])->name('admin.posts.destroy');
 
-    // Admin Newsletter Broadcast Routes
+    // Admin Newsletter Broadcast & Channels Routes
     Route::get('/clubs/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'index'])->name('admin.newsletters.index');
     Route::get('/clubs/{clubSlug}/admin/newsletters/create', [NewsletterAdminController::class, 'edit'])->name('admin.newsletters.create');
+    Route::get('/clubs/{clubSlug}/admin/newsletters/types', [NewsletterTypeAdminController::class, 'index'])->name('admin.newsletters.types');
+    Route::post('/clubs/{clubSlug}/admin/newsletters/types', [NewsletterTypeAdminController::class, 'store'])->name('admin.newsletters.types.store');
+    Route::delete('/clubs/{clubSlug}/admin/newsletters/types/{id}', [NewsletterTypeAdminController::class, 'destroy'])->name('admin.newsletters.types.destroy');
+    Route::get('/clubs/{clubSlug}/admin/newsletters/subscribers', [NewsletterTypeAdminController::class, 'subscribers'])->name('admin.newsletters.subscribers');
+    Route::post('/clubs/{clubSlug}/admin/newsletters/subscribers/{id}/status', [NewsletterTypeAdminController::class, 'updateSubscriberStatus'])->name('admin.newsletters.subscribers.status');
     Route::get('/clubs/{clubSlug}/admin/newsletters/{id}/edit', [NewsletterAdminController::class, 'edit'])->name('admin.newsletters.edit');
     Route::post('/clubs/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'store'])->name('admin.newsletters.store');
     Route::post('/clubs/{clubSlug}/admin/newsletters/{id}/send', [NewsletterAdminController::class, 'send'])->name('admin.newsletters.send');
     Route::delete('/clubs/{clubSlug}/admin/newsletters/{id}', [NewsletterAdminController::class, 'destroy'])->name('admin.newsletters.destroy');
+
+    // National Directory & Member Subscriptions Hub Routes
+    Route::get('/directory', [ClubDirectoryController::class, 'index'])->name('directory.index');
+    Route::post('/directory/clubs/{clubSlug}/subscribe/{typeId}', [ClubDirectoryController::class, 'subscribe'])->name('directory.subscribe');
+    Route::get('/portal/subscriptions', [MemberSubscriptionsController::class, 'index'])->name('portal.subscriptions');
+    Route::post('/portal/subscriptions/{clubSlug}/{typeId}/toggle', [MemberSubscriptionsController::class, 'toggle'])->name('portal.subscriptions.toggle');
 
     // Admin Subscriptions Plans Routes
     Route::get('/clubs/{clubSlug}/admin/subscriptions', [MembershipAdminController::class, 'index'])->name('admin.memberships.index');

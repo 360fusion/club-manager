@@ -61,6 +61,9 @@ class Club extends Model
         'default_honorary_members_text',
         'lodge_number',
         'motto',
+        'province_region',
+        'town_city',
+        'is_directory_listed',
     ];
 
     protected function casts(): array
@@ -100,6 +103,16 @@ class Club extends Model
     public function newsletters(): HasMany
     {
         return $this->hasMany(Newsletter::class);
+    }
+
+    public function newsletterTypes(): HasMany
+    {
+        return $this->hasMany(NewsletterType::class);
+    }
+
+    public function newsletterSubscriptions(): HasMany
+    {
+        return $this->hasMany(NewsletterSubscription::class);
     }
 
     public function events(): HasMany
