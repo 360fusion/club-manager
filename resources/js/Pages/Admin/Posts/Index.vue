@@ -46,10 +46,17 @@ const deletePost = (postId) => {
           </div>
 
           <div class="flex items-center gap-3 self-start md:self-auto">
+            <a
+              :href="route('member.posts.show', { slug: club.slug, id: post.id })"
+              target="_blank"
+              class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-xl border border-indigo-200 transition-all flex items-center gap-1"
+            >
+              👁️ Preview Article
+            </a>
             <Link :href="route('admin.posts.edit', { clubSlug: club.slug, id: post.id })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition-all">
               ✏️ Edit Post
             </Link>
-            <button @click="deletePost(post.id)" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-xl border border-rose-200 transition-all">
+            <button @click="deletePost(post.id)" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-xl border border-rose-200 transition-all cursor-pointer">
               🗑️ Delete
             </button>
           </div>

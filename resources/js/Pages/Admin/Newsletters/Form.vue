@@ -347,13 +347,25 @@ const sendBroadcast = () => {
                     <p class="text-[11px] text-slate-500 truncate">{{ item.teaser || 'No teaser text' }}</p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  @click="removeStagedNewsItem(idx)"
-                  class="text-slate-400 hover:text-rose-600 font-bold p-1 rounded"
-                >
-                  ✕
-                </button>
+                <div class="flex items-center gap-2">
+                  <a
+                    v-if="item.linkUrl"
+                    :href="item.linkUrl"
+                    target="_blank"
+                    class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-300 transition-all flex items-center gap-1"
+                    title="Preview Target Link"
+                  >
+                    👁️ Preview
+                  </a>
+                  <button
+                    type="button"
+                    @click="removeStagedNewsItem(idx)"
+                    class="text-slate-400 hover:text-rose-600 font-bold p-1 rounded cursor-pointer"
+                    title="Remove item"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             </div>
           </div>
