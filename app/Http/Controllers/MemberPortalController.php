@@ -553,7 +553,7 @@ class MemberPortalController extends Controller
     {
         $user = Auth::user();
         $club = Club::where('slug', $slug)->firstOrFail();
-        $post = \App\Models\Post::where('club_id', $club->id)->where('status', 'published')->findOrFail($id);
+        $post = \App\Models\Post::where('club_id', $club->id)->published()->findOrFail($id);
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 

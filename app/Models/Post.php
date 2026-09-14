@@ -22,6 +22,7 @@ class Post extends Model
         'cover_image_url',
         'status',
         'published_at',
+        'expires_at',
     ];
 
     protected function casts(): array
@@ -30,7 +31,24 @@ class Post extends Model
             'blocks' => 'array',
             'attachments' => 'array',
             'published_at' => 'datetime',
+            'expires_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Scope a query to only include published and active (non-expired) posts.
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published')
+            ->where(function ($q) {
+                $q->whereNull('published_at')
+                  ->orWhere('published_at', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>=', now());
+            });
     }
 
     public function club(): BelongsTo

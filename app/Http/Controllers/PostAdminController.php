@@ -40,12 +40,17 @@ class PostAdminController extends Controller
             : new Post([
                 'club_id' => $club->id,
                 'status' => 'published',
-                'published_at' => now()->format('Y-m-d\TH:i'),
+                'published_at' => null,
+                'expires_at' => null,
             ]);
+
+        $postArray = $post->toArray();
+        $postArray['published_at'] = $post->published_at ? $post->published_at->format('Y-m-d\TH:i') : null;
+        $postArray['expires_at'] = $post->expires_at ? $post->expires_at->format('Y-m-d\TH:i') : null;
 
         return Inertia::render('Admin/Posts/Form', [
             'club' => $club,
-            'post' => $post,
+            'post' => $postArray,
         ]);
     }
 
@@ -64,6 +69,8 @@ class PostAdminController extends Controller
             'excerpt' => 'nullable|string|max:500',
             'content' => 'nullable|string',
             'status' => 'required|in:draft,published',
+            'published_at' => 'nullable|date',
+            'expires_at' => 'nullable|date',
             'cover_image_url' => 'nullable|string|max:1000',
             'cover_image' => 'nullable|image|max:4096',
             'blocks' => 'nullable|array',
@@ -121,6 +128,13 @@ class PostAdminController extends Controller
             }
         }
 
+        $publishedAt = !empty($validated['published_at']) ? $validated['published_at'] : null;
+        if (!$publishedAt && $validated['status'] === 'published') {
+            $publishedAt = now();
+        }
+
+        $expiresAt = !empty($validated['expires_at']) ? $validated['expires_at'] : null;
+
         Post::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
             [
@@ -133,7 +147,8 @@ class PostAdminController extends Controller
                 'attachments' => $attachments,
                 'cover_image_url' => $coverImageUrl,
                 'status' => $validated['status'],
-                'published_at' => $validated['status'] === 'published' ? now() : null,
+                'published_at' => $publishedAt,
+                'expires_at' => $expiresAt,
             ]
         );
 

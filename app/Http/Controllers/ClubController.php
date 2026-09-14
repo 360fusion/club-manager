@@ -137,7 +137,7 @@ class ClubController extends Controller
                     'price' => number_format($p->price, 2),
                     'billing_period' => $p->billing_period,
                 ]),
-                'posts' => $club->posts->map(fn ($post) => [
+                'posts' => $club->posts()->published()->get()->map(fn ($post) => [
                     'id' => $post->id,
                     'title' => $post->title,
                     'slug' => $post->slug,

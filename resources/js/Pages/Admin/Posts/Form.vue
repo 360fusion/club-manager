@@ -30,6 +30,9 @@ if (!blocks.value.length) {
   ];
 }
 
+const showPublishSettings = ref(true);
+const isPublished = ref(props.post.status === 'published' || props.post.status === undefined);
+
 const form = useForm({
   id: props.post.id || null,
   title: props.post.title || '',
@@ -38,10 +41,16 @@ const form = useForm({
   content: props.post.content || '',
   cover_image_url: props.post.cover_image_url || '',
   cover_image: null,
-  status: props.post.status || 'published',
+  status: isPublished.value ? 'published' : 'draft',
+  published_at: props.post.published_at || '',
+  expires_at: props.post.expires_at || '',
   blocks: blocks.value,
   existing_attachments: existingAttachments.value,
   new_attachments: [],
+});
+
+watch(isPublished, (val) => {
+  form.status = val ? 'published' : 'draft';
 });
 
 // Auto-generate slug from title
@@ -661,12 +670,70 @@ const submit = () => {
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Status</label>
-          <select v-model="form.status" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500">
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-          </select>
+        <!-- Publish Settings Section -->
+        <div class="pt-4 border-t border-slate-200">
+          <!-- Accordion Header -->
+          <button
+            type="button"
+            @click="showPublishSettings = !showPublishSettings"
+            class="w-full flex items-center justify-between text-left text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer py-1"
+          >
+            <span class="flex items-center gap-1.5">
+              <span class="text-[10px] transform transition-transform duration-200" :class="{ 'rotate-180': !showPublishSettings }">▼</span>
+              <span class="text-xs font-medium text-slate-700">Publish settings</span>
+            </span>
+          </button>
+
+          <!-- Accordion Content -->
+          <div v-show="showPublishSettings" class="mt-4 space-y-4 text-xs">
+            <!-- Publish Item Checkbox -->
+            <div class="space-y-0.5">
+              <label class="inline-flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="isPublished"
+                  class="rounded border-slate-300 text-sky-600 focus:ring-sky-500 w-4 h-4 cursor-pointer"
+                />
+                <span>Publish item</span>
+              </label>
+              <p class="text-[11px] text-slate-500 pl-6">
+                Make the news item publicly visible on the website.
+              </p>
+            </div>
+
+            <!-- Date Range Controls Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
+              <!-- Show From -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Show from</label>
+                <div class="relative">
+                  <input
+                    v-model="form.published_at"
+                    type="datetime-local"
+                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
+                  />
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1 leading-normal">
+                  If you want to prevent the news item from showing on the website before a certain date/time, you can specify it here.
+                </p>
+              </div>
+
+              <!-- Show Until -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Show until</label>
+                <div class="relative">
+                  <input
+                    v-model="form.expires_at"
+                    type="datetime-local"
+                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
+                  />
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1 leading-normal">
+                  If you want to prevent the news item from showing on the website after a certain date/time, you can specify it here.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <button type="submit" :disabled="form.processing" class="w-full py-3.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-sky-600/20 cursor-pointer">

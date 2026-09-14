@@ -53,7 +53,7 @@ class PublicSiteController extends Controller
                 'is_members_only' => $page->is_members_only,
             ],
             'navigation' => $navigationPages,
-            'latestPosts' => $club->posts->where('status', 'published')->take(3)->values()->map(fn ($p) => [
+            'latestPosts' => $club->posts()->published()->take(3)->get()->map(fn ($p) => [
                 'id' => $p->id,
                 'title' => $p->title,
                 'slug' => $p->slug,
