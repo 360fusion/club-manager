@@ -66,46 +66,99 @@ watch([activeFolder, searchQuery], () => {
   }
 });
 
+const uploadFolder = ref('images');
+const isDragging = ref(false);
+const uploadStatus = ref('');
+const uploadError = ref('');
+
+const selectableFolders = [
+  { id: 'logos', label: 'Logos' },
+  { id: 'news', label: 'News Items' },
+  { id: 'newsletters', label: 'Newsletters' },
+  { id: 'images', label: 'Single Images' },
+  { id: 'galleries', label: 'Galleries' },
+  { id: 'documents', label: 'Documents' },
+];
+
+const getCsrfToken = () => {
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  if (meta && meta.getAttribute('content')) {
+    return meta.getAttribute('content');
+  }
+  const match = document.cookie.match(new RegExp('(?:^|; )XSRF-TOKEN=([^;]+)'));
+  if (match) {
+    return decodeURIComponent(match[1]);
+  }
+  return '';
+};
+
 const triggerUpload = () => {
   if (uploadFileInput.value) {
     uploadFileInput.value.click();
   }
 };
 
-const handleFileUpload = async (e) => {
-  const files = Array.from(e.target.files || []);
+const uploadFiles = async (filesList) => {
+  const files = Array.from(filesList || []);
   if (!files.length) return;
 
   isUploading.value = true;
-  const targetFolder = activeFolder.value === 'all' ? 'images' : activeFolder.value;
+  uploadError.value = '';
+  uploadStatus.value = '';
 
-  for (const file of files) {
+  const targetFolder = activeFolder.value !== 'all' ? activeFolder.value : uploadFolder.value;
+  let successCount = 0;
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    uploadStatus.value = `Uploading file ${i + 1} of ${files.length}: "${file.name}"...`;
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('folder', targetFolder);
 
     try {
+      const token = getCsrfToken();
       const res = await fetch(`/clubs/${props.clubSlug}/admin/media`, {
         method: 'POST',
         headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+          'X-CSRF-TOKEN': token,
+          'Accept': 'application/json',
         },
         body: formData,
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.media) {
-          mediaItems.value.unshift(data.media);
-        }
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success && data.media) {
+        mediaItems.value.unshift(data.media);
+        successCount++;
+      } else {
+        const msg = data.message || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Upload failed');
+        uploadError.value = `Error uploading "${file.name}": ${msg}`;
+        break;
       }
     } catch (err) {
       console.error('Failed to upload file:', err);
+      uploadError.value = `Network error uploading "${file.name}". Please check server connection.`;
+      break;
     }
   }
 
   isUploading.value = false;
+  uploadStatus.value = '';
+};
+
+const handleFileUpload = (e) => {
+  uploadFiles(e.target.files);
   if (e.target) e.target.value = '';
+};
+
+const handleDrop = (e) => {
+  isDragging.value = false;
+  if (e.dataTransfer && e.dataTransfer.files) {
+    uploadFiles(e.dataTransfer.files);
+  }
 };
 
 const selectItem = (item) => {
@@ -129,7 +182,8 @@ const deleteItem = async (item, e) => {
     const res = await fetch(`/clubs/${props.clubSlug}/admin/media/${item.id}`, {
       method: 'DELETE',
       headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
       },
     });
 

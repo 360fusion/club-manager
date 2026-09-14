@@ -5,9 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Club;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class MediaAdminController extends Controller
 {
+    /**
+     * Render full page File Manager view.
+     */
+    public function page(string $clubSlug): InertiaResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        return Inertia::render('Admin/Media/Index', [
+            'club' => $club,
+        ]);
+    }
     /**
      * List media items for a club, filtered by folder collection and search query.
      */
