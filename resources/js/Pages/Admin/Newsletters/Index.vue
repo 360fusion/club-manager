@@ -211,13 +211,15 @@ const deleteNewsletter = (id) => {
                 <span v-for="role in item.target_roles" :key="role" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-white text-slate-600 border border-slate-200">
                   {{ role }}
                 </span>
+
+                <!-- Audience Badge -->
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-white text-slate-600 border border-slate-200 flex items-center gap-1">
+                  <span>Audience: <strong class="text-slate-900">{{ item.recipient_count }} contacts</strong></span>
+                  <span v-if="item.external_recipient_count > 0" class="text-indigo-600 font-bold">({{ item.external_recipient_count }} visiting)</span>
+                </span>
               </div>
 
               <h3 class="text-lg font-bold text-slate-900">{{ item.subject }}</h3>
-              <div class="text-[11px] text-slate-400 font-medium flex items-center gap-2">
-                <span>Audience: <strong>{{ item.recipient_count }} contacts</strong></span>
-                <span v-if="item.external_recipient_count > 0" class="text-indigo-600">({{ item.external_recipient_count }} visiting brethren)</span>
-              </div>
             </div>
 
             <div class="flex items-center gap-3 self-start md:self-auto">
