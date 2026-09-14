@@ -545,4 +545,31 @@ class MemberPortalController extends Controller
         request()->merge(['download' => 1]);
         return $adminController->pdf($slug, $id);
     }
+
+    /**
+     * Display a published news article inside the member portal.
+     */
+    public function showPost(string $slug, int $id): Response
+    {
+        $user = Auth::user();
+        $club = Club::where('slug', $slug)->firstOrFail();
+        $post = \App\Models\Post::where('club_id', $club->id)->where('status', 'published')->findOrFail($id);
+
+        $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
+
+        return Inertia::render('Member/PostShow', [
+            'club' => $club,
+            'memberRole' => $memberPivot->role ?? 'member',
+            'post' => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'excerpt' => $post->excerpt,
+                'content' => $post->content,
+                'cover_image_url' => $post->cover_image_url,
+                'published_at' => $post->published_at?->format('M d, Y'),
+                'author_name' => $post->author?->name ?? 'Club Secretary',
+            ],
+        ]);
+    }
 }

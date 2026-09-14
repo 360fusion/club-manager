@@ -60,7 +60,7 @@ const onSelectPost = () => {
     customHeadline.value = post.title || '';
     customTeaser.value = post.excerpt || '';
     customImageUrl.value = post.cover_image_url || '';
-    customLinkUrl.value = route('posts.show', { clubSlug: props.club.slug, slug: post.slug });
+    customLinkUrl.value = route('member.posts.show', { slug: props.club.slug, id: post.id });
   }
 };
 

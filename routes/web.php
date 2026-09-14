@@ -171,6 +171,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{slug}/portal', [MemberPortalController::class, 'show'])->name('member.dashboard');
     Route::get('/clubs/{slug}/portal/clubs', [MemberPortalController::class, 'myClubs'])->name('member.clubs');
     Route::get('/clubs/{slug}/portal/events', [MemberPortalController::class, 'events'])->name('member.events');
+    Route::get('/clubs/{slug}/portal/news/{id}', [MemberPortalController::class, 'showPost'])->name('member.posts.show');
     Route::get('/clubs/{slug}/portal/dues', [MemberPortalController::class, 'dues'])->name('member.dues');
     Route::get('/clubs/{slug}/portal/profile', [MemberPortalController::class, 'profile'])->name('member.profile');
     Route::post('/clubs/{slug}/portal/profile', [MemberPortalController::class, 'updateProfile'])->name('member.profile.update');
