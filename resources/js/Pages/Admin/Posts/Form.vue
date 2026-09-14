@@ -927,22 +927,6 @@ const submitWithAction = (actionType) => {
           >
             Save and duplicate
           </button>
-          <button
-            type="button"
-            @click="submitWithAction('save_and_edit')"
-            :disabled="form.processing"
-            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
-          >
-            Save and edit
-          </button>
-          <button
-            type="button"
-            @click="submitWithAction('save_and_go_back')"
-            :disabled="form.processing"
-            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
-          >
-            Save and go back
-          </button>
         </div>
 
       </form>
