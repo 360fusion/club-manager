@@ -60,7 +60,7 @@ class PublicSiteController extends Controller
                 'excerpt' => $p->excerpt,
                 'content' => $p->content,
                 'author_name' => $p->author->name,
-                'published_at' => $p->published_at?->format('M d, Y'),
+                'published_at' => ($p->published_at ?? $p->created_at)?->format('M d, Y'),
             ]),
             'upcomingEvents' => $club->events->take(3)->values()->map(fn ($e) => [
                 'id' => $e->id,

@@ -143,4 +143,27 @@ class PostPublishSettingsTest extends TestCase
             'status' => 'draft',
         ]);
     }
+
+    public function test_post_with_blank_date_fields_remains_null_and_active(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.posts.store', ['clubSlug' => $this->club->slug]), [
+                'title' => 'Immediate News Item',
+                'slug' => 'immediate-news-item',
+                'excerpt' => 'Excerpt',
+                'content' => 'Content',
+                'status' => 'published',
+                'published_at' => null,
+                'expires_at' => null,
+            ]);
+
+        $response->assertRedirect(route('admin.posts.index', ['clubSlug' => $this->club->slug]));
+
+        $post = Post::where('slug', 'immediate-news-item')->firstOrFail();
+        $this->assertNull($post->published_at);
+        $this->assertNull($post->expires_at);
+
+        $publishedPosts = Post::where('club_id', $this->club->id)->published()->get();
+        $this->assertTrue($publishedPosts->contains('id', $post->id));
+    }
 }

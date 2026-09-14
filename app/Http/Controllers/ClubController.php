@@ -144,7 +144,7 @@ class ClubController extends Controller
                     'excerpt' => $post->excerpt,
                     'content' => $post->content,
                     'author_name' => $post->author->name,
-                    'published_at' => $post->published_at?->format('M d, Y'),
+                    'published_at' => ($post->published_at ?? $post->created_at)?->format('M d, Y'),
                 ]),
                 'newsletters' => $club->newsletters->map(fn ($n) => [
                     'id' => $n->id,

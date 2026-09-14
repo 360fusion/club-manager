@@ -129,10 +129,6 @@ class PostAdminController extends Controller
         }
 
         $publishedAt = !empty($validated['published_at']) ? $validated['published_at'] : null;
-        if (!$publishedAt && $validated['status'] === 'published') {
-            $publishedAt = now();
-        }
-
         $expiresAt = !empty($validated['expires_at']) ? $validated['expires_at'] : null;
 
         Post::updateOrCreate(
