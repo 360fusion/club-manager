@@ -113,4 +113,61 @@ class MediaLibraryAdminTest extends TestCase
             'id' => $mediaId,
         ]);
     }
+
+    public function test_upload_fails_if_file_exceeds_10mb(): void
+    {
+        // Fake file larger than 10MB (11MB = 11264 KB)
+        $file = UploadedFile::fake()->create('large-doc.pdf', 11264);
+
+        $response = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+                'file' => $file,
+                'folder' => 'documents',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['file']);
+    }
+
+    public function test_upload_fails_for_executable_or_unallowed_file_types(): void
+    {
+        $file = UploadedFile::fake()->create('malicious.php', 100);
+
+        $response = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+                'file' => $file,
+                'folder' => 'documents',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['file']);
+    }
+
+    public function test_upload_fails_for_non_image_in_image_only_folder(): void
+    {
+        $file = UploadedFile::fake()->create('document.pdf', 100);
+
+        $response = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+                'file' => $file,
+                'folder' => 'logos', // logos folder only accepts images
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['file']);
+    }
+
+    public function test_upload_fails_for_svg_with_embedded_script(): void
+    {
+        $svgContent = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>';
+        $file = UploadedFile::fake()->createWithContent('exploit.svg', $svgContent);
+
+        $response = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+                'file' => $file,
+                'folder' => 'images',
+            ]);
+
+        $response->assertStatus(422);
+    }
 }

@@ -107,10 +107,35 @@ const uploadFiles = async (filesList) => {
   uploadStatus.value = '';
 
   const targetFolder = activeFolder.value !== 'all' ? activeFolder.value : uploadFolder.value;
+  const isImageOnlyFolder = ['logos', 'images', 'galleries'].includes(targetFolder);
+  const allowedExts = isImageOnlyFolder
+    ? ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']
+    : ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'ppt', 'pptx', 'txt', 'rtf', 'zip'];
+
+  const maxSizeBytes = 10 * 1024 * 1024; // 10MB
+
   let successCount = 0;
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
+
+    // Client pre-check 1: 10MB File Size Limit
+    if (file.size > maxSizeBytes) {
+      uploadError.value = `File "${file.name}" exceeds the 10MB maximum size limit (${(file.size / (1024 * 1024)).toFixed(1)}MB).`;
+      isUploading.value = false;
+      return;
+    }
+
+    // Client pre-check 2: Allowed Extension
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!allowedExts.includes(ext)) {
+      uploadError.value = isImageOnlyFolder
+        ? `"${file.name}" has an invalid file type for "${targetFolder}". Only image files (JPG, PNG, GIF, WEBP, SVG) are allowed.`
+        : `"${file.name}" has an invalid file type. Only document and image files are allowed.`;
+      isUploading.value = false;
+      return;
+    }
+
     uploadStatus.value = `Uploading file ${i + 1} of ${files.length}: "${file.name}"...`;
 
     const formData = new FormData();
