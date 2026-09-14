@@ -131,14 +131,14 @@ const deleteNewsletter = (id) => {
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <!-- Prominent Search Bar (Left) -->
           <div class="relative w-full lg:w-96">
-            <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-700 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
               v-model="searchQuery"
               type="text"
               placeholder="Search broadcasts by subject line or content..."
-              class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all shadow-xs"
+              class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder-slate-600 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all shadow-sm"
             />
           </div>
 
@@ -147,7 +147,7 @@ const deleteNewsletter = (id) => {
             <!-- Status Dropdown -->
             <select
               v-model="selectedStatus"
-              class="px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+              class="px-3 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-sm"
             >
               <option value="all">All Statuses ({{ newsletters.length }})</option>
               <option value="sent">🚀 Sent ({{ newsletters.filter(n => n.status === 'sent').length }})</option>
@@ -157,7 +157,7 @@ const deleteNewsletter = (id) => {
             <!-- Channel Filter -->
             <select
               v-model="selectedTypeId"
-              class="px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+              class="px-3 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-sm"
             >
               <option value="all">All Channels</option>
               <option v-for="t in types" :key="t.id" :value="t.id">{{ t.icon }} {{ t.name }}</option>
@@ -166,7 +166,7 @@ const deleteNewsletter = (id) => {
             <!-- Target Role Filter -->
             <select
               v-model="selectedRole"
-              class="px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+              class="px-3 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-sm"
             >
               <option value="all">All Target Roles</option>
               <option v-for="r in availableRoles" :key="r.id" :value="r.id">{{ r.label }}</option>
@@ -175,7 +175,7 @@ const deleteNewsletter = (id) => {
             <!-- Date Range Filter -->
             <select
               v-model="selectedDateRange"
-              class="px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+              class="px-3 py-2.5 border border-slate-300 rounded-xl bg-white font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer shadow-sm"
             >
               <option value="all">All Time</option>
               <option value="30_days">Last 30 Days</option>
