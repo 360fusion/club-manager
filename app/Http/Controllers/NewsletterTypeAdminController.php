@@ -92,6 +92,34 @@ class NewsletterTypeAdminController extends Controller
     }
 
     /**
+     * Show form to create or edit a newsletter channel.
+     */
+    public function edit(string $clubSlug, ?int $id = null): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $type = $id
+            ? NewsletterType::where('club_id', $club->id)->findOrFail($id)
+            : new NewsletterType([
+                'club_id' => $club->id,
+                'name' => '',
+                'description' => '',
+                'color' => '#4f46e5',
+                'icon' => '✉️',
+                'is_external_subscribable' => true,
+                'require_approval' => false,
+                'is_mandatory' => false,
+                'require_home_club_info' => true,
+                'default_roles' => ['member'],
+            ]);
+
+        return Inertia::render('Admin/Newsletters/ChannelForm', [
+            'club' => $club,
+            'type' => $type,
+        ]);
+    }
+
+    /**
      * Store or update a newsletter type.
      */
     public function store(Request $request, string $clubSlug): RedirectResponse
@@ -133,7 +161,8 @@ class NewsletterTypeAdminController extends Controller
             ]
         );
 
-        return redirect()->back()->with('success', 'Newsletter channel saved successfully.');
+        return redirect()->route('admin.newsletters.types', ['clubSlug' => $club->slug])
+            ->with('success', 'Newsletter channel saved successfully.');
     }
 
     /**

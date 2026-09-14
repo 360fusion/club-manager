@@ -118,6 +118,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'index'])->name('admin.newsletters.index');
     Route::get('/clubs/{clubSlug}/admin/newsletters/create', [NewsletterAdminController::class, 'edit'])->name('admin.newsletters.create');
     Route::get('/clubs/{clubSlug}/admin/newsletters/types', [NewsletterTypeAdminController::class, 'index'])->name('admin.newsletters.types');
+    Route::get('/clubs/{clubSlug}/admin/newsletters/types/create', [NewsletterTypeAdminController::class, 'edit'])->name('admin.newsletters.types.create');
+    Route::get('/clubs/{clubSlug}/admin/newsletters/types/{id}/edit', [NewsletterTypeAdminController::class, 'edit'])->name('admin.newsletters.types.edit');
     Route::post('/clubs/{clubSlug}/admin/newsletters/types', [NewsletterTypeAdminController::class, 'store'])->name('admin.newsletters.types.store');
     Route::delete('/clubs/{clubSlug}/admin/newsletters/types/{id}', [NewsletterTypeAdminController::class, 'destroy'])->name('admin.newsletters.types.destroy');
     Route::get('/clubs/{clubSlug}/admin/newsletters/subscribers', [NewsletterTypeAdminController::class, 'subscribers'])->name('admin.newsletters.subscribers');
