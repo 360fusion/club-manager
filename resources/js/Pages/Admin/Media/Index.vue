@@ -10,10 +10,28 @@ const props = defineProps({
   },
 });
 
+const activeFolder = ref('all');
+const searchQuery = ref('');
+const mediaItems = ref([]);
+const isLoading = ref(false);
+const isUploading = ref(false);
+const uploadFileInput = ref(null);
+const copyToast = ref('');
+const previewItem = ref(null);
 const uploadFolder = ref('images');
 const isDragging = ref(false);
 const uploadStatus = ref('');
 const uploadError = ref('');
+
+const folders = [
+  { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100', text: 'text-slate-700' },
+  { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
+  { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50', text: 'text-blue-700' },
+  { id: 'newsletters', label: 'Newsletters', icon: '✉️', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+  { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-sky-50', text: 'text-sky-700' },
+  { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-purple-50', text: 'text-purple-700' },
+  { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50', text: 'text-amber-700' },
+];
 
 const selectableFolders = [
   { id: 'logos', label: 'Logos' },
