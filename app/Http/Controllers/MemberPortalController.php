@@ -566,6 +566,8 @@ class MemberPortalController extends Controller
                 'slug' => $post->slug,
                 'excerpt' => $post->excerpt,
                 'content' => $post->content,
+                'blocks' => $post->blocks ?? [],
+                'attachments' => $post->attachments ?? [],
                 'cover_image_url' => $post->cover_image_url,
                 'published_at' => $post->published_at?->format('M d, Y'),
                 'author_name' => $post->author?->name ?? 'Club Secretary',

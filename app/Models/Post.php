@@ -17,6 +17,8 @@ class Post extends Model
         'slug',
         'excerpt',
         'content',
+        'blocks',
+        'attachments',
         'cover_image_url',
         'status',
         'published_at',
@@ -25,6 +27,8 @@ class Post extends Model
     protected function casts(): array
     {
         return [
+            'blocks' => 'array',
+            'attachments' => 'array',
             'published_at' => 'datetime',
         ];
     }

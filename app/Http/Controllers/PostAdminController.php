@@ -62,9 +62,42 @@ class PostAdminController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
             'excerpt' => 'nullable|string|max:500',
-            'content' => 'required|string',
+            'content' => 'nullable|string',
             'status' => 'required|in:draft,published',
+            'cover_image_url' => 'nullable|string|max:1000',
+            'cover_image' => 'nullable|image|max:4096',
+            'blocks' => 'nullable|array',
+            'existing_attachments' => 'nullable|array',
+            'new_attachments.*' => 'nullable|file|max:10240',
         ]);
+
+        $coverImageUrl = $validated['cover_image_url'] ?? null;
+        if ($request->hasFile('cover_image') && $request->file('cover_image')->isValid()) {
+            $path = $request->file('cover_image')->store("post_images/{$club->id}", 'public');
+            $coverImageUrl = "/storage/{$path}";
+        }
+
+        $attachments = $validated['existing_attachments'] ?? [];
+        if ($request->hasFile('new_attachments')) {
+            foreach ($request->file('new_attachments') as $file) {
+                if ($file->isValid()) {
+                    $path = $file->store("post_attachments/{$club->id}", 'public');
+                    $bytes = $file->getSize();
+                    $sizeFormatted = $bytes >= 1048576 
+                        ? round($bytes / 1048576, 1) . ' MB' 
+                        : round($bytes / 1024, 1) . ' KB';
+
+                    $attachments[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'url' => "/storage/{$path}",
+                        'size' => $sizeFormatted,
+                        'mime_type' => $file->getMimeType(),
+                    ];
+                }
+            }
+        }
+
+        $blocks = $validated['blocks'] ?? [];
 
         Post::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
@@ -73,7 +106,10 @@ class PostAdminController extends Controller
                 'title' => $validated['title'],
                 'slug' => $validated['slug'],
                 'excerpt' => $validated['excerpt'] ?? '',
-                'content' => $validated['content'],
+                'content' => $validated['content'] ?? '',
+                'blocks' => $blocks,
+                'attachments' => $attachments,
+                'cover_image_url' => $coverImageUrl,
                 'status' => $validated['status'],
                 'published_at' => $validated['status'] === 'published' ? now() : null,
             ]
