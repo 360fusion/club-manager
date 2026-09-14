@@ -75,6 +75,10 @@ class NewsletterAdminController extends Controller
         NewsletterTypeAdminController::ensureDefaultTypes($club);
 
         $types = NewsletterType::where('club_id', $club->id)->get();
+        $posts = \App\Models\Post::where('club_id', $club->id)
+            ->where('status', 'published')
+            ->orderByDesc('published_at')
+            ->get();
 
         $newsletter = $id
             ? Newsletter::where('club_id', $club->id)->findOrFail($id)
@@ -92,6 +96,7 @@ class NewsletterAdminController extends Controller
             'club' => $club,
             'newsletter' => $newsletter,
             'types' => $types,
+            'posts' => $posts,
         ]);
     }
 

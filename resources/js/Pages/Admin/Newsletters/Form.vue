@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useForm, Head, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
@@ -8,11 +8,23 @@ const props = defineProps({
   club: Object,
   newsletter: Object,
   types: Array,
+  posts: Array,
 });
 
 const existingAttachments = ref([...(props.newsletter.attachments || [])]);
 const newFiles = ref([]);
 const fileInput = ref(null);
+
+// News Items Builder state
+const showNewsBuilder = ref(false);
+const selectedPostId = ref('');
+const customHeadline = ref('');
+const customTeaser = ref('');
+const customImageUrl = ref('');
+const customLinkUrl = ref('');
+const imagePosition = ref('left'); // 'left' or 'right'
+
+const stagedNewsItems = ref([]);
 
 const form = useForm({
   id: props.newsletter.id || null,
@@ -39,6 +51,78 @@ const toggleRole = (roleId) => {
   } else {
     form.target_roles.push(roleId);
   }
+};
+
+const onSelectPost = () => {
+  if (!selectedPostId.value) return;
+  const post = (props.posts || []).find(p => p.id === Number(selectedPostId.value));
+  if (post) {
+    customHeadline.value = post.title || '';
+    customTeaser.value = post.excerpt || '';
+    customImageUrl.value = post.cover_image_url || '';
+    customLinkUrl.value = route('posts.show', { clubSlug: props.club.slug, slug: post.slug });
+  }
+};
+
+const addNewsItemToList = () => {
+  if (!customHeadline.value.trim()) return;
+
+  stagedNewsItems.value.push({
+    headline: customHeadline.value.trim(),
+    teaser: customTeaser.value.trim(),
+    imageUrl: customImageUrl.value.trim(),
+    linkUrl: customLinkUrl.value.trim(),
+    imagePosition: imagePosition.value,
+  });
+
+  // Reset inputs
+  selectedPostId.value = '';
+  customHeadline.value = '';
+  customTeaser.value = '';
+  customImageUrl.value = '';
+  customLinkUrl.value = '';
+};
+
+const removeStagedNewsItem = (index) => {
+  stagedNewsItems.value.splice(index, 1);
+};
+
+const insertNewsListIntoContent = () => {
+  if (!stagedNewsItems.value.length) return;
+
+  let html = `<div class="newsletter-news-list" style="margin: 20px 0; font-family: sans-serif;">`;
+  html += `<h3 style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 14px; padding-bottom: 6px; border-bottom: 2px solid #e2e8f0;">📰 News & Announcements</h3>`;
+
+  stagedNewsItems.value.forEach(item => {
+    const hasImage = Boolean(item.imageUrl);
+    const imgHtml = hasImage 
+      ? `<div style="flex-shrink: 0; width: 140px;"><img src="${item.imageUrl}" alt="${item.headline}" style="width: 140px; height: 95px; object-fit: cover; border-radius: 8px; display: block;" /></div>`
+      : '';
+
+    const textHtml = `
+      <div style="flex-grow: 1;">
+        <h4 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.3;">${item.headline}</h4>
+        ${item.teaser ? `<p style="margin: 0 0 8px 0; font-size: 13px; color: #475569; line-height: 1.5;">${item.teaser}</p>` : ''}
+        ${item.linkUrl ? `<a href="${item.linkUrl}" target="_blank" style="display: inline-block; font-size: 12px; font-weight: 700; color: #4f46e5; text-decoration: none;">Read full story &rarr;</a>` : ''}
+      </div>
+    `;
+
+    html += `<div style="display: flex; gap: 16px; align-items: start; padding: 14px; margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; shadow: 0 1px 2px rgba(0,0,0,0.05);">`;
+    
+    if (item.imagePosition === 'right' && hasImage) {
+      html += textHtml + imgHtml;
+    } else {
+      html += imgHtml + textHtml;
+    }
+
+    html += `</div>`;
+  });
+
+  html += `</div><p><br></p>`;
+
+  form.content = (form.content || '') + html;
+  stagedNewsItems.value = [];
+  showNewsBuilder.value = false;
 };
 
 const triggerFileInput = () => {
@@ -154,6 +238,123 @@ const sendBroadcast = () => {
             >
               <span>{{ role.label }}</span>
               <span v-if="form.target_roles.includes(role.id)" class="text-indigo-600">✓</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- News Items Builder Toggle Bar -->
+        <div class="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 flex items-center justify-between">
+          <div>
+            <h4 class="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+              <span>📰</span> Add News Items List to Newsletter
+            </h4>
+            <p class="text-[11px] text-indigo-700/80 mt-0.5">Format and embed published club news or custom stories with images, headlines, and teaser text.</p>
+          </div>
+          <button
+            type="button"
+            @click="showNewsBuilder = !showNewsBuilder"
+            class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1"
+          >
+            {{ showNewsBuilder ? 'Hide News Builder' : '⚡ Open News Items Builder' }}
+          </button>
+        </div>
+
+        <!-- News Items Builder Card -->
+        <div v-if="showNewsBuilder" class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4 text-xs">
+          <div class="flex items-center justify-between border-b border-slate-200/80 pb-3">
+            <span class="font-bold text-slate-900 text-sm">📰 Construct News Items List</span>
+            <span class="text-slate-500 text-[11px]">Format: Thumbnail image side-by-side with headline & teaser text</span>
+          </div>
+
+          <!-- Select from Published Posts -->
+          <div v-if="posts && posts.length" class="space-y-1">
+            <label class="block font-bold text-slate-700">Import from Published Club Posts</label>
+            <select v-model="selectedPostId" @change="onSelectPost" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800">
+              <option value="">-- Choose a published news post to import --</option>
+              <option v-for="post in posts" :key="post.id" :value="post.id">
+                {{ post.title }} ({{ post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Published' }})
+              </option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Headline Title *</label>
+              <input v-model="customHeadline" type="text" placeholder="e.g. Annual Regatta Trophies Awarded" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-semibold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Cover Image URL (Optional)</label>
+              <input v-model="customImageUrl" type="text" placeholder="https://example.com/image.jpg" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Teaser Text Excerpt</label>
+            <textarea v-model="customTeaser" rows="2" placeholder="Short teaser summary that appears below the headline..." class="w-full p-2.5 bg-white border border-slate-300 rounded-xl"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Story Link URL (Optional)</label>
+              <input v-model="customLinkUrl" type="text" placeholder="https://..." class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Thumbnail Layout</label>
+              <select v-model="imagePosition" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-semibold">
+                <option value="left">Image on Left (Headline & Teaser on Right)</option>
+                <option value="right">Image on Right (Headline & Teaser on Left)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              @click="addNewsItemToList"
+              :disabled="!customHeadline.trim()"
+              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all cursor-pointer"
+            >
+              + Add News Item to List
+            </button>
+          </div>
+
+          <!-- Staged Items Preview List -->
+          <div v-if="stagedNewsItems.length" class="space-y-3 pt-3 border-t border-slate-200">
+            <div class="font-bold text-slate-900 flex items-center justify-between">
+              <span>Staged News List ({{ stagedNewsItems.length }} {{ stagedNewsItems.length === 1 ? 'item' : 'items' }})</span>
+              <button
+                type="button"
+                @click="insertNewsListIntoContent"
+                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1"
+              >
+                📥 Insert Formatted List into Content
+              </button>
+            </div>
+
+            <div class="space-y-2">
+              <div
+                v-for="(item, idx) in stagedNewsItems"
+                :key="idx"
+                class="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-3"
+              >
+                <div class="flex items-center gap-3 overflow-hidden">
+                  <img v-if="item.imageUrl" :src="item.imageUrl" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                  <div v-else class="w-12 h-12 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center font-bold flex-shrink-0">📰</div>
+                  <div class="truncate">
+                    <h5 class="font-bold text-slate-900 truncate">{{ item.headline }}</h5>
+                    <p class="text-[11px] text-slate-500 truncate">{{ item.teaser || 'No teaser text' }}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  @click="removeStagedNewsItem(idx)"
+                  class="text-slate-400 hover:text-rose-600 font-bold p-1 rounded"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           </div>
         </div>
