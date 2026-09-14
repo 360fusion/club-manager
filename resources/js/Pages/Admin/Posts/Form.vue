@@ -329,29 +329,29 @@ const submit = () => {
 
         <!-- Modular Page Element Builder -->
         <div class="space-y-4 pt-4 border-t border-slate-200">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="space-y-3">
             <div>
               <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
                 <span>🧩</span> Page Elements & Content Builder
               </h3>
-              <p class="text-xs text-slate-500">Construct article pages with reorderable text blocks, single images, multi-image galleries, and notice callouts.</p>
+              <p class="text-xs text-slate-500 mt-0.5">Construct article pages with reorderable text blocks, single images, multi-image galleries, and notice callouts.</p>
             </div>
 
-            <!-- Add Element Toolbar Buttons -->
-            <div class="flex flex-wrap items-center gap-1.5">
-              <button type="button" @click="addBlock('text')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer">
+            <!-- Add Element Toolbar Buttons (Listed Under Text) -->
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <button type="button" @click="addBlock('text')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer">
                 + Text Block
               </button>
-              <button type="button" @click="addBlock('image')" class="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all cursor-pointer">
+              <button type="button" @click="addBlock('image')" class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all cursor-pointer">
                 + Image
               </button>
-              <button type="button" @click="addBlock('images')" class="px-2.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-xl border border-purple-200 transition-all cursor-pointer">
+              <button type="button" @click="addBlock('images')" class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-xl border border-purple-200 transition-all cursor-pointer">
                 + Image Gallery
               </button>
-              <button type="button" @click="addBlock('notice')" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-xl border border-amber-200 transition-all cursor-pointer">
+              <button type="button" @click="addBlock('notice')" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-xl border border-amber-200 transition-all cursor-pointer">
                 + Callout Box
               </button>
-              <button type="button" @click="addBlock('button')" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all cursor-pointer">
+              <button type="button" @click="addBlock('button')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all cursor-pointer">
                 + Button Link
               </button>
             </div>
