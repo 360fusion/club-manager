@@ -48,6 +48,7 @@ class NewsletterAdminController extends Controller
                     'type_icon' => $newsletter->newsletterType?->icon ?? '✉️',
                     'subject' => $newsletter->subject,
                     'content' => $newsletter->content,
+                    'attachments' => $newsletter->attachments ?? [],
                     'target_roles' => $newsletter->target_roles ?? [],
                     'status' => $newsletter->status ?? 'draft',
                     'sent_at' => $newsletter->sent_at?->format('M d, Y @ H:i'),
@@ -82,6 +83,7 @@ class NewsletterAdminController extends Controller
                 'newsletter_type_id' => $types->first()?->id,
                 'subject' => '',
                 'content' => '',
+                'attachments' => [],
                 'target_roles' => ['member', 'admin', 'coach'],
                 'status' => 'draft',
             ]);
@@ -107,7 +109,30 @@ class NewsletterAdminController extends Controller
             'content' => 'required|string',
             'target_roles' => 'required|array',
             'status' => 'required|in:draft,sent',
+            'existing_attachments' => 'nullable|array',
+            'new_attachments.*' => 'nullable|file|max:10240', // max 10MB per file
         ]);
+
+        $attachments = $validated['existing_attachments'] ?? [];
+
+        if ($request->hasFile('new_attachments')) {
+            foreach ($request->file('new_attachments') as $file) {
+                if ($file->isValid()) {
+                    $path = $file->store("newsletter_attachments/{$club->id}", 'public');
+                    $bytes = $file->getSize();
+                    $sizeFormatted = $bytes >= 1048576 
+                        ? round($bytes / 1048576, 1) . ' MB' 
+                        : round($bytes / 1024, 1) . ' KB';
+
+                    $attachments[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'url' => "/storage/{$path}",
+                        'size' => $sizeFormatted,
+                        'mime_type' => $file->getMimeType(),
+                    ];
+                }
+            }
+        }
 
         $isSending = $validated['status'] === 'sent';
 
@@ -117,6 +142,7 @@ class NewsletterAdminController extends Controller
                 'newsletter_type_id' => $validated['newsletter_type_id'] ?? null,
                 'subject' => $validated['subject'],
                 'content' => $validated['content'],
+                'attachments' => $attachments,
                 'target_roles' => $validated['target_roles'],
                 'status' => $validated['status'],
                 'sent_at' => $isSending ? now() : null,

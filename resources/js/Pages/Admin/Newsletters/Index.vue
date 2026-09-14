@@ -210,9 +210,29 @@ const deleteNewsletter = (id) => {
                   <span>Audience: <strong class="text-slate-900">{{ item.recipient_count }} contacts</strong></span>
                   <span v-if="item.external_recipient_count > 0" class="text-indigo-600 font-bold">({{ item.external_recipient_count }} visiting)</span>
                 </span>
+
+                <!-- Attachments Count Badge -->
+                <span v-if="item.attachments && item.attachments.length" class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
+                  📎 {{ item.attachments.length }} {{ item.attachments.length === 1 ? 'Attachment' : 'Attachments' }}
+                </span>
               </div>
 
               <h3 class="text-lg font-bold text-slate-900">{{ item.subject }}</h3>
+
+              <!-- Attached Files Pills -->
+              <div v-if="item.attachments && item.attachments.length" class="flex flex-wrap gap-2 pt-1">
+                <a
+                  v-for="(att, aIdx) in item.attachments"
+                  :key="aIdx"
+                  :href="att.url"
+                  target="_blank"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-indigo-300 text-[11px] font-bold text-slate-700 hover:text-indigo-600 shadow-sm transition-all"
+                >
+                  <span>📎</span>
+                  <span>{{ att.name }}</span>
+                  <span class="text-[9px] text-slate-400 font-normal">({{ att.size }})</span>
+                </a>
+              </div>
             </div>
 
             <div class="flex items-center gap-3 self-start md:self-auto">

@@ -15,6 +15,7 @@ class Newsletter extends Model
         'newsletter_type_id',
         'subject',
         'content',
+        'attachments',
         'target_roles',
         'status',
         'sent_at',
@@ -23,6 +24,7 @@ class Newsletter extends Model
     protected function casts(): array
     {
         return [
+            'attachments' => 'array',
             'target_roles' => 'array',
             'sent_at' => 'datetime',
         ];
