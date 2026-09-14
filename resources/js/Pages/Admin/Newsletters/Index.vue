@@ -128,70 +128,53 @@ const deleteNewsletter = (id) => {
 
       <!-- Filter Toolbar Card -->
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <!-- Status Pill Tabs -->
-          <div class="flex items-center gap-2 overflow-x-auto">
-            <button
-              @click="selectedStatus = 'all'"
-              :class="['px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5', selectedStatus === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
-            >
-              <span>All Broadcasts</span>
-              <span :class="['px-1.5 py-0.5 rounded-md text-[10px] font-extrabold', selectedStatus === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700']">{{ newsletters.length }}</span>
-            </button>
-            <button
-              @click="selectedStatus = 'sent'"
-              :class="['px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5', selectedStatus === 'sent' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
-            >
-              <span>🚀 Sent</span>
-              <span :class="['px-1.5 py-0.5 rounded-md text-[10px] font-extrabold', selectedStatus === 'sent' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700']">{{ newsletters.filter(n => n.status === 'sent').length }}</span>
-            </button>
-            <button
-              @click="selectedStatus = 'draft'"
-              :class="['px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5', selectedStatus === 'draft' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
-            >
-              <span>✏️ Drafts</span>
-              <span :class="['px-1.5 py-0.5 rounded-md text-[10px] font-extrabold', selectedStatus === 'draft' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700']">{{ newsletters.filter(n => n.status === 'draft').length }}</span>
-            </button>
-          </div>
+        <!-- 5-Column Filter Toolbar -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+          <!-- Status Dropdown -->
+          <select
+            v-model="selectedStatus"
+            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+          >
+            <option value="all">All Broadcasts ({{ newsletters.length }})</option>
+            <option value="sent">🚀 Sent ({{ newsletters.filter(n => n.status === 'sent').length }})</option>
+            <option value="draft">✏️ Drafts ({{ newsletters.filter(n => n.status === 'draft').length }})</option>
+          </select>
 
-          <!-- Dropdown Filters & Search Bar -->
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
-            <!-- Channel Filter -->
-            <select
-              v-model="selectedTypeId"
-              class="px-3 py-1.5 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800"
-            >
-              <option value="all">All Channels</option>
-              <option v-for="t in types" :key="t.id" :value="t.id">{{ t.icon }} {{ t.name }}</option>
-            </select>
+          <!-- Channel Filter -->
+          <select
+            v-model="selectedTypeId"
+            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+          >
+            <option value="all">All Channels</option>
+            <option v-for="t in types" :key="t.id" :value="t.id">{{ t.icon }} {{ t.name }}</option>
+          </select>
 
-            <!-- Target Role Filter -->
-            <select
-              v-model="selectedRole"
-              class="px-3 py-1.5 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800"
-            >
-              <option value="all">All Target Roles</option>
-              <option v-for="r in availableRoles" :key="r.id" :value="r.id">{{ r.label }}</option>
-            </select>
+          <!-- Target Role Filter -->
+          <select
+            v-model="selectedRole"
+            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+          >
+            <option value="all">All Target Roles</option>
+            <option v-for="r in availableRoles" :key="r.id" :value="r.id">{{ r.label }}</option>
+          </select>
 
-            <!-- Date Range Filter -->
-            <select
-              v-model="selectedDateRange"
-              class="px-3 py-1.5 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800"
-            >
-              <option value="all">All Time</option>
-              <option value="30_days">Last 30 Days</option>
-              <option value="this_year">This Year</option>
-            </select>
+          <!-- Date Range Filter -->
+          <select
+            v-model="selectedDateRange"
+            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+          >
+            <option value="all">All Time</option>
+            <option value="30_days">Last 30 Days</option>
+            <option value="this_year">This Year</option>
+          </select>
 
-            <!-- Search Keyword -->
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search subject or text..."
-              class="px-3 py-1.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </div>
+          <!-- Search Keyword -->
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search subject or text..."
+            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          />
         </div>
 
         <!-- Newsletters List Grid -->
