@@ -133,21 +133,24 @@ const deleteNewsletter = (id) => {
           <div class="flex items-center gap-2 overflow-x-auto">
             <button
               @click="selectedStatus = 'all'"
-              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', selectedStatus === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100']"
+              :class="['px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5', selectedStatus === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
             >
-              All Broadcasts ({{ newsletters.length }})
+              <span>All Broadcasts</span>
+              <span :class="['px-1.5 py-0.5 rounded-md text-[10px] font-extrabold', selectedStatus === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700']">{{ newsletters.length }}</span>
             </button>
             <button
               @click="selectedStatus = 'sent'"
-              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', selectedStatus === 'sent' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-slate-100']"
+              :class="['px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5', selectedStatus === 'sent' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
             >
-              🚀 Sent ({{ newsletters.filter(n => n.status === 'sent').length }})
+              <span>🚀 Sent</span>
+              <span :class="['px-1.5 py-0.5 rounded-md text-[10px] font-extrabold', selectedStatus === 'sent' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700']">{{ newsletters.filter(n => n.status === 'sent').length }}</span>
             </button>
             <button
               @click="selectedStatus = 'draft'"
-              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', selectedStatus === 'draft' ? 'bg-amber-600 text-white' : 'text-slate-600 hover:bg-slate-100']"
+              :class="['px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5', selectedStatus === 'draft' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
             >
-              ✏️ Drafts ({{ newsletters.filter(n => n.status === 'draft').length }})
+              <span>✏️ Drafts</span>
+              <span :class="['px-1.5 py-0.5 rounded-md text-[10px] font-extrabold', selectedStatus === 'draft' ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-700']">{{ newsletters.filter(n => n.status === 'draft').length }}</span>
             </button>
           </div>
 
