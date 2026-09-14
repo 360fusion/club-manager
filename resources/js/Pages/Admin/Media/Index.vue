@@ -23,6 +23,14 @@ const isDragging = ref(false);
 const uploadStatus = ref('');
 const uploadError = ref('');
 
+const filterType = ref('all');
+const filterExtension = ref('all');
+const filterDate = ref('all');
+const sortBy = ref('newest');
+
+const availableExtensions = ref([]);
+const availableMonths = ref([]);
+
 const folders = [
   { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100', text: 'text-slate-700' },
   { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
@@ -59,16 +67,19 @@ const fetchMedia = async () => {
   isLoading.value = true;
   try {
     const params = new URLSearchParams();
-    if (activeFolder.value !== 'all') {
-      params.append('folder', activeFolder.value);
-    }
-    if (searchQuery.value) {
-      params.append('search', searchQuery.value);
-    }
+    if (activeFolder.value !== 'all') params.append('folder', activeFolder.value);
+    if (searchQuery.value) params.append('search', searchQuery.value);
+    if (filterType.value !== 'all') params.append('type', filterType.value);
+    if (filterExtension.value !== 'all') params.append('extension', filterExtension.value);
+    if (filterDate.value !== 'all') params.append('date', filterDate.value);
+    if (sortBy.value !== 'newest') params.append('sort', sortBy.value);
+
     const res = await fetch(`/clubs/${props.club.slug}/admin/media?${params.toString()}`);
     if (res.ok) {
       const data = await res.json();
       mediaItems.value = data.media || [];
+      availableExtensions.value = data.available_extensions || [];
+      availableMonths.value = data.available_months || [];
     }
   } catch (err) {
     console.error('Failed to load media library items:', err);
@@ -77,11 +88,19 @@ const fetchMedia = async () => {
   }
 };
 
+const resetFilters = () => {
+  searchQuery.value = '';
+  filterType.value = 'all';
+  filterExtension.value = 'all';
+  filterDate.value = 'all';
+  sortBy.value = 'newest';
+};
+
 onMounted(() => {
   fetchMedia();
 });
 
-watch([activeFolder, searchQuery], () => {
+watch([activeFolder, searchQuery, filterType, filterExtension, filterDate, sortBy], () => {
   if (activeFolder.value !== 'all') {
     uploadFolder.value = activeFolder.value;
   }
@@ -333,20 +352,93 @@ const isImage = (mimeOrUrl) => {
             <span class="text-xs font-bold text-sky-600 mt-1">Target folder: {{ activeFolder !== 'all' ? activeFolder : uploadFolder }}</span>
           </div>
 
-          <!-- Search & Filter Controls -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-            <div class="relative flex-1 max-w-md">
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Search files by name..."
-                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
-              />
-              <span class="absolute left-3.5 top-3 text-slate-400 text-xs">🔍</span>
+          <!-- Inline Search & Filter Controls Bar -->
+          <div class="space-y-4 pb-4 border-b border-slate-100">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              
+              <!-- Search Input Bar -->
+              <div class="relative flex-1">
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="Search files by name..."
+                  class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
+                />
+                <span class="absolute left-3.5 top-2.5 text-slate-400 text-xs">🔍</span>
+                <button
+                  v-if="searchQuery"
+                  type="button"
+                  @click="searchQuery = ''"
+                  class="absolute right-3 top-2 text-slate-400 hover:text-slate-700 text-xs font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <!-- Counter Badge -->
+              <div class="text-xs font-bold text-slate-500 shrink-0">
+                Showing {{ mediaItems.length }} {{ mediaItems.length === 1 ? 'file' : 'files' }} in <span class="text-slate-900 font-extrabold capitalize">{{ activeFolder }}</span>
+              </div>
             </div>
 
-            <div class="text-xs font-bold text-slate-500">
-              Showing {{ mediaItems.length }} {{ mediaItems.length === 1 ? 'file' : 'files' }} in <span class="text-slate-900 font-extrabold capitalize">{{ activeFolder }}</span>
+            <!-- Inline Filter Dropdowns Grid -->
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              
+              <!-- 1. Category / Type Filter -->
+              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+                <span class="text-slate-400">Type:</span>
+                <select v-model="filterType" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                  <option value="all">All Types</option>
+                  <option value="image">🖼️ Images Only</option>
+                  <option value="document">📄 Documents Only</option>
+                </select>
+              </div>
+
+              <!-- 2. Dynamic File Extension Filter (Only available extensions listed) -->
+              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+                <span class="text-slate-400">Extension:</span>
+                <select v-model="filterExtension" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                  <option value="all">All Extensions</option>
+                  <option v-for="ext in availableExtensions" :key="ext" :value="ext">
+                    .{{ ext.toUpperCase() }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- 3. Dynamic Date Added Filter (Year / Month) -->
+              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+                <span class="text-slate-400">Date:</span>
+                <select v-model="filterDate" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                  <option value="all">All Dates</option>
+                  <option v-for="m in availableMonths" :key="m.value" :value="m.value">
+                    📅 {{ m.label }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- 4. Sort Order -->
+              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+                <span class="text-slate-400">Sort:</span>
+                <select v-model="sortBy" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="name_asc">Name (A to Z)</option>
+                  <option value="name_desc">Name (Z to A)</option>
+                  <option value="size_desc">Size (Largest)</option>
+                  <option value="size_asc">Size (Smallest)</option>
+                </select>
+              </div>
+
+              <!-- Reset Filters Button -->
+              <button
+                v-if="searchQuery || filterType !== 'all' || filterExtension !== 'all' || filterDate !== 'all' || sortBy !== 'newest'"
+                type="button"
+                @click="resetFilters"
+                class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold rounded-xl border border-rose-200 transition-all cursor-pointer flex items-center gap-1"
+                title="Reset all search and filter settings"
+              >
+                <span>✕ Reset Filters</span>
+              </button>
             </div>
           </div>
 

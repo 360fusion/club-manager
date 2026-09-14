@@ -170,4 +170,40 @@ class MediaLibraryAdminTest extends TestCase
 
         $response->assertStatus(422);
     }
+
+    public function test_admin_can_filter_media_by_type_extension_date_and_sort(): void
+    {
+        $imageFile = UploadedFile::fake()->image('banner.png', 200, 200);
+        $pdfFile = UploadedFile::fake()->create('summons.pdf', 100);
+
+        $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", [
+            'file' => $imageFile,
+            'folder' => 'images',
+        ]);
+
+        $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", [
+            'file' => $pdfFile,
+            'folder' => 'documents',
+        ]);
+
+        // Filter by type=image
+        $resImages = $this->actingAs($this->user)
+            ->getJson("/clubs/{$this->club->slug}/admin/media?type=image");
+        $resImages->assertOk()
+            ->assertJsonCount(1, 'media')
+            ->assertJsonPath('media.0.file_name', 'banner.png');
+
+        // Filter by extension=pdf
+        $resPdf = $this->actingAs($this->user)
+            ->getJson("/clubs/{$this->club->slug}/admin/media?extension=pdf");
+        $resPdf->assertOk()
+            ->assertJsonCount(1, 'media')
+            ->assertJsonPath('media.0.file_name', 'summons.pdf');
+
+        // Check available_extensions & available_months metadata
+        $resAll = $this->actingAs($this->user)
+            ->getJson("/clubs/{$this->club->slug}/admin/media");
+        $resAll->assertOk()
+            ->assertJsonPath('available_extensions', ['png', 'pdf']);
+    }
 }
