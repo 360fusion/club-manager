@@ -214,7 +214,6 @@ const deleteNewsletter = (id) => {
               </div>
 
               <h3 class="text-lg font-bold text-slate-900">{{ item.subject }}</h3>
-              <div class="text-xs text-slate-500 line-clamp-2 prose max-w-none" v-html="item.content"></div>
               <div class="text-[11px] text-slate-400 font-medium flex items-center gap-2">
                 <span>Audience: <strong>{{ item.recipient_count }} contacts</strong></span>
                 <span v-if="item.external_recipient_count > 0" class="text-indigo-600">({{ item.external_recipient_count }} visiting brethren)</span>
