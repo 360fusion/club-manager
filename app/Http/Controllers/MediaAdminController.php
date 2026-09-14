@@ -112,17 +112,7 @@ class MediaAdminController extends Controller
         }
 
         $mediaItems = $query->get()->map(function ($media) {
-            return [
-                'id' => $media->id,
-                'name' => $media->name,
-                'file_name' => $media->file_name,
-                'mime_type' => $media->mime_type,
-                'size' => $media->size,
-                'human_size' => $this->formatBytes($media->size),
-                'collection_name' => $media->collection_name,
-                'original_url' => $media->getFullUrl(),
-                'created_at' => $media->created_at->format('M d, Y H:i'),
-            ];
+            return $this->transformMedia($media);
         });
 
         return response()->json([
@@ -201,17 +191,33 @@ class MediaAdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'media' => [
-                'id' => $media->id,
-                'name' => $media->name,
-                'file_name' => $media->file_name,
-                'mime_type' => $media->mime_type,
-                'size' => $media->size,
-                'human_size' => $this->formatBytes($media->size),
-                'collection_name' => $media->collection_name,
-                'original_url' => $media->getFullUrl(),
-                'created_at' => $media->created_at->format('M d, Y H:i'),
-            ],
+            'media' => $this->transformMedia($media),
+        ]);
+    }
+
+    /**
+     * Update details (name, alt_text, caption) of a media item.
+     */
+    public function update(string $clubSlug, int $id, Request $request): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $media = $club->media()->findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'alt_text' => 'nullable|string|max:255',
+            'caption' => 'nullable|string|max:1000',
+        ]);
+
+        $media->name = $request->input('name');
+        $media->setCustomProperty('alt_text', $request->input('alt_text', ''));
+        $media->setCustomProperty('caption', $request->input('caption', ''));
+        $media->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Media details updated successfully.',
+            'media' => $this->transformMedia($media),
         ]);
     }
 
@@ -229,6 +235,23 @@ class MediaAdminController extends Controller
             'success' => true,
             'message' => 'File deleted successfully from media library.',
         ]);
+    }
+
+    private function transformMedia($media): array
+    {
+        return [
+            'id' => $media->id,
+            'name' => $media->name,
+            'file_name' => $media->file_name,
+            'mime_type' => $media->mime_type,
+            'size' => $media->size,
+            'human_size' => $this->formatBytes($media->size),
+            'collection_name' => $media->collection_name,
+            'original_url' => $media->getFullUrl(),
+            'alt_text' => $media->getCustomProperty('alt_text', ''),
+            'caption' => $media->getCustomProperty('caption', ''),
+            'created_at' => $media->created_at->format('M d, Y H:i'),
+        ];
     }
 
     private function formatBytes(int $bytes): string

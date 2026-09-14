@@ -206,4 +206,30 @@ class MediaLibraryAdminTest extends TestCase
         $resAll->assertOk()
             ->assertJsonPath('available_extensions', ['png', 'pdf']);
     }
+
+    public function test_admin_can_update_media_details_name_alt_text_and_caption(): void
+    {
+        $file = UploadedFile::fake()->image('gallery-photo.jpg');
+
+        $uploadRes = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+                'file' => $file,
+                'folder' => 'galleries',
+            ]);
+
+        $mediaId = $uploadRes->json('media.id');
+
+        $updateRes = $this->actingAs($this->user)
+            ->putJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}", [
+                'name' => 'Oxford Regatta Victory Celebration 2026',
+                'alt_text' => 'Boating team celebrating trophy victory on river Isis',
+                'caption' => 'Oxford Boating Club crew holding trophy after winning Torpids Regatta 2026.',
+            ]);
+
+        $updateRes->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('media.name', 'Oxford Regatta Victory Celebration 2026')
+            ->assertJsonPath('media.alt_text', 'Boating team celebrating trophy victory on river Isis')
+            ->assertJsonPath('media.caption', 'Oxford Boating Club crew holding trophy after winning Torpids Regatta 2026.');
+    }
 }

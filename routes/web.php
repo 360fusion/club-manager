@@ -72,6 +72,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/media-manager', [\App\Http\Controllers\MediaAdminController::class, 'page'])->name('admin.media.page');
     Route::get('/clubs/{clubSlug}/admin/media', [\App\Http\Controllers\MediaAdminController::class, 'index'])->name('admin.media.index');
     Route::post('/clubs/{clubSlug}/admin/media', [\App\Http\Controllers\MediaAdminController::class, 'store'])->name('admin.media.store');
+    Route::put('/clubs/{clubSlug}/admin/media/{id}', [\App\Http\Controllers\MediaAdminController::class, 'update'])->name('admin.media.update');
     Route::delete('/clubs/{clubSlug}/admin/media/{id}', [\App\Http\Controllers\MediaAdminController::class, 'destroy'])->name('admin.media.destroy');
 
     // CSV Member Import & Export Routes
