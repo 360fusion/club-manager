@@ -32,6 +32,7 @@ if (!blocks.value.length) {
 
 const showPublishSettings = ref(true);
 const isPublished = ref(props.post.status === 'published' || props.post.status === undefined);
+const showPreviewModal = ref(false);
 
 const form = useForm({
   id: props.post.id || null,
@@ -254,14 +255,32 @@ const submit = () => {
     <div class="max-w-4xl mx-auto space-y-6">
       
       <!-- Top Action Bar -->
-      <div class="flex items-center justify-between bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
           <h2 class="text-xl font-bold text-slate-900">{{ post.id ? 'Edit News Post' : 'Create News Article' }}</h2>
           <p class="text-xs text-slate-500 mt-0.5">Build structured page elements, images, positioning, and downloadable files.</p>
         </div>
-        <Link :href="route('admin.posts.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all">
-          &larr; Back to Posts
-        </Link>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            @click="showPreviewModal = true"
+            class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            👁️ Preview Article
+          </button>
+          <a
+            v-if="post.id"
+            :href="route('member.posts.show', { slug: club.slug, id: post.id })"
+            target="_blank"
+            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all flex items-center gap-1"
+            title="Open live post in member portal"
+          >
+            ↗️ Live Link
+          </a>
+          <Link :href="route('admin.posts.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all">
+            &larr; Back to Posts
+          </Link>
+        </div>
       </div>
 
       <!-- Form -->
@@ -742,6 +761,180 @@ const submit = () => {
 
       </form>
 
+    </div>
+
+    <!-- Live Preview Modal -->
+    <div v-if="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+      <div class="bg-slate-100 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 space-y-4 p-6 relative">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">👁️</span>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Member Portal Article Preview</h3>
+              <p class="text-[11px] text-slate-500">Live preview of how this post will render in the member portal.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            @click="showPreviewModal = false"
+            class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors cursor-pointer text-xs"
+          >
+            ✕ Close Preview
+          </button>
+        </div>
+
+        <!-- Preview Article Card -->
+        <article class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 space-y-6 text-left">
+          <!-- Header -->
+          <div class="space-y-3">
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500">
+              <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-100 uppercase tracking-wider text-[10px]">
+                📰 News Bulletin
+              </span>
+              <span>•</span>
+              <span>{{ form.published_at ? 'Scheduled: ' + form.published_at : 'Publishing Immediately' }}</span>
+            </div>
+
+            <h1 class="text-2xl md:text-3xl font-black text-slate-900 leading-tight">
+              {{ form.title || 'Untitled News Article' }}
+            </h1>
+
+            <p v-if="form.excerpt" class="text-sm font-medium text-slate-600 italic border-l-4 border-indigo-500 pl-3 py-1 bg-slate-50 rounded-r-xl">
+              {{ form.excerpt }}
+            </p>
+          </div>
+
+          <!-- Cover Image -->
+          <div v-if="coverImagePreview || form.cover_image_url" class="rounded-xl overflow-hidden border border-slate-200">
+            <img :src="coverImagePreview || form.cover_image_url" :alt="form.title" class="w-full max-h-96 object-cover" />
+          </div>
+
+          <!-- Structured Page Blocks -->
+          <div v-if="blocks && blocks.length" class="space-y-6">
+            <div v-for="block in blocks" :key="block.id">
+              
+              <!-- 1. Text Block -->
+              <div
+                v-if="block.type === 'text'"
+                class="prose prose-slate max-w-none text-sm leading-relaxed text-slate-800 space-y-3"
+                v-html="block.content || '<p class=\'text-slate-400 italic\'>[Empty text block]</p>'"
+              ></div>
+
+              <!-- 2. Single Image -->
+              <div
+                v-else-if="block.type === 'image' && block.url"
+                :class="[
+                  'my-4 flex',
+                  block.position === 'left' ? 'justify-start' : block.position === 'right' ? 'justify-end' : block.position === 'center' ? 'justify-center' : 'w-full'
+                ]"
+              >
+                <figure :class="[
+                  'rounded-xl overflow-hidden border border-slate-200 bg-white p-1 shadow-sm',
+                  block.size === 'small' ? 'w-full sm:w-1/4' : block.size === 'medium' ? 'w-full sm:w-1/2' : block.size === 'large' ? 'w-full sm:w-3/4' : 'w-full'
+                ]">
+                  <img :src="block.url" :alt="block.caption || form.title" class="w-full h-auto max-h-[500px] object-cover rounded-lg" />
+                  <figcaption v-if="block.caption" class="text-xs text-center text-slate-500 italic mt-2 p-1">
+                    {{ block.caption }}
+                  </figcaption>
+                </figure>
+              </div>
+
+              <!-- 3. Image Gallery -->
+              <div v-else-if="block.type === 'images' && block.items && block.items.length" class="my-6">
+                <div :class="[
+                  'grid gap-3',
+                  block.columns === 2 ? 'grid-cols-1 sm:grid-cols-2' : block.columns === 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3'
+                ]">
+                  <figure
+                    v-for="(gItem, gIdx) in block.items"
+                    :key="gIdx"
+                    class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-1 shadow-sm"
+                  >
+                    <img v-if="gItem.url" :src="gItem.url" :alt="gItem.caption || ''" class="w-full h-40 object-cover rounded-lg" />
+                    <figcaption v-if="gItem.caption" class="text-[11px] text-center text-slate-600 font-medium italic mt-1.5 p-1">
+                      {{ gItem.caption }}
+                    </figcaption>
+                  </figure>
+                </div>
+              </div>
+
+              <!-- 4. Notice Callout Box -->
+              <div
+                v-else-if="block.type === 'notice'"
+                :class="[
+                  'p-4 rounded-xl border text-xs space-y-1 my-4',
+                  block.style === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-900' :
+                  block.style === 'important' ? 'bg-purple-50 border-purple-200 text-purple-900' :
+                  block.style === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' :
+                  'bg-blue-50 border-blue-200 text-blue-900'
+                ]"
+              >
+                <h4 class="font-bold text-sm flex items-center gap-1.5">
+                  <span>{{ block.style === 'warning' ? '⚠️' : block.style === 'important' ? '🚨' : block.style === 'success' ? '✅' : '💡' }}</span>
+                  {{ block.title }}
+                </h4>
+                <p class="leading-relaxed font-medium">{{ block.text }}</p>
+              </div>
+
+              <!-- 5. Button Link -->
+              <div
+                v-else-if="block.type === 'button' && block.url"
+                :class="[
+                  'my-4 flex',
+                  block.align === 'left' ? 'justify-start' : block.align === 'right' ? 'justify-end' : 'justify-center'
+                ]"
+              >
+                <a
+                  :href="block.url"
+                  target="_blank"
+                  class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-1"
+                >
+                  {{ block.label }}
+                </a>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Downloadable Attachments -->
+          <div v-if="existingAttachments.length || newFiles.length" class="pt-6 border-t border-slate-100 space-y-3">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <span>📎</span> Downloadable Files & Documents ({{ existingAttachments.length + newFiles.length }})
+            </h4>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div
+                v-for="(att, aIdx) in existingAttachments"
+                :key="'ex-' + aIdx"
+                class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs"
+              >
+                <div class="flex items-center gap-3 overflow-hidden">
+                  <span class="text-xl">{{ getFileIcon(att.mime_type || att.name) }}</span>
+                  <div class="truncate">
+                    <span class="font-bold text-slate-900 truncate block">{{ att.name }}</span>
+                    <span class="text-[10px] text-slate-500 font-semibold">{{ att.size || 'Download File' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-for="(file, fIdx) in newFiles"
+                :key="'nf-' + fIdx"
+                class="flex items-center justify-between p-3.5 bg-sky-50 rounded-xl border border-sky-200 text-xs"
+              >
+                <div class="flex items-center gap-3 overflow-hidden">
+                  <span class="text-xl">{{ getFileIcon(file.name) }}</span>
+                  <div class="truncate">
+                    <span class="font-bold text-sky-900 truncate block">{{ file.name }}</span>
+                    <span class="text-[10px] text-sky-600 font-semibold">{{ formatBytes(file.size) }} (Pending upload)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
     </div>
 
   </AdminLayout>
