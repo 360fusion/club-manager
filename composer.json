@@ -17,6 +17,7 @@
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
         "spatie/browsershot": "^5.4",
+        "spatie/laravel-medialibrary": "^11.23",
         "spatie/laravel-pdf": "^2.13",
         "tightenco/ziggy": "^2.6"
     },

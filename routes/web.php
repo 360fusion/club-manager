@@ -68,6 +68,11 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/clubs/{clubSlug}/admin/settings', [\App\Http\Controllers\ClubSettingsController::class, 'update'])->name('admin.settings.update');
     Route::post('/clubs/{slug}/domain', [ClubController::class, 'updateDomain'])->name('clubs.domain.update');
 
+    // Central Spatie Media Library Routes
+    Route::get('/clubs/{clubSlug}/admin/media', [\App\Http\Controllers\MediaAdminController::class, 'index'])->name('admin.media.index');
+    Route::post('/clubs/{clubSlug}/admin/media', [\App\Http\Controllers\MediaAdminController::class, 'store'])->name('admin.media.store');
+    Route::delete('/clubs/{clubSlug}/admin/media/{id}', [\App\Http\Controllers\MediaAdminController::class, 'destroy'])->name('admin.media.destroy');
+
     // CSV Member Import & Export Routes
     Route::post('/clubs/{slug}/members/import', [MemberImportExportController::class, 'import'])->name('clubs.members.import');
     Route::get('/clubs/{slug}/members/export', [MemberImportExportController::class, 'export'])->name('clubs.members.export');

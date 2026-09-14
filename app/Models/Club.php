@@ -10,9 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Cashier\Billable as StripeBillable;
 use Laravel\Paddle\Billable as PaddleBillable;
 
-class Club extends Model
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+
+class Club extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
     use PaddleBillable, StripeBillable {
         StripeBillable::subscription insteadof PaddleBillable;
         StripeBillable::subscriptions insteadof PaddleBillable;

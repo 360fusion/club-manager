@@ -1,0 +1,328 @@
+<script setup>
+import { ref, watch, computed } from 'vue';
+
+const props = defineProps({
+  show: Boolean,
+  clubSlug: String,
+  defaultFolder: {
+    type: String,
+    default: 'all',
+  },
+});
+
+const emit = defineEmits(['close', 'select']);
+
+const activeFolder = ref(props.defaultFolder || 'all');
+const searchQuery = ref('');
+const mediaItems = ref([]);
+const isLoading = ref(false);
+const isUploading = ref(false);
+const uploadFileInput = ref(null);
+
+const folders = [
+  { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100', text: 'text-slate-700' },
+  { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
+  { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50', text: 'text-blue-700' },
+  { id: 'newsletters', label: 'Newsletters', icon: '✉️', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+  { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-sky-50', text: 'text-sky-700' },
+  { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-purple-50', text: 'text-purple-700' },
+  { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50', text: 'text-amber-700' },
+];
+
+const fetchMedia = async () => {
+  if (!props.clubSlug) return;
+  isLoading.value = true;
+  try {
+    const params = new URLSearchParams();
+    if (activeFolder.value !== 'all') {
+      params.append('folder', activeFolder.value);
+    }
+    if (searchQuery.value) {
+      params.append('search', searchQuery.value);
+    }
+    const res = await fetch(`/clubs/${props.clubSlug}/admin/media?${params.toString()}`);
+    if (res.ok) {
+      const data = await res.json();
+      mediaItems.value = data.media || [];
+    }
+  } catch (err) {
+    console.error('Failed to load media library items:', err);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+watch(() => props.show, (newVal) => {
+  if (newVal) {
+    activeFolder.value = props.defaultFolder || 'all';
+    searchQuery.value = '';
+    fetchMedia();
+  }
+});
+
+watch([activeFolder, searchQuery], () => {
+  if (props.show) {
+    fetchMedia();
+  }
+});
+
+const triggerUpload = () => {
+  if (uploadFileInput.value) {
+    uploadFileInput.value.click();
+  }
+};
+
+const handleFileUpload = async (e) => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+
+  isUploading.value = true;
+  const targetFolder = activeFolder.value === 'all' ? 'images' : activeFolder.value;
+
+  for (const file of files) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', targetFolder);
+
+    try {
+      const res = await fetch(`/clubs/${props.clubSlug}/admin/media`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.media) {
+          mediaItems.value.unshift(data.media);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to upload file:', err);
+    }
+  }
+
+  isUploading.value = false;
+  if (e.target) e.target.value = '';
+};
+
+const selectItem = (item) => {
+  emit('select', {
+    id: item.id,
+    name: item.name,
+    file_name: item.file_name,
+    url: item.original_url,
+    mime_type: item.mime_type,
+    size: item.human_size,
+    collection_name: item.collection_name,
+  });
+  emit('close');
+};
+
+const deleteItem = async (item, e) => {
+  e.stopPropagation();
+  if (!confirm(`Are you sure you want to delete "${item.file_name}" from the media library?`)) return;
+
+  try {
+    const res = await fetch(`/clubs/${props.clubSlug}/admin/media/${item.id}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      },
+    });
+
+    if (res.ok) {
+      mediaItems.value = mediaItems.value.filter(m => m.id !== item.id);
+    }
+  } catch (err) {
+    console.error('Failed to delete media item:', err);
+  }
+};
+
+const getFileIcon = (mimeOrName) => {
+  const name = (mimeOrName || '').toLowerCase();
+  if (name.includes('pdf')) return '📄';
+  if (name.includes('image') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.webp')) return '🖼️';
+  if (name.includes('sheet') || name.endsWith('.xls') || name.endsWith('.xlsx') || name.endsWith('.csv')) return '📊';
+  if (name.includes('word') || name.endsWith('.doc') || name.endsWith('.docx')) return '📝';
+  if (name.endsWith('.zip') || name.endsWith('.rar')) return '📦';
+  return '📎';
+};
+
+const isImage = (mimeOrUrl) => {
+  const val = (mimeOrUrl || '').toLowerCase();
+  return val.includes('image') || val.match(/\.(jpg|jpeg|png|webp|gif|svg)$/);
+};
+</script>
+
+<template>
+  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">📁</span>
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">Spatie Media Library & Asset Manager</h3>
+            <p class="text-xs text-slate-500">Centralized file repository for logos, news, newsletters, galleries, and documents.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- Upload Button -->
+          <button
+            type="button"
+            @click="triggerUpload"
+            :disabled="isUploading"
+            class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            <span v-if="isUploading" class="animate-spin">⏳</span>
+            <span v-else>📤</span>
+            <span>Upload New File</span>
+          </button>
+          <input
+            ref="uploadFileInput"
+            type="file"
+            multiple
+            class="hidden"
+            @change="handleFileUpload"
+          />
+
+          <!-- Close Modal -->
+          <button
+            type="button"
+            @click="emit('close')"
+            class="p-2 text-slate-400 hover:text-slate-700 font-bold rounded-xl transition-colors cursor-pointer text-sm"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Sidebar + Content Area) -->
+      <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+        
+        <!-- Folder Navigation Sidebar -->
+        <div class="w-full md:w-64 bg-slate-50 border-r border-slate-200 p-4 space-y-1 overflow-y-auto shrink-0">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
+            Media Folders
+          </div>
+
+          <button
+            v-for="folder in folders"
+            :key="folder.id"
+            type="button"
+            @click="activeFolder = folder.id"
+            :class="[
+              'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer',
+              activeFolder === folder.id
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'text-slate-700 hover:bg-slate-200/60'
+            ]"
+          >
+            <span class="flex items-center gap-2">
+              <span>{{ folder.icon }}</span>
+              <span>{{ folder.label }}</span>
+            </span>
+          </button>
+        </div>
+
+        <!-- Main Media Grid Area -->
+        <div class="flex-1 flex flex-col p-6 space-y-4 overflow-hidden bg-white">
+          
+          <!-- Top Search Filter Bar -->
+          <div class="flex items-center justify-between gap-4">
+            <div class="relative flex-1">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search files by name..."
+                class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500"
+              />
+              <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+            </div>
+
+            <div class="text-xs font-semibold text-slate-500">
+              Showing {{ mediaItems.length }} {{ mediaItems.length === 1 ? 'file' : 'files' }}
+            </div>
+          </div>
+
+          <!-- Media Files Scrollable Grid -->
+          <div class="flex-1 overflow-y-auto">
+            
+            <div v-if="isLoading" class="flex items-center justify-center py-16 text-slate-400 text-xs font-semibold">
+              <span class="animate-spin text-lg mr-2">🔄</span> Loading Media Library...
+            </div>
+
+            <div v-else-if="!mediaItems.length" class="text-center py-16 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+              <span class="text-3xl block mb-2">📁</span>
+              <span class="text-xs font-bold text-slate-700 block">No media files in this folder</span>
+              <span class="text-[11px] text-slate-400">Click "Upload New File" above to add files to the media library.</span>
+            </div>
+
+            <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-1">
+              <div
+                v-for="item in mediaItems"
+                :key="item.id"
+                @click="selectItem(item)"
+                class="group relative bg-slate-50 hover:bg-sky-50/60 rounded-2xl border border-slate-200/90 hover:border-sky-300 p-2.5 transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col justify-between overflow-hidden"
+              >
+                <!-- Thumbnail Preview -->
+                <div class="h-28 w-full rounded-xl overflow-hidden bg-white border border-slate-200/80 flex items-center justify-center relative mb-2">
+                  <img
+                    v-if="isImage(item.mime_type || item.file_name)"
+                    :src="item.original_url"
+                    :alt="item.name"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  />
+                  <div v-else class="flex flex-col items-center justify-center space-y-1">
+                    <span class="text-3xl">{{ getFileIcon(item.mime_type || item.file_name) }}</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ item.file_name.split('.').pop() }}</span>
+                  </div>
+
+                  <!-- Folder Collection Badge -->
+                  <span class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-slate-900/75 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider">
+                    {{ item.collection_name }}
+                  </span>
+                </div>
+
+                <!-- File Info -->
+                <div class="space-y-1">
+                  <span class="block font-bold text-slate-900 group-hover:text-sky-700 text-xs truncate" :title="item.file_name">
+                    {{ item.file_name }}
+                  </span>
+                  <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                    <span>{{ item.human_size }}</span>
+                    <span>{{ item.created_at }}</span>
+                  </div>
+                </div>
+
+                <!-- Action Button Overlay -->
+                <div class="pt-2 flex items-center justify-between border-t border-slate-200/60 mt-2">
+                  <span class="text-[11px] font-bold text-sky-600 group-hover:underline flex items-center gap-1">
+                    <span>✓</span> Select File
+                  </span>
+                  <button
+                    type="button"
+                    @click="deleteItem(item, $event)"
+                    class="text-slate-400 hover:text-rose-600 p-1 text-xs cursor-pointer"
+                    title="Delete File"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</template>

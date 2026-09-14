@@ -2,6 +2,9 @@
 import { ref } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
+
+const showMediaModal = ref(false);
 
 const props = defineProps({
   club: {
@@ -797,7 +800,16 @@ const updateMemberRank = (userId, newRank) => {
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Logo Image URL</label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block font-bold text-slate-700">Logo Image URL</label>
+                <button
+                  type="button"
+                  @click="showMediaModal = true"
+                  class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  📁 Choose from Media Library
+                </button>
+              </div>
               <input v-model="form.logo_url" type="url" placeholder="https://example.com/logo.png" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
 
@@ -1364,5 +1376,14 @@ const updateMemberRank = (userId, newRank) => {
         </div>
       </div>
     </Transition>
+    <!-- Spatie Media Library Modal Component -->
+    <MediaLibraryModal
+      :show="showMediaModal"
+      :club-slug="club.slug"
+      default-folder="logos"
+      @close="showMediaModal = false"
+      @select="(item) => { form.logo_url = item.url; showMediaModal = false; }"
+    />
+
   </AdminLayout>
 </template>

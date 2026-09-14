@@ -3,6 +3,7 @@ import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useForm, Head, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
+import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
 
 const props = defineProps({
   club: Object,
@@ -17,6 +18,40 @@ const coverImageFile = ref(null);
 const coverImagePreview = ref(props.post.cover_image_url || '');
 
 const blocks = ref([...(props.post.blocks || [])]);
+
+// Spatie Media Library Modal State
+const showMediaModal = ref(false);
+const mediaTarget = ref(null);
+const mediaDefaultFolder = ref('news');
+
+const openMediaLibrary = (type, targetObj = null, folder = 'news') => {
+  mediaTarget.value = { type, targetObj };
+  mediaDefaultFolder.value = folder;
+  showMediaModal.value = true;
+};
+
+const onMediaSelect = (mediaItem) => {
+  if (!mediaTarget.value) return;
+
+  const { type, targetObj } = mediaTarget.value;
+
+  if (type === 'cover') {
+    form.cover_image_url = mediaItem.url;
+    coverImagePreview.value = mediaItem.url;
+  } else if (type === 'block_image' && targetObj) {
+    targetObj.url = mediaItem.url;
+  } else if (type === 'gallery_image' && targetObj) {
+    targetObj.url = mediaItem.url;
+  } else if (type === 'attachment') {
+    existingAttachments.value.push({
+      name: mediaItem.file_name || mediaItem.name,
+      url: mediaItem.url,
+      size: mediaItem.size,
+      mime_type: mediaItem.mime_type,
+    });
+    form.existing_attachments = existingAttachments.value;
+  }
+};
 
 // Default block templates
 if (!blocks.value.length) {
@@ -371,7 +406,16 @@ const submitWithAction = (actionType) => {
 
           <!-- Cover Image Upload & URL -->
           <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">🖼️ Article Banner / Cover Image</label>
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">🖼️ Article Banner / Cover Image</label>
+              <button
+                type="button"
+                @click="openMediaLibrary('cover', null, 'news')"
+                class="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all flex items-center gap-1 cursor-pointer"
+              >
+                📁 Choose from Media Library
+              </button>
+            </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -547,7 +591,16 @@ const submitWithAction = (actionType) => {
                   <div v-else-if="block.type === 'image'" class="space-y-3 text-xs">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div class="col-span-1 md:col-span-1">
-                        <label class="block font-bold text-slate-700 mb-1">Image URL</label>
+                        <div class="flex items-center justify-between mb-1">
+                          <label class="block font-bold text-slate-700">Image URL</label>
+                          <button
+                            type="button"
+                            @click="openMediaLibrary('block_image', block, 'images')"
+                            class="px-2 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-bold rounded-lg border border-sky-200 transition-all cursor-pointer"
+                          >
+                            📁 Media Library
+                          </button>
+                        </div>
                         <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
                       </div>
 
@@ -634,13 +687,22 @@ const submitWithAction = (actionType) => {
                       >
                         <div class="flex items-center justify-between">
                           <span class="font-bold text-slate-600 text-[11px]">Image {{ gIdx + 1 }}</span>
-                          <button
-                            type="button"
-                            @click="removeGalleryImage(block, gIdx)"
-                            class="text-slate-400 hover:text-rose-600 font-bold p-0.5"
-                          >
-                            ✕
-                          </button>
+                          <div class="flex items-center gap-1">
+                            <button
+                              type="button"
+                              @click="openMediaLibrary('gallery_image', gItem, 'galleries')"
+                              class="px-2 py-0.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-[10px] font-bold rounded-md border border-purple-200 transition-all cursor-pointer"
+                            >
+                              📁 Media Library
+                            </button>
+                            <button
+                              type="button"
+                              @click="removeGalleryImage(block, gIdx)"
+                              class="text-slate-400 hover:text-rose-600 font-bold p-0.5 cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          </div>
                         </div>
 
                         <div class="space-y-1">
@@ -765,13 +827,22 @@ const submitWithAction = (actionType) => {
               <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">📎 Downloadable Files & Documents</label>
               <p class="text-[11px] text-slate-500">Attach PDFs, agendas, meeting minutes, spreadsheets, or documents for members.</p>
             </div>
-            <button
-              type="button"
-              @click="triggerFileInput"
-              class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all flex items-center gap-1 cursor-pointer"
-            >
-              + Attach Files
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="openMediaLibrary('attachment', null, 'documents')"
+                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all flex items-center gap-1 cursor-pointer"
+              >
+                📁 Choose from Media Library
+              </button>
+              <button
+                type="button"
+                @click="triggerFileInput"
+                class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all flex items-center gap-1 cursor-pointer"
+              >
+                + Attach Files
+              </button>
+            </div>
             <input
               ref="fileInput"
               type="file"
@@ -1121,6 +1192,15 @@ const submitWithAction = (actionType) => {
         </article>
       </div>
     </div>
+
+    <!-- Spatie Media Library Modal Component -->
+    <MediaLibraryModal
+      :show="showMediaModal"
+      :club-slug="club.slug"
+      :default-folder="mediaDefaultFolder"
+      @close="showMediaModal = false"
+      @select="onMediaSelect"
+    />
 
   </AdminLayout>
 </template>
