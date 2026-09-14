@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
+import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
+
+const showNavMediaModal = ref(false);
 
 const props = defineProps({
   title: {
@@ -291,8 +294,34 @@ const copyInviteLink = () => {
             </svg>
             <span>Club Settings</span>
           </Link>
+
+          <!-- 9. File Manager (Spatie Media Library) -->
+          <button
+            type="button"
+            @click="showNavMediaModal = true"
+            :class="[
+              'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left cursor-pointer font-medium text-sm',
+              activeTab === 'media'
+                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-sky-500'
+                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+            ]"
+          >
+            <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            <span>File Manager</span>
+          </button>
         </nav>
       </div>
+
+      <!-- Spatie Media Library Nav Modal Component -->
+      <MediaLibraryModal
+        :show="showNavMediaModal"
+        :club-slug="clubSlug"
+        default-folder="all"
+        @close="showNavMediaModal = false"
+        @select="showNavMediaModal = false"
+      />
 
       <!-- Footer Quick Action / User Profile -->
       <div class="p-4 border-t border-slate-800 space-y-3">
