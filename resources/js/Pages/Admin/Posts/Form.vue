@@ -45,6 +45,7 @@ const form = useForm({
   status: isPublished.value ? 'published' : 'draft',
   published_at: props.post.published_at || '',
   expires_at: props.post.expires_at || '',
+  action_type: 'save',
   blocks: blocks.value,
   existing_attachments: existingAttachments.value,
   new_attachments: [],
@@ -246,6 +247,11 @@ const submit = () => {
   form.post(route('admin.posts.store', { clubSlug: props.club.slug }), {
     forceFormData: true,
   });
+};
+
+const submitWithAction = (actionType) => {
+  form.action_type = actionType;
+  submit();
 };
 </script>
 
@@ -755,9 +761,57 @@ const submit = () => {
           </div>
         </div>
 
-        <button type="submit" :disabled="form.processing" class="w-full py-3.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-sky-600/20 cursor-pointer">
-          {{ form.processing ? 'Saving Article...' : 'Save & Publish News Article' }}
-        </button>
+        <!-- Action Buttons Bar (Matching User's Screenshot) -->
+        <div class="bg-slate-100/90 -mx-6 -mb-6 p-4 rounded-b-2xl border-t border-slate-200/90 flex flex-wrap items-center gap-2 md:gap-2.5">
+          <button
+            type="button"
+            @click="submitWithAction('save')"
+            :disabled="form.processing"
+            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            @click="submitWithAction('save_and_close')"
+            :disabled="form.processing"
+            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          >
+            Save and close
+          </button>
+          <button
+            type="button"
+            @click="submitWithAction('save_and_new')"
+            :disabled="form.processing"
+            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          >
+            Save and new
+          </button>
+          <button
+            type="button"
+            @click="submitWithAction('save_and_duplicate')"
+            :disabled="form.processing"
+            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          >
+            Save and duplicate
+          </button>
+          <button
+            type="button"
+            @click="submitWithAction('save_and_edit')"
+            :disabled="form.processing"
+            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          >
+            Save and edit
+          </button>
+          <button
+            type="button"
+            @click="submitWithAction('save_and_go_back')"
+            :disabled="form.processing"
+            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          >
+            Save and go back
+          </button>
+        </div>
 
       </form>
 

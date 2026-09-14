@@ -76,6 +76,7 @@ class PostAdminController extends Controller
             'blocks' => 'nullable|array',
             'existing_attachments' => 'nullable|array',
             'new_attachments.*' => 'nullable|file|max:10240',
+            'action_type' => 'nullable|string',
         ]);
 
         $coverImageUrl = $validated['cover_image_url'] ?? null;
@@ -131,7 +132,7 @@ class PostAdminController extends Controller
         $publishedAt = !empty($validated['published_at']) ? $validated['published_at'] : null;
         $expiresAt = !empty($validated['expires_at']) ? $validated['expires_at'] : null;
 
-        Post::updateOrCreate(
+        $post = Post::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
             [
                 'author_id' => $user->id ?? 1,
@@ -148,8 +149,31 @@ class PostAdminController extends Controller
             ]
         );
 
+        $actionType = $validated['action_type'] ?? $request->input('action_type', null);
+
+        if ($actionType === 'save_and_new') {
+            return redirect()->route('admin.posts.create', ['clubSlug' => $club->slug])
+                ->with('success', 'Article saved successfully. You can now create another post.');
+        }
+
+        if ($actionType === 'save_and_duplicate') {
+            $duplicate = $post->replicate(['slug']);
+            $duplicate->title = $post->title . ' (Copy)';
+            $duplicate->slug = $post->slug . '-copy-' . time();
+            $duplicate->save();
+
+            return redirect()->route('admin.posts.edit', ['clubSlug' => $club->slug, 'id' => $duplicate->id])
+                ->with('success', 'Article saved and duplicated successfully.');
+        }
+
+        if ($actionType === 'save' || $actionType === 'save_and_edit') {
+            return redirect()->route('admin.posts.edit', ['clubSlug' => $club->slug, 'id' => $post->id])
+                ->with('success', 'Article saved successfully.');
+        }
+
+        // Default when action_type is save_and_close, save_and_go_back, or omitted:
         return redirect()->route('admin.posts.index', ['clubSlug' => $club->slug])
-            ->with('success', 'Blog post saved successfully.');
+            ->with('success', 'Article saved successfully.');
     }
 
     /**
