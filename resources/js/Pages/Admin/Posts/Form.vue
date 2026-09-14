@@ -103,6 +103,7 @@ const addBlock = (type) => {
       caption: '',
       position: 'center', // 'left', 'center', 'right', 'full'
       size: 'large', // 'small' (25%), 'medium' (50%), 'large' (75%), 'full' (100%)
+      file: null,
       isCollapsed: false,
     });
   } else if (type === 'images') {
@@ -111,8 +112,8 @@ const addBlock = (type) => {
       type: 'images',
       columns: 3, // 2, 3, 4
       items: [
-        { url: '', caption: '' },
-        { url: '', caption: '' },
+        { id: id + '-g1', url: '', caption: '', file: null },
+        { id: id + '-g2', url: '', caption: '', file: null },
       ],
       isCollapsed: false,
     });
@@ -134,6 +135,22 @@ const addBlock = (type) => {
       align: 'center', // 'left', 'center', 'right'
       isCollapsed: false,
     });
+  }
+};
+
+const onBlockImageFileSelect = (e, block) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    block.file = file;
+    block.url = URL.createObjectURL(file);
+  }
+};
+
+const onGalleryImageFileSelect = (e, gItem) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    gItem.file = file;
+    gItem.url = URL.createObjectURL(file);
   }
 };
 
@@ -165,7 +182,8 @@ const removeBlock = (index) => {
 };
 
 const addGalleryImage = (block) => {
-  block.items.push({ url: '', caption: '' });
+  const gId = block.id + '-g' + Date.now();
+  block.items.push({ id: gId, url: '', caption: '', file: null });
 };
 
 const removeGalleryImage = (block, idx) => {
@@ -195,7 +213,23 @@ const submit = () => {
     form.content = mainTextBlock.content;
   }
 
+  // Gather image files from blocks
+  const blockFiles = {};
+  blocks.value.forEach(b => {
+    if (b.type === 'image' && b.file) {
+      blockFiles[b.id] = b.file;
+    }
+    if (b.type === 'images' && Array.isArray(b.items)) {
+      b.items.forEach(gItem => {
+        if (gItem.file) {
+          blockFiles[gItem.id || (b.id + '-' + Math.random())] = gItem.file;
+        }
+      });
+    }
+  });
+
   form.blocks = blocks.value;
+  form.block_files = blockFiles;
   form.existing_attachments = existingAttachments.value;
   form.new_attachments = newFiles.value;
 
@@ -376,14 +410,24 @@ const submit = () => {
 
                 <!-- 2. Single Image Block with Position & Sizing Options -->
                 <div v-else-if="block.type === 'image'" class="space-y-3 text-xs">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label class="block font-bold text-slate-700 mb-1">Image URL *</label>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="col-span-1 md:col-span-1">
+                      <label class="block font-bold text-slate-700 mb-1">Image URL</label>
                       <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
                     </div>
 
-                    <div>
-                      <label class="block font-bold text-slate-700 mb-1">Image Caption / Alt Text</label>
+                    <div class="col-span-1 md:col-span-1">
+                      <label class="block font-bold text-slate-700 mb-1">Or Upload Image File</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        @change="onBlockImageFileSelect($event, block)"
+                        class="w-full text-[11px] text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer"
+                      />
+                    </div>
+
+                    <div class="col-span-1 md:col-span-1">
+                      <label class="block font-bold text-slate-700 mb-1">Caption / Alt Text</label>
                       <input v-model="block.caption" type="text" placeholder="e.g., Award ceremony at Oxford Boating Club" class="w-full p-2 bg-white border border-slate-300 rounded-xl" />
                     </div>
                   </div>
@@ -464,7 +508,16 @@ const submit = () => {
                         </button>
                       </div>
 
-                      <input v-model="gItem.url" type="text" placeholder="https://example.com/gallery-photo.jpg" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-[11px]" />
+                      <div class="space-y-1">
+                        <input v-model="gItem.url" type="text" placeholder="https://example.com/gallery-photo.jpg" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-[11px]" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          @change="onGalleryImageFileSelect($event, gItem)"
+                          class="w-full text-[10px] text-slate-600 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer"
+                        />
+                      </div>
+
                       <input v-model="gItem.caption" type="text" placeholder="Caption (optional)" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-[11px]" />
 
                       <img v-if="gItem.url" :src="gItem.url" class="w-full h-24 object-cover rounded-lg border border-slate-200" />

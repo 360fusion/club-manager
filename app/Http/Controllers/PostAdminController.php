@@ -99,6 +99,28 @@ class PostAdminController extends Controller
 
         $blocks = $validated['blocks'] ?? [];
 
+        if ($request->hasFile('block_files')) {
+            foreach ($request->file('block_files') as $blockKey => $file) {
+                if ($file && $file->isValid()) {
+                    $path = $file->store("post_images/{$club->id}", 'public');
+                    $url = "/storage/{$path}";
+
+                    foreach ($blocks as &$b) {
+                        if (isset($b['id']) && $b['id'] === $blockKey && $b['type'] === 'image') {
+                            $b['url'] = $url;
+                        }
+                        if (isset($b['type']) && $b['type'] === 'images' && isset($b['items']) && is_array($b['items'])) {
+                            foreach ($b['items'] as &$gItem) {
+                                if (isset($gItem['id']) && $gItem['id'] === $blockKey) {
+                                    $gItem['url'] = $url;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Post::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
             [
