@@ -130,6 +130,14 @@ const deleteNewsletter = (id) => {
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
         <!-- 5-Column Filter Toolbar -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+          <!-- Search Keyword (Leftmost Column) -->
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search subject or text..."
+            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          />
+
           <!-- Status Dropdown -->
           <select
             v-model="selectedStatus"
@@ -167,14 +175,6 @@ const deleteNewsletter = (id) => {
             <option value="30_days">Last 30 Days</option>
             <option value="this_year">This Year</option>
           </select>
-
-          <!-- Search Keyword -->
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search subject or text..."
-            class="px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-          />
         </div>
 
         <!-- Newsletters List Grid -->
