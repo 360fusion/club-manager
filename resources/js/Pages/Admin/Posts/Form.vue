@@ -267,22 +267,37 @@ const submit = () => {
     form.content = mainTextBlock.content;
   }
 
-  // Gather image files from blocks
+  // Gather image files from blocks and build a clean blocks payload
   const blockFiles = {};
-  blocks.value.forEach(b => {
+  const cleanBlocks = JSON.parse(JSON.stringify(blocks.value));
+
+  blocks.value.forEach((b, idx) => {
     if (b.type === 'image' && b.file) {
       blockFiles[b.id] = b.file;
     }
     if (b.type === 'images' && Array.isArray(b.items)) {
-      b.items.forEach(gItem => {
+      b.items.forEach((gItem, gIdx) => {
         if (gItem.file) {
-          blockFiles[gItem.id || (b.id + '-' + Math.random())] = gItem.file;
+          const gId = gItem.id || `${b.id}-g${gIdx}`;
+          gItem.id = gId;
+          if (cleanBlocks[idx] && cleanBlocks[idx].items && cleanBlocks[idx].items[gIdx]) {
+            cleanBlocks[idx].items[gIdx].id = gId;
+          }
+          blockFiles[gId] = gItem.file;
         }
       });
     }
   });
 
-  form.blocks = blocks.value;
+  // Strip transient file objects from cleanBlocks payload
+  cleanBlocks.forEach(b => {
+    delete b.file;
+    if (Array.isArray(b.items)) {
+      b.items.forEach(gItem => delete gItem.file);
+    }
+  });
+
+  form.blocks = cleanBlocks;
   form.block_files = blockFiles;
   form.existing_attachments = existingAttachments.value;
   form.new_attachments = newFiles.value;

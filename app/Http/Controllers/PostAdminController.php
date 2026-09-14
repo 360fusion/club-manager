@@ -107,6 +107,7 @@ class PostAdminController extends Controller
 
         $blocks = $validated['blocks'] ?? [];
 
+        // 1. Process files from block_files map (e.g. block_files[block-key])
         if ($request->hasFile('block_files')) {
             foreach ($request->file('block_files') as $blockKey => $file) {
                 if ($file && $file->isValid()) {
@@ -114,16 +115,55 @@ class PostAdminController extends Controller
                     $url = "/storage/{$path}";
 
                     foreach ($blocks as &$b) {
-                        if (isset($b['id']) && $b['id'] === $blockKey && $b['type'] === 'image') {
+                        if (isset($b['id']) && (string)$b['id'] === (string)$blockKey && $b['type'] === 'image') {
                             $b['url'] = $url;
                         }
                         if (isset($b['type']) && $b['type'] === 'images' && isset($b['items']) && is_array($b['items'])) {
                             foreach ($b['items'] as &$gItem) {
-                                if (isset($gItem['id']) && $gItem['id'] === $blockKey) {
+                                if (isset($gItem['id']) && (string)$gItem['id'] === (string)$blockKey) {
                                     $gItem['url'] = $url;
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        // 2. Process files uploaded directly within blocks array (blocks[i][file] or blocks[i][items][j][file])
+        if ($request->hasFile('blocks')) {
+            $blockFiles = $request->file('blocks');
+            foreach ($blockFiles as $i => $blockFileData) {
+                if (isset($blockFileData['file']) && $blockFileData['file']->isValid()) {
+                    $path = $blockFileData['file']->store("post_images/{$club->id}", 'public');
+                    if (isset($blocks[$i])) {
+                        $blocks[$i]['url'] = "/storage/{$path}";
+                    }
+                }
+                if (isset($blockFileData['items']) && is_array($blockFileData['items'])) {
+                    foreach ($blockFileData['items'] as $j => $gFileData) {
+                        if (isset($gFileData['file']) && $gFileData['file']->isValid()) {
+                            $path = $gFileData['file']->store("post_images/{$club->id}", 'public');
+                            if (isset($blocks[$i]['items'][$j])) {
+                                $blocks[$i]['items'][$j]['url'] = "/storage/{$path}";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Clean up transient file objects and unsaved blob: URLs
+        foreach ($blocks as &$b) {
+            unset($b['file']);
+            if (isset($b['url']) && str_starts_with($b['url'], 'blob:')) {
+                $b['url'] = '';
+            }
+            if (isset($b['items']) && is_array($b['items'])) {
+                foreach ($b['items'] as &$gItem) {
+                    unset($gItem['file']);
+                    if (isset($gItem['url']) && str_starts_with($gItem['url'], 'blob:')) {
+                        $gItem['url'] = '';
                     }
                 }
             }
