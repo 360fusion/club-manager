@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useForm, Head, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
@@ -101,13 +101,46 @@ const removeExistingAttachment = (index) => {
 };
 
 // Block Element Builder Functions
-const addBlock = (type) => {
+const blockTypes = [
+  { type: 'text', icon: '📝', label: 'Text Block', desc: 'Rich text paragraph or formatted text', color: 'text-blue-600', bg: 'bg-blue-50' },
+  { type: 'image', icon: '🖼️', label: 'Single Image', desc: 'Image upload with size & position controls', color: 'text-sky-600', bg: 'bg-sky-50' },
+  { type: 'images', icon: '🖼️', label: 'Image Gallery', desc: 'Multi-image grid layout', color: 'text-purple-600', bg: 'bg-purple-50' },
+  { type: 'notice', icon: '📢', label: 'Callout Box', desc: 'Highlighted notice or announcement box', color: 'text-amber-600', bg: 'bg-amber-50' },
+  { type: 'button', icon: '🔗', label: 'Button Link', desc: 'Call to action button link', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+];
+
+const activeInsertIndex = ref(null);
+
+const toggleInsertMenu = (index) => {
+  if (activeInsertIndex.value === index) {
+    activeInsertIndex.value = null;
+  } else {
+    activeInsertIndex.value = index;
+  }
+};
+
+const handleDocumentClick = (e) => {
+  if (activeInsertIndex.value !== null && !e.target.closest('.insert-menu-container')) {
+    activeInsertIndex.value = null;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleDocumentClick);
+});
+
+const addBlock = (type, targetIndex = null) => {
   const id = 'block-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+  let newBlock = null;
 
   if (type === 'text') {
-    blocks.value.push({ id, type: 'text', content: '', isCollapsed: false });
+    newBlock = { id, type: 'text', content: '', isCollapsed: false };
   } else if (type === 'image') {
-    blocks.value.push({
+    newBlock = {
       id,
       type: 'image',
       url: '',
@@ -116,9 +149,9 @@ const addBlock = (type) => {
       size: 'large', // 'small' (25%), 'medium' (50%), 'large' (75%), 'full' (100%)
       file: null,
       isCollapsed: false,
-    });
+    };
   } else if (type === 'images') {
-    blocks.value.push({
+    newBlock = {
       id,
       type: 'images',
       columns: 3, // 2, 3, 4
@@ -127,26 +160,36 @@ const addBlock = (type) => {
         { id: id + '-g2', url: '', caption: '', file: null },
       ],
       isCollapsed: false,
-    });
+    };
   } else if (type === 'notice') {
-    blocks.value.push({
+    newBlock = {
       id,
       type: 'notice',
       style: 'info', // 'info', 'warning', 'important', 'success'
       title: 'Important Notice',
       text: '',
       isCollapsed: false,
-    });
+    };
   } else if (type === 'button') {
-    blocks.value.push({
+    newBlock = {
       id,
       type: 'button',
       label: 'Learn More →',
       url: '',
       align: 'center', // 'left', 'center', 'right'
       isCollapsed: false,
-    });
+    };
   }
+
+  if (newBlock) {
+    if (targetIndex !== null && targetIndex >= 0 && targetIndex <= blocks.value.length) {
+      blocks.value.splice(targetIndex, 0, newBlock);
+    } else {
+      blocks.value.push(newBlock);
+    }
+  }
+
+  activeInsertIndex.value = null;
 };
 
 const onBlockImageFileSelect = (e, block) => {
@@ -364,250 +407,339 @@ const submitWithAction = (actionType) => {
           </div>
 
           <!-- Element Stack List -->
-          <div class="space-y-4">
-            <div
-              v-for="(block, bIdx) in blocks"
-              :key="block.id"
-              class="bg-slate-50 rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all"
-            >
-              <!-- Block Header & Controls -->
-              <div class="flex items-center justify-between px-4 py-2.5 bg-slate-100/90 border-b border-slate-200 text-xs font-bold text-slate-700">
-                <div class="flex items-center gap-2">
-                  <span class="w-5 h-5 rounded bg-white text-slate-600 flex items-center justify-center text-[11px] font-black border border-slate-200">
-                    {{ bIdx + 1 }}
-                  </span>
-
-                  <!-- Type Badge -->
-                  <span v-if="block.type === 'text'" class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px] uppercase font-bold">
-                    📝 Text Block
-                  </span>
-                  <span v-else-if="block.type === 'image'" class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 text-[10px] uppercase font-bold">
-                    🖼️ Single Image
-                  </span>
-                  <span v-else-if="block.type === 'images'" class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[10px] uppercase font-bold">
-                    🖼️ Image Gallery ({{ block.columns }} Cols)
-                  </span>
-                  <span v-else-if="block.type === 'notice'" class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold">
-                    📢 Callout Box
-                  </span>
-                  <span v-else-if="block.type === 'button'" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] uppercase font-bold">
-                    🔗 Button Link
-                  </span>
+          <div class="space-y-3">
+            <template v-for="(block, bIdx) in blocks" :key="block.id">
+              
+              <!-- Insert Divider Above First Block (Index 0) -->
+              <div v-if="bIdx === 0" class="relative py-1 flex items-center justify-center insert-menu-container">
+                <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div class="w-full border-t border-dashed border-slate-200 hover:border-slate-300 transition-colors"></div>
                 </div>
-
-                <!-- Control Buttons (Up, Down, Duplicate, Delete) -->
-                <div class="flex items-center gap-1">
+                <div class="relative flex justify-center">
                   <button
                     type="button"
-                    @click="moveBlockUp(bIdx)"
-                    :disabled="bIdx === 0"
-                    class="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 cursor-pointer"
-                    title="Move Up"
+                    @click.stop="toggleInsertMenu(0)"
+                    class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-sky-300 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
                   >
-                    ▲
+                    <span class="w-4 h-4 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-black">+</span>
+                    <span>Insert block at top</span>
                   </button>
-                  <button
-                    type="button"
-                    @click="moveBlockDown(bIdx)"
-                    :disabled="bIdx === blocks.length - 1"
-                    class="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 cursor-pointer"
-                    title="Move Down"
+
+                  <!-- Insert Menu Dropdown Popover -->
+                  <div
+                    v-if="activeInsertIndex === 0"
+                    class="absolute top-full mt-2 z-30 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100"
                   >
-                    ▼
-                  </button>
-                  <button
-                    type="button"
-                    @click="duplicateBlock(bIdx)"
-                    class="p-1 text-slate-500 hover:text-indigo-600 cursor-pointer"
-                    title="Duplicate Element"
-                  >
-                    📋
-                  </button>
-                  <button
-                    type="button"
-                    @click="removeBlock(bIdx)"
-                    class="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
-                    title="Delete Element"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-
-              <!-- Block Body Editors -->
-              <div class="p-4 space-y-3">
-                
-                <!-- 1. Text Block -->
-                <div v-if="block.type === 'text'">
-                  <RichTextEditor v-model="block.content" placeholder="Write rich body content here..." />
-                </div>
-
-                <!-- 2. Single Image Block with Position & Sizing Options -->
-                <div v-else-if="block.type === 'image'" class="space-y-3 text-xs">
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div class="col-span-1 md:col-span-1">
-                      <label class="block font-bold text-slate-700 mb-1">Image URL</label>
-                      <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
-                    </div>
-
-                    <div class="col-span-1 md:col-span-1">
-                      <label class="block font-bold text-slate-700 mb-1">Or Upload Image File</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        @change="onBlockImageFileSelect($event, block)"
-                        class="w-full text-[11px] text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer"
-                      />
-                    </div>
-
-                    <div class="col-span-1 md:col-span-1">
-                      <label class="block font-bold text-slate-700 mb-1">Caption / Alt Text</label>
-                      <input v-model="block.caption" type="text" placeholder="e.g., Award ceremony at Oxford Boating Club" class="w-full p-2 bg-white border border-slate-300 rounded-xl" />
-                    </div>
-                  </div>
-
-                  <!-- Positioning & Sizing Controls -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white rounded-xl border border-slate-200">
-                    <div>
-                      <label class="block font-bold text-slate-700 mb-1">Image Positioning</label>
-                      <select v-model="block.position" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold">
-                        <option value="left">Left Aligned</option>
-                        <option value="center">Centered</option>
-                        <option value="right">Right Aligned</option>
-                        <option value="full">Full Width Banner</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label class="block font-bold text-slate-700 mb-1">Image Sizing</label>
-                      <select v-model="block.size" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold">
-                        <option value="small">Small (25% Width)</option>
-                        <option value="medium">Medium (50% Width)</option>
-                        <option value="large">Large (75% Width)</option>
-                        <option value="full">Full Container Width (100%)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <!-- Live Thumbnail Preview -->
-                  <div v-if="block.url" class="pt-2">
-                    <span class="text-[10px] font-bold text-slate-400 block mb-1">Preview Layout:</span>
-                    <div :class="['flex', block.position === 'left' ? 'justify-start' : block.position === 'right' ? 'justify-end' : block.position === 'center' ? 'justify-center' : 'w-full']">
-                      <div :class="[
-                        'rounded-xl overflow-hidden border border-slate-200 bg-white p-1',
-                        block.size === 'small' ? 'w-1/4' : block.size === 'medium' ? 'w-1/2' : block.size === 'large' ? 'w-3/4' : 'w-full'
-                      ]">
-                        <img :src="block.url" class="w-full h-auto max-h-64 object-cover rounded-lg" />
-                        <p v-if="block.caption" class="text-[11px] text-center text-slate-500 italic mt-1">{{ block.caption }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 3. Image Gallery Block (Multi-Images) -->
-                <div v-else-if="block.type === 'images'" class="space-y-3 text-xs">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <label class="font-bold text-slate-700">Grid Layout Columns:</label>
-                      <select v-model.number="block.columns" class="p-1.5 bg-white border border-slate-300 rounded-lg font-bold">
-                        <option :value="2">2 Columns</option>
-                        <option :value="3">3 Columns</option>
-                        <option :value="4">4 Columns</option>
-                      </select>
+                    <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 flex items-center justify-between">
+                      <span>Insert Element Here</span>
+                      <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer">✕</button>
                     </div>
 
                     <button
+                      v-for="item in blockTypes"
+                      :key="item.type"
                       type="button"
-                      @click="addGalleryImage(block)"
-                      class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-lg border border-purple-200 transition-all cursor-pointer"
+                      @click="addBlock(item.type, 0)"
+                      class="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-all cursor-pointer group"
                     >
-                      + Add Image to Gallery
+                      <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black transition-transform group-hover:scale-110" :class="[item.bg, item.color]">
+                        {{ item.icon }}
+                      </span>
+                      <div>
+                        <span class="block font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{{ item.label }}</span>
+                        <span class="text-[10px] text-slate-400 font-normal leading-tight block">{{ item.desc }}</span>
+                      </div>
                     </button>
                   </div>
+                </div>
+              </div>
 
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div
-                      v-for="(gItem, gIdx) in block.items"
-                      :key="gIdx"
-                      class="p-3 bg-white rounded-xl border border-slate-200 space-y-2 relative"
+              <!-- Block Item Card -->
+              <div class="bg-slate-50 rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all">
+                <!-- Block Header & Controls -->
+                <div class="flex items-center justify-between px-4 py-2.5 bg-slate-100/90 border-b border-slate-200 text-xs font-bold text-slate-700">
+                  <div class="flex items-center gap-2">
+                    <span class="w-5 h-5 rounded bg-white text-slate-600 flex items-center justify-center text-[11px] font-black border border-slate-200">
+                      {{ bIdx + 1 }}
+                    </span>
+
+                    <!-- Type Badge -->
+                    <span v-if="block.type === 'text'" class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px] uppercase font-bold">
+                      📝 Text Block
+                    </span>
+                    <span v-else-if="block.type === 'image'" class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 text-[10px] uppercase font-bold">
+                      🖼️ Single Image
+                    </span>
+                    <span v-else-if="block.type === 'images'" class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[10px] uppercase font-bold">
+                      🖼️ Image Gallery ({{ block.columns }} Cols)
+                    </span>
+                    <span v-else-if="block.type === 'notice'" class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold">
+                      📢 Callout Box
+                    </span>
+                    <span v-else-if="block.type === 'button'" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] uppercase font-bold">
+                      🔗 Button Link
+                    </span>
+                  </div>
+
+                  <!-- Control Buttons (Up, Down, Duplicate, Delete) -->
+                  <div class="flex items-center gap-1">
+                    <button
+                      type="button"
+                      @click="moveBlockUp(bIdx)"
+                      :disabled="bIdx === 0"
+                      class="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 cursor-pointer"
+                      title="Move Up"
                     >
-                      <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-600 text-[11px]">Image {{ gIdx + 1 }}</span>
-                        <button
-                          type="button"
-                          @click="removeGalleryImage(block, gIdx)"
-                          class="text-slate-400 hover:text-rose-600 font-bold p-0.5"
-                        >
-                          ✕
-                        </button>
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      @click="moveBlockDown(bIdx)"
+                      :disabled="bIdx === blocks.length - 1"
+                      class="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 cursor-pointer"
+                      title="Move Down"
+                    >
+                      ▼
+                    </button>
+                    <button
+                      type="button"
+                      @click="duplicateBlock(bIdx)"
+                      class="p-1 text-slate-500 hover:text-indigo-600 cursor-pointer"
+                      title="Duplicate Element"
+                    >
+                      📋
+                    </button>
+                    <button
+                      type="button"
+                      @click="removeBlock(bIdx)"
+                      class="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                      title="Delete Element"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Block Body Editors -->
+                <div class="p-4 space-y-3">
+                  
+                  <!-- 1. Text Block -->
+                  <div v-if="block.type === 'text'">
+                    <RichTextEditor v-model="block.content" placeholder="Write rich body content here..." />
+                  </div>
+
+                  <!-- 2. Single Image Block with Position & Sizing Options -->
+                  <div v-else-if="block.type === 'image'" class="space-y-3 text-xs">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div class="col-span-1 md:col-span-1">
+                        <label class="block font-bold text-slate-700 mb-1">Image URL</label>
+                        <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
                       </div>
 
-                      <div class="space-y-1">
-                        <input v-model="gItem.url" type="text" placeholder="https://example.com/gallery-photo.jpg" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-[11px]" />
+                      <div class="col-span-1 md:col-span-1">
+                        <label class="block font-bold text-slate-700 mb-1">Or Upload Image File</label>
                         <input
                           type="file"
                           accept="image/*"
-                          @change="onGalleryImageFileSelect($event, gItem)"
-                          class="w-full text-[10px] text-slate-600 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer"
+                          @change="onBlockImageFileSelect($event, block)"
+                          class="w-full text-[11px] text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer"
                         />
                       </div>
 
-                      <input v-model="gItem.caption" type="text" placeholder="Caption (optional)" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-[11px]" />
+                      <div class="col-span-1 md:col-span-1">
+                        <label class="block font-bold text-slate-700 mb-1">Caption / Alt Text</label>
+                        <input v-model="block.caption" type="text" placeholder="e.g., Award ceremony at Oxford Boating Club" class="w-full p-2 bg-white border border-slate-300 rounded-xl" />
+                      </div>
+                    </div>
 
-                      <img v-if="gItem.url" :src="gItem.url" class="w-full h-24 object-cover rounded-lg border border-slate-200" />
+                    <!-- Positioning & Sizing Controls -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white rounded-xl border border-slate-200">
+                      <div>
+                        <label class="block font-bold text-slate-700 mb-1">Image Positioning</label>
+                        <select v-model="block.position" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold">
+                          <option value="left">Left Aligned</option>
+                          <option value="center">Centered</option>
+                          <option value="right">Right Aligned</option>
+                          <option value="full">Full Width Banner</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label class="block font-bold text-slate-700 mb-1">Image Sizing</label>
+                        <select v-model="block.size" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold">
+                          <option value="small">Small (25% Width)</option>
+                          <option value="medium">Medium (50% Width)</option>
+                          <option value="large">Large (75% Width)</option>
+                          <option value="full">Full Container Width (100%)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Live Thumbnail Preview -->
+                    <div v-if="block.url" class="pt-2">
+                      <span class="text-[10px] font-bold text-slate-400 block mb-1">Preview Layout:</span>
+                      <div :class="['flex', block.position === 'left' ? 'justify-start' : block.position === 'right' ? 'justify-end' : block.position === 'center' ? 'justify-center' : 'w-full']">
+                        <div :class="[
+                          'rounded-xl overflow-hidden border border-slate-200 bg-white p-1',
+                          block.size === 'small' ? 'w-1/4' : block.size === 'medium' ? 'w-1/2' : block.size === 'large' ? 'w-3/4' : 'w-full'
+                        ]">
+                          <img :src="block.url" class="w-full h-auto max-h-64 object-cover rounded-lg" />
+                          <p v-if="block.caption" class="text-[11px] text-center text-slate-500 italic mt-1">{{ block.caption }}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- 4. Notice Callout Box -->
-                <div v-else-if="block.type === 'notice'" class="space-y-3 text-xs">
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <!-- 3. Image Gallery Block (Multi-Images) -->
+                  <div v-else-if="block.type === 'images'" class="space-y-3 text-xs">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <label class="font-bold text-slate-700">Grid Layout Columns:</label>
+                        <select v-model.number="block.columns" class="p-1.5 bg-white border border-slate-300 rounded-lg font-bold">
+                          <option :value="2">2 Columns</option>
+                          <option :value="3">3 Columns</option>
+                          <option :value="4">4 Columns</option>
+                        </select>
+                      </div>
+
+                      <button
+                        type="button"
+                        @click="addGalleryImage(block)"
+                        class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-lg border border-purple-200 transition-all cursor-pointer"
+                      >
+                        + Add Image to Gallery
+                      </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div
+                        v-for="(gItem, gIdx) in block.items"
+                        :key="gIdx"
+                        class="p-3 bg-white rounded-xl border border-slate-200 space-y-2 relative"
+                      >
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-slate-600 text-[11px]">Image {{ gIdx + 1 }}</span>
+                          <button
+                            type="button"
+                            @click="removeGalleryImage(block, gIdx)"
+                            class="text-slate-400 hover:text-rose-600 font-bold p-0.5"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        <div class="space-y-1">
+                          <input v-model="gItem.url" type="text" placeholder="https://example.com/gallery-photo.jpg" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-[11px]" />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            @change="onGalleryImageFileSelect($event, gItem)"
+                            class="w-full text-[10px] text-slate-600 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer"
+                          />
+                        </div>
+
+                        <input v-model="gItem.caption" type="text" placeholder="Caption (optional)" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-[11px]" />
+
+                        <img v-if="gItem.url" :src="gItem.url" class="w-full h-24 object-cover rounded-lg border border-slate-200" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 4. Notice Callout Box -->
+                  <div v-else-if="block.type === 'notice'" class="space-y-3 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block font-bold text-slate-700 mb-1">Callout Style</label>
+                        <select v-model="block.style" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold">
+                          <option value="info">💡 Info / Announcement (Blue)</option>
+                          <option value="warning">⚠️ Warning / Reminder (Amber)</option>
+                          <option value="important">🚨 Important / Bylaws (Purple)</option>
+                          <option value="success">✅ Success / Milestone (Emerald)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label class="block font-bold text-slate-700 mb-1">Callout Title</label>
+                        <input v-model="block.title" type="text" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold" />
+                      </div>
+                    </div>
+
                     <div>
-                      <label class="block font-bold text-slate-700 mb-1">Callout Style</label>
-                      <select v-model="block.style" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold">
-                        <option value="info">💡 Info / Announcement (Blue)</option>
-                        <option value="warning">⚠️ Warning / Reminder (Amber)</option>
-                        <option value="important">🚨 Important / Bylaws (Purple)</option>
-                        <option value="success">✅ Success / Milestone (Emerald)</option>
+                      <label class="block font-bold text-slate-700 mb-1">Callout Text Body</label>
+                      <textarea v-model="block.text" rows="2" placeholder="Write notice callout text here..." class="w-full p-2 bg-white border border-slate-300 rounded-xl"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- 5. Button Link Block -->
+                  <div v-else-if="block.type === 'button'" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label class="block font-bold text-slate-700 mb-1">Button Label *</label>
+                      <input v-model="block.label" type="text" placeholder="Read Full Story →" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold" />
+                    </div>
+
+                    <div>
+                      <label class="block font-bold text-slate-700 mb-1">Target URL *</label>
+                      <input v-model="block.url" type="text" placeholder="https://..." class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+                    </div>
+
+                    <div>
+                      <label class="block font-bold text-slate-700 mb-1">Alignment</label>
+                      <select v-model="block.align" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-semibold">
+                        <option value="left">Left Aligned</option>
+                        <option value="center">Center Aligned</option>
+                        <option value="right">Right Aligned</option>
                       </select>
                     </div>
-
-                    <div>
-                      <label class="block font-bold text-slate-700 mb-1">Callout Title</label>
-                      <input v-model="block.title" type="text" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold" />
-                    </div>
                   </div>
 
-                  <div>
-                    <label class="block font-bold text-slate-700 mb-1">Callout Text Body</label>
-                    <textarea v-model="block.text" rows="2" placeholder="Write notice callout text here..." class="w-full p-2 bg-white border border-slate-300 rounded-xl"></textarea>
-                  </div>
                 </div>
-
-                <!-- 5. Button Link Block -->
-                <div v-else-if="block.type === 'button'" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                  <div>
-                    <label class="block font-bold text-slate-700 mb-1">Button Label *</label>
-                    <input v-model="block.label" type="text" placeholder="Read Full Story →" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold" />
-                  </div>
-
-                  <div>
-                    <label class="block font-bold text-slate-700 mb-1">Target URL *</label>
-                    <input v-model="block.url" type="text" placeholder="https://..." class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
-                  </div>
-
-                  <div>
-                    <label class="block font-bold text-slate-700 mb-1">Alignment</label>
-                    <select v-model="block.align" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-semibold">
-                      <option value="left">Left Aligned</option>
-                      <option value="center">Center Aligned</option>
-                      <option value="right">Right Aligned</option>
-                    </select>
-                  </div>
-                </div>
-
               </div>
-            </div>
+
+              <!-- Insert Divider Between / After Blocks (Index bIdx + 1) -->
+              <div class="relative py-1 flex items-center justify-center insert-menu-container">
+                <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div class="w-full border-t border-dashed border-slate-200 hover:border-slate-300 transition-colors"></div>
+                </div>
+                <div class="relative flex justify-center">
+                  <button
+                    type="button"
+                    @click.stop="toggleInsertMenu(bIdx + 1)"
+                    class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-sky-300 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
+                  >
+                    <span class="w-4 h-4 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-black">+</span>
+                    <span>Add block here</span>
+                  </button>
+
+                  <!-- Insert Menu Dropdown Popover -->
+                  <div
+                    v-if="activeInsertIndex === bIdx + 1"
+                    class="absolute top-full mt-2 z-30 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100"
+                  >
+                    <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 flex items-center justify-between">
+                      <span>Insert Element Here</span>
+                      <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer">✕</button>
+                    </div>
+
+                    <button
+                      v-for="item in blockTypes"
+                      :key="item.type"
+                      type="button"
+                      @click="addBlock(item.type, bIdx + 1)"
+                      class="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-all cursor-pointer group"
+                    >
+                      <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black transition-transform group-hover:scale-110" :class="[item.bg, item.color]">
+                        {{ item.icon }}
+                      </span>
+                      <div>
+                        <span class="block font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{{ item.label }}</span>
+                        <span class="text-[10px] text-slate-400 font-normal leading-tight block">{{ item.desc }}</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </template>
           </div>
         </div>
 
