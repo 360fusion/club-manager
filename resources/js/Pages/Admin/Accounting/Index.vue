@@ -219,11 +219,37 @@ const filteredContacts = computed(() => {
   return all;
 });
 
+const showOpeningBalanceModal = ref(false);
+
+const openingBalanceForm = useForm({
+  account_id: '',
+  opening_balance: '',
+  as_of_date: new Date().toISOString().split('T')[0],
+});
+
+const openOpeningBalanceModal = (accId = '') => {
+  openingBalanceForm.reset();
+  openingBalanceForm.account_id = accId || (props.accounts[0]?.id || '');
+  openingBalanceForm.as_of_date = new Date().toISOString().split('T')[0];
+  showOpeningBalanceModal.value = true;
+};
+
+const submitOpeningBalance = () => {
+  openingBalanceForm.post(route('admin.accounting.opening_balance.store', props.club.slug), {
+    onSuccess: () => {
+      showOpeningBalanceModal.value = false;
+      openingBalanceForm.reset();
+    },
+  });
+};
+
 // New Account Form
 const accountForm = useForm({
   code: '',
   name: '',
   type: 'asset',
+  opening_balance: '',
+  as_of_date: new Date().toISOString().split('T')[0],
 });
 
 const submitAccount = () => {
@@ -1218,13 +1244,22 @@ const getTypeBadge = (type) => {
               <h3 class="text-base font-extrabold text-slate-900">Chart of Accounts</h3>
               <p class="text-xs text-slate-500">Categorized ledger accounts for club bookkeeping.</p>
             </div>
-            <button
-              type="button"
-              @click="showAccountModal = true"
-              class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
-            >
-              + Add Account
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="openOpeningBalanceModal()"
+                class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                <span>⚖️ Set Opening Balances</span>
+              </button>
+              <button
+                type="button"
+                @click="showAccountModal = true"
+                class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm"
+              >
+                + Add Account
+              </button>
+            </div>
           </div>
 
           <div class="overflow-x-auto">
@@ -1247,7 +1282,17 @@ const getTypeBadge = (type) => {
                     </span>
                   </td>
                   <td class="py-3 px-6 text-right font-black text-slate-900 font-mono">
-                    {{ acc.formatted_balance }}
+                    <div class="flex items-center justify-end gap-3">
+                      <span>{{ acc.formatted_balance }}</span>
+                      <button
+                        type="button"
+                        @click="openOpeningBalanceModal(acc.id)"
+                        class="px-2.5 py-1 text-[10px] font-extrabold text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg border border-sky-200 transition-all cursor-pointer"
+                        title="Set opening / carry-over balance for this account"
+                      >
+                        ⚖️ Carry Over
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -1604,6 +1649,28 @@ const getTypeBadge = (type) => {
               <option value="expense">Expense (Normal Debit)</option>
             </select>
           </div>
+
+          <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Opening Balance (£)</label>
+              <input
+                v-model="accountForm.opening_balance"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:border-sky-500"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">As of Date</label>
+              <input
+                v-model="accountForm.as_of_date"
+                type="date"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+              />
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400 italic">Optional initial carry over. Balanced against Retained Earnings (3000).</p>
 
           <div class="pt-2 flex items-center justify-end gap-2">
             <button
@@ -2079,6 +2146,82 @@ const getTypeBadge = (type) => {
               class="px-4 py-2 bg-[#007bce] hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
             >
               Save Contact
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 6: Set Account Opening / Carry Over Balance -->
+    <div v-if="showOpeningBalanceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showOpeningBalanceModal = false">
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-base font-black text-slate-900">Set Account Opening / Carry Over Balance</h3>
+            <p class="text-xs text-slate-500">Record initial carry-over funds when setting up your club accounts for the first time.</p>
+          </div>
+          <button type="button" @click="showOpeningBalanceModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+
+        <form @submit.prevent="submitOpeningBalance" class="space-y-4 text-xs">
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Target Ledger Account *</label>
+            <select
+              v-model="openingBalanceForm.account_id"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-sky-500"
+              required
+            >
+              <option value="" disabled>Select Account...</option>
+              <option v-for="acc in accounts" :key="acc.id" :value="acc.id">
+                {{ acc.code }} - {{ acc.name }} ({{ acc.type }})
+              </option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Opening Amount (£) *</label>
+              <input
+                v-model="openingBalanceForm.opening_balance"
+                type="number"
+                step="0.01"
+                placeholder="e.g. 17903.76"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:border-sky-500"
+                required
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Effective Date *</label>
+              <input
+                v-model="openingBalanceForm.as_of_date"
+                type="date"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[11px] space-y-1">
+            <span class="font-extrabold block">⚖️ Balanced Double-Entry System</span>
+            <p class="text-amber-800">
+              Posting an opening balance automatically credits/debits <strong>Account 3000 (Retained Earnings / Prior Year Reserves)</strong> to keep your general ledger 100% balanced ($Assets = Liabilities + Equity$).
+            </p>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              @click="showOpeningBalanceModal = false"
+              class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="openingBalanceForm.processing"
+              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+            >
+              Post Opening Balance
             </button>
           </div>
         </form>

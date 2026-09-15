@@ -663,4 +663,34 @@ class AccountingService
             'current_reconciled' => round($currentTotalIncome, 2),
         ];
     }
+
+    /**
+     * Set opening balance / carry-over amount for an account.
+     */
+    public function setOpeningBalance(Club $club, Account $account, float $amount, ?string $asOfDate = null): ?JournalEntry
+    {
+        if ($amount == 0) return null;
+
+        $retainedEarningsAcc = $this->getAccount($club, '3000');
+        $asOfDate = $asOfDate ?: date('Y-01-01');
+
+        $isDebitAccount = in_array($account->type, ['asset', 'expense']);
+
+        $items = [];
+        if ($isDebitAccount) {
+            $items[] = ['account_id' => $account->id, 'debit' => abs($amount), 'credit' => 0, 'memo' => "Opening Carry-Over Balance ({$account->code})"];
+            $items[] = ['account_id' => $retainedEarningsAcc->id, 'debit' => 0, 'credit' => abs($amount), 'memo' => 'Prior Year Retained Reserves'];
+        } else {
+            $items[] = ['account_id' => $retainedEarningsAcc->id, 'debit' => abs($amount), 'credit' => 0, 'memo' => 'Prior Year Retained Reserves'];
+            $items[] = ['account_id' => $account->id, 'debit' => 0, 'credit' => abs($amount), 'memo' => "Opening Carry-Over Balance ({$account->code})"];
+        }
+
+        return $this->postJournalEntry($club, [
+            'entry_date' => $asOfDate,
+            'description' => "Opening Balance / Carry Over: {$account->code} - {$account->name}",
+            'source_type' => 'OpeningBalance',
+            'source_id' => $account->id,
+            'items' => $items,
+        ]);
+    }
 }

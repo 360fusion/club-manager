@@ -222,9 +222,11 @@ class AccountingAdminController extends Controller
             'code' => ['required', 'string', 'max:30', 'unique:accounting_accounts,code,NULL,id,club_id,' . $club->id],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:asset,liability,equity,revenue,expense'],
+            'opening_balance' => ['nullable', 'numeric'],
+            'as_of_date' => ['nullable', 'date'],
         ]);
 
-        Account::create([
+        $account = Account::create([
             'club_id' => $club->id,
             'code' => $validated['code'],
             'name' => $validated['name'],
@@ -233,7 +235,28 @@ class AccountingAdminController extends Controller
             'is_active' => true,
         ]);
 
-        return redirect()->back()->with('success', 'Account added to Chart of Accounts.');
+        if (!empty($validated['opening_balance']) && (float) $validated['opening_balance'] != 0) {
+            $this->accountingService->setOpeningBalance($club, $account, (float) $validated['opening_balance'], $validated['as_of_date'] ?? null);
+        }
+
+        return redirect()->back()->with('success', 'Account added to Chart of Accounts with opening balance.');
+    }
+
+    public function storeOpeningBalance(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $validated = $request->validate([
+            'account_id' => ['required', 'exists:accounting_accounts,id'],
+            'opening_balance' => ['required', 'numeric'],
+            'as_of_date' => ['nullable', 'date'],
+        ]);
+
+        $account = Account::where('club_id', $club->id)->where('id', $validated['account_id'])->firstOrFail();
+
+        $this->accountingService->setOpeningBalance($club, $account, (float) $validated['opening_balance'], $validated['as_of_date'] ?? null);
+
+        return redirect()->back()->with('success', "Opening balance updated for {$account->code} - {$account->name}.");
     }
 
     public function storeJournalEntry(Request $request, string $clubSlug): RedirectResponse
