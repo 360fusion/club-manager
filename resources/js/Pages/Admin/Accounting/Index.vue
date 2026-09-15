@@ -43,8 +43,8 @@ const props = defineProps({
   },
 });
 
-const activeTab = ref('overview'); // overview, invoices_bills, accounts, journal
-const billingSubTab = ref('invoices'); // invoices, bills
+// Primary Blue Bar Navigation: home | sales | purchases | reporting | payroll | accounting | tax | contacts
+const activeTab = ref('home');
 
 const showAccountModal = ref(false);
 const showJournalModal = ref(false);
@@ -181,7 +181,7 @@ const getTypeBadge = (type) => {
   <AdminLayout :club="club">
     <Head :title="`Accounting & ERP - ${club.name}`" />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       
       <!-- Top ERP Page Header -->
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm">
@@ -191,40 +191,141 @@ const getTypeBadge = (type) => {
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h1 class="text-2xl font-black text-slate-900 tracking-tight">Accounting & ERP Ledger</h1>
+              <h1 class="text-2xl font-black text-slate-900 tracking-tight">Accounting & ERP System</h1>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-100 text-sky-800 border border-sky-200">
                 Liberu Engine Active
               </span>
             </div>
             <p class="text-xs text-slate-500 mt-1">
-              Double-entry general ledger, invoices, vendor bills, chart of accounts, and financial statement reports.
+              Double-entry general ledger, sales invoicing, vendor bills, payroll, tax ledger, and financial reporting.
             </p>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
             @click="showInvoiceModal = true"
             class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
           >
-            <span>🧾 Create Invoice</span>
+            <span>🧾 Issue Invoice</span>
           </button>
           <button
             type="button"
             @click="showBillModal = true"
             class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
           >
-            <span>📄 Record Vendor Bill</span>
+            <span>📄 Record Bill</span>
           </button>
           <button
             type="button"
             @click="showJournalModal = true"
             class="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
           >
-            <span>📖 Post Journal Entry</span>
+            <span>📖 Post Journal</span>
           </button>
         </div>
+      </div>
+
+      <!-- Ocean Blue Navigation Bar (Matching requested Xero/QuickBooks layout) -->
+      <div class="bg-[#007bce] rounded-2xl shadow-md overflow-x-auto">
+        <nav class="flex items-center px-2 min-w-max text-sm font-semibold text-white">
+          <button
+            type="button"
+            @click="activeTab = 'home'"
+            :class="[
+              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
+              activeTab === 'home' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+            ]"
+          >
+            <span>Home</span>
+            <span v-if="activeTab === 'home'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'sales'"
+            :class="[
+              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
+              activeTab === 'sales' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+            ]"
+          >
+            <span>Sales</span>
+            <span v-if="activeTab === 'sales'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'purchases'"
+            :class="[
+              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
+              activeTab === 'purchases' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+            ]"
+          >
+            <span>Purchases</span>
+            <span v-if="activeTab === 'purchases'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'reporting'"
+            :class="[
+              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
+              activeTab === 'reporting' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+            ]"
+          >
+            <span>Reporting</span>
+            <span v-if="activeTab === 'reporting'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'payroll'"
+            :class="[
+              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
+              activeTab === 'payroll' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+            ]"
+          >
+            <span>Payroll</span>
+            <span v-if="activeTab === 'payroll'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'accounting'"
+            :class="[
+              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
+              activeTab === 'accounting' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+            ]"
+          >
+            <span>Accounting</span>
+            <span v-if="activeTab === 'accounting'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'tax'"
+            :class="[
+              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
+              activeTab === 'tax' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+            ]"
+          >
+            <span>Tax</span>
+            <span v-if="activeTab === 'tax'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'contacts'"
+            :class="[
+              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
+              activeTab === 'contacts' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+            ]"
+          >
+            <span>Contacts</span>
+            <span v-if="activeTab === 'contacts'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
+          </button>
+        </nav>
       </div>
 
       <!-- Financial KPIs Overview Grid -->
@@ -274,56 +375,8 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
-      <!-- Main Section Navigation Bar -->
-      <div class="bg-white p-2 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          @click="activeTab = 'overview'"
-          :class="['px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2', activeTab === 'overview' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
-        >
-          <span>📈</span>
-          <span>Financial Overview</span>
-        </button>
-
-        <button
-          type="button"
-          @click="activeTab = 'invoices_bills'"
-          :class="['px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2', activeTab === 'invoices_bills' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
-        >
-          <span>🧾</span>
-          <span>Invoices & Vendor Bills</span>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-200">
-            {{ invoices.length + bills.length }}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          @click="activeTab = 'accounts'"
-          :class="['px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2', activeTab === 'accounts' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
-        >
-          <span>📂</span>
-          <span>Chart of Accounts</span>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-800">
-            {{ accounts.length }}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          @click="activeTab = 'journal'"
-          :class="['px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2', activeTab === 'journal' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
-        >
-          <span>📖</span>
-          <span>General Ledger Journal</span>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-200">
-            {{ journalEntries.length }}
-          </span>
-        </button>
-      </div>
-
-      <!-- Tab 1: Financial Overview & Balance Sheet Breakdown -->
-      <div v-if="activeTab === 'overview'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- VIEW 1: HOME (Dashboard & Financial Statements Overview) -->
+      <div v-if="activeTab === 'home'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Balance Sheet Preview Box -->
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -390,199 +443,64 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
-      <!-- Tab 2: Invoices & Vendor Bills Management -->
-      <div v-if="activeTab === 'invoices_bills'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-6 p-6">
-        
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
+      <!-- VIEW 2: SALES (Member Invoices / Accounts Receivable) -->
+      <div v-if="activeTab === 'sales'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-6 p-6">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
-            <h3 class="text-lg font-black text-slate-900">Invoices & Bills Management</h3>
-            <p class="text-xs text-slate-500">Track member receivables and vendor payable obligations.</p>
+            <h3 class="text-lg font-black text-slate-900">Sales Invoicing & Receivables</h3>
+            <p class="text-xs text-slate-500">Track member dues, locker fees, and ticket invoices.</p>
           </div>
 
-          <!-- Billing Sub-Tab Selector -->
-          <div class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl shrink-0">
-            <button
-              type="button"
-              @click="billingSubTab = 'invoices'"
-              :class="['px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', billingSubTab === 'invoices' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900']"
-            >
-              Member Invoices (A/R)
-            </button>
-            <button
-              type="button"
-              @click="billingSubTab = 'bills'"
-              :class="['px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', billingSubTab === 'bills' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900']"
-            >
-              Vendor Bills (A/P)
-            </button>
-          </div>
-        </div>
-
-        <!-- Section 2A: Member Invoices (Accounts Receivable) -->
-        <div v-if="billingSubTab === 'invoices'" class="space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
-              Member Invoices ({{ invoices.length }})
-            </div>
-            <button
-              type="button"
-              @click="showInvoiceModal = true"
-              class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer"
-            >
-              + Create Member Invoice
-            </button>
-          </div>
-
-          <div v-if="!invoices.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
-            <span class="text-3xl block mb-2">🧾</span>
-            <span class="text-xs font-bold text-slate-700 block">No Member Invoices Found</span>
-            <span class="text-[11px] text-slate-400">Click "Create Member Invoice" to issue a new bill.</span>
-          </div>
-
-          <div v-else class="overflow-x-auto border border-slate-200 rounded-2xl">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                  <th class="py-3 px-4">Invoice #</th>
-                  <th class="py-3 px-4">Member</th>
-                  <th class="py-3 px-4">Title / Item</th>
-                  <th class="py-3 px-4">Date Issued</th>
-                  <th class="py-3 px-4">Status</th>
-                  <th class="py-3 px-4 text-right">Amount</th>
-                  <th class="py-3 px-4 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/80 transition-colors">
-                  <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ inv.invoice_number }}</td>
-                  <td class="py-3 px-4 font-bold text-slate-900">{{ inv.recipient_name }}</td>
-                  <td class="py-3 px-4 text-slate-600">{{ inv.title }}</td>
-                  <td class="py-3 px-4 text-slate-500">{{ inv.created_at }}</td>
-                  <td class="py-3 px-4">
-                    <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
-                      {{ inv.status }}
-                    </span>
-                  </td>
-                  <td class="py-3 px-4 text-right font-black text-slate-900 font-mono">{{ inv.formatted_amount }}</td>
-                  <td class="py-3 px-4 text-center">
-                    <button
-                      v-if="inv.status !== 'paid'"
-                      type="button"
-                      @click="markInvoicePaid(inv.id)"
-                      class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
-                    >
-                      ✓ Mark Paid
-                    </button>
-                    <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ inv.paid_at }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Section 2B: Vendor Bills (Accounts Payable) -->
-        <div v-if="billingSubTab === 'bills'" class="space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
-              Vendor Bills ({{ bills.length }})
-            </div>
-            <button
-              type="button"
-              @click="showBillModal = true"
-              class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer"
-            >
-              + Record Vendor Bill
-            </button>
-          </div>
-
-          <div v-if="!bills.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
-            <span class="text-3xl block mb-2">📄</span>
-            <span class="text-xs font-bold text-slate-700 block">No Vendor Bills Recorded</span>
-            <span class="text-[11px] text-slate-400">Click "Record Vendor Bill" to log payable vendor expenses.</span>
-          </div>
-
-          <div v-else class="overflow-x-auto border border-slate-200 rounded-2xl">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                  <th class="py-3 px-4">Bill #</th>
-                  <th class="py-3 px-4">Vendor Name</th>
-                  <th class="py-3 px-4">Category</th>
-                  <th class="py-3 px-4">Due Date</th>
-                  <th class="py-3 px-4">Status</th>
-                  <th class="py-3 px-4 text-right">Amount</th>
-                  <th class="py-3 px-4 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                <tr v-for="b in bills" :key="b.id" class="hover:bg-slate-50/80 transition-colors">
-                  <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ b.bill_number }}</td>
-                  <td class="py-3 px-4 font-bold text-slate-900">{{ b.vendor_name }}</td>
-                  <td class="py-3 px-4 text-slate-600">{{ b.category }}</td>
-                  <td class="py-3 px-4 text-slate-500">{{ b.due_date }}</td>
-                  <td class="py-3 px-4">
-                    <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', b.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200']">
-                      {{ b.status }}
-                    </span>
-                  </td>
-                  <td class="py-3 px-4 text-right font-black text-slate-900 font-mono">{{ b.formatted_amount }}</td>
-                  <td class="py-3 px-4 text-center">
-                    <button
-                      v-if="b.status !== 'paid'"
-                      type="button"
-                      @click="markBillPaid(b.id)"
-                      class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
-                    >
-                      ✓ Pay Bill
-                    </button>
-                    <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ b.paid_at }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Tab 3: Chart of Accounts Table -->
-      <div v-if="activeTab === 'accounts'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-          <div>
-            <h3 class="text-base font-extrabold text-slate-900">Chart of Accounts</h3>
-            <p class="text-xs text-slate-500">Categorized ledger accounts for club bookkeeping.</p>
-          </div>
           <button
             type="button"
-            @click="showAccountModal = true"
-            class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+            @click="showInvoiceModal = true"
+            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer flex items-center gap-1.5"
           >
-            + Add Account
+            <span>🧾 Create Member Invoice</span>
           </button>
         </div>
 
-        <div class="overflow-x-auto">
+        <div v-if="!invoices.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+          <span class="text-3xl block mb-2">🧾</span>
+          <span class="text-xs font-bold text-slate-700 block">No Member Invoices Found</span>
+          <span class="text-[11px] text-slate-400">Click "Create Member Invoice" to issue a new bill.</span>
+        </div>
+
+        <div v-else class="overflow-x-auto border border-slate-200 rounded-2xl">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                <th class="py-3 px-6">Code</th>
-                <th class="py-3 px-6">Account Name</th>
-                <th class="py-3 px-6">Account Type</th>
-                <th class="py-3 px-6 text-right">Current Balance</th>
+                <th class="py-3 px-4">Invoice #</th>
+                <th class="py-3 px-4">Member</th>
+                <th class="py-3 px-4">Title / Description</th>
+                <th class="py-3 px-4">Date Issued</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right">Amount</th>
+                <th class="py-3 px-4 text-center">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-              <tr v-for="acc in accounts" :key="acc.id" class="hover:bg-slate-50/80 transition-colors">
-                <td class="py-3 px-6 font-mono text-slate-500 font-bold">{{ acc.code }}</td>
-                <td class="py-3 px-6 font-bold text-slate-900">{{ acc.name }}</td>
-                <td class="py-3 px-6">
-                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', getTypeBadge(acc.type)]">
-                    {{ acc.type }}
+              <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/80 transition-colors">
+                <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ inv.invoice_number }}</td>
+                <td class="py-3 px-4 font-bold text-slate-900">{{ inv.recipient_name }}</td>
+                <td class="py-3 px-4 text-slate-600">{{ inv.title }}</td>
+                <td class="py-3 px-4 text-slate-500">{{ inv.created_at }}</td>
+                <td class="py-3 px-4">
+                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
+                    {{ inv.status }}
                   </span>
                 </td>
-                <td class="py-3 px-6 text-right font-black text-slate-900 font-mono">
-                  {{ acc.formatted_balance }}
+                <td class="py-3 px-4 text-right font-black text-slate-900 font-mono">{{ inv.formatted_amount }}</td>
+                <td class="py-3 px-4 text-center">
+                  <button
+                    v-if="inv.status !== 'paid'"
+                    type="button"
+                    @click="markInvoicePaid(inv.id)"
+                    class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                  >
+                    ✓ Mark Paid
+                  </button>
+                  <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ inv.paid_at }}</span>
                 </td>
               </tr>
             </tbody>
@@ -590,79 +508,309 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
-      <!-- Tab 4: General Ledger Journal Entries -->
-      <div v-if="activeTab === 'journal'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <!-- VIEW 3: PURCHASES (Vendor Bills / Accounts Payable) -->
+      <div v-if="activeTab === 'purchases'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-6 p-6">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
-            <h3 class="text-base font-extrabold text-slate-900">General Ledger Journal Entries</h3>
-            <p class="text-xs text-slate-500">Historical double-entry records posted to the ledger.</p>
+            <h3 class="text-lg font-black text-slate-900">Purchases & Vendor Bills</h3>
+            <p class="text-xs text-slate-500">Track equipment purchases, facility bills, and accounts payable.</p>
           </div>
+
           <button
             type="button"
-            @click="showJournalModal = true"
-            class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+            @click="showBillModal = true"
+            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer flex items-center gap-1.5"
           >
-            + Post Journal Entry
+            <span>📄 Record Vendor Bill</span>
           </button>
         </div>
 
-        <div class="p-6 space-y-4">
-          <div v-if="!journalEntries.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
-            <span class="text-3xl block mb-2">📖</span>
-            <span class="text-xs font-bold text-slate-700 block">No Journal Entries Recorded</span>
-            <span class="text-[11px] text-slate-400">Click "Post Journal Entry" above to add your first double-entry transaction.</span>
+        <div v-if="!bills.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+          <span class="text-3xl block mb-2">📄</span>
+          <span class="text-xs font-bold text-slate-700 block">No Vendor Bills Recorded</span>
+          <span class="text-[11px] text-slate-400">Click "Record Vendor Bill" to log payable vendor expenses.</span>
+        </div>
+
+        <div v-else class="overflow-x-auto border border-slate-200 rounded-2xl">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                <th class="py-3 px-4">Bill #</th>
+                <th class="py-3 px-4">Vendor Name</th>
+                <th class="py-3 px-4">Category</th>
+                <th class="py-3 px-4">Due Date</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right">Amount</th>
+                <th class="py-3 px-4 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+              <tr v-for="b in bills" :key="b.id" class="hover:bg-slate-50/80 transition-colors">
+                <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ b.bill_number }}</td>
+                <td class="py-3 px-4 font-bold text-slate-900">{{ b.vendor_name }}</td>
+                <td class="py-3 px-4 text-slate-600">{{ b.category }}</td>
+                <td class="py-3 px-4 text-slate-500">{{ b.due_date }}</td>
+                <td class="py-3 px-4">
+                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', b.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200']">
+                    {{ b.status }}
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-right font-black text-slate-900 font-mono">{{ b.formatted_amount }}</td>
+                <td class="py-3 px-4 text-center">
+                  <button
+                    v-if="b.status !== 'paid'"
+                    type="button"
+                    @click="markBillPaid(b.id)"
+                    class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                  >
+                    ✓ Pay Bill
+                  </button>
+                  <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ b.paid_at }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VIEW 4: REPORTING (Financial Statement Reports) -->
+      <div v-if="activeTab === 'reporting'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div class="border-b border-slate-100 pb-4">
+          <h3 class="text-lg font-black text-slate-900">Financial Reports & Statements</h3>
+          <p class="text-xs text-slate-500">Executive financial statements and trial balance analysis.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+            <span class="text-2xl block">📄</span>
+            <h4 class="font-extrabold text-slate-900 text-sm">Profit & Loss Statement</h4>
+            <p class="text-xs text-slate-500">Detailed breakdown of club revenue vs operating expenses.</p>
+            <div class="pt-2">
+              <span class="text-xs font-bold text-sky-700">Net Surplus: {{ formatCurrency(summary.net_income) }}</span>
+            </div>
           </div>
 
-          <div v-else class="space-y-4">
-            <div
-              v-for="entry in journalEntries"
-              :key="entry.id"
-              class="bg-slate-50/80 rounded-2xl border border-slate-200 p-4 space-y-3"
-            >
-              <div class="flex items-center justify-between text-xs border-b border-slate-200/60 pb-2">
-                <div class="flex items-center gap-3">
-                  <span class="font-mono font-black text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200">
-                    {{ entry.reference_number }}
-                  </span>
-                  <span class="font-bold text-slate-900">{{ entry.description }}</span>
-                </div>
-                <div class="flex items-center gap-3 text-slate-500 text-[11px] font-medium">
-                  <span>📅 {{ entry.entry_date }}</span>
-                  <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold uppercase text-[9px]">
-                    {{ entry.status }}
-                  </span>
-                </div>
-              </div>
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+            <span class="text-2xl block">⚖️</span>
+            <h4 class="font-extrabold text-slate-900 text-sm">Balance Sheet Statement</h4>
+            <p class="text-xs text-slate-500">Total assets, liabilities, and retained equity ledger.</p>
+            <div class="pt-2">
+              <span class="text-xs font-bold text-emerald-700">Assets: {{ formatCurrency(summary.total_assets) }}</span>
+            </div>
+          </div>
 
-              <!-- Line Items Table -->
-              <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                  <thead>
-                    <tr class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                      <th class="py-1">Account</th>
-                      <th class="py-1 text-right">Debit</th>
-                      <th class="py-1 text-right">Credit</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-200/40 text-[11px] font-semibold">
-                    <tr v-for="item in entry.items" :key="item.id">
-                      <td class="py-1.5 font-medium text-slate-800">
-                        <span class="font-mono font-bold text-slate-500 mr-2">{{ item.account_code }}</span>
-                        <span>{{ item.account_name }}</span>
-                        <span v-if="item.memo" class="text-slate-400 ml-2 italic text-[10px]">({{ item.memo }})</span>
-                      </td>
-                      <td class="py-1.5 text-right font-mono text-slate-900">
-                        {{ item.debit > 0 ? formatCurrency(item.debit) : '-' }}
-                      </td>
-                      <td class="py-1.5 text-right font-mono text-slate-900">
-                        {{ item.credit > 0 ? formatCurrency(item.credit) : '-' }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+            <span class="text-2xl block">📊</span>
+            <h4 class="font-extrabold text-slate-900 text-sm">General Ledger Trial Balance</h4>
+            <p class="text-xs text-slate-500">Full list of debit and credit balances per account code.</p>
+            <div class="pt-2">
+              <span class="text-xs font-bold text-purple-700">{{ accounts.length }} Active Accounts</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 5: PAYROLL (Staff & Coach Payroll Expenses) -->
+      <div v-if="activeTab === 'payroll'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div class="border-b border-slate-100 pb-4">
+          <h3 class="text-lg font-black text-slate-900">Payroll & Staff Wages</h3>
+          <p class="text-xs text-slate-500">Manage coach stipends, staff payroll, and wage expenses.</p>
+        </div>
+
+        <div class="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <span class="text-4xl block">💼</span>
+          <h4 class="text-sm font-extrabold text-slate-800">Payroll Ledger Module</h4>
+          <p class="text-xs text-slate-500 max-w-md mx-auto">
+            Staff and coach wages are automatically recorded under Code 5300 (Administrative & Software Fees) or custom salary expense accounts in the double-entry journal.
+          </p>
+        </div>
+      </div>
+
+      <!-- VIEW 6: ACCOUNTING (Chart of Accounts & General Ledger Journal) -->
+      <div v-if="activeTab === 'accounting'" class="space-y-6">
+        <!-- Chart of Accounts Table -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900">Chart of Accounts</h3>
+              <p class="text-xs text-slate-500">Categorized ledger accounts for club bookkeeping.</p>
+            </div>
+            <button
+              type="button"
+              @click="showAccountModal = true"
+              class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+            >
+              + Add Account
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                  <th class="py-3 px-6">Code</th>
+                  <th class="py-3 px-6">Account Name</th>
+                  <th class="py-3 px-6">Account Type</th>
+                  <th class="py-3 px-6 text-right">Current Balance</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                <tr v-for="acc in accounts" :key="acc.id" class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-6 font-mono text-slate-500 font-bold">{{ acc.code }}</td>
+                  <td class="py-3 px-6 font-bold text-slate-900">{{ acc.name }}</td>
+                  <td class="py-3 px-6">
+                    <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', getTypeBadge(acc.type)]">
+                      {{ acc.type }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-6 text-right font-black text-slate-900 font-mono">
+                    {{ acc.formatted_balance }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- General Ledger Journal Entries -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
+          <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900">General Ledger Journal Entries</h3>
+              <p class="text-xs text-slate-500">Historical double-entry records posted to the ledger.</p>
+            </div>
+            <button
+              type="button"
+              @click="showJournalModal = true"
+              class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+            >
+              + Post Journal Entry
+            </button>
+          </div>
+
+          <div class="p-6 space-y-4">
+            <div v-if="!journalEntries.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+              <span class="text-3xl block mb-2">📖</span>
+              <span class="text-xs font-bold text-slate-700 block">No Journal Entries Recorded</span>
+              <span class="text-[11px] text-slate-400">Click "Post Journal Entry" above to add your first double-entry transaction.</span>
+            </div>
+
+            <div v-else class="space-y-4">
+              <div
+                v-for="entry in journalEntries"
+                :key="entry.id"
+                class="bg-slate-50/80 rounded-2xl border border-slate-200 p-4 space-y-3"
+              >
+                <div class="flex items-center justify-between text-xs border-b border-slate-200/60 pb-2">
+                  <div class="flex items-center gap-3">
+                    <span class="font-mono font-black text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200">
+                      {{ entry.reference_number }}
+                    </span>
+                    <span class="font-bold text-slate-900">{{ entry.description }}</span>
+                  </div>
+                  <div class="flex items-center gap-3 text-slate-500 text-[11px] font-medium">
+                    <span>📅 {{ entry.entry_date }}</span>
+                    <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold uppercase text-[9px]">
+                      {{ entry.status }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-xs">
+                    <thead>
+                      <tr class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                        <th class="py-1">Account</th>
+                        <th class="py-1 text-right">Debit</th>
+                        <th class="py-1 text-right">Credit</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200/40 text-[11px] font-semibold">
+                      <tr v-for="item in entry.items" :key="item.id">
+                        <td class="py-1.5 font-medium text-slate-800">
+                          <span class="font-mono font-bold text-slate-500 mr-2">{{ item.account_code }}</span>
+                          <span>{{ item.account_name }}</span>
+                          <span v-if="item.memo" class="text-slate-400 ml-2 italic text-[10px]">({{ item.memo }})</span>
+                        </td>
+                        <td class="py-1.5 text-right font-mono text-slate-900">
+                          {{ item.debit > 0 ? formatCurrency(item.debit) : '-' }}
+                        </td>
+                        <td class="py-1.5 text-right font-mono text-slate-900">
+                          {{ item.credit > 0 ? formatCurrency(item.credit) : '-' }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- VIEW 7: TAX (VAT & Tax Summary) -->
+      <div v-if="activeTab === 'tax'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div class="border-b border-slate-100 pb-4">
+          <h3 class="text-lg font-black text-slate-900">Tax & VAT Ledger</h3>
+          <p class="text-xs text-slate-500">Track UK VAT rates and sales tax liabilities.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2">
+            <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider block">Standard VAT Rate</span>
+            <span class="text-xl font-black text-slate-900 block">20.0% UK VAT</span>
+            <span class="text-xs text-slate-500 block">Applied to applicable sales and vendor purchases.</span>
+          </div>
+
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2">
+            <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider block">Exempt Sales (Subscriptions & Dues)</span>
+            <span class="text-xl font-black text-emerald-700 block">0.0% Exempt</span>
+            <span class="text-xs text-slate-500 block">Membership dues and non-profit sports subscriptions.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 8: CONTACTS (Members & Vendors Directory) -->
+      <div v-if="activeTab === 'contacts'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-black text-slate-900">Contacts & Directory</h3>
+            <p class="text-xs text-slate-500">Manage billing contacts for members and vendors.</p>
+          </div>
+          <span class="text-xs font-bold text-slate-500">{{ members.length }} Members Registered</span>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                <th class="py-3 px-4">Contact Name</th>
+                <th class="py-3 px-4">Email</th>
+                <th class="py-3 px-4">Role / Relationship</th>
+                <th class="py-3 px-4 text-center">Quick Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+              <tr v-for="m in members" :key="m.id" class="hover:bg-slate-50/80 transition-colors">
+                <td class="py-3 px-4 font-bold text-slate-900">{{ m.name }}</td>
+                <td class="py-3 px-4 font-mono text-slate-600">{{ m.email }}</td>
+                <td class="py-3 px-4">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-200">
+                    Club Member
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-center">
+                  <button
+                    type="button"
+                    @click="showInvoiceModal = true; invoiceForm.user_id = m.id"
+                    class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                  >
+                    + Issue Invoice
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
