@@ -178,6 +178,11 @@ Route::middleware(['auth'])->group(function () {
     // Billing & Subscription Management Routes
     Route::get('/clubs/{clubSlug}/admin/billing', [BillingController::class, 'index'])->name('billing.index');
     Route::post('/clubs/{clubSlug}/admin/billing/provider', [BillingController::class, 'updateProvider'])->name('billing.provider.update');
+
+    // Admin Accounting & ERP Routes (Liberu Accounting Integration)
+    Route::get('/clubs/{clubSlug}/admin/accounting', [\App\Http\Controllers\AccountingAdminController::class, 'index'])->name('admin.accounting.index');
+    Route::post('/clubs/{clubSlug}/admin/accounting/accounts', [\App\Http\Controllers\AccountingAdminController::class, 'storeAccount'])->name('admin.accounting.accounts.store');
+    Route::post('/clubs/{clubSlug}/admin/accounting/journal-entries', [\App\Http\Controllers\AccountingAdminController::class, 'storeJournalEntry'])->name('admin.accounting.journal.store');
     Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
