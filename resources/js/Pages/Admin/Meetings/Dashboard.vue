@@ -140,69 +140,72 @@ const formattedMeetingDate = computed(() => {
           </div>
         </div>
 
-        <div class="flex items-center gap-3 flex-wrap">
-          <div class="relative group">
-            <Link
-              :href="route('admin.meetings.financial_return.show', { clubSlug: club.slug, id: meeting.id })"
-              title="Open Financial Return & Dining Calculator Page"
-              aria-label="Open Financial Return & Dining Calculator Page"
-              class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5"
-            >
-              <span>💰 Financial Return</span>
-            </Link>
-            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-              Open Full Page Financial Return & Dining Calculator
-              <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+        <div class="flex flex-col items-end gap-2.5 shrink-0">
+          <div class="flex items-center gap-2.5 flex-wrap justify-end">
+            <div class="relative group">
+              <Link
+                :href="route('admin.meetings.financial_return.show', { clubSlug: club.slug, id: meeting.id })"
+                title="Open Financial Return & Dining Calculator Page"
+                aria-label="Open Financial Return & Dining Calculator Page"
+                class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5"
+              >
+                <span>💰 Financial Return</span>
+              </Link>
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+                Open Full Page Financial Return & Dining Calculator
+                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
+
+            <div class="relative group">
+              <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" title="Download or Print Summons PDF" aria-label="Download or Print Summons PDF" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition-all flex items-center gap-1">
+                🖨️ PDF
+              </a>
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+                Download / Print PDF
+                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
+
+            <div class="relative group">
+              <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" title="Edit Summons Details" aria-label="Edit Summons Details" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all flex items-center gap-1">
+                📜 Edit Summons
+              </Link>
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+                Edit Summons Details
+                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
+
+            <div class="relative group">
+              <button @click="openManualRsvpModal(null)" title="Record or Update Member RSVP" aria-label="Record or Update Member RSVP" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all cursor-pointer flex items-center gap-1">
+                ✍️ Record RSVP
+              </button>
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+                Record / Edit Member RSVP
+                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
+
+            <div class="relative group">
+              <button @click="showApologiesModal = true" title="Copy Apologies for Minutes" aria-label="Copy Apologies for Minutes" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer flex items-center gap-1">
+                📋 Copy Minutes Apologies
+              </button>
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+                Copy Minutes Apologies
+                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+              </div>
             </div>
           </div>
 
-          <div class="relative group">
-            <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" title="Download or Print Summons PDF" aria-label="Download or Print Summons PDF" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition-all flex items-center gap-1">
-              🖨️ PDF
-            </a>
-            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-              Download / Print PDF
-              <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
-            </div>
-          </div>
-
-          <div class="relative group">
-            <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" title="Edit Summons Details" aria-label="Edit Summons Details" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all flex items-center gap-1">
-              📜 Edit Summons
-            </Link>
-            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-              Edit Summons Details
-              <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
-            </div>
-          </div>
-
-          <div class="relative group">
-            <button @click="openManualRsvpModal(null)" title="Record or Update Member RSVP" aria-label="Record or Update Member RSVP" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all cursor-pointer flex items-center gap-1">
-              ✍️ Record RSVP
-            </button>
-            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-              Record / Edit Member RSVP
-              <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
-            </div>
-          </div>
-
-          <div class="relative group">
-            <button @click="showApologiesModal = true" title="Copy Apologies for Minutes" aria-label="Copy Apologies for Minutes" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer flex items-center gap-1">
-              📋 Copy Minutes Apologies
-            </button>
-            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-              Copy Minutes Apologies
-              <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
-            </div>
-          </div>
-
+          <!-- Bottom Row: Publish & Dispatch Summons (Positioned under Copy Minutes Apologies) -->
           <div v-if="meeting.status !== 'published'" class="relative group">
-            <button @click="publishSummons" title="Publish & Dispatch Passwordless RSVPs" aria-label="Publish & Dispatch Passwordless RSVPs" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1">
-              ✉️ Publish & Dispatch Summons
+            <button @click="publishSummons" title="Publish & Dispatch Passwordless RSVPs" aria-label="Publish & Dispatch Passwordless RSVPs" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5">
+              <span>✉️ Publish & Dispatch Summons</span>
             </button>
-            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-              Publish & Dispatch Summons
-              <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+            <div class="absolute top-full mt-2 right-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              Publish & Dispatch Summons to All Members
+              <div class="absolute bottom-full right-4 -mb-1 border-4 border-transparent border-b-slate-900"></div>
             </div>
           </div>
         </div>
