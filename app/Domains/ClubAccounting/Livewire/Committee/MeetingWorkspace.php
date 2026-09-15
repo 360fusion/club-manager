@@ -12,6 +12,7 @@ use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Models\Club;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class MeetingWorkspace extends Component
@@ -29,6 +30,9 @@ class MeetingWorkspace extends Component
     public bool $showAttendeeModal = false;
     public ?int $selectedUserId = null;
     public string $attendeeRole = 'Committee Member';
+    public array $selectedMemberIds = [];
+    public array $customRoles = [];
+    public string $attendeeSearch = '';
 
     public function mount(string $clubSlug, int $meetingId): void
     {
@@ -91,6 +95,82 @@ class MeetingWorkspace extends Component
         $item->update(['is_approved' => !$item->is_approved]);
     }
 
+    public function openAttendeeModal(): void
+    {
+        $this->selectedMemberIds = [];
+        $this->attendeeSearch = '';
+        $this->showAttendeeModal = true;
+    }
+
+    public function selectAllCommittee(): void
+    {
+        $meeting = $this->getMeeting();
+        $existingAttendeeUserIds = $meeting->attendees->pluck('user_id')->filter()->map(fn ($id) => (int) $id)->all();
+
+        $committeeUserIds = $meeting->club->users()
+            ->withPivot('committee_role')
+            ->get()
+            ->filter(fn ($u) => in_array($u->pivot->committee_role ?? null, ['chair', 'secretary', 'member']))
+            ->pluck('id')
+            ->diff($existingAttendeeUserIds)
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        $this->selectedMemberIds = array_values(array_unique(array_merge($this->selectedMemberIds, $committeeUserIds)));
+    }
+
+    public function deselectAll(): void
+    {
+        $this->selectedMemberIds = [];
+    }
+
+    public function addSelectedAttendees(): void
+    {
+        if (empty($this->selectedMemberIds)) {
+            session()->flash('error', 'Please select at least one member to add to roll-call.');
+            return;
+        }
+
+        $meeting = $this->getMeeting();
+        $users = $meeting->club->users()
+            ->whereIn('users.id', $this->selectedMemberIds)
+            ->withPivot('committee_role')
+            ->get();
+
+        $addedCount = 0;
+        foreach ($users as $user) {
+            $commRole = $user->pivot->committee_role ?? null;
+            $defaultRole = match ($commRole) {
+                'chair' => 'Committee Chair',
+                'secretary' => 'Committee Secretary',
+                'member' => 'Committee Member',
+                default => 'Non-Committee Member',
+            };
+
+            $roleTitle = !empty($this->customRoles[$user->id])
+                ? trim($this->customRoles[$user->id])
+                : $defaultRole;
+
+            $attendee = ClubCommitteeAttendee::firstOrCreate([
+                'committee_meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+            ], [
+                'name' => $user->name,
+                'role_title' => $roleTitle,
+                'attendance_type' => AttendanceType::Present,
+            ]);
+
+            if ($attendee->wasRecentlyCreated) {
+                $addedCount++;
+            }
+        }
+
+        $this->showAttendeeModal = false;
+        $this->reset(['selectedMemberIds', 'customRoles', 'selectedUserId', 'attendeeRole', 'attendeeSearch']);
+        session()->flash('success', "Added {$addedCount} " . Str::plural('member', $addedCount) . " to committee roll-call.");
+    }
+
     public function addAttendee(): void
     {
         $meeting = $this->getMeeting();
@@ -132,12 +212,40 @@ class MeetingWorkspace extends Component
         $meeting = $this->getMeeting();
         $packData = $compiler->compilePackData($meeting);
 
-        $clubMembers = User::whereHas('clubs', fn ($q) => $q->where('clubs.id', $meeting->club_id))
-            ->orderBy('name')
-            ->get(['id', 'name', 'email']);
+        $existingAttendeeUserIds = $meeting->attendees->pluck('user_id')->filter()->map(fn ($id) => (int) $id)->all();
+
+        $allMembers = $meeting->club->users()
+            ->withPivot('role', 'rank', 'committee_role')
+            ->get()
+            ->sortBy(function ($user) {
+                $priority = match ($user->pivot->committee_role ?? null) {
+                    'chair' => 1,
+                    'secretary' => 2,
+                    'member' => 3,
+                    default => 4,
+                };
+                return $priority . '_' . strtolower($user->name);
+            })
+            ->values();
+
+        $filteredMembers = $allMembers;
+        if (!empty($this->attendeeSearch)) {
+            $search = strtolower(trim($this->attendeeSearch));
+            $filteredMembers = $filteredMembers->filter(function ($user) use ($search) {
+                return str_contains(strtolower($user->name), $search)
+                    || str_contains(strtolower($user->email), $search)
+                    || str_contains(strtolower($user->pivot->committee_role ?? ''), $search);
+            })->values();
+        }
+
+        $committeeMembers = $filteredMembers->filter(fn ($u) => in_array($u->pivot->committee_role ?? '', ['chair', 'secretary', 'member']))->values();
+        $nonCommitteeMembers = $filteredMembers->filter(fn ($u) => !in_array($u->pivot->committee_role ?? '', ['chair', 'secretary', 'member']))->values();
 
         return view('livewire.committee.meeting-workspace', array_merge($packData, [
-            'clubMembers' => $clubMembers,
+            'clubMembers' => $allMembers,
+            'committeeMembers' => $committeeMembers,
+            'nonCommitteeMembers' => $nonCommitteeMembers,
+            'existingAttendeeUserIds' => $existingAttendeeUserIds,
         ]))->layout('components.layouts.app');
     }
 }

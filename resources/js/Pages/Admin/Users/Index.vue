@@ -27,6 +27,7 @@ const searchQuery = ref('');
 const roleFilter = ref('');
 const rankFilter = ref('');
 const statusFilter = ref('');
+const committeeRoleFilter = ref('');
 const activeRosterTab = ref('all'); // 'all', 'active', 'invited_pending', 'deactivated', 'past'
 const inviteCopied = ref(false);
 
@@ -84,6 +85,7 @@ const addForm = useForm({
   email: '',
   role: 'member',
   rank: '',
+  committee_role: '',
   member_number: '',
   send_invite: true,
 });
@@ -145,8 +147,15 @@ const filteredMembers = computed(() => {
     const matchesRole = roleFilter.value ? m.role === roleFilter.value : true;
     const matchesRank = rankFilter.value ? m.rank === rankFilter.value : true;
     const matchesStatus = statusFilter.value ? m.status === statusFilter.value : true;
+    const matchesCommittee = committeeRoleFilter.value
+      ? (committeeRoleFilter.value === 'any'
+          ? !!m.committee_role
+          : (committeeRoleFilter.value === 'none'
+              ? !m.committee_role
+              : m.committee_role === committeeRoleFilter.value))
+      : true;
 
-    return matchesTab && matchesSearch && matchesRole && matchesRank && matchesStatus;
+    return matchesTab && matchesSearch && matchesRole && matchesRank && matchesStatus && matchesCommittee;
   });
 });
 
@@ -163,6 +172,14 @@ const updateRank = (userId, newRank) => {
   router.post(
     route('admin.users.rank.update', { clubSlug: props.club.slug, userId }),
     { rank: newRank },
+    { preserveScroll: true }
+  );
+};
+
+const updateCommitteeRole = (userId, newCommitteeRole) => {
+  router.post(
+    route('admin.users.committee_role.update', { clubSlug: props.club.slug, userId }),
+    { committee_role: newCommitteeRole || null },
     { preserveScroll: true }
   );
 };
@@ -463,6 +480,18 @@ const submitImportCsv = () => {
             <option value="past">Past Member</option>
             <option value="pending">Pending</option>
           </select>
+
+          <select
+            v-model="committeeRoleFilter"
+            class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium"
+          >
+            <option value="">All Committee Roles</option>
+            <option value="any">On Committee (Any)</option>
+            <option value="chair">👑 Chair</option>
+            <option value="secretary">✍️ Secretary</option>
+            <option value="member">🏛️ Member</option>
+            <option value="none">Not on Committee</option>
+          </select>
         </div>
       </div>
 
@@ -476,6 +505,7 @@ const submitImportCsv = () => {
                 <th class="py-3.5 px-4">Member ID #</th>
                 <th v-if="enableMemberRanks" class="py-3.5 px-4">Rank</th>
                 <th class="py-3.5 px-4">Club Role</th>
+                <th class="py-3.5 px-4">Committee Role</th>
                 <th class="py-3.5 px-4">Status</th>
                 <th class="py-3.5 px-4">Joined Date</th>
                 <th class="py-3.5 px-6 text-right">Actions</th>
@@ -539,6 +569,29 @@ const submitImportCsv = () => {
                     <option value="coach">Coach</option>
                     <option value="treasurer">Treasurer</option>
                     <option value="admin">Admin</option>
+                  </select>
+                </td>
+
+                <!-- Committee Role Selector -->
+                <td class="py-4 px-4">
+                  <select
+                    :value="m.committee_role || ''"
+                    @change="updateCommitteeRole(m.id, $event.target.value)"
+                    :class="[
+                      'px-2.5 py-1 text-xs font-bold rounded-lg border outline-none cursor-pointer transition-all',
+                      m.committee_role === 'chair'
+                        ? 'bg-amber-50 text-amber-800 border-amber-300'
+                        : m.committee_role === 'secretary'
+                        ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
+                        : m.committee_role === 'member'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                        : 'bg-slate-50 text-slate-400 border-slate-200'
+                    ]"
+                  >
+                    <option value="">— None —</option>
+                    <option value="chair">👑 Chair</option>
+                    <option value="secretary">✍️ Secretary</option>
+                    <option value="member">🏛️ Member</option>
                   </select>
                 </td>
 
@@ -715,6 +768,19 @@ const submitImportCsv = () => {
               </select>
             </div>
 
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Committee Role</label>
+              <select
+                v-model="addForm.committee_role"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">— Not on Committee —</option>
+                <option value="chair">👑 Chair</option>
+                <option value="secretary">✍️ Secretary</option>
+                <option value="member">🏛️ Committee Member</option>
+              </select>
+            </div>
+
             <div v-if="enableMemberRanks">
               <label class="block text-xs font-bold text-slate-700 mb-1">Member Rank</label>
               <select
@@ -726,7 +792,7 @@ const submitImportCsv = () => {
               </select>
             </div>
 
-            <div :class="enableMemberRanks ? 'col-span-2' : 'col-span-1'">
+            <div :class="enableMemberRanks ? '' : 'col-span-2'">
               <label class="block text-xs font-bold text-slate-700 mb-1">Member Number</label>
               <input
                 v-model="addForm.member_number"

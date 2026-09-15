@@ -359,4 +359,79 @@ TEXT;
         $responseMinutes = $this->get(route('admin.committee.minutes', [$this->club->slug, $meeting->id]));
         $responseMinutes->assertOk();
     }
+
+    public function test_can_assign_member_committee_roles_and_batch_add_to_roll_call(): void
+    {
+        $this->actingAs($this->admin);
+
+        // 1. Assign committee roles to members
+        $response1 = $this->post(route('admin.users.committee_role.update', [$this->club->slug, $this->member1->id]), [
+            'committee_role' => 'chair',
+        ]);
+        $response1->assertRedirect();
+        $this->assertDatabaseHas('club_user', [
+            'club_id' => $this->club->id,
+            'user_id' => $this->member1->id,
+            'committee_role' => 'chair',
+        ]);
+
+        $response2 = $this->post(route('admin.users.committee_role.update', [$this->club->slug, $this->member2->id]), [
+            'committee_role' => 'secretary',
+        ]);
+        $response2->assertRedirect();
+        $this->assertDatabaseHas('club_user', [
+            'club_id' => $this->club->id,
+            'user_id' => $this->member2->id,
+            'committee_role' => 'secretary',
+        ]);
+
+        // Non-committee member
+        $guestMember = User::factory()->create(['name' => 'Robert Visitor', 'email' => 'robert@visitor.com']);
+        $guestMember->clubs()->attach($this->club, ['role' => 'member', 'committee_role' => null]);
+
+        // 2. Create meeting and test Livewire batch roll-call
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Executive Committee',
+            'meeting_date' => Carbon::now()->addDays(3),
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        $lw = Livewire::test(MeetingWorkspace::class, [
+            'clubSlug' => $this->club->slug,
+            'meetingId' => $meeting->id,
+        ]);
+
+        // Verify selectAllCommittee() selects chair and secretary
+        $lw->call('selectAllCommittee')
+            ->assertSet('selectedMemberIds', [$this->member1->id, $this->member2->id]);
+
+        // Add the non-committee member with a custom role
+        $lw->set('selectedMemberIds', [$this->member1->id, $this->member2->id, $guestMember->id])
+            ->set('customRoles.' . $guestMember->id, 'Lodge Steward / Guest')
+            ->call('addSelectedAttendees')
+            ->assertHasNoErrors();
+
+        // Verify database attendees
+        $this->assertDatabaseHas('club_acc_committee_attendees', [
+            'committee_meeting_id' => $meeting->id,
+            'user_id' => $this->member1->id,
+            'role_title' => 'Committee Chair',
+            'attendance_type' => 'present',
+        ]);
+
+        $this->assertDatabaseHas('club_acc_committee_attendees', [
+            'committee_meeting_id' => $meeting->id,
+            'user_id' => $this->member2->id,
+            'role_title' => 'Committee Secretary',
+            'attendance_type' => 'present',
+        ]);
+
+        $this->assertDatabaseHas('club_acc_committee_attendees', [
+            'committee_meeting_id' => $meeting->id,
+            'user_id' => $guestMember->id,
+            'role_title' => 'Lodge Steward / Guest',
+            'attendance_type' => 'present',
+        ]);
+    }
 }

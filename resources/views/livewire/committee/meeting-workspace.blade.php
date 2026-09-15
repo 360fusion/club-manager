@@ -53,7 +53,7 @@
                     </h3>
                     <button
                         type="button"
-                        wire:click="$set('showAttendeeModal', true)"
+                        wire:click="openAttendeeModal"
                         class="text-xs font-bold text-indigo-600 hover:text-indigo-800"
                     >
                         + Add Member
@@ -277,33 +277,206 @@
     <!-- Add Attendee Modal -->
     @if($showAttendeeModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
-            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 text-xs">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h3 class="text-sm font-black text-slate-900">Add Member to Roll-Call</h3>
-                    <button type="button" wire:click="$set('showAttendeeModal', false)" class="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+            <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 text-xs overflow-hidden">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                    <div>
+                        <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                            <span>👥</span>
+                            <span>Add Members to Roll-Call</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Select committee members or invite other lodge members with specific attendance roles.</p>
+                    </div>
+                    <button type="button" wire:click="$set('showAttendeeModal', false)" class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 font-bold transition-all">✕</button>
                 </div>
 
-                <form wire:submit="addAttendee" class="space-y-4">
-                    <div class="space-y-1">
-                        <label class="block font-bold text-slate-700">Select Member</label>
-                        <select wire:model="selectedUserId" class="w-full px-3 py-2 border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
-                            <option value="">-- Choose Member --</option>
-                            @foreach($clubMembers as $member)
-                                <option value="{{ $member->id }}">{{ $member->name }} ({{ $member->email }})</option>
-                            @endforeach
-                        </select>
+                <!-- Search & Filter Bar -->
+                <div class="px-6 py-3 border-b border-slate-100 bg-white flex flex-wrap items-center justify-between gap-2">
+                    <div class="relative flex-1 min-w-[200px]">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">🔍</span>
+                        <input
+                            type="text"
+                            wire:model.live.debounce.250ms="attendeeSearch"
+                            placeholder="Filter members by name, email or role..."
+                            class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button
+                            type="button"
+                            wire:click="selectAllCommittee"
+                            class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl border border-indigo-200/60 text-[11px] transition-all flex items-center gap-1"
+                        >
+                            <span>🏛️</span>
+                            <span>Select All Committee</span>
+                        </button>
+                        @if(count($selectedMemberIds) > 0)
+                            <button
+                                type="button"
+                                wire:click="deselectAll"
+                                class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-[11px] transition-all"
+                            >
+                                Clear Selection
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Scrollable Member List -->
+                <div class="p-6 overflow-y-auto space-y-6 flex-1 max-h-[50vh]">
+                    <!-- Group 1: Committee Members (Top Priority) -->
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-indigo-700 border-b border-indigo-100/70 pb-1">
+                            <span class="flex items-center gap-1.5">
+                                <span>🏛️</span>
+                                <span>Committee Members ({{ $committeeMembers->count() }})</span>
+                            </span>
+                            <span class="text-[10px] font-medium text-slate-400 lowercase">priority attendance</span>
+                        </div>
+
+                        @forelse($committeeMembers as $member)
+                            @php
+                                $isAlreadyAttendee = in_array($member->id, $existingAttendeeUserIds);
+                                $roleKey = $member->pivot->committee_role;
+                                $defaultRoleText = match($roleKey) {
+                                    'chair' => 'Committee Chair',
+                                    'secretary' => 'Committee Secretary',
+                                    'member' => 'Committee Member',
+                                    default => 'Committee Member'
+                                };
+                            @endphp
+                            <div class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 {{ $isAlreadyAttendee ? 'bg-slate-50/70 border-slate-200 opacity-60' : (in_array($member->id, $selectedMemberIds) ? 'bg-indigo-50/40 border-indigo-300 ring-1 ring-indigo-200' : 'bg-white border-slate-200/80 hover:border-slate-300') }}">
+                                <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0 {{ $isAlreadyAttendee ? 'cursor-not-allowed' : '' }}">
+                                    <input
+                                        type="checkbox"
+                                        value="{{ $member->id }}"
+                                        wire:model.live="selectedMemberIds"
+                                        {{ $isAlreadyAttendee ? 'disabled checked' : '' }}
+                                        class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                                    />
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="font-bold text-slate-900 truncate">{{ $member->name }}</span>
+                                            @if($roleKey === 'chair')
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">👑 Chair</span>
+                                            @elseif($roleKey === 'secretary')
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-800 border border-indigo-300">✍️ Secretary</span>
+                                            @else
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">🏛️ Member</span>
+                                            @endif
+
+                                            @if($isAlreadyAttendee)
+                                                <span class="text-[10px] font-bold text-slate-400 italic">✓ Already on roll-call</span>
+                                            @endif
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 block truncate">{{ $member->email }}</span>
+                                    </div>
+                                </label>
+
+                                @if(!$isAlreadyAttendee)
+                                    <div class="w-44 flex-shrink-0">
+                                        <input
+                                            type="text"
+                                            wire:model="customRoles.{{ $member->id }}"
+                                            placeholder="{{ $defaultRoleText }}"
+                                            class="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                            title="Override roll-call title"
+                                        />
+                                    </div>
+                                @endif
+                            </div>
+                        @empty
+                            <div class="p-3 bg-slate-50 rounded-xl text-center text-[11px] text-slate-400">
+                                No committee members found matching query.
+                            </div>
+                        @endforelse
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="block font-bold text-slate-700">Role on Committee</label>
-                        <input type="text" wire:model="attendeeRole" placeholder="e.g. Worshipful Master, Secretary, Member" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    <!-- Group 2: Non-Committee Members -->
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-600 border-b border-slate-200 pb-1">
+                            <span class="flex items-center gap-1.5">
+                                <span>👥</span>
+                                <span>Other Lodge / Club Members ({{ $nonCommitteeMembers->count() }})</span>
+                            </span>
+                            <span class="text-[10px] font-medium text-slate-400 lowercase">optional guests & attendees</span>
+                        </div>
+
+                        @forelse($nonCommitteeMembers as $member)
+                            @php
+                                $isAlreadyAttendee = in_array($member->id, $existingAttendeeUserIds);
+                            @endphp
+                            <div class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 {{ $isAlreadyAttendee ? 'bg-slate-50/70 border-slate-200 opacity-60' : (in_array($member->id, $selectedMemberIds) ? 'bg-indigo-50/40 border-indigo-300 ring-1 ring-indigo-200' : 'bg-white border-slate-200/80 hover:border-slate-300') }}">
+                                <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0 {{ $isAlreadyAttendee ? 'cursor-not-allowed' : '' }}">
+                                    <input
+                                        type="checkbox"
+                                        value="{{ $member->id }}"
+                                        wire:model.live="selectedMemberIds"
+                                        {{ $isAlreadyAttendee ? 'disabled checked' : '' }}
+                                        class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                                    />
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="font-bold text-slate-800 truncate">{{ $member->name }}</span>
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Non-Committee</span>
+
+                                            @if($isAlreadyAttendee)
+                                                <span class="text-[10px] font-bold text-slate-400 italic">✓ Already on roll-call</span>
+                                            @endif
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 block truncate">{{ $member->email }}</span>
+                                    </div>
+                                </label>
+
+                                @if(!$isAlreadyAttendee)
+                                    <div class="w-44 flex-shrink-0">
+                                        <input
+                                            type="text"
+                                            wire:model="customRoles.{{ $member->id }}"
+                                            placeholder="Guest / Attendee"
+                                            class="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                            title="Roll-call role title"
+                                        />
+                                    </div>
+                                @endif
+                            </div>
+                        @empty
+                            <div class="p-3 bg-slate-50 rounded-xl text-center text-[11px] text-slate-400">
+                                No general members found matching query.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+                    <div class="text-xs text-slate-500 font-medium">
+                        <span class="font-bold text-slate-800">{{ count($selectedMemberIds) }}</span> members selected
                     </div>
 
-                    <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-                        <button type="button" wire:click="$set('showAttendeeModal', false)" class="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-700">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Add to Roll-Call</button>
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="button"
+                            wire:click="$set('showAttendeeModal', false)"
+                            class="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-700 transition-all shadow-sm"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            wire:click="addSelectedAttendees"
+                            @if(count($selectedMemberIds) === 0) disabled @endif
+                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-sm transition-all flex items-center gap-1.5"
+                        >
+                            <span>Add to Roll-Call</span>
+                            @if(count($selectedMemberIds) > 0)
+                                <span class="px-1.5 py-0.5 bg-indigo-500 rounded-full text-[10px] font-black">
+                                    {{ count($selectedMemberIds) }}
+                                </span>
+                            @endif
+                        </button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     @endif

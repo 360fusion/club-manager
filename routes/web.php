@@ -179,6 +179,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/users/{userId}/status', [UserAdminController::class, 'updateStatus'])->name('admin.users.status.update');
     Route::post('/clubs/{clubSlug}/admin/users/{userId}/role', [UserAdminController::class, 'updateRole'])->name('admin.users.role.update');
     Route::post('/clubs/{clubSlug}/admin/users/{userId}/rank', [UserAdminController::class, 'updateRank'])->name('admin.users.rank.update');
+    Route::post('/clubs/{clubSlug}/admin/users/{userId}/committee-role', [UserAdminController::class, 'updateCommitteeRole'])->name('admin.users.committee_role.update');
     Route::delete('/clubs/{clubSlug}/admin/users/{userId}', [UserAdminController::class, 'removeMember'])->name('admin.users.destroy');
     Route::delete('/clubs/{clubSlug}/admin/users/{userId}/force', [UserAdminController::class, 'forceDeleteMember'])->name('admin.users.force_delete');
 

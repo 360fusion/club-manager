@@ -35,6 +35,7 @@ class UserAdminController extends Controller
                     'email' => $u->email,
                     'role' => $u->pivot->role ?? 'member',
                     'rank' => $u->pivot->rank ?? '',
+                    'committee_role' => $u->pivot->committee_role ?? null,
                     'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
                     'status' => $u->pivot->status ?? 'active',
                     'invitation_token' => $u->pivot->invitation_token ?? null,
@@ -174,6 +175,7 @@ class UserAdminController extends Controller
             'email' => 'required|email|max:255',
             'role' => 'required|in:owner,admin,coach,member,treasurer',
             'rank' => 'nullable|string|max:100',
+            'committee_role' => 'nullable|in:chair,secretary,member',
             'member_number' => 'nullable|string|max:100',
             'send_invite' => 'nullable|boolean',
         ]);
@@ -196,6 +198,7 @@ class UserAdminController extends Controller
         $club->users()->attach($user->id, [
             'role' => $validated['role'],
             'rank' => $validated['rank'] ?? null,
+            'committee_role' => $validated['committee_role'] ?? null,
             'member_number' => ($validated['member_number'] ?? null) ?: ('MEM-'.rand(1000, 9999)),
             'status' => $sendInvite ? 'pending' : 'active',
             'invitation_token' => $token,
@@ -275,6 +278,31 @@ class UserAdminController extends Controller
         $club->users()->updateExistingPivot($userId, ['rank' => $validated['rank']]);
 
         return redirect()->back()->with('success', 'Member rank updated.');
+    }
+
+    /**
+     * Update a member's committee role in the club.
+     */
+    public function updateCommitteeRole(Request $request, string $clubSlug, int $userId): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $validated = $request->validate([
+            'committee_role' => 'nullable|in:chair,secretary,member',
+        ]);
+
+        $roleValue = !empty($validated['committee_role']) ? $validated['committee_role'] : null;
+
+        $club->users()->updateExistingPivot($userId, ['committee_role' => $roleValue]);
+
+        $roleLabel = match ($roleValue) {
+            'chair' => 'Committee Chair',
+            'secretary' => 'Committee Secretary',
+            'member' => 'Committee Member',
+            default => 'None',
+        };
+
+        return redirect()->back()->with('success', "Committee role updated to {$roleLabel}.");
     }
 
     /**
