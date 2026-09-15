@@ -24,7 +24,7 @@ class MemberPortalTest extends TestCase
 
         $club = Club::create([
             'club_type_id' => $clubType->id,
-            'name' => 'Oxford University Boat Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'status' => 'active',
         ]);
@@ -66,7 +66,7 @@ class MemberPortalTest extends TestCase
 
         $club = Club::create([
             'club_type_id' => $clubType->id,
-            'name' => 'Oxford University Boat Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'status' => 'active',
         ]);
@@ -94,7 +94,7 @@ class MemberPortalTest extends TestCase
 
         $club = Club::create([
             'club_type_id' => $clubType->id,
-            'name' => 'Oxford University Boat Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'status' => 'active',
         ]);
@@ -122,7 +122,7 @@ class MemberPortalTest extends TestCase
 
         $club = Club::create([
             'club_type_id' => $clubType->id,
-            'name' => 'Oxford University Boat Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'status' => 'active',
         ]);
@@ -151,7 +151,7 @@ class MemberPortalTest extends TestCase
 
         $club = Club::create([
             'club_type_id' => $clubType->id,
-            'name' => 'Oxford University Boat Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'status' => 'active',
         ]);

@@ -616,7 +616,7 @@ const submitWithAction = (actionType) => {
 
                       <div class="col-span-1 md:col-span-1">
                         <label class="block font-bold text-slate-700 mb-1">Caption / Alt Text</label>
-                        <input v-model="block.caption" type="text" placeholder="e.g., Award ceremony at Oxford Boating Club" class="w-full p-2 bg-white border border-slate-300 rounded-xl" />
+                        <input v-model="block.caption" type="text" placeholder="e.g., Annual Festive Board at The Lodge of Fraternity" class="w-full p-2 bg-white border border-slate-300 rounded-xl" />
                       </div>
                     </div>
 

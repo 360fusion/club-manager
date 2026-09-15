@@ -23,7 +23,7 @@ class PdfInvoiceTest extends TestCase
 
         $club = Club::create([
             'club_type_id' => $type->id,
-            'name' => 'Oxford Boat Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'status' => 'active',
         ]);
@@ -50,6 +50,6 @@ class PdfInvoiceTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('INV-2026-9999');
-        $response->assertSee('Oxford Boat Club');
+        $response->assertSee('The Lodge of Fraternity');
     }
 }

@@ -72,12 +72,12 @@ class ClubSeeder extends Seeder
         // 3. Seed Demo Clubs
         $oxfordRowing = Club::create([
             'club_type_id' => $rowingType->id,
-            'name' => 'Oxford University Boat Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'status' => 'active',
             'settings' => [
                 'enabled_modules' => ['website_builder', 'donations', 'invoices', 'memberships', 'events', 'dining_and_summons', 'news_and_blog', 'newsletters', 'boat_reservations', 'erg_scores'],
-                'tagline' => 'Excellence on the Isis & Thames',
+                'tagline' => 'Fraternity, Charity & Brotherly Love',
                 'primary_color' => '#0369a1',
             ],
         ]);
@@ -321,7 +321,7 @@ class ClubSeeder extends Seeder
         // 9. Seed Custom Website Pages
         Page::create([
             'club_id' => $oxfordRowing->id,
-            'title' => 'Welcome to Oxford University Boat Club',
+            'title' => 'Welcome to The Lodge of Fraternity',
             'slug' => 'home',
             'is_homepage' => true,
             'is_published' => true,
@@ -330,8 +330,8 @@ class ClubSeeder extends Seeder
             'blocks' => [
                 [
                     'type' => 'hero',
-                    'title' => 'Training Champion Athletes Since 1839',
-                    'subtitle' => 'Official website of Oxford University Boat Club. Join our squads on the Isis & Thames.',
+                    'title' => 'Brotherly Love, Relief & Truth',
+                    'subtitle' => 'Official website of The Lodge of Fraternity.',
                     'cta_text' => 'Join the Club',
                     'cta_link' => '/pages/join-us',
                 ],

@@ -23,7 +23,7 @@ class MultiClubWorkspaceTest extends TestCase
 
         $club1 = Club::create([
             'club_type_id' => $clubType->id,
-            'name' => 'Oxford Boat Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'status' => 'active',
         ]);
@@ -75,7 +75,7 @@ class MultiClubWorkspaceTest extends TestCase
 
         $club = Club::create([
             'club_type_id' => $clubType->id,
-            'name' => 'Oxford Boat Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'status' => 'active',
         ]);

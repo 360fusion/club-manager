@@ -27,7 +27,7 @@ class PostPublishSettingsTest extends TestCase
         ]);
 
         $this->club = Club::create([
-            'name' => 'Oxford Boating Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'club_type_id' => $clubType->id,
             'status' => 'active',

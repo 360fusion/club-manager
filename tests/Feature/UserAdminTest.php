@@ -29,7 +29,7 @@ class UserAdminTest extends TestCase
 
         $this->club = Club::create([
             'club_type_id' => $clubType->id,
-            'name' => 'Oxford University Boat Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'status' => 'active',
         ]);

@@ -30,7 +30,7 @@ class MediaLibraryAdminTest extends TestCase
         ]);
 
         $this->club = Club::create([
-            'name' => 'Oxford Boating Club',
+            'name' => 'The Lodge of Fraternity',
             'slug' => 'oxford-boating',
             'club_type_id' => $clubType->id,
             'is_active' => true,
@@ -223,14 +223,14 @@ class MediaLibraryAdminTest extends TestCase
             ->putJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}", [
                 'name' => 'Oxford Regatta Victory Celebration 2026',
                 'alt_text' => 'Boating team celebrating trophy victory on river Isis',
-                'caption' => 'Oxford Boating Club crew holding trophy after winning Torpids Regatta 2026.',
+                'caption' => 'The Lodge of Fraternity members holding trophy after winning Torpids Regatta 2026.',
             ]);
 
         $updateRes->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('media.name', 'Oxford Regatta Victory Celebration 2026')
             ->assertJsonPath('media.alt_text', 'Boating team celebrating trophy victory on river Isis')
-            ->assertJsonPath('media.caption', 'Oxford Boating Club crew holding trophy after winning Torpids Regatta 2026.');
+            ->assertJsonPath('media.caption', 'The Lodge of Fraternity members holding trophy after winning Torpids Regatta 2026.');
     }
 
     public function test_upload_automatically_populates_alt_text_from_filename(): void

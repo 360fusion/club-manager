@@ -1122,12 +1122,12 @@ const updateMemberRank = (userId, newRank) => {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
             <div>
               <label class="block font-bold text-slate-700 mb-1">Page Title Suffix</label>
-              <input v-model="form.seo_title_suffix" type="text" placeholder="| Oxford Boating Club" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+              <input v-model="form.seo_title_suffix" type="text" placeholder="| The Lodge of Fraternity" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
             </div>
 
             <div class="sm:col-span-2">
               <label class="block font-bold text-slate-700 mb-1">Default Meta Description</label>
-              <textarea v-model="form.seo_meta_description" rows="3" placeholder="Official homepage for Oxford Boating Club events, membership, and news." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+              <textarea v-model="form.seo_meta_description" rows="3" placeholder="Official homepage for The Lodge of Fraternity events, membership, and news." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
             </div>
           </div>
         </div>
