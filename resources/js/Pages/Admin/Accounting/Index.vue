@@ -191,154 +191,127 @@ const getTypeBadge = (type) => {
 </script>
 
 <template>
-  <AdminLayout :club="club">
+  <AdminLayout :club="club" title="Accounting">
     <Head :title="`Accounting & ERP - ${club.name}`" />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       
-      <!-- Top ERP Page Header -->
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-900 to-sky-900 text-white flex items-center justify-center text-2xl shadow-md shrink-0">
-            📊
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h1 class="text-2xl font-black text-slate-900 tracking-tight">Accounting & ERP System</h1>
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-100 text-sky-800 border border-sky-200">
-                Liberu Engine Active
-              </span>
-            </div>
-            <p class="text-xs text-slate-500 mt-1">
-              Double-entry general ledger, sales invoicing, vendor bills, payroll, tax ledger, and financial reporting.
-            </p>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            @click="showInvoiceModal = true"
-            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
-          >
-            <span>🧾 Issue Invoice</span>
-          </button>
-          <button
-            type="button"
-            @click="showBillModal = true"
-            class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
-          >
-            <span>📄 Record Bill</span>
-          </button>
-          <button
-            type="button"
-            @click="showJournalModal = true"
-            class="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
-          >
-            <span>📖 Post Journal</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Ocean Blue Navigation Bar (Matching requested Xero/QuickBooks layout) -->
-      <div class="bg-[#007bce] rounded-2xl shadow-md overflow-x-auto">
-        <nav class="flex items-center px-2 min-w-max text-sm font-semibold text-white">
+      <!-- Ocean Blue Navigation Bar at Top -->
+      <div class="bg-[#007bce] rounded-2xl shadow-md p-1.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 overflow-x-auto">
+        <nav class="flex items-center px-1 min-w-max text-sm font-semibold text-white">
           <button
             type="button"
             @click="activeTab = 'home'"
             :class="[
-              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'home' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'home' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
             ]"
           >
             <span>Home</span>
-            <span v-if="activeTab === 'home'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
           </button>
 
           <button
             type="button"
             @click="activeTab = 'sales'"
             :class="[
-              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'sales' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'sales' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
             ]"
           >
             <span>Sales</span>
-            <span v-if="activeTab === 'sales'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
           </button>
 
           <button
             type="button"
             @click="activeTab = 'purchases'"
             :class="[
-              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'purchases' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'purchases' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
             ]"
           >
             <span>Purchases</span>
-            <span v-if="activeTab === 'purchases'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
           </button>
 
           <button
             type="button"
             @click="activeTab = 'reporting'"
             :class="[
-              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'reporting' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'reporting' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
             ]"
           >
             <span>Reporting</span>
-            <span v-if="activeTab === 'reporting'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
           </button>
 
           <button
             type="button"
             @click="activeTab = 'payroll'"
             :class="[
-              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'payroll' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'payroll' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
             ]"
           >
             <span>Payroll</span>
-            <span v-if="activeTab === 'payroll'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
           </button>
 
           <button
             type="button"
             @click="activeTab = 'accounting'"
             :class="[
-              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'accounting' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'accounting' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
             ]"
           >
             <span>Accounting</span>
-            <span v-if="activeTab === 'accounting'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
           </button>
 
           <button
             type="button"
             @click="activeTab = 'tax'"
             :class="[
-              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'tax' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'tax' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
             ]"
           >
             <span>Tax</span>
-            <span v-if="activeTab === 'tax'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
           </button>
 
           <button
             type="button"
             @click="activeTab = 'contacts'"
             :class="[
-              'px-6 py-3.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'contacts' ? 'font-extrabold text-white bg-white/10' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'contacts' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
             ]"
           >
             <span>Contacts</span>
-            <span v-if="activeTab === 'contacts'" class="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-md"></span>
           </button>
         </nav>
+
+        <!-- Quick Action Buttons in Ocean Blue Bar -->
+        <div class="flex items-center gap-2 px-2 py-1 shrink-0">
+          <button
+            type="button"
+            @click="showInvoiceModal = true"
+            class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <span>🧾 Issue Invoice</span>
+          </button>
+          <button
+            type="button"
+            @click="showBillModal = true"
+            class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <span>📄 Record Bill</span>
+          </button>
+          <button
+            type="button"
+            @click="showJournalModal = true"
+            class="px-3 py-1.5 bg-white/20 hover:bg-white/35 text-white font-extrabold text-xs rounded-xl backdrop-blur-sm border border-white/30 transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <span>📖 Post Journal</span>
+          </button>
+        </div>
       </div>
 
       <!-- Financial KPIs Overview Grid -->
