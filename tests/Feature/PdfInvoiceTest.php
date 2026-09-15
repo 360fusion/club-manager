@@ -24,7 +24,7 @@ class PdfInvoiceTest extends TestCase
         $club = Club::create([
             'club_type_id' => $type->id,
             'name' => 'The Lodge of Fraternity',
-            'slug' => 'oxford-boating',
+            'slug' => 'lodge-of-fraternity',
             'status' => 'active',
         ]);
 

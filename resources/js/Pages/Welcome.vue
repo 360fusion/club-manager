@@ -66,13 +66,13 @@ const getIcon = (typeCode) => {
                 </div>
 
                 <div class="flex items-center gap-4 text-sm font-medium">
-                    <Link href="/clubs/oxford-boating/admin/pages" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <Link href="/clubs/lodge-of-fraternity/admin/pages" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         🎨 CMS Pages
                     </Link>
-                    <Link href="/site/oxford-boating" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <Link href="/site/lodge-of-fraternity" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         🌐 Live Site
                     </Link>
-                    <Link href="/clubs/oxford-boating/admin/subscriptions" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <Link href="/clubs/lodge-of-fraternity/admin/subscriptions" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         💳 Subscriptions
                     </Link>
                     <Link href="/admin/profile" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">

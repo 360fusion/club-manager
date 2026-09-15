@@ -73,7 +73,7 @@ class ClubSeeder extends Seeder
         $oxfordRowing = Club::create([
             'club_type_id' => $rowingType->id,
             'name' => 'The Lodge of Fraternity',
-            'slug' => 'oxford-boating',
+            'slug' => 'lodge-of-fraternity',
             'status' => 'active',
             'settings' => [
                 'enabled_modules' => ['website_builder', 'donations', 'invoices', 'memberships', 'events', 'dining_and_summons', 'news_and_blog', 'newsletters', 'boat_reservations', 'erg_scores'],

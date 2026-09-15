@@ -22,7 +22,7 @@ const props = defineProps({
 });
 
 const page = usePage();
-const clubSlug = props.club?.slug || page.props.club?.slug || 'oxford-boating';
+const clubSlug = props.club?.slug || page.props.club?.slug || 'lodge-of-fraternity';
 const clubName = props.club?.name || page.props.club?.name || 'The Lodge of Fraternity';
 
 const sidebarOpen = ref(false);

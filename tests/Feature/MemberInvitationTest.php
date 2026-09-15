@@ -31,7 +31,7 @@ class MemberInvitationTest extends TestCase
         $this->club = Club::create([
             'club_type_id' => $clubType->id,
             'name' => 'The Lodge of Fraternity',
-            'slug' => 'oxford-boating',
+            'slug' => 'lodge-of-fraternity',
             'status' => 'active',
             'settings' => [
                 'primary_color' => '#0369a1',
