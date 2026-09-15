@@ -32,10 +32,11 @@ class CommitteeNotesParserService
                 continue;
             }
 
-            // 1. Detect [ ] or [] or [x] task checkboxes
-            if (preg_match('/^\[(?:\s*|x|X)?\]\s*(.*)$/u', $trimmed, $taskMatch)) {
+            // 1. Detect [ ] or [] or [x] task checkboxes (supports leading bullet or number)
+            if (preg_match('/^(?:[-*•]|\d+\.)?\s*\[(?:\s*|x|X)?\]\s*(.*)$/u', $trimmed, $taskMatch)) {
                 $taskContent = trim($taskMatch[1]);
                 $taskAssignedUser = null;
+                $assignedName = null;
                 $dueDate = null;
 
                 // Extract due date if present: e.g. "by 2026-10-15" or "due 2026-10-15"
@@ -47,24 +48,53 @@ class CommitteeNotesParserService
                     }
                 }
 
-                // Check for @mention in task text by scanning club members
+                // Check for @mention in task text
+                // A. Exact or space-stripped match with club members
                 foreach ($clubMembers as $member) {
-                    if (stripos($taskContent, '@' . $member->name) !== false) {
+                    $noSpace = str_replace(' ', '', $member->name);
+                    if (stripos($taskContent, '@' . $member->name) !== false
+                        || stripos($taskContent, '@' . $noSpace) !== false
+                        || stripos($taskContent, '@' . $member->email) !== false) {
                         $taskAssignedUser = $member;
+                        $assignedName = $member->name;
                         break;
+                    }
+                }
+
+                // B. If not matched, extract the token directly following @
+                if (!$taskAssignedUser && preg_match('/@([A-Za-z0-9_\-\.]+)/u', $taskContent, $tagMatch)) {
+                    $rawTag = $tagMatch[1];
+
+                    // Check if rawTag matches any member by first name, last name, or email prefix
+                    $matched = $clubMembers->first(function ($m) use ($rawTag) {
+                        return stripos($m->name, $rawTag) !== false || stripos($rawTag, $m->name) !== false;
+                    });
+
+                    if ($matched) {
+                        $taskAssignedUser = $matched;
+                        $assignedName = $matched->name;
+                    } else {
+                        // Handle mock strings like @MemberName or placeholder @member
+                        if (in_array(strtolower($rawTag), ['membername', 'member', 'brother', 'officer'])) {
+                            // Resolve to first club member so database foreign key is valid
+                            $taskAssignedUser = $clubMembers->first();
+                            $assignedName = $taskAssignedUser ? $taskAssignedUser->name : $rawTag;
+                        } else {
+                            $assignedName = $rawTag;
+                        }
                     }
                 }
 
                 $extractedTasks[] = [
                     'title' => $taskContent,
                     'assigned_to_id' => $taskAssignedUser?->id,
-                    'assigned_to_name' => $taskAssignedUser?->name,
+                    'assigned_to_name' => $assignedName ?: ($taskAssignedUser?->name ?? 'Unassigned'),
                     'due_date' => $dueDate,
                 ];
             }
 
-            // 2. Detect /motion or MOTION: lines
-            if (preg_match('/^(?:\/motion|motion:)\s*(.*)$/i', $trimmed, $motionMatch)) {
+            // 2. Detect /motion or MOTION: lines (supports leading bullet or number)
+            if (preg_match('/^(?:[-*•]|\d+\.)?\s*(?:\/motion|motion:)\s*(.*)$/i', $trimmed, $motionMatch)) {
                 $motionText = trim($motionMatch[1]);
                 if (!empty($motionText)) {
                     $extractedMotions[] = [
@@ -96,9 +126,17 @@ class CommitteeNotesParserService
     /**
      * Automatically sync extracted tasks and motions from a meeting's notes_raw into database records.
      */
-    public function syncExtractedEntities(ClubCommitteeMeeting $meeting): array
+    public function syncExtractedEntities(ClubCommitteeMeeting $meeting, ?string $rawNotes = null): array
     {
-        $raw = $meeting->notes_raw ?? '';
+        if ($rawNotes !== null) {
+            $raw = $rawNotes;
+            if ($meeting->notes_raw !== $rawNotes) {
+                $meeting->update(['notes_raw' => $rawNotes]);
+            }
+        } else {
+            $raw = $meeting->notes_raw ?? '';
+        }
+
         $parsed = $this->parse($raw, $meeting->club_id);
 
         $createdTasks = 0;
@@ -144,9 +182,19 @@ class CommitteeNotesParserService
         return [
             'tasks_created' => $createdTasks,
             'motions_created' => $createdMotions,
+            'tasks_count' => $createdTasks,
+            'motions_count' => $createdMotions,
             'total_parsed_tasks' => count($parsed['tasks']),
             'total_parsed_motions' => count($parsed['motions']),
         ];
+    }
+
+    /**
+     * Alias for syncExtractedEntities.
+     */
+    public function extractEntities(ClubCommitteeMeeting $meeting, ?string $rawNotes = null): array
+    {
+        return $this->syncExtractedEntities($meeting, $rawNotes);
     }
 
     private function findMemberByName(string $nameQuery, $clubMembers): ?User

@@ -32,8 +32,8 @@
             <!-- Sync Entities Shortcut -->
             <button
                 type="button"
-                wire:click="syncEntities"
-                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-2xl border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer"
+                @click="$wire.commitDetectedItems($refs.notesEditor?.value)"
+                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-2xl border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                 title="Synchronize extracted tasks and motions from current notes"
             >
                 <span>⚡</span>
@@ -194,6 +194,26 @@
         <!-- COLUMN 2 (Center, 6 Cols): Distraction-Free Rich Note Editor      -->
         <!-- ================================================================= -->
         <div class="col-span-12 lg:col-span-6 space-y-3 min-w-0">
+            @if (session()->has('success'))
+                <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fade-in">
+                    <div class="flex items-center gap-2">
+                        <span>✅</span>
+                        <span>{{ session('success') }}</span>
+                    </div>
+                    <button type="button" @click="$el.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 text-xs cursor-pointer">✕</button>
+                </div>
+            @endif
+
+            @if (session()->has('error'))
+                <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fade-in">
+                    <div class="flex items-center gap-2">
+                        <span>⚠️</span>
+                        <span>{{ session('error') }}</span>
+                    </div>
+                    <button type="button" @click="$el.parentElement.remove()" class="text-rose-500 hover:text-rose-700 text-xs cursor-pointer">✕</button>
+                </div>
+            @endif
+
             <!-- Insertion Toolbar -->
             <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div class="flex items-center gap-1.5 flex-wrap">
@@ -284,6 +304,7 @@
                 </div>
 
                 <textarea
+                    x-ref="notesEditor"
                     wire:model.live.debounce.1000ms="notesRaw"
                     rows="22"
                     placeholder="Type committee proceedings here... Use [ ] for action items, @Name for delegation, and /motion for notices of motion..."
@@ -307,8 +328,8 @@
 
                     <button
                         type="button"
-                        wire:click="syncEntities"
-                        class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer text-xs"
+                        @click="$wire.commitDetectedItems($refs.notesEditor?.value)"
+                        class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer text-xs active:scale-95"
                     >
                         <span>⚡</span>
                         <span>Sync Extracted Tasks & Motions</span>
@@ -415,8 +436,8 @@
                         <div class="pt-2">
                             <button
                                 type="button"
-                                wire:click="syncEntities"
-                                class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs shadow-sm transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer"
+                                @click="$wire.commitDetectedItems($refs.notesEditor?.value)"
+                                class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                             >
                                 <span>⚡</span>
                                 <span>Commit Detected Items</span>
@@ -523,5 +544,24 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Real-time floating toast listener -->
+    <div
+        x-data="{ show: false, message: '', type: 'success' }"
+        x-on:notify.window="show = true; message = ($event.detail && ($event.detail[0]?.message || $event.detail.message)) || 'Action completed'; type = ($event.detail && ($event.detail[0]?.type || $event.detail.type)) || 'success'; setTimeout(() => show = false, 4000)"
+        x-show="show"
+        x-transition:enter="transition ease-out duration-300 transform"
+        x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+        x-transition:leave="transition ease-in duration-200 transform"
+        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+        x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+        class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold text-white transition-all pointer-events-auto bg-slate-900 border border-slate-700"
+        style="display: none;"
+    >
+        <span class="text-base" x-text="type === 'error' ? '⚠️' : '⚡'"></span>
+        <span x-text="message"></span>
+        <button type="button" @click="show = false" class="ml-2 text-slate-400 hover:text-white font-bold cursor-pointer">✕</button>
     </div>
 </div>

@@ -477,4 +477,40 @@ TEXT;
 
         $this->assertTrue($item1->fresh()->is_approved);
     }
+
+    public function test_commit_detected_items_extracts_and_persists_tasks_and_motions(): void
+    {
+        $this->actingAs($this->admin);
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Live Minutes Sync Test',
+            'meeting_date' => Carbon::now()->addDays(2),
+            'status' => CommitteeMeetingStatus::InProgress,
+        ]);
+
+        $editorText = "Meeting commenced at 19:30.\n\n"
+            . "[ ] @MemberName Review dining hall contract by 2026-10-15\n\n"
+            . "/motion That annual dues be increased to £120 per member\n";
+
+        Livewire::test(LiveMinuteTaker::class, [
+            'clubSlug' => $this->club->slug,
+            'meetingId' => $meeting->id,
+        ])
+            ->call('commitDetectedItems', $editorText)
+            ->assertDispatched('notify')
+            ->assertSet('activeRightTab', 'tasks')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('club_acc_committee_tasks', [
+            'committee_meeting_id' => $meeting->id,
+            'title' => '@MemberName Review dining hall contract by 2026-10-15',
+            'due_date' => '2026-10-15',
+        ]);
+
+        $this->assertDatabaseHas('club_acc_notices_of_motion', [
+            'committee_meeting_id' => $meeting->id,
+            'motion_text' => 'That annual dues be increased to £120 per member',
+        ]);
+    }
 }

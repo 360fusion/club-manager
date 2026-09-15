@@ -70,14 +70,52 @@ class LiveMinuteTaker extends Component
         $this->parsedPreview = $parser->parse($this->notesRaw, $meeting->club_id);
     }
 
-    public function syncEntities(): void
+    public function commitDetectedItems(?string $editorContent = null): void
     {
+        if ($editorContent !== null && trim($editorContent) !== '') {
+            $this->notesRaw = $editorContent;
+        }
+
         $this->autoSave();
+
         $meeting = $this->getMeeting();
         $parser = app(CommitteeNotesParserService::class);
-        $result = $parser->syncExtractedEntities($meeting);
+        $result = $parser->syncExtractedEntities($meeting, $this->notesRaw);
 
-        session()->flash('success', "Synced: {$result['tasks_created']} tasks and {$result['motions_created']} motions created.");
+        // Switch to the 'tasks' tab so the user visually sees the committed action items immediately
+        $this->activeRightTab = 'tasks';
+
+        // Update parsed preview
+        $this->updateParsedPreview();
+
+        $totalTasks = ClubCommitteeTask::where('committee_meeting_id', $meeting->id)->count();
+        $totalMotions = ClubNoticeOfMotion::where('committee_meeting_id', $meeting->id)->count();
+
+        if ($result['tasks_created'] > 0 || $result['motions_created'] > 0) {
+            $message = "Committed: {$result['tasks_created']} tasks and {$result['motions_created']} notices of motion.";
+        } else {
+            $message = "Sync complete: All {$totalTasks} tasks and {$totalMotions} motions are up-to-date.";
+        }
+
+        session()->flash('success', $message);
+
+        // Dispatch browser notification toast
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => $message,
+            'tasks_count' => $result['tasks_created'],
+            'motions_count' => $result['motions_created'],
+        ]);
+    }
+
+    public function syncExtractedEntities(?string $editorContent = null): void
+    {
+        $this->commitDetectedItems($editorContent);
+    }
+
+    public function syncEntities(?string $editorContent = null): void
+    {
+        $this->commitDetectedItems($editorContent);
     }
 
     public function toggleTaskStatus(int $taskId): void
