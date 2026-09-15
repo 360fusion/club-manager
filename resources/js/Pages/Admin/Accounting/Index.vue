@@ -74,7 +74,7 @@ const props = defineProps({
   },
 });
 
-// Primary Blue Bar Navigation: home | sales | purchases | reporting | payroll | accounting | tax | contacts
+// Primary Blue Bar Navigation: home | sales | purchases | reporting | accounting | contacts | settings
 const activeTab = ref('home');
 const selectedReport = ref(null);
 
@@ -264,17 +264,6 @@ const getTypeBadge = (type) => {
 
           <button
             type="button"
-            @click="activeTab = 'payroll'"
-            :class="[
-              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'payroll' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
-            ]"
-          >
-            <span>Payroll</span>
-          </button>
-
-          <button
-            type="button"
             @click="activeTab = 'accounting'"
             :class="[
               'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
@@ -282,17 +271,6 @@ const getTypeBadge = (type) => {
             ]"
           >
             <span>Accounting</span>
-          </button>
-
-          <button
-            type="button"
-            @click="activeTab = 'tax'"
-            :class="[
-              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'tax' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
-            ]"
-          >
-            <span>Tax</span>
           </button>
 
           <button
@@ -1014,22 +992,6 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
-      <!-- VIEW 5: PAYROLL (Staff & Coach Payroll Expenses) -->
-      <div v-if="activeTab === 'payroll'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
-        <div class="border-b border-slate-100 pb-4">
-          <h3 class="text-lg font-black text-slate-900">Payroll & Staff Wages</h3>
-          <p class="text-xs text-slate-500">Manage coach stipends, staff payroll, and wage expenses.</p>
-        </div>
-
-        <div class="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-          <span class="text-4xl block">💼</span>
-          <h4 class="text-sm font-extrabold text-slate-800">Payroll Ledger Module</h4>
-          <p class="text-xs text-slate-500 max-w-md mx-auto">
-            Staff and coach wages are automatically recorded under Code 5300 (Administrative & Software Fees) or custom salary expense accounts in the double-entry journal.
-          </p>
-        </div>
-      </div>
-
       <!-- VIEW 6: ACCOUNTING (Chart of Accounts & General Ledger Journal) -->
       <div v-if="activeTab === 'accounting'" class="space-y-6">
         <!-- Chart of Accounts Table -->
@@ -1148,39 +1110,6 @@ const getTypeBadge = (type) => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW 7: TAX (VAT & Tax Summary) -->
-      <div v-if="activeTab === 'tax'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
-        <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
-          <div>
-            <h3 class="text-lg font-black text-slate-900">Tax & VAT Ledger</h3>
-            <p class="text-xs text-slate-500">Track UK VAT rates, registration numbers, and sales tax liabilities.</p>
-          </div>
-          <span class="px-3 py-1 bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono font-extrabold text-slate-800">
-            VAT Reg #: {{ settings.tax_registration_number || 'GB 987 6543 21' }}
-          </span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2">
-            <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider block">Standard VAT Rate</span>
-            <span class="text-xl font-black text-slate-900 block">20.0% UK VAT</span>
-            <span class="text-xs text-slate-500 block">Applied to bar, dining, merchandise, and vendor purchases.</span>
-          </div>
-
-          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2">
-            <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider block">Exempt Sales (Subscriptions & Dues)</span>
-            <span class="text-xl font-black text-emerald-700 block">0.0% Exempt</span>
-            <span class="text-xs text-slate-500 block">Non-profit sports subscriptions and member dues.</span>
-          </div>
-
-          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2">
-            <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider block">Tax Registration & Filing</span>
-            <span class="text-sm font-black text-sky-800 block">{{ settings.tax_registration_number || 'GB 987 6543 21' }}</span>
-            <span class="text-xs text-slate-500 block">Registered with HMRC for Making Tax Digital (MTD).</span>
           </div>
         </div>
       </div>
