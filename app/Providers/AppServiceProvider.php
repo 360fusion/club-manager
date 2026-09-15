@@ -54,6 +54,10 @@ class AppServiceProvider extends ServiceProvider
                 'banking.bank-import-index',
                 \App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex::class
             );
+            Livewire::component(
+                'banking.bank-reconciliation-workspace',
+                \App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace::class
+            );
         }
 
         if (class_exists(Cashier::class)) {
