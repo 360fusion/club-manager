@@ -22,11 +22,14 @@
                 </div>
 
                 <div class="flex items-center gap-3 text-xs font-bold">
-                    @if (request()->route('clubSlug'))
-                        <a href="{{ route('admin.analytics', ['clubSlug' => request()->route('clubSlug')]) }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all">
+                    @php
+                        $activeClubSlug = request()->route('clubSlug') ?? request()->route('slug');
+                    @endphp
+                    @if ($activeClubSlug)
+                        <a href="{{ route('admin.analytics', ['slug' => $activeClubSlug]) }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all">
                             📊 Admin Dashboard
                         </a>
-                        <a href="{{ route('admin.meetings.index', ['clubSlug' => request()->route('clubSlug')]) }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all">
+                        <a href="{{ route('admin.meetings.index', ['clubSlug' => $activeClubSlug]) }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all">
                             📅 Meetings
                         </a>
                     @endif

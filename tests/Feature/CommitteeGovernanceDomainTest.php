@@ -337,4 +337,26 @@ TEXT;
             'is_approved' => true,
         ]);
     }
+
+    public function test_admin_can_access_committee_routes_via_http(): void
+    {
+        $this->actingAs($this->admin);
+
+        $response = $this->get(route('admin.committee.index', $this->club->slug));
+        $response->assertOk();
+        $response->assertSee('Lodge Committee');
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Regular Committee Meeting',
+            'meeting_date' => Carbon::now()->addDays(7),
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        $responseWorkspace = $this->get(route('admin.committee.workspace', [$this->club->slug, $meeting->id]));
+        $responseWorkspace->assertOk();
+
+        $responseMinutes = $this->get(route('admin.committee.minutes', [$this->club->slug, $meeting->id]));
+        $responseMinutes->assertOk();
+    }
 }
