@@ -91,6 +91,22 @@ const form = useForm({
   tax_registration_number: props.settings.tax_registration_number || '',
   receipt_footer_notes: props.settings.receipt_footer_notes || '',
 
+  // Accounting & ERP Configuration
+  fiscal_year_start_month: props.settings.fiscal_year_start_month || 'January',
+  accounting_method: props.settings.accounting_method || 'accrual',
+  lock_accounting_date: props.settings.lock_accounting_date || '',
+  standard_vat_rate: props.settings.standard_vat_rate ?? 20.0,
+  invoice_prefix: props.settings.invoice_prefix || 'INV-2026-',
+  invoice_due_terms: props.settings.invoice_due_terms || 'Net 14',
+  default_ar_account_code: props.settings.default_ar_account_code || '1200',
+  default_revenue_account_code: props.settings.default_revenue_account_code || '4000',
+  bill_prefix: props.settings.bill_prefix || 'BILL-2026-',
+  default_ap_account_code: props.settings.default_ap_account_code || '2000',
+  default_expense_account_code: props.settings.default_expense_account_code || '5000',
+  require_bill_approval: props.settings.require_bill_approval ?? false,
+  default_bank_account_code: props.settings.default_bank_account_code || '1000',
+  enforce_balanced_journals: props.settings.enforce_balanced_journals ?? true,
+
   // Events & Check-Ins
   event_rsvp_cutoff_hours: props.settings.event_rsvp_cutoff_hours ?? 24,
   max_guests_per_member: props.settings.max_guests_per_member ?? 2,
@@ -974,39 +990,158 @@ const updateMemberRank = (userId, newRank) => {
 
       <!-- TAB: ACCOUNTING & ERP SETTINGS -->
       <div v-if="activeTab === 'accounting'" class="space-y-6">
+        <!-- 1. Fiscal Year & Accounting Controls -->
         <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
           <div>
-            <h2 class="text-lg font-bold text-slate-900">📊 Accounting & Financial Configuration</h2>
-            <p class="text-xs text-slate-500 mt-1">Configure VAT registration number, company billing address, currency defaults, and automated invoice terms.</p>
+            <h2 class="text-lg font-bold text-slate-900">📊 Financial Year & Tax Controls</h2>
+            <p class="text-xs text-slate-500 mt-1">Configure fiscal year boundaries, accounting basis, lock dates, and tax rules.</p>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs">
             <div>
-              <label class="block font-bold text-slate-700 mb-1">VAT / Tax Registration Number</label>
-              <input v-model="form.tax_registration_number" type="text" placeholder="GB 987 6543 21" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono" />
-              <p class="text-[11px] text-slate-400 mt-1">Printed on official member invoices and vendor bill receipts.</p>
+              <label class="block font-bold text-slate-700 mb-1">Fiscal Year Start Month</label>
+              <select v-model="form.fiscal_year_start_month" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                <option value="January">January</option>
+                <option value="February">February</option>
+                <option value="March">March</option>
+                <option value="April">April (UK Tax Year)</option>
+                <option value="May">May</option>
+                <option value="June">June</option>
+                <option value="July">July</option>
+                <option value="August">August</option>
+                <option value="September">September</option>
+                <option value="October">October (Club Dues Cycle)</option>
+                <option value="November">November</option>
+                <option value="December">December</option>
+              </select>
             </div>
 
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Accounting Currency</label>
+              <label class="block font-bold text-slate-700 mb-1">Accounting Basis / Method</label>
+              <select v-model="form.accounting_method" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                <option value="accrual">Accrual Basis (Recognize when billed)</option>
+                <option value="cash">Cash Basis (Recognize when paid)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Standard VAT Rate (%)</label>
+              <input v-model.number="form.standard_vat_rate" type="number" step="0.1" min="0" max="100" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Closed Period Lock Date</label>
+              <input v-model="form.lock_accounting_date" type="date" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+              <p class="text-[11px] text-slate-400 mt-1">Prevents posting journals before this date.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Sales Invoicing & Member Receivables -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🧾 Sales Invoicing & Receivables Rules</h2>
+            <p class="text-xs text-slate-500 mt-1">Set invoice number prefixes, default revenue accounts, payment terms, and lead times.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Invoice Number Prefix</label>
+              <input v-model="form.invoice_prefix" type="text" placeholder="INV-2026-" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Default Payment Due Terms</label>
+              <select v-model="form.invoice_due_terms" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                <option value="Due on Receipt">Due on Receipt</option>
+                <option value="Net 7">Net 7 Days</option>
+                <option value="Net 14">Net 14 Days</option>
+                <option value="Net 30">Net 30 Days</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Default A/R Account Code</label>
+              <input v-model="form.default_ar_account_code" type="text" placeholder="1200" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Default Revenue Account Code</label>
+              <input v-model="form.default_revenue_account_code" type="text" placeholder="4000" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Auto-Invoice Lead Time (Days)</label>
+              <input v-model.number="form.auto_invoice_days_before" type="number" min="0" max="90" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Overdue Grace Period (Days)</label>
+              <input v-model.number="form.dues_grace_period_days" type="number" min="0" max="180" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Purchases & Vendor Bills Payables -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">📄 Purchases & Vendor Payables Rules</h2>
+            <p class="text-xs text-slate-500 mt-1">Set bill prefixes, default expense accounts, and vendor approval workflows.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Bill Number Prefix</label>
+              <input v-model="form.bill_prefix" type="text" placeholder="BILL-2026-" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Default A/P Account Code</label>
+              <input v-model="form.default_ap_account_code" type="text" placeholder="2000" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Default Expense Account Code</label>
+              <input v-model="form.default_expense_account_code" type="text" placeholder="5000" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100">
+            <label class="flex items-center gap-3 cursor-pointer text-xs">
+              <input type="checkbox" v-model="form.require_bill_approval" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <div class="font-bold text-slate-900">Vendor Bill Approval Workflow</div>
+                <div class="text-[11px] text-slate-500">Require explicit Administrator approval before a vendor bill can be marked as paid.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 4. General Ledger, Currency & Company Address Profile -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🏢 Organization Address & General Ledger Controls</h2>
+            <p class="text-xs text-slate-500 mt-1">Base accounting currency, double-entry validation, and company registration address.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Base Accounting Currency</label>
               <select v-model="form.currency" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
                 <option value="GBP">GBP (£) - British Pound Sterling</option>
                 <option value="USD">USD ($) - US Dollar</option>
                 <option value="EUR">EUR (€) - Euro</option>
               </select>
-              <p class="text-[11px] text-slate-400 mt-1">Base currency for general ledger journal entries and balance sheets.</p>
             </div>
 
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Auto-Invoice Lead Time (Days Before Cycle)</label>
-              <input v-model.number="form.auto_invoice_days_before" type="number" min="0" max="90" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
-              <p class="text-[11px] text-slate-400 mt-1">Days prior to membership renewal to dispatch automated invoices.</p>
+              <label class="block font-bold text-slate-700 mb-1">Operating Bank Account Code</label>
+              <input v-model="form.default_bank_account_code" type="text" placeholder="1000" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
             </div>
 
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Overdue Dues Grace Period (Days)</label>
-              <input v-model.number="form.dues_grace_period_days" type="number" min="0" max="180" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
-              <p class="text-[11px] text-slate-400 mt-1">Days after due date before invoice status marks as overdue.</p>
+              <label class="block font-bold text-slate-700 mb-1">VAT / Tax Registration Number</label>
+              <input v-model="form.tax_registration_number" type="text" placeholder="GB 987 6543 21" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
             </div>
 
             <div class="sm:col-span-2">
@@ -1028,6 +1163,16 @@ const updateMemberRank = (userId, newRank) => {
               <label class="block font-bold text-slate-700 mb-1">Receipt & Invoice Footer Terms</label>
               <textarea v-model="form.receipt_footer_notes" rows="3" placeholder="Thank you for supporting our club. Fees support equipment & clubhouse operations." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
             </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100">
+            <label class="flex items-center gap-3 cursor-pointer text-xs">
+              <input type="checkbox" v-model="form.enforce_balanced_journals" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <div class="font-bold text-slate-900">Enforce Double-Entry Balance Validation</div>
+                <div class="text-[11px] text-slate-500">Require total debits to exactly equal total credits before manual journal entries can be posted.</div>
+              </div>
+            </label>
           </div>
         </div>
       </div>

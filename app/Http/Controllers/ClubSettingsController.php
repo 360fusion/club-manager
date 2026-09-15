@@ -145,6 +145,22 @@ class ClubSettingsController extends Controller
             'tax_registration_number' => 'GB 987 6543 21',
             'receipt_footer_notes' => 'Thank you for supporting our club. Fees support equipment & clubhouse operations.',
 
+            // Accounting & ERP System Settings
+            'fiscal_year_start_month' => 'January',
+            'accounting_method' => 'accrual',
+            'lock_accounting_date' => '',
+            'standard_vat_rate' => 20.0,
+            'invoice_prefix' => 'INV-2026-',
+            'invoice_due_terms' => 'Net 14',
+            'default_ar_account_code' => '1200',
+            'default_revenue_account_code' => '4000',
+            'bill_prefix' => 'BILL-2026-',
+            'default_ap_account_code' => '2000',
+            'default_expense_account_code' => '5000',
+            'require_bill_approval' => false,
+            'default_bank_account_code' => '1000',
+            'enforce_balanced_journals' => true,
+
             // Events & Check-Ins
             'event_rsvp_cutoff_hours' => 24,
             'max_guests_per_member' => 2,
@@ -256,6 +272,22 @@ class ClubSettingsController extends Controller
             'auto_invoice_days_before' => 'nullable|integer|min:0|max:90',
             'tax_registration_number' => 'nullable|string|max:100',
             'receipt_footer_notes' => 'nullable|string|max:1000',
+
+            // Accounting & ERP Configuration
+            'fiscal_year_start_month' => 'nullable|string|max:50',
+            'accounting_method' => 'nullable|in:accrual,cash',
+            'lock_accounting_date' => 'nullable|string|max:50',
+            'standard_vat_rate' => 'nullable|numeric|min:0|max:100',
+            'invoice_prefix' => 'nullable|string|max:50',
+            'invoice_due_terms' => 'nullable|string|max:50',
+            'default_ar_account_code' => 'nullable|string|max:30',
+            'default_revenue_account_code' => 'nullable|string|max:30',
+            'bill_prefix' => 'nullable|string|max:50',
+            'default_ap_account_code' => 'nullable|string|max:30',
+            'default_expense_account_code' => 'nullable|string|max:30',
+            'require_bill_approval' => 'nullable|boolean',
+            'default_bank_account_code' => 'nullable|string|max:30',
+            'enforce_balanced_journals' => 'nullable|boolean',
 
             // Events & Check-Ins
             'event_rsvp_cutoff_hours' => 'nullable|integer|min:0|max:168',
