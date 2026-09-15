@@ -525,7 +525,7 @@ const getTypeBadge = (type) => {
       </div>
 
       <!-- Financial KPIs Overview Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div v-if="activeTab === 'home'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <!-- 1. Total Assets -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Assets</span>
