@@ -419,17 +419,17 @@ const getTypeBadge = (type) => {
   <AdminLayout :club="club" title="Accounting">
     <Head :title="`Accounting - ${club.name}`" />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-4">
       
-      <!-- Ocean Blue Navigation Bar at Top -->
-      <div class="bg-[#007bce] rounded-2xl shadow-md p-1.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 overflow-x-auto">
-        <nav class="flex items-center px-1 min-w-max text-sm font-semibold text-white">
+      <!-- Sleek Slate Navigation Bar at Top -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-sm p-1.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 overflow-x-auto">
+        <nav class="flex items-center px-1 min-w-max text-xs sm:text-sm font-semibold text-slate-300">
           <button
             type="button"
             @click="activeTab = 'home'"
             :class="[
-              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'home' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'home' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
             ]"
           >
             <span>Home</span>
@@ -439,8 +439,8 @@ const getTypeBadge = (type) => {
             type="button"
             @click="activeTab = 'sales'"
             :class="[
-              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'sales' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'sales' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
             ]"
           >
             <span>Sales</span>
@@ -450,8 +450,8 @@ const getTypeBadge = (type) => {
             type="button"
             @click="activeTab = 'purchases'"
             :class="[
-              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'purchases' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'purchases' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
             ]"
           >
             <span>Purchases</span>
@@ -461,8 +461,8 @@ const getTypeBadge = (type) => {
             type="button"
             @click="activeTab = 'reporting'"
             :class="[
-              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'reporting' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'reporting' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
             ]"
           >
             <span>Reporting</span>
@@ -472,8 +472,8 @@ const getTypeBadge = (type) => {
             type="button"
             @click="activeTab = 'accounting'"
             :class="[
-              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'accounting' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'accounting' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
             ]"
           >
             <span>Accounting</span>
@@ -483,8 +483,8 @@ const getTypeBadge = (type) => {
             type="button"
             @click="activeTab = 'contacts'"
             :class="[
-              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'contacts' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
+              'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'contacts' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
             ]"
           >
             <span>Contacts</span>
@@ -492,32 +492,32 @@ const getTypeBadge = (type) => {
 
           <Link
             :href="route('admin.settings.show', club.slug) + '#accounting'"
-            class="px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl text-sky-100 hover:text-white hover:bg-white/10"
+            class="px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80"
           >
             <span>⚙️ Settings</span>
           </Link>
         </nav>
 
-        <!-- Quick Action Buttons in Ocean Blue Bar -->
+        <!-- Quick Action Buttons in Header Bar -->
         <div class="flex items-center gap-2 px-2 py-1 shrink-0">
           <button
             type="button"
             @click="showInvoiceModal = true"
-            class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
           >
             <span>🧾 Issue Invoice</span>
           </button>
           <button
             type="button"
             @click="showBillModal = true"
-            class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+            class="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
           >
             <span>📄 + Add Bill</span>
           </button>
           <button
             type="button"
             @click="showJournalModal = true"
-            class="px-3 py-1.5 bg-white/20 hover:bg-white/35 text-white font-extrabold text-xs rounded-xl backdrop-blur-sm border border-white/30 transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+            class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
           >
             <span>📖 Post Journal</span>
           </button>
