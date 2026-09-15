@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Accounting\Account;
+use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -156,6 +158,73 @@ class AccountingService
     }
 
     /**
+     * Create Vendor Bill (Accounts Payable) & Post to Ledger
+     */
+    public function createVendorBill(Club $club, array $data): Bill
+    {
+        return DB::transaction(function () use ($club, $data) {
+            $billCount = Bill::where('club_id', $club->id)->count() + 1;
+            $billNum = $data['bill_number'] ?? 'BILL-' . date('Y') . '-' . str_pad((string) $billCount, 4, '0', STR_PAD_LEFT);
+
+            $bill = Bill::create([
+                'club_id' => $club->id,
+                'bill_number' => $billNum,
+                'vendor_name' => $data['vendor_name'],
+                'category' => $data['category'] ?? 'General Expense',
+                'amount' => $data['amount'],
+                'due_date' => $data['due_date'] ?? date('Y-m-d', strtotime('+30 days')),
+                'status' => 'unpaid',
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            // Post Ledger: Debit Expense (5000), Credit Accounts Payable (2000)
+            $expenseAcc = $this->getAccount($club, '5000');
+            $apAcc = $this->getAccount($club, '2000');
+
+            $this->postJournalEntry($club, [
+                'description' => "Vendor Bill: {$bill->vendor_name} ({$bill->bill_number})",
+                'source_type' => 'VendorBill',
+                'source_id' => $bill->id,
+                'items' => [
+                    ['account_id' => $expenseAcc->id, 'debit' => $bill->amount, 'credit' => 0, 'memo' => $bill->category],
+                    ['account_id' => $apAcc->id, 'debit' => 0, 'credit' => $bill->amount, 'memo' => 'Accounts Payable'],
+                ],
+            ]);
+
+            return $bill;
+        });
+    }
+
+    /**
+     * Mark Vendor Bill as Paid & Post Settlement Journal
+     */
+    public function markBillAsPaid(Bill $bill): void
+    {
+        if ($bill->status === 'paid') return;
+
+        DB::transaction(function () use ($bill) {
+            $bill->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
+
+            $club = $bill->club;
+            $apAcc = $this->getAccount($club, '2000');
+            $bankAcc = $this->getAccount($club, '1000');
+
+            $this->postJournalEntry($club, [
+                'description' => "Paid Vendor Bill: {$bill->vendor_name} ({$bill->bill_number})",
+                'source_type' => 'VendorBillPayment',
+                'source_id' => $bill->id,
+                'items' => [
+                    ['account_id' => $apAcc->id, 'debit' => $bill->amount, 'credit' => 0, 'memo' => 'Clear Accounts Payable'],
+                    ['account_id' => $bankAcc->id, 'debit' => 0, 'credit' => $bill->amount, 'memo' => 'Operating Bank Settlement'],
+                ],
+            ]);
+        });
+    }
+
+    /**
      * Get Overall Financial Summary KPIs
      */
     public function getFinancialSummary(Club $club): array
@@ -193,6 +262,9 @@ class AccountingService
 
         $netIncome = $totalRevenue - $totalExpenses;
 
+        $unpaidBillsTotal = (float) Bill::where('club_id', $club->id)->where('status', 'unpaid')->sum('amount');
+        $unpaidInvoicesTotal = (float) Invoice::where('club_id', $club->id)->where('status', 'unpaid')->sum('amount');
+
         return [
             'total_assets' => round($totalAssets, 2),
             'total_liabilities' => round($totalLiabilities, 2),
@@ -200,6 +272,8 @@ class AccountingService
             'total_revenue' => round($totalRevenue, 2),
             'total_expenses' => round($totalExpenses, 2),
             'net_income' => round($netIncome, 2),
+            'unpaid_bills_total' => round($unpaidBillsTotal, 2),
+            'unpaid_invoices_total' => round($unpaidInvoicesTotal, 2),
         ];
     }
 }

@@ -16,6 +16,18 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  invoices: {
+    type: Array,
+    default: () => [],
+  },
+  bills: {
+    type: Array,
+    default: () => [],
+  },
+  members: {
+    type: Array,
+    default: () => [],
+  },
   summary: {
     type: Object,
     default: () => ({
@@ -25,13 +37,19 @@ const props = defineProps({
       total_revenue: 0,
       total_expenses: 0,
       net_income: 0,
+      unpaid_bills_total: 0,
+      unpaid_invoices_total: 0,
     }),
   },
 });
 
-const activeTab = ref('overview');
+const activeTab = ref('overview'); // overview, invoices_bills, accounts, journal
+const billingSubTab = ref('invoices'); // invoices, bills
+
 const showAccountModal = ref(false);
 const showJournalModal = ref(false);
+const showInvoiceModal = ref(false);
+const showBillModal = ref(false);
 
 // New Account Form
 const accountForm = useForm({
@@ -96,6 +114,52 @@ const submitJournal = () => {
   });
 };
 
+// New Invoice Form
+const invoiceForm = useForm({
+  user_id: '',
+  title: '',
+  amount: '',
+});
+
+const submitInvoice = () => {
+  invoiceForm.post(route('admin.accounting.invoices.store', props.club.slug), {
+    onSuccess: () => {
+      showInvoiceModal.value = false;
+      invoiceForm.reset();
+    },
+  });
+};
+
+// New Vendor Bill Form
+const billForm = useForm({
+  vendor_name: '',
+  category: 'Facility & Clubhouse Maintenance',
+  amount: '',
+  due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  notes: '',
+});
+
+const submitBill = () => {
+  billForm.post(route('admin.accounting.bills.store', props.club.slug), {
+    onSuccess: () => {
+      showBillModal.value = false;
+      billForm.reset();
+    },
+  });
+};
+
+const markInvoicePaid = (id) => {
+  if (confirm('Mark this invoice as paid? This will automatically deposit funds to Operating Bank Account.')) {
+    router.post(route('admin.accounting.invoices.pay', { clubSlug: props.club.slug, id }));
+  }
+};
+
+const markBillPaid = (id) => {
+  if (confirm('Mark this vendor bill as paid? This will automatically clear Accounts Payable.')) {
+    router.post(route('admin.accounting.bills.pay', { clubSlug: props.club.slug, id }));
+  }
+};
+
 const formatCurrency = (val) => {
   const num = parseFloat(val) || 0;
   return '£' + num.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -133,23 +197,30 @@ const getTypeBadge = (type) => {
               </span>
             </div>
             <p class="text-xs text-slate-500 mt-1">
-              Double-entry general ledger, chart of accounts, automated dues posting, and balance sheet reporting.
+              Double-entry general ledger, invoices, vendor bills, chart of accounts, and financial statement reports.
             </p>
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
           <button
             type="button"
-            @click="showAccountModal = true"
-            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-xl border border-slate-200 shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+            @click="showInvoiceModal = true"
+            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
           >
-            <span>➕ New Account</span>
+            <span>🧾 Create Invoice</span>
+          </button>
+          <button
+            type="button"
+            @click="showBillModal = true"
+            class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <span>📄 Record Vendor Bill</span>
           </button>
           <button
             type="button"
             @click="showJournalModal = true"
-            class="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+            class="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
           >
             <span>📖 Post Journal Entry</span>
           </button>
@@ -203,28 +274,51 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
-      <!-- Main Navigation Tabs -->
-      <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
+      <!-- Main Section Navigation Bar -->
+      <div class="bg-white p-2 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap items-center gap-2">
         <button
           type="button"
           @click="activeTab = 'overview'"
-          :class="['px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer', activeTab === 'overview' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
+          :class="['px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2', activeTab === 'overview' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
         >
-          📈 Financial Statement Overview
+          <span>📈</span>
+          <span>Financial Overview</span>
         </button>
+
+        <button
+          type="button"
+          @click="activeTab = 'invoices_bills'"
+          :class="['px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2', activeTab === 'invoices_bills' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
+        >
+          <span>🧾</span>
+          <span>Invoices & Vendor Bills</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-200">
+            {{ invoices.length + bills.length }}
+          </span>
+        </button>
+
         <button
           type="button"
           @click="activeTab = 'accounts'"
-          :class="['px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer', activeTab === 'accounts' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
+          :class="['px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2', activeTab === 'accounts' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
         >
-          📂 Chart of Accounts ({{ accounts.length }})
+          <span>📂</span>
+          <span>Chart of Accounts</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-800">
+            {{ accounts.length }}
+          </span>
         </button>
+
         <button
           type="button"
           @click="activeTab = 'journal'"
-          :class="['px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer', activeTab === 'journal' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
+          :class="['px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2', activeTab === 'journal' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100']"
         >
-          📖 General Ledger Journal ({{ journalEntries.length }})
+          <span>📖</span>
+          <span>General Ledger Journal</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-200">
+            {{ journalEntries.length }}
+          </span>
         </button>
       </div>
 
@@ -296,7 +390,163 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
-      <!-- Tab 2: Chart of Accounts Table -->
+      <!-- Tab 2: Invoices & Vendor Bills Management -->
+      <div v-if="activeTab === 'invoices_bills'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-6 p-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <h3 class="text-lg font-black text-slate-900">Invoices & Bills Management</h3>
+            <p class="text-xs text-slate-500">Track member receivables and vendor payable obligations.</p>
+          </div>
+
+          <!-- Billing Sub-Tab Selector -->
+          <div class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl shrink-0">
+            <button
+              type="button"
+              @click="billingSubTab = 'invoices'"
+              :class="['px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', billingSubTab === 'invoices' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900']"
+            >
+              Member Invoices (A/R)
+            </button>
+            <button
+              type="button"
+              @click="billingSubTab = 'bills'"
+              :class="['px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', billingSubTab === 'bills' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900']"
+            >
+              Vendor Bills (A/P)
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 2A: Member Invoices (Accounts Receivable) -->
+        <div v-if="billingSubTab === 'invoices'" class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+              Member Invoices ({{ invoices.length }})
+            </div>
+            <button
+              type="button"
+              @click="showInvoiceModal = true"
+              class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer"
+            >
+              + Create Member Invoice
+            </button>
+          </div>
+
+          <div v-if="!invoices.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+            <span class="text-3xl block mb-2">🧾</span>
+            <span class="text-xs font-bold text-slate-700 block">No Member Invoices Found</span>
+            <span class="text-[11px] text-slate-400">Click "Create Member Invoice" to issue a new bill.</span>
+          </div>
+
+          <div v-else class="overflow-x-auto border border-slate-200 rounded-2xl">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                  <th class="py-3 px-4">Invoice #</th>
+                  <th class="py-3 px-4">Member</th>
+                  <th class="py-3 px-4">Title / Item</th>
+                  <th class="py-3 px-4">Date Issued</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4 text-right">Amount</th>
+                  <th class="py-3 px-4 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ inv.invoice_number }}</td>
+                  <td class="py-3 px-4 font-bold text-slate-900">{{ inv.recipient_name }}</td>
+                  <td class="py-3 px-4 text-slate-600">{{ inv.title }}</td>
+                  <td class="py-3 px-4 text-slate-500">{{ inv.created_at }}</td>
+                  <td class="py-3 px-4">
+                    <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
+                      {{ inv.status }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-right font-black text-slate-900 font-mono">{{ inv.formatted_amount }}</td>
+                  <td class="py-3 px-4 text-center">
+                    <button
+                      v-if="inv.status !== 'paid'"
+                      type="button"
+                      @click="markInvoicePaid(inv.id)"
+                      class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    >
+                      ✓ Mark Paid
+                    </button>
+                    <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ inv.paid_at }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 2B: Vendor Bills (Accounts Payable) -->
+        <div v-if="billingSubTab === 'bills'" class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+              Vendor Bills ({{ bills.length }})
+            </div>
+            <button
+              type="button"
+              @click="showBillModal = true"
+              class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer"
+            >
+              + Record Vendor Bill
+            </button>
+          </div>
+
+          <div v-if="!bills.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+            <span class="text-3xl block mb-2">📄</span>
+            <span class="text-xs font-bold text-slate-700 block">No Vendor Bills Recorded</span>
+            <span class="text-[11px] text-slate-400">Click "Record Vendor Bill" to log payable vendor expenses.</span>
+          </div>
+
+          <div v-else class="overflow-x-auto border border-slate-200 rounded-2xl">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                  <th class="py-3 px-4">Bill #</th>
+                  <th class="py-3 px-4">Vendor Name</th>
+                  <th class="py-3 px-4">Category</th>
+                  <th class="py-3 px-4">Due Date</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4 text-right">Amount</th>
+                  <th class="py-3 px-4 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                <tr v-for="b in bills" :key="b.id" class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ b.bill_number }}</td>
+                  <td class="py-3 px-4 font-bold text-slate-900">{{ b.vendor_name }}</td>
+                  <td class="py-3 px-4 text-slate-600">{{ b.category }}</td>
+                  <td class="py-3 px-4 text-slate-500">{{ b.due_date }}</td>
+                  <td class="py-3 px-4">
+                    <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', b.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200']">
+                      {{ b.status }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-right font-black text-slate-900 font-mono">{{ b.formatted_amount }}</td>
+                  <td class="py-3 px-4 text-center">
+                    <button
+                      v-if="b.status !== 'paid'"
+                      type="button"
+                      @click="markBillPaid(b.id)"
+                      class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    >
+                      ✓ Pay Bill
+                    </button>
+                    <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ b.paid_at }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tab 3: Chart of Accounts Table -->
       <div v-if="activeTab === 'accounts'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex items-center justify-between">
           <div>
@@ -340,7 +590,7 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
-      <!-- Tab 3: General Ledger Journal Entries -->
+      <!-- Tab 4: General Ledger Journal Entries -->
       <div v-if="activeTab === 'journal'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
         <div class="p-6 border-b border-slate-100 flex items-center justify-between">
           <div>
@@ -601,6 +851,158 @@ const getTypeBadge = (type) => {
               class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-sm disabled:opacity-50 cursor-pointer"
             >
               Post Journal Entry
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 3: Create Member Invoice -->
+    <div v-if="showInvoiceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showInvoiceModal = false">
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <h3 class="text-base font-black text-slate-900">Create Member Invoice</h3>
+          <button type="button" @click="showInvoiceModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+
+        <form @submit.prevent="submitInvoice" class="space-y-4 text-xs">
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Select Member</label>
+            <select
+              v-model="invoiceForm.user_id"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-sky-500"
+              required
+            >
+              <option value="" disabled>Select Member...</option>
+              <option v-for="m in members" :key="m.id" :value="m.id">
+                {{ m.name }} ({{ m.email }})
+              </option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Invoice Title / Description</label>
+            <input
+              v-model="invoiceForm.title"
+              type="text"
+              placeholder="e.g. Annual Boating Dues 2026"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Amount (£)</label>
+            <input
+              v-model.number="invoiceForm.amount"
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="150.00"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:border-sky-500"
+              required
+            />
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              @click="showInvoiceModal = false"
+              class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="invoiceForm.processing"
+              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+            >
+              Issue Invoice
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 4: Record Vendor Bill -->
+    <div v-if="showBillModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showBillModal = false">
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <h3 class="text-base font-black text-slate-900">Record Vendor Bill (A/P)</h3>
+          <button type="button" @click="showBillModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+
+        <form @submit.prevent="submitBill" class="space-y-4 text-xs">
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Vendor Name</label>
+            <input
+              v-model="billForm.vendor_name"
+              type="text"
+              placeholder="e.g. Boat Yard Supplies Ltd"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Expense Category</label>
+            <input
+              v-model="billForm.category"
+              type="text"
+              placeholder="e.g. Facility Maintenance"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+              required
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Amount (£)</label>
+              <input
+                v-model.number="billForm.amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder="450.00"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:border-sky-500"
+                required
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Due Date</label>
+              <input
+                v-model="billForm.due_date"
+                type="date"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Notes / Reference</label>
+            <textarea
+              v-model="billForm.notes"
+              rows="2"
+              placeholder="Optional notes or PO number..."
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500 resize-none"
+            ></textarea>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              @click="showBillModal = false"
+              class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="billForm.processing"
+              class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+            >
+              Record Bill
             </button>
           </div>
         </form>

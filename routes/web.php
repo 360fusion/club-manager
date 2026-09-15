@@ -183,6 +183,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/accounting', [\App\Http\Controllers\AccountingAdminController::class, 'index'])->name('admin.accounting.index');
     Route::post('/clubs/{clubSlug}/admin/accounting/accounts', [\App\Http\Controllers\AccountingAdminController::class, 'storeAccount'])->name('admin.accounting.accounts.store');
     Route::post('/clubs/{clubSlug}/admin/accounting/journal-entries', [\App\Http\Controllers\AccountingAdminController::class, 'storeJournalEntry'])->name('admin.accounting.journal.store');
+    Route::post('/clubs/{clubSlug}/admin/accounting/invoices', [\App\Http\Controllers\AccountingAdminController::class, 'storeInvoice'])->name('admin.accounting.invoices.store');
+    Route::post('/clubs/{clubSlug}/admin/accounting/invoices/{id}/pay', [\App\Http\Controllers\AccountingAdminController::class, 'markInvoicePaid'])->name('admin.accounting.invoices.pay');
+    Route::post('/clubs/{clubSlug}/admin/accounting/bills', [\App\Http\Controllers\AccountingAdminController::class, 'storeBill'])->name('admin.accounting.bills.store');
+    Route::post('/clubs/{clubSlug}/admin/accounting/bills/{id}/pay', [\App\Http\Controllers\AccountingAdminController::class, 'markBillPaid'])->name('admin.accounting.bills.pay');
     Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 

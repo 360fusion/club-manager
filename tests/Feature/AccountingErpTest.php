@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Accounting\Account;
+use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
 use App\Models\ClubType;
+use App\Models\Invoice;
 use App\Models\User;
 use App\Services\AccountingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -137,6 +139,8 @@ class AccountingErpTest extends TestCase
             ->has('club')
             ->has('accounts')
             ->has('journalEntries')
+            ->has('invoices')
+            ->has('bills')
             ->has('summary')
         );
     }
@@ -182,5 +186,59 @@ class AccountingErpTest extends TestCase
             'club_id' => $this->club->id,
             'description' => 'Repaired boat shed roof',
         ]);
+    }
+
+    public function test_admin_can_issue_member_invoice_and_auto_post_ledger(): void
+    {
+        $member = User::factory()->create();
+
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.invoices.store', $this->club->slug), [
+                'user_id' => $member->id,
+                'title' => 'Locker Rental 2026',
+                'amount' => 120.00,
+            ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('invoices', [
+            'club_id' => $this->club->id,
+            'user_id' => $member->id,
+            'title' => 'Locker Rental 2026',
+            'amount' => 120.00,
+            'status' => 'unpaid',
+        ]);
+
+        $arAcc = Account::where('club_id', $this->club->id)->where('code', '1200')->firstOrFail();
+        $this->assertEquals(120.00, $arAcc->balance);
+    }
+
+    public function test_admin_can_record_vendor_bill_and_pay_bill(): void
+    {
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.bills.store', $this->club->slug), [
+                'vendor_name' => 'Boat Repair Supplies Ltd',
+                'category' => 'Facility Maintenance',
+                'amount' => 350.00,
+                'due_date' => '2026-10-15',
+                'notes' => 'Invoice #SUP-8812',
+            ]);
+
+        $response->assertRedirect();
+
+        $bill = Bill::where('club_id', $this->club->id)->where('vendor_name', 'Boat Repair Supplies Ltd')->firstOrFail();
+        $this->assertEquals('unpaid', $bill->status);
+        $this->assertEquals(350.00, $bill->amount);
+
+        $apAcc = Account::where('club_id', $this->club->id)->where('code', '2000')->firstOrFail();
+        $this->assertEquals(350.00, $apAcc->balance);
+
+        // Mark Bill as Paid
+        $payResponse = $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.bills.pay', ['clubSlug' => $this->club->slug, 'id' => $bill->id]));
+
+        $payResponse->assertRedirect();
+        $this->assertEquals('paid', $bill->fresh()->status);
+        $this->assertEquals(0.00, $apAcc->fresh()->balance);
     }
 }
