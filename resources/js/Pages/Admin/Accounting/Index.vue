@@ -41,10 +41,23 @@ const props = defineProps({
       unpaid_invoices_total: 0,
     }),
   },
+  reports: {
+    type: Object,
+    default: () => ({
+      account_summary: [],
+      aged_payables: { current: 0, '1_30': 0, '31_60': 0, '61_90': 0, '90_plus': 0, total: 0, items: [] },
+      aged_receivables: { current: 0, '1_30': 0, '31_60': 0, '61_90': 0, '90_plus': 0, total: 0, items: [] },
+      balance_sheet: { assets: [], liabilities: [], equity: [], total_assets: 0, total_liabilities: 0, total_equity: 0 },
+      cash_summary: { total_cash_on_hand: 0, accounts: [] },
+      executive_summary: { net_profit_margin_pct: 0, operating_expense_ratio_pct: 0, total_cash_reserves: 0, outstanding_ar: 0, outstanding_ap: 0 },
+      profit_and_loss: { revenues: [], expenses: [], total_revenue: 0, total_expenses: 0, net_income: 0 },
+    }),
+  },
 });
 
 // Primary Blue Bar Navigation: home | sales | purchases | reporting | payroll | accounting | tax | contacts
 const activeTab = ref('home');
+const selectedReport = ref(null);
 
 const showAccountModal = ref(false);
 const showJournalModal = ref(false);
@@ -575,36 +588,424 @@ const getTypeBadge = (type) => {
 
       <!-- VIEW 4: REPORTING (Financial Statement Reports) -->
       <div v-if="activeTab === 'reporting'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
-        <div class="border-b border-slate-100 pb-4">
-          <h3 class="text-lg font-black text-slate-900">Financial Reports & Statements</h3>
-          <p class="text-xs text-slate-500">Executive financial statements and trial balance analysis.</p>
+        <div class="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-black text-slate-900">Financial Reports & Statements</h3>
+            <p class="text-xs text-slate-500">Official double-entry financial statements and accounting reports.</p>
+          </div>
+          <button
+            v-if="selectedReport"
+            type="button"
+            @click="selectedReport = null"
+            class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer self-start sm:self-auto flex items-center gap-1"
+          >
+            ← Back to All Reports
+          </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
-            <span class="text-2xl block">📄</span>
-            <h4 class="font-extrabold text-slate-900 text-sm">Profit & Loss Statement</h4>
-            <p class="text-xs text-slate-500">Detailed breakdown of club revenue vs operating expenses.</p>
-            <div class="pt-2">
-              <span class="text-xs font-bold text-sky-700">Net Surplus: {{ formatCurrency(summary.net_income) }}</span>
+        <!-- 7 Report Grid Cards Selection -->
+        <div v-if="!selectedReport" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- 1. Account Summary -->
+          <div @click="selectedReport = 'account_summary'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">📋</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-slate-200 group-hover:bg-sky-200 group-hover:text-sky-900 px-2 py-0.5 rounded-full text-slate-700">General Ledger</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-sky-800">Account Summary</h4>
+              <p class="text-xs text-slate-500 mt-1">Full activity debit/credit summary across chart of accounts.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-sky-700">
+              <span>{{ reports.account_summary ? reports.account_summary.length : 0 }} Accounts</span>
+              <span>View Report →</span>
             </div>
           </div>
 
-          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
-            <span class="text-2xl block">⚖️</span>
-            <h4 class="font-extrabold text-slate-900 text-sm">Balance Sheet Statement</h4>
-            <p class="text-xs text-slate-500">Total assets, liabilities, and retained equity ledger.</p>
-            <div class="pt-2">
-              <span class="text-xs font-bold text-emerald-700">Assets: {{ formatCurrency(summary.total_assets) }}</span>
+          <!-- 2. Aged Payables Summary -->
+          <div @click="selectedReport = 'aged_payables'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">📉</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">Payables</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-sky-800">Aged Payables Summary</h4>
+              <p class="text-xs text-slate-500 mt-1">Outstanding vendor bills grouped by 0-30, 31-60, 61-90, 90+ days.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-amber-700">
+              <span>Total: {{ formatCurrency(reports.aged_payables ? reports.aged_payables.total : 0) }}</span>
+              <span>View Report →</span>
             </div>
           </div>
 
-          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
-            <span class="text-2xl block">📊</span>
-            <h4 class="font-extrabold text-slate-900 text-sm">General Ledger Trial Balance</h4>
-            <p class="text-xs text-slate-500">Full list of debit and credit balances per account code.</p>
-            <div class="pt-2">
-              <span class="text-xs font-bold text-purple-700">{{ accounts.length }} Active Accounts</span>
+          <!-- 3. Aged Receivables Summary -->
+          <div @click="selectedReport = 'aged_receivables'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">📈</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Receivables</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-sky-800">Aged Receivables Summary</h4>
+              <p class="text-xs text-slate-500 mt-1">Outstanding member dues & invoices grouped by aging buckets.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-emerald-700">
+              <span>Total: {{ formatCurrency(reports.aged_receivables ? reports.aged_receivables.total : 0) }}</span>
+              <span>View Report →</span>
+            </div>
+          </div>
+
+          <!-- 4. Balance Sheet -->
+          <div @click="selectedReport = 'balance_sheet'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">⚖️</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Statement</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-sky-800">Balance Sheet</h4>
+              <p class="text-xs text-slate-500 mt-1">Assets, liabilities, and retained club equity balance statement.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-purple-700">
+              <span>Assets: {{ formatCurrency(summary.total_assets) }}</span>
+              <span>View Report →</span>
+            </div>
+          </div>
+
+          <!-- 5. Cash Summary -->
+          <div @click="selectedReport = 'cash_summary'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">💵</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full">Cash Flow</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-sky-800">Cash Summary</h4>
+              <p class="text-xs text-slate-500 mt-1">Net cash position in bank and petty cash operating accounts.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-sky-700">
+              <span>Cash: {{ formatCurrency(reports.cash_summary ? reports.cash_summary.total_cash_on_hand : 0) }}</span>
+              <span>View Report →</span>
+            </div>
+          </div>
+
+          <!-- 6. Executive Summary -->
+          <div @click="selectedReport = 'executive_summary'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">📊</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">KPI Ratios</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-sky-800">Executive Summary</h4>
+              <p class="text-xs text-slate-500 mt-1">Key financial performance metrics, profit margins & ratios.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-indigo-700">
+              <span>Margin: {{ reports.executive_summary ? reports.executive_summary.net_profit_margin_pct : 0 }}%</span>
+              <span>View Report →</span>
+            </div>
+          </div>
+
+          <!-- 7. Profit and Loss -->
+          <div @click="selectedReport = 'profit_and_loss'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">🧾</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">P&L</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-sky-800">Profit and Loss (P&L)</h4>
+              <p class="text-xs text-slate-500 mt-1">Detailed revenue income minus operating expenses statement.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-emerald-700">
+              <span>Net: {{ formatCurrency(summary.net_income) }}</span>
+              <span>View Report →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Report Views -->
+        <div v-else class="space-y-6">
+          <!-- Report 1: Account Summary Detail -->
+          <div v-if="selectedReport === 'account_summary'" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-base font-extrabold text-slate-900">Account Summary Report</h4>
+              <span class="text-xs font-semibold text-slate-400">All Active Accounts</span>
+            </div>
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase">
+                    <th class="py-3 px-4">Code</th>
+                    <th class="py-3 px-4">Account Name</th>
+                    <th class="py-3 px-4">Type</th>
+                    <th class="py-3 px-4 text-right">Total Debit (£)</th>
+                    <th class="py-3 px-4 text-right">Total Credit (£)</th>
+                    <th class="py-3 px-4 text-right">Net Balance (£)</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-semibold text-slate-700">
+                  <tr v-for="acc in reports.account_summary" :key="acc.code" class="hover:bg-slate-50">
+                    <td class="py-2.5 px-4 font-mono font-bold text-slate-900">{{ acc.code }}</td>
+                    <td class="py-2.5 px-4 font-bold text-slate-900">{{ acc.name }}</td>
+                    <td class="py-2.5 px-4">
+                      <span :class="['px-2 py-0.5 rounded text-[10px] font-black uppercase border', getTypeBadge(acc.type)]">
+                        {{ acc.type }}
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-4 text-right font-mono">{{ formatCurrency(acc.total_debit) }}</td>
+                    <td class="py-2.5 px-4 text-right font-mono">{{ formatCurrency(acc.total_credit) }}</td>
+                    <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900">{{ formatCurrency(acc.net_balance) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Report 2: Aged Payables Summary Detail -->
+          <div v-if="selectedReport === 'aged_payables'" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-base font-extrabold text-slate-900">Aged Payables Summary</h4>
+              <span class="text-xs font-semibold text-amber-700 font-mono">Total Outstanding: {{ formatCurrency(reports.aged_payables.total) }}</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs">
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">Current</span>
+                <span class="font-black text-slate-800 text-sm block">{{ formatCurrency(reports.aged_payables.current) }}</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">1 - 30 Days</span>
+                <span class="font-black text-amber-700 text-sm block">{{ formatCurrency(reports.aged_payables['1_30']) }}</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">31 - 60 Days</span>
+                <span class="font-black text-amber-800 text-sm block">{{ formatCurrency(reports.aged_payables['31_60']) }}</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">61 - 90 Days</span>
+                <span class="font-black text-rose-700 text-sm block">{{ formatCurrency(reports.aged_payables['61_90']) }}</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">90+ Days</span>
+                <span class="font-black text-rose-900 text-sm block">{{ formatCurrency(reports.aged_payables['90_plus']) }}</span>
+              </div>
+            </div>
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase">
+                    <th class="py-3 px-4">Bill #</th>
+                    <th class="py-3 px-4">Vendor Name</th>
+                    <th class="py-3 px-4">Due Date</th>
+                    <th class="py-3 px-4">Aging Bucket</th>
+                    <th class="py-3 px-4 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-semibold text-slate-700">
+                  <tr v-if="!reports.aged_payables.items.length">
+                    <td colspan="5" class="py-6 text-center text-slate-400">No outstanding unpaid vendor bills.</td>
+                  </tr>
+                  <tr v-for="b in reports.aged_payables.items" :key="b.bill_number" class="hover:bg-slate-50">
+                    <td class="py-2.5 px-4 font-mono font-bold text-slate-900">{{ b.bill_number }}</td>
+                    <td class="py-2.5 px-4 font-bold text-slate-900">{{ b.vendor_name }}</td>
+                    <td class="py-2.5 px-4 text-slate-500">{{ b.due_date }}</td>
+                    <td class="py-2.5 px-4">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200">
+                        {{ b.bucket }}
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900">{{ formatCurrency(b.amount) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Report 3: Aged Receivables Summary Detail -->
+          <div v-if="selectedReport === 'aged_receivables'" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-base font-extrabold text-slate-900">Aged Receivables Summary</h4>
+              <span class="text-xs font-semibold text-emerald-700 font-mono">Total Outstanding: {{ formatCurrency(reports.aged_receivables.total) }}</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs">
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">Current</span>
+                <span class="font-black text-slate-800 text-sm block">{{ formatCurrency(reports.aged_receivables.current) }}</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">1 - 30 Days</span>
+                <span class="font-black text-emerald-700 text-sm block">{{ formatCurrency(reports.aged_receivables['1_30']) }}</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">31 - 60 Days</span>
+                <span class="font-black text-amber-700 text-sm block">{{ formatCurrency(reports.aged_receivables['31_60']) }}</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">61 - 90 Days</span>
+                <span class="font-black text-rose-700 text-sm block">{{ formatCurrency(reports.aged_receivables['61_90']) }}</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-400 block uppercase">90+ Days</span>
+                <span class="font-black text-rose-900 text-sm block">{{ formatCurrency(reports.aged_receivables['90_plus']) }}</span>
+              </div>
+            </div>
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase">
+                    <th class="py-3 px-4">Invoice #</th>
+                    <th class="py-3 px-4">Member Name</th>
+                    <th class="py-3 px-4">Date Issued</th>
+                    <th class="py-3 px-4">Aging Bucket</th>
+                    <th class="py-3 px-4 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-semibold text-slate-700">
+                  <tr v-if="!reports.aged_receivables.items.length">
+                    <td colspan="5" class="py-6 text-center text-slate-400">No outstanding unpaid member invoices.</td>
+                  </tr>
+                  <tr v-for="inv in reports.aged_receivables.items" :key="inv.invoice_number" class="hover:bg-slate-50">
+                    <td class="py-2.5 px-4 font-mono font-bold text-slate-900">{{ inv.invoice_number }}</td>
+                    <td class="py-2.5 px-4 font-bold text-slate-900">{{ inv.recipient_name }}</td>
+                    <td class="py-2.5 px-4 text-slate-500">{{ inv.created_at }}</td>
+                    <td class="py-2.5 px-4">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        {{ inv.bucket }}
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900">{{ formatCurrency(inv.amount) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Report 4: Balance Sheet Detail -->
+          <div v-if="selectedReport === 'balance_sheet'" class="space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h4 class="text-base font-extrabold text-slate-900">Balance Sheet Statement</h4>
+              <span class="text-xs font-extrabold text-purple-700 font-mono">Assets = Liabilities + Equity</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+              <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 space-y-3">
+                <span class="font-extrabold text-emerald-900 text-sm block">Assets</span>
+                <div class="space-y-1.5">
+                  <div v-for="a in reports.balance_sheet.assets" :key="a.code" class="flex justify-between border-b border-emerald-100 pb-1">
+                    <span class="font-semibold text-slate-700">{{ a.code }} - {{ a.name }}</span>
+                    <span class="font-mono font-bold">{{ formatCurrency(a.balance) }}</span>
+                  </div>
+                </div>
+                <div class="pt-2 flex justify-between font-black text-emerald-900 text-sm border-t border-emerald-200">
+                  <span>Total Assets</span>
+                  <span>{{ formatCurrency(reports.balance_sheet.total_assets) }}</span>
+                </div>
+              </div>
+
+              <div class="bg-amber-50/50 p-4 rounded-2xl border border-amber-100 space-y-3">
+                <span class="font-extrabold text-amber-900 text-sm block">Liabilities</span>
+                <div class="space-y-1.5">
+                  <div v-for="l in reports.balance_sheet.liabilities" :key="l.code" class="flex justify-between border-b border-amber-100 pb-1">
+                    <span class="font-semibold text-slate-700">{{ l.code }} - {{ l.name }}</span>
+                    <span class="font-mono font-bold">{{ formatCurrency(l.balance) }}</span>
+                  </div>
+                </div>
+                <div class="pt-2 flex justify-between font-black text-amber-900 text-sm border-t border-amber-200">
+                  <span>Total Liabilities</span>
+                  <span>{{ formatCurrency(reports.balance_sheet.total_liabilities) }}</span>
+                </div>
+              </div>
+
+              <div class="bg-purple-50/50 p-4 rounded-2xl border border-purple-100 space-y-3">
+                <span class="font-extrabold text-purple-900 text-sm block">Club Equity</span>
+                <div class="space-y-1.5">
+                  <div v-for="e in reports.balance_sheet.equity" :key="e.code" class="flex justify-between border-b border-purple-100 pb-1">
+                    <span class="font-semibold text-slate-700">{{ e.code }} - {{ e.name }}</span>
+                    <span class="font-mono font-bold">{{ formatCurrency(e.balance) }}</span>
+                  </div>
+                </div>
+                <div class="pt-2 flex justify-between font-black text-purple-900 text-sm border-t border-purple-200">
+                  <span>Total Equity</span>
+                  <span>{{ formatCurrency(reports.balance_sheet.total_equity) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Report 5: Cash Summary Detail -->
+          <div v-if="selectedReport === 'cash_summary'" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-base font-extrabold text-slate-900">Cash & Bank Accounts Summary</h4>
+              <span class="text-xs font-black text-sky-800 font-mono">Net Cash Reserve: {{ formatCurrency(reports.cash_summary.total_cash_on_hand) }}</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div v-for="acc in reports.cash_summary.accounts" :key="acc.code" class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                <div>
+                  <span class="font-mono font-bold text-sky-700 block">{{ acc.code }}</span>
+                  <span class="font-bold text-slate-900 text-sm block">{{ acc.name }}</span>
+                </div>
+                <span class="text-base font-black font-mono text-emerald-700">{{ formatCurrency(acc.balance) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Report 6: Executive Summary Detail -->
+          <div v-if="selectedReport === 'executive_summary'" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-base font-extrabold text-slate-900">Executive Summary & Financial Ratios</h4>
+              <span class="text-xs font-semibold text-indigo-700 font-mono">Executive Financial Health</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block">Net Profit Margin</span>
+                <span class="text-xl font-black text-emerald-700 block">{{ reports.executive_summary.net_profit_margin_pct }}%</span>
+              </div>
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block">Operating Expense Ratio</span>
+                <span class="text-xl font-black text-sky-700 block">{{ reports.executive_summary.operating_expense_ratio_pct }}%</span>
+              </div>
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block">Total Receivables (A/R)</span>
+                <span class="text-xl font-black text-amber-700 block">{{ formatCurrency(reports.executive_summary.outstanding_ar) }}</span>
+              </div>
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block">Total Payables (A/P)</span>
+                <span class="text-xl font-black text-rose-700 block">{{ formatCurrency(reports.executive_summary.outstanding_ap) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Report 7: Profit & Loss Detail -->
+          <div v-if="selectedReport === 'profit_and_loss'" class="space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h4 class="text-base font-extrabold text-slate-900">Profit and Loss (Income Statement)</h4>
+              <span class="text-xs font-black font-mono" :class="reports.profit_and_loss.net_income >= 0 ? 'text-emerald-700' : 'text-rose-700'">
+                Net Income: {{ formatCurrency(reports.profit_and_loss.net_income) }}
+              </span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+              <!-- Revenue Section -->
+              <div class="bg-sky-50/50 p-4 rounded-2xl border border-sky-100 space-y-3">
+                <span class="font-extrabold text-sky-900 text-sm block">Revenues & Operating Income</span>
+                <div class="space-y-1.5">
+                  <div v-for="r in reports.profit_and_loss.revenues" :key="r.code" class="flex justify-between border-b border-sky-100 pb-1">
+                    <span class="font-semibold text-slate-700">{{ r.code }} - {{ r.name }}</span>
+                    <span class="font-mono font-bold">{{ formatCurrency(r.amount) }}</span>
+                  </div>
+                </div>
+                <div class="pt-2 flex justify-between font-black text-sky-900 text-sm border-t border-sky-200">
+                  <span>Total Revenue</span>
+                  <span>{{ formatCurrency(reports.profit_and_loss.total_revenue) }}</span>
+                </div>
+              </div>
+
+              <!-- Expense Section -->
+              <div class="bg-rose-50/50 p-4 rounded-2xl border border-rose-100 space-y-3">
+                <span class="font-extrabold text-rose-900 text-sm block">Operating Expenses</span>
+                <div class="space-y-1.5">
+                  <div v-for="ex in reports.profit_and_loss.expenses" :key="ex.code" class="flex justify-between border-b border-rose-100 pb-1">
+                    <span class="font-semibold text-slate-700">{{ ex.code }} - {{ ex.name }}</span>
+                    <span class="font-mono font-bold">{{ formatCurrency(ex.amount) }}</span>
+                  </div>
+                </div>
+                <div class="pt-2 flex justify-between font-black text-rose-900 text-sm border-t border-rose-200">
+                  <span>Total Expenses</span>
+                  <span>{{ formatCurrency(reports.profit_and_loss.total_expenses) }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

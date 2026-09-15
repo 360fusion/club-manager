@@ -276,4 +276,173 @@ class AccountingService
             'unpaid_invoices_total' => round($unpaidInvoicesTotal, 2),
         ];
     }
+
+    /**
+     * Get detailed financial report breakdown for the 7 standard ERP reports
+     */
+    public function getReportsData(Club $club): array
+    {
+        $this->seedDefaultAccounts($club);
+        $summary = $this->getFinancialSummary($club);
+        $accounts = Account::where('club_id', $club->id)->orderBy('code')->get();
+
+        // 1. Account Summary
+        $accountSummary = $accounts->map(function ($acc) {
+            $debits = (float) DB::table('accounting_journal_items')
+                ->join('accounting_journal_entries', 'accounting_journal_entries.id', '=', 'accounting_journal_items.journal_entry_id')
+                ->where('accounting_journal_entries.club_id', $acc->club_id)
+                ->where('accounting_journal_items.account_id', $acc->id)
+                ->sum('debit');
+
+            $credits = (float) DB::table('accounting_journal_items')
+                ->join('accounting_journal_entries', 'accounting_journal_entries.id', '=', 'accounting_journal_items.journal_entry_id')
+                ->where('accounting_journal_entries.club_id', $acc->club_id)
+                ->where('accounting_journal_items.account_id', $acc->id)
+                ->sum('credit');
+
+            return [
+                'code' => $acc->code,
+                'name' => $acc->name,
+                'type' => $acc->type,
+                'total_debit' => round($debits, 2),
+                'total_credit' => round($credits, 2),
+                'net_balance' => round($acc->balance, 2),
+            ];
+        });
+
+        // 2. Aged Payables Summary
+        $bills = Bill::where('club_id', $club->id)->where('status', 'unpaid')->get();
+        $agedPayables = [
+            'current' => 0.0,
+            '1_30' => 0.0,
+            '31_60' => 0.0,
+            '61_90' => 0.0,
+            '90_plus' => 0.0,
+            'total' => 0.0,
+            'items' => [],
+        ];
+
+        foreach ($bills as $b) {
+            $daysOverdue = max(0, (int) now()->diffInDays($b->due_date, false) * -1);
+            $amt = (float) $b->amount;
+            $agedPayables['total'] += $amt;
+
+            if ($daysOverdue === 0) {
+                $agedPayables['current'] += $amt;
+                $bucket = 'Current';
+            } elseif ($daysOverdue <= 30) {
+                $agedPayables['1_30'] += $amt;
+                $bucket = '1 - 30 Days';
+            } elseif ($daysOverdue <= 60) {
+                $agedPayables['31_60'] += $amt;
+                $bucket = '31 - 60 Days';
+            } elseif ($daysOverdue <= 90) {
+                $agedPayables['61_90'] += $amt;
+                $bucket = '61 - 90 Days';
+            } else {
+                $agedPayables['90_plus'] += $amt;
+                $bucket = '90+ Days';
+            }
+
+            $agedPayables['items'][] = [
+                'bill_number' => $b->bill_number,
+                'vendor_name' => $b->vendor_name,
+                'due_date' => $b->due_date->format('d M Y'),
+                'days_overdue' => $daysOverdue,
+                'bucket' => $bucket,
+                'amount' => $amt,
+            ];
+        }
+
+        // 3. Aged Receivables Summary
+        $invoices = Invoice::where('club_id', $club->id)->where('status', 'unpaid')->with('user')->get();
+        $agedReceivables = [
+            'current' => 0.0,
+            '1_30' => 0.0,
+            '31_60' => 0.0,
+            '61_90' => 0.0,
+            '90_plus' => 0.0,
+            'total' => 0.0,
+            'items' => [],
+        ];
+
+        foreach ($invoices as $inv) {
+            $daysOverdue = max(0, (int) now()->diffInDays($inv->created_at->addDays(30), false) * -1);
+            $amt = (float) $inv->amount;
+            $agedReceivables['total'] += $amt;
+
+            if ($daysOverdue === 0) {
+                $agedReceivables['current'] += $amt;
+                $bucket = 'Current';
+            } elseif ($daysOverdue <= 30) {
+                $agedReceivables['1_30'] += $amt;
+                $bucket = '1 - 30 Days';
+            } elseif ($daysOverdue <= 60) {
+                $agedReceivables['31_60'] += $amt;
+                $bucket = '31 - 60 Days';
+            } elseif ($daysOverdue <= 90) {
+                $agedReceivables['61_90'] += $amt;
+                $bucket = '61 - 90 Days';
+            } else {
+                $agedReceivables['90_plus'] += $amt;
+                $bucket = '90+ Days';
+            }
+
+            $agedReceivables['items'][] = [
+                'invoice_number' => $inv->invoice_number,
+                'recipient_name' => $inv->user ? $inv->user->name : 'Member',
+                'created_at' => $inv->created_at->format('d M Y'),
+                'days_overdue' => $daysOverdue,
+                'bucket' => $bucket,
+                'amount' => $amt,
+            ];
+        }
+
+        // 4. Balance Sheet Summary
+        $balanceSheet = [
+            'assets' => $accounts->where('type', 'asset')->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
+            'liabilities' => $accounts->where('type', 'liability')->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
+            'equity' => $accounts->where('type', 'equity')->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
+            'total_assets' => $summary['total_assets'],
+            'total_liabilities' => $summary['total_liabilities'],
+            'total_equity' => $summary['total_equity'],
+        ];
+
+        // 5. Cash Summary
+        $cashAccounts = $accounts->whereIn('code', ['1000', '1100']);
+        $cashSummary = [
+            'total_cash_on_hand' => round($cashAccounts->sum('balance'), 2),
+            'accounts' => $cashAccounts->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
+        ];
+
+        // 6. Executive Summary
+        $grossMarginPct = $summary['total_revenue'] > 0 ? round((($summary['total_revenue'] - $summary['total_expenses']) / $summary['total_revenue']) * 100, 1) : 0;
+        $operatingRatio = $summary['total_revenue'] > 0 ? round(($summary['total_expenses'] / $summary['total_revenue']) * 100, 1) : 0;
+        $execSummary = [
+            'net_profit_margin_pct' => $grossMarginPct,
+            'operating_expense_ratio_pct' => $operatingRatio,
+            'total_cash_reserves' => $cashSummary['total_cash_on_hand'],
+            'outstanding_ar' => $agedReceivables['total'],
+            'outstanding_ap' => $agedPayables['total'],
+        ];
+
+        // 7. Profit and Loss
+        $profitAndLoss = [
+            'revenues' => $accounts->where('type', 'revenue')->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'amount' => round($a->balance, 2)]),
+            'expenses' => $accounts->where('type', 'expense')->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'amount' => round($a->balance, 2)]),
+            'total_revenue' => $summary['total_revenue'],
+            'total_expenses' => $summary['total_expenses'],
+            'net_income' => $summary['net_income'],
+        ];
+
+        return [
+            'account_summary' => $accountSummary,
+            'aged_payables' => $agedPayables,
+            'aged_receivables' => $agedReceivables,
+            'balance_sheet' => $balanceSheet,
+            'cash_summary' => $cashSummary,
+            'executive_summary' => $execSummary,
+            'profit_and_loss' => $profitAndLoss,
+        ];
+    }
 }

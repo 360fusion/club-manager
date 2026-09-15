@@ -105,6 +105,7 @@ class AccountingAdminController extends Controller
             ->get(['id', 'name', 'email']);
 
         $summary = $this->accountingService->getFinancialSummary($club);
+        $reports = $this->accountingService->getReportsData($club);
 
         return Inertia::render('Admin/Accounting/Index', [
             'club' => [
@@ -118,6 +119,7 @@ class AccountingAdminController extends Controller
             'bills' => $bills,
             'members' => $members,
             'summary' => $summary,
+            'reports' => $reports,
         ]);
     }
 
