@@ -280,7 +280,7 @@ const formatCurrency = (val) => {
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
               <div class="bg-white p-3 rounded-xl border-2 border-amber-200/80 shadow-xs">
                 <div class="text-[10px] uppercase font-black text-slate-600">Total Meals Prepared</div>
-                <div class="text-xl font-black text-slate-900">{{ calcTotalMeals }} plates</div>
+                <div class="text-xl font-black text-slate-900">{{ calcTotalMeals }} {{ calcTotalMeals === 1 ? 'meal' : 'meals' }}</div>
               </div>
               <div class="bg-white p-3 rounded-xl border-2 border-amber-200/80 shadow-xs">
                 <div class="text-[10px] uppercase font-black text-slate-600">Gross Dining Revenue</div>
