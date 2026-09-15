@@ -237,6 +237,21 @@ const duplicateMeeting = (id) => {
           </div>
 
           <div class="flex items-center gap-2.5 self-start md:self-auto">
+            <div v-if="String(meeting.meeting_date).split('T')[0] <= todayStr" class="relative group">
+              <Link
+                :href="route('admin.meetings.financial_return.show', { clubSlug: club.slug, id: meeting.id })"
+                title="Financial Return & Dining Calculator"
+                aria-label="Financial Return & Dining Calculator"
+                class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+              >
+                <span>💰 Financial Return</span>
+              </Link>
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+                Meeting Financial Return & Dining Calculator
+                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
+
             <div class="relative group">
               <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" title="Edit Summons Details" aria-label="Edit Summons Details" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all flex items-center gap-1">
                 📜 Edit Summons

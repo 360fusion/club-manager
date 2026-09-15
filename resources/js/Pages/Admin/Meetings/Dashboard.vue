@@ -119,6 +119,14 @@ const formattedMeetingDate = computed(() => {
   }
   return props.meeting.meeting_date;
 });
+
+const todayStr = new Date().toISOString().split('T')[0];
+
+const isPastMeeting = computed(() => {
+  if (!props.meeting?.meeting_date) return false;
+  const meetingDateStr = String(props.meeting.meeting_date).split('T')[0];
+  return meetingDateStr <= todayStr;
+});
 </script>
 
 <template>
@@ -142,7 +150,7 @@ const formattedMeetingDate = computed(() => {
 
         <div class="flex flex-col items-end gap-2.5 shrink-0">
           <div class="flex items-center gap-2.5 flex-wrap justify-end">
-            <div class="relative group">
+            <div v-if="isPastMeeting || meeting.financial_return" class="relative group">
               <Link
                 :href="route('admin.meetings.financial_return.show', { clubSlug: club.slug, id: meeting.id })"
                 title="Open Financial Return & Dining Calculator Page"
