@@ -132,7 +132,7 @@ class MemberProfile extends Component
         $club = Club::where('slug', $this->clubSlug)->firstOrFail();
         return Member::where('club_id', $club->id)
             ->where('id', $this->memberId)
-            ->with(['club', 'user', 'customerAccount'])
+            ->with(['club', 'user', 'customerAccount', 'subscriptionTier', 'subscriptions.tier'])
             ->firstOrFail();
     }
 

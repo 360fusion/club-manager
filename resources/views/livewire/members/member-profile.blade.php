@@ -253,22 +253,81 @@
 
     <!-- Tab 3: Finances & Subscriptions -->
     @if($activeTab === 'finances')
-        <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4 text-xs">
-            <h3 class="text-sm font-black text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-                <span>💳</span>
-                <span>Annual Subscription &amp; Dues Snapshot</span>
+        <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 text-xs">
+            <h3 class="text-sm font-black text-slate-900 border-b border-slate-100 pb-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span>💳</span>
+                    <span>Annual Subscription &amp; Dues Ledger</span>
+                </div>
+                <a href="{{ route('admin.club_acc.subscriptions.index', ['clubSlug' => $club->slug]) }}" class="text-amber-600 hover:underline font-bold text-xs">Manage All Dues →</a>
             </h3>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assigned Fee Tier</span>
+                    <span class="text-base font-black text-slate-900 block">
+                        {{ $member->subscriptionTier ? $member->subscriptionTier->name : 'Standard Lodge Dues' }}
+                    </span>
+                    @if($member->subscriptionTier)
+                        <span class="text-[10px] text-slate-500 block">£{{ number_format($member->subscriptionTier->annual_amount, 2) }} / year</span>
+                    @endif
+                </div>
+
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Annual Dues Override</span>
-                    <span class="text-xl font-black text-slate-900 block">
-                        {{ $member->annual_dues_override ? '£' . number_format($member->annual_dues_override, 2) : 'Standard Lodge Dues' }}
+                    <span class="text-base font-black text-slate-900 block">
+                        {{ $member->annual_dues_override ? '£' . number_format($member->annual_dues_override, 2) : 'None (Standard Rate)' }}
                     </span>
                 </div>
-                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-1">
-                    <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Subscription Status</span>
-                    <span class="text-xl font-black text-emerald-950 block">Clear / Up to Date</span>
+
+                @php
+                    $latestSub = $member->subscriptions->sortByDesc('billing_year')->first();
+                    $isClear = !$latestSub || !$latestSub->status->isOutstanding();
+                @endphp
+                <div class="p-4 {{ $isClear ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : 'bg-amber-50 border-amber-200 text-amber-950' }} border rounded-2xl space-y-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider block">Subscription Status</span>
+                    <span class="text-base font-black block">
+                        {{ $latestSub ? $latestSub->status->label() : 'No Dues Recorded' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Member Subscriptions History Table -->
+            <div class="space-y-3 pt-2">
+                <h4 class="font-black text-slate-800 text-xs">Subscription Invoices &amp; Payment History:</h4>
+                <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                                <th class="py-2.5 px-3">Billing Year</th>
+                                <th class="py-2.5 px-3">Invoice Ref</th>
+                                <th class="py-2.5 px-3 text-right">Amount Due</th>
+                                <th class="py-2.5 px-3 text-right">Amount Paid</th>
+                                <th class="py-2.5 px-3">Due Date</th>
+                                <th class="py-2.5 px-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            @forelse($member->subscriptions->sortByDesc('billing_year') as $sub)
+                                <tr>
+                                    <td class="py-2.5 px-3 font-bold text-slate-900">{{ $sub->billing_year }} / {{ $sub->billing_year + 1 }}</td>
+                                    <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">{{ $sub->invoice_reference ?: '—' }}</td>
+                                    <td class="py-2.5 px-3 text-right font-semibold">£{{ number_format($sub->amount_due, 2) }}</td>
+                                    <td class="py-2.5 px-3 text-right font-bold text-emerald-700">£{{ number_format($sub->amount_paid, 2) }}</td>
+                                    <td class="py-2.5 px-3 text-slate-600">{{ $sub->due_date ? $sub->due_date->format('d M Y') : '—' }}</td>
+                                    <td class="py-2.5 px-3">
+                                        <span class="px-2 py-0.5 text-[9px] font-extrabold rounded-full border {{ $sub->status->badgeClasses() }}">
+                                            {{ $sub->status->label() }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="py-4 text-center text-slate-400 italic">No subscription invoices recorded for this member.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

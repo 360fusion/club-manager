@@ -46,6 +46,10 @@ class AppServiceProvider extends ServiceProvider
                 'candidates.candidate-pipeline',
                 \App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline::class
             );
+            Livewire::component(
+                'subscriptions.subscription-index',
+                \App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex::class
+            );
         }
 
         if (class_exists(Cashier::class)) {

@@ -22,6 +22,7 @@ class Member extends Model
         'club_id',
         'user_id',
         'customer_account_id',
+        'subscription_tier_id',
         'title',
         'first_name',
         'last_name',
@@ -130,5 +131,15 @@ class Member extends Model
     public function customerAccount(): BelongsTo
     {
         return $this->belongsTo(AccountingContact::class, 'customer_account_id');
+    }
+
+    public function subscriptionTier(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionTier::class, 'subscription_tier_id');
+    }
+
+    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MemberSubscription::class, 'member_id');
     }
 }
