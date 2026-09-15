@@ -60,7 +60,7 @@
         <!-- ================================================================= -->
         <!-- COLUMN 1 (Left Rail, 3 Cols): Meeting Agenda & Pacing             -->
         <!-- ================================================================= -->
-        <div class="lg:col-span-3 space-y-4">
+        <div class="col-span-12 lg:col-span-3 space-y-4">
             <!-- Agenda Items Panel -->
             <div class="bg-white rounded-3xl border border-slate-200 p-4 shadow-sm space-y-3">
                 <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
@@ -193,7 +193,7 @@
         <!-- ================================================================= -->
         <!-- COLUMN 2 (Center, 6 Cols): Distraction-Free Rich Note Editor      -->
         <!-- ================================================================= -->
-        <div class="lg:col-span-6 space-y-3">
+        <div class="col-span-12 lg:col-span-6 space-y-3 min-w-0">
             <!-- Insertion Toolbar -->
             <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div class="flex items-center gap-1.5 flex-wrap">
@@ -320,7 +320,7 @@
         <!-- ================================================================= -->
         <!-- COLUMN 3 (Right Rail, 3 Cols): Consolidated Live Extraction Tab   -->
         <!-- ================================================================= -->
-        <div class="lg:col-span-3 space-y-4">
+        <div class="col-span-12 lg:col-span-3 space-y-4">
             <div class="bg-white rounded-3xl border border-slate-200 p-4 shadow-sm space-y-3.5">
                 <!-- Navigation Tabs -->
                 <div class="flex items-center bg-slate-100 p-1 rounded-2xl text-xs font-bold text-slate-600">
