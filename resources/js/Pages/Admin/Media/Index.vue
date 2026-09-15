@@ -27,6 +27,8 @@ const filterType = ref('all');
 const filterExtension = ref('all');
 const filterDate = ref('all');
 const sortBy = ref('newest');
+const isSavingDetails = ref(false);
+const saveSuccessMsg = ref('');
 
 const availableExtensions = ref([]);
 const availableMonths = ref([]);
@@ -216,8 +218,105 @@ const copyUrl = (item) => {
   }, 3000);
 };
 
-const isSavingDetails = ref(false);
-const saveSuccessMsg = ref('');
+const selectedMediaIds = ref([]);
+const targetBulkFolder = ref('images');
+const assetUsages = ref([]);
+const isLoadingUsages = ref(false);
+
+const showCropModal = ref(false);
+const cropAspect = ref('free'); // 'free', '1:1', '16:9', '4:3'
+const cropRotation = ref(0);
+const isCropping = ref(false);
+const cropCanvasRef = ref(null);
+const cropSourceImageRef = ref(null);
+
+const toggleSelectItem = (id) => {
+  if (selectedMediaIds.value.includes(id)) {
+    selectedMediaIds.value = selectedMediaIds.value.filter(i => i !== id);
+  } else {
+    selectedMediaIds.value.push(id);
+  }
+};
+
+const toggleSelectAll = () => {
+  if (selectedMediaIds.value.length === mediaItems.value.length) {
+    selectedMediaIds.value = [];
+  } else {
+    selectedMediaIds.value = mediaItems.value.map(m => m.id);
+  }
+};
+
+const handleBulkDelete = async () => {
+  if (!selectedMediaIds.value.length) return;
+  if (!confirm(`Are you sure you want to delete ${selectedMediaIds.value.length} selected files?`)) return;
+
+  try {
+    const res = await fetch(`/clubs/${props.club.slug}/admin/media/bulk-delete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ ids: selectedMediaIds.value }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      mediaItems.value = mediaItems.value.filter(m => !selectedMediaIds.value.includes(m.id));
+      selectedMediaIds.value = [];
+      copyToast.value = data.message || 'Selected files deleted successfully!';
+      setTimeout(() => { copyToast.value = ''; }, 3000);
+    }
+  } catch (err) {
+    console.error('Failed bulk delete:', err);
+  }
+};
+
+const handleBulkMove = async () => {
+  if (!selectedMediaIds.value.length) return;
+
+  try {
+    const res = await fetch(`/clubs/${props.club.slug}/admin/media/bulk-move`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        ids: selectedMediaIds.value,
+        folder: targetBulkFolder.value,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      fetchMedia();
+      selectedMediaIds.value = [];
+      copyToast.value = data.message || 'Selected files moved successfully!';
+      setTimeout(() => { copyToast.value = ''; }, 3000);
+    }
+  } catch (err) {
+    console.error('Failed bulk move:', err);
+  }
+};
+
+const fetchUsage = async (id) => {
+  assetUsages.value = [];
+  isLoadingUsages.value = true;
+  try {
+    const res = await fetch(`/clubs/${props.club.slug}/admin/media/${id}/usage`);
+    if (res.ok) {
+      const data = await res.json();
+      assetUsages.value = data.usages || [];
+    }
+  } catch (err) {
+    console.error('Failed to fetch asset usage:', err);
+  } finally {
+    isLoadingUsages.value = false;
+  }
+};
 
 const openPreview = (item) => {
   previewItem.value = {
@@ -226,6 +325,81 @@ const openPreview = (item) => {
     caption: item.caption || '',
   };
   saveSuccessMsg.value = '';
+  fetchUsage(item.id);
+};
+
+const openCropper = () => {
+  if (!previewItem.value || !isImage(previewItem.value.mime_type || previewItem.value.file_name)) return;
+  showCropModal.value = true;
+  cropAspect.value = 'free';
+  cropRotation.value = 0;
+};
+
+const applyCrop = async () => {
+  if (!cropSourceImageRef.value || !previewItem.value) return;
+  isCropping.value = true;
+
+  try {
+    const img = cropSourceImageRef.value;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let targetWidth = img.naturalWidth || img.width;
+    let targetHeight = img.naturalHeight || img.height;
+
+    // Apply aspect ratio cropping box if preset selected
+    if (cropAspect.value === '1:1') {
+      const side = Math.min(targetWidth, targetHeight);
+      targetWidth = side;
+      targetHeight = side;
+    } else if (cropAspect.value === '16:9') {
+      targetHeight = Math.round(targetWidth * (9 / 16));
+    } else if (cropAspect.value === '4:3') {
+      targetHeight = Math.round(targetWidth * (3 / 4));
+    }
+
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    if (cropRotation.value !== 0) {
+      ctx.translate(targetWidth / 2, targetHeight / 2);
+      ctx.rotate((cropRotation.value * Math.PI) / 180);
+      ctx.drawImage(img, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight);
+    } else {
+      ctx.drawImage(img, 0, 0, targetWidth, targetHeight, 0, 0, targetWidth, targetHeight);
+    }
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const formData = new FormData();
+      formData.append('file', blob, previewItem.value.file_name);
+
+      const res = await fetch(`/clubs/${props.club.slug}/admin/media/${previewItem.value.id}/crop`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': getCsrfToken(),
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.media) {
+          const idx = mediaItems.value.findIndex(m => m.id === data.media.id);
+          if (idx !== -1) mediaItems.value[idx] = data.media;
+          previewItem.value = { ...data.media };
+          showCropModal.value = false;
+          saveSuccessMsg.value = 'Image cropped and updated successfully!';
+          setTimeout(() => { saveSuccessMsg.value = ''; }, 3000);
+        }
+      }
+      isCropping.value = false;
+    }, 'image/jpeg', 0.9);
+  } catch (err) {
+    console.error('Failed to crop image:', err);
+    isCropping.value = false;
+  }
 };
 
 const saveMediaDetails = async () => {
@@ -495,6 +669,56 @@ const isImage = (mimeOrUrl) => {
             </div>
           </div>
 
+          <!-- Bulk Actions Floating Control Bar -->
+          <div v-if="selectedMediaIds.length > 0" class="p-4 bg-slate-900 text-white rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+            <div class="flex items-center gap-3">
+              <span class="px-2.5 py-1 bg-sky-500 text-white rounded-xl text-xs font-black">
+                {{ selectedMediaIds.length }} Selected
+              </span>
+              <button
+                type="button"
+                @click="toggleSelectAll"
+                class="text-xs font-bold text-slate-300 hover:text-white underline cursor-pointer"
+              >
+                {{ selectedMediaIds.length === mediaItems.length ? 'Deselect All' : 'Select All' }}
+              </button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- Target Folder Selection for Bulk Move -->
+              <div class="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
+                <span class="text-slate-400">Move to:</span>
+                <select v-model="targetBulkFolder" class="bg-transparent font-bold text-white focus:outline-none cursor-pointer">
+                  <option v-for="f in selectableFolders" :key="f.id" :value="f.id" class="bg-slate-900 text-white">{{ f.label }}</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                @click="handleBulkMove"
+                class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
+              >
+                📁 Move
+              </button>
+
+              <button
+                type="button"
+                @click="handleBulkDelete"
+                class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
+              >
+                🗑️ Delete Selected
+              </button>
+
+              <button
+                type="button"
+                @click="selectedMediaIds = []"
+                class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
+              >
+                ✕ Clear
+              </button>
+            </div>
+          </div>
+
           <!-- Upload Status / Error / Success Alerts -->
           <div v-if="uploadStatus" class="p-3.5 bg-sky-50 border border-sky-200 text-sky-800 text-xs font-bold rounded-xl flex items-center gap-2.5 animate-pulse">
             <span class="animate-spin text-sm">🔄</span>
@@ -539,7 +763,12 @@ const isImage = (mimeOrUrl) => {
               <div
                 v-for="item in mediaItems"
                 :key="item.id"
-                class="group bg-slate-50 hover:bg-slate-100/80 rounded-2xl border border-slate-200 p-3 transition-all shadow-sm hover:shadow-md flex flex-col justify-between"
+                :class="[
+                  'group rounded-2xl border p-3 transition-all shadow-sm hover:shadow-md flex flex-col justify-between relative',
+                  selectedMediaIds.includes(item.id)
+                    ? 'bg-sky-50/80 border-sky-400 ring-2 ring-sky-300'
+                    : 'bg-slate-50 hover:bg-slate-100/80 border-slate-200'
+                ]"
               >
                 <!-- Image or Icon Box -->
                 <div
@@ -555,6 +784,16 @@ const isImage = (mimeOrUrl) => {
                   <div v-else class="flex flex-col items-center justify-center space-y-1">
                     <span class="text-4xl">{{ getFileIcon(item.mime_type || item.file_name) }}</span>
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ item.file_name.split('.').pop() }}</span>
+                  </div>
+
+                  <!-- Multi-Select Checkbox -->
+                  <div class="absolute top-2 right-2 z-20" @click.stop>
+                    <input
+                      type="checkbox"
+                      :checked="selectedMediaIds.includes(item.id)"
+                      @change="toggleSelectItem(item.id)"
+                      class="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500 cursor-pointer shadow-sm"
+                    />
                   </div>
 
                   <!-- Folder Collection Tag -->
@@ -676,6 +915,41 @@ const isImage = (mimeOrUrl) => {
                 <div><span class="text-slate-400 block text-[10px]">Uploaded On:</span> <span class="text-slate-900 font-bold">{{ previewItem.created_at }}</span></div>
               </div>
             </div>
+
+            <!-- Asset Usage Tracking Section -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
+              <div class="font-extrabold text-slate-900 uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60 flex items-center justify-between">
+                <span>Asset Usage Tracking</span>
+                <span v-if="isLoadingUsages" class="animate-spin text-sky-600">🔄</span>
+                <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="assetUsages.length ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'">
+                  {{ assetUsages.length }} {{ assetUsages.length === 1 ? 'Location' : 'Locations' }}
+                </span>
+              </div>
+
+              <div v-if="isLoadingUsages" class="py-2 text-slate-400 font-semibold text-center">
+                Checking asset references across news & settings...
+              </div>
+
+              <div v-else-if="!assetUsages.length" class="py-2 text-slate-400 font-medium italic text-center">
+                This asset is not currently published on news articles or club settings.
+              </div>
+
+              <div v-else class="space-y-1.5 pt-1">
+                <div
+                  v-for="(u, idx) in assetUsages"
+                  :key="idx"
+                  class="p-2 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs"
+                >
+                  <div class="truncate pr-2">
+                    <span class="font-bold text-slate-900 block truncate">{{ u.title }}</span>
+                    <span class="text-[10px] text-slate-400 font-medium">{{ u.location }}</span>
+                  </div>
+                  <span class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 text-[10px] font-bold border border-sky-200 shrink-0">
+                    {{ u.type }}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Right Column: Editable Metadata Form -->
@@ -699,7 +973,7 @@ const isImage = (mimeOrUrl) => {
             <div class="space-y-1">
               <label class="block text-xs font-extrabold text-slate-800 flex items-center justify-between">
                 <span>Alt Text (Accessibility & SEO)</span>
-                <span class="text-[10px] text-slate-400 font-normal">Recommended for images</span>
+                <span class="text-[10px] text-sky-600 font-bold">Auto-generated from filename</span>
               </label>
               <input
                 v-model="previewItem.alt_text"
@@ -759,7 +1033,16 @@ const isImage = (mimeOrUrl) => {
 
         <!-- Modal Bottom Actions Toolbar -->
         <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100 text-xs">
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              v-if="isImage(previewItem.mime_type || previewItem.file_name)"
+              type="button"
+              @click="openCropper"
+              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>✂️ Visual Crop & Resize</span>
+            </button>
+
             <a
               :href="previewItem.original_url"
               download
@@ -785,6 +1068,97 @@ const isImage = (mimeOrUrl) => {
           </button>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Visual Image Cropper Modal -->
+    <div v-if="showCropModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto" @click="showCropModal = false">
+      <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 relative overflow-hidden" @click.stop>
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl">✂️</span>
+            <div>
+              <h3 class="text-lg font-black text-slate-900">Interactive Image Cropper & Resizer</h3>
+              <p class="text-xs text-slate-500">Apply aspect ratio cropping presets and rotation to optimize images for web publishing.</p>
+            </div>
+          </div>
+          <button type="button" @click="showCropModal = false" class="p-2 text-slate-400 hover:text-slate-700 font-bold rounded-xl text-sm">✕</button>
+        </div>
+
+        <!-- Aspect Ratio Presets Toolbar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Presets:</span>
+            <button
+              type="button"
+              @click="cropAspect = 'free'"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === 'free' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
+            >
+              Free Crop
+            </button>
+            <button
+              type="button"
+              @click="cropAspect = '1:1'"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '1:1' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
+            >
+              1:1 Square (Logo)
+            </button>
+            <button
+              type="button"
+              @click="cropAspect = '16:9'"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '16:9' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
+            >
+              16:9 Banner
+            </button>
+            <button
+              type="button"
+              @click="cropAspect = '4:3'"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '4:3' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
+            >
+              4:3 Gallery
+            </button>
+          </div>
+
+          <button
+            type="button"
+            @click="cropRotation = (cropRotation + 90) % 360"
+            class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl border border-slate-200 transition-all cursor-pointer flex items-center gap-1"
+          >
+            🔄 Rotate 90° ({{ cropRotation }}°)
+          </button>
+        </div>
+
+        <!-- Canvas / Image Preview Container -->
+        <div class="bg-slate-900 rounded-2xl p-6 flex items-center justify-center min-h-[300px] max-h-[420px] overflow-hidden relative">
+          <img
+            ref="cropSourceImageRef"
+            :src="previewItem?.original_url"
+            alt="Source image for cropping"
+            :style="{ transform: `rotate(${cropRotation}deg)` }"
+            class="max-h-[360px] max-w-full object-contain rounded shadow-lg transition-transform duration-200"
+          />
+        </div>
+
+        <!-- Cropper Action Footer -->
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          <button
+            type="button"
+            @click="showCropModal = false"
+            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            @click="applyCrop"
+            :disabled="isCropping"
+            class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+          >
+            <span v-if="isCropping" class="animate-spin text-sm">🔄</span>
+            <span v-else>✂️</span>
+            <span>{{ isCropping ? 'Cropping & Saving...' : 'Save & Apply Crop' }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </AdminLayout>

@@ -185,9 +185,17 @@ class MediaAdminController extends Controller
         // Clean filename (strip invalid characters)
         $safeName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
 
+        // Downscale large camera photos > 1920px max dimension before storing
+        $this->downscaleImageIfNeeded($uploadedFile);
+
         $media = $club->addMediaFromRequest('file')
             ->usingName($safeName)
             ->toMediaCollection($folder);
+
+        // Auto-generate human readable Alt Text from original filename
+        $autoAltText = $this->formatTitleFromFilename($originalName);
+        $media->setCustomProperty('alt_text', $autoAltText);
+        $media->save();
 
         return response()->json([
             'success' => true,
@@ -222,6 +230,142 @@ class MediaAdminController extends Controller
     }
 
     /**
+     * Crop an image media asset and save back to media collection.
+     */
+    public function crop(string $clubSlug, int $id, Request $request): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $media = $club->media()->findOrFail($id);
+
+        $request->validate([
+            'file' => 'required|file|mimes:jpg,jpeg,png,webp,gif|max:10240',
+        ]);
+
+        $collection = $media->collection_name;
+        $name = $media->name;
+        $altText = $media->getCustomProperty('alt_text', '');
+        $caption = $media->getCustomProperty('caption', '');
+
+        $media->delete();
+
+        $newMedia = $club->addMediaFromRequest('file')
+            ->usingName($name)
+            ->toMediaCollection($collection);
+
+        $newMedia->setCustomProperty('alt_text', $altText);
+        $newMedia->setCustomProperty('caption', $caption);
+        $newMedia->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Image cropped successfully.',
+            'media' => $this->transformMedia($newMedia),
+        ]);
+    }
+
+    /**
+     * Bulk delete multiple media items.
+     */
+    public function bulkDelete(string $clubSlug, Request $request): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ]);
+
+        $count = 0;
+        foreach ($request->input('ids') as $mediaId) {
+            $media = $club->media()->find($mediaId);
+            if ($media) {
+                $media->delete();
+                $count++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted {$count} " . ($count === 1 ? 'file' : 'files') . '.',
+        ]);
+    }
+
+    /**
+     * Bulk move multiple media items to a target folder / collection.
+     */
+    public function bulkMove(string $clubSlug, Request $request): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+            'folder' => 'required|string|in:logos,news,newsletters,images,galleries,documents',
+        ]);
+
+        $targetFolder = $request->input('folder');
+        $count = 0;
+
+        foreach ($request->input('ids') as $mediaId) {
+            $media = $club->media()->find($mediaId);
+            if ($media) {
+                $media->collection_name = $targetFolder;
+                $media->save();
+                $count++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully moved {$count} " . ($count === 1 ? 'file' : 'files') . " to '{$targetFolder}'.",
+        ]);
+    }
+
+    /**
+     * Check asset usage across news posts and club branding settings.
+     */
+    public function usage(string $clubSlug, int $id): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $media = $club->media()->findOrFail($id);
+
+        $url = $media->getFullUrl();
+        $filename = $media->file_name;
+        $usages = [];
+
+        // Check if used in Club Logo
+        if ($club->logo_url && (str_contains($club->logo_url, $filename) || $club->logo_url === $url)) {
+            $usages[] = [
+                'type' => 'Club Logo',
+                'title' => $club->name . ' Logo',
+                'location' => 'Club Settings',
+            ];
+        }
+
+        // Check if used in News Articles / Posts
+        $posts = \App\Models\Post::where('club_id', $club->id)->get();
+        foreach ($posts as $post) {
+            if ($post->cover_image && (str_contains($post->cover_image, $filename) || $post->cover_image === $url)) {
+                $usages[] = [
+                    'type' => 'Cover Image',
+                    'title' => $post->title,
+                    'location' => 'News Article Cover',
+                ];
+            }
+            if ($post->content && str_contains($post->content, $filename)) {
+                $usages[] = [
+                    'type' => 'Article Content',
+                    'title' => $post->title,
+                    'location' => 'News Article Body',
+                ];
+            }
+        }
+
+        return response()->json([
+            'usage_count' => count($usages),
+            'usages' => $usages,
+        ]);
+    }
+
+    /**
      * Delete a media item.
      */
     public function destroy(string $clubSlug, int $id): JsonResponse
@@ -235,6 +379,68 @@ class MediaAdminController extends Controller
             'success' => true,
             'message' => 'File deleted successfully from media library.',
         ]);
+    }
+
+    private function formatTitleFromFilename(string $filename): string
+    {
+        $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+        $clean = preg_replace('/[_\-\.]+/', ' ', $nameWithoutExt);
+        return ucwords(trim($clean));
+    }
+
+    private function downscaleImageIfNeeded($uploadedFile): void
+    {
+        $mime = $uploadedFile->getMimeType();
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'])) {
+            return;
+        }
+
+        $path = $uploadedFile->getRealPath();
+        [$width, $height] = @getimagesize($path);
+        if (!$width || !$height) {
+            return;
+        }
+
+        $maxDimension = 1920;
+        if ($width <= $maxDimension && $height <= $maxDimension) {
+            return;
+        }
+
+        if ($width >= $height) {
+            $newWidth = $maxDimension;
+            $newHeight = (int) round(($height / $width) * $maxDimension);
+        } else {
+            $newHeight = $maxDimension;
+            $newWidth = (int) round(($width / $height) * $maxDimension);
+        }
+
+        $srcImage = match ($mime) {
+            'image/jpeg' => @imagecreatefromjpeg($path),
+            'image/png'  => @imagecreatefrompng($path),
+            'image/webp' => @imagecreatefromwebp($path),
+            default      => null,
+        };
+
+        if (!$srcImage) {
+            return;
+        }
+
+        $dstImage = imagecreatetruecolor($newWidth, $newHeight);
+        if ($mime === 'image/png' || $mime === 'image/webp') {
+            imagealphablending($dstImage, false);
+            imagesavealpha($dstImage, true);
+        }
+
+        imagecopyresampled($dstImage, $srcImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+        match ($mime) {
+            'image/jpeg' => imagejpeg($dstImage, $path, 85),
+            'image/png'  => imagepng($dstImage, $path, 8),
+            'image/webp' => imagewebp($dstImage, $path, 85),
+        };
+
+        imagedestroy($srcImage);
+        imagedestroy($dstImage);
     }
 
     private function transformMedia($media): array

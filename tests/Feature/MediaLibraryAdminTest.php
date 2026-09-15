@@ -232,4 +232,89 @@ class MediaLibraryAdminTest extends TestCase
             ->assertJsonPath('media.alt_text', 'Boating team celebrating trophy victory on river Isis')
             ->assertJsonPath('media.caption', 'Oxford Boating Club crew holding trophy after winning Torpids Regatta 2026.');
     }
+
+    public function test_upload_automatically_populates_alt_text_from_filename(): void
+    {
+        $file = UploadedFile::fake()->image('oxford_boating_trophy_2026.png', 400, 400);
+
+        $response = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+                'file' => $file,
+                'folder' => 'images',
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('media.alt_text', 'Oxford Boating Trophy 2026');
+    }
+
+    public function test_admin_can_bulk_delete_media_items(): void
+    {
+        $file1 = UploadedFile::fake()->image('photo1.jpg');
+        $file2 = UploadedFile::fake()->image('photo2.jpg');
+
+        $id1 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'images'])->json('media.id');
+        $id2 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'images'])->json('media.id');
+
+        $response = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media/bulk-delete", [
+                'ids' => [$id1, $id2],
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('message', 'Successfully deleted 2 files.');
+
+        $this->assertDatabaseMissing('media', ['id' => $id1]);
+        $this->assertDatabaseMissing('media', ['id' => $id2]);
+    }
+
+    public function test_admin_can_bulk_move_media_items_to_folder(): void
+    {
+        $file1 = UploadedFile::fake()->image('logo1.png');
+        $file2 = UploadedFile::fake()->image('logo2.png');
+
+        $id1 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'logos'])->json('media.id');
+        $id2 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'logos'])->json('media.id');
+
+        $response = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media/bulk-move", [
+                'ids' => [$id1, $id2],
+                'folder' => 'news',
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('media', ['id' => $id1, 'collection_name' => 'news']);
+        $this->assertDatabaseHas('media', ['id' => $id2, 'collection_name' => 'news']);
+    }
+
+    public function test_admin_can_check_asset_usage(): void
+    {
+        $file = UploadedFile::fake()->image('club-logo.png');
+        $id = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file, 'folder' => 'logos'])->json('media.id');
+
+        $response = $this->actingAs($this->user)
+            ->getJson("/clubs/{$this->club->slug}/admin/media/{$id}/usage");
+
+        $response->assertOk()
+            ->assertJsonStructure(['usage_count', 'usages']);
+    }
+
+    public function test_admin_can_crop_image(): void
+    {
+        $file = UploadedFile::fake()->image('original.png', 800, 600);
+        $id = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file, 'folder' => 'images'])->json('media.id');
+
+        $croppedFile = UploadedFile::fake()->image('cropped.png', 400, 400);
+
+        $response = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media/{$id}/crop", [
+                'file' => $croppedFile,
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true);
+    }
 }
