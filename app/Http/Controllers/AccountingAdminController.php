@@ -386,6 +386,55 @@ class AccountingAdminController extends Controller
         ]);
     }
 
+    public function editMemberContact(string $clubSlug, int $userId): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $user = User::whereHas('clubs', fn ($q) => $q->where('clubs.id', $club->id))
+            ->where('users.id', $userId)
+            ->firstOrFail();
+
+        $contact = AccountingContact::firstOrCreate(
+            [
+                'club_id' => $club->id,
+                'user_id' => $user->id,
+            ],
+            [
+                'type' => 'person',
+                'name' => $user->name,
+                'contact_person' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone ?? null,
+                'role' => 'Club Member',
+                'is_active' => true,
+            ]
+        );
+
+        return Inertia::render('Admin/Accounting/ContactForm', [
+            'club' => [
+                'id' => $club->id,
+                'name' => $club->name,
+                'slug' => $club->slug,
+            ],
+            'contact' => [
+                'id' => $contact->id,
+                'type' => $contact->type,
+                'name' => $contact->name,
+                'contact_person' => $contact->contact_person,
+                'email' => $contact->email,
+                'phone' => $contact->phone,
+                'role' => $contact->role,
+                'tax_id' => $contact->tax_id,
+                'address_line_1' => $contact->address_line_1,
+                'address_line_2' => $contact->address_line_2,
+                'city' => $contact->city,
+                'postcode' => $contact->postcode,
+                'country' => $contact->country,
+                'notes' => $contact->notes,
+                'is_active' => $contact->is_active,
+            ],
+        ]);
+    }
+
     public function editContact(string $clubSlug, int $id): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();

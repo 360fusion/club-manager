@@ -15,6 +15,7 @@ class AccountingContact extends Model
 
     protected $fillable = [
         'club_id',
+        'user_id',
         'type',
         'name',
         'contact_person',
@@ -38,5 +39,10 @@ class AccountingContact extends Model
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class);
     }
 }

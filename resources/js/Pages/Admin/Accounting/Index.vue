@@ -1500,11 +1500,11 @@ const getTypeBadge = (type) => {
                       </Link>
                       <Link
                         v-else-if="c.kind === 'member' && c.user_id"
-                        :href="route('admin.users.show', [club.slug, c.user_id])"
-                        class="font-extrabold text-slate-900 hover:text-indigo-600 hover:underline text-left block cursor-pointer transition-colors"
-                        title="Click to view and edit member details"
+                        :href="route('admin.accounting.contacts.member.edit', [club.slug, c.user_id])"
+                        class="font-extrabold text-slate-900 hover:text-sky-700 hover:underline text-left block cursor-pointer transition-colors"
+                        title="Click to edit member accounting details"
                       >
-                        {{ c.name }} 👤
+                        {{ c.name }} ✏️
                       </Link>
                       <span v-else class="font-extrabold text-slate-900 block">{{ c.name }}</span>
                       <span v-if="c.type === 'business' && c.contact_person && c.contact_person !== c.name" class="text-[11px] text-slate-500 block">
