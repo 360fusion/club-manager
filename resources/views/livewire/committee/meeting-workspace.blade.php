@@ -1,4 +1,4 @@
-<div class="space-y-8">
+<div class="space-y-8" x-data="{ complianceModal: null }">
     <!-- Meeting Header Card -->
     <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-100 pb-6">
@@ -208,15 +208,27 @@
             <div class="space-y-6">
                 <!-- Candidate Vetting Queue (Rule 159) -->
                 <div class="space-y-3">
-                    <h3 class="font-black text-slate-900 text-sm flex items-center justify-between">
-                        <span class="flex items-center gap-2">
-                            <span>👤</span>
-                            <span>Candidate Vetting (Rule 159)</span>
-                        </span>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">👤</span>
+                            <h3 class="font-black text-slate-900 text-sm">Candidate Vetting</h3>
+                            <span class="text-[10px] font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">Rule 159</span>
+                            <button
+                                type="button"
+                                @click="complianceModal = 'vetting'"
+                                class="text-slate-400 hover:text-amber-600 transition p-0.5 rounded-full hover:bg-amber-50 cursor-pointer"
+                                title="Why is this here? Click for Rule 159 compliance explainer"
+                                aria-label="Rule 159 compliance info"
+                            >
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </button>
+                        </div>
                         <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
                             {{ count($candidates) }} Pending
                         </span>
-                    </h3>
+                    </div>
 
                     <div class="space-y-2">
                         @forelse($candidates as $cand)
@@ -244,15 +256,27 @@
 
                 <!-- Unpaid Bill Audit Queue (Rule 158) -->
                 <div class="space-y-3">
-                    <h3 class="font-black text-slate-900 text-sm flex items-center justify-between">
-                        <span class="flex items-center gap-2">
-                            <span>🔍</span>
-                            <span>Accounts Audit (Rule 158)</span>
-                        </span>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">🔍</span>
+                            <h3 class="font-black text-slate-900 text-sm">Accounts Audit</h3>
+                            <span class="text-[10px] font-semibold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">Rule 158</span>
+                            <button
+                                type="button"
+                                @click="complianceModal = 'audit'"
+                                class="text-slate-400 hover:text-indigo-600 transition p-0.5 rounded-full hover:bg-indigo-50 cursor-pointer"
+                                title="Why is this here? Click for Rule 158 compliance explainer"
+                                aria-label="Rule 158 compliance info"
+                            >
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </button>
+                        </div>
                         <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
                             {{ count($unpaid_bills) }} Bills
                         </span>
-                    </h3>
+                    </div>
 
                     <div class="space-y-2">
                         @forelse($unpaid_bills as $bill)
@@ -286,6 +310,161 @@
     <!-- Modals -->
     @livewire(\App\Domains\ClubAccounting\Livewire\Committee\Modals\CandidateVettingModal::class)
     @livewire(\App\Domains\ClubAccounting\Livewire\Committee\Modals\BillAuditModal::class)
+
+    <!-- Compliance Explainer Modal Overlay (UGLE Rule 158 & 159) -->
+    <div
+        x-show="complianceModal"
+        x-cloak
+        class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        @keydown.escape.window="complianceModal = null"
+    >
+        <div
+            @click.outside="complianceModal = null"
+            class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 space-y-5 relative text-slate-800"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        >
+            <!-- Top Right Close Button -->
+            <button
+                type="button"
+                @click="complianceModal = null"
+                class="absolute top-4 right-4 p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                title="Close explainer"
+            >
+                ✕
+            </button>
+
+            <!-- Template A: Candidate Vetting (Rule 159) -->
+            <template x-if="complianceModal === 'vetting'">
+                <div class="space-y-4">
+                    <!-- Header -->
+                    <div class="flex items-start gap-3 pr-6">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 border border-amber-200/80 flex items-center justify-center text-lg shrink-0">
+                            👤
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 tracking-tight">
+                                Candidate Vetting &amp; Approval (Rule 159)
+                            </h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full">
+                                    Statutory Summons Gate
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Blocks -->
+                    <div class="space-y-3 text-xs">
+                        <!-- Constitutional Requirement -->
+                        <div class="p-3.5 bg-amber-50/60 border border-amber-200/70 rounded-xl space-y-1">
+                            <span class="font-bold text-amber-900 block">Constitutional Requirement</span>
+                            <p class="text-amber-950/90 leading-relaxed">
+                                Under UGLE Rule 159, no candidate may be balloted for initiation or joining in open lodge without prior recommendation by the Lodge Committee and formal notice on the printed summons.
+                            </p>
+                        </div>
+
+                        <!-- Platform Workflow -->
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                            <span class="font-bold text-slate-900 block">Platform Workflow</span>
+                            <p class="text-slate-600 leading-relaxed">
+                                This gate pulls candidate records currently sitting at the <code class="px-1 py-0.5 bg-white border border-slate-200 rounded text-slate-800 font-mono text-[11px]">lodge_committee</code> stage in the Candidate Pipeline. It provides immediate access to the candidate's Form P, statutory background declarations, and reports from the informal interviewers.
+                            </p>
+                        </div>
+
+                        <!-- Downstream Impact -->
+                        <div class="p-3.5 bg-emerald-50/60 border border-emerald-200/70 rounded-xl space-y-1">
+                            <span class="font-bold text-emerald-900 block">Downstream Impact</span>
+                            <p class="text-emerald-950/90 leading-relaxed">
+                                Marking a candidate as <em>Approved</em> clears them for publication on the upcoming summons and prompts the Secretary's Summons Builder to generate the statutory ballot notice.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="pt-2 flex items-center justify-end border-t border-slate-100">
+                        <button
+                            type="button"
+                            @click="complianceModal = null"
+                            class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition"
+                        >
+                            Understood
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Template B: Accounts Audit (Rule 158) -->
+            <template x-if="complianceModal === 'audit'">
+                <div class="space-y-4">
+                    <!-- Header -->
+                    <div class="flex items-start gap-3 pr-6">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 border border-indigo-200/80 flex items-center justify-center text-lg shrink-0">
+                            🔍
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 tracking-tight">
+                                Accounts &amp; Liability Pre-Audit (Rule 158)
+                            </h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[10px] font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-full">
+                                    Financial Governance Gate
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Blocks -->
+                    <div class="space-y-3 text-xs">
+                        <!-- Constitutional Requirement -->
+                        <div class="p-3.5 bg-indigo-50/60 border border-indigo-200/70 rounded-xl space-y-1">
+                            <span class="font-bold text-indigo-900 block">Constitutional Requirement</span>
+                            <p class="text-indigo-950/90 leading-relaxed">
+                                Under UGLE Rule 158, the Lodge Committee is required to audit and examine all liabilities, bills, and demands incurred prior to them being presented in open lodge. The Master cannot submit unaudited accounts to the brethren for payment approval.
+                            </p>
+                        </div>
+
+                        <!-- Platform Workflow -->
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                            <span class="font-bold text-slate-900 block">Platform Workflow</span>
+                            <p class="text-slate-600 leading-relaxed">
+                                Integrates directly with Liberu Accounting's Accounts Payable ledger, pulling pending invoices (e.g. hall rental, dining catering, per-capita dues, regalia).
+                            </p>
+                        </div>
+
+                        <!-- Downstream Impact -->
+                        <div class="p-3.5 bg-emerald-50/60 border border-emerald-200/70 rounded-xl space-y-1">
+                            <span class="font-bold text-emerald-900 block">Downstream Impact</span>
+                            <p class="text-emerald-950/90 leading-relaxed">
+                                Audited bills are marked as <em>Committee Recommended</em>, allowing the Master to formally declare in open lodge that the accounts have been vetted and are approved for settlement.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="pt-2 flex items-center justify-end border-t border-slate-100">
+                        <button
+                            type="button"
+                            @click="complianceModal = null"
+                            class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition"
+                        >
+                            Understood
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
 
     <!-- Add Agenda Item Modal -->
     @if($showAgendaModal)

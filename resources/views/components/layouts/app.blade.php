@@ -7,6 +7,7 @@
     <title>{{ ($title ?? 'Committee') . ' - ClubAdmin' }}</title>
     @vite(['resources/js/app.js'])
     @livewireStyles
+    <style>[x-cloak] { display: none !important; }</style>
 </head>
 <body class="min-h-screen bg-[#f1f5f9] text-slate-800 font-sans antialiased">
     @php

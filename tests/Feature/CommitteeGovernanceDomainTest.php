@@ -711,4 +711,35 @@ TEXT;
         $downloadResponse->assertStatus(200);
         $downloadResponse->assertHeader('content-type', 'application/pdf');
     }
+
+    public function test_compliance_explainer_modals_rendered_in_workspace(): void
+    {
+        $this->actingAs($this->admin);
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Explainer Modals Workspace Test',
+            'meeting_date' => Carbon::now()->addDays(3),
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        Livewire::test(MeetingWorkspace::class, [
+            'clubSlug' => $this->club->slug,
+            'meetingId' => $meeting->id,
+        ])
+            ->assertSee('Candidate Vetting')
+            ->assertSee('Rule 159')
+            ->assertSee('complianceModal = \'vetting\'', false)
+            ->assertSee('Accounts Audit')
+            ->assertSee('Rule 158')
+            ->assertSee('complianceModal = \'audit\'', false)
+            ->assertSee('Statutory Summons Gate')
+            ->assertSee('Financial Governance Gate')
+            ->assertSee('Constitutional Requirement')
+            ->assertSee('Platform Workflow')
+            ->assertSee('Downstream Impact')
+            ->assertSee('no candidate may be balloted for initiation or joining in open lodge without prior recommendation')
+            ->assertSee('the Lodge Committee is required to audit and examine all liabilities, bills, and demands')
+            ->assertHasNoErrors();
+    }
 }
