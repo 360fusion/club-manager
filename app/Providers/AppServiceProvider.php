@@ -50,6 +50,10 @@ class AppServiceProvider extends ServiceProvider
                 'subscriptions.subscription-index',
                 \App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex::class
             );
+            Livewire::component(
+                'banking.bank-import-index',
+                \App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex::class
+            );
         }
 
         if (class_exists(Cashier::class)) {
