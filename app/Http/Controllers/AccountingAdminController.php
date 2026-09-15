@@ -107,6 +107,23 @@ class AccountingAdminController extends Controller
         $summary = $this->accountingService->getFinancialSummary($club);
         $reports = $this->accountingService->getReportsData($club);
 
+        $clubSettings = array_merge([
+            'company_name' => $club->name,
+            'tax_registration_number' => 'GB 987 6543 21',
+            'contact_email' => 'admin@' . $club->slug . '.org',
+            'phone' => '+44 20 7946 0912',
+            'address_line_1' => '100 Boathouse Way',
+            'address_line_2' => '',
+            'city' => 'Oxford',
+            'county' => 'Oxfordshire',
+            'postcode' => 'OX1 1AA',
+            'country' => 'United Kingdom',
+            'currency' => 'GBP',
+            'receipt_footer_notes' => 'Thank you for supporting our club. Fees support equipment & clubhouse operations.',
+            'dues_grace_period_days' => 14,
+            'auto_invoice_days_before' => 7,
+        ], $club->settings ?? []);
+
         return Inertia::render('Admin/Accounting/Index', [
             'club' => [
                 'id' => $club->id,
@@ -120,6 +137,7 @@ class AccountingAdminController extends Controller
             'members' => $members,
             'summary' => $summary,
             'reports' => $reports,
+            'settings' => $clubSettings,
         ]);
     }
 

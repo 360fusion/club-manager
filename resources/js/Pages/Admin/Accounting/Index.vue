@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -51,6 +51,25 @@ const props = defineProps({
       cash_summary: { total_cash_on_hand: 0, accounts: [] },
       executive_summary: { net_profit_margin_pct: 0, operating_expense_ratio_pct: 0, total_cash_reserves: 0, outstanding_ar: 0, outstanding_ap: 0 },
       profit_and_loss: { revenues: [], expenses: [], total_revenue: 0, total_expenses: 0, net_income: 0 },
+    }),
+  },
+  settings: {
+    type: Object,
+    default: () => ({
+      company_name: '',
+      tax_registration_number: 'GB 987 6543 21',
+      contact_email: '',
+      phone: '',
+      address_line_1: '',
+      address_line_2: '',
+      city: '',
+      county: '',
+      postcode: '',
+      country: 'United Kingdom',
+      currency: 'GBP',
+      receipt_footer_notes: '',
+      dues_grace_period_days: 14,
+      auto_invoice_days_before: 7,
     }),
   },
 });
@@ -285,6 +304,17 @@ const getTypeBadge = (type) => {
             ]"
           >
             <span>Contacts</span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'settings'"
+            :class="[
+              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'settings' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
+            ]"
+          >
+            <span>⚙️ Settings</span>
           </button>
         </nav>
 
@@ -1124,22 +1154,33 @@ const getTypeBadge = (type) => {
 
       <!-- VIEW 7: TAX (VAT & Tax Summary) -->
       <div v-if="activeTab === 'tax'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
-        <div class="border-b border-slate-100 pb-4">
-          <h3 class="text-lg font-black text-slate-900">Tax & VAT Ledger</h3>
-          <p class="text-xs text-slate-500">Track UK VAT rates and sales tax liabilities.</p>
+        <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-black text-slate-900">Tax & VAT Ledger</h3>
+            <p class="text-xs text-slate-500">Track UK VAT rates, registration numbers, and sales tax liabilities.</p>
+          </div>
+          <span class="px-3 py-1 bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono font-extrabold text-slate-800">
+            VAT Reg #: {{ settings.tax_registration_number || 'GB 987 6543 21' }}
+          </span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2">
             <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider block">Standard VAT Rate</span>
             <span class="text-xl font-black text-slate-900 block">20.0% UK VAT</span>
-            <span class="text-xs text-slate-500 block">Applied to applicable sales and vendor purchases.</span>
+            <span class="text-xs text-slate-500 block">Applied to bar, dining, merchandise, and vendor purchases.</span>
           </div>
 
           <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2">
             <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider block">Exempt Sales (Subscriptions & Dues)</span>
             <span class="text-xl font-black text-emerald-700 block">0.0% Exempt</span>
-            <span class="text-xs text-slate-500 block">Membership dues and non-profit sports subscriptions.</span>
+            <span class="text-xs text-slate-500 block">Non-profit sports subscriptions and member dues.</span>
+          </div>
+
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2">
+            <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider block">Tax Registration & Filing</span>
+            <span class="text-sm font-black text-sky-800 block">{{ settings.tax_registration_number || 'GB 987 6543 21' }}</span>
+            <span class="text-xs text-slate-500 block">Registered with HMRC for Making Tax Digital (MTD).</span>
           </div>
         </div>
       </div>
@@ -1185,6 +1226,110 @@ const getTypeBadge = (type) => {
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- VIEW 9: SETTINGS (Financial & Organization Settings) -->
+      <div v-if="activeTab === 'settings'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div class="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-black text-slate-900">Financial & Accounting Settings</h3>
+            <p class="text-xs text-slate-500">Configure company address, VAT registration numbers, invoicing rules, and billing defaults.</p>
+          </div>
+          <Link
+            :href="route('admin.settings.show', club.slug)"
+            class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5 self-start sm:self-auto"
+          >
+            <span>⚙️ Full System Settings</span>
+          </Link>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+          <!-- Card 1: Company & Address Profile -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🏢</span>
+              <h4 class="font-extrabold text-slate-900 text-sm">Company & Address</h4>
+            </div>
+            <div class="space-y-2 text-slate-600">
+              <div>
+                <span class="font-bold text-slate-800 block text-[11px]">Organization Name</span>
+                <span class="font-bold text-slate-900">{{ club.name }}</span>
+              </div>
+              <div>
+                <span class="font-bold text-slate-800 block text-[11px]">Registered Address</span>
+                <span>{{ settings.address_line_1 || '100 Boathouse Way' }}</span>
+                <span v-if="settings.city" class="block">{{ settings.city }}, {{ settings.postcode }}</span>
+                <span class="block text-slate-500 font-mono text-[10px]">{{ settings.country || 'United Kingdom' }}</span>
+              </div>
+              <div>
+                <span class="font-bold text-slate-800 block text-[11px]">Contact Information</span>
+                <span class="block font-mono">{{ settings.contact_email || 'admin@' + club.slug + '.org' }}</span>
+                <span class="block font-mono text-slate-500">{{ settings.phone || '+44 20 7946 0912' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: VAT & Tax Registration -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">📋</span>
+              <h4 class="font-extrabold text-slate-900 text-sm">VAT & Tax Configuration</h4>
+            </div>
+            <div class="space-y-2 text-slate-600">
+              <div>
+                <span class="font-bold text-slate-800 block text-[11px]">Tax / VAT Reg Number</span>
+                <span class="font-mono font-bold text-sky-800 text-sm block">{{ settings.tax_registration_number || 'GB 987 6543 21' }}</span>
+              </div>
+              <div>
+                <span class="font-bold text-slate-800 block text-[11px]">Default Tax Rates</span>
+                <span class="block">• 20.0% Standard UK VAT</span>
+                <span class="block">• 0.0% Exempt Subscriptions</span>
+              </div>
+              <div>
+                <span class="font-bold text-slate-800 block text-[11px]">Currency</span>
+                <span class="font-mono font-bold text-emerald-700">GBP (£)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Invoicing Setup & Footer Notes -->
+          <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🧾</span>
+              <h4 class="font-extrabold text-slate-900 text-sm">Invoicing & Dues Setup</h4>
+            </div>
+            <div class="space-y-2 text-slate-600">
+              <div>
+                <span class="font-bold text-slate-800 block text-[11px]">Auto-Invoicing Lead Time</span>
+                <span class="font-bold text-slate-900">{{ settings.auto_invoice_days_before || 7 }} Days before due date</span>
+              </div>
+              <div>
+                <span class="font-bold text-slate-800 block text-[11px]">Overdue Grace Period</span>
+                <span class="font-bold text-amber-800">{{ settings.dues_grace_period_days || 14 }} Days</span>
+              </div>
+              <div>
+                <span class="font-bold text-slate-800 block text-[11px]">Receipt & Invoice Notes</span>
+                <p class="text-[11px] text-slate-500 italic">"{{ settings.receipt_footer_notes || 'Thank you for supporting our club.' }}"</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-sky-50 rounded-2xl border border-sky-200 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">⚙️</span>
+            <div>
+              <span class="font-black text-sky-900 block">Edit Organization Settings & Billing Rules</span>
+              <span class="text-sky-700">Update company address, VAT registration number, logos, and role permission matrix.</span>
+            </div>
+          </div>
+          <Link
+            :href="route('admin.settings.show', club.slug)"
+            class="px-3.5 py-1.5 bg-sky-700 hover:bg-sky-800 text-white font-bold rounded-xl shadow-sm transition-all whitespace-nowrap"
+          >
+            Edit Settings →
+          </Link>
         </div>
       </div>
 
