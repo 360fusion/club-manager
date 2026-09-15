@@ -42,6 +42,10 @@ class AppServiceProvider extends ServiceProvider
                 'members.member-profile',
                 \App\Domains\ClubAccounting\Livewire\Members\MemberProfile::class
             );
+            Livewire::component(
+                'candidates.candidate-pipeline',
+                \App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline::class
+            );
         }
 
         if (class_exists(Cashier::class)) {

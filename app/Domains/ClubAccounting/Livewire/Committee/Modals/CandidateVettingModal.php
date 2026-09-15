@@ -2,7 +2,9 @@
 
 namespace App\Domains\ClubAccounting\Livewire\Committee\Modals;
 
+use App\Domains\ClubAccounting\Enums\CandidateStage;
 use App\Domains\ClubAccounting\Enums\CommitteeItemType;
+use App\Domains\ClubAccounting\Models\Candidate;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAgendaItem;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\User;
@@ -34,33 +36,65 @@ class CandidateVettingModal extends Component
 
     public function signOffCandidate(): void
     {
-        $candidate = User::findOrFail($this->candidateId);
         $meeting = ClubCommitteeMeeting::findOrFail($this->meetingId);
+        $candidateRecord = Candidate::find($this->candidateId);
+
+        if ($candidateRecord) {
+            $name = $candidateRecord->full_name;
+            $email = $candidateRecord->email;
+            $refId = $candidateRecord->id;
+            $refType = Candidate::class;
+
+            if ($this->isRecommended) {
+                $candidateRecord->update([
+                    'rule_159_cleared' => true,
+                    'stage' => CandidateStage::BallotApproved,
+                ]);
+            }
+        } else {
+            $user = User::findOrFail($this->candidateId);
+            $name = $user->name;
+            $email = $user->email;
+            $refId = $user->id;
+            $refType = User::class;
+        }
 
         // Record on Agenda
         ClubCommitteeAgendaItem::create([
             'committee_meeting_id' => $meeting->id,
             'order' => $meeting->agendaItems()->count() + 1,
             'item_type' => CommitteeItemType::CandidateVetting,
-            'title' => "Candidate Vetting: {$candidate->name}",
-            'description' => "Vetting of {$candidate->name} ({$candidate->email}) for initiation.",
+            'title' => "Candidate Vetting: {$name}",
+            'description' => "Vetting of {$name} ({$email}) for initiation.",
             'discussion_notes' => $this->vettingNotes,
             'recommendation_text' => $this->isRecommended
-                ? "RECOMMENDED: Committee approves candidate {$candidate->name} to proceed to Summons ballot."
+                ? "RECOMMENDED: Committee approves candidate {$name} to proceed to Summons ballot."
                 : "DEFERRED: Committee requests further enquiry before proceeding.",
             'is_approved' => $this->isRecommended,
-            'reference_id' => $candidate->id,
-            'reference_type' => User::class,
+            'reference_id' => $refId,
+            'reference_type' => $refType,
         ]);
 
         $this->closeModal();
         $this->dispatch('agendaItemAdded');
-        session()->flash('success', "Candidate {$candidate->name} sign-off recorded on the committee agenda.");
+        session()->flash('success', "Candidate {$name} sign-off recorded on the committee agenda.");
     }
 
     public function render()
     {
-        $candidate = $this->candidateId ? User::find($this->candidateId) : null;
+        $candidate = null;
+        if ($this->candidateId) {
+            $domainCand = Candidate::find($this->candidateId);
+            if ($domainCand) {
+                $candidate = (object) [
+                    'id' => $domainCand->id,
+                    'name' => $domainCand->full_name,
+                    'email' => $domainCand->email,
+                ];
+            } else {
+                $candidate = User::find($this->candidateId);
+            }
+        }
 
         return view('livewire.committee.candidate-vetting-modal', [
             'candidate' => $candidate,

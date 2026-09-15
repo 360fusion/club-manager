@@ -33,10 +33,26 @@ class CommitteePackCompilerService
             ->first();
 
         // 2. Candidate Vetting Queue (Candidates pending initiation or joining)
-        $candidates = User::whereHas('clubs', function ($q) use ($club) {
-            $q->where('clubs.id', $club->id)
-              ->whereIn('role', ['candidate', 'applicant', 'enquirer']);
-        })->get(['id', 'name', 'email', 'created_at']);
+        $domainCandidates = \App\Domains\ClubAccounting\Models\Candidate::where('club_id', $club->id)
+            ->where('stage', \App\Domains\ClubAccounting\Enums\CandidateStage::LodgeCommittee->value)
+            ->get();
+
+        if ($domainCandidates->isNotEmpty()) {
+            $candidates = $domainCandidates->map(function ($c) {
+                return (object) [
+                    'id' => $c->id,
+                    'name' => $c->full_name,
+                    'email' => $c->email,
+                    'created_at' => $c->created_at,
+                    'is_domain_candidate' => true,
+                ];
+            });
+        } else {
+            $candidates = User::whereHas('clubs', function ($q) use ($club) {
+                $q->where('clubs.id', $club->id)
+                  ->whereIn('role', ['candidate', 'applicant', 'enquirer']);
+            })->get(['id', 'name', 'email', 'created_at']);
+        }
 
         // 3. Unpaid Vendor Bills for Audit
         $unpaidBills = Bill::where('club_id', $club->id)

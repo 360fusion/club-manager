@@ -231,6 +231,7 @@ Route::middleware(['auth'])->group(function () {
     // Core Member Management Domain Routes
     Route::get('/clubs/{clubSlug}/admin/members', \App\Domains\ClubAccounting\Livewire\Members\MemberIndex::class)->name('admin.club_acc.members.index');
     Route::get('/clubs/{clubSlug}/admin/members/{memberId}', \App\Domains\ClubAccounting\Livewire\Members\MemberProfile::class)->name('admin.club_acc.members.show');
+    Route::get('/clubs/{clubSlug}/admin/candidates', \App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline::class)->name('admin.club_acc.candidates.index');
 
     Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
