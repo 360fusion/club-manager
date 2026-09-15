@@ -109,9 +109,59 @@ class MediaLibraryAdminTest extends TestCase
         $deleteRes->assertOk()
             ->assertJsonPath('success', true);
 
-        $this->assertDatabaseMissing('media', [
+        $this->assertSoftDeleted('media', [
             'id' => $mediaId,
         ]);
+    }
+
+    public function test_admin_can_restore_soft_deleted_media_item(): void
+    {
+        $file = UploadedFile::fake()->image('restore-me.png');
+        $uploadRes = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+                'file' => $file,
+                'folder' => 'images',
+            ]);
+        $mediaId = $uploadRes->json('media.id');
+
+        // Soft delete
+        $this->actingAs($this->user)->deleteJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}");
+        $this->assertSoftDeleted('media', ['id' => $mediaId]);
+
+        // Restore
+        $restoreRes = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}/restore");
+
+        $restoreRes->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('media', [
+            'id' => $mediaId,
+            'deleted_at' => null,
+        ]);
+    }
+
+    public function test_admin_can_force_delete_media_item(): void
+    {
+        $file = UploadedFile::fake()->image('purge-me.png');
+        $uploadRes = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+                'file' => $file,
+                'folder' => 'images',
+            ]);
+        $mediaId = $uploadRes->json('media.id');
+
+        // Soft delete first
+        $this->actingAs($this->user)->deleteJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}");
+
+        // Force delete
+        $forceRes = $this->actingAs($this->user)
+            ->deleteJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}/force");
+
+        $forceRes->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseMissing('media', ['id' => $mediaId]);
     }
 
     public function test_upload_fails_if_file_exceeds_10mb(): void
@@ -262,11 +312,10 @@ class MediaLibraryAdminTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('message', 'Successfully deleted 2 files.');
+            ->assertJsonPath('success', true);
 
-        $this->assertDatabaseMissing('media', ['id' => $id1]);
-        $this->assertDatabaseMissing('media', ['id' => $id2]);
+        $this->assertSoftDeleted('media', ['id' => $id1]);
+        $this->assertSoftDeleted('media', ['id' => $id2]);
     }
 
     public function test_admin_can_bulk_move_media_items_to_folder(): void
@@ -302,19 +351,85 @@ class MediaLibraryAdminTest extends TestCase
             ->assertJsonStructure(['usage_count', 'usages']);
     }
 
-    public function test_admin_can_crop_image(): void
+    public function test_admin_can_crop_image_and_create_variant(): void
     {
         $file = UploadedFile::fake()->image('original.png', 800, 600);
         $id = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file, 'folder' => 'images'])->json('media.id');
 
         $croppedFile = UploadedFile::fake()->image('cropped.png', 400, 400);
 
-        $response = $this->actingAs($this->user)
+        // Crop as variant
+        $variantRes = $this->actingAs($this->user)
             ->postJson("/clubs/{$this->club->slug}/admin/media/{$id}/crop", [
                 'file' => $croppedFile,
+                'save_mode' => 'variant',
+            ]);
+
+        $variantRes->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('media.is_variant', true);
+
+        $variantId = $variantRes->json('media.id');
+
+        // Admin can delete variant (move to trash)
+        $deleteRes = $this->actingAs($this->user)->deleteJson("/clubs/{$this->club->slug}/admin/media/{$variantId}");
+        $deleteRes->assertOk();
+        $this->assertSoftDeleted('media', ['id' => $variantId]);
+
+        // Admin can restore variant from trash
+        $restoreRes = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media/{$variantId}/restore");
+        $restoreRes->assertOk();
+        $this->assertDatabaseHas('media', ['id' => $variantId, 'deleted_at' => null]);
+    }
+
+    public function test_admin_can_bulk_restore_media_items_from_trash(): void
+    {
+        $file1 = UploadedFile::fake()->image('trash1.jpg');
+        $file2 = UploadedFile::fake()->image('trash2.jpg');
+
+        $id1 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'images'])->json('media.id');
+        $id2 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'images'])->json('media.id');
+
+        // Delete both to trash
+        $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media/bulk-delete", ['ids' => [$id1, $id2]]);
+        $this->assertSoftDeleted('media', ['id' => $id1]);
+        $this->assertSoftDeleted('media', ['id' => $id2]);
+
+        // Bulk restore
+        $response = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media/bulk-restore", [
+                'ids' => [$id1, $id2],
             ]);
 
         $response->assertOk()
             ->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('media', ['id' => $id1, 'deleted_at' => null]);
+        $this->assertDatabaseHas('media', ['id' => $id2, 'deleted_at' => null]);
+    }
+
+    public function test_admin_can_bulk_force_delete_media_items(): void
+    {
+        $file1 = UploadedFile::fake()->image('purge1.jpg');
+        $file2 = UploadedFile::fake()->image('purge2.jpg');
+
+        $id1 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'images'])->json('media.id');
+        $id2 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'images'])->json('media.id');
+
+        // Delete to trash first
+        $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media/bulk-delete", ['ids' => [$id1, $id2]]);
+
+        // Bulk force delete
+        $response = $this->actingAs($this->user)
+            ->postJson("/clubs/{$this->club->slug}/admin/media/bulk-force-delete", [
+                'ids' => [$id1, $id2],
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseMissing('media', ['id' => $id1]);
+        $this->assertDatabaseMissing('media', ['id' => $id2]);
     }
 }
+

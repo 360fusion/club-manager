@@ -133,12 +133,12 @@ const editingContactId = ref(null);
 const contactFilter = ref('all');
 
 const contactForm = useForm({
-  type: 'business',
+  type: 'person',
   name: '',
   contact_person: '',
   email: '',
   phone: '',
-  role: 'Vendor / Supplier',
+  role: 'Contractor / Coach',
   tax_id: '',
   address_line_1: '',
   address_line_2: '',
@@ -152,12 +152,12 @@ const openAddContactModal = () => {
   editingContactId.value = null;
   contactForm.clearErrors();
   contactForm.reset({
-    type: 'business',
+    type: 'person',
     name: '',
     contact_person: '',
     email: '',
     phone: '',
-    role: 'Vendor / Supplier',
+    role: 'Contractor / Coach',
     tax_id: '',
     address_line_1: '',
     address_line_2: '',
@@ -173,12 +173,12 @@ const openEditContactModal = (c) => {
   if (c.kind === 'member') return;
   editingContactId.value = c.contact_db_id;
   contactForm.clearErrors();
-  contactForm.type = c.type || 'business';
+  contactForm.type = c.type || 'person';
   contactForm.name = c.name || '';
   contactForm.contact_person = (c.contact_person && c.contact_person !== c.name) ? c.contact_person : '';
   contactForm.email = (c.email && c.email !== '—') ? c.email : '';
   contactForm.phone = (c.phone && c.phone !== '—') ? c.phone : '';
-  contactForm.role = c.role || 'Vendor / Supplier';
+  contactForm.role = c.role || 'Contractor / Coach';
   contactForm.tax_id = (c.tax_id && c.tax_id !== '—') ? c.tax_id : '';
   contactForm.address_line_1 = c.address_line_1 || '';
   contactForm.address_line_2 = c.address_line_2 || '';
@@ -252,9 +252,6 @@ const filteredContacts = computed(() => {
 
   if (contactFilter.value === 'person') {
     return all.filter(item => item.type === 'person');
-  }
-  if (contactFilter.value === 'business') {
-    return all.filter(item => item.type === 'business');
   }
   if (contactFilter.value === 'member') {
     return all.filter(item => item.kind === 'member');
@@ -398,6 +395,94 @@ const markBillPaid = (id) => {
   }
 };
 
+// ── Sales & Purchases Filters ────────────────────────────────────────────────
+const salesSearch     = ref('');
+const salesYearFilter = ref('all');   // 'all' | '2024' | '2025' | ...
+const salesFyFilter   = ref('all');   // 'all' | '2024-25' | ...
+
+const billsSearch     = ref('');
+const billsYearFilter = ref('all');
+const billsFyFilter   = ref('all');
+
+// Financial year: 1 Sept → 31 Aug (UK club default — override via settings)
+const fyStartMonth = 9; // September (1-indexed)
+
+/** Parse a date string like "12 Sep 2026" → Date */
+const parseDate = (str) => {
+  if (!str) return null;
+  return new Date(str);
+};
+
+/** Return financial year label for a date, e.g. "2025-26" */
+const getFyLabel = (dateStr) => {
+  const d = parseDate(dateStr);
+  if (!d) return null;
+  const m = d.getMonth() + 1; // 1-indexed
+  const y = d.getFullYear();
+  return m >= fyStartMonth ? `${y}-${String(y + 1).slice(2)}` : `${y - 1}-${String(y).slice(2)}`;
+};
+
+/** All calendar years present in invoices */
+const salesYears = computed(() => {
+  const years = [...new Set((props.invoices || []).map(i => parseDate(i.created_at)?.getFullYear()).filter(Boolean))];
+  return years.sort((a, b) => b - a);
+});
+
+const billsYears = computed(() => {
+  const years = [...new Set((props.bills || []).map(b => parseDate(b.due_date)?.getFullYear()).filter(Boolean))];
+  return years.sort((a, b) => b - a);
+});
+
+/** All financial years present in invoices */
+const salesFyYears = computed(() => {
+  const fys = [...new Set((props.invoices || []).map(i => getFyLabel(i.created_at)).filter(Boolean))];
+  return fys.sort((a, b) => b.localeCompare(a));
+});
+
+const billsFyYears = computed(() => {
+  const fys = [...new Set((props.bills || []).map(b => getFyLabel(b.due_date)).filter(Boolean))];
+  return fys.sort((a, b) => b.localeCompare(a));
+});
+
+/** Filtered invoices */
+const filteredInvoices = computed(() => {
+  let list = props.invoices || [];
+  const q = salesSearch.value.trim().toLowerCase();
+  if (q) {
+    list = list.filter(i =>
+      i.invoice_number?.toLowerCase().includes(q) ||
+      i.recipient_name?.toLowerCase().includes(q) ||
+      i.title?.toLowerCase().includes(q)
+    );
+  }
+  if (salesFyFilter.value !== 'all') {
+    list = list.filter(i => getFyLabel(i.created_at) === salesFyFilter.value);
+  } else if (salesYearFilter.value !== 'all') {
+    list = list.filter(i => parseDate(i.created_at)?.getFullYear() === Number(salesYearFilter.value));
+  }
+  return list;
+});
+
+/** Filtered bills */
+const filteredBills = computed(() => {
+  let list = props.bills || [];
+  const q = billsSearch.value.trim().toLowerCase();
+  if (q) {
+    list = list.filter(b =>
+      b.bill_number?.toLowerCase().includes(q) ||
+      b.vendor_name?.toLowerCase().includes(q) ||
+      b.category?.toLowerCase().includes(q)
+    );
+  }
+  if (billsFyFilter.value !== 'all') {
+    list = list.filter(b => getFyLabel(b.due_date) === billsFyFilter.value);
+  } else if (billsYearFilter.value !== 'all') {
+    list = list.filter(b => parseDate(b.due_date)?.getFullYear() === Number(billsYearFilter.value));
+  }
+  return list;
+});
+// ────────────────────────────────────────────────────────────────────────────
+
 const formatCurrency = (val) => {
   const num = parseFloat(val) || 0;
   return '£' + num.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -500,13 +585,12 @@ const getTypeBadge = (type) => {
 
         <!-- Quick Action Buttons in Header Bar -->
         <div class="flex items-center gap-2 px-2 py-1 shrink-0">
-          <button
-            type="button"
-            @click="showInvoiceModal = true"
+          <Link
+            :href="route('admin.accounting.invoices.create', club.slug)"
             class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
           >
-            <span>🧾 Issue Invoice</span>
-          </button>
+            <span>🧾 Create Invoice</span>
+          </Link>
           <button
             type="button"
             @click="showBillModal = true"
@@ -640,28 +724,75 @@ const getTypeBadge = (type) => {
       </div>
 
       <!-- VIEW 2: SALES (Member Invoices / Accounts Receivable) -->
-      <div v-if="activeTab === 'sales'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-6 p-6">
+      <div v-if="activeTab === 'sales'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4 p-6">
+
+        <!-- Header row -->
         <div class="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
             <h3 class="text-lg font-black text-slate-900">Sales Invoicing & Receivables</h3>
             <p class="text-xs text-slate-500">Track member dues, locker fees, and ticket invoices.</p>
           </div>
-
-          <button
-            type="button"
-            @click="showInvoiceModal = true"
+          <Link
+            :href="route('admin.accounting.invoices.create', club.slug)"
             class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer flex items-center gap-1.5"
           >
-            <span>🧾 Create Member Invoice</span>
-          </button>
+            <span>🧾 Create Invoice</span>
+          </Link>
         </div>
 
-        <div v-if="!invoices.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+        <!-- Filter Bar -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Search -->
+          <div class="relative flex-1 min-w-[200px]">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+            <input
+              v-model="salesSearch"
+              type="text"
+              placeholder="Search invoice #, member, description…"
+              class="w-full pl-7 pr-3 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+            />
+          </div>
+
+          <!-- Calendar year -->
+          <select
+            v-model="salesYearFilter"
+            @change="salesFyFilter = 'all'"
+            class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer"
+          >
+            <option value="all">All Years</option>
+            <option v-for="yr in salesYears" :key="yr" :value="String(yr)">{{ yr }}</option>
+          </select>
+
+          <!-- Financial year quick-filters -->
+          <div class="flex items-center gap-1 flex-wrap">
+            <button
+              type="button"
+              @click="salesFyFilter = 'all'; salesYearFilter = 'all'"
+              :class="['px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer', salesFyFilter === 'all' && salesYearFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+            >All</button>
+            <button
+              v-for="fy in salesFyYears"
+              :key="fy"
+              type="button"
+              @click="salesFyFilter = fy; salesYearFilter = 'all'"
+              :class="['px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer', salesFyFilter === fy ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+            >FY {{ fy }}</button>
+          </div>
+
+          <!-- Result count -->
+          <span class="text-[11px] text-slate-400 font-semibold ml-auto whitespace-nowrap">
+            {{ filteredInvoices.length }} of {{ (invoices || []).length }} invoices
+          </span>
+        </div>
+
+        <!-- Empty state -->
+        <div v-if="!filteredInvoices.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
           <span class="text-3xl block mb-2">🧾</span>
-          <span class="text-xs font-bold text-slate-700 block">No Member Invoices Found</span>
-          <span class="text-[11px] text-slate-400">Click "Create Member Invoice" to issue a new bill.</span>
+          <span class="text-xs font-bold text-slate-700 block">{{ (invoices || []).length ? 'No results match your filters' : 'No Invoices Found' }}</span>
+          <span class="text-[11px] text-slate-400">{{ (invoices || []).length ? 'Try adjusting your search or year filter.' : 'Click "Create Invoice" to issue a new one.' }}</span>
         </div>
 
+        <!-- Table -->
         <div v-else class="overflow-x-auto border border-slate-200 rounded-2xl">
           <table class="w-full text-left border-collapse">
             <thead>
@@ -676,7 +807,7 @@ const getTypeBadge = (type) => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-              <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/80 transition-colors">
+              <tr v-for="inv in filteredInvoices" :key="inv.id" class="hover:bg-slate-50/80 transition-colors">
                 <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ inv.invoice_number }}</td>
                 <td class="py-3 px-4 font-bold text-slate-900">{{ inv.recipient_name }}</td>
                 <td class="py-3 px-4 text-slate-600">{{ inv.title }}</td>
@@ -705,13 +836,14 @@ const getTypeBadge = (type) => {
       </div>
 
       <!-- VIEW 3: PURCHASES (Vendor Bills / Accounts Payable) -->
-      <div v-if="activeTab === 'purchases'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-6 p-6">
+      <div v-if="activeTab === 'purchases'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4 p-6">
+
+        <!-- Header row -->
         <div class="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
             <h3 class="text-lg font-black text-slate-900">Purchases & Vendor Bills</h3>
             <p class="text-xs text-slate-500">Track equipment purchases, facility bills, and accounts payable.</p>
           </div>
-
           <button
             type="button"
             @click="showBillModal = true"
@@ -721,12 +853,59 @@ const getTypeBadge = (type) => {
           </button>
         </div>
 
-        <div v-if="!bills.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
-          <span class="text-3xl block mb-2">📄</span>
-          <span class="text-xs font-bold text-slate-700 block">No Vendor Bills Recorded</span>
-          <span class="text-[11px] text-slate-400">Click "Record Vendor Bill" to log payable vendor expenses.</span>
+        <!-- Filter Bar -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Search -->
+          <div class="relative flex-1 min-w-[200px]">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+            <input
+              v-model="billsSearch"
+              type="text"
+              placeholder="Search bill #, vendor, category…"
+              class="w-full pl-7 pr-3 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
+            />
+          </div>
+
+          <!-- Calendar year -->
+          <select
+            v-model="billsYearFilter"
+            @change="billsFyFilter = 'all'"
+            class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer"
+          >
+            <option value="all">All Years</option>
+            <option v-for="yr in billsYears" :key="yr" :value="String(yr)">{{ yr }}</option>
+          </select>
+
+          <!-- Financial year quick-filters -->
+          <div class="flex items-center gap-1 flex-wrap">
+            <button
+              type="button"
+              @click="billsFyFilter = 'all'; billsYearFilter = 'all'"
+              :class="['px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer', billsFyFilter === 'all' && billsYearFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+            >All</button>
+            <button
+              v-for="fy in billsFyYears"
+              :key="fy"
+              type="button"
+              @click="billsFyFilter = fy; billsYearFilter = 'all'"
+              :class="['px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer', billsFyFilter === fy ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+            >FY {{ fy }}</button>
+          </div>
+
+          <!-- Result count -->
+          <span class="text-[11px] text-slate-400 font-semibold ml-auto whitespace-nowrap">
+            {{ filteredBills.length }} of {{ (bills || []).length }} bills
+          </span>
         </div>
 
+        <!-- Empty state -->
+        <div v-if="!filteredBills.length" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+          <span class="text-3xl block mb-2">📄</span>
+          <span class="text-xs font-bold text-slate-700 block">{{ (bills || []).length ? 'No results match your filters' : 'No Vendor Bills Recorded' }}</span>
+          <span class="text-[11px] text-slate-400">{{ (bills || []).length ? 'Try adjusting your search or year filter.' : 'Click "Record Vendor Bill" to log payable vendor expenses.' }}</span>
+        </div>
+
+        <!-- Table -->
         <div v-else class="overflow-x-auto border border-slate-200 rounded-2xl">
           <table class="w-full text-left border-collapse">
             <thead>
@@ -741,7 +920,7 @@ const getTypeBadge = (type) => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-              <tr v-for="b in bills" :key="b.id" class="hover:bg-slate-50/80 transition-colors">
+              <tr v-for="b in filteredBills" :key="b.id" class="hover:bg-slate-50/80 transition-colors">
                 <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ b.bill_number }}</td>
                 <td class="py-3 px-4 font-bold text-slate-900">{{ b.vendor_name }}</td>
                 <td class="py-3 px-4 text-slate-600">{{ b.category }}</td>
@@ -1446,13 +1625,6 @@ const getTypeBadge = (type) => {
           </button>
           <button
             type="button"
-            @click="contactFilter = 'business'"
-            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5', contactFilter === 'business' ? 'bg-sky-700 text-white font-black' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
-          >
-            <span>🏢 Businesses / Vendors</span>
-          </button>
-          <button
-            type="button"
             @click="contactFilter = 'person'"
             :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5', contactFilter === 'person' ? 'bg-indigo-700 text-white font-black' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
           >
@@ -1486,9 +1658,7 @@ const getTypeBadge = (type) => {
               <tr v-for="c in filteredContacts" :key="c.id" class="hover:bg-slate-50/80 transition-colors">
                 <td class="py-3 px-4">
                   <div class="flex items-center gap-2.5">
-                    <span class="text-base p-1.5 rounded-lg bg-slate-100 border border-slate-200">
-                      {{ c.type === 'business' ? '🏢' : '👤' }}
-                    </span>
+                    <span class="text-base p-1.5 rounded-lg bg-slate-100 border border-slate-200">👤</span>
                     <div>
                       <Link
                         v-if="c.kind === 'contact'"
@@ -1496,7 +1666,7 @@ const getTypeBadge = (type) => {
                         class="font-extrabold text-slate-900 hover:text-sky-700 hover:underline text-left block cursor-pointer transition-colors"
                         title="Click to edit contact details"
                       >
-                        {{ c.name }} ✏️
+                        {{ c.name }}
                       </Link>
                       <Link
                         v-else-if="c.kind === 'member' && c.user_id"
@@ -1504,21 +1674,18 @@ const getTypeBadge = (type) => {
                         class="font-extrabold text-slate-900 hover:text-sky-700 hover:underline text-left block cursor-pointer transition-colors"
                         title="Click to edit member accounting details"
                       >
-                        {{ c.name }} ✏️
+                        {{ c.name }}
                       </Link>
                       <span v-else class="font-extrabold text-slate-900 block">{{ c.name }}</span>
-                      <span v-if="c.type === 'business' && c.contact_person && c.contact_person !== c.name" class="text-[11px] text-slate-500 block">
-                        Contact: {{ c.contact_person }}
+                      <span v-if="c.contact_person && c.contact_person !== c.name" class="text-[11px] text-slate-500 block">
+                        Alt: {{ c.contact_person }}
                       </span>
                     </div>
                   </div>
                 </td>
                 <td class="py-3 px-4">
-                  <span :class="[
-                    'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border',
-                    c.type === 'business' ? 'bg-sky-50 text-sky-800 border-sky-200' : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                  ]">
-                    {{ c.type }}
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border bg-indigo-50 text-indigo-800 border-indigo-200">
+                    {{ c.kind === 'member' ? 'member' : 'person' }}
                   </span>
                 </td>
                 <td class="py-3 px-4">
@@ -1549,7 +1716,7 @@ const getTypeBadge = (type) => {
                       class="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
                       title="Edit Contact"
                     >
-                      ✏️ Edit
+                      Edit
                     </Link>
                     <button
                       type="button"

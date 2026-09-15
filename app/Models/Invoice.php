@@ -18,6 +18,7 @@ class Invoice extends Model
         'amount',
         'status',
         'paid_at',
+        'media_id',
     ];
 
     protected function casts(): array
@@ -36,5 +37,10 @@ class Invoice extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function media(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Media::class, 'media_id');
     }
 }

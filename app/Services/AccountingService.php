@@ -166,11 +166,24 @@ class AccountingService
     /**
      * Create Vendor Bill (Accounts Payable) & Post to Ledger
      */
-    public function createVendorBill(Club $club, array $data): Bill
+    public function createVendorBill(Club $club, array $data, $attachmentFile = null): Bill
     {
-        return DB::transaction(function () use ($club, $data) {
+        return DB::transaction(function () use ($club, $data, $attachmentFile) {
             $billCount = Bill::where('club_id', $club->id)->count() + 1;
             $billNum = $data['bill_number'] ?? 'BILL-' . date('Y') . '-' . str_pad((string) $billCount, 4, '0', STR_PAD_LEFT);
+
+            $mediaId = null;
+            if ($attachmentFile && $attachmentFile->isValid()) {
+                $media = $club->addMedia($attachmentFile)
+                    ->withCustomProperties([
+                        'is_accounting_protected' => true,
+                        'source' => 'accounting',
+                        'bill_number' => $billNum,
+                        'vendor_name' => $data['vendor_name'],
+                    ])
+                    ->toMediaCollection('accounting');
+                $mediaId = $media->id;
+            }
 
             $bill = Bill::create([
                 'club_id' => $club->id,
@@ -181,6 +194,7 @@ class AccountingService
                 'due_date' => $data['due_date'] ?? date('Y-m-d', strtotime('+30 days')),
                 'status' => 'unpaid',
                 'notes' => $data['notes'] ?? null,
+                'media_id' => $mediaId,
             ]);
 
             // Post Ledger: Debit Expense (5000), Credit Accounts Payable (2000)
@@ -557,12 +571,68 @@ class AccountingService
                     'net_bank_deposit' => $netBankDeposit,
                     'vendor_bill_id' => $vendorBill?->id,
                     'journal_entry_id' => $journalEntry?->id,
+                    'is_draft' => false,
                     'notes' => $data['notes'] ?? null,
                 ]
             );
 
             return $financialReturn;
         });
+    }
+
+    /**
+     * Save draft financial return for a meeting without posting to general ledger.
+     */
+    public function saveMeetingFinancialReturnDraft(Club $club, Meeting $meeting, array $data): MeetingFinancialReturn
+    {
+        $diningFee = (float) ($data['dining_fee_per_head'] ?? 0);
+        $paidDiners = (int) ($data['paid_diners_count'] ?? 0);
+        $waivedDiners = (int) ($data['waived_diners_count'] ?? 0);
+        $kitchenCostPerHead = (float) ($data['kitchen_cost_per_head'] ?? 0);
+        $kitchenVendor = !empty($data['kitchen_vendor_name']) ? $data['kitchen_vendor_name'] : 'Kitchen Caterer';
+
+        $raffleAmount = (float) ($data['raffle_amount'] ?? 0);
+        $almsAmount = (float) ($data['alms_amount'] ?? 0);
+        $donationsAmount = (float) ($data['donations_amount'] ?? 0);
+        $bequestAmount = (float) ($data['bequest_amount'] ?? 0);
+
+        $totalMeals = $paidDiners + $waivedDiners;
+        $totalDiningRevenue = round($paidDiners * $diningFee, 2);
+        $totalKitchenBill = round($totalMeals * $kitchenCostPerHead, 2);
+        $netDiningSurplus = round($totalDiningRevenue - $totalKitchenBill, 2);
+        $totalCharity = round($raffleAmount + $almsAmount + $donationsAmount + $bequestAmount, 2);
+        $netBankDeposit = round($totalDiningRevenue + $totalCharity, 2);
+
+        $returnDate = !empty($data['return_date'])
+            ? date('Y-m-d', strtotime((string) $data['return_date']))
+            : (!empty($meeting->meeting_date) ? date('Y-m-d', strtotime((string) $meeting->meeting_date)) : date('Y-m-d'));
+
+        return MeetingFinancialReturn::updateOrCreate(
+            [
+                'club_id' => $club->id,
+                'meeting_id' => $meeting->id,
+            ],
+            [
+                'return_date' => $returnDate,
+                'dining_fee_per_head' => $diningFee,
+                'paid_diners_count' => $paidDiners,
+                'waived_diners_count' => $waivedDiners,
+                'waived_reason' => $data['waived_reason'] ?? null,
+                'kitchen_cost_per_head' => $kitchenCostPerHead,
+                'kitchen_vendor_name' => $kitchenVendor,
+                'raffle_amount' => $raffleAmount,
+                'alms_amount' => $almsAmount,
+                'donations_amount' => $donationsAmount,
+                'bequest_amount' => $bequestAmount,
+                'total_dining_revenue' => $totalDiningRevenue,
+                'total_kitchen_bill' => $totalKitchenBill,
+                'net_dining_surplus' => $netDiningSurplus,
+                'total_charity_collected' => $totalCharity,
+                'net_bank_deposit' => $netBankDeposit,
+                'is_draft' => true,
+                'notes' => $data['notes'] ?? null,
+            ]
+        );
     }
 
     /**

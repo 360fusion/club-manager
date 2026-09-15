@@ -85,8 +85,12 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/clubs/{clubSlug}/admin/media/{id}', [\App\Http\Controllers\MediaAdminController::class, 'update'])->name('admin.media.update');
     Route::post('/clubs/{clubSlug}/admin/media/{id}/crop', [\App\Http\Controllers\MediaAdminController::class, 'crop'])->name('admin.media.crop');
     Route::post('/clubs/{clubSlug}/admin/media/{id}/revert', [\App\Http\Controllers\MediaAdminController::class, 'revert'])->name('admin.media.revert');
+    Route::post('/clubs/{clubSlug}/admin/media/{id}/restore', [\App\Http\Controllers\MediaAdminController::class, 'restore'])->name('admin.media.restore');
+    Route::delete('/clubs/{clubSlug}/admin/media/{id}/force', [\App\Http\Controllers\MediaAdminController::class, 'forceDelete'])->name('admin.media.force_delete');
     Route::get('/clubs/{clubSlug}/admin/media/{id}/usage', [\App\Http\Controllers\MediaAdminController::class, 'usage'])->name('admin.media.usage');
     Route::post('/clubs/{clubSlug}/admin/media/bulk-delete', [\App\Http\Controllers\MediaAdminController::class, 'bulkDelete'])->name('admin.media.bulk_delete');
+    Route::post('/clubs/{clubSlug}/admin/media/bulk-restore', [\App\Http\Controllers\MediaAdminController::class, 'bulkRestore'])->name('admin.media.bulk_restore');
+    Route::post('/clubs/{clubSlug}/admin/media/bulk-force-delete', [\App\Http\Controllers\MediaAdminController::class, 'bulkForceDelete'])->name('admin.media.bulk_force_delete');
     Route::post('/clubs/{clubSlug}/admin/media/bulk-move', [\App\Http\Controllers\MediaAdminController::class, 'bulkMove'])->name('admin.media.bulk_move');
     Route::delete('/clubs/{clubSlug}/admin/media/{id}', [\App\Http\Controllers\MediaAdminController::class, 'destroy'])->name('admin.media.destroy');
 
@@ -187,16 +191,25 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/accounting/accounts', [\App\Http\Controllers\AccountingAdminController::class, 'storeAccount'])->name('admin.accounting.accounts.store');
     Route::post('/clubs/{clubSlug}/admin/accounting/opening-balance', [\App\Http\Controllers\AccountingAdminController::class, 'storeOpeningBalance'])->name('admin.accounting.opening_balance.store');
     Route::post('/clubs/{clubSlug}/admin/accounting/journal-entries', [\App\Http\Controllers\AccountingAdminController::class, 'storeJournalEntry'])->name('admin.accounting.journal.store');
+    Route::get('/clubs/{clubSlug}/admin/accounting/invoices/create', [\App\Http\Controllers\AccountingAdminController::class, 'createInvoice'])->name('admin.accounting.invoices.create');
     Route::post('/clubs/{clubSlug}/admin/accounting/invoices', [\App\Http\Controllers\AccountingAdminController::class, 'storeInvoice'])->name('admin.accounting.invoices.store');
     Route::post('/clubs/{clubSlug}/admin/accounting/invoices/{id}/pay', [\App\Http\Controllers\AccountingAdminController::class, 'markInvoicePaid'])->name('admin.accounting.invoices.pay');
+    Route::delete('/clubs/{clubSlug}/admin/accounting/invoices/{id}/attachment', [\App\Http\Controllers\AccountingAdminController::class, 'deleteInvoiceAttachment'])->name('admin.accounting.invoices.attachment.destroy');
     Route::post('/clubs/{clubSlug}/admin/accounting/bills', [\App\Http\Controllers\AccountingAdminController::class, 'storeBill'])->name('admin.accounting.bills.store');
     Route::post('/clubs/{clubSlug}/admin/accounting/bills/{id}/pay', [\App\Http\Controllers\AccountingAdminController::class, 'markBillPaid'])->name('admin.accounting.bills.pay');
+    Route::delete('/clubs/{clubSlug}/admin/accounting/bills/{id}/attachment', [\App\Http\Controllers\AccountingAdminController::class, 'deleteBillAttachment'])->name('admin.accounting.bills.attachment.destroy');
+    Route::delete('/clubs/{clubSlug}/admin/accounting/bills/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'destroyBill'])->name('admin.accounting.bills.destroy');
     Route::get('/clubs/{clubSlug}/admin/accounting/contacts/create', [\App\Http\Controllers\AccountingAdminController::class, 'createContact'])->name('admin.accounting.contacts.create');
     Route::get('/clubs/{clubSlug}/admin/accounting/contacts/member/{userId}/edit', [\App\Http\Controllers\AccountingAdminController::class, 'editMemberContact'])->name('admin.accounting.contacts.member.edit');
     Route::get('/clubs/{clubSlug}/admin/accounting/contacts/{id}/edit', [\App\Http\Controllers\AccountingAdminController::class, 'editContact'])->name('admin.accounting.contacts.edit');
     Route::post('/clubs/{clubSlug}/admin/accounting/contacts', [\App\Http\Controllers\AccountingAdminController::class, 'storeContact'])->name('admin.accounting.contacts.store');
     Route::put('/clubs/{clubSlug}/admin/accounting/contacts/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'updateContact'])->name('admin.accounting.contacts.update');
     Route::delete('/clubs/{clubSlug}/admin/accounting/contacts/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'destroyContact'])->name('admin.accounting.contacts.destroy');
+
+    // Lodge Committee & Board Governance Routes (Livewire Domain)
+    Route::get('/clubs/{clubSlug}/admin/committee', \App\Domains\ClubAccounting\Livewire\Committee\MeetingIndex::class)->name('admin.committee.index');
+    Route::get('/clubs/{clubSlug}/admin/committee/{meetingId}', \App\Domains\ClubAccounting\Livewire\Committee\MeetingWorkspace::class)->name('admin.committee.workspace');
+    Route::get('/clubs/{clubSlug}/admin/committee/{meetingId}/minutes', \App\Domains\ClubAccounting\Livewire\Committee\LiveMinuteTaker::class)->name('admin.committee.minutes');
     Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 

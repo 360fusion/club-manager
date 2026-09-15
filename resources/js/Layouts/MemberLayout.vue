@@ -106,8 +106,8 @@ const switchWorkspace = (targetClub) => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'dashboard' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-emerald-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,8 +122,8 @@ const switchWorkspace = (targetClub) => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'clubs' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-emerald-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,8 +138,8 @@ const switchWorkspace = (targetClub) => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'events' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-emerald-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,8 +154,8 @@ const switchWorkspace = (targetClub) => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'dues' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-emerald-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,8 +170,8 @@ const switchWorkspace = (targetClub) => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'subscriptions' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-emerald-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,8 +186,8 @@ const switchWorkspace = (targetClub) => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'directory' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-emerald-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,8 +212,8 @@ const switchWorkspace = (targetClub) => {
                 :class="[
                   'w-full flex items-center justify-between px-4 py-2 rounded-xl text-left transition-all text-xs',
                   c.slug === clubSlug 
-                    ? 'bg-indigo-600/30 text-white font-bold border-l-2 border-indigo-400' 
-                    : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+                    ? 'bg-indigo-600/40 text-white font-bold' 
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 ]"
               >
                 <div class="flex items-center gap-2.5 overflow-hidden">
@@ -238,8 +238,8 @@ const switchWorkspace = (targetClub) => {
                 :class="[
                   'w-full flex items-center justify-between px-4 py-2 rounded-xl text-left transition-all text-xs',
                   c.slug === clubSlug 
-                    ? 'bg-emerald-600/30 text-white font-bold border-l-2 border-emerald-400' 
-                    : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+                    ? 'bg-emerald-600/40 text-white font-bold' 
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 ]"
               >
                 <div class="flex items-center gap-2.5 overflow-hidden">
@@ -261,8 +261,8 @@ const switchWorkspace = (targetClub) => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'profile' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-emerald-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

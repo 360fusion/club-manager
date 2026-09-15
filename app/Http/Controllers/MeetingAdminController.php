@@ -699,6 +699,30 @@ class MeetingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
+        $isDraft = (bool) $request->boolean('is_draft');
+
+        if ($isDraft) {
+            $validated = $request->validate([
+                'return_date' => 'nullable|date',
+                'dining_fee_per_head' => 'nullable|numeric|min:0',
+                'paid_diners_count' => 'nullable|integer|min:0',
+                'waived_diners_count' => 'nullable|integer|min:0',
+                'waived_reason' => 'nullable|string',
+                'kitchen_cost_per_head' => 'nullable|numeric|min:0',
+                'kitchen_vendor_name' => 'nullable|string|max:255',
+                'raffle_amount' => 'nullable|numeric|min:0',
+                'alms_amount' => 'nullable|numeric|min:0',
+                'donations_amount' => 'nullable|numeric|min:0',
+                'bequest_amount' => 'nullable|numeric|min:0',
+                'notes' => 'nullable|string',
+            ]);
+
+            $accountingService->saveMeetingFinancialReturnDraft($club, $meeting, $validated);
+
+            return redirect()->route('admin.meetings.financial_return.show', ['clubSlug' => $club->slug, 'id' => $meeting->id])
+                ->with('success', 'Meeting financial return draft saved successfully.');
+        }
+
         $validated = $request->validate([
             'return_date' => 'required|date',
             'dining_fee_per_head' => 'required|numeric|min:0',

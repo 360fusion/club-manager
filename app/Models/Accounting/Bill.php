@@ -23,6 +23,7 @@ class Bill extends Model
         'status',
         'paid_at',
         'notes',
+        'media_id',
     ];
 
     protected function casts(): array
@@ -37,5 +38,10 @@ class Bill extends Model
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function media(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Media::class, 'media_id');
     }
 }

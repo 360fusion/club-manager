@@ -35,11 +35,13 @@ class MeetingFinancialReturn extends Model
         'net_bank_deposit',
         'vendor_bill_id',
         'journal_entry_id',
+        'is_draft',
         'notes',
     ];
 
     protected $casts = [
         'return_date' => 'date',
+        'is_draft' => 'boolean',
         'dining_fee_per_head' => 'decimal:2',
         'kitchen_cost_per_head' => 'decimal:2',
         'raffle_amount' => 'decimal:2',

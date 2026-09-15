@@ -34,7 +34,9 @@ class MediaAdminController extends Controller
         $date = $request->query('date', 'all');
         $sort = $request->query('sort', 'newest');
 
-        // Fetch all club media once to build metadata filters (available extensions & dates)
+        $trashCount = $club->media()->onlyTrashed()->count();
+
+        // Fetch all non-trashed club media once to build metadata filters (available extensions & dates)
         $allClubMedia = $club->media()->get();
 
         $availableExtensions = $allClubMedia
@@ -57,10 +59,13 @@ class MediaAdminController extends Controller
             ->toArray();
 
         // Build filtered query
-        $query = $club->media();
-
-        if ($folder && $folder !== 'all') {
-            $query->where('collection_name', $folder);
+        if ($folder === 'trash') {
+            $query = $club->media()->onlyTrashed();
+        } else {
+            $query = $club->media();
+            if ($folder && $folder !== 'all') {
+                $query->where('collection_name', $folder);
+            }
         }
 
         if ($search) {
@@ -117,6 +122,7 @@ class MediaAdminController extends Controller
 
         return response()->json([
             'media' => $mediaItems,
+            'trash_count' => $trashCount,
             'available_extensions' => $availableExtensions,
             'available_months' => $availableMonths,
         ]);
@@ -141,7 +147,7 @@ class MediaAdminController extends Controller
         $allowedRule = in_array($folder, $imageOnlyFolders) ? $imageExtensions : $allAllowedExtensions;
 
         $request->validate([
-            'folder' => 'required|string|in:logos,news,newsletters,images,galleries,documents',
+            'folder' => 'required|string|in:logos,news,newsletters,images,galleries,documents,accounting',
             'file' => [
                 'required',
                 'file',
@@ -365,17 +371,34 @@ class MediaAdminController extends Controller
         ]);
 
         $count = 0;
+        $skippedProtected = 0;
         foreach ($request->input('ids') as $mediaId) {
             $media = $club->media()->find($mediaId);
             if ($media) {
+                if ($this->isAccountingProtected($media)) {
+                    $skippedProtected++;
+                    continue;
+                }
                 $media->delete();
                 $count++;
             }
         }
 
+        if ($count === 0 && $skippedProtected > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The selected file(s) are attached to Accounting records and protected by the financial audit trail. They cannot be deleted from the file manager.',
+            ], 422);
+        }
+
+        $message = "Successfully deleted {$count} " . ($count === 1 ? 'file' : 'files') . '.';
+        if ($skippedProtected > 0) {
+            $message .= " ({$skippedProtected} accounting-protected " . ($skippedProtected === 1 ? 'file was' : 'files were') . ' skipped).';
+        }
+
         return response()->json([
             'success' => true,
-            'message' => "Successfully deleted {$count} " . ($count === 1 ? 'file' : 'files') . '.',
+            'message' => $message,
         ]);
     }
 
@@ -388,7 +411,7 @@ class MediaAdminController extends Controller
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'integer',
-            'folder' => 'required|string|in:logos,news,newsletters,images,galleries,documents',
+            'folder' => 'required|string|in:logos,news,newsletters,images,galleries,documents,accounting',
         ]);
 
         $targetFolder = $request->input('folder');
@@ -410,12 +433,12 @@ class MediaAdminController extends Controller
     }
 
     /**
-     * Check asset usage across news posts and club branding settings.
+     * Check asset usage across news posts, club branding settings, and accounting records.
      */
     public function usage(string $clubSlug, int $id): JsonResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $media = $club->media()->findOrFail($id);
+        $media = $club->media()->withTrashed()->findOrFail($id);
 
         $url = $media->getFullUrl();
         $filename = $media->file_name;
@@ -449,6 +472,26 @@ class MediaAdminController extends Controller
             }
         }
 
+        // Check if attached to Accounting Bills
+        $bills = \App\Models\Accounting\Bill::where('club_id', $club->id)->where('media_id', $media->id)->get();
+        foreach ($bills as $bill) {
+            $usages[] = [
+                'type' => 'Accounting Bill Receipt',
+                'title' => "Bill {$bill->bill_number} ({$bill->vendor_name})",
+                'location' => 'Accounting ERP → Purchases',
+            ];
+        }
+
+        // Check if attached to Accounting Invoices
+        $invoices = \App\Models\Invoice::where('club_id', $club->id)->where('media_id', $media->id)->get();
+        foreach ($invoices as $inv) {
+            $usages[] = [
+                'type' => 'Member Invoice Document',
+                'title' => "Invoice {$inv->invoice_number} ({$inv->title})",
+                'location' => 'Accounting ERP → Sales',
+            ];
+        }
+
         return response()->json([
             'usage_count' => count($usages),
             'usages' => $usages,
@@ -456,19 +499,156 @@ class MediaAdminController extends Controller
     }
 
     /**
-     * Delete a media item.
+     * Soft delete a media item (move to Trash bin).
      */
     public function destroy(string $clubSlug, int $id): JsonResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $media = $club->media()->findOrFail($id);
 
+        if ($this->isAccountingProtected($media)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Protected Audit Document: '{$media->file_name}' is attached to an Accounting bill or invoice. It cannot be deleted from the file manager; manage or delete it directly from the Accounting page.",
+            ], 422);
+        }
+
         $media->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'File deleted successfully from media library.',
+            'message' => 'File moved to Trash bin.',
         ]);
+    }
+
+    /**
+     * Restore a soft-deleted media item from Trash bin.
+     */
+    public function restore(string $clubSlug, int $id): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $media = $club->media()->onlyTrashed()->findOrFail($id);
+
+        $media->restore();
+
+        return response()->json([
+            'success' => true,
+            'message' => "File '{$media->file_name}' restored successfully from Trash bin.",
+            'media' => $this->transformMedia($media),
+        ]);
+    }
+
+    /**
+     * Permanently delete a media item from disk and database.
+     */
+    public function forceDelete(string $clubSlug, int $id): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $media = $club->media()->withTrashed()->findOrFail($id);
+
+        if ($this->isAccountingProtected($media)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Protected Audit Document: '{$media->file_name}' is attached to an Accounting bill or invoice. It cannot be permanently deleted from the file manager; manage or delete it directly from the Accounting page.",
+            ], 422);
+        }
+
+        $filename = $media->file_name;
+        $media->forceDelete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "File '{$filename}' permanently deleted.",
+        ]);
+    }
+
+    /**
+     * Bulk restore multiple media items from Trash bin.
+     */
+    public function bulkRestore(string $clubSlug, Request $request): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ]);
+
+        $count = 0;
+        foreach ($request->input('ids') as $mediaId) {
+            $media = $club->media()->onlyTrashed()->find($mediaId);
+            if ($media) {
+                $media->restore();
+                $count++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully restored {$count} " . ($count === 1 ? 'file' : 'files') . ' from Trash.',
+        ]);
+    }
+
+    /**
+     * Bulk force-delete multiple media items permanently.
+     */
+    public function bulkForceDelete(string $clubSlug, Request $request): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ]);
+
+        $count = 0;
+        $skippedProtected = 0;
+        foreach ($request->input('ids') as $mediaId) {
+            $media = $club->media()->onlyTrashed()->find($mediaId);
+            if ($media) {
+                if ($this->isAccountingProtected($media)) {
+                    $skippedProtected++;
+                    continue;
+                }
+                $media->forceDelete();
+                $count++;
+            }
+        }
+
+        if ($count === 0 && $skippedProtected > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The selected file(s) are attached to Accounting records and protected by the financial audit trail. They cannot be permanently deleted from the file manager.',
+            ], 422);
+        }
+
+        $message = "Successfully permanently deleted {$count} " . ($count === 1 ? 'file' : 'files') . '.';
+        if ($skippedProtected > 0) {
+            $message .= " ({$skippedProtected} accounting-protected " . ($skippedProtected === 1 ? 'file was' : 'files were') . ' skipped).';
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+        ]);
+    }
+
+    /**
+     * Check if a media item is linked to an Accounting Bill or Invoice, or is accounting-protected.
+     */
+    private function isAccountingProtected($media): bool
+    {
+        if ($media->getCustomProperty('is_accounting_protected') || $media->getCustomProperty('source') === 'accounting' || $media->collection_name === 'accounting') {
+            return true;
+        }
+
+        if (\App\Models\Accounting\Bill::where('media_id', $media->id)->exists()) {
+            return true;
+        }
+
+        if (\App\Models\Invoice::where('media_id', $media->id)->exists()) {
+            return true;
+        }
+
+        return false;
     }
 
     private function formatTitleFromFilename(string $filename): string
@@ -535,6 +715,8 @@ class MediaAdminController extends Controller
 
     private function transformMedia($media): array
     {
+        $isAccountingProtected = $this->isAccountingProtected($media);
+
         return [
             'id' => $media->id,
             'name' => $media->name,
@@ -548,7 +730,14 @@ class MediaAdminController extends Controller
             'caption' => $media->getCustomProperty('caption', ''),
             'has_original_backup' => (bool) ($media->getCustomProperty('has_original_backup', false) && file_exists($media->getCustomProperty('original_master_path', ''))),
             'is_cropped' => (bool) $media->getCustomProperty('is_cropped', false),
+            'is_variant' => (bool) $media->getCustomProperty('is_variant', false),
+            'parent_media_id' => $media->getCustomProperty('parent_media_id', null),
+            'is_trashed' => $media->trashed(),
+            'deleted_at' => $media->deleted_at ? $media->deleted_at->format('M d, Y H:i') : null,
             'created_at' => $media->created_at->format('M d, Y H:i'),
+            'is_accounting_protected' => $isAccountingProtected,
+            'accounting_bill_number' => $media->getCustomProperty('bill_number', ''),
+            'accounting_invoice_number' => $media->getCustomProperty('invoice_number', ''),
         ];
     }
 

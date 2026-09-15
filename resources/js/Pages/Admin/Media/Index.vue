@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue';
+import { ref, watch, onMounted, nextTick, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Cropper from 'cropperjs';
@@ -34,8 +34,9 @@ const saveSuccessMsg = ref('');
 
 const availableExtensions = ref([]);
 const availableMonths = ref([]);
+const trashCount = ref(0);
 
-const folders = [
+const folders = computed(() => [
   { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100', text: 'text-slate-700' },
   { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
   { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50', text: 'text-blue-700' },
@@ -43,7 +44,8 @@ const folders = [
   { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-sky-50', text: 'text-sky-700' },
   { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-purple-50', text: 'text-purple-700' },
   { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50', text: 'text-amber-700' },
-];
+  { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50', text: 'text-rose-700' },
+]);
 
 const selectableFolders = [
   { id: 'logos', label: 'Logos' },
@@ -82,6 +84,7 @@ const fetchMedia = async () => {
     if (res.ok) {
       const data = await res.json();
       mediaItems.value = data.media || [];
+      trashCount.value = data.trash_count || 0;
       availableExtensions.value = data.available_extensions || [];
       availableMonths.value = data.available_months || [];
     }
@@ -538,8 +541,115 @@ const saveMediaDetails = async () => {
   }
 };
 
+const restoreItem = async (item) => {
+  try {
+    const res = await fetch(`/clubs/${props.club.slug}/admin/media/${item.id}/restore`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      mediaItems.value = mediaItems.value.filter(m => m.id !== item.id);
+      if (previewItem.value?.id === item.id) {
+        previewItem.value = null;
+      }
+      trashCount.value = Math.max(0, trashCount.value - 1);
+      copyToast.value = data.message || `Restored "${item.file_name}" from Trash!`;
+      setTimeout(() => { copyToast.value = ''; }, 3000);
+    }
+  } catch (err) {
+    console.error('Failed to restore media item:', err);
+  }
+};
+
+const forceDeleteItem = async (item) => {
+  if (!confirm(`Are you sure you want to PERMANENTLY delete "${item.file_name}"? This action cannot be undone.`)) return;
+
+  try {
+    const res = await fetch(`/clubs/${props.club.slug}/admin/media/${item.id}/force`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      mediaItems.value = mediaItems.value.filter(m => m.id !== item.id);
+      if (previewItem.value?.id === item.id) {
+        previewItem.value = null;
+      }
+      trashCount.value = Math.max(0, trashCount.value - 1);
+      copyToast.value = data.message || `Permanently deleted "${item.file_name}".`;
+      setTimeout(() => { copyToast.value = ''; }, 3000);
+    }
+  } catch (err) {
+    console.error('Failed to force delete media item:', err);
+  }
+};
+
+const handleBulkRestore = async () => {
+  if (!selectedMediaIds.value.length) return;
+
+  try {
+    const res = await fetch(`/clubs/${props.club.slug}/admin/media/bulk-restore`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ ids: selectedMediaIds.value }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      mediaItems.value = mediaItems.value.filter(m => !selectedMediaIds.value.includes(m.id));
+      trashCount.value = Math.max(0, trashCount.value - selectedMediaIds.value.length);
+      selectedMediaIds.value = [];
+      copyToast.value = data.message || 'Selected files restored successfully!';
+      setTimeout(() => { copyToast.value = ''; }, 3000);
+    }
+  } catch (err) {
+    console.error('Failed bulk restore:', err);
+  }
+};
+
+const handleBulkForceDelete = async () => {
+  if (!selectedMediaIds.value.length) return;
+  if (!confirm(`Are you sure you want to PERMANENTLY delete ${selectedMediaIds.value.length} selected files? This action CANNOT be undone.`)) return;
+
+  try {
+    const res = await fetch(`/clubs/${props.club.slug}/admin/media/bulk-force-delete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ ids: selectedMediaIds.value }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      mediaItems.value = mediaItems.value.filter(m => !selectedMediaIds.value.includes(m.id));
+      trashCount.value = Math.max(0, trashCount.value - selectedMediaIds.value.length);
+      selectedMediaIds.value = [];
+      copyToast.value = data.message || 'Selected files permanently deleted!';
+      setTimeout(() => { copyToast.value = ''; }, 3000);
+    }
+  } catch (err) {
+    console.error('Failed bulk force delete:', err);
+  }
+};
+
 const deleteItem = async (item) => {
-  if (!confirm(`Are you sure you want to delete "${item.file_name}" from the media library?`)) return;
+  if (!confirm(`Move "${item.file_name}" to Trash bin?`)) return;
 
   try {
     const res = await fetch(`/clubs/${props.club.slug}/admin/media/${item.id}`, {
@@ -551,10 +661,14 @@ const deleteItem = async (item) => {
     });
 
     if (res.ok) {
+      const data = await res.json();
       mediaItems.value = mediaItems.value.filter(m => m.id !== item.id);
+      trashCount.value++;
       if (previewItem.value?.id === item.id) {
         previewItem.value = null;
       }
+      copyToast.value = data.message || `Moved "${item.file_name}" to Trash bin.`;
+      setTimeout(() => { copyToast.value = ''; }, 3000);
     }
   } catch (err) {
     console.error('Failed to delete media item:', err);
@@ -651,6 +765,15 @@ const isImage = (mimeOrUrl) => {
               <span class="flex items-center gap-2.5">
                 <span class="text-sm">{{ folder.icon }}</span>
                 <span>{{ folder.label }}</span>
+              </span>
+              <span
+                v-if="folder.id === 'trash' && trashCount > 0"
+                :class="[
+                  'px-2 py-0.5 rounded-full text-[10px] font-black',
+                  activeFolder === 'trash' ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700'
+                ]"
+              >
+                {{ trashCount }}
               </span>
             </button>
           </div>
@@ -780,29 +903,47 @@ const isImage = (mimeOrUrl) => {
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-              <!-- Target Folder Selection for Bulk Move -->
-              <div class="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
-                <span class="text-slate-400">Move to:</span>
-                <select v-model="targetBulkFolder" class="bg-transparent font-bold text-white focus:outline-none cursor-pointer">
-                  <option v-for="f in selectableFolders" :key="f.id" :value="f.id" class="bg-slate-900 text-white">{{ f.label }}</option>
-                </select>
-              </div>
+              <template v-if="activeFolder === 'trash'">
+                <button
+                  type="button"
+                  @click="handleBulkRestore"
+                  class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
+                >
+                  ↻ Restore Selected
+                </button>
+                <button
+                  type="button"
+                  @click="handleBulkForceDelete"
+                  class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
+                >
+                  🔥 Delete Permanently
+                </button>
+              </template>
+              <template v-else>
+                <!-- Target Folder Selection for Bulk Move -->
+                <div class="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
+                  <span class="text-slate-400">Move to:</span>
+                  <select v-model="targetBulkFolder" class="bg-transparent font-bold text-white focus:outline-none cursor-pointer">
+                    <option v-for="f in selectableFolders" :key="f.id" :value="f.id" class="bg-slate-900 text-white">{{ f.label }}</option>
+                  </select>
+                </div>
 
-              <button
-                type="button"
-                @click="handleBulkMove"
-                class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
-              >
-                📁 Move
-              </button>
+                <button
+                  type="button"
+                  @click="handleBulkMove"
+                  class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
+                >
+                  📁 Move
+                </button>
 
-              <button
-                type="button"
-                @click="handleBulkDelete"
-                class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
-              >
-                🗑️ Delete Selected
-              </button>
+                <button
+                  type="button"
+                  @click="handleBulkDelete"
+                  class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
+                >
+                  🗑️ Move to Trash
+                </button>
+              </template>
 
               <button
                 type="button"
@@ -891,10 +1032,18 @@ const isImage = (mimeOrUrl) => {
                     />
                   </div>
 
-                  <!-- Folder Collection Tag -->
-                  <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider shadow-sm">
-                    {{ item.collection_name }}
-                  </span>
+                  <!-- Folder Collection Tag & Badges -->
+                  <div class="absolute top-2 left-2 flex flex-col gap-1 items-start z-10">
+                    <span class="px-2 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider shadow-sm">
+                      {{ item.collection_name }}
+                    </span>
+                    <span v-if="item.is_variant" class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
+                      ✂️ Variant
+                    </span>
+                    <span v-if="item.is_trashed" class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
+                      🗑️ Trashed
+                    </span>
+                  </div>
 
                   <!-- Hover Inspect Overlay -->
                   <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
@@ -936,14 +1085,34 @@ const isImage = (mimeOrUrl) => {
                     📋 Copy
                   </button>
 
-                  <button
-                    type="button"
-                    @click="deleteItem(item)"
-                    class="p-1 text-slate-400 hover:text-rose-600 text-xs transition-colors cursor-pointer"
-                    title="Delete file"
-                  >
-                    🗑️
-                  </button>
+                  <template v-if="activeFolder === 'trash' || item.is_trashed">
+                    <button
+                      type="button"
+                      @click="restoreItem(item)"
+                      class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-lg border border-emerald-200 transition-colors cursor-pointer flex items-center gap-0.5"
+                      title="Restore file from Trash"
+                    >
+                      ↻ Restore
+                    </button>
+                    <button
+                      type="button"
+                      @click="forceDeleteItem(item)"
+                      class="p-1 text-slate-400 hover:text-rose-600 text-xs transition-colors cursor-pointer"
+                      title="Permanently delete file"
+                    >
+                      🔥
+                    </button>
+                  </template>
+                  <template v-else>
+                    <button
+                      type="button"
+                      @click="deleteItem(item)"
+                      class="p-1 text-slate-400 hover:text-rose-600 text-xs transition-colors cursor-pointer"
+                      title="Move file to Trash bin"
+                    >
+                      🗑️
+                    </button>
+                  </template>
                 </div>
               </div>
             </div>
@@ -1142,37 +1311,55 @@ const isImage = (mimeOrUrl) => {
           </div>
 
           <div class="flex items-center gap-2">
-            <button
-              v-if="previewItem?.has_original_backup"
-              type="button"
-              @click="revertMediaToOriginal"
-              :disabled="isReverting"
-              class="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-xl border border-amber-300 transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
-              title="Revert image back to original uncropped master"
-            >
-              <span v-if="isReverting" class="animate-spin">🔄</span>
-              <span v-else>↺</span>
-              <span>{{ isReverting ? 'Reverting...' : 'Revert to Original Master' }}</span>
-            </button>
+            <template v-if="previewItem?.is_trashed || activeFolder === 'trash'">
+              <button
+                type="button"
+                @click="restoreItem(previewItem)"
+                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5"
+              >
+                ↻ Restore File
+              </button>
+              <button
+                type="button"
+                @click="forceDeleteItem(previewItem)"
+                class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5"
+              >
+                🔥 Delete Permanently
+              </button>
+            </template>
+            <template v-else>
+              <button
+                v-if="previewItem?.has_original_backup"
+                type="button"
+                @click="revertMediaToOriginal"
+                :disabled="isReverting"
+                class="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-xl border border-amber-300 transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+                title="Revert image back to original uncropped master"
+              >
+                <span v-if="isReverting" class="animate-spin">🔄</span>
+                <span v-else>↺</span>
+                <span>{{ isReverting ? 'Reverting...' : 'Revert to Original Master' }}</span>
+              </button>
 
-            <button
-              type="button"
-              @click="saveMediaDetails"
-              :disabled="isSavingDetails"
-              class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-extrabold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              <span v-if="isSavingDetails" class="animate-spin">🔄</span>
-              <span v-else>💾</span>
-              <span>{{ isSavingDetails ? 'Saving...' : 'Save Asset Details' }}</span>
-            </button>
+              <button
+                type="button"
+                @click="saveMediaDetails"
+                :disabled="isSavingDetails"
+                class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-extrabold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <span v-if="isSavingDetails" class="animate-spin">🔄</span>
+                <span v-else>💾</span>
+                <span>{{ isSavingDetails ? 'Saving...' : 'Save Asset Details' }}</span>
+              </button>
 
-            <button
-              type="button"
-              @click="deleteItem(previewItem)"
-              class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-all cursor-pointer inline-flex items-center gap-1.5"
-            >
-              <span>🗑️ Delete Asset</span>
-            </button>
+              <button
+                type="button"
+                @click="deleteItem(previewItem)"
+                class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-all cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <span>🗑️ Move to Trash</span>
+              </button>
+            </template>
           </div>
         </div>
 

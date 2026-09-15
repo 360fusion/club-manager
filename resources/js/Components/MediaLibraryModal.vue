@@ -26,8 +26,9 @@ const sortBy = ref('newest');
 
 const availableExtensions = ref([]);
 const availableMonths = ref([]);
+const trashCount = ref(0);
 
-const folders = [
+const folders = computed(() => [
   { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100', text: 'text-slate-700' },
   { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
   { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50', text: 'text-blue-700' },
@@ -35,7 +36,8 @@ const folders = [
   { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-sky-50', text: 'text-sky-700' },
   { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-purple-50', text: 'text-purple-700' },
   { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50', text: 'text-amber-700' },
-];
+  { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50', text: 'text-rose-700' },
+]);
 
 const fetchMedia = async () => {
   if (!props.clubSlug) return;
@@ -53,6 +55,7 @@ const fetchMedia = async () => {
     if (res.ok) {
       const data = await res.json();
       mediaItems.value = data.media || [];
+      trashCount.value = data.trash_count || 0;
       availableExtensions.value = data.available_extensions || [];
       availableMonths.value = data.available_months || [];
     }
@@ -218,9 +221,51 @@ const selectItem = (item) => {
   emit('close');
 };
 
+const restoreItem = async (item, e) => {
+  e.stopPropagation();
+  try {
+    const res = await fetch(`/clubs/${props.clubSlug}/admin/media/${item.id}/restore`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+    });
+
+    if (res.ok) {
+      mediaItems.value = mediaItems.value.filter(m => m.id !== item.id);
+      trashCount.value = Math.max(0, trashCount.value - 1);
+    }
+  } catch (err) {
+    console.error('Failed to restore media item:', err);
+  }
+};
+
+const forceDeleteItem = async (item, e) => {
+  e.stopPropagation();
+  if (!confirm(`Are you sure you want to PERMANENTLY delete "${item.file_name}"?`)) return;
+
+  try {
+    const res = await fetch(`/clubs/${props.clubSlug}/admin/media/${item.id}/force`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+    });
+
+    if (res.ok) {
+      mediaItems.value = mediaItems.value.filter(m => m.id !== item.id);
+      trashCount.value = Math.max(0, trashCount.value - 1);
+    }
+  } catch (err) {
+    console.error('Failed to force delete media item:', err);
+  }
+};
+
 const deleteItem = async (item, e) => {
   e.stopPropagation();
-  if (!confirm(`Are you sure you want to delete "${item.file_name}" from the media library?`)) return;
+  if (!confirm(`Move "${item.file_name}" to Trash bin?`)) return;
 
   try {
     const res = await fetch(`/clubs/${props.clubSlug}/admin/media/${item.id}`, {
@@ -233,6 +278,7 @@ const deleteItem = async (item, e) => {
 
     if (res.ok) {
       mediaItems.value = mediaItems.value.filter(m => m.id !== item.id);
+      trashCount.value++;
     }
   } catch (err) {
     console.error('Failed to delete media item:', err);
@@ -324,6 +370,15 @@ const isImage = (mimeOrUrl) => {
             <span class="flex items-center gap-2">
               <span>{{ folder.icon }}</span>
               <span>{{ folder.label }}</span>
+            </span>
+            <span
+              v-if="folder.id === 'trash' && trashCount > 0"
+              :class="[
+                'px-2 py-0.5 rounded-full text-[10px] font-black',
+                activeFolder === 'trash' ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700'
+              ]"
+            >
+              {{ trashCount }}
             </span>
           </button>
         </div>
@@ -453,10 +508,18 @@ const isImage = (mimeOrUrl) => {
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ item.file_name.split('.').pop() }}</span>
                   </div>
 
-                  <!-- Folder Collection Badge -->
-                  <span class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-slate-900/75 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider">
-                    {{ item.collection_name }}
-                  </span>
+                  <!-- Folder Collection Badge & Variant / Trashed Tags -->
+                  <div class="absolute top-1.5 left-1.5 flex flex-col gap-1 items-start z-10">
+                    <span class="px-2 py-0.5 rounded-md bg-slate-900/75 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider">
+                      {{ item.collection_name }}
+                    </span>
+                    <span v-if="item.is_variant" class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
+                      ✂️ Variant
+                    </span>
+                    <span v-if="item.is_trashed" class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
+                      🗑️ Trashed
+                    </span>
+                  </div>
                 </div>
 
                 <!-- File Info -->
@@ -472,17 +535,43 @@ const isImage = (mimeOrUrl) => {
 
                 <!-- Action Button Overlay -->
                 <div class="pt-2 flex items-center justify-between border-t border-slate-200/60 mt-2">
-                  <span class="text-[11px] font-bold text-sky-600 group-hover:underline flex items-center gap-1">
+                  <span v-if="activeFolder !== 'trash' && !item.is_trashed" class="text-[11px] font-bold text-sky-600 group-hover:underline flex items-center gap-1">
                     <span>✓</span> Select File
                   </span>
-                  <button
-                    type="button"
-                    @click="deleteItem(item, $event)"
-                    class="text-slate-400 hover:text-rose-600 p-1 text-xs cursor-pointer"
-                    title="Delete File"
-                  >
-                    🗑️
-                  </button>
+                  <span v-else class="text-[11px] font-bold text-rose-600">
+                    Trashed File
+                  </span>
+
+                  <div class="flex items-center gap-1">
+                    <template v-if="activeFolder === 'trash' || item.is_trashed">
+                      <button
+                        type="button"
+                        @click="restoreItem(item, $event)"
+                        class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-md border border-emerald-200 transition-colors cursor-pointer"
+                        title="Restore File"
+                      >
+                        ↻ Restore
+                      </button>
+                      <button
+                        type="button"
+                        @click="forceDeleteItem(item, $event)"
+                        class="text-slate-400 hover:text-rose-600 p-1 text-xs cursor-pointer"
+                        title="Delete Permanently"
+                      >
+                        🔥
+                      </button>
+                    </template>
+                    <template v-else>
+                      <button
+                        type="button"
+                        @click="deleteItem(item, $event)"
+                        class="text-slate-400 hover:text-rose-600 p-1 text-xs cursor-pointer"
+                        title="Move to Trash"
+                      >
+                        🗑️
+                      </button>
+                    </template>
+                  </div>
                 </div>
               </div>
             </div>

@@ -156,8 +156,8 @@ const copyInviteLink = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'dashboard' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,8 +172,8 @@ const copyInviteLink = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'meetings' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,8 +188,8 @@ const copyInviteLink = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'events' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,8 +204,8 @@ const copyInviteLink = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'memberships' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,8 +220,8 @@ const copyInviteLink = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'users' || activeTab === 'members'
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,8 +236,8 @@ const copyInviteLink = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'posts' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,8 +252,8 @@ const copyInviteLink = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'newsletters' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,8 +268,8 @@ const copyInviteLink = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'pages' 
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,9 +283,9 @@ const copyInviteLink = () => {
             :href="route('admin.settings.show', { clubSlug })" 
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
-              activeTab === 'settings' || activeTab === 'profile'
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-indigo-500' 
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+              activeTab === 'settings' || activeTab === 'profile' 
+                ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -301,8 +301,8 @@ const copyInviteLink = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'media'
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-sky-500'
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm'
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -317,8 +317,8 @@ const copyInviteLink = () => {
             :class="[
               'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
               activeTab === 'accounting'
-                ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-4 border-emerald-500'
-                : 'hover:bg-slate-800/50 hover:text-white text-slate-300'
+                ? 'bg-slate-800 text-white font-bold shadow-sm'
+                : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
             <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

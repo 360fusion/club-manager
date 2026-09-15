@@ -68,7 +68,7 @@ class AccountingAdminController extends Controller
             ]);
 
         $invoices = Invoice::where('club_id', $club->id)
-            ->with('user')
+            ->with(['user', 'media'])
             ->orderByDesc('created_at')
             ->take(50)
             ->get()
@@ -82,9 +82,18 @@ class AccountingAdminController extends Controller
                 'recipient_name' => $inv->user ? $inv->user->name : 'Member',
                 'created_at' => $inv->created_at->format('d M Y'),
                 'paid_at' => $inv->paid_at ? $inv->paid_at->format('d M Y') : null,
+                'attachment' => $inv->media ? [
+                    'id' => $inv->media->id,
+                    'file_name' => $inv->media->file_name,
+                    'url' => $inv->media->getUrl(),
+                    'mime_type' => $inv->media->mime_type,
+                    'size' => $inv->media->human_readable_size ?? (round($inv->media->size / 1024, 1) . ' KB'),
+                    'is_image' => str_starts_with($inv->media->mime_type ?? '', 'image/'),
+                ] : null,
             ]);
 
         $bills = Bill::where('club_id', $club->id)
+            ->with('media')
             ->orderByDesc('due_date')
             ->take(50)
             ->get()
@@ -99,6 +108,14 @@ class AccountingAdminController extends Controller
                 'status' => $b->status,
                 'notes' => $b->notes,
                 'paid_at' => $b->paid_at ? $b->paid_at->format('d M Y') : null,
+                'attachment' => $b->media ? [
+                    'id' => $b->media->id,
+                    'file_name' => $b->media->file_name,
+                    'url' => $b->media->getUrl(),
+                    'mime_type' => $b->media->mime_type,
+                    'size' => $b->media->human_readable_size ?? (round($b->media->size / 1024, 1) . ' KB'),
+                    'is_image' => str_starts_with($b->media->mime_type ?? '', 'image/'),
+                ] : null,
             ]);
 
         $members = User::whereHas('clubs', fn ($q) => $q->where('clubs.id', $club->id))
@@ -278,6 +295,32 @@ class AccountingAdminController extends Controller
         return redirect()->back()->with('success', 'Double-entry journal entry posted successfully.');
     }
 
+    public function createInvoice(string $clubSlug): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $members = \DB::table('club_user')
+            ->join('users', 'club_user.user_id', '=', 'users.id')
+            ->where('club_user.club_id', $club->id)
+            ->select('users.id', 'users.name', 'users.email')
+            ->orderBy('users.name')
+            ->get()
+            ->map(fn ($u) => [
+                'id'    => $u->id,
+                'name'  => $u->name,
+                'email' => $u->email,
+            ]);
+
+        return Inertia::render('Admin/Accounting/InvoiceCreate', [
+            'club'    => [
+                'id'   => $club->id,
+                'name' => $club->name,
+                'slug' => $club->slug,
+            ],
+            'members' => $members,
+        ]);
+    }
+
     public function storeInvoice(Request $request, string $clubSlug): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
@@ -286,10 +329,24 @@ class AccountingAdminController extends Controller
             'user_id' => ['required', 'exists:users,id'],
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
         ]);
 
         $invCount = Invoice::where('club_id', $club->id)->count() + 1;
         $invNum = 'INV-' . date('Y') . '-' . str_pad((string) $invCount, 4, '0', STR_PAD_LEFT);
+
+        $mediaId = null;
+        if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
+            $media = $club->addMedia($request->file('attachment'))
+                ->withCustomProperties([
+                    'is_accounting_protected' => true,
+                    'source' => 'accounting',
+                    'invoice_number' => $invNum,
+                    'invoice_title' => $validated['title'],
+                ])
+                ->toMediaCollection('accounting');
+            $mediaId = $media->id;
+        }
 
         $invoice = Invoice::create([
             'club_id' => $club->id,
@@ -298,6 +355,7 @@ class AccountingAdminController extends Controller
             'title' => $validated['title'],
             'amount' => $validated['amount'],
             'status' => 'unpaid',
+            'media_id' => $mediaId,
         ]);
 
         // Auto post receivable ledger entry
@@ -314,7 +372,9 @@ class AccountingAdminController extends Controller
             ],
         ]);
 
-        return redirect()->back()->with('success', 'Member invoice created and posted to Accounts Receivable.');
+        return redirect()
+            ->to(route('admin.accounting.index', $clubSlug) . '#sales')
+            ->with('success', 'Invoice created and posted to Accounts Receivable.');
     }
 
     public function storeBill(Request $request, string $clubSlug): RedirectResponse
@@ -327,11 +387,72 @@ class AccountingAdminController extends Controller
             'amount' => ['required', 'numeric', 'min:0.01'],
             'due_date' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
         ]);
 
-        $this->accountingService->createVendorBill($club, $validated);
+        $attachmentFile = $request->hasFile('attachment') ? $request->file('attachment') : null;
+
+        $this->accountingService->createVendorBill($club, $validated, $attachmentFile);
 
         return redirect()->back()->with('success', 'Vendor bill recorded and posted to Accounts Payable.');
+    }
+
+    /**
+     * Remove bill receipt attachment directly from Accounting.
+     */
+    public function deleteBillAttachment(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $bill = Bill::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        if ($bill->media_id && $bill->media) {
+            $bill->media->forceDelete();
+            $bill->update(['media_id' => null]);
+        }
+
+        return redirect()->back()->with('success', 'Bill receipt attachment removed.');
+    }
+
+    /**
+     * Remove invoice document attachment directly from Accounting.
+     */
+    public function deleteInvoiceAttachment(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        if ($invoice->media_id && $invoice->media) {
+            $invoice->media->forceDelete();
+            $invoice->update(['media_id' => null]);
+        }
+
+        return redirect()->back()->with('success', 'Invoice attachment removed.');
+    }
+
+    /**
+     * Delete vendor bill and its attachment directly from Accounting.
+     */
+    public function destroyBill(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $bill = Bill::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        if ($bill->status === 'paid') {
+            return redirect()->back()->with('error', 'Paid bills cannot be deleted. Void or adjust via journal entry.');
+        }
+
+        if ($bill->media_id && $bill->media) {
+            $bill->media->forceDelete();
+        }
+
+        \App\Models\Accounting\JournalEntry::where('club_id', $club->id)
+            ->where('source_type', 'VendorBill')
+            ->where('source_id', $bill->id)
+            ->delete();
+
+        $bill->delete();
+
+        return redirect()->back()->with('success', "Vendor bill {$bill->bill_number} deleted.");
     }
 
     public function markBillPaid(string $clubSlug, int $id): RedirectResponse
@@ -393,45 +514,125 @@ class AccountingAdminController extends Controller
             ->where('users.id', $userId)
             ->firstOrFail();
 
+        // Auto-split the user's name into parts if not already set
+        $nameParts = explode(' ', trim($user->name), 3);
+        $defaultFirst  = $nameParts[0] ?? '';
+        $defaultMiddle = count($nameParts) === 3 ? $nameParts[1] : null;
+        $defaultLast   = count($nameParts) >= 2 ? end($nameParts) : null;
+
         $contact = AccountingContact::firstOrCreate(
             [
                 'club_id' => $club->id,
                 'user_id' => $user->id,
             ],
             [
-                'type' => 'person',
-                'name' => $user->name,
+                'type'           => 'person',
+                'name'           => $user->name,
+                'first_name'     => $defaultFirst,
+                'middle_names'   => $defaultMiddle,
+                'last_name'      => $defaultLast,
+                'preferred_name' => null,
                 'contact_person' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone ?? null,
-                'role' => 'Club Member',
-                'is_active' => true,
+                'email'          => $user->email,
+                'phone'          => $user->phone ?? null,
+                'role'           => 'Club Member',
+                'is_active'      => true,
+                'is_member'      => true,
             ]
         );
 
+        // ── Financial Summary ──────────────────────────────────────────────
+        $userInvoices = Invoice::where('club_id', $club->id)
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        $amountOwed    = $userInvoices->where('status', 'unpaid')->sum('amount');
+        $totalPaid     = $userInvoices->where('status', 'paid')->sum('amount');
+        $creditBalance = $userInvoices->where('status', 'refunded')->sum('amount');
+        $invoiceCount  = $userInvoices->count();
+
+        $lastPaidInvoice = $userInvoices->where('status', 'paid')->first();
+        $lastPaymentDate = $lastPaidInvoice?->paid_at?->format('d M Y')
+            ?? $lastPaidInvoice?->created_at?->format('d M Y');
+        $lastPaymentAmount = $lastPaidInvoice ? '£' . number_format($lastPaidInvoice->amount, 2) : null;
+
+        $unpaidInvoices = $userInvoices->where('status', 'unpaid')->map(fn ($inv) => [
+            'id'               => $inv->id,
+            'invoice_number'   => $inv->invoice_number,
+            'title'            => $inv->title,
+            'amount'           => '£' . number_format($inv->amount, 2),
+            'created_at'       => $inv->created_at->format('d M Y'),
+        ])->values();
+
+        // Active membership plan
+        $membership = \DB::table('memberships')
+            ->join('membership_plans', 'memberships.membership_plan_id', '=', 'membership_plans.id')
+            ->where('memberships.club_id', $club->id)
+            ->where('memberships.user_id', $user->id)
+            ->where('memberships.status', 'active')
+            ->select('membership_plans.name', 'membership_plans.price', 'membership_plans.billing_period',
+                     'memberships.starts_at', 'memberships.ends_at', 'memberships.status')
+            ->orderByDesc('memberships.starts_at')
+            ->first();
+
+        // Member since (oldest membership record, or club pivot created_at)
+        $memberSince = \DB::table('club_user')
+            ->where('club_id', $club->id)
+            ->where('user_id', $user->id)
+            ->value('created_at');
+
+        $memberSummary = [
+            'amount_owed'          => $amountOwed,
+            'amount_owed_formatted'=> '£' . number_format($amountOwed, 2),
+            'credit_balance'       => $creditBalance,
+            'credit_balance_formatted' => '£' . number_format($creditBalance, 2),
+            'total_paid'           => $totalPaid,
+            'total_paid_formatted' => '£' . number_format($totalPaid, 2),
+            'invoice_count'        => $invoiceCount,
+            'last_payment_date'    => $lastPaymentDate,
+            'last_payment_amount'  => $lastPaymentAmount,
+            'unpaid_invoices'      => $unpaidInvoices,
+            'membership_plan'      => $membership ? $membership->name : null,
+            'membership_price'     => $membership ? '£' . number_format($membership->price, 2) : null,
+            'membership_period'    => $membership ? $membership->billing_period : null,
+            'membership_renews'    => ($membership && $membership->ends_at)
+                ? \Carbon\Carbon::parse($membership->ends_at)->format('d M Y') : null,
+            'membership_status'    => $membership ? $membership->status : 'no_plan',
+            'member_since'         => $memberSince
+                ? \Carbon\Carbon::parse($memberSince)->format('d M Y') : null,
+        ];
+        // ─────────────────────────────────────────────────────────────────
+
         return Inertia::render('Admin/Accounting/ContactForm', [
             'club' => [
-                'id' => $club->id,
+                'id'   => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
             'contact' => [
-                'id' => $contact->id,
-                'type' => $contact->type,
-                'name' => $contact->name,
+                'id'             => $contact->id,
+                'type'           => $contact->type,
+                'name'           => $contact->name,
+                'first_name'     => $contact->first_name,
+                'middle_names'   => $contact->middle_names,
+                'last_name'      => $contact->last_name,
+                'preferred_name' => $contact->preferred_name,
                 'contact_person' => $contact->contact_person,
-                'email' => $contact->email,
-                'phone' => $contact->phone,
-                'role' => $contact->role,
-                'tax_id' => $contact->tax_id,
+                'email'          => $contact->email,
+                'phone'          => $contact->phone,
+                'role'           => $contact->role,
+                'tax_id'         => $contact->tax_id,
                 'address_line_1' => $contact->address_line_1,
                 'address_line_2' => $contact->address_line_2,
-                'city' => $contact->city,
-                'postcode' => $contact->postcode,
-                'country' => $contact->country,
-                'notes' => $contact->notes,
-                'is_active' => $contact->is_active,
+                'city'           => $contact->city,
+                'postcode'       => $contact->postcode,
+                'country'        => $contact->country,
+                'notes'          => $contact->notes,
+                'is_active'      => $contact->is_active,
+                'is_member'      => true,
             ],
+            'member_summary' => $memberSummary,
         ]);
     }
 
@@ -442,26 +643,31 @@ class AccountingAdminController extends Controller
 
         return Inertia::render('Admin/Accounting/ContactForm', [
             'club' => [
-                'id' => $club->id,
+                'id'   => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
             'contact' => [
-                'id' => $contact->id,
-                'type' => $contact->type,
-                'name' => $contact->name,
+                'id'             => $contact->id,
+                'type'           => $contact->type,
+                'name'           => $contact->name,
+                'first_name'     => $contact->first_name,
+                'middle_names'   => $contact->middle_names,
+                'last_name'      => $contact->last_name,
+                'preferred_name' => $contact->preferred_name,
                 'contact_person' => $contact->contact_person,
-                'email' => $contact->email,
-                'phone' => $contact->phone,
-                'role' => $contact->role,
-                'tax_id' => $contact->tax_id,
+                'email'          => $contact->email,
+                'phone'          => $contact->phone,
+                'role'           => $contact->role,
+                'tax_id'         => $contact->tax_id,
                 'address_line_1' => $contact->address_line_1,
                 'address_line_2' => $contact->address_line_2,
-                'city' => $contact->city,
-                'postcode' => $contact->postcode,
-                'country' => $contact->country,
-                'notes' => $contact->notes,
-                'is_active' => $contact->is_active,
+                'city'           => $contact->city,
+                'postcode'       => $contact->postcode,
+                'country'        => $contact->country,
+                'notes'          => $contact->notes,
+                'is_active'      => $contact->is_active,
+                'is_member'      => $contact->is_member ?? false,
             ],
         ]);
     }
@@ -471,37 +677,63 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
         $validated = $request->validate([
-            'type' => ['required', 'in:person,business'],
-            'name' => ['required', 'string', 'max:255'],
+            'name'           => ['nullable', 'required_without:first_name', 'string', 'max:255'],
+            'first_name'     => ['nullable', 'required_without:name', 'string', 'max:100'],
+            'middle_names'   => ['nullable', 'string', 'max:150'],
+            'last_name'      => ['nullable', 'string', 'max:100'],
+            'preferred_name' => ['nullable', 'string', 'max:100'],
+            'type'           => ['nullable', 'string', 'in:person,business'],
             'contact_person' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'role' => ['required', 'string', 'max:100'],
-            'tax_id' => ['nullable', 'string', 'max:50'],
+            'email'          => ['nullable', 'email', 'max:255'],
+            'phone'          => ['nullable', 'string', 'max:50'],
+            'role'           => ['required', 'string', 'max:100'],
+            'tax_id'         => ['nullable', 'string', 'max:50'],
             'address_line_1' => ['nullable', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:100'],
-            'postcode' => ['nullable', 'string', 'max:20'],
-            'country' => ['nullable', 'string', 'max:100'],
-            'notes' => ['nullable', 'string', 'max:1000'],
+            'city'           => ['nullable', 'string', 'max:100'],
+            'postcode'       => ['nullable', 'string', 'max:20'],
+            'country'        => ['nullable', 'string', 'max:100'],
+            'notes'          => ['nullable', 'string', 'max:1000'],
         ]);
 
+        $firstName = $validated['first_name'] ?? null;
+        $lastName = $validated['last_name'] ?? null;
+        $middleNames = $validated['middle_names'] ?? null;
+
+        if (!empty($firstName)) {
+            $fullName = trim(implode(' ', array_filter([
+                $firstName,
+                $middleNames,
+                $lastName,
+            ])));
+        } else {
+            $fullName = trim($validated['name'] ?? '');
+            $parts = explode(' ', $fullName, 2);
+            $firstName = $parts[0] ?? $fullName;
+            $lastName = $parts[1] ?? null;
+        }
+
         AccountingContact::create([
-            'club_id' => $club->id,
-            'type' => $validated['type'],
-            'name' => $validated['name'],
+            'club_id'        => $club->id,
+            'type'           => $validated['type'] ?? 'person',
+            'name'           => $fullName,
+            'first_name'     => $firstName,
+            'middle_names'   => $middleNames,
+            'last_name'      => $lastName,
+            'preferred_name' => $validated['preferred_name'] ?? null,
             'contact_person' => $validated['contact_person'] ?? null,
-            'email' => $validated['email'] ?? null,
-            'phone' => $validated['phone'] ?? null,
-            'role' => $validated['role'],
-            'tax_id' => $validated['tax_id'] ?? null,
+            'email'          => $validated['email'] ?? null,
+            'phone'          => $validated['phone'] ?? null,
+            'role'           => $validated['role'],
+            'tax_id'         => $validated['tax_id'] ?? null,
             'address_line_1' => $validated['address_line_1'] ?? null,
             'address_line_2' => $validated['address_line_2'] ?? null,
-            'city' => $validated['city'] ?? null,
-            'postcode' => $validated['postcode'] ?? null,
-            'country' => $validated['country'] ?? 'United Kingdom',
-            'notes' => $validated['notes'] ?? null,
-            'is_active' => true,
+            'city'           => $validated['city'] ?? null,
+            'postcode'       => $validated['postcode'] ?? null,
+            'country'        => $validated['country'] ?? 'United Kingdom',
+            'notes'          => $validated['notes'] ?? null,
+            'is_active'      => true,
+            'is_member'      => false,
         ]);
 
         return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, '#contacts'])->with('success', 'New contact added to directory.');
@@ -513,36 +745,68 @@ class AccountingAdminController extends Controller
         $contact = AccountingContact::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
         $validated = $request->validate([
-            'type' => ['required', 'in:person,business'],
-            'name' => ['required', 'string', 'max:255'],
+            'name'           => ['nullable', 'required_without:first_name', 'string', 'max:255'],
+            'first_name'     => ['nullable', 'required_without:name', 'string', 'max:100'],
+            'middle_names'   => ['nullable', 'string', 'max:150'],
+            'last_name'      => ['nullable', 'string', 'max:100'],
+            'preferred_name' => ['nullable', 'string', 'max:100'],
+            'type'           => ['nullable', 'string', 'in:person,business'],
             'contact_person' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'role' => ['required', 'string', 'max:100'],
-            'tax_id' => ['nullable', 'string', 'max:50'],
+            'email'          => ['nullable', 'email', 'max:255'],
+            'phone'          => ['nullable', 'string', 'max:50'],
+            'role'           => ['required', 'string', 'max:100'],
+            'tax_id'         => ['nullable', 'string', 'max:50'],
             'address_line_1' => ['nullable', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:100'],
-            'postcode' => ['nullable', 'string', 'max:20'],
-            'country' => ['nullable', 'string', 'max:100'],
-            'notes' => ['nullable', 'string', 'max:1000'],
+            'city'           => ['nullable', 'string', 'max:100'],
+            'postcode'       => ['nullable', 'string', 'max:20'],
+            'country'        => ['nullable', 'string', 'max:100'],
+            'notes'          => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $contact->update([
-            'type' => $validated['type'],
-            'name' => $validated['name'],
-            'contact_person' => $validated['contact_person'] ?? null,
-            'email' => $validated['email'] ?? null,
-            'phone' => $validated['phone'] ?? null,
-            'role' => $validated['role'],
-            'tax_id' => $validated['tax_id'] ?? null,
+        $firstName = $validated['first_name'] ?? null;
+        $lastName = $validated['last_name'] ?? null;
+        $middleNames = $validated['middle_names'] ?? null;
+
+        if (!empty($firstName)) {
+            $fullName = trim(implode(' ', array_filter([
+                $firstName,
+                $middleNames,
+                $lastName,
+            ])));
+        } else {
+            $fullName = trim($validated['name'] ?? $contact->name);
+            $parts = explode(' ', $fullName, 2);
+            $firstName = $contact->first_name ?: ($parts[0] ?? $fullName);
+            $lastName = $contact->last_name ?: ($parts[1] ?? null);
+        }
+
+        $updateData = [
+            'name'           => $fullName,
+            'first_name'     => $firstName,
+            'middle_names'   => $middleNames,
+            'last_name'      => $lastName,
+            'preferred_name' => $validated['preferred_name'] ?? $contact->preferred_name,
+            'email'          => $validated['email'] ?? null,
+            'phone'          => $validated['phone'] ?? null,
+            'role'           => $contact->is_member ? 'Club Member' : $validated['role'],
+            'tax_id'         => $validated['tax_id'] ?? null,
             'address_line_1' => $validated['address_line_1'] ?? null,
             'address_line_2' => $validated['address_line_2'] ?? null,
-            'city' => $validated['city'] ?? null,
-            'postcode' => $validated['postcode'] ?? null,
-            'country' => $validated['country'] ?? 'United Kingdom',
-            'notes' => $validated['notes'] ?? null,
-        ]);
+            'city'           => $validated['city'] ?? null,
+            'postcode'       => $validated['postcode'] ?? null,
+            'country'        => $validated['country'] ?? 'United Kingdom',
+            'notes'          => $validated['notes'] ?? null,
+        ];
+
+        if (isset($validated['type'])) {
+            $updateData['type'] = $validated['type'];
+        }
+        if (array_key_exists('contact_person', $validated)) {
+            $updateData['contact_person'] = $validated['contact_person'];
+        }
+
+        $contact->update($updateData);
 
         return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, '#contacts'])->with('success', 'Contact details updated successfully.');
     }

@@ -189,4 +189,37 @@ class MeetingFinancialReturnTest extends TestCase
             ->has('confirmedDiningCount')
         );
     }
+
+    public function test_can_save_draft_financial_return(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->post(route('admin.meetings.financial_return.store', [
+                'clubSlug' => $this->club->slug,
+                'id' => $this->meeting->id,
+            ]), [
+                'is_draft' => true,
+                'dining_fee_per_head' => 35.00,
+                'paid_diners_count' => 15,
+                'kitchen_cost_per_head' => 25.00,
+                'kitchen_vendor_name' => 'Draft Caterer',
+                'raffle_amount' => 120.00,
+            ]);
+
+        $response->assertRedirect(route('admin.meetings.financial_return.show', [
+            'clubSlug' => $this->club->slug,
+            'id' => $this->meeting->id,
+        ]));
+
+        $this->assertDatabaseHas('meeting_financial_returns', [
+            'club_id' => $this->club->id,
+            'meeting_id' => $this->meeting->id,
+            'is_draft' => true,
+            'dining_fee_per_head' => 35.00,
+            'paid_diners_count' => 15,
+            'kitchen_vendor_name' => 'Draft Caterer',
+            'raffle_amount' => 120.00,
+            'vendor_bill_id' => null,
+            'journal_entry_id' => null,
+        ]);
+    }
 }
