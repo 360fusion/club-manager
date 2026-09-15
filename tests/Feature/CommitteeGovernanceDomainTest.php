@@ -27,6 +27,7 @@ use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
 use App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal;
+use App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal;
 use App\Domains\ClubAccounting\Mail\CommitteeAgendaPackMailable;
 use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use Carbon\Carbon;
@@ -741,5 +742,87 @@ TEXT;
             ->assertSee('no candidate may be balloted for initiation or joining in open lodge without prior recommendation')
             ->assertSee('the Lodge Committee is required to audit and examine all liabilities, bills, and demands')
             ->assertHasNoErrors();
+    }
+
+    public function test_create_committee_meeting_modal_auto_title_and_default_venue(): void
+    {
+        $this->actingAs($this->admin);
+
+        $testDate = '2026-10-15';
+        $expectedTitle = 'Committee Meeting – 15th October 2026';
+
+        $test = Livewire::test(CreateCommitteeMeetingModal::class, ['clubSlug' => $this->club->slug])
+            ->assertSet('isOpen', false)
+            ->call('openModal')
+            ->assertSet('isOpen', true);
+
+        $this->assertNotEmpty($test->get('location'));
+
+        $test->set('meeting_date', $testDate)
+            ->assertSet('title', $expectedTitle)
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertDispatched('meetingCreated');
+
+        $this->assertDatabaseHas('club_acc_committee_meetings', [
+            'club_id' => $this->club->id,
+            'title' => $expectedTitle,
+            'status' => 'scheduled',
+        ]);
+    }
+
+    public function test_create_committee_meeting_modal_suggests_offset_date_from_linked_meeting(): void
+    {
+        $this->actingAs($this->admin);
+
+        // Create an upcoming regular lodge meeting on 2026-11-20
+        $regularMeeting = Meeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'November Regular Lodge Meeting',
+            'meeting_date' => '2026-11-20',
+            'starts_at' => '18:30:00',
+            'venue' => 'Grand Masonic Temple, Grey Street',
+            'dress_code' => 'Dark Suit',
+            'status' => 'scheduled',
+        ]);
+
+        // 9 days prior is 2026-11-11
+        $expectedCommitteeDate = '2026-11-11';
+        $expectedTitle = 'Committee Meeting – 11th November 2026';
+
+        Livewire::test(CreateCommitteeMeetingModal::class, ['clubSlug' => $this->club->slug])
+            ->call('openModal')
+            ->set('linked_regular_meeting_id', $regularMeeting->id)
+            ->assertSet('meeting_date', $expectedCommitteeDate)
+            ->assertSet('title', $expectedTitle)
+            ->assertSet('location', 'Grand Masonic Temple, Grey Street')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('club_acc_committee_meetings', [
+            'club_id' => $this->club->id,
+            'linked_regular_meeting_id' => $regularMeeting->id,
+            'title' => $expectedTitle,
+            'location' => 'Grand Masonic Temple, Grey Street',
+        ]);
+    }
+
+    public function test_create_committee_meeting_modal_guarantees_title_if_blank_on_save(): void
+    {
+        $this->actingAs($this->admin);
+
+        Livewire::test(CreateCommitteeMeetingModal::class, ['clubSlug' => $this->club->slug])
+            ->call('openModal')
+            ->set('meeting_date', '2026-12-05')
+            ->set('title', '') // User clears title
+            ->set('location', 'Lodge Hall')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('club_acc_committee_meetings', [
+            'club_id' => $this->club->id,
+            'title' => 'Committee Meeting – 5th December 2026',
+            'location' => 'Lodge Hall',
+        ]);
     }
 }

@@ -140,35 +140,69 @@
                 </div>
 
                 <form wire:submit="createMeeting" class="space-y-4 text-xs">
-                    <div class="space-y-1">
-                        <label class="block font-bold text-slate-700">Meeting Title</label>
-                        <input
-                            type="text"
-                            wire:model="newTitle"
-                            placeholder="e.g. Regular Lodge Committee - October 2026"
-                            class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                            required
-                        />
-                        @error('newTitle') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                    </div>
+                    <!-- Helper: Link to Regular Lodge Meeting (Optional) -->
+                    @if(isset($upcomingRegularMeetings) && $upcomingRegularMeetings->isNotEmpty())
+                        <div class="p-3 bg-indigo-50/50 border border-indigo-200/70 rounded-2xl space-y-1">
+                            <label class="block font-bold text-indigo-950 flex items-center justify-between">
+                                <span class="flex items-center gap-1.5">
+                                    <span>🔗</span>
+                                    <span>Link to Regular Lodge Meeting (Optional)</span>
+                                </span>
+                                <span class="text-[10px] font-semibold text-indigo-600 bg-indigo-100/70 px-2 py-0.5 rounded-full">Auto-Suggests -9 Days</span>
+                            </label>
+                            <select
+                                wire:model.live="linked_regular_meeting_id"
+                                class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                            >
+                                <option value="">-- Standalone Committee Meeting --</option>
+                                @foreach($upcomingRegularMeetings as $regMeeting)
+                                    <option value="{{ $regMeeting->id }}">
+                                        {{ $regMeeting->title ?: 'Regular Lodge Meeting' }} ({{ $regMeeting->meeting_date?->format('d M Y') }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
                     <div class="space-y-1">
-                        <label class="block font-bold text-slate-700">Date & Time</label>
+                        <div class="flex items-center justify-between">
+                            <label class="block font-bold text-slate-700">Date &amp; Time</label>
+                            <span class="text-[10px] text-slate-400">Triggers standardized title</span>
+                        </div>
                         <input
                             type="datetime-local"
-                            wire:model="newDate"
-                            class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                            wire:model.live="newDate"
+                            class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition-all font-semibold"
                             required
                         />
                         @error('newDate') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="space-y-1">
-                        <label class="block font-bold text-slate-700">Location / Room</label>
+                        <div class="flex items-center justify-between">
+                            <label class="block font-bold text-slate-700">Meeting Title</label>
+                            <span class="text-[10px] text-emerald-600 font-bold">✓ Auto-Generated from Date</span>
+                        </div>
+                        <input
+                            type="text"
+                            wire:model.live="newTitle"
+                            placeholder="e.g. Committee Meeting – 15th September 2026"
+                            class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-slate-900 bg-white transition-all"
+                            required
+                        />
+                        <p class="text-[10px] text-slate-400">Standardized title generated from meeting date. Can be customized if desired.</p>
+                        @error('newTitle') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between">
+                            <label class="block font-bold text-slate-700">Location / Venue</label>
+                            <span class="text-[10px] text-indigo-600 font-semibold">Defaulted</span>
+                        </div>
                         <input
                             type="text"
                             wire:model="newLocation"
-                            placeholder="e.g. Committee Room 2, Masonic Hall"
+                            placeholder="e.g. Masonic Hall, Wellington Street..."
                             class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                         />
                         @error('newLocation') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
@@ -178,19 +212,22 @@
                         <button
                             type="button"
                             wire:click="closeCreateModal"
-                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all cursor-pointer"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all cursor-pointer"
+                            class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
                         >
-                            Schedule Meeting
+                            <span>📅</span>
+                            <span>Schedule Meeting</span>
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     @endif
+
+    @livewire(\App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal::class, ['clubSlug' => $club->slug], key('create-comm-modal-' . $club->slug))
 </div>

@@ -4,6 +4,7 @@ namespace App\Domains\ClubAccounting\Models;
 
 use App\Domains\ClubAccounting\Enums\CommitteeMeetingStatus;
 use App\Models\Club;
+use App\Models\Meeting;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,8 +19,10 @@ class ClubCommitteeMeeting extends Model
 
     protected $fillable = [
         'club_id',
+        'linked_regular_meeting_id',
         'title',
         'meeting_date',
+        'time_opened',
         'location',
         'status',
         'notes_raw',
@@ -82,5 +85,10 @@ class ClubCommitteeMeeting extends Model
     public function noticesOfMotion(): HasMany
     {
         return $this->hasMany(ClubNoticeOfMotion::class, 'committee_meeting_id');
+    }
+
+    public function linkedRegularMeeting(): BelongsTo
+    {
+        return $this->belongsTo(Meeting::class, 'linked_regular_meeting_id');
     }
 }

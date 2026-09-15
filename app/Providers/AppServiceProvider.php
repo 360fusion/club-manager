@@ -30,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
                 'committee.agenda-pack-preview-modal',
                 \App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal::class
             );
+            Livewire::component(
+                'committee.create-committee-meeting-modal',
+                \App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal::class
+            );
         }
 
         if (class_exists(Cashier::class)) {

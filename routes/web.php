@@ -213,6 +213,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/committee/{meetingId}/minutes', \App\Domains\ClubAccounting\Livewire\Committee\LiveMinuteTaker::class)->name('admin.committee.minutes');
     Route::get('/clubs/{clubSlug}/admin/committee/{meetingId}/pack-pdf', [\App\Domains\ClubAccounting\Http\Controllers\CommitteePackController::class, 'pdf'])->name('admin.committee.pack.pdf');
     Route::get('/committee/meetings/{meetingId}/pack-pdf', [\App\Domains\ClubAccounting\Http\Controllers\CommitteePackController::class, 'pdf'])->name('committee.pack.pdf');
+    Route::get('/committee/meetings/{meetingId}/minutes', function ($meetingId) {
+        $meeting = \App\Domains\ClubAccounting\Models\ClubCommitteeMeeting::with('club')->findOrFail($meetingId);
+        return redirect()->route('admin.committee.minutes', [
+            'clubSlug' => $meeting->club->slug,
+            'meetingId' => $meeting->id,
+        ]);
+    })->name('committee.minutes');
+    Route::get('/committee/meetings/{meetingId}', function ($meetingId) {
+        $meeting = \App\Domains\ClubAccounting\Models\ClubCommitteeMeeting::with('club')->findOrFail($meetingId);
+        return redirect()->route('admin.committee.workspace', [
+            'clubSlug' => $meeting->club->slug,
+            'meetingId' => $meeting->id,
+        ]);
+    })->name('committee.workspace');
     Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
