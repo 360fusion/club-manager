@@ -80,6 +80,15 @@ onUnmounted(() => {
 const form = useForm({
   name: props.club.name || '',
   lodge_number: props.club.lodge_number || props.settings.lodge_number || '1418',
+  lodge_status: props.settings.lodge_status || 'Normal',
+  installed_masters: props.settings.installed_masters || 'No',
+  ritual: props.settings.ritual || '-',
+  consecration_date: props.settings.consecration_date || '3rd April 1873',
+  constitution_date: props.settings.constitution_date || '21st October 1872',
+  subscription_month: props.settings.subscription_month || 'April',
+  installation_month: props.settings.installation_month || 'April',
+  provincial_ar_month: props.settings.provincial_ar_month || 'March',
+  meeting_formula: props.settings.meeting_formula || '4th Thu. 1 To 11 Ex. 6, 7, 8',
   tagline: props.settings.tagline || '',
   logo_url: props.club.logo_url || '',
   primary_color: props.settings.primary_color || '#0369a1',
@@ -608,6 +617,129 @@ const updateMemberRank = (userId, newRank) => {
 
       <!-- TAB 1: GENERAL SETTINGS -->
       <div v-if="activeTab === 'general'" class="space-y-6">
+
+        <!-- Lodge Details Card (Matches Lodge Particulars Specs) -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div class="border-b border-slate-100 pb-3">
+            <h2 class="text-2xl font-extrabold text-slate-900">Details</h2>
+          </div>
+
+          <!-- 2-Column Responsive Layout -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1 text-sm font-semibold text-slate-800">
+            <!-- Left Column -->
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-100 py-3.5">
+                <span class="font-black text-slate-900">Status</span>
+                <span class="px-3 py-0.5 rounded border border-emerald-500 text-emerald-600 bg-white text-xs font-medium">
+                  {{ form.lodge_status || 'Normal' }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-100 py-3.5">
+                <span class="font-black text-slate-900">Installed Masters</span>
+                <span class="text-slate-800 font-normal">{{ form.installed_masters || 'No' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-100 py-3.5">
+                <span class="font-black text-slate-900">Ritual</span>
+                <span class="text-slate-800 font-normal">{{ form.ritual || '-' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-100 py-3.5">
+                <span class="font-black text-slate-900">Consecration Date</span>
+                <span class="text-slate-800 font-normal">{{ form.consecration_date || '3rd April 1873' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-100 py-3.5">
+                <span class="font-black text-slate-900">Constitution Date</span>
+                <span class="text-slate-800 font-normal">{{ form.constitution_date || '21st October 1872' }}</span>
+              </div>
+            </div>
+
+            <!-- Right Column -->
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-100 py-3.5">
+                <span class="font-black text-slate-900">Subscription Month</span>
+                <span class="text-slate-800 font-normal">{{ form.subscription_month || 'April' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-100 py-3.5">
+                <span class="font-black text-slate-900">Installation Month</span>
+                <span class="text-slate-800 font-normal">{{ form.installation_month || 'April' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-100 py-3.5">
+                <span class="font-black text-slate-900">Provincial AR Month</span>
+                <span class="text-slate-800 font-normal">{{ form.provincial_ar_month || 'March' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-100 py-3.5">
+                <span class="font-black text-slate-900">Meeting Formula</span>
+                <span class="text-slate-800 font-normal">{{ form.meeting_formula || '4th Thu. 1 To 11 Ex. 6, 7, 8' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Particulars Inputs Grid -->
+          <div class="border-t border-slate-100 pt-5 space-y-4">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500">Edit Lodge Particulars & Dates</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Status</label>
+                <select v-model="form.lodge_status" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="Normal">Normal</option>
+                  <option value="Active">Active</option>
+                  <option value="Suspended">Suspended</option>
+                  <option value="Erased">Erased</option>
+                  <option value="Amalgamated">Amalgamated</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Installed Masters</label>
+                <select v-model="form.installed_masters" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Ritual</label>
+                <input v-model="form.ritual" type="text" placeholder="e.g. Emulation / Stability" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Consecration Date</label>
+                <input v-model="form.consecration_date" type="text" placeholder="e.g. 3rd April 1873" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Constitution Date</label>
+                <input v-model="form.constitution_date" type="text" placeholder="e.g. 21st October 1872" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Subscription Month</label>
+                <select v-model="form.subscription_month" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option v-for="m in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']" :key="m" :value="m">{{ m }}</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Installation Month</label>
+                <select v-model="form.installation_month" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option v-for="m in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']" :key="m" :value="m">{{ m }}</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Provincial AR Month</label>
+                <select v-model="form.provincial_ar_month" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option v-for="m in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']" :key="m" :value="m">{{ m }}</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Meeting Formula Rule</label>
+                <input v-model="form.meeting_formula" type="text" placeholder="e.g. 4th Thu. 1 To 11 Ex. 6, 7, 8" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
           <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">🏢 Organization Profile</h2>
           
