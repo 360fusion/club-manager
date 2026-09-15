@@ -45,3 +45,10 @@ php artisan boost:install
 
 Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
 </laravel-boost-guidelines>
+
+# Project Rules & Customizations
+
+## Accounting ERP Component Isolation Guidelines
+- All accounting models, services, controllers, migrations, and Vue 3 frontend components MUST remain strictly isolated in dedicated namespaces (`App\Models\Accounting\*`, `App\Services\AccountingService`, `App\Http\Controllers\AccountingAdminController`, `resources/js/Pages/Admin/Accounting/*`, `accounting_*` database tables).
+- Do NOT mutate third-party vendor code directly; all custom logic must be encapsulated in standalone services so that upstream Git / Composer updates can be pulled cleanly without merge conflicts or breaking changes.
+
