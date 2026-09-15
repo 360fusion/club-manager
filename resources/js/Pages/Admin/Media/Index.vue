@@ -917,10 +917,10 @@ const isImage = (mimeOrUrl) => {
 
     <!-- Media Asset Details & Inspector Modal -->
     <div v-if="previewItem" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="previewItem = null">
-      <div class="bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 relative overflow-hidden" @click.stop>
+      <div class="bg-white rounded-3xl max-w-4xl w-full py-4 px-6 sm:px-8 shadow-2xl border border-slate-200 space-y-3.5 relative overflow-hidden" @click.stop>
         
         <!-- Modal Top Header -->
-        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
           <div class="flex items-center gap-3">
             <span class="text-2xl">{{ getFileIcon(previewItem.mime_type || previewItem.file_name) }}</span>
             <div>
@@ -933,32 +933,32 @@ const isImage = (mimeOrUrl) => {
         </div>
 
         <!-- Success Toast Alert -->
-        <div v-if="saveSuccessMsg" class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in">
+        <div v-if="saveSuccessMsg" class="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in">
           <span>✓</span>
           <span>{{ saveSuccessMsg }}</span>
         </div>
 
         <!-- Main Inspector Layout: Left Visual Preview + Right Editable Metadata -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
           
           <!-- Left Column: Visual Image / File Preview Box & Technical Specs -->
-          <div class="space-y-4">
-            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col items-center justify-center min-h-[260px] max-h-[380px] overflow-hidden relative">
+          <div class="space-y-3">
+            <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200 flex flex-col items-center justify-center min-h-[160px] max-h-[240px] overflow-hidden relative">
               <img
                 v-if="isImage(previewItem.mime_type || previewItem.file_name)"
                 :src="previewItem.original_url"
                 :alt="previewItem.alt_text || previewItem.name"
-                class="max-h-[320px] w-auto object-contain rounded-xl shadow-sm"
+                class="max-h-[220px] w-auto object-contain rounded-xl shadow-sm"
               />
-              <div v-else class="py-12 text-center space-y-2">
-                <span class="text-6xl block">{{ getFileIcon(previewItem.mime_type || previewItem.file_name) }}</span>
-                <span class="text-sm font-extrabold text-slate-800 block">{{ previewItem.file_name }}</span>
-                <span class="text-xs font-semibold text-slate-400 block">{{ previewItem.human_size }}</span>
+              <div v-else class="py-6 text-center space-y-1.5">
+                <span class="text-5xl block">{{ getFileIcon(previewItem.mime_type || previewItem.file_name) }}</span>
+                <span class="text-xs font-extrabold text-slate-800 block">{{ previewItem.file_name }}</span>
+                <span class="text-[11px] font-semibold text-slate-400 block">{{ previewItem.human_size }}</span>
               </div>
             </div>
 
             <!-- Technical File Specifications Table -->
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1.5 text-xs">
               <div class="font-extrabold text-slate-900 uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60">
                 Technical Specifications
               </div>
@@ -971,7 +971,7 @@ const isImage = (mimeOrUrl) => {
             </div>
 
             <!-- Asset Usage Tracking Section -->
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1.5 text-xs">
               <div class="font-extrabold text-slate-900 uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60 flex items-center justify-between">
                 <span>Asset Usage Tracking</span>
                 <span v-if="isLoadingUsages" class="animate-spin text-sky-600">🔄</span>
@@ -980,19 +980,19 @@ const isImage = (mimeOrUrl) => {
                 </span>
               </div>
 
-              <div v-if="isLoadingUsages" class="py-2 text-slate-400 font-semibold text-center">
+              <div v-if="isLoadingUsages" class="py-1.5 text-slate-400 font-semibold text-center">
                 Checking asset references across news & settings...
               </div>
 
-              <div v-else-if="!assetUsages.length" class="py-2 text-slate-400 font-medium italic text-center">
+              <div v-else-if="!assetUsages.length" class="py-1.5 text-slate-400 font-medium italic text-center text-[11px]">
                 This asset is not currently published on news articles or club settings.
               </div>
 
-              <div v-else class="space-y-1.5 pt-1">
+              <div v-else class="space-y-1 pt-0.5 max-h-[100px] overflow-y-auto">
                 <div
                   v-for="(u, idx) in assetUsages"
                   :key="idx"
-                  class="p-2 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs"
+                  class="p-1.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs"
                 >
                   <div class="truncate pr-2">
                     <span class="font-bold text-slate-900 block truncate">{{ u.title }}</span>
@@ -1007,7 +1007,7 @@ const isImage = (mimeOrUrl) => {
           </div>
 
           <!-- Right Column: Editable Metadata Form -->
-          <div class="space-y-4 bg-slate-50/50 p-5 rounded-2xl border border-slate-200">
+          <div class="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200">
             <div class="font-extrabold text-slate-900 uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200">
               Editable Asset Metadata
             </div>
@@ -1019,7 +1019,7 @@ const isImage = (mimeOrUrl) => {
                 v-model="previewItem.name"
                 type="text"
                 placeholder="Enter display title..."
-                class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
+                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
               />
             </div>
 
@@ -1033,7 +1033,7 @@ const isImage = (mimeOrUrl) => {
                 v-model="previewItem.alt_text"
                 type="text"
                 placeholder="Descriptive alt text for screen readers..."
-                class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
+                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
               />
             </div>
 
@@ -1042,26 +1042,26 @@ const isImage = (mimeOrUrl) => {
               <label class="block text-xs font-extrabold text-slate-800">Caption / Description</label>
               <textarea
                 v-model="previewItem.caption"
-                rows="3"
+                rows="2"
                 placeholder="Add optional caption or description..."
-                class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm resize-none"
+                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm resize-none"
               ></textarea>
             </div>
 
             <!-- 4. Direct Asset Link Box -->
-            <div class="space-y-1 pt-1">
+            <div class="space-y-1 pt-0.5">
               <label class="block text-xs font-extrabold text-slate-800">Direct Asset Link (URL)</label>
               <div class="flex items-center gap-2">
                 <input
                   :value="previewItem.original_url"
                   readonly
                   type="text"
-                  class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-[11px] font-mono text-slate-600 focus:outline-none select-all"
+                  class="w-full px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-xl text-[11px] font-mono text-slate-600 focus:outline-none select-all"
                 />
                 <button
                   type="button"
                   @click="copyUrl(previewItem)"
-                  class="px-3 py-2 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl border border-slate-200 shadow-sm transition-all shrink-0 cursor-pointer flex items-center gap-1"
+                  class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl border border-slate-200 shadow-sm transition-all shrink-0 cursor-pointer flex items-center gap-1"
                 >
                   📋 Copy
                 </button>
@@ -1069,12 +1069,12 @@ const isImage = (mimeOrUrl) => {
             </div>
 
             <!-- Save Metadata Button -->
-            <div class="pt-2">
+            <div class="pt-1">
               <button
                 type="button"
                 @click="saveMediaDetails"
                 :disabled="isSavingDetails"
-                class="w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                class="w-full py-2 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 <span v-if="isSavingDetails" class="animate-spin">🔄</span>
                 <span v-else>💾</span>
@@ -1086,13 +1086,13 @@ const isImage = (mimeOrUrl) => {
         </div>
 
         <!-- Modal Bottom Actions Toolbar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-100 text-xs">
           <div class="flex flex-wrap items-center gap-2">
             <button
               v-if="isImage(previewItem.mime_type || previewItem.file_name)"
               type="button"
               @click="openCropper"
-              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer"
+              class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer"
             >
               <span>✂️ Visual Crop & Resize</span>
             </button>
@@ -1100,14 +1100,14 @@ const isImage = (mimeOrUrl) => {
             <a
               :href="previewItem.original_url"
               download
-              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl border border-slate-300 transition-all inline-flex items-center gap-1.5"
+              class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl border border-slate-300 transition-all inline-flex items-center gap-1.5"
             >
               <span>⬇️ Download File</span>
             </a>
             <a
               :href="previewItem.original_url"
               target="_blank"
-              class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-200 transition-all inline-flex items-center gap-1.5"
+              class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-200 transition-all inline-flex items-center gap-1.5"
             >
               <span>↗️ Open in New Tab</span>
             </a>
@@ -1116,7 +1116,7 @@ const isImage = (mimeOrUrl) => {
           <button
             type="button"
             @click="deleteItem(previewItem)"
-            class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-all cursor-pointer inline-flex items-center gap-1.5"
+            class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-all cursor-pointer inline-flex items-center gap-1.5"
           >
             <span>🗑️ Delete Asset</span>
           </button>
