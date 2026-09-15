@@ -330,18 +330,6 @@ const copyInviteLink = () => {
       </div>
 
       <!-- Footer Quick Action / User Profile -->
-      <div class="p-4 border-t border-slate-800 space-y-3">
-        <Link :href="route('profile.edit')" class="flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 transition-all group">
-          <div class="w-8 h-8 rounded-full overflow-hidden border border-slate-700 flex-shrink-0 bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-xs">
-            <img v-if="page.props.auth?.user?.avatar_url" :src="page.props.auth.user.avatar_url" class="w-full h-full object-cover" />
-            <span v-else>{{ page.props.auth?.user?.name ? page.props.auth.user.name.substring(0, 2).toUpperCase() : 'CA' }}</span>
-          </div>
-          <div class="overflow-hidden text-left">
-            <div class="text-xs font-bold text-white truncate group-hover:text-indigo-300 transition-colors">{{ page.props.auth?.user?.name || 'Club Administrator' }}</div>
-            <div class="text-[10px] text-slate-400 truncate">{{ page.props.auth?.user?.email || 'admin@oxford.edu' }}</div>
-          </div>
-        </Link>
-      </div>
     </aside>
 
     <!-- Main Right Content Area -->
