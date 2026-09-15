@@ -88,4 +88,9 @@ class Meeting extends Model
     {
         return $this->hasMany(MeetingRsvp::class);
     }
+
+    public function financialReturn()
+    {
+        return $this->hasOne(\App\Models\Accounting\MeetingFinancialReturn::class);
+    }
 }

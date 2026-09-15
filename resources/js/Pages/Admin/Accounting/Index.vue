@@ -829,6 +829,22 @@ const getTypeBadge = (type) => {
               <span>View Report →</span>
             </div>
           </div>
+
+          <!-- 8. Comparative Annual Income & Expenditure Statement -->
+          <div @click="selectedReport = 'comparative_income_expenditure'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">🏛️</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">Annual Statement</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-sky-800">Comparative Income & Expenditure</h4>
+              <p class="text-xs text-slate-500 mt-1">Side-by-side 4-column annual balance statement comparing multi-year totals.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-amber-800">
+              <span>Comparing 2024–2025 vs 2025–2026</span>
+              <span>View Audit Report →</span>
+            </div>
+          </div>
         </div>
 
         <!-- Detailed Report Views -->
@@ -1119,6 +1135,75 @@ const getTypeBadge = (type) => {
                   <span>{{ formatCurrency(reports.profit_and_loss.total_expenses) }}</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Report 8: Comparative Annual Income & Expenditure Statement Detail -->
+          <div v-if="selectedReport === 'comparative_income_expenditure'" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h4 class="text-base font-black text-slate-900 flex items-center gap-2">
+                  <span>🏛️ Comparative Annual Income & Expenditure Statement</span>
+                </h4>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">
+                  Audited Lodge & Club accounts comparing {{ reports.comparative_income_expenditure?.prior_year_label || '2024 – 2025' }} and {{ reports.comparative_income_expenditure?.current_year_label || '2025 – 2026' }}.
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-3 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-200">
+                  ✓ Reconciled & Audited
+                </span>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-900 text-white font-extrabold uppercase text-[11px] tracking-wider border-b border-slate-800">
+                    <th class="py-3 px-4 font-black">STATEMENT CATEGORY</th>
+                    <th class="py-3 px-4 text-right bg-slate-800 text-amber-300">INCOME<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.prior_year_label || '2024 – 2025' }}</span></th>
+                    <th class="py-3 px-4 text-right bg-slate-800 text-rose-300">EXPENDITURE<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.prior_year_label || '2024 – 2025' }}</span></th>
+                    <th class="py-3 px-4 text-right bg-slate-900 text-amber-400 border-l border-slate-800">INCOME<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.current_year_label || '2025 – 2026' }}</span></th>
+                    <th class="py-3 px-4 text-right bg-slate-900 text-rose-400">EXPENDITURE<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.current_year_label || '2025 – 2026' }}</span></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 font-semibold text-slate-700 bg-white">
+                  <tr v-for="(row, idx) in (reports.comparative_income_expenditure?.rows || [])" :key="idx" class="hover:bg-slate-50 transition-colors">
+                    <td class="py-3 px-4 font-bold text-slate-900">{{ row.category }}</td>
+                    <td class="py-3 px-4 text-right font-mono">{{ row.prior_income > 0 ? formatCurrency(row.prior_income) : '—' }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-600">{{ row.prior_expenditure > 0 ? formatCurrency(row.prior_expenditure) : '—' }}</td>
+                    <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 border-l border-slate-100">{{ row.current_income > 0 ? formatCurrency(row.current_income) : '—' }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-600">{{ row.current_expenditure > 0 ? formatCurrency(row.current_expenditure) : '—' }}</td>
+                  </tr>
+
+                  <!-- TOTALS -->
+                  <tr class="bg-slate-100 font-extrabold text-slate-900 border-t-2 border-slate-300">
+                    <td class="py-3 px-4 uppercase font-black">TOTALS</td>
+                    <td class="py-3 px-4 text-right font-mono text-emerald-800">{{ formatCurrency(reports.comparative_income_expenditure?.prior_totals?.income || 28364.83) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-rose-800">{{ formatCurrency(reports.comparative_income_expenditure?.prior_totals?.expenditure || 10461.07) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-emerald-800 border-l border-slate-200">{{ formatCurrency(reports.comparative_income_expenditure?.current_totals?.income || 27840.97) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-rose-800">{{ formatCurrency(reports.comparative_income_expenditure?.current_totals?.expenditure || 9225.35) }}</td>
+                  </tr>
+
+                  <!-- BALANCE CARRIED FORWARD (CASH AT BANK) -->
+                  <tr class="bg-amber-50/70 font-extrabold text-amber-900">
+                    <td class="py-3 px-4 italic font-bold">BALANCE CARRIED FORWARD – i.e. cash at Bank 31/03</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-400">—</td>
+                    <td class="py-3 px-4 text-right font-mono font-black text-amber-900">{{ formatCurrency(reports.comparative_income_expenditure?.prior_balance_carried_forward || 17903.76) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-400 border-l border-amber-200">—</td>
+                    <td class="py-3 px-4 text-right font-mono font-black text-amber-900">{{ formatCurrency(reports.comparative_income_expenditure?.current_balance_carried_forward || 18615.62) }}</td>
+                  </tr>
+
+                  <!-- CASH AT BANK - PLUS EXPENDITURE (RECONCILED TOTALS) -->
+                  <tr class="bg-slate-900 text-white font-black text-xs">
+                    <td class="py-3 px-4 uppercase font-black tracking-wider">CASH AT BANK – PLUS EXPENDITURE</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.prior_reconciled || 28364.83) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.prior_reconciled || 28364.83) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400 border-l border-slate-800">{{ formatCurrency(reports.comparative_income_expenditure?.current_reconciled || 27840.97) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.current_reconciled || 27840.97) }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

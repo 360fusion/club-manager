@@ -279,7 +279,7 @@ class MeetingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $meeting = Meeting::where('club_id', $club->id)
             ->where('id', $id)
-            ->with(['agendaItems', 'officerAssignments.user', 'officerAssignments.officerRole', 'fraternalVisits', 'rsvps.user', 'rsvps.guests'])
+            ->with(['agendaItems', 'officerAssignments.user', 'officerAssignments.officerRole', 'fraternalVisits', 'rsvps.user', 'rsvps.guests', 'financialReturn'])
             ->firstOrFail();
 
         $subscribingMembers = $club->users()->wherePivot('role', '!=', 'visitor')->get()->unique('id');
@@ -656,5 +656,33 @@ class MeetingAdminController extends Controller
 
         $statusLabel = ucfirst($validated['payment_status']);
         return redirect()->back()->with('success', "Payment status marked as {$statusLabel} for {$user->name}.");
+    }
+
+    /**
+     * Store financial return for a meeting and post to accounting ledger.
+     */
+    public function storeFinancialReturn(Request $request, string $clubSlug, int $id, \App\Services\AccountingService $accountingService): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'return_date' => 'required|date',
+            'dining_fee_per_head' => 'required|numeric|min:0',
+            'paid_diners_count' => 'required|integer|min:0',
+            'waived_diners_count' => 'nullable|integer|min:0',
+            'waived_reason' => 'nullable|string',
+            'kitchen_cost_per_head' => 'required|numeric|min:0',
+            'kitchen_vendor_name' => 'nullable|string|max:255',
+            'raffle_amount' => 'nullable|numeric|min:0',
+            'alms_amount' => 'nullable|numeric|min:0',
+            'donations_amount' => 'nullable|numeric|min:0',
+            'bequest_amount' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        $accountingService->postMeetingFinancialReturn($club, $meeting, $validated);
+
+        return redirect()->back()->with('success', 'Meeting financial return posted successfully to Accounts Payable and General Ledger!');
     }
 }

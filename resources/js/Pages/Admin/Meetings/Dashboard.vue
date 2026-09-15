@@ -119,6 +119,64 @@ const formattedMeetingDate = computed(() => {
   }
   return props.meeting.meeting_date;
 });
+const showFinancialReturnModal = ref(false);
+
+const financialReturnForm = useForm({
+  return_date: props.meeting?.meeting_date ? String(props.meeting.meeting_date).split('T')[0] : '',
+  dining_fee_per_head: props.meeting?.dining_cost_member || 35.00,
+  paid_diners_count: props.stats?.attending_dining || 0,
+  waived_diners_count: 0,
+  waived_reason: 'Official Guests / Visiting Speakers',
+  kitchen_cost_per_head: 28.00,
+  kitchen_vendor_name: 'Masonic Hall Catering Ltd',
+  raffle_amount: 0.00,
+  alms_amount: 0.00,
+  donations_amount: 0.00,
+  bequest_amount: 0.00,
+  notes: '',
+});
+
+const openFinancialReturnModal = () => {
+  const existing = props.meeting?.financial_return;
+  if (existing) {
+    financialReturnForm.return_date = existing.return_date ? String(existing.return_date).split('T')[0] : '';
+    financialReturnForm.dining_fee_per_head = Number(existing.dining_fee_per_head) || 35.00;
+    financialReturnForm.paid_diners_count = Number(existing.paid_diners_count) || 0;
+    financialReturnForm.waived_diners_count = Number(existing.waived_diners_count) || 0;
+    financialReturnForm.waived_reason = existing.waived_reason || '';
+    financialReturnForm.kitchen_cost_per_head = Number(existing.kitchen_cost_per_head) || 28.00;
+    financialReturnForm.kitchen_vendor_name = existing.kitchen_vendor_name || '';
+    financialReturnForm.raffle_amount = Number(existing.raffle_amount) || 0.00;
+    financialReturnForm.alms_amount = Number(existing.alms_amount) || 0.00;
+    financialReturnForm.donations_amount = Number(existing.donations_amount) || 0.00;
+    financialReturnForm.bequest_amount = Number(existing.bequest_amount) || 0.00;
+    financialReturnForm.notes = existing.notes || '';
+  } else {
+    financialReturnForm.paid_diners_count = props.stats?.attending_dining || 0;
+  }
+  showFinancialReturnModal.value = true;
+};
+
+const calcTotalMeals = computed(() => Number(financialReturnForm.paid_diners_count || 0) + Number(financialReturnForm.waived_diners_count || 0));
+const calcDiningRevenue = computed(() => Number(financialReturnForm.paid_diners_count || 0) * Number(financialReturnForm.dining_fee_per_head || 0));
+const calcKitchenBill = computed(() => calcTotalMeals.value * Number(financialReturnForm.kitchen_cost_per_head || 0));
+const calcDiningSurplus = computed(() => calcDiningRevenue.value - calcKitchenBill.value);
+const calcTotalCharity = computed(() => 
+  Number(financialReturnForm.raffle_amount || 0) + 
+  Number(financialReturnForm.alms_amount || 0) + 
+  Number(financialReturnForm.donations_amount || 0) + 
+  Number(financialReturnForm.bequest_amount || 0)
+);
+const calcBankDeposit = computed(() => calcDiningRevenue.value + calcTotalCharity.value);
+
+const submitFinancialReturn = () => {
+  financialReturnForm.post(route('admin.meetings.financial_return.store', { clubSlug: props.club.slug, id: props.meeting.id }), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showFinancialReturnModal.value = false;
+    },
+  });
+};
 </script>
 
 <template>
@@ -140,7 +198,17 @@ const formattedMeetingDate = computed(() => {
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="relative group">
+            <button @click="openFinancialReturnModal" title="Enter Financial Return & Dining Calculator" aria-label="Enter Financial Return & Dining Calculator" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1">
+              💰 Financial Return
+            </button>
+            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              Post Dining Fees, Charity Collections & Kitchen Bill
+              <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+            </div>
+          </div>
+
           <div class="relative group">
             <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" title="Download or Print Summons PDF" aria-label="Download or Print Summons PDF" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition-all flex items-center gap-1">
               🖨️ PDF
@@ -535,6 +603,147 @@ const formattedMeetingDate = computed(() => {
               <button type="button" @click="showManualRsvpModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancel</button>
               <button type="submit" :disabled="manualRsvpForm.processing" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50">
                 Save RSVP
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Financial Return & Dining Calculator Modal -->
+      <div v-if="showFinancialReturnModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-6 my-8 border border-slate-200">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <span>💰 Meeting Financial Return & Dining Calculator</span>
+              </h3>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">
+                Automatically posts dining income, charity collections, and kitchen bills to Accounts Payable & Ledger.
+              </p>
+            </div>
+            <button @click="showFinancialReturnModal = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+          </div>
+
+          <form @submit.prevent="submitFinancialReturn" class="space-y-6">
+            
+            <!-- Date & Basic Info -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Accounting Return Date</label>
+                <input type="date" v-model="financialReturnForm.return_date" class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-semibold" required />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Kitchen Vendor (Accounts Payable)</label>
+                <input type="text" v-model="financialReturnForm.kitchen_vendor_name" placeholder="e.g. Masonic Hall Catering Ltd" class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-semibold" />
+              </div>
+            </div>
+
+            <!-- Section 1: Dining Fees & Kitchen Expense -->
+            <div class="space-y-3">
+              <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-amber-100 pb-1.5">
+                <span>🍽️ 1. Dining Fees & Kitchen Caterer Calculator</span>
+              </h4>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Paid Diners Count</label>
+                  <input type="number" min="0" v-model.number="financialReturnForm.paid_diners_count" class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-bold" required />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Dining Fee / Head (£)</label>
+                  <input type="number" step="0.01" min="0" v-model.number="financialReturnForm.dining_fee_per_head" class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-bold" required />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Kitchen Cost / Head (£)</label>
+                  <input type="number" step="0.01" min="0" v-model.number="financialReturnForm.kitchen_cost_per_head" class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-bold" required />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Waived Diners (Guests / Speakers)</label>
+                  <input type="number" min="0" v-model.number="financialReturnForm.waived_diners_count" class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-semibold" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Reason for Waived Fee</label>
+                  <input type="text" v-model="financialReturnForm.waived_reason" placeholder="Official guests, visiting speakers" class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5" />
+                </div>
+              </div>
+
+              <!-- Dining Calculation Preview Card -->
+              <div class="bg-gradient-to-r from-amber-500/10 to-orange-500/10 p-4 rounded-xl border border-amber-200/80 space-y-2">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
+                  <div>
+                    <div class="text-[10px] uppercase font-bold text-slate-500">Total Meals</div>
+                    <div class="text-base font-black text-slate-800">{{ calcTotalMeals }} plates</div>
+                  </div>
+                  <div>
+                    <div class="text-[10px] uppercase font-bold text-slate-500">Gross Dining Income</div>
+                    <div class="text-base font-black text-emerald-700">£{{ calcDiningRevenue.toFixed(2) }}</div>
+                  </div>
+                  <div>
+                    <div class="text-[10px] uppercase font-bold text-slate-500">Kitchen Caterer Bill</div>
+                    <div class="text-base font-black text-rose-700">£{{ calcKitchenBill.toFixed(2) }}</div>
+                  </div>
+                  <div>
+                    <div class="text-[10px] uppercase font-bold text-slate-500">Net Dining Surplus</div>
+                    <div :class="['text-base font-black', calcDiningSurplus >= 0 ? 'text-indigo-700' : 'text-rose-600']">
+                      £{{ calcDiningSurplus.toFixed(2) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: Charity Collections & Contributions -->
+            <div class="space-y-3">
+              <h4 class="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-purple-100 pb-1.5">
+                <span>🎗️ 2. Meeting Charity & Almoner Collections</span>
+              </h4>
+
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Raffle Collection (£)</label>
+                  <input type="number" step="0.01" min="0" v-model.number="financialReturnForm.raffle_amount" class="w-full text-xs rounded-xl border-slate-300 focus:border-purple-500 focus:ring-purple-500 p-2.5 font-bold" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Alms Box Collection (£)</label>
+                  <input type="number" step="0.01" min="0" v-model.number="financialReturnForm.alms_amount" class="w-full text-xs rounded-xl border-slate-300 focus:border-purple-500 focus:ring-purple-500 p-2.5 font-bold" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Donations (£)</label>
+                  <input type="number" step="0.01" min="0" v-model.number="financialReturnForm.donations_amount" class="w-full text-xs rounded-xl border-slate-300 focus:border-purple-500 focus:ring-purple-500 p-2.5 font-bold" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Bequests (£)</label>
+                  <input type="number" step="0.01" min="0" v-model.number="financialReturnForm.bequest_amount" class="w-full text-xs rounded-xl border-slate-300 focus:border-purple-500 focus:ring-purple-500 p-2.5 font-bold" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes & Summary Banner -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Treasury Notes / Remarks</label>
+              <textarea v-model="financialReturnForm.notes" rows="2" placeholder="e.g. Raffle receipts to be remitted to Masonic Charity Foundation" class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5"></textarea>
+            </div>
+
+            <!-- Total Deposit Summary Bar -->
+            <div class="bg-slate-900 text-white p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Net Bank Deposit Expected</div>
+                <div class="text-xl font-black text-amber-400">£{{ calcBankDeposit.toFixed(2) }}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-[10px] text-slate-400 font-medium">Kitchen AP Bill Created: <span class="font-bold text-rose-300">£{{ calcKitchenBill.toFixed(2) }}</span></div>
+                <div class="text-[10px] text-slate-400 font-medium">Total Charity Collected: <span class="font-bold text-purple-300">£{{ calcTotalCharity.toFixed(2) }}</span></div>
+              </div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="flex justify-end gap-3 pt-2 border-t border-slate-100">
+              <button type="button" @click="showFinancialReturnModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancel</button>
+              <button type="submit" :disabled="financialReturnForm.processing" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                <span>⚡ Post Financial Return & Ledger Entry</span>
               </button>
             </div>
           </form>

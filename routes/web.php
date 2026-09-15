@@ -122,6 +122,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/meetings/{id}', [\App\Http\Controllers\MeetingAdminController::class, 'show'])->name('admin.meetings.show');
     Route::post('/clubs/{clubSlug}/admin/meetings/{id}/rsvp', [\App\Http\Controllers\MeetingAdminController::class, 'updateRsvp'])->name('admin.meetings.rsvp.update');
     Route::post('/clubs/{clubSlug}/admin/meetings/{id}/rsvp-payment-status', [\App\Http\Controllers\MeetingAdminController::class, 'updatePaymentStatus'])->name('admin.meetings.rsvp.payment_status');
+    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/financial-return', [\App\Http\Controllers\MeetingAdminController::class, 'storeFinancialReturn'])->name('admin.meetings.financial_return.store');
     Route::get('/clubs/{clubSlug}/admin/meetings/{id}/pdf', [\App\Http\Controllers\MeetingAdminController::class, 'pdf'])->name('admin.meetings.pdf');
     Route::post('/clubs/{clubSlug}/admin/meetings/generate-season', [\App\Http\Controllers\MeetingAdminController::class, 'generateSeason'])->name('admin.meetings.generate_season');
     Route::post('/clubs/{clubSlug}/admin/meetings/{id}/publish', [\App\Http\Controllers\MeetingAdminController::class, 'publishSummons'])->name('admin.meetings.publish');
