@@ -442,7 +442,7 @@ const getTypeBadge = (type) => {
             @click="showBillModal = true"
             class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
           >
-            <span>📄 Record Bill</span>
+            <span>📄 + Add Bill</span>
           </button>
           <button
             type="button"
@@ -1182,7 +1182,7 @@ const getTypeBadge = (type) => {
               @click="showJournalModal = true"
               class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
             >
-              + Post Journal Entry
+              + Add Journal Entry
             </button>
           </div>
 
@@ -1545,8 +1545,8 @@ const getTypeBadge = (type) => {
       <div class="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
-            <h3 class="text-base font-black text-slate-900">Post Double-Entry Journal</h3>
-            <p class="text-xs text-slate-500">Record a balanced transaction with matching debits and credits.</p>
+            <h3 class="text-base font-black text-slate-900">Add Journal Entry (Manual Ledger Adjustment)</h3>
+            <p class="text-xs text-slate-500">Record a manual double-entry ledger adjustment. (To add a vendor bill, click "+ Add Bill" above).</p>
           </div>
           <button type="button" @click="showJournalModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
         </div>
@@ -1731,11 +1731,11 @@ const getTypeBadge = (type) => {
       </div>
     </div>
 
-    <!-- Modal 4: Record Vendor Bill -->
+    <!-- Modal 4: Add Vendor Bill -->
     <div v-if="showBillModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showBillModal = false">
       <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <h3 class="text-base font-black text-slate-900">Record Vendor Bill (A/P)</h3>
+          <h3 class="text-base font-black text-slate-900">Add Vendor Bill (A/P)</h3>
           <button type="button" @click="showBillModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
         </div>
 
