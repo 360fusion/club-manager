@@ -8,6 +8,7 @@ use App\Models\PaddleSubscriptionItem;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Paddle\Cashier;
 use Laravel\Pennant\Feature;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (class_exists(Livewire::class)) {
+            Livewire::component(
+                'committee.agenda-pack-preview-modal',
+                \App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal::class
+            );
+        }
+
         if (class_exists(Cashier::class)) {
             Cashier::useSubscriptionModel(PaddleSubscription::class);
             Cashier::useSubscriptionItemModel(PaddleSubscriptionItem::class);

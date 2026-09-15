@@ -21,12 +21,14 @@ class ClubCommitteeAttendee extends Model
         'role_title',
         'attendance_type',
         'notes',
+        'pack_sent_at',
     ];
 
     protected function casts(): array
     {
         return [
             'attendance_type' => AttendanceType::class,
+            'pack_sent_at' => 'datetime',
         ];
     }
 

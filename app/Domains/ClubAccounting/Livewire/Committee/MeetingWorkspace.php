@@ -13,12 +13,19 @@ use App\Models\Club;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class MeetingWorkspace extends Component
 {
     public string $clubSlug;
     public int $meetingId;
+
+    #[On('pack-dispatched')]
+    public function onPackDispatched(): void
+    {
+        // Re-renders component when agenda pack is dispatched
+    }
 
     // Add Agenda Item Form
     public bool $showAgendaModal = false;

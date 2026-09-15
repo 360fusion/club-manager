@@ -211,6 +211,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/committee', \App\Domains\ClubAccounting\Livewire\Committee\MeetingIndex::class)->name('admin.committee.index');
     Route::get('/clubs/{clubSlug}/admin/committee/{meetingId}', \App\Domains\ClubAccounting\Livewire\Committee\MeetingWorkspace::class)->name('admin.committee.workspace');
     Route::get('/clubs/{clubSlug}/admin/committee/{meetingId}/minutes', \App\Domains\ClubAccounting\Livewire\Committee\LiveMinuteTaker::class)->name('admin.committee.minutes');
+    Route::get('/clubs/{clubSlug}/admin/committee/{meetingId}/pack-pdf', [\App\Domains\ClubAccounting\Http\Controllers\CommitteePackController::class, 'pdf'])->name('admin.committee.pack.pdf');
+    Route::get('/committee/meetings/{meetingId}/pack-pdf', [\App\Domains\ClubAccounting\Http\Controllers\CommitteePackController::class, 'pdf'])->name('committee.pack.pdf');
     Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 

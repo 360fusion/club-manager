@@ -26,8 +26,12 @@ use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
+use App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal;
+use App\Domains\ClubAccounting\Mail\CommitteeAgendaPackMailable;
+use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -556,5 +560,155 @@ TEXT;
             'committee_meeting_id' => $meeting->id,
             'motion_text' => 'Approve annual financial statements for audit submission',
         ]);
+    }
+
+    public function test_compiler_service_generates_pdf_and_email_body(): void
+    {
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Quarterly Finance & Governance Meeting',
+            'meeting_date' => Carbon::now()->addDays(7),
+            'location' => 'Lodge Temple & Committee Room',
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        ClubCommitteeAttendee::create([
+            'committee_meeting_id' => $meeting->id,
+            'user_id' => $this->member1->id,
+            'name' => $this->member1->name,
+            'role_title' => 'Worshipful Master',
+            'attendance_type' => AttendanceType::Present,
+        ]);
+
+        ClubCommitteeAgendaItem::create([
+            'committee_meeting_id' => $meeting->id,
+            'order' => 1,
+            'item_type' => CommitteeItemType::General,
+            'title' => 'Opening of Committee & Reading of Minutes',
+            'description' => 'Confirm previous meeting minutes as approved.',
+        ]);
+
+        $compiler = app(CommitteePackCompilerService::class);
+
+        // 1. Email body test
+        $emailBody = $compiler->compileEmailBody($meeting);
+        $this->assertStringContainsString('Quarterly Finance & Governance Meeting', $emailBody);
+        $this->assertStringContainsString('Opening of Committee & Reading of Minutes', $emailBody);
+        $this->assertStringContainsString('The Lodge of Fraternity No. 1234', $emailBody);
+
+        // 2. PDF compilation test
+        $pdfOutput = $compiler->compilePdf($meeting);
+        $this->assertNotEmpty($pdfOutput);
+        $this->assertStringStartsWith('%PDF', $pdfOutput);
+    }
+
+    public function test_compiler_service_dispatches_pack_and_updates_pack_sent_at(): void
+    {
+        Mail::fake();
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Executive Committee Dispatch Test',
+            'meeting_date' => Carbon::now()->addDays(4),
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        $attendee = ClubCommitteeAttendee::create([
+            'committee_meeting_id' => $meeting->id,
+            'user_id' => $this->member1->id,
+            'name' => $this->member1->name,
+            'role_title' => 'Secretary',
+            'attendance_type' => AttendanceType::Present,
+            'pack_sent_at' => null,
+        ]);
+
+        $compiler = app(CommitteePackCompilerService::class);
+
+        $sentCount = $compiler->dispatchPack(
+            meeting: $meeting,
+            recipientMemberIds: [$this->member1->id],
+            emailSubject: 'Official Agenda Pack',
+            customEmailBody: '<p>Please find attached the official agenda pack.</p>',
+            attachPdf: true,
+        );
+
+        $this->assertEquals(1, $sentCount);
+
+        Mail::assertQueued(CommitteeAgendaPackMailable::class, function ($mail) {
+            return $mail->hasTo($this->member1->email)
+                && $mail->emailSubject === 'Official Agenda Pack'
+                && $mail->attachPdf === true;
+        });
+
+        $this->assertNotNull($attendee->fresh()->pack_sent_at);
+    }
+
+    public function test_agenda_pack_preview_modal_flow(): void
+    {
+        Mail::fake();
+        $this->actingAs($this->admin);
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Lodge Pack Preview Modal Test',
+            'meeting_date' => Carbon::now()->addDays(2),
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        ClubCommitteeAttendee::create([
+            'committee_meeting_id' => $meeting->id,
+            'user_id' => $this->member2->id,
+            'name' => $this->member2->name,
+            'role_title' => 'Treasurer',
+            'attendance_type' => AttendanceType::Present,
+        ]);
+
+        Livewire::test(AgendaPackPreviewModal::class, [
+            'clubSlug' => $this->club->slug,
+            'meetingId' => $meeting->id,
+        ])
+            ->assertSet('activeTab', 'pdf')
+            ->assertSet('isOpen', false)
+            ->call('openModal')
+            ->assertSet('isOpen', true)
+            ->assertSee($meeting->title)
+            ->assertSet('includePdfAttachment', true)
+            ->set('emailSubject', 'Custom Subject for Lodge Committee')
+            ->set('emailBody', 'Dear Brethren, please review before Friday.')
+            ->call('sendAgendaPack')
+            ->assertDispatched('pack-dispatched')
+            ->assertDispatched('notify')
+            ->assertSet('isOpen', false)
+            ->assertHasNoErrors();
+
+        Mail::assertQueued(CommitteeAgendaPackMailable::class, function ($mail) {
+            return $mail->emailSubject === 'Custom Subject for Lodge Committee';
+        });
+    }
+
+    public function test_committee_pack_pdf_controller_route(): void
+    {
+        $this->actingAs($this->admin);
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'PDF Controller Test Meeting',
+            'meeting_date' => Carbon::now()->addDays(1),
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        // Test route committee.pack.pdf
+        $response = $this->get(route('committee.pack.pdf', ['meetingId' => $meeting->id]));
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/pdf');
+
+        // Test route admin.committee.pack.pdf with download
+        $downloadResponse = $this->get(route('admin.committee.pack.pdf', [
+            'clubSlug' => $this->club->slug,
+            'meetingId' => $meeting->id,
+            'download' => 1,
+        ]));
+        $downloadResponse->assertStatus(200);
+        $downloadResponse->assertHeader('content-type', 'application/pdf');
     }
 }

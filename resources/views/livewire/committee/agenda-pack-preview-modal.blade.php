@@ -1,0 +1,303 @@
+<div>
+    @if($isOpen)
+        <!-- Modal Backdrop -->
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-all animate-fade-in">
+            <!-- Modal Dialog Container -->
+            <div
+                @click.away="$wire.closeModal()"
+                class="bg-white w-full max-w-5xl rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200"
+            >
+                <!-- Modal Header -->
+                <div class="px-6 py-5 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black text-amber-400 uppercase tracking-wider bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full">
+                                Executive Governance
+                            </span>
+                            <span class="text-slate-400 text-xs">•</span>
+                            <span class="text-xs font-medium text-slate-300 truncate max-w-[280px] sm:max-w-md">{{ $meeting->title }}</span>
+                        </div>
+                        <h2 class="text-lg font-black text-white mt-1 flex items-center gap-2">
+                            <span>📄</span>
+                            <span>Agenda Pack Preview & Dispatch</span>
+                        </h2>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <!-- Navigation Tabs Pill -->
+                        <div class="flex items-center bg-slate-800 p-1 rounded-2xl border border-slate-700/80 text-xs font-bold">
+                            <button
+                                type="button"
+                                wire:click="$set('activeTab', 'pdf')"
+                                class="px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer {{ $activeTab === 'pdf' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white' }}"
+                            >
+                                <span>📄</span>
+                                <span>PDF Document</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                wire:click="$set('activeTab', 'email')"
+                                class="px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer {{ $activeTab === 'email' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-300 hover:text-white' }}"
+                            >
+                                <span>✉️</span>
+                                <span>Email & Recipients</span>
+                                <span class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black {{ $activeTab === 'email' ? 'bg-white/20 text-white' : 'bg-slate-700 text-slate-300' }}">
+                                    {{ count($selectedRecipientIds) }}
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- Close Button -->
+                        <button
+                            type="button"
+                            wire:click="closeModal"
+                            class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal Body (Scrollable) -->
+                <div class="p-6 overflow-y-auto flex-1 bg-slate-50/50 space-y-6">
+
+                    <!-- ========================================================= -->
+                    <!-- TAB 1: Formatted PDF Document Preview                     -->
+                    <!-- ========================================================= -->
+                    @if($activeTab === 'pdf')
+                        <div class="space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-xs">
+                                <div class="flex items-center gap-2 text-slate-600">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>Compiled directly from Lodge Committee agenda items, candidate registry, and audit ledger.</span>
+                                </div>
+
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <a
+                                        href="{{ route('committee.pack.pdf', $meeting->id) }}"
+                                        target="_blank"
+                                        class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-200 transition-all flex items-center gap-1.5"
+                                    >
+                                        <span>↗</span>
+                                        <span>Open Full Window</span>
+                                    </a>
+
+                                    <button
+                                        type="button"
+                                        wire:click="downloadPdf"
+                                        class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                        <span>📥</span>
+                                        <span>Download PDF</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="rounded-2xl border border-slate-200 shadow-inner overflow-hidden bg-slate-100 relative min-h-[560px]">
+                                <iframe
+                                    src="{{ route('committee.pack.pdf', $meeting->id) }}"
+                                    class="w-full h-[620px] border-0 rounded-2xl bg-white"
+                                    title="Agenda Pack PDF Preview"
+                                ></iframe>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- ========================================================= -->
+                    <!-- TAB 2: Email Body & Recipients Selection                  -->
+                    <!-- ========================================================= -->
+                    @if($activeTab === 'email')
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                            <!-- Left: Email Content Editor (7 Cols) -->
+                            <div class="lg:col-span-7 space-y-4">
+                                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                                    <div class="space-y-1">
+                                        <label class="text-xs font-black text-slate-700 uppercase tracking-wider block">
+                                            Email Subject Line
+                                        </label>
+                                        <input
+                                            type="text"
+                                            wire:model="emailSubject"
+                                            class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-900"
+                                            placeholder="Subject line..."
+                                        />
+                                        @error('emailSubject') <span class="text-rose-600 text-[11px] font-bold">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <label class="text-xs font-black text-slate-700 uppercase tracking-wider block">
+                                                Message Body (Markdown / Plain Text)
+                                            </label>
+                                            <span class="text-[10px] text-slate-400 font-medium">Pre-filled with agenda summary</span>
+                                        </div>
+                                        <textarea
+                                            wire:model="emailBody"
+                                            rows="15"
+                                            class="w-full p-3.5 text-xs font-mono leading-relaxed rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 resize-y min-h-[340px]"
+                                            placeholder="Write message to committee members..."
+                                        ></textarea>
+                                        @error('emailBody') <span class="text-rose-600 text-[11px] font-bold">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <!-- PDF Attachment Toggle -->
+                                    <div class="p-3.5 bg-indigo-50/70 border border-indigo-200/80 rounded-xl flex items-center justify-between gap-3">
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="text-xl">📎</span>
+                                            <div>
+                                                <span class="text-xs font-black text-indigo-950 block">Attach Official PDF Agenda Pack</span>
+                                                <span class="text-[11px] text-indigo-700 block">Generates and appends the formatted PDF document directly to each recipient's email.</span>
+                                            </div>
+                                        </div>
+
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                wire:model="includePdfAttachment"
+                                                class="sr-only peer"
+                                            />
+                                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Recipients Checklist (5 Cols) -->
+                            <div class="lg:col-span-5 space-y-4">
+                                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                                    <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                                        <div>
+                                            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                                                <span>👥</span>
+                                                <span>Recipients</span>
+                                            </h3>
+                                            <span class="text-[11px] text-slate-400 font-medium">
+                                                {{ count($selectedRecipientIds) }} of {{ $attendees->count() }} selected
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center gap-2 text-[11px] font-bold">
+                                            <button
+                                                type="button"
+                                                wire:click="selectAllRecipients"
+                                                class="text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                                            >
+                                                Select All
+                                            </button>
+                                            <span class="text-slate-300">•</span>
+                                            <button
+                                                type="button"
+                                                wire:click="deselectAllRecipients"
+                                                class="text-slate-400 hover:text-slate-600 cursor-pointer"
+                                            >
+                                                Clear
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    @error('selectedRecipientIds')
+                                        <div class="p-2.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-bold">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
+
+                                    <div class="space-y-2 max-h-[420px] overflow-y-auto pr-1 divide-y divide-slate-100">
+                                        @forelse($attendees as $att)
+                                            @php
+                                                $userId = $att->user_id;
+                                                $user = $att->user;
+                                                $isSelected = in_array($userId, $selectedRecipientIds);
+                                            @endphp
+                                            <div
+                                                wire:key="attendee-{{ $att->id }}"
+                                                wire:click="toggleRecipient({{ $userId ?: 0 }})"
+                                                class="pt-2 pb-2 px-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 {{ $isSelected ? 'bg-indigo-50/40 border-indigo-200' : 'bg-white border-transparent hover:bg-slate-50' }}"
+                                            >
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked="{{ $isSelected }}"
+                                                        class="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 pointer-events-none"
+                                                    />
+                                                    <div class="min-w-0">
+                                                        <div class="font-bold text-xs text-slate-900 truncate flex items-center gap-1.5">
+                                                            <span>{{ $att->name }}</span>
+                                                            @if($att->role_title)
+                                                                <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded-md">
+                                                                    {{ $att->role_title }}
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                        <div class="text-[10px] text-slate-400 truncate">
+                                                            {{ $user?->email ?: 'Registered member' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="shrink-0 text-right">
+                                                    @if($att->pack_sent_at)
+                                                        <span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md block" title="{{ $att->pack_sent_at->format('d M Y H:i') }}">
+                                                            ✓ Sent {{ $att->pack_sent_at->format('H:i') }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md block">
+                                                            Pending
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @empty
+                                            <div class="p-4 text-center text-xs text-slate-400">
+                                                No roll-call attendees registered yet.
+                                            </div>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <button
+                        type="button"
+                        wire:click="downloadPdf"
+                        class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+                    >
+                        <span>📥</span>
+                        <span>Download PDF Copy</span>
+                    </button>
+
+                    <div class="flex items-center gap-2.5 self-end sm:self-auto">
+                        <button
+                            type="button"
+                            wire:click="closeModal"
+                            class="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-600 font-bold text-xs rounded-xl border border-slate-200 transition-all cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="button"
+                            wire:click="sendAgendaPack"
+                            wire:loading.attr="disabled"
+                            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                            <span wire:loading.remove>🚀 Send to {{ count($selectedRecipientIds) }} Selected Brethren</span>
+                            <span wire:loading class="inline-flex items-center gap-2">
+                                <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Dispatching Emails...</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+</div>

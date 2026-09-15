@@ -31,6 +31,25 @@
                     @endforeach
                 </div>
 
+                <button
+                    type="button"
+                    wire:click="$dispatch('open-agenda-pack-modal')"
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5"
+                >
+                    <span>📄</span>
+                    <span>Preview &amp; Send Pack</span>
+                </button>
+
+                <a
+                    href="{{ route('admin.committee.pack.pdf', ['clubSlug' => $club->slug, 'meetingId' => $meeting->id, 'download' => 1]) }}"
+                    class="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5"
+                    title="Download PDF Agenda Pack"
+                    target="_blank"
+                >
+                    <span>📥</span>
+                    <span>PDF</span>
+                </a>
+
                 <a
                     href="{{ route('admin.committee.minutes', ['clubSlug' => $club->slug, 'meetingId' => $meeting->id]) }}"
                     class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5"
@@ -63,9 +82,20 @@
                 <div class="space-y-2">
                     @forelse($attendees as $att)
                         <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between text-xs">
-                            <div>
+                            <div class="space-y-0.5">
                                 <span class="font-bold text-slate-900 block">{{ $att->name }}</span>
-                                <span class="text-[10px] text-slate-500 font-semibold">{{ $att->role_title ?: 'Committee Member' }}</span>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-[10px] text-slate-500 font-semibold">{{ $att->role_title ?: 'Committee Member' }}</span>
+                                    @if($att->pack_sent_at)
+                                        <span class="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/70 px-1.5 py-0.5 rounded-full" title="Agenda pack emailed at {{ $att->pack_sent_at->format('d M Y H:i') }}">
+                                            <span>✓ Pack Sent</span>
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-0.5 text-[9px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full" title="Agenda pack not yet dispatched">
+                                            <span>Unsent</span>
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
 
                             <div class="flex items-center gap-1">
@@ -503,4 +533,7 @@
             </div>
         </div>
     @endif
+
+    <!-- Agenda Pack Preview & Dispatch Modal -->
+    @livewire(\App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal::class, ['clubSlug' => $club->slug, 'meetingId' => $meeting->id], key('agenda-pack-modal-' . $meeting->id))
 </div>
