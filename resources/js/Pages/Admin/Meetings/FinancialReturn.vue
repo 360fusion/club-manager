@@ -144,31 +144,37 @@ const formatCurrency = (val) => {
       </div>
 
       <!-- Financial Return Main Form Card -->
-      <form @submit.prevent="submit" class="bg-white rounded-3xl border border-slate-200 shadow-md p-6 sm:p-8 space-y-8">
+      <form @submit.prevent="submit" class="bg-white rounded-3xl border-2 border-slate-200 shadow-md p-6 sm:p-8 space-y-8">
         
         <!-- Section 1: Accounting Return Date & Kitchen Vendor -->
         <div class="space-y-4">
-          <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
+          <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b-2 border-slate-100 pb-2">
             <span>🗓️ Return Date & Catering Supplier</span>
           </h3>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-200">
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Accounting Return Date *</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 bg-slate-50/80 p-5 rounded-2xl border-2 border-slate-200">
+            <div class="space-y-1.5">
+              <label for="return_date" class="block text-xs font-black text-slate-900 uppercase tracking-wider">
+                Accounting Return Date <span class="text-rose-600">*</span>
+              </label>
               <input
+                id="return_date"
                 type="date"
                 v-model="form.return_date"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-semibold"
+                class="w-full text-sm rounded-xl border-2 border-slate-300 bg-white hover:border-slate-400 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 p-3 font-bold text-slate-900 shadow-sm transition-all"
                 required
               />
             </div>
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Kitchen Vendor (Accounts Payable) *</label>
+            <div class="space-y-1.5">
+              <label for="kitchen_vendor_name" class="block text-xs font-black text-slate-900 uppercase tracking-wider">
+                Kitchen Vendor (Accounts Payable) <span class="text-rose-600">*</span>
+              </label>
               <input
+                id="kitchen_vendor_name"
                 type="text"
                 v-model="form.kitchen_vendor_name"
                 placeholder="e.g. Masonic Hall Catering Ltd"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-semibold"
+                class="w-full text-sm rounded-xl border-2 border-slate-300 bg-white hover:border-slate-400 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 p-3 font-bold text-slate-900 shadow-sm transition-all"
                 required
               />
             </div>
@@ -177,84 +183,116 @@ const formatCurrency = (val) => {
 
         <!-- Section 2: Dining Fees & Kitchen Caterer Calculator -->
         <div class="space-y-4">
-          <h3 class="text-sm font-extrabold text-amber-900 uppercase tracking-wider flex items-center gap-2 border-b border-amber-100 pb-2">
+          <h3 class="text-sm font-black text-amber-950 uppercase tracking-wider flex items-center gap-2 border-b-2 border-amber-200 pb-2">
             <span>🍽️ 1. Dining Fees & Kitchen Caterer Calculator</span>
           </h3>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700">Paid Diners Count *</label>
-              <input
-                type="number"
-                min="0"
-                v-model.number="form.paid_diners_count"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-bold"
-                required
-              />
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div class="space-y-1.5 bg-amber-50/40 p-4 rounded-2xl border-2 border-amber-200/80">
+              <label for="paid_diners_count" class="block text-xs font-black text-slate-900">
+                Paid Diners Count <span class="text-rose-600">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 font-bold text-sm">👥</span>
+                <input
+                  id="paid_diners_count"
+                  type="number"
+                  min="0"
+                  v-model.number="form.paid_diners_count"
+                  class="w-full text-base rounded-xl border-2 border-slate-300 bg-white hover:border-amber-500 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 pl-9 pr-3 py-2.5 font-black text-slate-900 shadow-sm transition-all"
+                  required
+                />
+              </div>
+              <p class="text-[11px] text-slate-500 font-medium">Number of paying diners</p>
             </div>
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700">Dining Fee / Head (£) *</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                v-model.number="form.dining_fee_per_head"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-bold"
-                required
-              />
+
+            <div class="space-y-1.5 bg-amber-50/40 p-4 rounded-2xl border-2 border-amber-200/80">
+              <label for="dining_fee_per_head" class="block text-xs font-black text-slate-900">
+                Dining Fee / Head (£) <span class="text-rose-600">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-600 font-black text-sm">£</span>
+                <input
+                  id="dining_fee_per_head"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model.number="form.dining_fee_per_head"
+                  class="w-full text-base rounded-xl border-2 border-slate-300 bg-white hover:border-amber-500 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 pl-8 pr-3 py-2.5 font-black text-slate-900 shadow-sm transition-all font-mono"
+                  required
+                />
+              </div>
+              <p class="text-[11px] text-slate-500 font-medium">Price charged per diner</p>
             </div>
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700">Kitchen Cost / Head (£) *</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                v-model.number="form.kitchen_cost_per_head"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-bold"
-                required
-              />
+
+            <div class="space-y-1.5 bg-amber-50/40 p-4 rounded-2xl border-2 border-amber-200/80">
+              <label for="kitchen_cost_per_head" class="block text-xs font-black text-slate-900">
+                Kitchen Cost / Head (£) <span class="text-rose-600">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-600 font-black text-sm">£</span>
+                <input
+                  id="kitchen_cost_per_head"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model.number="form.kitchen_cost_per_head"
+                  class="w-full text-base rounded-xl border-2 border-slate-300 bg-white hover:border-amber-500 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 pl-8 pr-3 py-2.5 font-black text-slate-900 shadow-sm transition-all font-mono"
+                  required
+                />
+              </div>
+              <p class="text-[11px] text-slate-500 font-medium">Caterer fee per meal prepared</p>
             </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 pt-1">
-            <div class="sm:col-span-2 space-y-1">
-              <label class="block text-xs font-bold text-slate-700">Waived Diners (Guests / Speakers)</label>
-              <input
-                type="number"
-                min="0"
-                v-model.number="form.waived_diners_count"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5 font-semibold"
-              />
+            <div class="sm:col-span-2 space-y-1.5">
+              <label for="waived_diners_count" class="block text-xs font-black text-slate-900">
+                Waived Diners (Guests / Speakers)
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 font-bold text-sm">🎟️</span>
+                <input
+                  id="waived_diners_count"
+                  type="number"
+                  min="0"
+                  v-model.number="form.waived_diners_count"
+                  class="w-full text-sm rounded-xl border-2 border-slate-300 bg-slate-50 hover:bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 pl-9 pr-3 py-2.5 font-bold text-slate-900 shadow-sm transition-all"
+                />
+              </div>
             </div>
-            <div class="sm:col-span-3 space-y-1">
-              <label class="block text-xs font-bold text-slate-700">Reason for Waived Fee</label>
+            <div class="sm:col-span-3 space-y-1.5">
+              <label for="waived_reason" class="block text-xs font-black text-slate-900">
+                Reason for Waived Fee
+              </label>
               <input
+                id="waived_reason"
                 type="text"
                 v-model="form.waived_reason"
                 placeholder="e.g. Official guests, visiting speakers"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-2.5"
+                class="w-full text-sm rounded-xl border-2 border-slate-300 bg-slate-50 hover:bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 px-3 py-2.5 font-medium text-slate-900 shadow-sm transition-all"
               />
             </div>
           </div>
 
           <!-- Dining Calculation Preview Card -->
-          <div class="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 p-5 rounded-2xl border border-amber-200 shadow-sm space-y-3">
+          <div class="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 p-5 rounded-2xl border-2 border-amber-300/80 shadow-sm space-y-3">
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-              <div class="bg-white/80 p-3 rounded-xl border border-amber-100">
-                <div class="text-[10px] uppercase font-bold text-slate-500">Total Meals Prepared</div>
-                <div class="text-lg font-black text-slate-800">{{ calcTotalMeals }} plates</div>
+              <div class="bg-white p-3 rounded-xl border-2 border-amber-200/80 shadow-xs">
+                <div class="text-[10px] uppercase font-black text-slate-600">Total Meals Prepared</div>
+                <div class="text-xl font-black text-slate-900">{{ calcTotalMeals }} plates</div>
               </div>
-              <div class="bg-white/80 p-3 rounded-xl border border-amber-100">
-                <div class="text-[10px] uppercase font-bold text-slate-500">Gross Dining Revenue</div>
-                <div class="text-lg font-black text-emerald-700">{{ formatCurrency(calcDiningRevenue) }}</div>
+              <div class="bg-white p-3 rounded-xl border-2 border-amber-200/80 shadow-xs">
+                <div class="text-[10px] uppercase font-black text-slate-600">Gross Dining Revenue</div>
+                <div class="text-xl font-black text-emerald-800 font-mono">{{ formatCurrency(calcDiningRevenue) }}</div>
               </div>
-              <div class="bg-white/80 p-3 rounded-xl border border-amber-100">
-                <div class="text-[10px] uppercase font-bold text-slate-500">Kitchen Caterer Bill</div>
-                <div class="text-lg font-black text-rose-700">{{ formatCurrency(calcKitchenBill) }}</div>
+              <div class="bg-white p-3 rounded-xl border-2 border-amber-200/80 shadow-xs">
+                <div class="text-[10px] uppercase font-black text-slate-600">Kitchen Caterer Bill</div>
+                <div class="text-xl font-black text-rose-800 font-mono">{{ formatCurrency(calcKitchenBill) }}</div>
               </div>
-              <div class="bg-white/80 p-3 rounded-xl border border-amber-100">
-                <div class="text-[10px] uppercase font-bold text-slate-500">Net Dining Surplus</div>
-                <div :class="['text-lg font-black', calcDiningSurplus >= 0 ? 'text-indigo-700' : 'text-rose-600']">
+              <div class="bg-white p-3 rounded-xl border-2 border-amber-200/80 shadow-xs">
+                <div class="text-[10px] uppercase font-black text-slate-600">Net Dining Surplus</div>
+                <div :class="['text-xl font-black font-mono', calcDiningSurplus >= 0 ? 'text-indigo-800' : 'text-rose-700']">
                   {{ formatCurrency(calcDiningSurplus) }}
                 </div>
               </div>
@@ -264,83 +302,113 @@ const formatCurrency = (val) => {
 
         <!-- Section 3: Charity Collections & Contributions -->
         <div class="space-y-4">
-          <h3 class="text-sm font-extrabold text-purple-900 uppercase tracking-wider flex items-center gap-2 border-b border-purple-100 pb-2">
+          <h3 class="text-sm font-black text-purple-950 uppercase tracking-wider flex items-center gap-2 border-b-2 border-purple-200 pb-2">
             <span>🎗️ 2. Meeting Charity & Almoner Collections</span>
           </h3>
 
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700">Raffle Collection (£)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                v-model.number="form.raffle_amount"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-purple-500 focus:ring-purple-500 p-2.5 font-bold"
-              />
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="space-y-1.5 bg-purple-50/50 p-4 rounded-2xl border-2 border-purple-200">
+              <label for="raffle_amount" class="block text-xs font-black text-slate-900">
+                Raffle Collection (£)
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-700 font-black text-sm">£</span>
+                <input
+                  id="raffle_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model.number="form.raffle_amount"
+                  class="w-full text-base rounded-xl border-2 border-purple-300 bg-white hover:border-purple-500 focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 pl-8 pr-3 py-2.5 font-black text-slate-900 shadow-sm transition-all font-mono"
+                />
+              </div>
             </div>
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700">Alms Box Collection (£)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                v-model.number="form.alms_amount"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-purple-500 focus:ring-purple-500 p-2.5 font-bold"
-              />
+
+            <div class="space-y-1.5 bg-purple-50/50 p-4 rounded-2xl border-2 border-purple-200">
+              <label for="alms_amount" class="block text-xs font-black text-slate-900">
+                Alms Box Collection (£)
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-700 font-black text-sm">£</span>
+                <input
+                  id="alms_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model.number="form.alms_amount"
+                  class="w-full text-base rounded-xl border-2 border-purple-300 bg-white hover:border-purple-500 focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 pl-8 pr-3 py-2.5 font-black text-slate-900 shadow-sm transition-all font-mono"
+                />
+              </div>
             </div>
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700">Donations (£)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                v-model.number="form.donations_amount"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-purple-500 focus:ring-purple-500 p-2.5 font-bold"
-              />
+
+            <div class="space-y-1.5 bg-purple-50/50 p-4 rounded-2xl border-2 border-purple-200">
+              <label for="donations_amount" class="block text-xs font-black text-slate-900">
+                Donations (£)
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-700 font-black text-sm">£</span>
+                <input
+                  id="donations_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model.number="form.donations_amount"
+                  class="w-full text-base rounded-xl border-2 border-purple-300 bg-white hover:border-purple-500 focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 pl-8 pr-3 py-2.5 font-black text-slate-900 shadow-sm transition-all font-mono"
+                />
+              </div>
             </div>
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700">Bequests (£)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                v-model.number="form.bequest_amount"
-                class="w-full text-xs rounded-xl border-slate-300 focus:border-purple-500 focus:ring-purple-500 p-2.5 font-bold"
-              />
+
+            <div class="space-y-1.5 bg-purple-50/50 p-4 rounded-2xl border-2 border-purple-200">
+              <label for="bequest_amount" class="block text-xs font-black text-slate-900">
+                Bequests (£)
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-purple-700 font-black text-sm">£</span>
+                <input
+                  id="bequest_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model.number="form.bequest_amount"
+                  class="w-full text-base rounded-xl border-2 border-purple-300 bg-white hover:border-purple-500 focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 pl-8 pr-3 py-2.5 font-black text-slate-900 shadow-sm transition-all font-mono"
+                />
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Section 4: Treasury Notes & Remarks -->
         <div class="space-y-2">
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Treasury Notes / Remarks</label>
+          <label for="notes" class="block text-xs font-black text-slate-900 uppercase tracking-wider">
+            Treasury Notes / Remarks
+          </label>
           <textarea
+            id="notes"
             v-model="form.notes"
             rows="2"
             placeholder="e.g. Raffle receipts to be remitted to Masonic Charity Foundation. Catering invoice matched to kitchen cost."
-            class="w-full text-xs rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500 p-3"
+            class="w-full text-sm rounded-xl border-2 border-slate-300 bg-slate-50 hover:bg-white focus:bg-white hover:border-amber-500 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 p-3 font-semibold text-slate-900 shadow-sm transition-all"
           ></textarea>
         </div>
 
         <!-- Section 5: Total Expected Bank Deposit Summary Bar -->
-        <div class="bg-slate-900 text-white p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl border border-slate-800">
+        <div class="bg-slate-900 text-white p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl border-2 border-slate-800">
           <div>
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Net Bank Deposit Expected</div>
-            <div class="text-3xl font-black text-amber-400 font-mono">{{ formatCurrency(calcBankDeposit) }}</div>
-            <div class="text-[11px] text-slate-400 mt-1">Includes Gross Dining Income ({{ formatCurrency(calcDiningRevenue) }}) + Total Charity Collections ({{ formatCurrency(calcTotalCharity) }})</div>
+            <div class="text-xs font-extrabold text-amber-400 uppercase tracking-wider">Net Bank Deposit Expected</div>
+            <div class="text-3xl font-black text-amber-300 font-mono">{{ formatCurrency(calcBankDeposit) }}</div>
+            <div class="text-[11px] text-slate-300 mt-1">Includes Gross Dining Income ({{ formatCurrency(calcDiningRevenue) }}) + Total Charity Collections ({{ formatCurrency(calcTotalCharity) }})</div>
           </div>
           <div class="text-right space-y-1 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-6">
-            <div class="text-xs text-slate-300 font-semibold">Kitchen AP Bill Created: <span class="font-bold text-rose-400 font-mono">{{ formatCurrency(calcKitchenBill) }}</span></div>
-            <div class="text-xs text-slate-300 font-semibold">Total Charity Collected: <span class="font-bold text-purple-300 font-mono">{{ formatCurrency(calcTotalCharity) }}</span></div>
+            <div class="text-xs text-slate-200 font-semibold">Kitchen AP Bill Created: <span class="font-black text-rose-400 font-mono">{{ formatCurrency(calcKitchenBill) }}</span></div>
+            <div class="text-xs text-slate-200 font-semibold">Total Charity Collected: <span class="font-black text-purple-300 font-mono">{{ formatCurrency(calcTotalCharity) }}</span></div>
           </div>
         </div>
 
         <!-- Submit & Cancel Buttons -->
-        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+        <div class="flex items-center justify-between pt-4 border-t-2 border-slate-100">
           <Link
             :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })"
-            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all"
+            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs rounded-xl transition-all"
           >
             Cancel & Return to Meeting
           </Link>
