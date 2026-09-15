@@ -341,18 +341,23 @@ const initCropper = () => {
 
   cropperInstance = new Cropper(cropSourceImageRef.value, {
     aspectRatio: NaN,
-    viewMode: 1,
+    viewMode: 1, // Keep crop box strictly within image boundaries
     dragMode: 'crop',
-    autoCropArea: 0.85,
+    autoCropArea: 0.8,
     responsive: true,
-    restore: true,
+    restore: false,
     checkCrossOrigin: false,
     guides: true,
     center: true,
     highlight: true,
     cropBoxMovable: true,
     cropBoxResizable: true,
-    toggleDragModeOnDblclick: true,
+    toggleDragModeOnDblclick: false,
+    zoomable: false,
+    zoomOnWheel: false,
+    background: false,
+    minContainerWidth: 300,
+    minContainerHeight: 300,
   });
 };
 
@@ -1178,15 +1183,13 @@ const isImage = (mimeOrUrl) => {
         </div>
 
         <!-- Canvas / Image Container for CropperJS -->
-        <div class="bg-slate-900 rounded-2xl p-4 flex items-center justify-center min-h-[350px] max-h-[460px] overflow-hidden relative">
-          <div class="max-h-[420px] w-full flex items-center justify-center">
-            <img
-              ref="cropSourceImageRef"
-              :src="previewItem?.original_url"
-              alt="Source image for cropping"
-              class="max-h-[420px] max-w-full block"
-            />
-          </div>
+        <div class="bg-slate-950 rounded-2xl p-2 h-[420px] w-full overflow-hidden relative border border-slate-800">
+          <img
+            ref="cropSourceImageRef"
+            :src="previewItem?.original_url"
+            alt="Source image for cropping"
+            class="max-w-full block"
+          />
         </div>
 
         <!-- Cropper Action Footer -->
@@ -1213,3 +1216,33 @@ const isImage = (mimeOrUrl) => {
     </div>
   </AdminLayout>
 </template>
+
+<style scoped>
+:deep(.cropper-container) {
+  width: 100% !important;
+  height: 100% !important;
+}
+:deep(.cropper-bg) {
+  background-image: none !important;
+  background-color: #020617 !important;
+}
+:deep(.cropper-view-box) {
+  outline: 2px solid #38bdf8 !important;
+  outline-color: rgba(56, 189, 248, 0.9) !important;
+}
+:deep(.cropper-line) {
+  background-color: #38bdf8 !important;
+}
+:deep(.cropper-point) {
+  background-color: #0284c7 !important;
+  width: 8px !important;
+  height: 8px !important;
+  opacity: 0.95 !important;
+  border-radius: 2px !important;
+}
+:deep(.cropper-point.point-se) {
+  width: 12px !important;
+  height: 12px !important;
+  background-color: #38bdf8 !important;
+}
+</style>
