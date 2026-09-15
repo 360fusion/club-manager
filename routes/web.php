@@ -191,6 +191,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/accounting/bills', [\App\Http\Controllers\AccountingAdminController::class, 'storeBill'])->name('admin.accounting.bills.store');
     Route::post('/clubs/{clubSlug}/admin/accounting/bills/{id}/pay', [\App\Http\Controllers\AccountingAdminController::class, 'markBillPaid'])->name('admin.accounting.bills.pay');
     Route::post('/clubs/{clubSlug}/admin/accounting/contacts', [\App\Http\Controllers\AccountingAdminController::class, 'storeContact'])->name('admin.accounting.contacts.store');
+    Route::put('/clubs/{clubSlug}/admin/accounting/contacts/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'updateContact'])->name('admin.accounting.contacts.update');
+    Route::delete('/clubs/{clubSlug}/admin/accounting/contacts/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'destroyContact'])->name('admin.accounting.contacts.destroy');
     Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 

@@ -92,4 +92,62 @@ class AccountingContactTest extends TestCase
             'role' => 'Vendor / Supplier',
         ]);
     }
+
+    public function test_authenticated_admin_can_update_contact(): void
+    {
+        $contact = AccountingContact::create([
+            'club_id' => $this->club->id,
+            'type' => 'business',
+            'name' => 'Original Boat Works',
+            'contact_person' => 'John Doe',
+            'email' => 'john@originalboat.co.uk',
+            'phone' => '+44 1865 111222',
+            'role' => 'Vendor / Supplier',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->put(route('admin.accounting.contacts.update', [$this->club->slug, $contact->id]), [
+            'type' => 'business',
+            'name' => 'Updated Boat Works Ltd',
+            'contact_person' => 'Jane Smith',
+            'email' => 'jane@updatedboat.co.uk',
+            'phone' => '+44 1865 333444',
+            'role' => 'Partner',
+            'tax_id' => 'GB 123 4567 89',
+            'address_line_1' => '99 Harbor Lane',
+            'city' => 'Oxford',
+            'postcode' => 'OX2 999',
+            'country' => 'United Kingdom',
+            'notes' => 'Updated payment terms Net 15',
+        ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('accounting_contacts', [
+            'id' => $contact->id,
+            'club_id' => $this->club->id,
+            'name' => 'Updated Boat Works Ltd',
+            'contact_person' => 'Jane Smith',
+            'email' => 'jane@updatedboat.co.uk',
+            'role' => 'Partner',
+            'notes' => 'Updated payment terms Net 15',
+        ]);
+    }
+
+    public function test_authenticated_admin_can_delete_contact(): void
+    {
+        $contact = AccountingContact::create([
+            'club_id' => $this->club->id,
+            'type' => 'person',
+            'name' => 'Temporary Contractor',
+            'role' => 'Contractor / Coach',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->delete(route('admin.accounting.contacts.destroy', [$this->club->slug, $contact->id]));
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseMissing('accounting_contacts', [
+            'id' => $contact->id,
+        ]);
+    }
 }

@@ -412,4 +412,54 @@ class AccountingAdminController extends Controller
 
         return redirect()->back()->with('success', 'New contact added to directory.');
     }
+
+    public function updateContact(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $contact = AccountingContact::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'type' => ['required', 'in:person,business'],
+            'name' => ['required', 'string', 'max:255'],
+            'contact_person' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'role' => ['required', 'string', 'max:100'],
+            'tax_id' => ['nullable', 'string', 'max:50'],
+            'address_line_1' => ['nullable', 'string', 'max:255'],
+            'address_line_2' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'postcode' => ['nullable', 'string', 'max:20'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $contact->update([
+            'type' => $validated['type'],
+            'name' => $validated['name'],
+            'contact_person' => $validated['contact_person'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'role' => $validated['role'],
+            'tax_id' => $validated['tax_id'] ?? null,
+            'address_line_1' => $validated['address_line_1'] ?? null,
+            'address_line_2' => $validated['address_line_2'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'postcode' => $validated['postcode'] ?? null,
+            'country' => $validated['country'] ?? 'United Kingdom',
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return redirect()->back()->with('success', 'Contact details updated successfully.');
+    }
+
+    public function destroyContact(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $contact = AccountingContact::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $contact->delete();
+
+        return redirect()->back()->with('success', 'Contact removed from directory.');
+    }
 }

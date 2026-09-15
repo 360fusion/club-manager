@@ -128,6 +128,7 @@ const showJournalModal = ref(false);
 const showInvoiceModal = ref(false);
 const showBillModal = ref(false);
 const showContactModal = ref(false);
+const editingContactId = ref(null);
 
 const contactFilter = ref('all');
 
@@ -147,27 +148,64 @@ const contactForm = useForm({
   notes: '',
 });
 
-const submitContact = () => {
-  contactForm.post(route('admin.accounting.contacts.store', props.club.slug), {
-    onSuccess: () => {
-      showContactModal.value = false;
-      contactForm.reset({
-        type: 'business',
-        name: '',
-        contact_person: '',
-        email: '',
-        phone: '',
-        role: 'Vendor / Supplier',
-        tax_id: '',
-        address_line_1: '',
-        address_line_2: '',
-        city: '',
-        postcode: '',
-        country: 'United Kingdom',
-        notes: '',
-      });
-    },
+const openAddContactModal = () => {
+  editingContactId.value = null;
+  contactForm.clearErrors();
+  contactForm.reset({
+    type: 'business',
+    name: '',
+    contact_person: '',
+    email: '',
+    phone: '',
+    role: 'Vendor / Supplier',
+    tax_id: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    postcode: '',
+    country: 'United Kingdom',
+    notes: '',
   });
+  showContactModal.value = true;
+};
+
+const openEditContactModal = (c) => {
+  if (c.kind === 'member') return;
+  editingContactId.value = c.contact_db_id;
+  contactForm.clearErrors();
+  contactForm.type = c.type || 'business';
+  contactForm.name = c.name || '';
+  contactForm.contact_person = (c.contact_person && c.contact_person !== c.name) ? c.contact_person : '';
+  contactForm.email = (c.email && c.email !== '—') ? c.email : '';
+  contactForm.phone = (c.phone && c.phone !== '—') ? c.phone : '';
+  contactForm.role = c.role || 'Vendor / Supplier';
+  contactForm.tax_id = (c.tax_id && c.tax_id !== '—') ? c.tax_id : '';
+  contactForm.address_line_1 = c.address_line_1 || '';
+  contactForm.address_line_2 = c.address_line_2 || '';
+  contactForm.city = c.city || '';
+  contactForm.postcode = c.postcode || '';
+  contactForm.country = c.country || 'United Kingdom';
+  contactForm.notes = c.notes || '';
+  showContactModal.value = true;
+};
+
+const submitContact = () => {
+  if (editingContactId.value) {
+    contactForm.put(route('admin.accounting.contacts.update', [props.club.slug, editingContactId.value]), {
+      onSuccess: () => {
+        showContactModal.value = false;
+        editingContactId.value = null;
+        contactForm.reset();
+      },
+    });
+  } else {
+    contactForm.post(route('admin.accounting.contacts.store', props.club.slug), {
+      onSuccess: () => {
+        showContactModal.value = false;
+        contactForm.reset();
+      },
+    });
+  }
 };
 
 const filteredContacts = computed(() => {
@@ -176,6 +214,7 @@ const filteredContacts = computed(() => {
   (props.contacts || []).forEach(c => {
     all.push({
       id: 'c_' + c.id,
+      contact_db_id: c.id,
       kind: 'contact',
       type: c.type,
       name: c.name,
@@ -185,7 +224,12 @@ const filteredContacts = computed(() => {
       role: c.role || 'Contact',
       tax_id: c.tax_id || '—',
       address: c.formatted_address || '—',
-      notes: c.notes,
+      address_line_1: c.address_line_1 || '',
+      address_line_2: c.address_line_2 || '',
+      city: c.city || '',
+      postcode: c.postcode || '',
+      country: c.country || 'United Kingdom',
+      notes: c.notes || '',
     });
   });
 
@@ -1385,7 +1429,7 @@ const getTypeBadge = (type) => {
           </div>
           <button
             type="button"
-            @click="showContactModal = true"
+            @click="openAddContactModal"
             class="px-4 py-2 bg-[#007bce] hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 shrink-0"
           >
             <span>+ Add Contact</span>
@@ -1447,7 +1491,16 @@ const getTypeBadge = (type) => {
                       {{ c.type === 'business' ? '🏢' : '👤' }}
                     </span>
                     <div>
-                      <span class="font-extrabold text-slate-900 block">{{ c.name }}</span>
+                      <button
+                        v-if="c.kind === 'contact'"
+                        type="button"
+                        @click="openEditContactModal(c)"
+                        class="font-extrabold text-slate-900 hover:text-sky-700 hover:underline text-left block cursor-pointer transition-colors"
+                        title="Click to edit contact details"
+                      >
+                        {{ c.name }} ✏️
+                      </button>
+                      <span v-else class="font-extrabold text-slate-900 block">{{ c.name }}</span>
                       <span v-if="c.type === 'business' && c.contact_person && c.contact_person !== c.name" class="text-[11px] text-slate-500 block">
                         Contact: {{ c.contact_person }}
                       </span>
@@ -1484,14 +1537,23 @@ const getTypeBadge = (type) => {
                   >
                     + Issue Invoice
                   </button>
-                  <button
-                    v-else
-                    type="button"
-                    @click="showBillModal = true; billForm.vendor_name = c.name"
-                    class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
-                  >
-                    + Record Bill
-                  </button>
+                  <div v-else class="flex items-center justify-center gap-1.5">
+                    <button
+                      type="button"
+                      @click="openEditContactModal(c)"
+                      class="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                      title="Edit Contact"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      type="button"
+                      @click="showBillModal = true; billForm.vendor_name = c.name"
+                      class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    >
+                      + Record Bill
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -1968,13 +2030,13 @@ const getTypeBadge = (type) => {
       </div>
     </div>
 
-    <!-- Modal 5: Add New Contact (Person or Business) -->
+    <!-- Modal 5: Add / Edit Contact (Person or Business) -->
     <div v-if="showContactModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="showContactModal = false">
       <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-8" @click.stop>
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
-            <h3 class="text-base font-black text-slate-900">Add New Contact</h3>
-            <p class="text-xs text-slate-500">Create a new person or business contact for invoicing and bookkeeping.</p>
+            <h3 class="text-base font-black text-slate-900">{{ editingContactId ? 'Edit Contact Details' : 'Add New Contact' }}</h3>
+            <p class="text-xs text-slate-500">{{ editingContactId ? 'Update accounting contact details in directory.' : 'Create a new person or business contact for invoicing and bookkeeping.' }}</p>
           </div>
           <button type="button" @click="showContactModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
         </div>
@@ -2145,7 +2207,7 @@ const getTypeBadge = (type) => {
               :disabled="contactForm.processing"
               class="px-4 py-2 bg-[#007bce] hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
             >
-              Save Contact
+              {{ editingContactId ? 'Update Contact' : 'Save Contact' }}
             </button>
           </div>
         </form>
