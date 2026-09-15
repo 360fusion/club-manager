@@ -1427,13 +1427,12 @@ const getTypeBadge = (type) => {
             <h3 class="text-lg font-black text-slate-900">Contacts & Directory</h3>
             <p class="text-xs text-slate-500">Manage billing contacts for individual persons, contractors, vendors, sponsors, and club members.</p>
           </div>
-          <button
-            type="button"
-            @click="openAddContactModal"
+          <Link
+            :href="route('admin.accounting.contacts.create', club.slug)"
             class="px-4 py-2 bg-[#007bce] hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 shrink-0"
           >
             <span>+ Add Contact</span>
-          </button>
+          </Link>
         </div>
 
         <!-- Filter Segmented Tabs -->
@@ -1491,15 +1490,14 @@ const getTypeBadge = (type) => {
                       {{ c.type === 'business' ? '🏢' : '👤' }}
                     </span>
                     <div>
-                      <button
+                      <Link
                         v-if="c.kind === 'contact'"
-                        type="button"
-                        @click="openEditContactModal(c)"
+                        :href="route('admin.accounting.contacts.edit', [club.slug, c.contact_db_id])"
                         class="font-extrabold text-slate-900 hover:text-sky-700 hover:underline text-left block cursor-pointer transition-colors"
                         title="Click to edit contact details"
                       >
                         {{ c.name }} ✏️
-                      </button>
+                      </Link>
                       <span v-else class="font-extrabold text-slate-900 block">{{ c.name }}</span>
                       <span v-if="c.type === 'business' && c.contact_person && c.contact_person !== c.name" class="text-[11px] text-slate-500 block">
                         Contact: {{ c.contact_person }}
@@ -1538,14 +1536,13 @@ const getTypeBadge = (type) => {
                     + Issue Invoice
                   </button>
                   <div v-else class="flex items-center justify-center gap-1.5">
-                    <button
-                      type="button"
-                      @click="openEditContactModal(c)"
+                    <Link
+                      :href="route('admin.accounting.contacts.edit', [club.slug, c.contact_db_id])"
                       class="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
                       title="Edit Contact"
                     >
                       ✏️ Edit
-                    </button>
+                    </Link>
                     <button
                       type="button"
                       @click="showBillModal = true; billForm.vendor_name = c.name"
@@ -2030,189 +2027,7 @@ const getTypeBadge = (type) => {
       </div>
     </div>
 
-    <!-- Modal 5: Add / Edit Contact (Person or Business) -->
-    <div v-if="showContactModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="showContactModal = false">
-      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-8" @click.stop>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <h3 class="text-base font-black text-slate-900">{{ editingContactId ? 'Edit Contact Details' : 'Add New Contact' }}</h3>
-            <p class="text-xs text-slate-500">{{ editingContactId ? 'Update accounting contact details in directory.' : 'Create a new person or business contact for invoicing and bookkeeping.' }}</p>
-          </div>
-          <button type="button" @click="showContactModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
-        </div>
 
-        <form @submit.prevent="submitContact" class="space-y-4 text-xs">
-          <!-- Contact Type Toggle Selector -->
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700">Contact Type *</label>
-            <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
-              <button
-                type="button"
-                @click="contactForm.type = 'person'; if (!contactForm.role || contactForm.role === 'Vendor / Supplier') contactForm.role = 'Contractor / Coach'"
-                :class="[
-                  'py-2 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer',
-                  contactForm.type === 'person' ? 'bg-white text-indigo-900 shadow-sm border border-slate-200' : 'text-slate-600 hover:text-slate-900'
-                ]"
-              >
-                <span>👤 Individual Person</span>
-              </button>
-
-              <button
-                type="button"
-                @click="contactForm.type = 'business'; if (!contactForm.role || contactForm.role === 'Contractor / Coach') contactForm.role = 'Vendor / Supplier'"
-                :class="[
-                  'py-2 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer',
-                  contactForm.type === 'business' ? 'bg-white text-sky-900 shadow-sm border border-slate-200' : 'text-slate-600 hover:text-slate-900'
-                ]"
-              >
-                <span>🏢 Business / Organization</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Entity / Name Field (Dynamic Label) -->
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700">
-              {{ contactForm.type === 'business' ? 'Business / Company Name *' : 'Full Name *' }}
-            </label>
-            <input
-              v-model="contactForm.name"
-              type="text"
-              :placeholder="contactForm.type === 'business' ? 'e.g. Oxford Boatyard Ltd' : 'e.g. Robert Sterling'"
-              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500 font-semibold"
-              required
-            />
-          </div>
-
-          <!-- Primary Contact Person Field -->
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700">
-              {{ contactForm.type === 'business' ? 'Primary Contact Person Name' : 'Secondary / Preferred Name' }}
-            </label>
-            <input
-              v-model="contactForm.contact_person"
-              type="text"
-              :placeholder="contactForm.type === 'business' ? 'e.g. David Miller (Account Representative)' : 'e.g. Bob Sterling'"
-              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
-            />
-          </div>
-
-          <!-- Role / Category Select -->
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700">Relationship / Role Category *</label>
-            <select
-              v-model="contactForm.role"
-              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-sky-500"
-              required
-            >
-              <template v-if="contactForm.type === 'business'">
-                <option value="Vendor / Supplier">Vendor / Supplier</option>
-                <option value="Sponsor & Insurer">Sponsor & Insurer</option>
-                <option value="Contractor / Service Provider">Contractor / Service Provider</option>
-                <option value="Client / Corporate Customer">Client / Corporate Customer</option>
-                <option value="Partner">Partner Organization</option>
-              </template>
-              <template v-else>
-                <option value="Contractor / Coach">Contractor / Coach</option>
-                <option value="Volunteer / Staff">Volunteer / Staff</option>
-                <option value="Vendor Representative">Vendor Representative</option>
-                <option value="Client / Customer">Client / Customer</option>
-                <option value="Member">Club Member</option>
-              </template>
-            </select>
-          </div>
-
-          <!-- Email & Phone Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700">Email Address</label>
-              <input
-                v-model="contactForm.email"
-                type="email"
-                placeholder="contact@domain.com"
-                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:border-sky-500"
-              />
-            </div>
-
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700">Phone Number</label>
-              <input
-                v-model="contactForm.phone"
-                type="text"
-                placeholder="+44 20 7946 0912"
-                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
-              />
-            </div>
-          </div>
-
-          <!-- Tax ID / VAT Number -->
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700">
-              {{ contactForm.type === 'business' ? 'VAT / Tax Registration Number' : 'Tax / UTR Number' }}
-            </label>
-            <input
-              v-model="contactForm.tax_id"
-              type="text"
-              :placeholder="contactForm.type === 'business' ? 'GB 883 9920 11' : 'UTR 982341'"
-              class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:border-sky-500"
-            />
-          </div>
-
-          <!-- Billing Address -->
-          <div class="space-y-2 pt-2 border-t border-slate-100">
-            <label class="block font-bold text-slate-700">Billing Address</label>
-            <input
-              v-model="contactForm.address_line_1"
-              type="text"
-              placeholder="Address Line 1"
-              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500 mb-2"
-            />
-            <div class="grid grid-cols-2 gap-2">
-              <input
-                v-model="contactForm.city"
-                type="text"
-                placeholder="City"
-                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
-              />
-              <input
-                v-model="contactForm.postcode"
-                type="text"
-                placeholder="Postcode"
-                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
-              />
-            </div>
-          </div>
-
-          <!-- Notes -->
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700">Internal Notes / Payment Terms</label>
-            <textarea
-              v-model="contactForm.notes"
-              rows="2"
-              placeholder="e.g. Payment terms Net 30. Direct bank transfer."
-              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
-            ></textarea>
-          </div>
-
-          <div class="pt-2 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              @click="showContactModal = false"
-              class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="contactForm.processing"
-              class="px-4 py-2 bg-[#007bce] hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
-            >
-              {{ editingContactId ? 'Update Contact' : 'Save Contact' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
 
     <!-- Modal 6: Set Account Opening / Carry Over Balance -->
     <div v-if="showOpeningBalanceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showOpeningBalanceModal = false">

@@ -372,6 +372,51 @@ class AccountingAdminController extends Controller
         return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} marked as paid.");
     }
 
+    public function createContact(string $clubSlug): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        return Inertia::render('Admin/Accounting/ContactForm', [
+            'club' => [
+                'id' => $club->id,
+                'name' => $club->name,
+                'slug' => $club->slug,
+            ],
+            'contact' => null,
+        ]);
+    }
+
+    public function editContact(string $clubSlug, int $id): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $contact = AccountingContact::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        return Inertia::render('Admin/Accounting/ContactForm', [
+            'club' => [
+                'id' => $club->id,
+                'name' => $club->name,
+                'slug' => $club->slug,
+            ],
+            'contact' => [
+                'id' => $contact->id,
+                'type' => $contact->type,
+                'name' => $contact->name,
+                'contact_person' => $contact->contact_person,
+                'email' => $contact->email,
+                'phone' => $contact->phone,
+                'role' => $contact->role,
+                'tax_id' => $contact->tax_id,
+                'address_line_1' => $contact->address_line_1,
+                'address_line_2' => $contact->address_line_2,
+                'city' => $contact->city,
+                'postcode' => $contact->postcode,
+                'country' => $contact->country,
+                'notes' => $contact->notes,
+                'is_active' => $contact->is_active,
+            ],
+        ]);
+    }
+
     public function storeContact(Request $request, string $clubSlug): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
@@ -410,7 +455,7 @@ class AccountingAdminController extends Controller
             'is_active' => true,
         ]);
 
-        return redirect()->back()->with('success', 'New contact added to directory.');
+        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, '#contacts'])->with('success', 'New contact added to directory.');
     }
 
     public function updateContact(Request $request, string $clubSlug, int $id): RedirectResponse
@@ -450,7 +495,7 @@ class AccountingAdminController extends Controller
             'notes' => $validated['notes'] ?? null,
         ]);
 
-        return redirect()->back()->with('success', 'Contact details updated successfully.');
+        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, '#contacts'])->with('success', 'Contact details updated successfully.');
     }
 
     public function destroyContact(string $clubSlug, int $id): RedirectResponse
@@ -460,6 +505,6 @@ class AccountingAdminController extends Controller
 
         $contact->delete();
 
-        return redirect()->back()->with('success', 'Contact removed from directory.');
+        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, '#contacts'])->with('success', 'Contact removed from directory.');
     }
 }
