@@ -116,18 +116,41 @@
 
                 <div class="space-y-2">
                     @forelse($agenda_items as $item)
+                        @php
+                            $itemTypeEnum = $item->item_type instanceof \App\Domains\ClubAccounting\Enums\CommitteeItemType
+                                ? $item->item_type
+                                : \App\Domains\ClubAccounting\Enums\CommitteeItemType::tryFrom($item->item_type);
+                            $typeLabel = $itemTypeEnum ? $itemTypeEnum->label() : ($item->item_type ?: 'General Business');
+                            $typeIcon = $itemTypeEnum ? $itemTypeEnum->icon() : '📋';
+                            $typeValue = $itemTypeEnum ? $itemTypeEnum->value : 'general';
+                        @endphp
                         <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 text-xs">
                             <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-black text-[10px] flex items-center justify-center shrink-0">
+                                <div class="flex items-start gap-2.5 min-w-0">
+                                    <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                                         {{ $item->order }}
                                     </span>
-                                    <span class="font-bold text-slate-900">{{ $item->title }}</span>
+                                    <div class="min-w-0 space-y-1">
+                                        <h4 class="font-bold text-slate-900 leading-snug">{{ $item->title }}</h4>
+                                        <div>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold {{ match($typeValue) {
+                                                'general' => 'bg-slate-200/80 text-slate-700 border border-slate-300/60',
+                                                'candidate_vetting' => 'bg-blue-100 text-blue-800 border border-blue-200',
+                                                'accounts_audit' => 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+                                                'hall_affairs' => 'bg-purple-100 text-purple-800 border border-purple-200',
+                                                'motion' => 'bg-amber-100 text-amber-800 border border-amber-200',
+                                                default => 'bg-slate-200/80 text-slate-700 border border-slate-300/60',
+                                            } }}">
+                                                <span>{{ $typeIcon }}</span>
+                                                <span>{{ $typeLabel }}</span>
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <button
                                     type="button"
                                     wire:click="toggleAgendaApproval({{ $item->id }})"
-                                    class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider {{ $item->is_approved ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-slate-200 text-slate-600' }}"
+                                    class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider shrink-0 {{ $item->is_approved ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-slate-200 text-slate-600' }}"
                                 >
                                     {{ $item->is_approved ? 'Approved' : 'Pending' }}
                                 </button>
@@ -138,7 +161,7 @@
                             @endif
 
                             @if($item->recommendation_text)
-                                <div class="pl-7 text-[10px] font-bold text-indigo-700 bg-indigo-50/50 p-1.5 rounded-lg border border-indigo-100">
+                                <div class="ml-7 text-[10px] font-bold text-indigo-700 bg-indigo-50/50 p-1.5 rounded-lg border border-indigo-100">
                                     {{ $item->recommendation_text }}
                                 </div>
                             @endif
