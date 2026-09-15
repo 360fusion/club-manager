@@ -420,16 +420,12 @@ const getTypeBadge = (type) => {
             <span>Contacts</span>
           </button>
 
-          <button
-            type="button"
-            @click="activeTab = 'settings'"
-            :class="[
-              'px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'settings' ? 'font-extrabold text-white bg-white/20' : 'text-sky-100 hover:text-white hover:bg-white/10'
-            ]"
+          <Link
+            :href="route('admin.settings.show', club.slug) + '#accounting'"
+            class="px-5 py-3 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl text-sky-100 hover:text-white hover:bg-white/10"
           >
             <span>⚙️ Settings</span>
-          </button>
+          </Link>
         </nav>
 
         <!-- Quick Action Buttons in Ocean Blue Bar -->
@@ -1381,7 +1377,7 @@ const getTypeBadge = (type) => {
             <p class="text-xs text-slate-500">Configure company address, VAT registration numbers, invoicing rules, and billing defaults.</p>
           </div>
           <Link
-            :href="route('admin.settings.show', club.slug)"
+            :href="route('admin.settings.show', club.slug) + '#accounting'"
             class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5 self-start sm:self-auto"
           >
             <span>⚙️ Full System Settings</span>
