@@ -34,6 +34,14 @@ class AppServiceProvider extends ServiceProvider
                 'committee.create-committee-meeting-modal',
                 \App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal::class
             );
+            Livewire::component(
+                'members.member-index',
+                \App\Domains\ClubAccounting\Livewire\Members\MemberIndex::class
+            );
+            Livewire::component(
+                'members.member-profile',
+                \App\Domains\ClubAccounting\Livewire\Members\MemberProfile::class
+            );
         }
 
         if (class_exists(Cashier::class)) {
