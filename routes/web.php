@@ -84,6 +84,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/media', [\App\Http\Controllers\MediaAdminController::class, 'store'])->name('admin.media.store');
     Route::put('/clubs/{clubSlug}/admin/media/{id}', [\App\Http\Controllers\MediaAdminController::class, 'update'])->name('admin.media.update');
     Route::post('/clubs/{clubSlug}/admin/media/{id}/crop', [\App\Http\Controllers\MediaAdminController::class, 'crop'])->name('admin.media.crop');
+    Route::post('/clubs/{clubSlug}/admin/media/{id}/revert', [\App\Http\Controllers\MediaAdminController::class, 'revert'])->name('admin.media.revert');
     Route::get('/clubs/{clubSlug}/admin/media/{id}/usage', [\App\Http\Controllers\MediaAdminController::class, 'usage'])->name('admin.media.usage');
     Route::post('/clubs/{clubSlug}/admin/media/bulk-delete', [\App\Http\Controllers\MediaAdminController::class, 'bulkDelete'])->name('admin.media.bulk_delete');
     Route::post('/clubs/{clubSlug}/admin/media/bulk-move', [\App\Http\Controllers\MediaAdminController::class, 'bulkMove'])->name('admin.media.bulk_move');

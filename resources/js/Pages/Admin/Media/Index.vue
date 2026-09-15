@@ -403,7 +403,9 @@ const rotateCropper = (deg) => {
   cropRotation.value = (cropRotation.value + deg) % 360;
 };
 
-const applyCrop = async () => {
+const isReverting = ref(false);
+
+const applyCrop = async (mode = 'replace') => {
   if (!cropperInstance || !previewItem.value) return;
   isCropping.value = true;
 
@@ -427,6 +429,7 @@ const applyCrop = async () => {
       }
       const formData = new FormData();
       formData.append('file', blob, previewItem.value.file_name);
+      formData.append('save_mode', mode);
 
       const res = await fetch(`/clubs/${props.club.slug}/admin/media/${previewItem.value.id}/crop`, {
         method: 'POST',
@@ -440,12 +443,17 @@ const applyCrop = async () => {
       if (res.ok) {
         const data = await res.json();
         if (data.media) {
-          const idx = mediaItems.value.findIndex(m => m.id === data.media.id);
-          if (idx !== -1) mediaItems.value[idx] = data.media;
-          previewItem.value = { ...data.media };
+          if (mode === 'variant') {
+            mediaItems.value.unshift(data.media);
+            saveSuccessMsg.value = 'Saved as new cropped variant copy!';
+          } else {
+            const idx = mediaItems.value.findIndex(m => m.id === data.media.id);
+            if (idx !== -1) mediaItems.value[idx] = data.media;
+            previewItem.value = { ...data.media };
+            saveSuccessMsg.value = 'Image updated! Original master preserved for 1-click reverting.';
+          }
           closeCropper();
-          saveSuccessMsg.value = 'Image cropped and updated successfully!';
-          setTimeout(() => { saveSuccessMsg.value = ''; }, 3000);
+          setTimeout(() => { saveSuccessMsg.value = ''; }, 4000);
         }
       }
       isCropping.value = false;
@@ -453,6 +461,39 @@ const applyCrop = async () => {
   } catch (err) {
     console.error('Failed to crop image:', err);
     isCropping.value = false;
+  }
+};
+
+const revertMediaToOriginal = async () => {
+  if (!previewItem.value || isReverting.value) return;
+  if (!confirm(`Revert "${previewItem.value.name}" back to its original uncropped master image?`)) return;
+
+  isReverting.value = true;
+  saveSuccessMsg.value = '';
+
+  try {
+    const res = await fetch(`/clubs/${props.club.slug}/admin/media/${previewItem.value.id}/revert`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.media) {
+        const idx = mediaItems.value.findIndex(m => m.id === data.media.id);
+        if (idx !== -1) mediaItems.value[idx] = data.media;
+        previewItem.value = { ...data.media };
+        saveSuccessMsg.value = 'Reverted image back to original master file!';
+        setTimeout(() => { saveSuccessMsg.value = ''; }, 4000);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to revert image:', err);
+  } finally {
+    isReverting.value = false;
   }
 };
 
@@ -1102,6 +1143,19 @@ const isImage = (mimeOrUrl) => {
 
           <div class="flex items-center gap-2">
             <button
+              v-if="previewItem?.has_original_backup"
+              type="button"
+              @click="revertMediaToOriginal"
+              :disabled="isReverting"
+              class="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-xl border border-amber-300 transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+              title="Revert image back to original uncropped master"
+            >
+              <span v-if="isReverting" class="animate-spin">🔄</span>
+              <span v-else>↺</span>
+              <span>{{ isReverting ? 'Reverting...' : 'Revert to Original Master' }}</span>
+            </button>
+
+            <button
               type="button"
               @click="saveMediaDetails"
               :disabled="isSavingDetails"
@@ -1192,25 +1246,35 @@ const isImage = (mimeOrUrl) => {
           />
         </div>
 
-        <!-- Cropper Action Footer -->
-        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <!-- Cropper Action Footer with Variant and Master Backup buttons -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
           <button
             type="button"
             @click="closeCropper"
-            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
           >
             Cancel
           </button>
-          <button
-            type="button"
-            @click="applyCrop"
-            :disabled="isCropping"
-            class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
-          >
-            <span v-if="isCropping" class="animate-spin text-sm">🔄</span>
-            <span v-else>✂️</span>
-            <span>{{ isCropping ? 'Cropping & Saving...' : 'Save & Apply Crop' }}</span>
-          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              @click="applyCrop('variant')"
+              :disabled="isCropping"
+              class="px-4 py-2.5 bg-white hover:bg-slate-100 text-indigo-700 font-extrabold text-xs rounded-xl border border-indigo-200 shadow-sm transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <span>➕ Save as New Copy (Variant)</span>
+            </button>
+            <button
+              type="button"
+              @click="applyCrop('replace')"
+              :disabled="isCropping"
+              class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+            >
+              <span v-if="isCropping" class="animate-spin text-sm">🔄</span>
+              <span v-else>⚡</span>
+              <span>{{ isCropping ? 'Cropping & Saving...' : 'Update & Keep Master Backup' }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

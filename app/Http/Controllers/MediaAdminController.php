@@ -230,7 +230,9 @@ class MediaAdminController extends Controller
     }
 
     /**
-     * Crop an image media asset and save back to media collection.
+     * Crop an image media asset. Supports dual save modes:
+     * - 'variant': Creates a separate new copy/variant asset, leaving original untouched.
+     * - 'replace': Overwrites current asset while backing up the uncropped master original file for 1-click reverting.
      */
     public function crop(string $clubSlug, int $id, Request $request): JsonResponse
     {
@@ -239,9 +241,50 @@ class MediaAdminController extends Controller
 
         $request->validate([
             'file' => 'required|file|mimes:jpg,jpeg,png,webp,gif|max:10240',
+            'save_mode' => 'nullable|string|in:replace,variant',
         ]);
 
+        $saveMode = $request->input('save_mode', 'replace');
         $collection = $media->collection_name;
+
+        if ($saveMode === 'variant') {
+            $variantName = $media->name . ' (Cropped)';
+            $newMedia = $club->addMediaFromRequest('file')
+                ->usingName($variantName)
+                ->toMediaCollection($collection);
+
+            $newMedia->setCustomProperty('alt_text', $media->getCustomProperty('alt_text', ''));
+            $newMedia->setCustomProperty('caption', $media->getCustomProperty('caption', ''));
+            $newMedia->setCustomProperty('is_variant', true);
+            $newMedia->setCustomProperty('parent_media_id', $media->id);
+            $newMedia->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'New cropped variant saved successfully.',
+                'media' => $this->transformMedia($newMedia),
+            ]);
+        }
+
+        // Mode: replace active asset while storing original master backup
+        $originalFilePath = $media->getPath();
+        $backupDir = storage_path("app/media-originals/{$club->id}");
+
+        if (!file_exists($backupDir)) {
+            mkdir($backupDir, 0755, true);
+        }
+
+        $hasBackup = $media->getCustomProperty('has_original_backup', false);
+        $masterBackupPath = $media->getCustomProperty('original_master_path', null);
+
+        if (!$hasBackup || !$masterBackupPath || !file_exists($masterBackupPath)) {
+            $ext = pathinfo($media->file_name, PATHINFO_EXTENSION) ?: 'png';
+            $masterBackupPath = "{$backupDir}/{$media->id}_master.{$ext}";
+            if (file_exists($originalFilePath)) {
+                copy($originalFilePath, $masterBackupPath);
+            }
+        }
+
         $name = $media->name;
         $altText = $media->getCustomProperty('alt_text', '');
         $caption = $media->getCustomProperty('caption', '');
@@ -254,12 +297,59 @@ class MediaAdminController extends Controller
 
         $newMedia->setCustomProperty('alt_text', $altText);
         $newMedia->setCustomProperty('caption', $caption);
+        $newMedia->setCustomProperty('has_original_backup', true);
+        $newMedia->setCustomProperty('original_master_path', $masterBackupPath);
+        $newMedia->setCustomProperty('is_cropped', true);
+        $newMedia->setCustomProperty('cropped_at', now()->toIso8601String());
         $newMedia->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Image cropped successfully.',
+            'message' => 'Image updated successfully. Original master backup preserved.',
             'media' => $this->transformMedia($newMedia),
+        ]);
+    }
+
+    /**
+     * Revert a cropped media asset back to its original master image.
+     */
+    public function revert(string $clubSlug, int $id): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $media = $club->media()->findOrFail($id);
+
+        $masterBackupPath = $media->getCustomProperty('original_master_path');
+
+        if (!$masterBackupPath || !file_exists($masterBackupPath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No original master backup found for this image.',
+            ], 422);
+        }
+
+        $collection = $media->collection_name;
+        $name = $media->name;
+        $altText = $media->getCustomProperty('alt_text', '');
+        $caption = $media->getCustomProperty('caption', '');
+
+        $media->delete();
+
+        $restoredMedia = $club->addMedia($masterBackupPath)
+            ->preservingOriginal()
+            ->usingName($name)
+            ->toMediaCollection($collection);
+
+        $restoredMedia->setCustomProperty('alt_text', $altText);
+        $restoredMedia->setCustomProperty('caption', $caption);
+        $restoredMedia->setCustomProperty('has_original_backup', true);
+        $restoredMedia->setCustomProperty('original_master_path', $masterBackupPath);
+        $restoredMedia->setCustomProperty('is_cropped', false);
+        $restoredMedia->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Image reverted to original master version successfully.',
+            'media' => $this->transformMedia($restoredMedia),
         ]);
     }
 
@@ -456,6 +546,8 @@ class MediaAdminController extends Controller
             'original_url' => $media->getFullUrl(),
             'alt_text' => $media->getCustomProperty('alt_text', ''),
             'caption' => $media->getCustomProperty('caption', ''),
+            'has_original_backup' => (bool) ($media->getCustomProperty('has_original_backup', false) && file_exists($media->getCustomProperty('original_master_path', ''))),
+            'is_cropped' => (bool) $media->getCustomProperty('is_cropped', false),
             'created_at' => $media->created_at->format('M d, Y H:i'),
         ];
     }
