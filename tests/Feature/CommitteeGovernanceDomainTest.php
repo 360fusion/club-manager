@@ -434,4 +434,47 @@ TEXT;
             'attendance_type' => 'present',
         ]);
     }
+
+    public function test_live_minute_taker_integrates_agenda_items_and_outline(): void
+    {
+        $this->actingAs($this->admin);
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Regular Meeting with Agenda',
+            'meeting_date' => Carbon::now()->addDays(5),
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        $item1 = ClubCommitteeAgendaItem::create([
+            'committee_meeting_id' => $meeting->id,
+            'order' => 1,
+            'item_type' => CommitteeItemType::AccountsAudit,
+            'title' => 'Audit Hall Invoices',
+            'description' => 'Review quarterly electricity and maintenance invoices.',
+            'recommendation_text' => 'Pass for payment',
+        ]);
+
+        $item2 = ClubCommitteeAgendaItem::create([
+            'committee_meeting_id' => $meeting->id,
+            'order' => 2,
+            'item_type' => CommitteeItemType::Motion,
+            'title' => 'Capitation Fee Review',
+            'description' => 'Proposed £5 increase per member.',
+        ]);
+
+        Livewire::test(LiveMinuteTaker::class, [
+            'clubSlug' => $this->club->slug,
+            'meetingId' => $meeting->id,
+        ])
+            ->assertSee('Audit Hall Invoices')
+            ->assertSee('Capitation Fee Review')
+            ->call('loadAgendaOutline')
+            ->assertSet('notesRaw', fn ($val) => str_contains($val, '### 1. Audit Hall Invoices'))
+            ->assertSet('notesRaw', fn ($val) => str_contains($val, '### 2. Capitation Fee Review'))
+            ->call('toggleAgendaApproval', $item1->id)
+            ->assertHasNoErrors();
+
+        $this->assertTrue($item1->fresh()->is_approved);
+    }
 }

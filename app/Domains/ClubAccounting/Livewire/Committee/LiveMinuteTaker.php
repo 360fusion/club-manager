@@ -2,8 +2,10 @@
 
 namespace App\Domains\ClubAccounting\Livewire\Committee;
 
+use App\Domains\ClubAccounting\Enums\AttendanceType;
 use App\Domains\ClubAccounting\Enums\CommitteeMeetingStatus;
 use App\Domains\ClubAccounting\Enums\TaskStatus;
+use App\Domains\ClubAccounting\Models\ClubCommitteeAgendaItem;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Models\ClubCommitteeTask;
 use App\Domains\ClubAccounting\Models\ClubNoticeOfMotion;
@@ -20,6 +22,9 @@ class LiveMinuteTaker extends Component
     public int $meetingId;
     public string $notesRaw = '';
     public string $lastSavedAt = '';
+
+    // Active Tab in Right Sidebar ('live', 'tasks', 'motions')
+    public string $activeRightTab = 'live';
 
     // Extracted live preview
     public array $parsedPreview = ['mentions' => [], 'tasks' => [], 'motions' => []];
@@ -153,12 +158,81 @@ class LiveMinuteTaker extends Component
         $this->updatedNotesRaw();
     }
 
+    public function toggleAgendaApproval(int $itemId): void
+    {
+        $item = ClubCommitteeAgendaItem::where('committee_meeting_id', $this->meetingId)->findOrFail($itemId);
+        $item->update(['is_approved' => !$item->is_approved]);
+    }
+
+    public function insertAgendaItem(int $itemId): void
+    {
+        $item = ClubCommitteeAgendaItem::where('committee_meeting_id', $this->meetingId)->findOrFail($itemId);
+        $typeLabel = $item->item_type?->label() ?? 'General Business';
+        $snippet = "\n\n### {$item->order}. {$item->title} [{$typeLabel}]\n";
+        if ($item->description) {
+            $snippet .= "{$item->description}\n";
+        }
+        if ($item->recommendation_text) {
+            $snippet .= "**Committee Recommendation:** {$item->recommendation_text}\n";
+        }
+        $snippet .= "- Proceedings & Notes: \n";
+
+        $this->notesRaw .= $snippet;
+        $this->updatedNotesRaw();
+        session()->flash('success', "Inserted heading for Agenda Item #{$item->order}.");
+    }
+
+    public function loadAgendaOutline(): void
+    {
+        $meeting = $this->getMeeting();
+        $items = $meeting->agendaItems;
+
+        $outline = "# Meeting Minutes: {$meeting->title}\n";
+        $outline .= "**Date:** " . ($meeting->meeting_date ? $meeting->meeting_date->format('jS F Y, H:i') : 'TBD') . "\n\n";
+
+        // Attendees Roll Call summary
+        $attendees = $meeting->attendees;
+        if ($attendees->isNotEmpty()) {
+            $present = $attendees->where('attendance_type', AttendanceType::Present)->pluck('name')->implode(', ');
+            $apologies = $attendees->where('attendance_type', AttendanceType::Apology)->pluck('name')->implode(', ');
+            $outline .= "**Present:** " . ($present ?: 'None recorded') . "\n";
+            if ($apologies) {
+                $outline .= "**Apologies for Absence:** {$apologies}\n";
+            }
+            $outline .= "\n---\n\n";
+        }
+
+        foreach ($items as $item) {
+            $typeLabel = $item->item_type?->label() ?? 'General Business';
+            $outline .= "### {$item->order}. {$item->title} [{$typeLabel}]\n";
+            if ($item->description) {
+                $outline .= "{$item->description}\n";
+            }
+            if ($item->recommendation_text) {
+                $outline .= "**Recommendation:** {$item->recommendation_text}\n";
+            }
+            $outline .= "- Proceedings: \n\n";
+        }
+
+        $this->notesRaw = trim($this->notesRaw) ? $this->notesRaw . "\n\n" . $outline : $outline;
+        $this->updatedNotesRaw();
+        session()->flash('success', 'Agenda outline loaded into meeting minutes.');
+    }
+
     private function getMeeting(): ClubCommitteeMeeting
     {
         $club = Club::where('slug', $this->clubSlug)->firstOrFail();
         return ClubCommitteeMeeting::where('club_id', $club->id)
             ->where('id', $this->meetingId)
-            ->with(['club', 'chair', 'secretary', 'attendees', 'tasks.assignedTo', 'noticesOfMotion'])
+            ->with([
+                'club',
+                'chair',
+                'secretary',
+                'attendees',
+                'agendaItems' => fn ($q) => $q->orderBy('order'),
+                'tasks.assignedTo',
+                'noticesOfMotion'
+            ])
             ->firstOrFail();
     }
 
@@ -169,6 +243,8 @@ class LiveMinuteTaker extends Component
         return view('livewire.committee.live-minute-taker', [
             'meeting' => $meeting,
             'club' => $meeting->club,
+            'agendaItems' => $meeting->agendaItems,
+            'attendees' => $meeting->attendees,
             'tasks' => $meeting->tasks,
             'motions' => $meeting->noticesOfMotion,
         ])->layout('components.layouts.app');
