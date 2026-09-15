@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
@@ -74,8 +74,49 @@ const props = defineProps({
   },
 });
 
-// Primary Blue Bar Navigation: home | sales | purchases | reporting | accounting | contacts | settings
-const activeTab = ref('home');
+const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'contacts', 'settings'];
+
+const getTabFromUrl = () => {
+  const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '').trim() : '';
+  if (hash && validTabs.includes(hash)) {
+    return hash;
+  }
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const tabParam = searchParams ? searchParams.get('tab') : null;
+  if (tabParam && validTabs.includes(tabParam)) {
+    return tabParam;
+  }
+  return 'home';
+};
+
+const activeTab = ref(getTabFromUrl());
+
+const syncTabWithUrl = () => {
+  const tabFromUrl = getTabFromUrl();
+  if (tabFromUrl !== activeTab.value) {
+    activeTab.value = tabFromUrl;
+  }
+};
+
+watch(activeTab, (newTab) => {
+  if (typeof window !== 'undefined' && window.location.hash.replace('#', '') !== newTab) {
+    history.replaceState(null, '', '#' + newTab);
+  }
+});
+
+onMounted(() => {
+  activeTab.value = getTabFromUrl();
+  if (typeof window !== 'undefined') {
+    window.addEventListener('hashchange', syncTabWithUrl);
+  }
+});
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('hashchange', syncTabWithUrl);
+  }
+});
+
 const selectedReport = ref(null);
 
 const showAccountModal = ref(false);
@@ -211,7 +252,7 @@ const getTypeBadge = (type) => {
 
 <template>
   <AdminLayout :club="club" title="Accounting">
-    <Head :title="`Accounting & ERP - ${club.name}`" />
+    <Head :title="`Accounting - ${club.name}`" />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       
@@ -1254,7 +1295,7 @@ const getTypeBadge = (type) => {
             </div>
           </div>
           <Link
-            :href="route('admin.settings.show', club.slug)"
+            :href="route('admin.settings.show', club.slug) + '#accounting'"
             class="px-3.5 py-1.5 bg-sky-700 hover:bg-sky-800 text-white font-bold rounded-xl shadow-sm transition-all whitespace-nowrap"
           >
             Edit Settings →

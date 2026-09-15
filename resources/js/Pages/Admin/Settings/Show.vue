@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
@@ -29,7 +29,52 @@ const props = defineProps({
   },
 });
 
-const activeTab = ref('general');
+const validTabs = [
+  'general', 'positions', 'branding', 'roles', 'modules',
+  'accounting', 'subscriptions', 'events', 'dining',
+  'communications', 'website', 'bookings', 'performance'
+];
+
+const getTabFromUrl = () => {
+  const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '').trim() : '';
+  if (hash && validTabs.includes(hash)) {
+    return hash;
+  }
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const tabParam = searchParams ? searchParams.get('tab') : null;
+  if (tabParam && validTabs.includes(tabParam)) {
+    return tabParam;
+  }
+  return 'general';
+};
+
+const activeTab = ref(getTabFromUrl());
+
+const syncTabWithUrl = () => {
+  const tabFromUrl = getTabFromUrl();
+  if (tabFromUrl !== activeTab.value) {
+    activeTab.value = tabFromUrl;
+  }
+};
+
+watch(activeTab, (newTab) => {
+  if (typeof window !== 'undefined' && window.location.hash.replace('#', '') !== newTab) {
+    history.replaceState(null, '', '#' + newTab);
+  }
+});
+
+onMounted(() => {
+  activeTab.value = getTabFromUrl();
+  if (typeof window !== 'undefined') {
+    window.addEventListener('hashchange', syncTabWithUrl);
+  }
+});
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('hashchange', syncTabWithUrl);
+  }
+});
 
 // Primary Settings Form
 const form = useForm({
@@ -390,7 +435,7 @@ const updateMemberRank = (userId, newRank) => {
                 <option value="modules">⚡ Active Feature Modules</option>
               </optgroup>
               <optgroup label="Operations & Finance">
-                <option value="accounting">📊 Accounting & ERP Settings</option>
+                <option value="accounting">📊 Accounting Settings</option>
                 <option value="subscriptions">💳 Subscriptions & Dues</option>
                 <option value="events">📅 Events & Check-Ins</option>
                 <option value="dining">🍽️ Dining & Catering RSVPs</option>
@@ -474,7 +519,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'accounting' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>📊</span> Accounting & ERP</span>
+                  <span class="flex items-center gap-2.5"><span>📊</span> Accounting</span>
                 </button>
 
                 <button
@@ -988,7 +1033,7 @@ const updateMemberRank = (userId, newRank) => {
 
       </div>
 
-      <!-- TAB: ACCOUNTING & ERP SETTINGS -->
+      <!-- TAB: ACCOUNTING SETTINGS -->
       <div v-if="activeTab === 'accounting'" class="space-y-6">
         <!-- 1. Fiscal Year & Accounting Controls -->
         <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
