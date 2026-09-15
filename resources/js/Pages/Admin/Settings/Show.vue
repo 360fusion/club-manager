@@ -374,6 +374,7 @@ const updateMemberRank = (userId, newRank) => {
                 <option value="modules">⚡ Active Feature Modules</option>
               </optgroup>
               <optgroup label="Operations & Finance">
+                <option value="accounting">📊 Accounting & ERP Settings</option>
                 <option value="subscriptions">💳 Subscriptions & Dues</option>
                 <option value="events">📅 Events & Check-Ins</option>
                 <option value="dining">🍽️ Dining & Catering RSVPs</option>
@@ -450,6 +451,16 @@ const updateMemberRank = (userId, newRank) => {
             <div>
               <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Operations</div>
               <div class="space-y-0.5 text-xs font-bold">
+                <button
+                  @click="activeTab = 'accounting'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'accounting' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>📊</span> Accounting & ERP</span>
+                </button>
+
                 <button
                   @click="activeTab = 'subscriptions'"
                   :class="[
@@ -959,6 +970,66 @@ const updateMemberRank = (userId, newRank) => {
           </div>
         </div>
 
+      </div>
+
+      <!-- TAB: ACCOUNTING & ERP SETTINGS -->
+      <div v-if="activeTab === 'accounting'" class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">📊 Accounting & Financial Configuration</h2>
+            <p class="text-xs text-slate-500 mt-1">Configure VAT registration number, company billing address, currency defaults, and automated invoice terms.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">VAT / Tax Registration Number</label>
+              <input v-model="form.tax_registration_number" type="text" placeholder="GB 987 6543 21" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono" />
+              <p class="text-[11px] text-slate-400 mt-1">Printed on official member invoices and vendor bill receipts.</p>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Accounting Currency</label>
+              <select v-model="form.currency" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                <option value="GBP">GBP (£) - British Pound Sterling</option>
+                <option value="USD">USD ($) - US Dollar</option>
+                <option value="EUR">EUR (€) - Euro</option>
+              </select>
+              <p class="text-[11px] text-slate-400 mt-1">Base currency for general ledger journal entries and balance sheets.</p>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Auto-Invoice Lead Time (Days Before Cycle)</label>
+              <input v-model.number="form.auto_invoice_days_before" type="number" min="0" max="90" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+              <p class="text-[11px] text-slate-400 mt-1">Days prior to membership renewal to dispatch automated invoices.</p>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Overdue Dues Grace Period (Days)</label>
+              <input v-model.number="form.dues_grace_period_days" type="number" min="0" max="180" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+              <p class="text-[11px] text-slate-400 mt-1">Days after due date before invoice status marks as overdue.</p>
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">Company Registered Billing Address (Line 1)</label>
+              <input v-model="form.address_line_1" type="text" placeholder="100 Boathouse Way" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">City / Town</label>
+              <input v-model="form.city" type="text" placeholder="Oxford" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Postcode / ZIP</label>
+              <input v-model="form.postcode" type="text" placeholder="OX1 1AA" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-semibold" />
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">Receipt & Invoice Footer Terms</label>
+              <textarea v-model="form.receipt_footer_notes" rows="3" placeholder="Thank you for supporting our club. Fees support equipment & clubhouse operations." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- TAB 4: SUBSCRIPTIONS & DUES -->
