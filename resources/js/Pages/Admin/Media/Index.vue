@@ -492,7 +492,7 @@ const isImage = (mimeOrUrl) => {
       <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-3">
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">File Manager & Spatie Media Library</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">File Manager</h1>
             <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
               {{ club.slug }}
             </span>

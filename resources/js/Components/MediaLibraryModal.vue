@@ -264,7 +264,7 @@ const isImage = (mimeOrUrl) => {
         <div class="flex items-center gap-2.5">
           <span class="text-xl">📁</span>
           <div>
-            <h3 class="text-base font-extrabold text-slate-900">Spatie Media Library & Asset Manager</h3>
+            <h3 class="text-base font-extrabold text-slate-900">File Manager</h3>
             <p class="text-xs text-slate-500">Centralized file repository for logos, news, newsletters, galleries, and documents.</p>
           </div>
         </div>
