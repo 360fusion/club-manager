@@ -93,4 +93,13 @@ class MultiClubWorkspaceTest extends TestCase
             ->has('plans')
         );
     }
+
+    public function test_legacy_oxford_boating_urls_redirect_to_lodge_of_fraternity(): void
+    {
+        $response = $this->get('/clubs/oxford-boating/admin/media-manager');
+        $response->assertRedirect('/clubs/lodge-of-fraternity/admin/media-manager');
+
+        $responseSite = $this->get('/site/oxford-boating');
+        $responseSite->assertRedirect('/site/lodge-of-fraternity');
+    }
 }
