@@ -23,10 +23,16 @@ const props = defineProps({
 });
 
 const defaultDate = computed(() => {
+  let d = null;
   if (props.financialReturn?.return_date) {
-    return props.financialReturn.return_date;
+    d = String(props.financialReturn.return_date);
+  } else if (props.meeting?.meeting_date) {
+    d = String(props.meeting.meeting_date);
   }
-  return props.meeting.meeting_date || new Date().toISOString().split('T')[0];
+  if (d) {
+    return d.includes('T') ? d.split('T')[0] : d.substring(0, 10);
+  }
+  return new Date().toISOString().split('T')[0];
 });
 
 const form = useForm({
