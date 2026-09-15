@@ -1,7 +1,9 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, nextTick } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Cropper from 'cropperjs';
+import 'cropperjs/dist/cropper.css';
 
 const props = defineProps({
   club: {
@@ -328,49 +330,96 @@ const openPreview = (item) => {
   fetchUsage(item.id);
 };
 
+let cropperInstance = null;
+
+const initCropper = () => {
+  if (cropperInstance) {
+    cropperInstance.destroy();
+    cropperInstance = null;
+  }
+  if (!cropSourceImageRef.value) return;
+
+  cropperInstance = new Cropper(cropSourceImageRef.value, {
+    aspectRatio: NaN,
+    viewMode: 1,
+    dragMode: 'crop',
+    autoCropArea: 0.85,
+    responsive: true,
+    restore: true,
+    checkCrossOrigin: false,
+    guides: true,
+    center: true,
+    highlight: true,
+    cropBoxMovable: true,
+    cropBoxResizable: true,
+    toggleDragModeOnDblclick: true,
+  });
+};
+
 const openCropper = () => {
   if (!previewItem.value || !isImage(previewItem.value.mime_type || previewItem.value.file_name)) return;
   showCropModal.value = true;
   cropAspect.value = 'free';
   cropRotation.value = 0;
+
+  nextTick(() => {
+    setTimeout(() => {
+      initCropper();
+    }, 150);
+  });
+};
+
+const closeCropper = () => {
+  if (cropperInstance) {
+    cropperInstance.destroy();
+    cropperInstance = null;
+  }
+  showCropModal.value = false;
+};
+
+const setCropAspect = (aspect) => {
+  cropAspect.value = aspect;
+  if (!cropperInstance) return;
+
+  if (aspect === '1:1') {
+    cropperInstance.setAspectRatio(1);
+  } else if (aspect === '16:9') {
+    cropperInstance.setAspectRatio(16 / 9);
+  } else if (aspect === '4:3') {
+    cropperInstance.setAspectRatio(4 / 3);
+  } else {
+    cropperInstance.setAspectRatio(NaN); // free crop
+  }
+};
+
+const rotateCropper = (deg) => {
+  if (!cropperInstance) return;
+  cropperInstance.rotate(deg);
+  cropRotation.value = (cropRotation.value + deg) % 360;
 };
 
 const applyCrop = async () => {
-  if (!cropSourceImageRef.value || !previewItem.value) return;
+  if (!cropperInstance || !previewItem.value) return;
   isCropping.value = true;
 
   try {
-    const img = cropSourceImageRef.value;
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = cropperInstance.getCroppedCanvas({
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: 'high',
+    });
 
-    let targetWidth = img.naturalWidth || img.width;
-    let targetHeight = img.naturalHeight || img.height;
-
-    // Apply aspect ratio cropping box if preset selected
-    if (cropAspect.value === '1:1') {
-      const side = Math.min(targetWidth, targetHeight);
-      targetWidth = side;
-      targetHeight = side;
-    } else if (cropAspect.value === '16:9') {
-      targetHeight = Math.round(targetWidth * (9 / 16));
-    } else if (cropAspect.value === '4:3') {
-      targetHeight = Math.round(targetWidth * (3 / 4));
-    }
-
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-
-    if (cropRotation.value !== 0) {
-      ctx.translate(targetWidth / 2, targetHeight / 2);
-      ctx.rotate((cropRotation.value * Math.PI) / 180);
-      ctx.drawImage(img, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight);
-    } else {
-      ctx.drawImage(img, 0, 0, targetWidth, targetHeight, 0, 0, targetWidth, targetHeight);
+    if (!canvas) {
+      isCropping.value = false;
+      return;
     }
 
     canvas.toBlob(async (blob) => {
-      if (!blob) return;
+      if (!blob) {
+        isCropping.value = false;
+        return;
+      }
       const formData = new FormData();
       formData.append('file', blob, previewItem.value.file_name);
 
@@ -389,7 +438,7 @@ const applyCrop = async () => {
           const idx = mediaItems.value.findIndex(m => m.id === data.media.id);
           if (idx !== -1) mediaItems.value[idx] = data.media;
           previewItem.value = { ...data.media };
-          showCropModal.value = false;
+          closeCropper();
           saveSuccessMsg.value = 'Image cropped and updated successfully!';
           setTimeout(() => { saveSuccessMsg.value = ''; }, 3000);
         }
@@ -1072,47 +1121,47 @@ const isImage = (mimeOrUrl) => {
     </div>
 
     <!-- Visual Image Cropper Modal -->
-    <div v-if="showCropModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto" @click="showCropModal = false">
+    <div v-if="showCropModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto" @click="closeCropper">
       <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 relative overflow-hidden" @click.stop>
         <div class="flex items-center justify-between pb-4 border-b border-slate-100">
           <div class="flex items-center gap-2.5">
             <span class="text-2xl">✂️</span>
             <div>
               <h3 class="text-lg font-black text-slate-900">Interactive Image Cropper & Resizer</h3>
-              <p class="text-xs text-slate-500">Apply aspect ratio cropping presets and rotation to optimize images for web publishing.</p>
+              <p class="text-xs text-slate-500">Drag to move crop area or grab corner handles to adjust crop box size.</p>
             </div>
           </div>
-          <button type="button" @click="showCropModal = false" class="p-2 text-slate-400 hover:text-slate-700 font-bold rounded-xl text-sm">✕</button>
+          <button type="button" @click="closeCropper" class="p-2 text-slate-400 hover:text-slate-700 font-bold rounded-xl text-sm cursor-pointer">✕</button>
         </div>
 
         <!-- Aspect Ratio Presets Toolbar -->
         <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Presets:</span>
             <button
               type="button"
-              @click="cropAspect = 'free'"
+              @click="setCropAspect('free')"
               :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === 'free' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
             >
               Free Crop
             </button>
             <button
               type="button"
-              @click="cropAspect = '1:1'"
+              @click="setCropAspect('1:1')"
               :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '1:1' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
             >
               1:1 Square (Logo)
             </button>
             <button
               type="button"
-              @click="cropAspect = '16:9'"
+              @click="setCropAspect('16:9')"
               :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '16:9' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
             >
               16:9 Banner
             </button>
             <button
               type="button"
-              @click="cropAspect = '4:3'"
+              @click="setCropAspect('4:3')"
               :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '4:3' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
             >
               4:3 Gallery
@@ -1121,29 +1170,30 @@ const isImage = (mimeOrUrl) => {
 
           <button
             type="button"
-            @click="cropRotation = (cropRotation + 90) % 360"
+            @click="rotateCropper(90)"
             class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl border border-slate-200 transition-all cursor-pointer flex items-center gap-1"
           >
-            🔄 Rotate 90° ({{ cropRotation }}°)
+            🔄 Rotate 90°
           </button>
         </div>
 
-        <!-- Canvas / Image Preview Container -->
-        <div class="bg-slate-900 rounded-2xl p-6 flex items-center justify-center min-h-[300px] max-h-[420px] overflow-hidden relative">
-          <img
-            ref="cropSourceImageRef"
-            :src="previewItem?.original_url"
-            alt="Source image for cropping"
-            :style="{ transform: `rotate(${cropRotation}deg)` }"
-            class="max-h-[360px] max-w-full object-contain rounded shadow-lg transition-transform duration-200"
-          />
+        <!-- Canvas / Image Container for CropperJS -->
+        <div class="bg-slate-900 rounded-2xl p-4 flex items-center justify-center min-h-[350px] max-h-[460px] overflow-hidden relative">
+          <div class="max-h-[420px] w-full flex items-center justify-center">
+            <img
+              ref="cropSourceImageRef"
+              :src="previewItem?.original_url"
+              alt="Source image for cropping"
+              class="max-h-[420px] max-w-full block"
+            />
+          </div>
         </div>
 
         <!-- Cropper Action Footer -->
         <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
           <button
             type="button"
-            @click="showCropModal = false"
+            @click="closeCropper"
             class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
           >
             Cancel
