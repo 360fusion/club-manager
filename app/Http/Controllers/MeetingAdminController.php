@@ -659,6 +659,39 @@ class MeetingAdminController extends Controller
     }
 
     /**
+     * Display dedicated full page for Meeting Financial Return & Dining Calculator.
+     */
+    public function financialReturn(string $clubSlug, int $id): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)
+            ->where('id', $id)
+            ->with(['rsvps.guests', 'financialReturn'])
+            ->firstOrFail();
+
+        // Calculate confirmed dining count from RSVPs
+        $confirmedDiningCount = $meeting->rsvps
+            ->where('attendance_status', 'attending_dining')
+            ->count();
+
+        $guestDiningCount = 0;
+        foreach ($meeting->rsvps as $r) {
+            if ($r->attendance_status === 'attending_dining') {
+                $guestDiningCount += $r->guests->where('attending_dining', true)->count();
+            }
+        }
+
+        $totalConfirmedDiners = $confirmedDiningCount + $guestDiningCount;
+
+        return Inertia::render('Admin/Meetings/FinancialReturn', [
+            'club' => $club,
+            'meeting' => $meeting,
+            'confirmedDiningCount' => $totalConfirmedDiners,
+            'financialReturn' => $meeting->financialReturn,
+        ]);
+    }
+
+    /**
      * Store financial return for a meeting and post to accounting ledger.
      */
     public function storeFinancialReturn(Request $request, string $clubSlug, int $id, \App\Services\AccountingService $accountingService): RedirectResponse
@@ -683,6 +716,7 @@ class MeetingAdminController extends Controller
 
         $accountingService->postMeetingFinancialReturn($club, $meeting, $validated);
 
-        return redirect()->back()->with('success', 'Meeting financial return posted successfully to Accounts Payable and General Ledger!');
+        return redirect()->route('admin.meetings.show', ['clubSlug' => $club->slug, 'id' => $meeting->id])
+            ->with('success', 'Meeting financial return posted successfully to Accounts Payable and General Ledger!');
     }
 }

@@ -172,4 +172,21 @@ class MeetingFinancialReturnTest extends TestCase
         $this->assertGreaterThan(0, $report['current_totals']['income']);
         $this->assertGreaterThan(0, $report['current_balance_carried_forward']);
     }
+
+    public function test_can_view_dedicated_financial_return_page(): void
+    {
+        $response = $this->actingAs($this->user)
+            ->get(route('admin.meetings.financial_return.show', [
+                'clubSlug' => $this->club->slug,
+                'id' => $this->meeting->id,
+            ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Admin/Meetings/FinancialReturn')
+            ->has('club')
+            ->has('meeting')
+            ->has('confirmedDiningCount')
+        );
+    }
 }
