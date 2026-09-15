@@ -242,10 +242,14 @@ class MeetingWorkspace extends Component
         $nonCommitteeMembers = $filteredMembers->filter(fn ($u) => !in_array($u->pivot->committee_role ?? '', ['chair', 'secretary', 'member']))->values();
 
         return view('livewire.committee.meeting-workspace', array_merge($packData, [
+            'club' => $meeting->club,
             'clubMembers' => $allMembers,
             'committeeMembers' => $committeeMembers,
             'nonCommitteeMembers' => $nonCommitteeMembers,
             'existingAttendeeUserIds' => $existingAttendeeUserIds,
-        ]))->layout('components.layouts.app');
+        ]))->layout('components.layouts.app', [
+            'title' => $meeting->title . ' — Agenda Pack',
+            'club' => $meeting->club,
+        ]);
     }
 }

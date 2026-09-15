@@ -1,19 +1,24 @@
 <div class="space-y-6">
-    <!-- Top Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <!-- Top Header & Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Lodge Committee & Board Meetings</h1>
+            <h2 class="text-xl font-bold text-slate-900">Committee & Board Meetings</h2>
             <p class="text-xs text-slate-500 mt-1">Manage executive meetings, pre-meeting briefing packs, and live minutes under UGLE governance rules.</p>
         </div>
 
-        <button
-            type="button"
-            wire:click="openCreateModal"
-            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-2 self-start sm:self-auto"
-        >
-            <span>➕</span>
-            <span>Schedule Committee Meeting</span>
-        </button>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{{ route('admin.meetings.index', ['clubSlug' => $club->slug]) }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-all flex items-center gap-1.5">
+                📅 Open Lodge Meetings
+            </a>
+            <button
+                type="button"
+                wire:click="openCreateModal"
+                class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all cursor-pointer inline-flex items-center gap-2 self-start sm:self-auto"
+            >
+                <span>➕</span>
+                <span>Schedule Committee Meeting</span>
+            </button>
+        </div>
     </div>
 
     <!-- Rule Advisory Banner -->

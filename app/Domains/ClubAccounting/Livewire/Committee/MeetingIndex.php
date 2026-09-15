@@ -73,6 +73,9 @@ class MeetingIndex extends Component
         return view('livewire.committee.meeting-index', [
             'club' => $club,
             'meetings' => $meetings,
-        ])->layout('components.layouts.app');
+        ])->layout('components.layouts.app', [
+            'title' => 'Committee & Board Governance',
+            'club' => $club,
+        ]);
     }
 }

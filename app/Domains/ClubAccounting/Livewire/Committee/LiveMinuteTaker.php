@@ -310,6 +310,9 @@ class LiveMinuteTaker extends Component
             'attendees' => $meeting->attendees,
             'tasks' => $meeting->tasks,
             'motions' => $meeting->noticesOfMotion,
-        ])->layout('components.layouts.app');
+        ])->layout('components.layouts.app', [
+            'title' => $meeting->title . ' — Live Minutes',
+            'club' => $meeting->club,
+        ]);
     }
 }
