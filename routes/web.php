@@ -235,6 +235,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/dues-subscriptions', \App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex::class)->name('admin.club_acc.subscriptions.index');
     Route::get('/clubs/{clubSlug}/admin/bank-imports', \App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex::class)->name('admin.club_acc.bank_imports.index');
     Route::get('/clubs/{clubSlug}/admin/bank-reconciliation', \App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace::class)->name('admin.club_acc.bank_reconciliation.index');
+    Route::get('/clubs/{clubSlug}/admin/charity', \App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard::class)->name('admin.club_acc.charity.index');
 
     Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');

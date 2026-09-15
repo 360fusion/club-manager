@@ -58,6 +58,10 @@ class AppServiceProvider extends ServiceProvider
                 'banking.bank-reconciliation-workspace',
                 \App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace::class
             );
+            Livewire::component(
+                'charity.charity-dashboard',
+                \App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard::class
+            );
         }
 
         if (class_exists(Cashier::class)) {
