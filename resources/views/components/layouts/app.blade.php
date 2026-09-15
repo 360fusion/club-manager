@@ -22,7 +22,15 @@
                 </div>
 
                 <div class="flex items-center gap-3 text-xs font-bold">
-                    <a href="{{ url()->previous() }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all">
+                    @if (request()->route('clubSlug'))
+                        <a href="{{ route('admin.analytics', ['clubSlug' => request()->route('clubSlug')]) }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all">
+                            📊 Admin Dashboard
+                        </a>
+                        <a href="{{ route('admin.meetings.index', ['clubSlug' => request()->route('clubSlug')]) }}" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all">
+                            📅 Meetings
+                        </a>
+                    @endif
+                    <a href="{{ url()->previous() }}" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all">
                         ← Back
                     </a>
                 </div>

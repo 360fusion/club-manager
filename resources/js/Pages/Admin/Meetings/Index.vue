@@ -138,7 +138,10 @@ const duplicateMeeting = (id) => {
           <p class="text-xs text-slate-500 mt-1">Generate season schedules using nth-weekday rules, publish summonses, and track passwordless RSVPs.</p>
         </div>
         
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <a :href="route('admin.committee.index', { clubSlug: club.slug })" class="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold rounded-xl border border-amber-300 transition-all flex items-center gap-1.5 shadow-sm">
+            🏛️ Lodge Committee & Board
+          </a>
           <button @click="showSeasonModal = true" class="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all">
             ⚡ Generate Season / Masonic Year
           </button>
