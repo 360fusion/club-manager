@@ -1068,19 +1068,6 @@ const isImage = (mimeOrUrl) => {
               </div>
             </div>
 
-            <!-- Save Metadata Button -->
-            <div class="pt-1">
-              <button
-                type="button"
-                @click="saveMediaDetails"
-                :disabled="isSavingDetails"
-                class="w-full py-2 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                <span v-if="isSavingDetails" class="animate-spin">🔄</span>
-                <span v-else>💾</span>
-                <span>{{ isSavingDetails ? 'Saving Metadata...' : 'Save Asset Details' }}</span>
-              </button>
-            </div>
           </div>
 
         </div>
@@ -1113,13 +1100,26 @@ const isImage = (mimeOrUrl) => {
             </a>
           </div>
 
-          <button
-            type="button"
-            @click="deleteItem(previewItem)"
-            class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-all cursor-pointer inline-flex items-center gap-1.5"
-          >
-            <span>🗑️ Delete Asset</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              @click="saveMediaDetails"
+              :disabled="isSavingDetails"
+              class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-extrabold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <span v-if="isSavingDetails" class="animate-spin">🔄</span>
+              <span v-else>💾</span>
+              <span>{{ isSavingDetails ? 'Saving...' : 'Save Asset Details' }}</span>
+            </button>
+
+            <button
+              type="button"
+              @click="deleteItem(previewItem)"
+              class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-all cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <span>🗑️ Delete Asset</span>
+            </button>
+          </div>
         </div>
 
       </div>
