@@ -16,7 +16,7 @@ class CommitteeNotesParserService
      *
      * @return array{mentions: array, tasks: array, motions: array}
      */
-    public function parse(string $rawNotes, int $clubId): array
+    public function parse(string $rawNotes, int $clubId, ?ClubCommitteeMeeting $meeting = null): array
     {
         $clubMembers = User::whereHas('clubs', fn ($q) => $q->where('clubs.id', $clubId))
             ->get(['id', 'name', 'email']);
@@ -70,18 +70,26 @@ class CommitteeNotesParserService
                         return stripos($m->name, $rawTag) !== false || stripos($rawTag, $m->name) !== false;
                     });
 
+                    // Also check meeting attendees if available
+                    if (!$matched && $meeting && $meeting->attendees) {
+                        $attendee = $meeting->attendees->first(function ($att) use ($rawTag) {
+                            return stripos($att->name, $rawTag) !== false || stripos($rawTag, $att->name) !== false;
+                        });
+                        if ($attendee && $attendee->user) {
+                            $matched = $attendee->user;
+                        } elseif ($attendee) {
+                            $assignedName = $attendee->name;
+                        }
+                    }
+
                     if ($matched) {
                         $taskAssignedUser = $matched;
                         $assignedName = $matched->name;
                     } else {
-                        // Handle mock strings like @MemberName or placeholder @member
-                        if (in_array(strtolower($rawTag), ['membername', 'member', 'brother', 'officer'])) {
-                            // Resolve to first club member so database foreign key is valid
-                            $taskAssignedUser = $clubMembers->first();
-                            $assignedName = $taskAssignedUser ? $taskAssignedUser->name : $rawTag;
-                        } else {
-                            $assignedName = $rawTag;
-                        }
+                        // Handle mock strings like @MemberName or placeholder @member, @brother, @officer, etc.
+                        $fallbackUser = $meeting?->chair ?? $meeting?->secretary ?? $clubMembers->first();
+                        $taskAssignedUser = $fallbackUser;
+                        $assignedName = $rawTag;
                     }
                 }
 
@@ -131,51 +139,73 @@ class CommitteeNotesParserService
         if ($rawNotes !== null) {
             $raw = $rawNotes;
             if ($meeting->notes_raw !== $rawNotes) {
-                $meeting->update(['notes_raw' => $rawNotes]);
+                $meeting->update([
+                    'notes_raw' => $rawNotes,
+                    'draft_notes' => $rawNotes,
+                ]);
             }
         } else {
             $raw = $meeting->notes_raw ?? '';
         }
 
-        $parsed = $this->parse($raw, $meeting->club_id);
+        $parsed = $this->parse($raw, $meeting->club_id, $meeting);
 
         $createdTasks = 0;
         foreach ($parsed['tasks'] as $taskData) {
-            // Check if task with identical title already exists for this meeting
-            $exists = ClubCommitteeTask::where('committee_meeting_id', $meeting->id)
-                ->where('title', $taskData['title'])
-                ->exists();
+            try {
+                // Check if task with identical title already exists for this meeting
+                $exists = ClubCommitteeTask::where('committee_meeting_id', $meeting->id)
+                    ->where('title', $taskData['title'])
+                    ->exists();
 
-            if (!$exists) {
-                ClubCommitteeTask::create([
-                    'committee_meeting_id' => $meeting->id,
-                    'assigned_to_user_id' => $taskData['assigned_to_id'],
-                    'assigned_to_name' => $taskData['assigned_to_name'],
-                    'title' => $taskData['title'],
-                    'due_date' => $taskData['due_date'],
-                    'status' => TaskStatus::Pending,
-                ]);
-                $createdTasks++;
+                if (!$exists) {
+                    // Ensure assigned_to_user_id exists in users table to prevent FK violations
+                    $assignedUserId = null;
+                    if (!empty($taskData['assigned_to_id']) && User::where('id', $taskData['assigned_to_id'])->exists()) {
+                        $assignedUserId = $taskData['assigned_to_id'];
+                    }
+
+                    ClubCommitteeTask::create([
+                        'committee_meeting_id' => $meeting->id,
+                        'assigned_to_user_id' => $assignedUserId,
+                        'assigned_to_name' => $taskData['assigned_to_name'],
+                        'title' => $taskData['title'],
+                        'due_date' => $taskData['due_date'],
+                        'status' => TaskStatus::Pending,
+                    ]);
+                    $createdTasks++;
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to sync committee task: ' . $e->getMessage());
             }
         }
 
         $createdMotions = 0;
         foreach ($parsed['motions'] as $motionData) {
-            $exists = ClubNoticeOfMotion::where('committee_meeting_id', $meeting->id)
-                ->where('motion_text', $motionData['motion_text'])
-                ->exists();
+            try {
+                $exists = ClubNoticeOfMotion::where('committee_meeting_id', $meeting->id)
+                    ->where('motion_text', $motionData['motion_text'])
+                    ->exists();
 
-            if (!$exists) {
-                ClubNoticeOfMotion::create([
-                    'club_id' => $meeting->club_id,
-                    'committee_meeting_id' => $meeting->id,
-                    'proposer_user_id' => $meeting->chair_user_id,
-                    'proposer_name' => $meeting->chair?->name,
-                    'title' => $motionData['title'],
-                    'motion_text' => $motionData['motion_text'],
-                    'status' => 'draft_committee',
-                ]);
-                $createdMotions++;
+                if (!$exists) {
+                    $proposerId = null;
+                    if ($meeting->chair_user_id && User::where('id', $meeting->chair_user_id)->exists()) {
+                        $proposerId = $meeting->chair_user_id;
+                    }
+
+                    ClubNoticeOfMotion::create([
+                        'club_id' => $meeting->club_id,
+                        'committee_meeting_id' => $meeting->id,
+                        'proposer_user_id' => $proposerId,
+                        'proposer_name' => $meeting->chair?->name ?? 'Committee Chair',
+                        'title' => $motionData['title'],
+                        'motion_text' => $motionData['motion_text'],
+                        'status' => 'draft_committee',
+                    ]);
+                    $createdMotions++;
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to sync committee motion: ' . $e->getMessage());
             }
         }
 

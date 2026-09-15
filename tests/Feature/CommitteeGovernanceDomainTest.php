@@ -513,4 +513,48 @@ TEXT;
             'motion_text' => 'That annual dues be increased to £120 per member',
         ]);
     }
+
+    public function test_sync_extracted_entities_method_and_toast_format(): void
+    {
+        $this->actingAs($this->admin);
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Live Minutes Sync Alias Test',
+            'meeting_date' => Carbon::now()->addDays(3),
+            'status' => CommitteeMeetingStatus::InProgress,
+        ]);
+
+        $editorText = "Intro notes.\n\n"
+            . "[ ] @BrotherSmith Setup projector and sound equipment by 2026-11-01\n\n"
+            . "/motion Approve annual financial statements for audit submission\n";
+
+        Livewire::test(LiveMinuteTaker::class, [
+            'clubSlug' => $this->club->slug,
+            'meetingId' => $meeting->id,
+        ])
+            ->call('syncExtractedEntities', $editorText)
+            ->assertDispatched('notify', function ($eventName, ...$args) {
+                $payload = is_array($args[0] ?? null) ? $args[0] : $args;
+                $data = isset($payload['type']) ? $payload : ($payload[0] ?? []);
+                return ($data['type'] ?? '') === 'success'
+                    && str_contains($data['message'] ?? '', 'Successfully committed 1 tasks and 1 motions.');
+            })
+            ->assertSet('activeRightTab', 'tasks')
+            ->assertHasNoErrors();
+
+        $this->assertEquals($editorText, $meeting->fresh()->draft_notes);
+        $this->assertEquals($editorText, $meeting->fresh()->notes_raw);
+
+        $this->assertDatabaseHas('club_acc_committee_tasks', [
+            'committee_meeting_id' => $meeting->id,
+            'title' => '@BrotherSmith Setup projector and sound equipment by 2026-11-01',
+            'due_date' => '2026-11-01',
+        ]);
+
+        $this->assertDatabaseHas('club_acc_notices_of_motion', [
+            'committee_meeting_id' => $meeting->id,
+            'motion_text' => 'Approve annual financial statements for audit submission',
+        ]);
+    }
 }

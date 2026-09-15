@@ -23,11 +23,22 @@ class ClubCommitteeMeeting extends Model
         'location',
         'status',
         'notes_raw',
+        'draft_notes',
         'minutes_final',
         'chair_user_id',
         'secretary_user_id',
         'finalized_at',
     ];
+
+    public function setDraftNotesAttribute($value): void
+    {
+        $this->attributes['notes_raw'] = $value;
+    }
+
+    public function getDraftNotesAttribute(): ?string
+    {
+        return $this->attributes['notes_raw'] ?? null;
+    }
 
     protected function casts(): array
     {

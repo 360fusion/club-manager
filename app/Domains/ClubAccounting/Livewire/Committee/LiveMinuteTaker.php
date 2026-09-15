@@ -20,7 +20,10 @@ class LiveMinuteTaker extends Component
 {
     public string $clubSlug;
     public int $meetingId;
+    public ?ClubCommitteeMeeting $meeting = null;
     public string $notesRaw = '';
+    public ?string $content = null;
+    public ?string $notes = null;
     public string $lastSavedAt = '';
 
     // Active Tab in Right Sidebar ('live', 'tasks', 'motions')
@@ -38,23 +41,41 @@ class LiveMinuteTaker extends Component
         $this->clubSlug = $clubSlug;
         $this->meetingId = $meetingId;
 
-        $meeting = $this->getMeeting();
-        $this->notesRaw = $meeting->notes_raw ?? '';
-        $this->lastSavedAt = $meeting->updated_at ? $meeting->updated_at->format('H:i:s') : 'Never';
+        $this->meeting = $this->getMeeting();
+        $this->notesRaw = $this->meeting->notes_raw ?? '';
+        $this->content = $this->notesRaw;
+        $this->notes = $this->notesRaw;
+        $this->lastSavedAt = $this->meeting->updated_at ? $this->meeting->updated_at->format('H:i:s') : 'Never';
         $this->updateParsedPreview();
     }
 
     public function updatedNotesRaw(): void
     {
+        $this->content = $this->notesRaw;
+        $this->notes = $this->notesRaw;
+        $this->autoSave();
+        $this->updateParsedPreview();
+    }
+
+    public function updatedContent(): void
+    {
+        $this->notesRaw = $this->content ?? '';
+        $this->notes = $this->content ?? '';
         $this->autoSave();
         $this->updateParsedPreview();
     }
 
     public function autoSave(): void
     {
-        $meeting = $this->getMeeting();
+        $meeting = $this->meeting ?: $this->getMeeting();
+        $text = $this->content ?? $this->notesRaw;
+        $this->notesRaw = $text;
+        $this->content = $text;
+        $this->notes = $text;
+
         $meeting->update([
-            'notes_raw' => $this->notesRaw,
+            'notes_raw' => $text,
+            'draft_notes' => $text,
             'status' => $meeting->status === CommitteeMeetingStatus::Scheduled
                 ? CommitteeMeetingStatus::InProgress
                 : $meeting->status,
@@ -65,46 +86,50 @@ class LiveMinuteTaker extends Component
 
     public function updateParsedPreview(): void
     {
-        $meeting = $this->getMeeting();
-        $parser = app(CommitteeNotesParserService::class);
-        $this->parsedPreview = $parser->parse($this->notesRaw, $meeting->club_id);
+        $meeting = $this->meeting ?: $this->getMeeting();
+        $parser = app(\App\Domains\ClubAccounting\Services\CommitteeNotesParserService::class);
+        $this->parsedPreview = $parser->parse($this->content ?? $this->notesRaw, $meeting->club_id, $meeting);
     }
 
     public function commitDetectedItems(?string $editorContent = null): void
     {
-        if ($editorContent !== null && trim($editorContent) !== '') {
-            $this->notesRaw = $editorContent;
+        if (!$this->meeting) {
+            $this->meeting = $this->getMeeting();
         }
 
-        $this->autoSave();
+        // Sync content directly from client if passed
+        if ($editorContent !== null) {
+            $this->content = $editorContent;
+            $this->notesRaw = $editorContent;
+            $this->notes = $editorContent;
+            $this->meeting->update(['draft_notes' => $editorContent]);
+        } else {
+            if ($this->content === null) {
+                $this->content = $this->notesRaw;
+            }
+        }
 
-        $meeting = $this->getMeeting();
-        $parser = app(CommitteeNotesParserService::class);
-        $result = $parser->syncExtractedEntities($meeting, $this->notesRaw);
+        $parser = app(\App\Domains\ClubAccounting\Services\CommitteeNotesParserService::class);
+        $results = $parser->extractEntities($this->meeting, $this->content);
 
         // Switch to the 'tasks' tab so the user visually sees the committed action items immediately
         $this->activeRightTab = 'tasks';
 
+        // Refresh relations so Livewire re-renders the right sidebar and counters
+        $this->meeting->load(['tasks', 'tasks.assignedTo', 'noticesOfMotion']);
+
         // Update parsed preview
         $this->updateParsedPreview();
 
-        $totalTasks = ClubCommitteeTask::where('committee_meeting_id', $meeting->id)->count();
-        $totalMotions = ClubNoticeOfMotion::where('committee_meeting_id', $meeting->id)->count();
-
-        if ($result['tasks_created'] > 0 || $result['motions_created'] > 0) {
-            $message = "Committed: {$result['tasks_created']} tasks and {$result['motions_created']} notices of motion.";
-        } else {
-            $message = "Sync complete: All {$totalTasks} tasks and {$totalMotions} motions are up-to-date.";
-        }
-
+        $message = "Successfully committed {$results['tasks_count']} tasks and {$results['motions_count']} motions.";
         session()->flash('success', $message);
 
-        // Dispatch browser notification toast
+        // Emit notification event for toast feedback
         $this->dispatch('notify', [
             'type' => 'success',
             'message' => $message,
-            'tasks_count' => $result['tasks_created'],
-            'motions_count' => $result['motions_created'],
+            'tasks_count' => $results['tasks_count'],
+            'motions_count' => $results['motions_count'],
         ]);
     }
 
