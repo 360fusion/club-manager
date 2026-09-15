@@ -28,6 +28,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  contacts: {
+    type: Array,
+    default: () => [],
+  },
   summary: {
     type: Object,
     default: () => ({
@@ -123,6 +127,97 @@ const showAccountModal = ref(false);
 const showJournalModal = ref(false);
 const showInvoiceModal = ref(false);
 const showBillModal = ref(false);
+const showContactModal = ref(false);
+
+const contactFilter = ref('all');
+
+const contactForm = useForm({
+  type: 'business',
+  name: '',
+  contact_person: '',
+  email: '',
+  phone: '',
+  role: 'Vendor / Supplier',
+  tax_id: '',
+  address_line_1: '',
+  address_line_2: '',
+  city: '',
+  postcode: '',
+  country: 'United Kingdom',
+  notes: '',
+});
+
+const submitContact = () => {
+  contactForm.post(route('admin.accounting.contacts.store', props.club.slug), {
+    onSuccess: () => {
+      showContactModal.value = false;
+      contactForm.reset({
+        type: 'business',
+        name: '',
+        contact_person: '',
+        email: '',
+        phone: '',
+        role: 'Vendor / Supplier',
+        tax_id: '',
+        address_line_1: '',
+        address_line_2: '',
+        city: '',
+        postcode: '',
+        country: 'United Kingdom',
+        notes: '',
+      });
+    },
+  });
+};
+
+const filteredContacts = computed(() => {
+  const all = [];
+
+  (props.contacts || []).forEach(c => {
+    all.push({
+      id: 'c_' + c.id,
+      kind: 'contact',
+      type: c.type,
+      name: c.name,
+      contact_person: c.contact_person || c.name,
+      email: c.email || '—',
+      phone: c.phone || '—',
+      role: c.role || 'Contact',
+      tax_id: c.tax_id || '—',
+      address: c.formatted_address || '—',
+      notes: c.notes,
+    });
+  });
+
+  (props.members || []).forEach(m => {
+    all.push({
+      id: 'm_' + m.id,
+      kind: 'member',
+      type: 'person',
+      name: m.name,
+      contact_person: m.name,
+      email: m.email || '—',
+      phone: '—',
+      role: 'Club Member',
+      tax_id: '—',
+      address: 'Registered Member',
+      notes: null,
+      user_id: m.id,
+    });
+  });
+
+  if (contactFilter.value === 'person') {
+    return all.filter(item => item.type === 'person');
+  }
+  if (contactFilter.value === 'business') {
+    return all.filter(item => item.type === 'business');
+  }
+  if (contactFilter.value === 'member') {
+    return all.filter(item => item.kind === 'member');
+  }
+
+  return all;
+});
 
 // New Account Form
 const accountForm = useForm({
@@ -1155,42 +1250,121 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
-      <!-- VIEW 8: CONTACTS (Members & Vendors Directory) -->
+      <!-- VIEW 8: CONTACTS (Members, Vendors & Business Directory) -->
       <div v-if="activeTab === 'contacts'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
-        <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+        <div class="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 class="text-lg font-black text-slate-900">Contacts & Directory</h3>
-            <p class="text-xs text-slate-500">Manage billing contacts for members and vendors.</p>
+            <p class="text-xs text-slate-500">Manage billing contacts for individual persons, contractors, vendors, sponsors, and club members.</p>
           </div>
-          <span class="text-xs font-bold text-slate-500">{{ members.length }} Members Registered</span>
+          <button
+            type="button"
+            @click="showContactModal = true"
+            class="px-4 py-2 bg-[#007bce] hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 shrink-0"
+          >
+            <span>+ Add Contact</span>
+          </button>
+        </div>
+
+        <!-- Filter Segmented Tabs -->
+        <div class="flex items-center gap-2 text-xs font-bold border-b border-slate-100 pb-3 overflow-x-auto">
+          <button
+            type="button"
+            @click="contactFilter = 'all'"
+            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer', contactFilter === 'all' ? 'bg-slate-900 text-white font-black' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+          >
+            All Contacts ({{ filteredContacts.length }})
+          </button>
+          <button
+            type="button"
+            @click="contactFilter = 'business'"
+            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5', contactFilter === 'business' ? 'bg-sky-700 text-white font-black' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+          >
+            <span>🏢 Businesses / Vendors</span>
+          </button>
+          <button
+            type="button"
+            @click="contactFilter = 'person'"
+            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5', contactFilter === 'person' ? 'bg-indigo-700 text-white font-black' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+          >
+            <span>👤 Persons & Contractors</span>
+          </button>
+          <button
+            type="button"
+            @click="contactFilter = 'member'"
+            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5', contactFilter === 'member' ? 'bg-emerald-700 text-white font-black' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+          >
+            <span>💳 Club Members</span>
+          </button>
         </div>
 
         <div class="overflow-x-auto border border-slate-200 rounded-2xl">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                <th class="py-3 px-4">Contact Name</th>
-                <th class="py-3 px-4">Email</th>
-                <th class="py-3 px-4">Role / Relationship</th>
+                <th class="py-3 px-4">Entity / Contact Name</th>
+                <th class="py-3 px-4">Type</th>
+                <th class="py-3 px-4">Role / Category</th>
+                <th class="py-3 px-4">Email & Phone</th>
+                <th class="py-3 px-4">Address / Tax ID</th>
                 <th class="py-3 px-4 text-center">Quick Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-              <tr v-for="m in members" :key="m.id" class="hover:bg-slate-50/80 transition-colors">
-                <td class="py-3 px-4 font-bold text-slate-900">{{ m.name }}</td>
-                <td class="py-3 px-4 font-mono text-slate-600">{{ m.email }}</td>
+              <tr v-if="!filteredContacts.length">
+                <td colspan="6" class="py-8 text-center text-slate-400">No contacts match the selected filter. Click "+ Add Contact" to add your first contact.</td>
+              </tr>
+              <tr v-for="c in filteredContacts" :key="c.id" class="hover:bg-slate-50/80 transition-colors">
                 <td class="py-3 px-4">
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-200">
-                    Club Member
+                  <div class="flex items-center gap-2.5">
+                    <span class="text-base p-1.5 rounded-lg bg-slate-100 border border-slate-200">
+                      {{ c.type === 'business' ? '🏢' : '👤' }}
+                    </span>
+                    <div>
+                      <span class="font-extrabold text-slate-900 block">{{ c.name }}</span>
+                      <span v-if="c.type === 'business' && c.contact_person && c.contact_person !== c.name" class="text-[11px] text-slate-500 block">
+                        Contact: {{ c.contact_person }}
+                      </span>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-3 px-4">
+                  <span :class="[
+                    'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border',
+                    c.type === 'business' ? 'bg-sky-50 text-sky-800 border-sky-200' : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                  ]">
+                    {{ c.type }}
                   </span>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-slate-100 text-slate-800 border border-slate-200">
+                    {{ c.role }}
+                  </span>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="font-mono text-slate-700 block">{{ c.email }}</span>
+                  <span class="text-[11px] text-slate-500 block">{{ c.phone }}</span>
+                </td>
+                <td class="py-3 px-4 text-slate-600">
+                  <span class="block text-[11px] font-medium">{{ c.address }}</span>
+                  <span v-if="c.tax_id && c.tax_id !== '—'" class="font-mono text-[10px] text-slate-400 block">Tax ID: {{ c.tax_id }}</span>
                 </td>
                 <td class="py-3 px-4 text-center">
                   <button
+                    v-if="c.kind === 'member'"
                     type="button"
-                    @click="showInvoiceModal = true; invoiceForm.user_id = m.id"
+                    @click="showInvoiceModal = true; invoiceForm.user_id = c.user_id"
                     class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
                   >
                     + Issue Invoice
+                  </button>
+                  <button
+                    v-else
+                    type="button"
+                    @click="showBillModal = true; billForm.vendor_name = c.name"
+                    class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                  >
+                    + Record Bill
                   </button>
                 </td>
               </tr>
@@ -1646,5 +1820,188 @@ const getTypeBadge = (type) => {
       </div>
     </div>
 
+    <!-- Modal 5: Add New Contact (Person or Business) -->
+    <div v-if="showContactModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="showContactModal = false">
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-8" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-base font-black text-slate-900">Add New Contact</h3>
+            <p class="text-xs text-slate-500">Create a new person or business contact for invoicing and bookkeeping.</p>
+          </div>
+          <button type="button" @click="showContactModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+
+        <form @submit.prevent="submitContact" class="space-y-4 text-xs">
+          <!-- Contact Type Toggle Selector -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Contact Type *</label>
+            <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+              <button
+                type="button"
+                @click="contactForm.type = 'person'; if (!contactForm.role || contactForm.role === 'Vendor / Supplier') contactForm.role = 'Contractor / Coach'"
+                :class="[
+                  'py-2 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer',
+                  contactForm.type === 'person' ? 'bg-white text-indigo-900 shadow-sm border border-slate-200' : 'text-slate-600 hover:text-slate-900'
+                ]"
+              >
+                <span>👤 Individual Person</span>
+              </button>
+
+              <button
+                type="button"
+                @click="contactForm.type = 'business'; if (!contactForm.role || contactForm.role === 'Contractor / Coach') contactForm.role = 'Vendor / Supplier'"
+                :class="[
+                  'py-2 px-3 rounded-lg text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer',
+                  contactForm.type === 'business' ? 'bg-white text-sky-900 shadow-sm border border-slate-200' : 'text-slate-600 hover:text-slate-900'
+                ]"
+              >
+                <span>🏢 Business / Organization</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Entity / Name Field (Dynamic Label) -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">
+              {{ contactForm.type === 'business' ? 'Business / Company Name *' : 'Full Name *' }}
+            </label>
+            <input
+              v-model="contactForm.name"
+              type="text"
+              :placeholder="contactForm.type === 'business' ? 'e.g. Oxford Boatyard Ltd' : 'e.g. Robert Sterling'"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500 font-semibold"
+              required
+            />
+          </div>
+
+          <!-- Primary Contact Person Field -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">
+              {{ contactForm.type === 'business' ? 'Primary Contact Person Name' : 'Secondary / Preferred Name' }}
+            </label>
+            <input
+              v-model="contactForm.contact_person"
+              type="text"
+              :placeholder="contactForm.type === 'business' ? 'e.g. David Miller (Account Representative)' : 'e.g. Bob Sterling'"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+            />
+          </div>
+
+          <!-- Role / Category Select -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Relationship / Role Category *</label>
+            <select
+              v-model="contactForm.role"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-sky-500"
+              required
+            >
+              <template v-if="contactForm.type === 'business'">
+                <option value="Vendor / Supplier">Vendor / Supplier</option>
+                <option value="Sponsor & Insurer">Sponsor & Insurer</option>
+                <option value="Contractor / Service Provider">Contractor / Service Provider</option>
+                <option value="Client / Corporate Customer">Client / Corporate Customer</option>
+                <option value="Partner">Partner Organization</option>
+              </template>
+              <template v-else>
+                <option value="Contractor / Coach">Contractor / Coach</option>
+                <option value="Volunteer / Staff">Volunteer / Staff</option>
+                <option value="Vendor Representative">Vendor Representative</option>
+                <option value="Client / Customer">Client / Customer</option>
+                <option value="Member">Club Member</option>
+              </template>
+            </select>
+          </div>
+
+          <!-- Email & Phone Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Email Address</label>
+              <input
+                v-model="contactForm.email"
+                type="email"
+                placeholder="contact@domain.com"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:border-sky-500"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Phone Number</label>
+              <input
+                v-model="contactForm.phone"
+                type="text"
+                placeholder="+44 20 7946 0912"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+              />
+            </div>
+          </div>
+
+          <!-- Tax ID / VAT Number -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">
+              {{ contactForm.type === 'business' ? 'VAT / Tax Registration Number' : 'Tax / UTR Number' }}
+            </label>
+            <input
+              v-model="contactForm.tax_id"
+              type="text"
+              :placeholder="contactForm.type === 'business' ? 'GB 883 9920 11' : 'UTR 982341'"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:border-sky-500"
+            />
+          </div>
+
+          <!-- Billing Address -->
+          <div class="space-y-2 pt-2 border-t border-slate-100">
+            <label class="block font-bold text-slate-700">Billing Address</label>
+            <input
+              v-model="contactForm.address_line_1"
+              type="text"
+              placeholder="Address Line 1"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500 mb-2"
+            />
+            <div class="grid grid-cols-2 gap-2">
+              <input
+                v-model="contactForm.city"
+                type="text"
+                placeholder="City"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+              />
+              <input
+                v-model="contactForm.postcode"
+                type="text"
+                placeholder="Postcode"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+              />
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Internal Notes / Payment Terms</label>
+            <textarea
+              v-model="contactForm.notes"
+              rows="2"
+              placeholder="e.g. Payment terms Net 30. Direct bank transfer."
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+            ></textarea>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              @click="showContactModal = false"
+              class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="contactForm.processing"
+              class="px-4 py-2 bg-[#007bce] hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+            >
+              Save Contact
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </AdminLayout>
 </template>

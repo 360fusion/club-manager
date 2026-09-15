@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Accounting\Account;
+use App\Models\Accounting\AccountingContact;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
@@ -104,6 +105,77 @@ class AccountingAdminController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
+        $contactsQuery = AccountingContact::where('club_id', $club->id)->orderBy('name')->get();
+
+        if ($contactsQuery->isEmpty()) {
+            AccountingContact::create([
+                'club_id' => $club->id,
+                'type' => 'business',
+                'name' => 'Oxford Rowing Supplies Ltd',
+                'contact_person' => 'David Miller',
+                'email' => 'sales@oxfordrowingsupplies.co.uk',
+                'phone' => '+44 1865 240100',
+                'role' => 'Vendor / Supplier',
+                'tax_id' => 'GB 883 9920 11',
+                'address_line_1' => 'Unit 4 Meadowside Works',
+                'city' => 'Oxford',
+                'postcode' => 'OX2 0ES',
+                'notes' => 'Primary supplier for rowing equipment and maintenance parts.',
+            ]);
+
+            AccountingContact::create([
+                'club_id' => $club->id,
+                'type' => 'business',
+                'name' => 'Thames Marine Insurance',
+                'contact_person' => 'Sarah Jenkins',
+                'email' => 'corporate@thamesmarine.co.uk',
+                'phone' => '+44 20 7946 0999',
+                'role' => 'Sponsor & Insurer',
+                'tax_id' => 'GB 552 1198 44',
+                'address_line_1' => '88 Leadenhall Street',
+                'city' => 'London',
+                'postcode' => 'EC3A 3BP',
+                'notes' => 'Annual club insurance and regatta sponsor.',
+            ]);
+
+            AccountingContact::create([
+                'club_id' => $club->id,
+                'type' => 'person',
+                'name' => 'Robert Sterling',
+                'contact_person' => 'Robert Sterling',
+                'email' => 'robert.sterling@coachnet.org',
+                'phone' => '+44 7700 900456',
+                'role' => 'Contractor / Head Coach',
+                'tax_id' => 'UTR 982341',
+                'address_line_1' => '15 Isis Waterside',
+                'city' => 'Oxford',
+                'postcode' => 'OX1 4XU',
+                'notes' => 'Contract senior coach for regatta training.',
+            ]);
+
+            $contactsQuery = AccountingContact::where('club_id', $club->id)->orderBy('name')->get();
+        }
+
+        $contacts = $contactsQuery->map(fn ($c) => [
+            'id' => $c->id,
+            'type' => $c->type, // person or business
+            'name' => $c->name,
+            'contact_person' => $c->contact_person,
+            'email' => $c->email,
+            'phone' => $c->phone,
+            'role' => $c->role,
+            'tax_id' => $c->tax_id,
+            'address_line_1' => $c->address_line_1,
+            'address_line_2' => $c->address_line_2,
+            'city' => $c->city,
+            'postcode' => $c->postcode,
+            'country' => $c->country,
+            'formatted_address' => implode(', ', array_filter([$c->address_line_1, $c->city, $c->postcode])),
+            'notes' => $c->notes,
+            'is_active' => $c->is_active,
+            'created_at' => $c->created_at->format('d M Y'),
+        ]);
+
         $summary = $this->accountingService->getFinancialSummary($club);
         $reports = $this->accountingService->getReportsData($club);
 
@@ -135,6 +207,7 @@ class AccountingAdminController extends Controller
             'invoices' => $invoices,
             'bills' => $bills,
             'members' => $members,
+            'contacts' => $contacts,
             'summary' => $summary,
             'reports' => $reports,
             'settings' => $clubSettings,
@@ -274,5 +347,46 @@ class AccountingAdminController extends Controller
         }
 
         return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} marked as paid.");
+    }
+
+    public function storeContact(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $validated = $request->validate([
+            'type' => ['required', 'in:person,business'],
+            'name' => ['required', 'string', 'max:255'],
+            'contact_person' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'role' => ['required', 'string', 'max:100'],
+            'tax_id' => ['nullable', 'string', 'max:50'],
+            'address_line_1' => ['nullable', 'string', 'max:255'],
+            'address_line_2' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'postcode' => ['nullable', 'string', 'max:20'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        AccountingContact::create([
+            'club_id' => $club->id,
+            'type' => $validated['type'],
+            'name' => $validated['name'],
+            'contact_person' => $validated['contact_person'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'role' => $validated['role'],
+            'tax_id' => $validated['tax_id'] ?? null,
+            'address_line_1' => $validated['address_line_1'] ?? null,
+            'address_line_2' => $validated['address_line_2'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'postcode' => $validated['postcode'] ?? null,
+            'country' => $validated['country'] ?? 'United Kingdom',
+            'notes' => $validated['notes'] ?? null,
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', 'New contact added to directory.');
     }
 }
