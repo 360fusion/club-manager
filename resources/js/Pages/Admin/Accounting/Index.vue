@@ -248,6 +248,72 @@ const submitIgnore = (txId) => {
   });
 };
 
+const rowStates = ref({});
+
+const getRowState = (txId, tx) => {
+  if (!rowStates.value[txId]) {
+    const hasMatches = tx?.suggested_matches && tx.suggested_matches.length > 0;
+    rowStates.value[txId] = {
+      tab: hasMatches ? 'Match' : 'Create',
+      who: tx?.contact_name || '',
+      what: tx?.amount > 0 ? '2150' : '700',
+      why: tx?.raw_description || '',
+      category: 'General',
+      vat: 'No VAT',
+      transfer_account: '',
+      discuss_note: '',
+    };
+  }
+  return rowStates.value[txId];
+};
+
+const setRowTab = (txId, tabName) => {
+  if (!rowStates.value[txId]) {
+    getRowState(txId, null);
+  }
+  rowStates.value[txId].tab = tabName;
+};
+
+const openManualMatchModalForTx = (tx) => {
+  selectedTx.value = tx;
+  openManualMatchModal();
+};
+
+const submitRowReconcile = (tx) => {
+  selectedTx.value = tx;
+  const state = getRowState(tx.id, tx);
+  if (state.tab === 'Match') {
+    if (tx.suggested_matches && tx.suggested_matches.length > 0) {
+      const match = tx.suggested_matches[0];
+      reconcileForm.transaction_id = tx.id;
+      reconcileForm.match_type = match.match_type;
+      reconcileForm.target_id = match.target_id;
+      reconcileForm.nominal_code = match.nominal_code || 'GENERAL';
+    } else {
+      reconcileForm.transaction_id = tx.id;
+      reconcileForm.match_type = 'ledger_account';
+      reconcileForm.target_id = 0;
+      reconcileForm.nominal_code = state.what || '4000';
+    }
+  } else if (state.tab === 'Create') {
+    reconcileForm.transaction_id = tx.id;
+    reconcileForm.match_type = 'ledger_account';
+    reconcileForm.target_id = 0;
+    reconcileForm.nominal_code = state.what || '4000';
+  } else if (state.tab === 'Transfer') {
+    reconcileForm.transaction_id = tx.id;
+    reconcileForm.match_type = 'ledger_account';
+    reconcileForm.target_id = 0;
+    reconcileForm.nominal_code = '1200';
+  } else if (state.tab === 'Discuss') {
+    return;
+  }
+
+  reconcileForm.post(route('admin.accounting.reconcile', props.club.slug), {
+    preserveScroll: true,
+  });
+};
+
 const submitStatementImport = () => {
   importForm.post(route('admin.accounting.import_statement', props.club.slug), {
     preserveScroll: true,
@@ -1875,240 +1941,319 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
-      <!-- VIEW 8: BANK RECONCILIATION WORKSPACE -->
-      <div v-if="activeTab === 'reconciliation'" class="space-y-6">
-        <!-- Header Banner -->
-        <div class="p-6 bg-slate-900 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <!-- VIEW 8: BANK RECONCILIATION WORKSPACE (XERO ROW MATCHING LAYOUT) -->
+      <div v-if="activeTab === 'reconciliation'" class="space-y-4">
+        <!-- Header Sub-banner matching screenshot -->
+        <div class="px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500 font-medium">
           <div>
-            <div class="flex items-center gap-3">
-              <span class="p-2.5 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30">⚡</span>
-              <div>
-                <h3 class="text-2xl font-black tracking-tight">Bank Reconciliation Workspace</h3>
-                <p class="text-xs text-slate-400 mt-1 font-medium">Rule-Based Automatic Matcher for Member Dues, Supplier Bills &amp; Relief Chest</p>
-              </div>
-            </div>
+            <a href="#" @click.prevent class="text-sky-600 font-bold hover:underline">What's this?</a>
+            <span class="ml-1">Review your bank statement lines...</span>
           </div>
+          <div class="text-slate-400 font-normal">
+            ...then match with your transactions in the system
+          </div>
+        </div>
 
+        <!-- Toolbar Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200">
+          <div class="relative w-full sm:w-80">
+            <input
+              v-model="reconSearch"
+              type="text"
+              placeholder="Search statement description..."
+              class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-cyan-600"
+            />
+            <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
+          </div>
           <div class="flex items-center gap-3">
+            <span class="text-xs font-semibold text-slate-500">
+              {{ reconciliation.unmatched_transactions?.length || 0 }} statement lines pending
+            </span>
             <button
               type="button"
               @click="showImportModal = true"
-              class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 transition-all flex items-center gap-2 cursor-pointer"
+              class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
             >
               <span>📂</span>
-              <span>Bank Statement Imports</span>
+              <span>Import Statement</span>
             </button>
           </div>
         </div>
 
-        <!-- 2 Column Workspace Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          <!-- LEFT COLUMN: Unmatched Statement Lines Stack (5 Cols) -->
-          <div class="lg:col-span-5 space-y-4">
-            <div class="p-4 bg-white border border-slate-200/80 rounded-2xl shadow-sm space-y-3">
-              <div class="flex items-center justify-between">
-                <h4 class="font-black text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <span>📥</span>
-                  <span>Unmatched Statement Lines</span>
-                </h4>
-                <span class="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-amber-100 text-amber-900">
-                  {{ reconciliation.unmatched_transactions?.length || 0 }} Pending
-                </span>
-              </div>
-
-              <div class="relative">
-                <input
-                  v-model="reconSearch"
-                  type="text"
-                  placeholder="Search statement description..."
-                  class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
-                <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
-              </div>
-            </div>
-
-            <!-- List Stack -->
-            <div class="space-y-2.5 max-h-[650px] overflow-y-auto pr-1">
-              <div
-                v-for="tx in filteredUnmatchedTx"
-                :key="tx.id"
-                @click="selectTx(tx)"
-                :class="[
-                  'p-4 rounded-2xl border transition-all cursor-pointer text-xs space-y-2',
-                  selectedTx?.id === tx.id
-                    ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/30 shadow-md'
-                    : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'
-                ]"
-              >
-                <div class="flex items-start justify-between gap-2">
-                  <span class="font-bold text-slate-500 text-[11px] whitespace-nowrap">
-                    {{ tx.transaction_date }}
-                  </span>
-                  <span :class="['font-black text-sm whitespace-nowrap', tx.amount > 0 ? 'text-emerald-700' : 'text-rose-700']">
-                    {{ tx.amount > 0 ? '+' : '' }}£{{ number_format(Math.abs(tx.amount), 2) }}
-                  </span>
-                </div>
-
+        <!-- Statement Line Rows Stack -->
+        <div class="space-y-4">
+          <div
+            v-for="tx in filteredUnmatchedTx"
+            :key="tx.id"
+            class="bg-slate-50/50 p-2.5 rounded-xl border border-slate-200/60"
+          >
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+              
+              <!-- LEFT CARD (Statement Line) -->
+              <div class="lg:col-span-5 bg-white border border-slate-300 rounded-lg p-4 shadow-sm space-y-3 min-h-[160px] flex flex-col justify-between">
                 <div>
-                  <span class="font-extrabold text-slate-900 block line-clamp-2">{{ tx.raw_description }}</span>
-                  <span v-if="tx.reference" class="text-[10px] text-slate-500 font-mono block mt-0.5">Ref: {{ tx.reference }}</span>
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-semibold text-slate-400">{{ tx.transaction_date }}</span>
+                    <a href="#" @click.prevent class="text-sky-600 hover:underline font-medium">Options ▾</a>
+                  </div>
+                  <div class="mt-2">
+                    <h4 class="font-extrabold text-slate-900 text-sm leading-snug">{{ tx.raw_description }}</h4>
+                    <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mt-0.5">
+                      {{ tx.reference || (tx.amount > 0 ? 'FASTER PAYMENT' : 'DIRECT DEBIT') }}
+                    </span>
+                  </div>
+                  <a href="#" @click.prevent class="text-xs text-sky-600 hover:underline inline-block mt-2 font-medium">More details</a>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 flex items-end justify-between">
+                  <div v-if="tx.amount < 0">
+                    <span class="text-[11px] font-semibold text-slate-400 block uppercase">Spent</span>
+                    <span class="text-lg font-black text-slate-900 block">
+                      {{ number_format(Math.abs(tx.amount), 2) }}
+                    </span>
+                  </div>
+                  <div v-else>
+                    <span class="text-[11px] font-semibold text-slate-400 block uppercase">Received</span>
+                    <span class="text-lg font-black text-slate-900 block">
+                      {{ number_format(Math.abs(tx.amount), 2) }}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div v-if="filteredUnmatchedTx.length === 0" class="p-8 text-center bg-white border border-slate-200 rounded-2xl text-slate-400 text-xs italic">
-                All bank statement lines reconciled! No unmatched lines pending.
+              <!-- CENTER OK BUTTON -->
+              <div class="lg:col-span-1 flex justify-center py-2">
+                <button
+                  type="button"
+                  @click="submitRowReconcile(tx)"
+                  class="w-14 h-10 bg-[#008ba8] hover:bg-[#00768f] text-white font-black text-xs rounded uppercase shadow-sm transition-all cursor-pointer flex items-center justify-center tracking-wide"
+                >
+                  OK
+                </button>
+              </div>
+
+              <!-- RIGHT CARD (Match / Create / Transfer / Discuss) -->
+              <div class="lg:col-span-6 bg-white border border-slate-300 rounded-lg p-4 shadow-sm space-y-3 min-h-[160px] flex flex-col justify-between">
+                <div>
+                  <!-- Tab Header bar -->
+                  <div class="flex items-center justify-between border-b border-slate-200 pb-2 mb-3">
+                    <div class="flex items-center gap-4 text-xs font-bold">
+                      <button
+                        type="button"
+                        @click="setRowTab(tx.id, 'Match')"
+                        :class="[
+                          'pb-1 cursor-pointer transition-all',
+                          getRowState(tx.id, tx).tab === 'Match' ? 'text-slate-900 border-b-2 border-[#008ba8]' : 'text-slate-400 hover:text-slate-600'
+                        ]"
+                      >
+                        Match
+                      </button>
+
+                      <button
+                        type="button"
+                        @click="setRowTab(tx.id, 'Create')"
+                        :class="[
+                          'pb-1 cursor-pointer transition-all',
+                          getRowState(tx.id, tx).tab === 'Create' ? 'text-slate-900 border-b-2 border-[#008ba8]' : 'text-slate-400 hover:text-slate-600'
+                        ]"
+                      >
+                        Create
+                      </button>
+
+                      <button
+                        type="button"
+                        @click="setRowTab(tx.id, 'Transfer')"
+                        :class="[
+                          'pb-1 cursor-pointer transition-all',
+                          getRowState(tx.id, tx).tab === 'Transfer' ? 'text-slate-900 border-b-2 border-[#008ba8]' : 'text-slate-400 hover:text-slate-600'
+                        ]"
+                      >
+                        Transfer
+                      </button>
+
+                      <button
+                        type="button"
+                        @click="setRowTab(tx.id, 'Discuss')"
+                        :class="[
+                          'pb-1 cursor-pointer transition-all',
+                          getRowState(tx.id, tx).tab === 'Discuss' ? 'text-slate-900 border-b-2 border-[#008ba8]' : 'text-slate-400 hover:text-slate-600'
+                        ]"
+                      >
+                        Discuss
+                      </button>
+                    </div>
+
+                    <a href="#" @click.prevent="openManualMatchModalForTx(tx)" class="text-xs font-semibold text-sky-600 hover:underline">Find &amp; Match</a>
+                  </div>
+
+                  <!-- Tab Body: CREATE -->
+                  <div v-if="getRowState(tx.id, tx).tab === 'Create'" class="space-y-2 text-xs">
+                    <div class="grid grid-cols-12 items-center gap-2">
+                      <label class="col-span-2 text-right font-semibold text-slate-500">Who</label>
+                      <div class="col-span-10">
+                        <input
+                          v-model="getRowState(tx.id, tx).who"
+                          type="text"
+                          placeholder="Name of the contact..."
+                          class="w-full px-2.5 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-12 items-center gap-2">
+                      <label class="col-span-2 text-right font-semibold text-slate-500">What</label>
+                      <div class="col-span-10">
+                        <select
+                          v-model="getRowState(tx.id, tx).what"
+                          class="w-full px-2.5 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                        >
+                          <option value="">Choose the account...</option>
+                          <option v-for="acc in accounts" :key="acc.id" :value="acc.code">
+                            {{ acc.code }} - {{ acc.name }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-12 items-center gap-2">
+                      <label class="col-span-2 text-right font-semibold text-slate-500">Why</label>
+                      <div class="col-span-10">
+                        <input
+                          v-model="getRowState(tx.id, tx).why"
+                          type="text"
+                          placeholder="Enter a description..."
+                          class="w-full px-2.5 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tab Body: MATCH -->
+                  <div v-else-if="getRowState(tx.id, tx).tab === 'Match'" class="space-y-2 text-xs">
+                    <div v-if="tx.suggested_matches && tx.suggested_matches.length > 0" class="space-y-2">
+                      <div
+                        v-for="(m, idx) in tx.suggested_matches"
+                        :key="idx"
+                        class="p-2.5 rounded-lg border border-emerald-300 bg-emerald-50/60 flex items-center justify-between"
+                      >
+                        <div>
+                          <span class="font-black text-slate-900 block text-xs">{{ m.target_title }}</span>
+                          <span class="text-[11px] text-emerald-800 font-medium">{{ m.match_reason }} — £{{ number_format(m.target_amount, 2) }}</span>
+                        </div>
+                        <button
+                          type="button"
+                          @click="submitReconcile(m.match_type, m.target_id, m.nominal_code || 'GENERAL')"
+                          class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] rounded transition"
+                        >
+                          Match
+                        </button>
+                      </div>
+                    </div>
+                    <div v-else class="p-3 text-slate-500 text-center italic bg-slate-50 border border-slate-200 rounded">
+                      No automatic system match found. Switch to 'Create' or click 'Find &amp; Match'.
+                    </div>
+                  </div>
+
+                  <!-- Tab Body: TRANSFER -->
+                  <div v-else-if="getRowState(tx.id, tx).tab === 'Transfer'" class="space-y-2 text-xs">
+                    <div class="grid grid-cols-12 items-center gap-2">
+                      <label class="col-span-3 text-right font-semibold text-slate-500">Bank Account</label>
+                      <div class="col-span-9">
+                        <select
+                          v-model="getRowState(tx.id, tx).transfer_account"
+                          class="w-full px-2.5 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800"
+                        >
+                          <option value="">Select destination bank account...</option>
+                          <option v-for="acc in accounts.filter(a => a.type === 'asset')" :key="acc.id" :value="acc.id">
+                            {{ acc.code }} - {{ acc.name }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tab Body: DISCUSS -->
+                  <div v-else-if="getRowState(tx.id, tx).tab === 'Discuss'" class="space-y-2 text-xs">
+                    <textarea
+                      v-model="getRowState(tx.id, tx).discuss_note"
+                      placeholder="Type a note or query for your team..."
+                      rows="2"
+                      class="w-full p-2 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-sky-500"
+                    ></textarea>
+                  </div>
+                </div>
+
+                <!-- Bottom Footer Row of Right Card -->
+                <div v-if="getRowState(tx.id, tx).tab === 'Create'" class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-2">
+                    <select
+                      v-model="getRowState(tx.id, tx).category"
+                      class="px-2 py-0.5 border border-slate-300 rounded text-xs text-slate-700 bg-white"
+                    >
+                      <option value="General">General</option>
+                      <option value="Members">Members</option>
+                      <option value="Facilities">Facilities</option>
+                    </select>
+
+                    <select
+                      v-model="getRowState(tx.id, tx).vat"
+                      class="px-2 py-0.5 border border-slate-300 rounded text-xs text-slate-700 bg-white"
+                    >
+                      <option value="No VAT">No VAT</option>
+                      <option value="20% Standard">20% Standard</option>
+                      <option value="Exempt">Exempt</option>
+                    </select>
+                  </div>
+
+                  <a href="#" @click.prevent="openManualMatchModalForTx(tx)" class="text-sky-600 font-semibold hover:underline">Add details</a>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- RIGHT COLUMN: Inspector & Match Engine (7 Cols) -->
-          <div class="lg:col-span-7 space-y-4">
-            <div v-if="selectedTx" class="space-y-4">
-              
-              <!-- Selected Statement Line Inspector Card -->
-              <div class="p-6 bg-slate-900 text-white rounded-3xl shadow-lg space-y-3">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <span class="text-[10px] font-black uppercase tracking-wider text-amber-400">Statement Line Inspector</span>
-                  <span class="text-xs font-bold text-slate-400">{{ selectedTx.transaction_date }}</span>
-                </div>
+          <!-- Empty state -->
+          <div v-if="filteredUnmatchedTx.length === 0" class="p-12 bg-white border border-slate-200 rounded-xl text-center text-slate-400 text-xs italic">
+            All bank statement lines reconciled! No unmatched lines pending.
+          </div>
+        </div>
 
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div>
-                    <h2 class="text-base font-black text-white">{{ selectedTx.raw_description }}</h2>
-                    <p v-if="selectedTx.reference" class="text-xs text-slate-400 font-mono mt-0.5">Ref: {{ selectedTx.reference }}</p>
-                  </div>
-                  <div class="text-right">
-                    <span :class="['text-2xl font-black block', selectedTx.amount > 0 ? 'text-emerald-400' : 'text-rose-400']">
-                      {{ selectedTx.amount > 0 ? '+' : '' }}£{{ number_format(Math.abs(selectedTx.amount), 2) }}
+        <!-- Recent Reconciled Statement History Card -->
+        <div class="mt-6 bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4">
+          <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+            <span>📜</span>
+            <span>Recent Reconciled Statement History</span>
+          </h4>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                <tr>
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3">Description</th>
+                  <th class="py-2.5 px-3">Reference</th>
+                  <th class="py-2.5 px-3 text-right">Amount</th>
+                  <th class="py-2.5 px-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 font-medium">
+                <tr v-for="tx in reconciliation.reconciled_transactions" :key="tx.id">
+                  <td class="py-2 px-3 text-slate-500 font-mono text-[11px]">{{ tx.transaction_date }}</td>
+                  <td class="py-2 px-3 text-slate-900 font-bold max-w-[200px] truncate">{{ tx.raw_description }}</td>
+                  <td class="py-2 px-3 text-slate-500 font-mono text-[11px]">{{ tx.reference || '—' }}</td>
+                  <td :class="['py-2 px-3 text-right font-mono font-bold', tx.amount > 0 ? 'text-emerald-600' : 'text-slate-900']">
+                    {{ tx.formatted_amount }}
+                  </td>
+                  <td class="py-2 px-3 text-center">
+                    <span class="px-2 py-0.5 text-[9px] font-black rounded-full bg-emerald-100 text-emerald-800">
+                      Reconciled
                     </span>
-                    <span class="text-[10px] text-slate-400 block font-semibold uppercase">
-                      {{ selectedTx.amount > 0 ? 'Incoming Credit (Income)' : 'Outgoing Debit (Expense)' }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Suggested Matches Engine Panel -->
-              <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <div class="flex items-center gap-2">
-                    <span class="text-lg">🎯</span>
-                    <h4 class="font-black text-slate-900 text-sm">Automated Rule-Based Match Suggestions</h4>
-                  </div>
-                  <span class="text-xs font-bold text-slate-500">{{ selectedTx.suggested_matches?.length || 0 }} Candidate Matches</span>
-                </div>
-
-                <div class="space-y-3">
-                  <div
-                    v-for="(m, idx) in selectedTx.suggested_matches"
-                    :key="idx"
-                    :class="[
-                      'p-4 rounded-2xl border transition-all space-y-3',
-                      m.confidence_level === 'high' ? 'bg-emerald-50/70 border-emerald-300' : 'bg-amber-50/70 border-amber-300'
-                    ]"
-                  >
-                    <div class="flex items-start justify-between gap-2">
-                      <div class="flex items-center gap-2">
-                        <span v-if="m.confidence_level === 'high'" class="px-2.5 py-0.5 bg-emerald-700 text-white rounded-full text-[10px] font-black">
-                          {{ m.confidence_score }}% High Confidence Match
-                        </span>
-                        <span v-else class="px-2.5 py-0.5 bg-amber-600 text-white rounded-full text-[10px] font-black">
-                          {{ m.confidence_score }}% Medium Match
-                        </span>
-                      </div>
-                      <span class="text-[11px] font-semibold text-slate-500">{{ m.match_reason }}</span>
-                    </div>
-
-                    <div class="flex items-center justify-between gap-3 pt-1">
-                      <div>
-                        <h4 class="font-black text-slate-900 text-sm">{{ m.target_title }}</h4>
-                        <span class="text-xs text-slate-600 font-medium">Target Dues / Amount: £{{ number_format(m.target_amount, 2) }}</span>
-                      </div>
-
-                      <button
-                        type="button"
-                        @click="submitReconcile(m.match_type, m.target_id)"
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
-                      >
-                        <span>✅</span>
-                        <span>Reconcile &amp; Mark Paid</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div v-if="!selectedTx.suggested_matches || selectedTx.suggested_matches.length === 0" class="p-6 text-center bg-slate-50 border border-slate-200 rounded-2xl text-slate-500 text-xs space-y-1">
-                    <p class="font-bold">No automatic rule-based match found for this statement line.</p>
-                    <p class="text-slate-400">Use the manual lookup drawer below to allocate to a member, vendor bill, or ledger code.</p>
-                  </div>
-                </div>
-
-                <!-- Secondary Action Buttons -->
-                <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    @click="openManualMatchModal"
-                    class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>🔍</span>
-                    <span>Manual Lookup &amp; Allocation Drawer</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    @click="submitIgnore(selectedTx.id)"
-                    class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs rounded-xl transition cursor-pointer"
-                  >
-                    Ignore Line
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div v-else class="p-12 bg-white border border-slate-200 rounded-3xl text-center text-slate-400 text-xs italic">
-              Select an unmatched statement line from the left panel to inspect and reconcile.
-            </div>
-
-            <!-- Statement Imports & Recent Reconciled History Card -->
-            <div class="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 space-y-4">
-              <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <span>📜</span>
-                <span>Recent Reconciled Statement History</span>
-              </h4>
-
-              <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                  <thead class="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                    <tr>
-                      <th class="py-2.5 px-3">Date</th>
-                      <th class="py-2.5 px-3">Description</th>
-                      <th class="py-2.5 px-3">Reference</th>
-                      <th class="py-2.5 px-3 text-right">Amount</th>
-                      <th class="py-2.5 px-3 text-center">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 font-medium">
-                    <tr v-for="tx in reconciliation.reconciled_transactions" :key="tx.id">
-                      <td class="py-2 px-3 text-slate-500 font-mono text-[11px]">{{ tx.transaction_date }}</td>
-                      <td class="py-2 px-3 text-slate-900 font-bold max-w-[200px] truncate">{{ tx.raw_description }}</td>
-                      <td class="py-2 px-3 text-slate-500 font-mono text-[11px]">{{ tx.reference || '—' }}</td>
-                      <td :class="['py-2 px-3 text-right font-mono font-bold', tx.amount > 0 ? 'text-emerald-600' : 'text-slate-900']">
-                        {{ tx.formatted_amount }}
-                      </td>
-                      <td class="py-2 px-3 text-center">
-                        <span class="px-2 py-0.5 text-[9px] font-black rounded-full bg-emerald-100 text-emerald-800">
-                          Reconciled
-                        </span>
-                      </td>
-                    </tr>
-                    <tr v-if="!reconciliation.reconciled_transactions || reconciliation.reconciled_transactions.length === 0">
-                      <td colspan="5" class="py-6 text-center text-slate-400 italic">No reconciled transactions recorded yet.</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
+                  </td>
+                </tr>
+                <tr v-if="!reconciliation.reconciled_transactions || reconciliation.reconciled_transactions.length === 0">
+                  <td colspan="5" class="py-6 text-center text-slate-400 italic">No reconciled transactions recorded yet.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
