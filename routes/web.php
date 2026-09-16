@@ -186,7 +186,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/billing/provider', [BillingController::class, 'updateProvider'])->name('billing.provider.update');
 
     // Admin Accounting & ERP Routes (Liberu Accounting Integration)
-    Route::get('/clubs/{clubSlug}/admin/accounting', [\App\Http\Controllers\AccountingAdminController::class, 'index'])->name('admin.accounting.index');
     Route::post('/clubs/{clubSlug}/admin/accounting/accounts', [\App\Http\Controllers\AccountingAdminController::class, 'storeAccount'])->name('admin.accounting.accounts.store');
     Route::post('/clubs/{clubSlug}/admin/accounting/opening-balance', [\App\Http\Controllers\AccountingAdminController::class, 'storeOpeningBalance'])->name('admin.accounting.opening_balance.store');
     Route::post('/clubs/{clubSlug}/admin/accounting/journal-entries', [\App\Http\Controllers\AccountingAdminController::class, 'storeJournalEntry'])->name('admin.accounting.journal.store');
@@ -210,6 +209,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/accounting/statement-lines/restore', [\App\Http\Controllers\AccountingAdminController::class, 'restoreBankStatementLines'])->name('admin.accounting.statement_lines.restore');
     Route::post('/clubs/{clubSlug}/admin/accounting/account-transactions/remove-and-redo', [\App\Http\Controllers\AccountingAdminController::class, 'removeAndRedoAccountTransactions'])->name('admin.accounting.account_transactions.remove_redo');
     Route::post('/clubs/{clubSlug}/admin/accounting/import-statement', [\App\Http\Controllers\AccountingAdminController::class, 'importBankStatement'])->name('admin.accounting.import_statement');
+    Route::get('/clubs/{clubSlug}/admin/accounting/{tab?}/{report?}', [\App\Http\Controllers\AccountingAdminController::class, 'index'])->where('tab', '^(?!invoices|bills|reconcile|ignore-transaction|statement-lines|account-transactions|import-statement|accounts|opening-balance|journal-entries).*$')->name('admin.accounting.index');
 
     // Lodge Committee & Board Governance Routes (Livewire Domain)
     Route::get('/clubs/{clubSlug}/admin/committee', \App\Domains\ClubAccounting\Livewire\Committee\MeetingIndex::class)->name('admin.committee.index');

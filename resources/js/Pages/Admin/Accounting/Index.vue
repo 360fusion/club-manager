@@ -76,6 +76,14 @@ const props = defineProps({
       auto_invoice_days_before: 7,
     }),
   },
+  initialTab: {
+    type: String,
+    default: null,
+  },
+  initialReport: {
+    type: String,
+    default: null,
+  },
   reconciliation: {
     type: Object,
     default: () => ({
@@ -92,7 +100,23 @@ const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'rec
 const validReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'reconciliation_summary'];
 
 const parseUrlState = () => {
-  if (typeof window === 'undefined') return { tab: 'home', report: null };
+  if (typeof window === 'undefined') {
+    return { tab: props.initialTab || 'home', report: props.initialReport || null };
+  }
+
+  const basePath = `/clubs/${props.club.slug}/admin/accounting`;
+  const currentPath = window.location.pathname;
+
+  if (currentPath.startsWith(basePath)) {
+    const subPath = currentPath.substring(basePath.length).replace(/^\/+|\/+$/g, '');
+    if (subPath) {
+      const parts = subPath.split('/');
+      const tab = validTabs.includes(parts[0]) ? parts[0] : (props.initialTab || 'home');
+      const report = (parts[1] && validReports.includes(parts[1])) ? parts[1] : (tab === 'reporting' ? props.initialReport : null);
+      return { tab, report };
+    }
+  }
+
   const hash = window.location.hash.replace('#', '').trim();
   if (hash) {
     const parts = hash.split('/');
@@ -100,11 +124,9 @@ const parseUrlState = () => {
     const report = (parts[1] && validReports.includes(parts[1])) ? parts[1] : null;
     return { tab, report };
   }
-  const searchParams = new URLSearchParams(window.location.search);
-  const tabParam = searchParams.get('tab');
-  const reportParam = searchParams.get('report');
-  const tab = (tabParam && validTabs.includes(tabParam)) ? tabParam : 'home';
-  const report = (reportParam && validReports.includes(reportParam)) ? reportParam : null;
+
+  const tab = props.initialTab || 'home';
+  const report = props.initialReport || null;
   return { tab, report };
 };
 
@@ -123,12 +145,16 @@ const navigateTo = (tabName, reportName = null) => {
   selectedReport.value = reportName;
 
   if (typeof window !== 'undefined') {
-    let newHash = '#' + tabName;
-    if (tabName === 'reporting' && reportName) {
-      newHash += '/' + reportName;
+    const basePath = `/clubs/${props.club.slug}/admin/accounting`;
+    let targetUrl = basePath;
+    if (tabName && tabName !== 'home') {
+      targetUrl += '/' + tabName;
+      if (tabName === 'reporting' && reportName) {
+        targetUrl += '/' + reportName;
+      }
     }
-    if (window.location.hash !== newHash) {
-      history.pushState({ tab: tabName, report: reportName }, '', newHash);
+    if (window.location.pathname !== targetUrl) {
+      history.pushState({ tab: tabName, report: reportName }, '', targetUrl);
     }
   }
 };

@@ -78,7 +78,7 @@ const deleteContact = () => {
             </Link>
             <span>/</span>
             <Link
-              :href="`${route('admin.accounting.index', club.slug)}#contacts`"
+              :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })"
               class="hover:text-slate-900 transition-colors"
             >
               Contacts Directory
@@ -100,7 +100,7 @@ const deleteContact = () => {
 
         <div class="flex items-center gap-3">
           <Link
-            :href="`${route('admin.accounting.index', club.slug)}#contacts`"
+            :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })"
             class="inline-flex items-center gap-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors"
           >
             ← Back to Directory
@@ -450,7 +450,7 @@ const deleteContact = () => {
         <!-- Footer Actions Bar -->
         <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-between">
           <Link
-            :href="`${route('admin.accounting.index', club.slug)}#contacts`"
+            :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })"
             class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl shadow-sm transition-colors"
           >
             Cancel & Return

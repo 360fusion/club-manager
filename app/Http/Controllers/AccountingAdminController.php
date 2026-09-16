@@ -26,7 +26,7 @@ class AccountingAdminController extends Controller
         protected AccountingService $accountingService
     ) {}
 
-    public function index(string $clubSlug): Response
+    public function index(string $clubSlug, ?string $tab = null, ?string $report = null): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
@@ -356,6 +356,8 @@ class AccountingAdminController extends Controller
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
+            'initialTab' => $tab,
+            'initialReport' => $report,
             'accounts' => $accounts,
             'journalEntries' => $journalEntries,
             'invoices' => $invoices,
@@ -615,7 +617,7 @@ class AccountingAdminController extends Controller
         ]);
 
         return redirect()
-            ->to(route('admin.accounting.index', $clubSlug) . '#sales')
+            ->route('admin.accounting.index', ['clubSlug' => $clubSlug, 'tab' => 'sales'])
             ->with('success', 'Invoice created and posted to Accounts Receivable.');
     }
 
@@ -978,7 +980,7 @@ class AccountingAdminController extends Controller
             'is_member'      => false,
         ]);
 
-        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, '#contacts'])->with('success', 'New contact added to directory.');
+        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, 'tab' => 'contacts'])->with('success', 'New contact added to directory.');
     }
 
     public function updateContact(Request $request, string $clubSlug, int $id): RedirectResponse
@@ -1050,7 +1052,7 @@ class AccountingAdminController extends Controller
 
         $contact->update($updateData);
 
-        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, '#contacts'])->with('success', 'Contact details updated successfully.');
+        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, 'tab' => 'contacts'])->with('success', 'Contact details updated successfully.');
     }
 
     public function destroyContact(string $clubSlug, int $id): RedirectResponse
@@ -1060,6 +1062,6 @@ class AccountingAdminController extends Controller
 
         $contact->delete();
 
-        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, '#contacts'])->with('success', 'Contact removed from directory.');
+        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, 'tab' => 'contacts'])->with('success', 'Contact removed from directory.');
     }
 }
