@@ -153,6 +153,7 @@ const showBillModal = ref(false);
 const showContactModal = ref(false);
 const showImportModal = ref(false);
 const showManualModal = ref(false);
+const showReconciliationReportModal = ref(false);
 const editingContactId = ref(null);
 
 const selectedTx = ref(null);
@@ -1480,6 +1481,22 @@ const getTypeBadge = (type) => {
               <span>View Audit Report →</span>
             </div>
           </div>
+
+          <!-- 9. Bank Reconciliation Summary -->
+          <div @click="showReconciliationReportModal = true" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">💳</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-sky-100 text-sky-900 px-2 py-0.5 rounded-full">Bank Audit</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm group-hover:text-sky-800">Bank Reconciliation Summary</h4>
+              <p class="text-xs text-slate-500 mt-1">Audit verification comparing General Ledger vs actual bank feed balance.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-sky-800">
+              <span>System £401.33 vs Feed £476.49</span>
+              <span>View Audit Report →</span>
+            </div>
+          </div>
         </div>
 
         <!-- Detailed Report Views -->
@@ -2144,7 +2161,13 @@ const getTypeBadge = (type) => {
           </div>
 
           <div class="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
-            <a href="#" @click.prevent class="text-xs font-bold text-sky-600 hover:underline mr-2">Reconciliation Report</a>
+            <button
+              type="button"
+              @click="showReconciliationReportModal = true"
+              class="text-xs font-bold text-sky-600 hover:underline mr-2 cursor-pointer"
+            >
+              Reconciliation Report
+            </button>
 
             <div class="relative">
               <button
@@ -3460,6 +3483,142 @@ const getTypeBadge = (type) => {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Modal 9: Bank Reconciliation Summary Report -->
+    <div v-if="showReconciliationReportModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="showReconciliationReportModal = false">
+      <div class="bg-white rounded-3xl max-w-3xl w-full p-6 md:p-8 shadow-2xl border border-slate-200 space-y-6 my-8" @click.stop>
+        
+        <!-- Header -->
+        <div class="flex items-start justify-between border-b border-slate-200 pb-4">
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-wider text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
+              Audit &amp; Financial Compliance
+            </span>
+            <h3 class="text-xl font-black text-slate-900 mt-2">Bank Reconciliation Summary</h3>
+            <p class="text-xs font-bold text-slate-500">AMERICAN EXPRESS (Operating Account) — As at {{ new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" @click="window.print()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-lg transition-all cursor-pointer flex items-center gap-1">
+              🖨️ Print / PDF
+            </button>
+            <button type="button" @click="showReconciliationReportModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-base px-2 py-1">✕</button>
+          </div>
+        </div>
+
+        <!-- Report Content Card -->
+        <div class="space-y-6 text-xs font-medium text-slate-800">
+          
+          <!-- Section 1: System Balance -->
+          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2">
+            <div class="flex justify-between items-center text-sm font-extrabold text-slate-900">
+              <span>Balance in System (General Ledger)</span>
+              <span class="font-mono text-base text-slate-900">£401.33</span>
+            </div>
+            <p class="text-[11px] text-slate-500">Total cleared balance across all approved transactions in your books.</p>
+          </div>
+
+          <!-- Section 2: Outstanding Receipts -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-xs font-black text-emerald-800 border-b border-emerald-200 pb-1">
+              <span>PLUS: Outstanding Receipts (Unreconciled Receive Money)</span>
+              <span class="font-mono">+£190.00</span>
+            </div>
+            <table class="w-full text-left text-[11px]">
+              <thead class="text-slate-500 font-bold">
+                <tr>
+                  <th class="py-1">Date</th>
+                  <th class="py-1">Description / Payee</th>
+                  <th class="py-1 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr>
+                  <td class="py-1.5 font-mono">01 Oct 2026</td>
+                  <td class="py-1.5 font-bold text-slate-900">DD 1418 LORD</td>
+                  <td class="py-1.5 text-right font-mono font-bold text-emerald-700">£20.00</td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 font-mono">25 Sep 2026</td>
+                  <td class="py-1.5 font-bold text-slate-900">BACS BURNS NIGHT C IRONS</td>
+                  <td class="py-1.5 text-right font-mono font-bold text-emerald-700">£20.00</td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 font-mono">05 Sep 2026</td>
+                  <td class="py-1.5 font-bold text-slate-900">ANNUAL SUBSCRIPTION W BRO J SMITH</td>
+                  <td class="py-1.5 text-right font-mono font-bold text-emerald-700">£150.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 3: Outstanding Payments -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-xs font-black text-rose-800 border-b border-rose-200 pb-1">
+              <span>LESS: Outstanding Payments (Unreconciled Spend Money)</span>
+              <span class="font-mono">-£114.84</span>
+            </div>
+            <table class="w-full text-left text-[11px]">
+              <thead class="text-slate-500 font-bold">
+                <tr>
+                  <th class="py-1">Date</th>
+                  <th class="py-1">Description / Payee</th>
+                  <th class="py-1 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr>
+                  <td class="py-1.5 font-mono">14 Sep 2026</td>
+                  <td class="py-1.5 font-bold text-slate-900">STOCKTON MASONIC HALL TRUST</td>
+                  <td class="py-1.5 text-right font-mono font-bold text-rose-700">£85.09</td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 font-mono">12 Sep 2026</td>
+                  <td class="py-1.5 font-bold text-slate-900">LINKEDINPREC*82482521 LNKD.I</td>
+                  <td class="py-1.5 text-right font-mono font-bold text-rose-700">£15.24</td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 font-mono">08 Sep 2026</td>
+                  <td class="py-1.5 font-bold text-slate-900">LARAVEL FORGE NEW YORK</td>
+                  <td class="py-1.5 text-right font-mono font-bold text-rose-700">£14.51</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 4: Calculated Statement Balance vs Real Bank Balance -->
+          <div class="bg-sky-50 rounded-2xl p-4 border border-sky-200 space-y-3">
+            <div class="flex justify-between items-center text-sm font-extrabold text-sky-950">
+              <span>Calculated Bank Statement Balance</span>
+              <span class="font-mono text-base text-sky-950">£476.49</span>
+            </div>
+            <div class="flex justify-between items-center text-sm font-extrabold text-slate-900 border-t border-sky-200 pt-2">
+              <span>Actual Bank Statement Feed Balance</span>
+              <span class="font-mono text-base text-slate-900">£476.49</span>
+            </div>
+            <div class="flex justify-between items-center text-xs font-black text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-300">
+              <span class="flex items-center gap-1.5">
+                <span>✅</span>
+                <span>Unreconciled Difference / Discrepancy</span>
+              </span>
+              <span class="font-mono">£0.00 (Fully Reconciled)</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-4 border-t border-slate-200 flex items-center justify-end">
+          <button
+            type="button"
+            @click="showReconciliationReportModal = false"
+            class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs shadow cursor-pointer"
+          >
+            Close Report
+          </button>
+        </div>
+
       </div>
     </div>
 
