@@ -2145,20 +2145,6 @@ const getTypeBadge = (type) => {
 
           <div class="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
             <a href="#" @click.prevent class="text-xs font-bold text-sky-600 hover:underline mr-2">Reconciliation Report</a>
-            
-            <button
-              type="button"
-              @click="autoReconcile = !autoReconcile"
-              :class="[
-                'px-3 py-1.5 text-xs font-bold rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer',
-                autoReconcile ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'
-              ]"
-            >
-              <span>⚙️ Auto-reconcile</span>
-              <span :class="['px-1.5 py-0.2 text-[10px] uppercase font-extrabold rounded', autoReconcile ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-800']">
-                {{ autoReconcile ? 'ON' : 'OFF' }}
-              </span>
-            </button>
 
             <div class="relative">
               <button
@@ -2187,10 +2173,13 @@ const getTypeBadge = (type) => {
             <button type="button" @click="reconSubTab = 'account_transactions'" class="text-sky-700 hover:underline">Review reconciled</button>
             <button
               type="button"
-              @click="autoReconcile = true"
-              class="px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white font-extrabold rounded-md shadow-sm transition-all cursor-pointer"
+              @click="autoReconcile = !autoReconcile"
+              :class="[
+                'px-3.5 py-1.5 text-white font-extrabold rounded-md shadow-sm transition-all cursor-pointer flex items-center gap-1.5',
+                autoReconcile ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-sky-600 hover:bg-sky-700'
+              ]"
             >
-              Turn auto-reconcile on
+              <span>{{ autoReconcile ? 'Turn auto-reconcile off' : 'Turn auto-reconcile on' }}</span>
             </button>
           </div>
         </div>
