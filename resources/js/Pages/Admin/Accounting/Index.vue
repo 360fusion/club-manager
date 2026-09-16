@@ -146,6 +146,41 @@ onUnmounted(() => {
 
 const selectedReport = ref(null);
 
+const now = new Date();
+const firstDayOfMonthStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+const lastDayOfMonthStr = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+
+const reportStartDate = ref(firstDayOfMonthStr);
+const reportEndDate = ref(lastDayOfMonthStr);
+const reportQuickRange = ref('this_month');
+
+const setQuickRange = (preset) => {
+  reportQuickRange.value = preset;
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = today.getMonth();
+
+  if (preset === 'this_month') {
+    reportStartDate.value = new Date(y, m, 1).toISOString().slice(0, 10);
+    reportEndDate.value = new Date(y, m + 1, 0).toISOString().slice(0, 10);
+  } else if (preset === 'last_month') {
+    reportStartDate.value = new Date(y, m - 1, 1).toISOString().slice(0, 10);
+    reportEndDate.value = new Date(y, m, 0).toISOString().slice(0, 10);
+  } else if (preset === 'this_year') {
+    reportStartDate.value = new Date(y, 0, 1).toISOString().slice(0, 10);
+    reportEndDate.value = new Date(y, 11, 31).toISOString().slice(0, 10);
+  } else if (preset === 'all_time') {
+    reportStartDate.value = '2020-01-01';
+    reportEndDate.value = new Date().toISOString().slice(0, 10);
+  }
+};
+
+const formatDateFormatted = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
 const showAccountModal = ref(false);
 const showJournalModal = ref(false);
 const showInvoiceModal = ref(false);
@@ -1351,6 +1386,82 @@ const getTypeBadge = (type) => {
           </button>
         </div>
 
+        <!-- Global Date Range Filter Bar for Reports -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+              <span>📅</span> Date Range:
+            </span>
+
+            <!-- Preset Buttons -->
+            <div class="flex flex-wrap items-center gap-1 bg-white p-1 rounded-xl border border-slate-200">
+              <button
+                type="button"
+                @click="setQuickRange('this_month')"
+                :class="[
+                  'px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer',
+                  reportQuickRange === 'this_month' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ]"
+              >
+                This Month
+              </button>
+              <button
+                type="button"
+                @click="setQuickRange('last_month')"
+                :class="[
+                  'px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer',
+                  reportQuickRange === 'last_month' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ]"
+              >
+                Last Month
+              </button>
+              <button
+                type="button"
+                @click="setQuickRange('this_year')"
+                :class="[
+                  'px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer',
+                  reportQuickRange === 'this_year' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ]"
+              >
+                This Year
+              </button>
+              <button
+                type="button"
+                @click="setQuickRange('all_time')"
+                :class="[
+                  'px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer',
+                  reportQuickRange === 'all_time' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ]"
+              >
+                All Time
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom Date Input Pickers -->
+          <div class="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-700">
+            <div class="flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-xs">
+              <span class="text-slate-400 font-medium">From:</span>
+              <input
+                type="date"
+                v-model="reportStartDate"
+                @change="reportQuickRange = 'custom'"
+                class="bg-transparent font-mono text-xs text-slate-900 focus:outline-none cursor-pointer"
+              />
+            </div>
+            <span class="text-slate-400 font-bold">to</span>
+            <div class="flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-xs">
+              <span class="text-slate-400 font-medium">To:</span>
+              <input
+                type="date"
+                v-model="reportEndDate"
+                @change="reportQuickRange = 'custom'"
+                class="bg-transparent font-mono text-xs text-slate-900 focus:outline-none cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+
         <!-- 7 Report Grid Cards Selection -->
         <div v-if="!selectedReport" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <!-- 1. Account Summary -->
@@ -1866,8 +1977,8 @@ const getTypeBadge = (type) => {
                   Audit &amp; Financial Compliance
                 </span>
                 <h3 class="text-xl font-black text-slate-900 mt-2">Bank Reconciliation Summary</h3>
-                <p class="text-xs text-slate-500 font-medium mt-0.5">
-                  AMERICAN EXPRESS (Operating Account) — As at {{ new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }}
+                <p class="text-xs text-slate-600 font-semibold mt-0.5">
+                  AMERICAN EXPRESS (Operating Account) — As at {{ formatDateFormatted(reportEndDate) }} <span class="text-slate-400">|</span> Period: <span class="text-indigo-900 font-extrabold">{{ formatDateFormatted(reportStartDate) }} – {{ formatDateFormatted(reportEndDate) }}</span>
                 </p>
               </div>
               <div class="flex items-center gap-2">
