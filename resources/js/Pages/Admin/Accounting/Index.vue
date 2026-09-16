@@ -2711,38 +2711,56 @@ const getTypeBadge = (type) => {
 
         <!-- SUB-TAB 4: ACCOUNT TRANSACTIONS -->
         <div v-else-if="reconSubTab === 'account_transactions'" class="space-y-4">
-          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-            <h4 class="font-black text-slate-900 text-sm">System Account Transactions History</h4>
-            <p class="text-xs text-slate-500">Full audit ledger of transactions recorded against this bank account.</p>
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center justify-between">
+            <div>
+              <h4 class="font-black text-slate-900 text-sm">Internal System Account Transactions History</h4>
+              <p class="text-xs text-slate-500">Internal bookkeeping entries created inside your books (bills, invoices, spend/receive money).</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400">Showing all internal transactions</span>
+            </div>
           </div>
 
           <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-50 text-[11px] font-bold text-slate-600 border-b border-slate-200">
                 <tr>
+                  <th class="py-2.5 px-3 w-8">
+                    <input type="checkbox" class="rounded text-sky-600 focus:ring-sky-500" />
+                  </th>
                   <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3">Type</th>
                   <th class="py-2.5 px-3">Description</th>
                   <th class="py-2.5 px-3">Reference</th>
-                  <th class="py-2.5 px-3 text-right">Amount</th>
+                  <th class="py-2.5 px-3 text-right">Spent</th>
+                  <th class="py-2.5 px-3 text-right">Received</th>
                   <th class="py-2.5 px-3 text-center">Status</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
-                <tr v-for="tx in reconciliation.reconciled_transactions" :key="tx.id">
-                  <td class="py-2 px-3 text-slate-500 font-mono text-[11px]">{{ tx.transaction_date }}</td>
-                  <td class="py-2 px-3 text-slate-900 font-bold max-w-[220px] truncate">{{ tx.raw_description }}</td>
-                  <td class="py-2 px-3 text-slate-500 font-mono text-[11px]">{{ tx.reference || '—' }}</td>
-                  <td :class="['py-2 px-3 text-right font-mono font-bold', tx.amount > 0 ? 'text-emerald-600' : 'text-slate-900']">
-                    {{ tx.formatted_amount }}
+                <tr v-for="tx in reconciliation.account_transactions || []" :key="tx.id" class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-2.5 px-3">
+                    <input type="checkbox" class="rounded text-sky-600 focus:ring-sky-500" />
                   </td>
-                  <td class="py-2 px-3 text-center">
-                    <span class="px-2 py-0.5 text-[9px] font-black rounded-full bg-emerald-100 text-emerald-800">
-                      Reconciled
+                  <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">{{ tx.transaction_date }}</td>
+                  <td class="py-2.5 px-3 text-slate-600 font-medium">{{ tx.type }}</td>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">{{ tx.description }}</td>
+                  <td class="py-2.5 px-3 text-slate-500 font-mono text-[11px]">{{ tx.reference }}</td>
+                  <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900">{{ tx.spent }}</td>
+                  <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-700">{{ tx.received }}</td>
+                  <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                    <span
+                      :class="[
+                        'px-2.5 py-0.5 text-[10px] font-black rounded-full uppercase tracking-wider',
+                        tx.status === 'Reconciled' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      ]"
+                    >
+                      {{ tx.status }}
                     </span>
                   </td>
                 </tr>
-                <tr v-if="!reconciliation.reconciled_transactions || reconciliation.reconciled_transactions.length === 0">
-                  <td colspan="5" class="py-8 text-center text-slate-400 italic">No reconciled account transactions recorded yet.</td>
+                <tr v-if="!reconciliation.account_transactions || reconciliation.account_transactions.length === 0">
+                  <td colspan="8" class="py-8 text-center text-slate-400 italic">No internal account transactions recorded yet.</td>
                 </tr>
               </tbody>
             </table>

@@ -307,10 +307,40 @@ class AccountingAdminController extends Controller
                 'status' => in_array(strtolower($tx->status->value ?? (string)$tx->status), ['matched', 'reconciled']) ? 'Reconciled' : 'Unreconciled',
             ]);
 
+        $accountTransactions = BankTransaction::where('club_id', $club->id)
+            ->whereIn('status', ['reconciled', 'matched'])
+            ->orderByDesc('updated_at')
+            ->get()
+            ->map(fn ($tx) => [
+                'id' => 'tx_' . $tx->id,
+                'transaction_date' => $tx->transaction_date->format('d M Y'),
+                'type' => $tx->amount < 0 ? 'Spend Money' : 'Receive Money',
+                'description' => $tx->raw_description,
+                'reference' => $tx->reference ?: 'SYSTEM-REF',
+                'amount' => (float)$tx->amount,
+                'spent' => $tx->amount < 0 ? '£' . number_format(abs((float)$tx->amount), 2) : '',
+                'received' => $tx->amount > 0 ? '£' . number_format((float)$tx->amount, 2) : '',
+                'status' => 'Reconciled',
+            ])
+            ->concat(
+                $unpaidSubscriptions->map(fn ($sub) => [
+                    'id' => 'sub_' . $sub['id'],
+                    'transaction_date' => date('d M Y'),
+                    'type' => 'Invoice Payment',
+                    'description' => 'Dues: ' . $sub['member_name'],
+                    'reference' => $sub['invoice_reference'],
+                    'amount' => (float)$sub['amount_due'],
+                    'spent' => '',
+                    'received' => '£' . number_format((float)$sub['amount_due'], 2),
+                    'status' => 'Unreconciled',
+                ])
+            )->values();
+
         $reconciliation = [
             'unmatched_transactions' => $unmatchedTransactions,
             'reconciled_transactions' => $reconciledTransactions,
             'statement_lines' => $allStatementLines,
+            'account_transactions' => $accountTransactions,
             'bank_imports' => $bankImports,
             'unpaid_subscriptions' => $unpaidSubscriptions,
             'unpaid_bills' => array_values(array_filter($bills->toArray(), fn ($b) => $b['status'] === 'unpaid')),
