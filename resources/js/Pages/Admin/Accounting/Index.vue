@@ -2242,25 +2242,6 @@ const getTypeBadge = (type) => {
               Account transactions
             </button>
           </div>
-
-          <div class="flex items-center gap-2 py-1 pr-2 self-end sm:self-auto">
-            <span class="text-xs font-semibold text-slate-500">Compact view</span>
-            <button
-              type="button"
-              @click="compactView = !compactView"
-              :class="[
-                'w-10 h-5 flex items-center rounded-full p-0.5 transition-colors cursor-pointer',
-                compactView ? 'bg-sky-600' : 'bg-slate-300'
-              ]"
-            >
-              <div
-                :class="[
-                  'bg-white w-4 h-4 rounded-full shadow-md transform transition-transform',
-                  compactView ? 'translate-x-5' : 'translate-x-0'
-                ]"
-              ></div>
-            </button>
-          </div>
         </div>
 
         <!-- Search & Filter Toolbar -->
