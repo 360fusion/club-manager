@@ -272,7 +272,7 @@ class SubscriptionIndex extends Component
             'activeMembers' => $activeMembers,
             'statuses' => SubscriptionStatus::cases(),
         ])->layout('components.layouts.app', [
-            'title' => 'Subscription Tiers & Dues Invoicing — ' . $club->name,
+            'title' => 'Subscriptions — ' . $club->name,
             'club' => $club,
         ]);
     }

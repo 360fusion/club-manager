@@ -173,42 +173,16 @@
                         <span>Subscriptions</span>
                     </a>
 
-                    <!-- 5. Members & Candidate Management Hub -->
-                    <div class="space-y-1">
-                        <a
-                            href="{{ route('admin.club_acc.members.index', ['clubSlug' => $clubSlug]) }}"
-                            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('admin.club_acc.members.*', 'admin.club_acc.candidates.*', 'admin.club_acc.subscriptions.*', 'admin.users.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
-                        >
-                            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            <span>Members &amp; Candidates</span>
-                        </a>
-
-                        <div class="pl-9 space-y-1 text-xs">
-                            <a
-                                href="{{ route('admin.club_acc.members.index', ['clubSlug' => $clubSlug]) }}"
-                                class="flex items-center gap-2 py-1.5 px-3 rounded-lg transition-colors {{ request()->routeIs('admin.club_acc.members.*') ? 'text-white font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white' }}"
-                            >
-                                <span>👥</span>
-                                <span>Members Roster</span>
-                            </a>
-                            <a
-                                href="{{ route('admin.club_acc.candidates.index', ['clubSlug' => $clubSlug]) }}"
-                                class="flex items-center gap-2 py-1.5 px-3 rounded-lg transition-colors {{ request()->routeIs('admin.club_acc.candidates.*') ? 'text-white font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white' }}"
-                            >
-                                <span>📋</span>
-                                <span>Candidate Pipeline</span>
-                            </a>
-                            <a
-                                href="{{ route('admin.club_acc.subscriptions.index', ['clubSlug' => $clubSlug]) }}"
-                                class="flex items-center gap-2 py-1.5 px-3 rounded-lg transition-colors {{ request()->routeIs('admin.club_acc.subscriptions.*') ? 'text-white font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white' }}"
-                            >
-                                <span>💳</span>
-                                <span>Subscriptions &amp; Dues</span>
-                            </a>
-                        </div>
-                    </div>
+                    <!-- 5. Members Hub -->
+                    <a
+                        href="{{ route('admin.club_acc.members.index', ['clubSlug' => $clubSlug]) }}"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('admin.club_acc.members.*', 'admin.club_acc.candidates.*', 'admin.club_acc.subscriptions.*', 'admin.users.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
+                    >
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span>Members</span>
+                    </a>
 
                     <!-- 6. Communications -->
                     <a

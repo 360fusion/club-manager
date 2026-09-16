@@ -32,7 +32,7 @@
             <div class="flex items-center gap-3">
                 <span class="p-2.5 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/30">💳</span>
                 <div>
-                    <h1 class="text-2xl font-black tracking-tight">Subscription Tiers &amp; Dues Invoicing</h1>
+                    <h1 class="text-2xl font-black tracking-tight">Subscriptions</h1>
                     <p class="text-xs text-slate-400 mt-1 font-medium">UGLE Rule 181 Arrears Audit &amp; Liberu Accounts Receivable Ledger Integration</p>
                 </div>
             </div>

@@ -178,7 +178,7 @@ class SubscriptionDomainTest extends TestCase
 
         Livewire::test(SubscriptionIndex::class, ['clubSlug' => $this->club->slug])
             ->assertStatus(200)
-            ->assertSee('Subscription Tiers &amp; Dues Invoicing', false)
+            ->assertSee('Subscriptions', false)
             ->call('runAnnualBilling')
             ->assertHasNoErrors();
 
