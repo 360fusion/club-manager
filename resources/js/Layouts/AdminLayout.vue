@@ -340,20 +340,6 @@ const copyInviteLink = () => {
             <span class="text-lg">🤝</span>
             <span>Charity &amp; Festival</span>
           </a>
-
-          <!-- 12. Candidate Pipeline (Form P Vetting) -->
-          <a
-            :href="route('admin.club_acc.candidates.index', { clubSlug })"
-            :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
-              activeTab === 'candidates'
-                ? 'bg-slate-800 text-white font-bold shadow-sm'
-                : 'hover:bg-slate-800 hover:text-white text-slate-300'
-            ]"
-          >
-            <span class="text-lg">📋</span>
-            <span>Candidates (Form P)</span>
-          </a>
         </nav>
       </div>
 
