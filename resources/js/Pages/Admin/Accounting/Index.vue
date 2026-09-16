@@ -89,34 +89,49 @@ const props = defineProps({
 });
 
 const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'reconciliation', 'contacts', 'settings'];
+const validReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'reconciliation_summary'];
 
-const getTabFromUrl = () => {
-  const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '').trim() : '';
-  if (hash && validTabs.includes(hash)) {
-    return hash;
+const parseUrlState = () => {
+  if (typeof window === 'undefined') return { tab: 'home', report: null };
+  const hash = window.location.hash.replace('#', '').trim();
+  if (hash) {
+    const parts = hash.split('/');
+    const tab = validTabs.includes(parts[0]) ? parts[0] : 'home';
+    const report = (parts[1] && validReports.includes(parts[1])) ? parts[1] : null;
+    return { tab, report };
   }
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const tabParam = searchParams ? searchParams.get('tab') : null;
-  if (tabParam && validTabs.includes(tabParam)) {
-    return tabParam;
-  }
-  return 'home';
+  const searchParams = new URLSearchParams(window.location.search);
+  const tabParam = searchParams.get('tab');
+  const reportParam = searchParams.get('report');
+  const tab = (tabParam && validTabs.includes(tabParam)) ? tabParam : 'home';
+  const report = (reportParam && validReports.includes(reportParam)) ? reportParam : null;
+  return { tab, report };
 };
 
-const activeTab = ref(getTabFromUrl());
+const initialState = parseUrlState();
+const activeTab = ref(initialState.tab);
+const selectedReport = ref(initialState.report);
 
 const syncTabWithUrl = () => {
-  const tabFromUrl = getTabFromUrl();
-  if (tabFromUrl !== activeTab.value) {
-    activeTab.value = tabFromUrl;
-  }
+  const { tab, report } = parseUrlState();
+  activeTab.value = tab;
+  selectedReport.value = report;
 };
 
-watch(activeTab, (newTab) => {
-  if (typeof window !== 'undefined' && window.location.hash.replace('#', '') !== newTab) {
-    history.replaceState(null, '', '#' + newTab);
+const navigateTo = (tabName, reportName = null) => {
+  activeTab.value = tabName;
+  selectedReport.value = reportName;
+
+  if (typeof window !== 'undefined') {
+    let newHash = '#' + tabName;
+    if (tabName === 'reporting' && reportName) {
+      newHash += '/' + reportName;
+    }
+    if (window.location.hash !== newHash) {
+      history.pushState({ tab: tabName, report: reportName }, '', newHash);
+    }
   }
-});
+};
 
 const handleGlobalDocumentClick = (e) => {
   if (!e.target.closest('.who-dropdown-container')) {
@@ -127,9 +142,10 @@ const handleGlobalDocumentClick = (e) => {
 };
 
 onMounted(() => {
-  activeTab.value = getTabFromUrl();
+  syncTabWithUrl();
   if (typeof window !== 'undefined') {
     window.addEventListener('hashchange', syncTabWithUrl);
+    window.addEventListener('popstate', syncTabWithUrl);
     document.addEventListener('click', handleGlobalDocumentClick);
   }
   if (props.reconciliation?.unmatched_transactions?.length > 0) {
@@ -140,11 +156,10 @@ onMounted(() => {
 onUnmounted(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('hashchange', syncTabWithUrl);
+    window.removeEventListener('popstate', syncTabWithUrl);
     document.removeEventListener('click', handleGlobalDocumentClick);
   }
 });
-
-const selectedReport = ref(null);
 
 const now = new Date();
 const firstDayOfMonthStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
@@ -918,7 +933,7 @@ const getTypeBadge = (type) => {
         <nav class="flex items-center px-1 min-w-max text-xs sm:text-sm font-semibold text-slate-300">
           <button
             type="button"
-            @click="activeTab = 'home'"
+            @click="navigateTo('home')"
             :class="[
               'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
               activeTab === 'home' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
@@ -929,7 +944,7 @@ const getTypeBadge = (type) => {
 
           <button
             type="button"
-            @click="activeTab = 'sales'"
+            @click="navigateTo('sales')"
             :class="[
               'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
               activeTab === 'sales' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
@@ -940,7 +955,7 @@ const getTypeBadge = (type) => {
 
           <button
             type="button"
-            @click="activeTab = 'purchases'"
+            @click="navigateTo('purchases')"
             :class="[
               'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
               activeTab === 'purchases' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
@@ -951,7 +966,7 @@ const getTypeBadge = (type) => {
 
           <button
             type="button"
-            @click="activeTab = 'reporting'; selectedReport = null"
+            @click="navigateTo('reporting')"
             :class="[
               'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
               activeTab === 'reporting' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
@@ -962,7 +977,7 @@ const getTypeBadge = (type) => {
 
           <button
             type="button"
-            @click="activeTab = 'accounting'"
+            @click="navigateTo('accounting')"
             :class="[
               'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
               activeTab === 'accounting' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
@@ -973,7 +988,7 @@ const getTypeBadge = (type) => {
 
           <button
             type="button"
-            @click="activeTab = 'reconciliation'"
+            @click="navigateTo('reconciliation')"
             :class="[
               'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
               activeTab === 'reconciliation' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
@@ -987,7 +1002,7 @@ const getTypeBadge = (type) => {
 
           <button
             type="button"
-            @click="activeTab = 'contacts'"
+            @click="navigateTo('contacts')"
             :class="[
               'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
               activeTab === 'contacts' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
@@ -1379,7 +1394,7 @@ const getTypeBadge = (type) => {
           <button
             v-if="selectedReport && selectedReport !== 'reconciliation_summary'"
             type="button"
-            @click="selectedReport = null"
+            @click="navigateTo('reporting', null)"
             class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer self-start sm:self-auto flex items-center gap-1"
           >
             ← Back to All Reports
@@ -1465,7 +1480,7 @@ const getTypeBadge = (type) => {
         <!-- 7 Report Grid Cards Selection -->
         <div v-if="!selectedReport" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <!-- 1. Account Summary -->
-          <div @click="selectedReport = 'account_summary'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+          <div @click="navigateTo('reporting', 'account_summary')" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
               <span class="text-2xl group-hover:scale-110 transition-transform">📋</span>
               <span class="text-[10px] font-black uppercase tracking-wider bg-slate-200 group-hover:bg-sky-200 group-hover:text-sky-900 px-2 py-0.5 rounded-full text-slate-700">General Ledger</span>
@@ -1481,7 +1496,7 @@ const getTypeBadge = (type) => {
           </div>
 
           <!-- 2. Aged Payables Summary -->
-          <div @click="selectedReport = 'aged_payables'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+          <div @click="navigateTo('reporting', 'aged_payables')" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
               <span class="text-2xl group-hover:scale-110 transition-transform">📉</span>
               <span class="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">Payables</span>
@@ -1497,7 +1512,7 @@ const getTypeBadge = (type) => {
           </div>
 
           <!-- 3. Aged Receivables Summary -->
-          <div @click="selectedReport = 'aged_receivables'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+          <div @click="navigateTo('reporting', 'aged_receivables')" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
               <span class="text-2xl group-hover:scale-110 transition-transform">📈</span>
               <span class="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Receivables</span>
@@ -1513,7 +1528,7 @@ const getTypeBadge = (type) => {
           </div>
 
           <!-- 4. Balance Sheet -->
-          <div @click="selectedReport = 'balance_sheet'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+          <div @click="navigateTo('reporting', 'balance_sheet')" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
               <span class="text-2xl group-hover:scale-110 transition-transform">⚖️</span>
               <span class="text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">Statement</span>
@@ -1529,7 +1544,7 @@ const getTypeBadge = (type) => {
           </div>
 
           <!-- 5. Cash Summary -->
-          <div @click="selectedReport = 'cash_summary'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+          <div @click="navigateTo('reporting', 'cash_summary')" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
               <span class="text-2xl group-hover:scale-110 transition-transform">💵</span>
               <span class="text-[10px] font-black uppercase tracking-wider bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full">Cash Flow</span>
@@ -1545,7 +1560,7 @@ const getTypeBadge = (type) => {
           </div>
 
           <!-- 6. Executive Summary -->
-          <div @click="selectedReport = 'executive_summary'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+          <div @click="navigateTo('reporting', 'executive_summary')" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
               <span class="text-2xl group-hover:scale-110 transition-transform">📊</span>
               <span class="text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">KPI Ratios</span>
@@ -1561,7 +1576,7 @@ const getTypeBadge = (type) => {
           </div>
 
           <!-- 7. Profit and Loss -->
-          <div @click="selectedReport = 'profit_and_loss'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+          <div @click="navigateTo('reporting', 'profit_and_loss')" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
               <span class="text-2xl group-hover:scale-110 transition-transform">🧾</span>
               <span class="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">P&L</span>
@@ -1577,7 +1592,7 @@ const getTypeBadge = (type) => {
           </div>
 
           <!-- 8. Comparative Annual Income & Expenditure Statement -->
-          <div @click="selectedReport = 'comparative_income_expenditure'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+          <div @click="navigateTo('reporting', 'comparative_income_expenditure')" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
               <span class="text-2xl group-hover:scale-110 transition-transform">🏛️</span>
               <span class="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">Annual Statement</span>
@@ -1593,7 +1608,7 @@ const getTypeBadge = (type) => {
           </div>
 
           <!-- 9. Bank Reconciliation Summary -->
-          <div @click="selectedReport = 'reconciliation_summary'" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
+          <div @click="navigateTo('reporting', 'reconciliation_summary')" class="bg-slate-50 hover:bg-sky-50/50 p-5 rounded-2xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
               <span class="text-2xl group-hover:scale-110 transition-transform">💳</span>
               <span class="text-[10px] font-black uppercase tracking-wider bg-sky-100 text-sky-900 px-2 py-0.5 rounded-full">Bank Audit</span>
@@ -2398,7 +2413,7 @@ const getTypeBadge = (type) => {
           <div class="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
             <button
               type="button"
-              @click="activeTab = 'reporting'; selectedReport = 'reconciliation_summary'"
+              @click="navigateTo('reporting', 'reconciliation_summary')"
               class="text-xs font-bold text-sky-600 hover:underline mr-2 cursor-pointer"
             >
               Reconciliation Report
