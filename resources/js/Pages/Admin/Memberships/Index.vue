@@ -52,7 +52,7 @@ const deletePlan = (planId) => {
             </p>
           </div>
 
-          <!-- Gateway Toggle Buttons & Customer Portal -->
+          <!-- Gateway Toggle Buttons & Settings Tab Link -->
           <div class="flex items-center gap-3 flex-wrap">
             <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
               <button
@@ -84,6 +84,10 @@ const deletePlan = (planId) => {
               </button>
             </div>
 
+            <a :href="route('admin.settings.show', { clubSlug: props.club.slug }) + '#payments'" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all flex items-center gap-1.5">
+              <span>⚙️ Gateway Settings Tab ➔</span>
+            </a>
+
             <a :href="route('billing.portal', { clubSlug: props.club.slug })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition-all flex items-center gap-1.5">
               <span>⚙️ Customer Portal</span>
             </a>
@@ -99,7 +103,7 @@ const deletePlan = (planId) => {
                 {{ stripeConfigured ? 'Keys Active' : 'Sandbox Demo Mode' }}
               </span>
             </div>
-            <p class="text-xs text-slate-500">Direct card processing with Stripe Elements & Cashier subscription hooks.</p>
+            <p class="text-xs text-slate-500">Direct card processing with Stripe Elements &amp; Cashier subscription hooks.</p>
           </div>
 
           <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
@@ -109,7 +113,7 @@ const deletePlan = (planId) => {
                 {{ paddleConfigured ? 'Keys Active' : 'Sandbox Demo Mode' }}
               </span>
             </div>
-            <p class="text-xs text-slate-500">Merchant of Record billing, automatic international sales tax & VAT remittance.</p>
+            <p class="text-xs text-slate-500">Merchant of Record billing, automatic international sales tax &amp; VAT remittance.</p>
           </div>
         </div>
       </div>

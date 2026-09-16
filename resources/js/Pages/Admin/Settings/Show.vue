@@ -27,11 +27,35 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  activeProvider: {
+    type: String,
+    default: 'stripe',
+  },
+  stripeConfigured: {
+    type: Boolean,
+    default: false,
+  },
+  paddleConfigured: {
+    type: Boolean,
+    default: false,
+  },
 });
+
+const selectedProvider = ref(props.activeProvider || 'stripe');
+const processingProvider = ref(false);
+
+const switchProvider = (provider) => {
+  selectedProvider.value = provider;
+  processingProvider.value = true;
+  router.post(route('billing.provider.update', { clubSlug: props.club.slug }), { provider }, {
+    preserveScroll: true,
+    onFinish: () => { processingProvider.value = false; }
+  });
+};
 
 const validTabs = [
   'general', 'positions', 'branding', 'roles', 'modules',
-  'accounting', 'subscriptions', 'events', 'dining',
+  'accounting', 'subscriptions', 'payments', 'events', 'dining',
   'communications', 'website', 'bookings', 'performance'
 ];
 
@@ -449,6 +473,7 @@ const updateMemberRank = (userId, newRank) => {
               <optgroup label="Operations & Finance">
                 <option value="accounting">📊 Accounting Settings</option>
                 <option value="subscriptions">💳 Subscriptions & Dues</option>
+                <option value="payments">💳 Payment Gateways</option>
                 <option value="events">📅 Events & Check-Ins</option>
                 <option value="dining">🍽️ Dining & Catering RSVPs</option>
                 <option value="communications">✉️ Communications & Emails</option>
@@ -542,6 +567,16 @@ const updateMemberRank = (userId, newRank) => {
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>💳</span> Subscriptions & Dues</span>
+                </button>
+
+                <button
+                  @click="activeTab = 'payments'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'payments' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>💳</span> Payment Gateways</span>
                 </button>
 
                 <button
@@ -1392,6 +1427,87 @@ const updateMemberRank = (userId, newRank) => {
             <div class="sm:col-span-2">
               <label class="block font-bold text-slate-700 mb-1">Receipt & Invoice Footer Notes</label>
               <textarea v-model="form.receipt_footer_notes" rows="3" placeholder="Thank you for supporting our club." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: PAYMENT GATEWAYS & PROVIDERS -->
+      <div v-if="activeTab === 'payments'" class="space-y-6">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <span>💳 Active Payment Gateway Provider</span>
+              </h2>
+              <p class="text-xs text-slate-500 mt-1">
+                Select which payment gateway handles member subscription checkouts, card payments, and recurring dues for this club.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  @click="switchProvider('stripe')"
+                  :disabled="processingProvider"
+                  :class="[
+                    'px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer',
+                    selectedProvider === 'stripe'
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                      : 'text-slate-600 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="w-2 h-2 rounded-full bg-indigo-300"></span>
+                  Stripe (Direct / Cards)
+                </button>
+
+                <button
+                  type="button"
+                  @click="switchProvider('paddle')"
+                  :disabled="processingProvider"
+                  :class="[
+                    'px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer',
+                    selectedProvider === 'paddle'
+                      ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/20'
+                      : 'text-slate-600 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="w-2 h-2 rounded-full bg-cyan-300"></span>
+                  Paddle (MoR / Tax Compliant)
+                </button>
+              </div>
+
+              <a :href="route('billing.portal', { clubSlug: props.club.slug })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition-all flex items-center gap-1.5">
+                <span>⚙️ Customer Portal</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Gateway Specs Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-5 rounded-2xl border border-slate-200/80 bg-slate-50 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-extrabold text-slate-900 text-xs">Stripe Integration</span>
+                <span :class="stripeConfigured ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border">
+                  {{ stripeConfigured ? 'Keys Active' : 'Sandbox Demo Mode' }}
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Direct card processing with Stripe Elements &amp; Cashier subscription webhooks. Ideal for direct card payments.
+              </p>
+            </div>
+
+            <div class="p-5 rounded-2xl border border-slate-200/80 bg-slate-50 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-extrabold text-slate-900 text-xs">Paddle Integration</span>
+                <span :class="paddleConfigured ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border">
+                  {{ paddleConfigured ? 'Keys Active' : 'Sandbox Demo Mode' }}
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Merchant of Record billing, automatic international sales tax &amp; VAT remittance for international country members.
+              </p>
             </div>
           </div>
         </div>
