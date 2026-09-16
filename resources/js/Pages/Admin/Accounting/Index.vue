@@ -1377,12 +1377,20 @@ const getTypeBadge = (type) => {
             <p class="text-xs text-slate-500">Official double-entry financial statements and accounting reports.</p>
           </div>
           <button
-            v-if="selectedReport"
+            v-if="selectedReport && selectedReport !== 'reconciliation_summary'"
             type="button"
             @click="selectedReport = null"
             class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer self-start sm:self-auto flex items-center gap-1"
           >
             ← Back to All Reports
+          </button>
+          <button
+            v-if="selectedReport === 'reconciliation_summary'"
+            type="button"
+            @click="activeTab = 'reconciliation'; selectedReport = null"
+            class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer self-start sm:self-auto flex items-center gap-1"
+          >
+            ← Back to Bank Reconciliation
           </button>
         </div>
 
