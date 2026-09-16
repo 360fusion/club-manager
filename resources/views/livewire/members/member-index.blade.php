@@ -1,4 +1,31 @@
-<div class="space-y-8">
+<div class="space-y-6">
+    <!-- Member Management Domain Unified Navigation -->
+    <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 shadow-inner">
+        <a
+            href="{{ route('admin.club_acc.members.index', ['clubSlug' => $club->slug]) }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.members.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+        >
+            <span>👥</span>
+            <span>Members Roster</span>
+        </a>
+
+        <a
+            href="{{ route('admin.club_acc.candidates.index', ['clubSlug' => $club->slug]) }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.candidates.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+        >
+            <span>📋</span>
+            <span>Candidates (Form P Vetting)</span>
+        </a>
+
+        <a
+            href="{{ route('admin.club_acc.subscriptions.index', ['clubSlug' => $club->slug]) }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.subscriptions.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+        >
+            <span>💳</span>
+            <span>Subscriptions &amp; Dues</span>
+        </a>
+    </div>
+
     <!-- Header & Action Toolbar -->
     <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-100 pb-6">

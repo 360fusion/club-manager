@@ -230,21 +230,56 @@ const copyInviteLink = () => {
             <span>Subscriptions</span>
           </Link>
 
-          <!-- 4. Members -->
-          <Link 
-            :href="route('admin.users.index', { clubSlug })" 
-            :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
-              activeTab === 'users' || activeTab === 'members'
-                ? 'bg-slate-800 text-white font-bold shadow-sm' 
-                : 'hover:bg-slate-800 hover:text-white text-slate-300'
-            ]"
-          >
-            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <span>Members</span>
-          </Link>
+          <!-- 4. Members & Candidates Management Hub -->
+          <div class="space-y-1">
+            <a 
+              :href="route('admin.club_acc.members.index', { clubSlug })" 
+              :class="[
+                'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+                activeTab === 'users' || activeTab === 'members' || activeTab === 'candidates' || activeTab === 'subscriptions'
+                  ? 'bg-slate-800 text-white font-bold shadow-sm' 
+                  : 'hover:bg-slate-800 hover:text-white text-slate-300'
+              ]"
+            >
+              <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>Members &amp; Candidates</span>
+            </a>
+
+            <div class="pl-9 space-y-1 text-xs">
+              <a
+                :href="route('admin.club_acc.members.index', { clubSlug })"
+                :class="[
+                  'flex items-center gap-2 py-1.5 px-3 rounded-lg transition-colors',
+                  activeTab === 'members' ? 'text-white font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white'
+                ]"
+              >
+                <span>👥</span>
+                <span>Members Roster</span>
+              </a>
+              <a
+                :href="route('admin.club_acc.candidates.index', { clubSlug })"
+                :class="[
+                  'flex items-center gap-2 py-1.5 px-3 rounded-lg transition-colors',
+                  activeTab === 'candidates' ? 'text-white font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white'
+                ]"
+              >
+                <span>📋</span>
+                <span>Candidate Pipeline</span>
+              </a>
+              <a
+                :href="route('admin.club_acc.subscriptions.index', { clubSlug })"
+                :class="[
+                  'flex items-center gap-2 py-1.5 px-3 rounded-lg transition-colors',
+                  activeTab === 'subscriptions' ? 'text-white font-bold bg-slate-800/60' : 'text-slate-400 hover:text-white'
+                ]"
+              >
+                <span>💳</span>
+                <span>Subscriptions &amp; Dues</span>
+              </a>
+            </div>
+          </div>
 
           <!-- 5. Communications & Posts -->
           <Link 
