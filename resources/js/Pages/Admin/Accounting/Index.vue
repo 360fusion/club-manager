@@ -341,7 +341,8 @@ const getRowState = (txId, tx) => {
       tab: hasMatches ? 'Match' : 'Create',
       who: autoWho,
       showWhoDropdown: false,
-      what: tx?.amount > 0 ? '2150' : '700',
+      what: '',
+      showWhatError: false,
       why: tx?.raw_description || '',
       category: 'General',
       vat: 'No VAT',
@@ -367,7 +368,19 @@ const openManualMatchModalForTx = (tx) => {
 const submitRowReconcile = (tx) => {
   selectedTx.value = tx;
   const state = getRowState(tx.id, tx);
-  if (state.tab === 'Match') {
+  state.showWhatError = false;
+
+  if (state.tab === 'Create') {
+    if (!state.what) {
+      state.showWhatError = true;
+      alert('Please select an account code (What) before reconciling.');
+      return;
+    }
+    reconcileForm.transaction_id = tx.id;
+    reconcileForm.match_type = 'ledger_account';
+    reconcileForm.target_id = 0;
+    reconcileForm.nominal_code = state.what;
+  } else if (state.tab === 'Match') {
     if (tx.suggested_matches && tx.suggested_matches.length > 0) {
       const match = tx.suggested_matches[0];
       reconcileForm.transaction_id = tx.id;
@@ -375,16 +388,16 @@ const submitRowReconcile = (tx) => {
       reconcileForm.target_id = match.target_id;
       reconcileForm.nominal_code = match.nominal_code || 'GENERAL';
     } else {
+      if (!state.what) {
+        state.showWhatError = true;
+        alert('Please select an account code (What) before reconciling.');
+        return;
+      }
       reconcileForm.transaction_id = tx.id;
       reconcileForm.match_type = 'ledger_account';
       reconcileForm.target_id = 0;
-      reconcileForm.nominal_code = state.what || '4000';
+      reconcileForm.nominal_code = state.what;
     }
-  } else if (state.tab === 'Create') {
-    reconcileForm.transaction_id = tx.id;
-    reconcileForm.match_type = 'ledger_account';
-    reconcileForm.target_id = 0;
-    reconcileForm.nominal_code = state.what || '4000';
   } else if (state.tab === 'Transfer') {
     reconcileForm.transaction_id = tx.id;
     reconcileForm.match_type = 'ledger_account';
@@ -2406,13 +2419,18 @@ const getTypeBadge = (type) => {
                         <div class="col-span-10">
                           <select
                             v-model="getRowState(tx.id, tx).what"
-                            class="w-full px-2.5 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                            @change="getRowState(tx.id, tx).showWhatError = false"
+                            :class="[
+                              'w-full px-2.5 py-1 bg-white border rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500',
+                              getRowState(tx.id, tx).showWhatError ? 'border-red-500 bg-red-50/50' : 'border-slate-300'
+                            ]"
                           >
                             <option value="">Choose the account...</option>
                             <option v-for="acc in accounts" :key="acc.id" :value="acc.code">
                               {{ acc.code }} - {{ acc.name }}
                             </option>
                           </select>
+                          <p v-if="getRowState(tx.id, tx).showWhatError" class="text-[10px] text-red-600 font-bold mt-0.5">Please select an account code (What) before reconciling.</p>
                         </div>
                       </div>
 
@@ -2596,7 +2614,14 @@ const getTypeBadge = (type) => {
                     <input v-model="getRowState(tx.id, tx).why" type="text" placeholder="Description..." class="w-full px-2 py-1 border border-slate-300 rounded text-xs" />
                   </td>
                   <td class="py-2 px-3">
-                    <select v-model="getRowState(tx.id, tx).what" class="w-full px-2 py-1 border border-slate-300 rounded text-xs">
+                    <select
+                      v-model="getRowState(tx.id, tx).what"
+                      @change="getRowState(tx.id, tx).showWhatError = false"
+                      :class="[
+                        'w-full px-2 py-1 border rounded text-xs',
+                        getRowState(tx.id, tx).showWhatError ? 'border-red-500 bg-red-50/50' : 'border-slate-300'
+                      ]"
+                    >
                       <option value="">Select Account...</option>
                       <option v-for="acc in accounts" :key="acc.id" :value="acc.code">{{ acc.code }} - {{ acc.name }}</option>
                     </select>
