@@ -304,7 +304,11 @@ class AccountingAdminController extends Controller
                 'spent' => $tx->amount < 0 ? '£' . number_format(abs((float)$tx->amount), 2) : '',
                 'received' => $tx->amount > 0 ? '£' . number_format((float)$tx->amount, 2) : '',
                 'source' => 'Bank Feed',
-                'status' => in_array(strtolower($tx->status->value ?? (string)$tx->status), ['matched', 'reconciled']) ? 'Reconciled' : 'Unreconciled',
+                'status' => match (strtolower($tx->status->value ?? (string)$tx->status)) {
+                    'matched', 'reconciled' => 'Reconciled',
+                    'ignored' => 'Deleted',
+                    default => 'Unreconciled',
+                },
             ]);
 
         $accountTransactions = BankTransaction::where('club_id', $club->id)
@@ -400,6 +404,34 @@ class AccountingAdminController extends Controller
         $matcher->ignoreTransaction($tx);
 
         return redirect()->back()->with('success', 'Transaction line ignored.');
+    }
+
+    public function deleteBankStatementLines(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $ids = (array) $request->input('transaction_ids', []);
+
+        if (!empty($ids)) {
+            BankTransaction::where('club_id', $club->id)
+                ->whereIn('id', $ids)
+                ->update(['status' => BankTransactionStatus::Ignored->value]);
+        }
+
+        return redirect()->back()->with('success', count($ids) . ' statement line(s) deleted.');
+    }
+
+    public function restoreBankStatementLines(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $ids = (array) $request->input('transaction_ids', []);
+
+        if (!empty($ids)) {
+            BankTransaction::where('club_id', $club->id)
+                ->whereIn('id', $ids)
+                ->update(['status' => BankTransactionStatus::Unmatched->value]);
+        }
+
+        return redirect()->back()->with('success', count($ids) . ' statement line(s) restored.');
     }
 
     public function importBankStatement(Request $request, string $clubSlug): RedirectResponse

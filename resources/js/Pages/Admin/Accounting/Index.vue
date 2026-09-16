@@ -188,6 +188,50 @@ const autoReconcile = ref(false);
 const showFilterPanel = ref(false);
 const showManageAccountMenu = ref(false);
 const selectedCashCodingTx = ref([]);
+const selectedStatementLineIds = ref([]);
+const statementLinesFilter = ref('statement_lines');
+
+const filteredStatementLines = computed(() => {
+  let list = props.reconciliation?.statement_lines || [];
+  if (statementLinesFilter.value === 'statement_lines') {
+    return list.filter(l => l.status !== 'Deleted');
+  } else if (statementLinesFilter.value === 'deleted') {
+    return list.filter(l => l.status === 'Deleted');
+  }
+  return list;
+});
+
+const toggleStatementLinesSelectAll = () => {
+  if (selectedStatementLineIds.value.length === filteredStatementLines.value.length) {
+    selectedStatementLineIds.value = [];
+  } else {
+    selectedStatementLineIds.value = filteredStatementLines.value.map(l => l.id);
+  }
+};
+
+const deleteSelectedStatementLines = () => {
+  if (selectedStatementLineIds.value.length === 0) return;
+  router.post(route('admin.accounting.statement_lines.delete', props.club.slug), {
+    transaction_ids: selectedStatementLineIds.value,
+  }, {
+    preserveScroll: true,
+    onSuccess: () => {
+      selectedStatementLineIds.value = [];
+    }
+  });
+};
+
+const restoreSelectedStatementLines = () => {
+  if (selectedStatementLineIds.value.length === 0) return;
+  router.post(route('admin.accounting.statement_lines.restore', props.club.slug), {
+    transaction_ids: selectedStatementLineIds.value,
+  }, {
+    preserveScroll: true,
+    onSuccess: () => {
+      selectedStatementLineIds.value = [];
+    }
+  });
+};
 
 const filterType = ref('all');
 const filterMinAmount = ref('');
@@ -2648,14 +2692,34 @@ const getTypeBadge = (type) => {
           <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
               <span class="text-xs font-bold text-slate-700">Showing</span>
-              <select class="px-2.5 py-1 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800">
+              <select v-model="statementLinesFilter" class="px-2.5 py-1 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800">
                 <option value="statement_lines">Statement lines</option>
-                <option value="imported_files">Imported Statement Files</option>
+                <option value="deleted">Deleted statement lines</option>
+                <option value="all">All statement lines</option>
               </select>
-              <span class="text-xs text-slate-400">No transactions selected</span>
+              <span v-if="selectedStatementLineIds.length === 0" class="text-xs text-slate-400">No transactions selected</span>
+              <span v-else class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                {{ selectedStatementLineIds.length }} transaction(s) selected
+              </span>
             </div>
             <div class="flex items-center gap-2">
-              <button type="button" @click="showImportModal = true" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer">
+              <button
+                v-if="selectedStatementLineIds.length > 0 && statementLinesFilter !== 'deleted'"
+                type="button"
+                @click="deleteSelectedStatementLines"
+                class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-lg shadow transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                Delete ({{ selectedStatementLineIds.length }})
+              </button>
+              <button
+                v-if="selectedStatementLineIds.length > 0 && (statementLinesFilter === 'deleted' || statementLinesFilter === 'all')"
+                type="button"
+                @click="restoreSelectedStatementLines"
+                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-lg shadow transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                Restore ({{ selectedStatementLineIds.length }})
+              </button>
+              <button type="button" @click="showImportModal = true" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-lg shadow cursor-pointer">
                 + Upload Statement
               </button>
             </div>
@@ -2666,7 +2730,12 @@ const getTypeBadge = (type) => {
               <thead class="bg-slate-50 text-[11px] font-bold text-slate-600 border-b border-slate-200">
                 <tr>
                   <th class="py-2.5 px-3 w-8">
-                    <input type="checkbox" class="rounded text-sky-600 focus:ring-sky-500" />
+                    <input
+                      type="checkbox"
+                      @change="toggleStatementLinesSelectAll"
+                      :checked="selectedStatementLineIds.length === filteredStatementLines.length && filteredStatementLines.length > 0"
+                      class="rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+                    />
                   </th>
                   <th class="py-2.5 px-3">Date</th>
                   <th class="py-2.5 px-3">Type</th>
@@ -2679,9 +2748,14 @@ const getTypeBadge = (type) => {
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
-                <tr v-for="line in reconciliation.statement_lines || []" :key="line.id" class="hover:bg-slate-50/80 transition-colors">
+                <tr v-for="line in filteredStatementLines" :key="line.id" class="hover:bg-slate-50/80 transition-colors">
                   <td class="py-2.5 px-3">
-                    <input type="checkbox" class="rounded text-sky-600 focus:ring-sky-500" />
+                    <input
+                      type="checkbox"
+                      :value="line.id"
+                      v-model="selectedStatementLineIds"
+                      class="rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+                    />
                   </td>
                   <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">{{ line.transaction_date }}</td>
                   <td class="py-2.5 px-3 text-slate-600 font-medium">{{ line.type }}</td>
@@ -2694,15 +2768,17 @@ const getTypeBadge = (type) => {
                     <span
                       :class="[
                         'px-2.5 py-0.5 text-[10px] font-black rounded-full uppercase tracking-wider',
-                        line.status === 'Reconciled' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        line.status === 'Reconciled' ? 'bg-emerald-100 text-emerald-800' :
+                        line.status === 'Deleted' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
+                        'bg-amber-100 text-amber-800'
                       ]"
                     >
                       {{ line.status }}
                     </span>
                   </td>
                 </tr>
-                <tr v-if="!reconciliation.statement_lines || reconciliation.statement_lines.length === 0">
-                  <td colspan="9" class="py-8 text-center text-slate-400 italic">No imported statement lines found.</td>
+                <tr v-if="filteredStatementLines.length === 0">
+                  <td colspan="9" class="py-8 text-center text-slate-400 italic">No statement lines found for selected filter.</td>
                 </tr>
               </tbody>
             </table>
