@@ -291,9 +291,26 @@ class AccountingAdminController extends Controller
                 'formatted_amount' => '£' . number_format((float)$sub->balance_due, 2),
             ]);
 
+        $allStatementLines = BankTransaction::where('club_id', $club->id)
+            ->orderByDesc('transaction_date')
+            ->get()
+            ->map(fn ($tx) => [
+                'id' => $tx->id,
+                'transaction_date' => $tx->transaction_date->format('d M Y'),
+                'type' => $tx->amount < 0 ? 'Debit' : 'Credit',
+                'raw_description' => $tx->raw_description,
+                'reference' => $tx->reference ?: ($tx->amount < 0 ? 'DEBIT' : 'CREDIT'),
+                'amount' => (float)$tx->amount,
+                'spent' => $tx->amount < 0 ? '£' . number_format(abs((float)$tx->amount), 2) : '',
+                'received' => $tx->amount > 0 ? '£' . number_format((float)$tx->amount, 2) : '',
+                'source' => 'Bank Feed',
+                'status' => in_array(strtolower($tx->status->value ?? (string)$tx->status), ['matched', 'reconciled']) ? 'Reconciled' : 'Unreconciled',
+            ]);
+
         $reconciliation = [
             'unmatched_transactions' => $unmatchedTransactions,
             'reconciled_transactions' => $reconciledTransactions,
+            'statement_lines' => $allStatementLines,
             'bank_imports' => $bankImports,
             'unpaid_subscriptions' => $unpaidSubscriptions,
             'unpaid_bills' => array_values(array_filter($bills->toArray(), fn ($b) => $b['status'] === 'unpaid')),

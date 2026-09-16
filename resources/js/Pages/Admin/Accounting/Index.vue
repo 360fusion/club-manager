@@ -2643,43 +2643,66 @@ const getTypeBadge = (type) => {
           </div>
         </div>
 
-        <!-- SUB-TAB 3: BANK STATEMENTS LOG -->
+        <!-- SUB-TAB 3: BANK STATEMENTS (Full imported statement lines log) -->
         <div v-else-if="reconSubTab === 'bank_statements'" class="space-y-4">
           <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center justify-between gap-4">
-            <div>
-              <h4 class="font-black text-slate-900 text-sm">Imported Statement Files &amp; Audit Log</h4>
-              <p class="text-xs text-slate-500">History of uploaded CSV, OFX, and QFX bank feeds.</p>
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-bold text-slate-700">Showing</span>
+              <select class="px-2.5 py-1 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-800">
+                <option value="statement_lines">Statement lines</option>
+                <option value="imported_files">Imported Statement Files</option>
+              </select>
+              <span class="text-xs text-slate-400">No transactions selected</span>
             </div>
-            <button type="button" @click="showImportModal = true" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer">
-              + Upload Statement File
-            </button>
+            <div class="flex items-center gap-2">
+              <button type="button" @click="showImportModal = true" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer">
+                + Upload Statement
+              </button>
+            </div>
           </div>
 
           <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-slate-50 text-[11px] font-bold text-slate-600 border-b border-slate-200">
                 <tr>
-                  <th class="py-2.5 px-3">Import Date</th>
-                  <th class="py-2.5 px-3">Statement File</th>
-                  <th class="py-2.5 px-3">Source / Channel</th>
-                  <th class="py-2.5 px-3 text-center">Total Lines</th>
-                  <th class="py-2.5 px-3 text-center">Reconciled</th>
+                  <th class="py-2.5 px-3 w-8">
+                    <input type="checkbox" class="rounded text-sky-600 focus:ring-sky-500" />
+                  </th>
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3">Type</th>
+                  <th class="py-2.5 px-3">Particulars / Description</th>
+                  <th class="py-2.5 px-3">Reference</th>
+                  <th class="py-2.5 px-3 text-right">Spent</th>
+                  <th class="py-2.5 px-3 text-right">Received</th>
+                  <th class="py-2.5 px-3 text-center">Source</th>
                   <th class="py-2.5 px-3 text-center">Status</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
-                <tr v-for="(imp, idx) in reconciliation.bank_imports || []" :key="idx">
-                  <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500">{{ imp.created_at || '16 Sep 2026' }}</td>
-                  <td class="py-2.5 px-3 font-bold text-slate-900">{{ imp.filename || 'bank_statement_sep2026.csv' }}</td>
-                  <td class="py-2.5 px-3 text-slate-600">{{ imp.source || 'Manual CSV Feed' }}</td>
-                  <td class="py-2.5 px-3 text-center font-bold">{{ imp.total_lines || 12 }}</td>
-                  <td class="py-2.5 px-3 text-center font-bold text-emerald-700">{{ imp.reconciled_lines || 9 }}</td>
-                  <td class="py-2.5 px-3 text-center">
-                    <span class="px-2 py-0.5 text-[9px] font-black rounded-full bg-emerald-100 text-emerald-800">Completed</span>
+                <tr v-for="line in reconciliation.statement_lines || []" :key="line.id" class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-2.5 px-3">
+                    <input type="checkbox" class="rounded text-sky-600 focus:ring-sky-500" />
+                  </td>
+                  <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">{{ line.transaction_date }}</td>
+                  <td class="py-2.5 px-3 text-slate-600 font-medium">{{ line.type }}</td>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">{{ line.raw_description }}</td>
+                  <td class="py-2.5 px-3 text-slate-500 font-mono text-[11px]">{{ line.reference }}</td>
+                  <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900">{{ line.spent }}</td>
+                  <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-700">{{ line.received }}</td>
+                  <td class="py-2.5 px-3 text-center text-slate-500 text-[11px]">{{ line.source }}</td>
+                  <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                    <span
+                      :class="[
+                        'px-2.5 py-0.5 text-[10px] font-black rounded-full uppercase tracking-wider',
+                        line.status === 'Reconciled' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      ]"
+                    >
+                      {{ line.status }}
+                    </span>
                   </td>
                 </tr>
-                <tr v-if="!reconciliation.bank_imports || reconciliation.bank_imports.length === 0">
-                  <td colspan="6" class="py-8 text-center text-slate-400 italic">No uploaded statement history records found.</td>
+                <tr v-if="!reconciliation.statement_lines || reconciliation.statement_lines.length === 0">
+                  <td colspan="9" class="py-8 text-center text-slate-400 italic">No imported statement lines found.</td>
                 </tr>
               </tbody>
             </table>
