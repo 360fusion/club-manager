@@ -1384,14 +1384,6 @@ const getTypeBadge = (type) => {
           >
             ← Back to All Reports
           </button>
-          <button
-            v-if="selectedReport === 'reconciliation_summary'"
-            type="button"
-            @click="activeTab = 'reconciliation'; selectedReport = null"
-            class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer self-start sm:self-auto flex items-center gap-1"
-          >
-            ← Back to Bank Reconciliation
-          </button>
         </div>
 
         <!-- Global Date Range Filter Bar for Reports -->
