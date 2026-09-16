@@ -951,7 +951,7 @@ const getTypeBadge = (type) => {
 
           <button
             type="button"
-            @click="activeTab = 'reporting'"
+            @click="activeTab = 'reporting'; selectedReport = null"
             :class="[
               'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
               activeTab === 'reporting' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
