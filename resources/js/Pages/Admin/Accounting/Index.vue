@@ -2347,6 +2347,11 @@ const getTypeBadge = (type) => {
                             @focus="getRowState(tx.id, tx).showWhoDropdown = true"
                             @blur="setTimeout(() => { getRowState(tx.id, tx).showWhoDropdown = false; }, 200)"
                             type="text"
+                            name="payee_contact_search_no_autofill"
+                            autocomplete="off"
+                            aria-autocomplete="none"
+                            data-lpignore="true"
+                            data-form-type="other"
                             placeholder="Name of the contact..."
                             class="w-full px-2.5 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
                           />
@@ -2535,6 +2540,11 @@ const getTypeBadge = (type) => {
                       @focus="getRowState(tx.id, tx).showWhoDropdown = true"
                       @blur="setTimeout(() => { getRowState(tx.id, tx).showWhoDropdown = false; }, 200)"
                       type="text"
+                      name="cash_coding_contact_no_autofill"
+                      autocomplete="off"
+                      aria-autocomplete="none"
+                      data-lpignore="true"
+                      data-form-type="other"
                       placeholder="Contact..."
                       class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-sky-500"
                     />
