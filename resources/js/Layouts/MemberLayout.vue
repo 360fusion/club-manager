@@ -259,7 +259,7 @@ const switchWorkspace = (targetClub) => {
           <Link 
             :href="route('member.profile', { slug: clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'profile' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
