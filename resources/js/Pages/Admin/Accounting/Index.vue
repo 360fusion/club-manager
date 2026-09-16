@@ -2170,7 +2170,6 @@ const getTypeBadge = (type) => {
             <span>11 statement lines imported in the last 30 days</span>
           </div>
           <div class="flex items-center gap-3">
-            <button type="button" @click="reconSubTab = 'account_transactions'" class="text-sky-700 hover:underline">Review reconciled</button>
             <button
               type="button"
               @click="autoReconcile = !autoReconcile"
