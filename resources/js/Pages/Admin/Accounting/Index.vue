@@ -295,10 +295,23 @@ const rowStates = ref({});
 const getContactSuggestions = (query) => {
   const q = (query || '').trim().toLowerCase();
   if (q.length < 2) return [];
-  return (filteredContacts.value || []).filter(c =>
+  
+  const matches = (filteredContacts.value || []).filter(c =>
     c.name?.toLowerCase().includes(q) ||
     (c.email && c.email !== '—' && c.email.toLowerCase().includes(q))
-  ).slice(0, 8);
+  );
+
+  const seen = new Set();
+  const unique = [];
+  for (const c of matches) {
+    const key = c.name?.trim().toLowerCase();
+    if (key && !seen.has(key)) {
+      seen.add(key);
+      unique.push(c);
+    }
+  }
+
+  return unique.slice(0, 8);
 };
 
 const getRowState = (txId, tx) => {
