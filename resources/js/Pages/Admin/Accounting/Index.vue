@@ -292,6 +292,15 @@ const submitIgnore = (txId) => {
 
 const rowStates = ref({});
 
+const getContactSuggestions = (query) => {
+  const q = (query || '').trim().toLowerCase();
+  if (q.length < 2) return [];
+  return (filteredContacts.value || []).filter(c =>
+    c.name?.toLowerCase().includes(q) ||
+    (c.email && c.email !== '—' && c.email.toLowerCase().includes(q))
+  ).slice(0, 8);
+};
+
 const getRowState = (txId, tx) => {
   if (!rowStates.value[txId]) {
     const hasMatches = tx?.suggested_matches && tx.suggested_matches.length > 0;
@@ -308,6 +317,7 @@ const getRowState = (txId, tx) => {
     rowStates.value[txId] = {
       tab: hasMatches ? 'Match' : 'Create',
       who: autoWho,
+      showWhoDropdown: false,
       what: tx?.amount > 0 ? '2150' : '700',
       why: tx?.raw_description || '',
       category: 'General',
@@ -2331,14 +2341,35 @@ const getTypeBadge = (type) => {
                     <div v-if="getRowState(tx.id, tx).tab === 'Create'" class="space-y-2 text-xs">
                       <div class="grid grid-cols-12 items-center gap-2">
                         <label class="col-span-2 text-right font-semibold text-slate-500">Who</label>
-                        <div class="col-span-10">
+                        <div class="col-span-10 relative">
                           <input
                             v-model="getRowState(tx.id, tx).who"
+                            @focus="getRowState(tx.id, tx).showWhoDropdown = true"
+                            @blur="setTimeout(() => { getRowState(tx.id, tx).showWhoDropdown = false; }, 200)"
                             type="text"
-                            list="contacts-autocomplete-list"
                             placeholder="Name of the contact..."
                             class="w-full px-2.5 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
                           />
+
+                          <!-- Floating Dropdown menu (appears only after typing 2+ letters) -->
+                          <div
+                            v-if="getRowState(tx.id, tx).showWhoDropdown && getContactSuggestions(getRowState(tx.id, tx).who).length > 0"
+                            class="absolute left-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl z-30 max-h-48 overflow-y-auto divide-y divide-slate-100"
+                          >
+                            <button
+                              v-for="c in getContactSuggestions(getRowState(tx.id, tx).who)"
+                              :key="c.id"
+                              type="button"
+                              @mousedown.prevent="getRowState(tx.id, tx).who = c.name; getRowState(tx.id, tx).showWhoDropdown = false"
+                              class="w-full text-left px-3 py-1.5 hover:bg-sky-50 flex items-center justify-between text-xs transition-colors cursor-pointer"
+                            >
+                              <div>
+                                <span class="font-bold text-slate-900 block text-xs">{{ c.name }}</span>
+                                <span class="text-[10px] text-slate-500 block">{{ c.role || c.kind }}</span>
+                              </div>
+                              <span class="text-[10px] text-sky-700 font-mono font-bold bg-sky-50 px-1.5 py-0.5 rounded border border-sky-100">Select</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
 
@@ -2498,8 +2529,35 @@ const getTypeBadge = (type) => {
                     <input type="checkbox" :value="tx.id" v-model="selectedCashCodingTx" class="rounded text-sky-600 focus:ring-sky-500" />
                   </td>
                   <td class="py-2 px-3 text-slate-500 font-mono text-[11px] whitespace-nowrap">{{ tx.transaction_date }}</td>
-                  <td class="py-2 px-3">
-                    <input v-model="getRowState(tx.id, tx).who" type="text" list="contacts-autocomplete-list" placeholder="Contact..." class="w-full px-2 py-1 border border-slate-300 rounded text-xs" />
+                  <td class="py-2 px-3 relative">
+                    <input
+                      v-model="getRowState(tx.id, tx).who"
+                      @focus="getRowState(tx.id, tx).showWhoDropdown = true"
+                      @blur="setTimeout(() => { getRowState(tx.id, tx).showWhoDropdown = false; }, 200)"
+                      type="text"
+                      placeholder="Contact..."
+                      class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-sky-500"
+                    />
+
+                    <!-- Floating Dropdown menu -->
+                    <div
+                      v-if="getRowState(tx.id, tx).showWhoDropdown && getContactSuggestions(getRowState(tx.id, tx).who).length > 0"
+                      class="absolute left-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-30 max-h-48 overflow-y-auto divide-y divide-slate-100"
+                    >
+                      <button
+                        v-for="c in getContactSuggestions(getRowState(tx.id, tx).who)"
+                        :key="c.id"
+                        type="button"
+                        @mousedown.prevent="getRowState(tx.id, tx).who = c.name; getRowState(tx.id, tx).showWhoDropdown = false"
+                        class="w-full text-left px-3 py-1.5 hover:bg-sky-50 flex items-center justify-between text-xs transition-colors cursor-pointer"
+                      >
+                        <div>
+                          <span class="font-bold text-slate-900 block text-xs">{{ c.name }}</span>
+                          <span class="text-[10px] text-slate-500 block">{{ c.role || c.kind }}</span>
+                        </div>
+                        <span class="text-[10px] text-sky-700 font-mono font-bold bg-sky-50 px-1.5 py-0.5 rounded border border-sky-100">Select</span>
+                      </button>
+                    </div>
                   </td>
                   <td class="py-2 px-3">
                     <input v-model="getRowState(tx.id, tx).why" type="text" placeholder="Description..." class="w-full px-2 py-1 border border-slate-300 rounded text-xs" />
@@ -2611,13 +2669,6 @@ const getTypeBadge = (type) => {
             </table>
           </div>
         </div>
-
-        <!-- HTML Autocomplete Datalist for Contacts & Members -->
-        <datalist id="contacts-autocomplete-list">
-          <option v-for="c in filteredContacts" :key="c.id" :value="c.name">
-            {{ c.role || c.kind }} — {{ c.email }}
-          </option>
-        </datalist>
 
       </div>
 
