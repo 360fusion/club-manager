@@ -295,9 +295,19 @@ const rowStates = ref({});
 const getRowState = (txId, tx) => {
   if (!rowStates.value[txId]) {
     const hasMatches = tx?.suggested_matches && tx.suggested_matches.length > 0;
+    
+    let autoWho = tx?.contact_name || '';
+    if (!autoWho && tx?.raw_description && filteredContacts.value?.length > 0) {
+      const descLower = tx.raw_description.toLowerCase();
+      const match = filteredContacts.value.find(c => c.name && c.name.length > 2 && descLower.includes(c.name.toLowerCase()));
+      if (match) {
+        autoWho = match.name;
+      }
+    }
+
     rowStates.value[txId] = {
       tab: hasMatches ? 'Match' : 'Create',
-      who: tx?.contact_name || '',
+      who: autoWho,
       what: tx?.amount > 0 ? '2150' : '700',
       why: tx?.raw_description || '',
       category: 'General',
@@ -2325,6 +2335,7 @@ const getTypeBadge = (type) => {
                           <input
                             v-model="getRowState(tx.id, tx).who"
                             type="text"
+                            list="contacts-autocomplete-list"
                             placeholder="Name of the contact..."
                             class="w-full px-2.5 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
                           />
@@ -2488,7 +2499,7 @@ const getTypeBadge = (type) => {
                   </td>
                   <td class="py-2 px-3 text-slate-500 font-mono text-[11px] whitespace-nowrap">{{ tx.transaction_date }}</td>
                   <td class="py-2 px-3">
-                    <input v-model="getRowState(tx.id, tx).who" type="text" placeholder="Contact..." class="w-full px-2 py-1 border border-slate-300 rounded text-xs" />
+                    <input v-model="getRowState(tx.id, tx).who" type="text" list="contacts-autocomplete-list" placeholder="Contact..." class="w-full px-2 py-1 border border-slate-300 rounded text-xs" />
                   </td>
                   <td class="py-2 px-3">
                     <input v-model="getRowState(tx.id, tx).why" type="text" placeholder="Description..." class="w-full px-2 py-1 border border-slate-300 rounded text-xs" />
@@ -2600,6 +2611,13 @@ const getTypeBadge = (type) => {
             </table>
           </div>
         </div>
+
+        <!-- HTML Autocomplete Datalist for Contacts & Members -->
+        <datalist id="contacts-autocomplete-list">
+          <option v-for="c in filteredContacts" :key="c.id" :value="c.name">
+            {{ c.role || c.kind }} — {{ c.email }}
+          </option>
+        </datalist>
 
       </div>
 
