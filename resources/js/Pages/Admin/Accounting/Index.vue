@@ -201,6 +201,19 @@ const filteredStatementLines = computed(() => {
   return list;
 });
 
+const selectedStatementLines = computed(() => {
+  const allLines = props.reconciliation?.statement_lines || [];
+  return allLines.filter(l => selectedStatementLineIds.value.includes(l.id));
+});
+
+const deletableStatementLines = computed(() => {
+  return selectedStatementLines.value.filter(l => l.status !== 'Deleted');
+});
+
+const restorableStatementLines = computed(() => {
+  return selectedStatementLines.value.filter(l => l.status === 'Deleted');
+});
+
 const toggleStatementLinesSelectAll = () => {
   if (selectedStatementLineIds.value.length === filteredStatementLines.value.length) {
     selectedStatementLineIds.value = [];
@@ -210,9 +223,10 @@ const toggleStatementLinesSelectAll = () => {
 };
 
 const deleteSelectedStatementLines = () => {
-  if (selectedStatementLineIds.value.length === 0) return;
+  const ids = deletableStatementLines.value.map(l => l.id);
+  if (ids.length === 0) return;
   router.post(route('admin.accounting.statement_lines.delete', props.club.slug), {
-    transaction_ids: selectedStatementLineIds.value,
+    transaction_ids: ids,
   }, {
     preserveScroll: true,
     onSuccess: () => {
@@ -222,9 +236,10 @@ const deleteSelectedStatementLines = () => {
 };
 
 const restoreSelectedStatementLines = () => {
-  if (selectedStatementLineIds.value.length === 0) return;
+  const ids = restorableStatementLines.value.map(l => l.id);
+  if (ids.length === 0) return;
   router.post(route('admin.accounting.statement_lines.restore', props.club.slug), {
-    transaction_ids: selectedStatementLineIds.value,
+    transaction_ids: ids,
   }, {
     preserveScroll: true,
     onSuccess: () => {
@@ -2704,20 +2719,20 @@ const getTypeBadge = (type) => {
             </div>
             <div class="flex items-center gap-2">
               <button
-                v-if="selectedStatementLineIds.length > 0 && statementLinesFilter !== 'deleted'"
+                v-if="deletableStatementLines.length > 0"
                 type="button"
                 @click="deleteSelectedStatementLines"
                 class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-lg shadow transition-all cursor-pointer flex items-center gap-1.5"
               >
-                Delete ({{ selectedStatementLineIds.length }})
+                Delete ({{ deletableStatementLines.length }})
               </button>
               <button
-                v-if="selectedStatementLineIds.length > 0 && (statementLinesFilter === 'deleted' || statementLinesFilter === 'all')"
+                v-if="restorableStatementLines.length > 0"
                 type="button"
                 @click="restoreSelectedStatementLines"
                 class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-lg shadow transition-all cursor-pointer flex items-center gap-1.5"
               >
-                Restore ({{ selectedStatementLineIds.length }})
+                Restore ({{ restorableStatementLines.length }})
               </button>
               <button type="button" @click="showImportModal = true" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-lg shadow cursor-pointer">
                 + Upload Statement
