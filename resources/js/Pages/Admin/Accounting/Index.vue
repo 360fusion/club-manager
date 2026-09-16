@@ -373,7 +373,6 @@ const submitRowReconcile = (tx) => {
   if (state.tab === 'Create') {
     if (!state.what) {
       state.showWhatError = true;
-      alert('Please select an account code (What) before reconciling.');
       return;
     }
     reconcileForm.transaction_id = tx.id;
@@ -390,7 +389,6 @@ const submitRowReconcile = (tx) => {
     } else {
       if (!state.what) {
         state.showWhatError = true;
-        alert('Please select an account code (What) before reconciling.');
         return;
       }
       reconcileForm.transaction_id = tx.id;
