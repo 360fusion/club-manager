@@ -434,6 +434,29 @@ class AccountingAdminController extends Controller
         return redirect()->back()->with('success', count($ids) . ' statement line(s) restored.');
     }
 
+    public function removeAndRedoAccountTransactions(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $rawIds = (array) $request->input('transaction_ids', []);
+
+        $txIds = [];
+        foreach ($rawIds as $id) {
+            if (is_numeric($id)) {
+                $txIds[] = (int)$id;
+            } elseif (is_string($id) && str_starts_with($id, 'tx_')) {
+                $txIds[] = (int)str_replace('tx_', '', $id);
+            }
+        }
+
+        if (!empty($txIds)) {
+            BankTransaction::where('club_id', $club->id)
+                ->whereIn('id', $txIds)
+                ->update(['status' => BankTransactionStatus::Unmatched->value]);
+        }
+
+        return redirect()->back()->with('success', count($txIds) . ' transaction(s) un-reconciled and returned to the Reconcile queue.');
+    }
+
     public function importBankStatement(Request $request, string $clubSlug): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();

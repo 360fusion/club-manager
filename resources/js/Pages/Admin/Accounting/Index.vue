@@ -248,6 +248,29 @@ const restoreSelectedStatementLines = () => {
   });
 };
 
+const selectedAccountTxIds = ref([]);
+
+const toggleAccountTxSelectAll = () => {
+  const allTx = props.reconciliation?.account_transactions || [];
+  if (selectedAccountTxIds.value.length === allTx.length) {
+    selectedAccountTxIds.value = [];
+  } else {
+    selectedAccountTxIds.value = allTx.map(t => t.id);
+  }
+};
+
+const removeAndRedoSelectedAccountTransactions = () => {
+  if (selectedAccountTxIds.value.length === 0) return;
+  router.post(route('admin.accounting.account_transactions.remove_redo', props.club.slug), {
+    transaction_ids: selectedAccountTxIds.value,
+  }, {
+    preserveScroll: true,
+    onSuccess: () => {
+      selectedAccountTxIds.value = [];
+    }
+  });
+};
+
 const filterType = ref('all');
 const filterMinAmount = ref('');
 const filterMaxAmount = ref('');
@@ -2802,13 +2825,24 @@ const getTypeBadge = (type) => {
 
         <!-- SUB-TAB 4: ACCOUNT TRANSACTIONS -->
         <div v-else-if="reconSubTab === 'account_transactions'" class="space-y-4">
-          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center justify-between">
+          <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center justify-between gap-4">
             <div>
               <h4 class="font-black text-slate-900 text-sm">Internal System Account Transactions History</h4>
               <p class="text-xs text-slate-500">Internal bookkeeping entries created inside your books (bills, invoices, spend/receive money).</p>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-slate-400">Showing all internal transactions</span>
+            <div class="flex items-center gap-3">
+              <span v-if="selectedAccountTxIds.length === 0" class="text-xs text-slate-400">Showing all internal transactions</span>
+              <span v-else class="text-xs font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                {{ selectedAccountTxIds.length }} transaction(s) selected
+              </span>
+              <button
+                v-if="selectedAccountTxIds.length > 0"
+                type="button"
+                @click="removeAndRedoSelectedAccountTransactions"
+                class="px-3.5 py-1.5 bg-[#008ba8] hover:bg-[#00768f] text-white font-extrabold text-xs rounded-lg shadow transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                Remove &amp; Redo ({{ selectedAccountTxIds.length }})
+              </button>
             </div>
           </div>
 
@@ -2817,7 +2851,12 @@ const getTypeBadge = (type) => {
               <thead class="bg-slate-50 text-[11px] font-bold text-slate-600 border-b border-slate-200">
                 <tr>
                   <th class="py-2.5 px-3 w-8">
-                    <input type="checkbox" class="rounded text-sky-600 focus:ring-sky-500" />
+                    <input
+                      type="checkbox"
+                      @change="toggleAccountTxSelectAll"
+                      :checked="selectedAccountTxIds.length === (reconciliation.account_transactions || []).length && (reconciliation.account_transactions || []).length > 0"
+                      class="rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+                    />
                   </th>
                   <th class="py-2.5 px-3">Date</th>
                   <th class="py-2.5 px-3">Type</th>
@@ -2831,7 +2870,12 @@ const getTypeBadge = (type) => {
               <tbody class="divide-y divide-slate-100 font-medium">
                 <tr v-for="tx in reconciliation.account_transactions || []" :key="tx.id" class="hover:bg-slate-50/80 transition-colors">
                   <td class="py-2.5 px-3">
-                    <input type="checkbox" class="rounded text-sky-600 focus:ring-sky-500" />
+                    <input
+                      type="checkbox"
+                      :value="tx.id"
+                      v-model="selectedAccountTxIds"
+                      class="rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+                    />
                   </td>
                   <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">{{ tx.transaction_date }}</td>
                   <td class="py-2.5 px-3 text-slate-600 font-medium">{{ tx.type }}</td>

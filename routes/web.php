@@ -208,6 +208,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/accounting/ignore-transaction', [\App\Http\Controllers\AccountingAdminController::class, 'ignoreBankTransaction'])->name('admin.accounting.ignore_transaction');
     Route::post('/clubs/{clubSlug}/admin/accounting/statement-lines/delete', [\App\Http\Controllers\AccountingAdminController::class, 'deleteBankStatementLines'])->name('admin.accounting.statement_lines.delete');
     Route::post('/clubs/{clubSlug}/admin/accounting/statement-lines/restore', [\App\Http\Controllers\AccountingAdminController::class, 'restoreBankStatementLines'])->name('admin.accounting.statement_lines.restore');
+    Route::post('/clubs/{clubSlug}/admin/accounting/account-transactions/remove-and-redo', [\App\Http\Controllers\AccountingAdminController::class, 'removeAndRedoAccountTransactions'])->name('admin.accounting.account_transactions.remove_redo');
     Route::post('/clubs/{clubSlug}/admin/accounting/import-statement', [\App\Http\Controllers\AccountingAdminController::class, 'importBankStatement'])->name('admin.accounting.import_statement');
 
     // Lodge Committee & Board Governance Routes (Livewire Domain)
