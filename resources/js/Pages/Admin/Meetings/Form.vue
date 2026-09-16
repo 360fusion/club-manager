@@ -35,15 +35,15 @@ const form = useForm({
   honorary_members_text: props.meeting.honorary_members_text || 'RW Bro Sir David Hugh Wootton Past Deputy Grand Master',
   provincial_header_text: props.meeting.provincial_header_text || 'PROVINCIAL GRAND LODGE\nProvincial Grand Master\nR WBro John David Watts',
   fraternal_visits_text: props.meeting.fraternal_visits_text || 'The Worshipful Master and Brethren of Haven of Rest Lodge No 4350 will be making their fraternal visit.',
-  officers_year_label: props.meeting.officers_year_label || 'OFFICERS FOR 2025-2026',
+  officers_year_label: props.meeting.officers_year_label || props.club.settings?.officers_year_label || 'OFFICERS FOR 2025-2026',
 
   // Front Page Cover Fields
   front_page_logo: props.meeting.front_page_logo || '',
   front_page_logo_file: null,
-  front_page_title: props.meeting.front_page_title || 'PROVINCIAL GRAND LODGE',
-  provincial_grand_master: props.meeting.provincial_grand_master || 'R WBro John David Watts',
-  deputy_provincial_grand_master: props.meeting.deputy_provincial_grand_master || 'WBro Andrew Peter Faul Foster PSGD',
-  assistant_provincial_grand_masters: props.meeting.assistant_provincial_grand_masters || "WBro Dr. Rakesh Bhalla PSGD\nWBro Thomas Fred Gittins PSGD\nWBro Martin Rankin PJGD\nWBro Michael Stuart Shaw PJGD\nWBro Lt Col John William Henry",
+  front_page_title: props.meeting.front_page_title || props.club.settings?.provincial_name?.toUpperCase() || 'PROVINCIAL GRAND LODGE',
+  provincial_grand_master: props.meeting.provincial_grand_master || props.club.settings?.provincial_grand_master || 'R WBro John David Watts',
+  deputy_provincial_grand_master: props.meeting.deputy_provincial_grand_master || props.club.settings?.deputy_provincial_grand_master || 'WBro Andrew Peter Faul Foster PSGD',
+  assistant_provincial_grand_masters: props.meeting.assistant_provincial_grand_masters || props.club.settings?.assistant_provincial_grand_masters || "WBro Dr. Rakesh Bhalla PSGD\nWBro Thomas Fred Gittins PSGD\nWBro Martin Rankin PJGD\nWBro Michael Stuart Shaw PJGD\nWBro Lt Col John William Henry",
   cover_club_name: props.meeting.cover_club_name || props.club.name,
   cover_club_number: props.meeting.cover_club_number || (props.club.lodge_number || '1418'),
   cover_motto: props.meeting.cover_motto || (props.club.motto || 'Fraternus Amor Maneto'),
@@ -71,6 +71,25 @@ const clearLogo = () => {
   form.front_page_logo = '';
   form.front_page_logo_file = null;
   logoPreview.value = '';
+};
+
+const importProvincialRulersFromSettings = () => {
+  const s = props.club?.settings || {};
+  if (s.provincial_name) form.front_page_title = s.provincial_name.toUpperCase();
+  if (s.provincial_grand_master) form.provincial_grand_master = s.provincial_grand_master;
+  if (s.deputy_provincial_grand_master) form.deputy_provincial_grand_master = s.deputy_provincial_grand_master;
+  if (s.assistant_provincial_grand_masters) form.assistant_provincial_grand_masters = s.assistant_provincial_grand_masters;
+};
+
+const importOfficersFromSettings = () => {
+  const s = props.club?.settings || {};
+  if (s.officers_year_label) form.officers_year_label = s.officers_year_label;
+  if (Array.isArray(s.officers_roster)) {
+    const master = s.officers_roster.find(o => o.role && o.role.toLowerCase().includes('master'));
+    if (master && master.name) {
+      form.cover_worshipful_master = master.name;
+    }
+  }
 };
 
 const addAgendaItem = () => {
@@ -212,8 +231,19 @@ const submit = () => {
             
             <!-- SECTION 0: Front Page Cover Page -->
             <div v-show="activeSection === 'front_page'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
-              <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">🏛️ Front Page — PDF Cover Configuration</h3>
-              <p class="text-xs text-slate-500">Configure the emblem, province header, lodge title, motto, and Worshipful Master details rendered on Page 1 (Cover Page).</p>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 class="text-base font-bold text-slate-900">🏛️ Front Page — PDF Cover Configuration</h3>
+                  <p class="text-xs text-slate-500">Configure the emblem, province header, lodge title, motto, and Worshipful Master details rendered on Page 1 (Cover Page).</p>
+                </div>
+                <button
+                  type="button"
+                  @click="importProvincialRulersFromSettings"
+                  class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-start sm:self-auto"
+                >
+                  👔 Import Provincial Rulers
+                </button>
+              </div>
 
               <div>
                 <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Logo / Emblem Image Upload</label>
@@ -378,8 +408,19 @@ const submit = () => {
 
             <!-- SECTION 3: Officers for Year -->
             <div v-show="activeSection === 'officers'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
-              <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">👔 OFFICERS FOR 2025-2026</h3>
-              <p class="text-xs text-slate-500">This section renders on the left column of Page 2. Member ranks and assigned lodge officer roles populate automatically.</p>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 class="text-base font-bold text-slate-900">👔 OFFICERS FOR THE YEAR</h3>
+                  <p class="text-xs text-slate-500">This section renders on the left column of Page 2. Member ranks and assigned lodge officer roles populate automatically.</p>
+                </div>
+                <button
+                  type="button"
+                  @click="importOfficersFromSettings"
+                  class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-start sm:self-auto"
+                >
+                  👔 Import Roster Banner
+                </button>
+              </div>
 
               <div>
                 <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Section Header Label</label>

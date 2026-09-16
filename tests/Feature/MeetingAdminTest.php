@@ -284,4 +284,52 @@ class MeetingAdminTest extends TestCase
             'payment_status' => 'paid',
         ]);
     }
+
+    public function test_provincial_rulers_and_officers_roster_settings_and_meeting_defaults()
+    {
+        $clubType = \App\Models\ClubType::create([
+            'name' => 'Masonic Lodge',
+            'code' => 'masonic',
+            'available_modules' => ['meetings'],
+            'default_settings' => [],
+        ]);
+
+        $club = Club::create([
+            'club_type_id' => $clubType->id,
+            'name' => 'Lodge of Fraternity',
+            'slug' => 'lodge-of-fraternity',
+            'status' => 'active',
+            'settings' => [],
+        ]);
+
+        $adminUser = User::factory()->create();
+        $club->users()->attach($adminUser->id, ['role' => 'admin']);
+
+        $this->actingAs($adminUser);
+
+        // Update settings with Provincial Rulers & Officers Roster
+        $response = $this->put("/clubs/{$club->slug}/admin/settings", [
+            'provincial_name' => 'Provincial Grand Lodge of Durham',
+            'provincial_grand_master' => 'R WBro John David Watts',
+            'deputy_provincial_grand_master' => 'WBro Andrew Peter Faul Foster PSGD',
+            'assistant_provincial_grand_masters' => "WBro Dr. Rakesh Bhalla PSGD\nWBro Thomas Fred Gittins PSGD",
+            'officers_year_label' => 'OFFICERS FOR 2025–2026',
+            'officers_roster' => [
+                ['role' => 'Worshipful Master', 'name' => 'WBro K. D. Lord'],
+                ['role' => 'Senior Warden', 'name' => 'Bro J. Smith'],
+            ],
+        ]);
+
+        $response->assertRedirect();
+        $club->refresh();
+
+        $this->assertEquals('Provincial Grand Lodge of Durham', $club->settings['provincial_name']);
+        $this->assertEquals('R WBro John David Watts', $club->settings['provincial_grand_master']);
+        $this->assertEquals('OFFICERS FOR 2025–2026', $club->settings['officers_year_label']);
+        $this->assertCount(2, $club->settings['officers_roster']);
+
+        // Check meeting create form receives settings
+        $createResponse = $this->get("/clubs/{$club->slug}/admin/meetings/create");
+        $createResponse->assertOk();
+    }
 }

@@ -54,7 +54,7 @@ const switchProvider = (provider) => {
 };
 
 const validTabs = [
-  'general', 'positions', 'branding', 'roles', 'modules',
+  'general', 'positions', 'officers', 'branding', 'roles', 'modules',
   'accounting', 'subscriptions', 'payments', 'events', 'dining',
   'communications', 'website', 'bookings', 'performance'
 ];
@@ -161,6 +161,30 @@ const form = useForm({
     'Royal Arch Representative (Royal Arch Rep)',
     'Durham FC Representative (Durham FC Rep)',
     'Mentoring & Members Co-ordinator (MenCo-ord)',
+  ],
+  provincial_name: props.settings.provincial_name || 'Provincial Grand Lodge of Durham',
+  provincial_grand_master: props.settings.provincial_grand_master || 'R WBro John David Watts',
+  deputy_provincial_grand_master: props.settings.deputy_provincial_grand_master || 'WBro Andrew Peter Faul Foster PSGD',
+  assistant_provincial_grand_masters: props.settings.assistant_provincial_grand_masters || "WBro Dr. Rakesh Bhalla PSGD\nWBro Thomas Fred Gittins PSGD\nWBro Martin Rankin PJGD\nWBro Michael Stuart Shaw PJGD\nWBro Lt Col John William Henry",
+  officers_year_label: props.settings.officers_year_label || 'OFFICERS FOR 2025-2026',
+  officers_roster: props.settings.officers_roster || [
+    { role: 'Worshipful Master', name: 'W. Bro. K. D. Lord' },
+    { role: 'Senior Warden', name: 'Bro. A. Smith' },
+    { role: 'Junior Warden', name: 'Bro. M. Johnson' },
+    { role: 'Chaplain', name: 'W. Bro. P. Davies' },
+    { role: 'Treasurer', name: 'W. Bro. M. Brown' },
+    { role: 'Secretary', name: 'W. Bro. R. Wilson' },
+    { role: 'Director of Ceremonies', name: 'W. Bro. T. Anderson' },
+    { role: 'Almoner', name: 'W. Bro. G. Martin' },
+    { role: 'Charity Steward', name: 'W. Bro. E. Clark' },
+    { role: 'Senior Deacon', name: 'Bro. C. White' },
+    { role: 'Junior Deacon', name: 'Bro. D. Harris' },
+    { role: 'Assistant Director of Ceremonies', name: 'W. Bro. P. Lewis' },
+    { role: 'Organist', name: 'Bro. S. Walker' },
+    { role: 'Assistant Secretary', name: 'Bro. A. Hall' },
+    { role: 'Inner Guard', name: 'Bro. M. Allen' },
+    { role: 'Steward', name: 'Bro. J. Young' },
+    { role: 'Tyler', name: 'Bro. D. King' },
   ],
   custom_domain: props.club.custom_domain || '',
   enabled_modules: props.settings.enabled_modules || [],
@@ -410,6 +434,27 @@ const updateMemberRank = (userId, newRank) => {
     { preserveScroll: true }
   );
 };
+
+// Officer Roster Helper Functions
+const addOfficerRow = () => {
+  form.officers_roster.push({ role: '', name: '' });
+};
+
+const removeOfficerRow = (index) => {
+  form.officers_roster.splice(index, 1);
+};
+
+const moveOfficerUp = (index) => {
+  if (index <= 0) return;
+  const item = form.officers_roster.splice(index, 1)[0];
+  form.officers_roster.splice(index - 1, 0, item);
+};
+
+const moveOfficerDown = (index) => {
+  if (index >= form.officers_roster.length - 1) return;
+  const item = form.officers_roster.splice(index, 1)[0];
+  form.officers_roster.splice(index + 1, 0, item);
+};
 </script>
 
 <template>
@@ -466,6 +511,7 @@ const updateMemberRank = (userId, newRank) => {
               <optgroup label="Workspace & Security">
                 <option value="general">🏢 General Profile & Access</option>
                 <option value="positions">🎖️ Club Positions & Ranks</option>
+                <option value="officers">👔 Provincial & Officers Roster</option>
                 <option value="branding">🎨 Branding & Custom Domain</option>
                 <option value="roles">🛡️ Roles & Permissions</option>
                 <option value="modules">⚡ Active Feature Modules</option>
@@ -511,6 +557,16 @@ const updateMemberRank = (userId, newRank) => {
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>🎖️</span> Club Positions</span>
+                </button>
+
+                <button
+                  @click="activeTab = 'officers'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'officers' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>👔</span> Officers Roster</span>
                 </button>
 
                 <button
@@ -1112,6 +1168,148 @@ const updateMemberRank = (userId, newRank) => {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- TAB: PROVINCIAL & OFFICERS ROSTER -->
+      <div v-if="activeTab === 'officers'" class="space-y-6">
+        
+        <!-- Provincial Executive Card -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">🏛️ Provincial Executive & Rulers</h2>
+            <p class="text-xs text-slate-500 mt-1">Configure annual Provincial Grand Lodge rulers and executive officers. These settings automatically populate new meeting summonses.</p>
+          </div>
+
+          <div class="space-y-4 text-xs">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Provincial Title / Name</label>
+                <input v-model="form.provincial_name" type="text" placeholder="Provincial Grand Lodge of Durham" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Provincial Grand Master</label>
+                <input v-model="form.provincial_grand_master" type="text" placeholder="R WBro John David Watts" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Deputy Provincial Grand Master</label>
+                <input v-model="form.deputy_provincial_grand_master" type="text" placeholder="WBro Andrew Peter Faul Foster PSGD" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Assistant Provincial Grand Masters (One per line)</label>
+                <textarea v-model="form.assistant_provincial_grand_masters" rows="4" placeholder="WBro Dr. Rakesh Bhalla PSGD..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-xs"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Annual Officers Roster Card -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-3">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">👔 Annual Officers Roster</h2>
+              <p class="text-xs text-slate-500 mt-1">Maintain the master Lodge Officers list for the current installation year. Secretaries can import this into summonses with one click.</p>
+            </div>
+            <button
+              type="button"
+              @click="addOfficerRow"
+              class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+            >
+              + Add Officer Role
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Officers Year Banner Label</label>
+              <input v-model="form.officers_year_label" type="text" placeholder="OFFICERS FOR 2025-2026" class="w-full sm:w-96 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
+                    <th class="py-3 px-3 w-12 text-center">#</th>
+                    <th class="py-3 px-4">Officer Role Title</th>
+                    <th class="py-3 px-4">Assigned Member / Officer Name</th>
+                    <th class="py-3 px-3 text-right w-32">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                  <tr v-for="(item, idx) in form.officers_roster" :key="idx" class="hover:bg-slate-50/50">
+                    <td class="py-2.5 px-3 text-center font-bold text-slate-400">
+                      {{ idx + 1 }}
+                    </td>
+
+                    <td class="py-2.5 px-4">
+                      <input
+                        v-model="item.role"
+                        type="text"
+                        placeholder="e.g. Worshipful Master"
+                        class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </td>
+
+                    <td class="py-2.5 px-4">
+                      <div class="flex items-center gap-2">
+                        <input
+                          v-model="item.name"
+                          type="text"
+                          placeholder="e.g. W. Bro. K. D. Lord"
+                          class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        <select
+                          @change="e => { if (e.target.value) item.name = e.target.value }"
+                          class="px-2 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-medium cursor-pointer text-slate-600"
+                        >
+                          <option value="">Select Member...</option>
+                          <option v-for="m in members" :key="m.id" :value="`${m.pivot?.rank_prefix || 'W. Bro.'} ${m.name}`">
+                            {{ m.name }} ({{ m.pivot?.rank || 'Member' }})
+                          </option>
+                        </select>
+                      </div>
+                    </td>
+
+                    <td class="py-2.5 px-3 text-right space-x-1">
+                      <button
+                        type="button"
+                        @click="moveOfficerUp(idx)"
+                        :disabled="idx === 0"
+                        class="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                        title="Move Up"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        @click="moveOfficerDown(idx)"
+                        :disabled="idx === form.officers_roster.length - 1"
+                        class="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                        title="Move Down"
+                      >
+                        ▼
+                      </button>
+                      <button
+                        type="button"
+                        @click="removeOfficerRow(idx)"
+                        class="p-1 text-rose-500 hover:text-rose-700 cursor-pointer"
+                        title="Delete Role"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
       </div>
 
       <!-- TAB 3: ROLES & PERMISSIONS -->

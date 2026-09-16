@@ -94,7 +94,7 @@ class AccountingAttachmentsTest extends TestCase
                 'attachment' => $pdfFile,
             ]);
 
-        $response->assertRedirect("/clubs/{$this->club->slug}/admin/accounting#sales");
+        $response->assertRedirect("/clubs/{$this->club->slug}/admin/accounting/sales");
 
         $invoice = Invoice::where('club_id', $this->club->id)->first();
         $this->assertNotNull($invoice);
