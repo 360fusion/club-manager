@@ -32,7 +32,7 @@
             <div class="flex items-center gap-3">
                 <span class="p-2.5 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/30">📜</span>
                 <div>
-                    <h1 class="text-2xl font-black tracking-tight">Candidate Pipeline & Statutory Vetting</h1>
+                    <h1 class="text-2xl font-black tracking-tight">Candidate Pipeline</h1>
                     <p class="text-xs text-slate-400 mt-1 font-medium">UGLE Rule 159 Candidate Progression, Form P Vetting &amp; Initiation Bridge</p>
                 </div>
             </div>

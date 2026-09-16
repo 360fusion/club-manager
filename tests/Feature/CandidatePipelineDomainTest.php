@@ -190,7 +190,7 @@ class CandidatePipelineDomainTest extends TestCase
 
         Livewire::test(CandidatePipeline::class, ['clubSlug' => $this->club->slug])
             ->assertStatus(200)
-            ->assertSee('Candidate Pipeline & Statutory Vetting', false)
+            ->assertSee('Candidate Pipeline', false)
             ->assertSee('Oliver Twist')
             ->call('editCandidate', $candidate->id)
             ->assertSet('first_name', 'Oliver')

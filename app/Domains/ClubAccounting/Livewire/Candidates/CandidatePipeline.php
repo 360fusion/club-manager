@@ -319,7 +319,7 @@ class CandidatePipeline extends Component
             'allCandidates' => $allCandidates,
             'activeMembers' => $activeMembers,
         ])->layout('components.layouts.app', [
-            'title' => 'Candidate Pipeline & Initiation Lifecycle — ' . $club->name,
+            'title' => 'Candidate Pipeline — ' . $club->name,
             'club' => $club,
         ]);
     }
