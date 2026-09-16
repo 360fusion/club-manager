@@ -354,20 +354,6 @@ const copyInviteLink = () => {
             <span class="text-lg">📋</span>
             <span>Candidates (Form P)</span>
           </a>
-
-          <!-- 13. Bank Reconciliation Workspace -->
-          <a
-            :href="route('admin.club_acc.bank_reconciliation.index', { clubSlug })"
-            :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
-              activeTab === 'bank_reconciliation'
-                ? 'bg-slate-800 text-white font-bold shadow-sm'
-                : 'hover:bg-slate-800 hover:text-white text-slate-300'
-            ]"
-          >
-            <span class="text-lg">🏦</span>
-            <span>Bank Reconciliation</span>
-          </a>
         </nav>
       </div>
 
