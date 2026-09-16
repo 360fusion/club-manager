@@ -164,11 +164,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/portal/subscriptions/{clubSlug}/{typeId}/toggle', [MemberSubscriptionsController::class, 'toggle'])->name('portal.subscriptions.toggle');
 
     // Admin Subscriptions Plans Routes
-    Route::get('/clubs/{clubSlug}/admin/subscriptions', [MembershipAdminController::class, 'index'])->name('admin.memberships.index');
-    Route::get('/clubs/{clubSlug}/admin/subscriptions/create', [MembershipAdminController::class, 'edit'])->name('admin.memberships.create');
-    Route::get('/clubs/{clubSlug}/admin/subscriptions/{id}/edit', [MembershipAdminController::class, 'edit'])->name('admin.memberships.edit');
-    Route::post('/clubs/{clubSlug}/admin/subscriptions', [MembershipAdminController::class, 'store'])->name('admin.memberships.store');
-    Route::delete('/clubs/{clubSlug}/admin/subscriptions/{id}', [MembershipAdminController::class, 'destroy'])->name('admin.memberships.destroy');
+    Route::get('/clubs/{clubSlug}/admin/subscriptions', function ($clubSlug) {
+        return redirect()->route('admin.club_acc.subscriptions.index', ['clubSlug' => $clubSlug]);
+    })->name('admin.memberships.index');
 
     // Admin Members Routes
     Route::get('/clubs/{clubSlug}/admin/users', [UserAdminController::class, 'index'])->name('admin.users.index');

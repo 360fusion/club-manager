@@ -113,6 +113,54 @@
         </div>
     </div>
 
+    <!-- Membership Fee Tiers & Pricing Grid -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                    <span>💳</span>
+                    <span>Membership Fee Tiers &amp; Pricing</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Active fee structures for annual subscription billing and member dues tiers.</p>
+            </div>
+            <button
+                type="button"
+                wire:click="openTierModal()"
+                class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer"
+            >
+                <span>+</span>
+                <span>Add Fee Tier</span>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            @forelse($tiers as $t)
+                <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex flex-col justify-between space-y-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-slate-900 text-sm">{{ $t->name }}</span>
+                            <span class="font-black text-amber-950 text-base">£{{ number_format($t->annual_amount, 2) }}</span>
+                        </div>
+                        <p class="text-xs text-slate-500">{{ $t->description ?: 'Standard annual membership subscription rate.' }}</p>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 text-xs">
+                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full {{ $t->is_active ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-200 text-slate-600' }}">
+                            {{ $t->is_active ? 'Active Tier' : 'Inactive' }}
+                        </span>
+                        <button type="button" wire:click="openTierModal({{ $t->id }})" class="text-xs text-amber-700 hover:underline font-bold">
+                            Edit Tier ✏️
+                        </button>
+                    </div>
+                </div>
+            @empty
+                <div class="md:col-span-3 p-6 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl">
+                    No custom fee tiers configured. Default £160.00 rate will apply to annual billing runs.
+                </div>
+            @endforelse
+        </div>
+    </div>
+
     <!-- Search & Filter Controls -->
     <div class="p-4 bg-white border border-slate-200/80 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="relative w-full md:w-80">

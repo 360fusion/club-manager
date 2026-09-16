@@ -85,13 +85,7 @@ class MultiClubWorkspaceTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('admin.memberships.index', ['clubSlug' => $club->slug]));
 
-        $response->assertStatus(200);
-        $response->assertInertia(fn ($page) => $page
-            ->component('Admin/Memberships/Index')
-            ->has('club')
-            ->has('activeProvider')
-            ->has('plans')
-        );
+        $response->assertRedirect(route('admin.club_acc.subscriptions.index', ['clubSlug' => $club->slug]));
     }
 
     public function test_legacy_oxford_boating_urls_redirect_to_lodge_of_fraternity(): void
