@@ -248,24 +248,6 @@
                         <span class="text-lg">🤝</span>
                         <span>Charity &amp; Festival</span>
                     </a>
-
-                    <!-- 13. Candidate Pipeline -->
-                    <a
-                        href="{{ route('admin.club_acc.candidates.index', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.club_acc.candidates.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
-                    >
-                        <span class="text-lg">📋</span>
-                        <span>Candidates (Form P)</span>
-                    </a>
-
-                    <!-- 14. Bank Reconciliation Workspace -->
-                    <a
-                        href="{{ route('admin.club_acc.bank_reconciliation.index', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.club_acc.bank_reconciliation.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
-                    >
-                        <span class="text-lg">🏦</span>
-                        <span>Bank Reconciliation</span>
-                    </a>
                 </nav>
             </div>
         </aside>
