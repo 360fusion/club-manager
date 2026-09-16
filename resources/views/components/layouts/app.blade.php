@@ -206,19 +206,7 @@
                         <span>Website Builder</span>
                     </a>
 
-                    <!-- 9. Club Settings -->
-                    <a
-                        href="{{ route('admin.settings.show', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
-                    >
-                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>Club Settings</span>
-                    </a>
-
-                    <!-- 10. File Manager -->
+                    <!-- 9. File Manager -->
                     <a
                         href="{{ route('admin.media.page', ['clubSlug' => $clubSlug]) }}"
                         class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
@@ -229,7 +217,7 @@
                         <span>File Manager</span>
                     </a>
 
-                    <!-- 11. Accounting -->
+                    <!-- 10. Accounting -->
                     <a
                         href="{{ route('admin.accounting.index', ['clubSlug' => $clubSlug]) }}"
                         class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.accounting.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
@@ -240,13 +228,25 @@
                         <span>Accounting</span>
                     </a>
 
-                    <!-- 12. Charity Steward & Festival -->
+                    <!-- 11. Charity Steward & Festival -->
                     <a
                         href="{{ route('admin.club_acc.charity.index', ['clubSlug' => $clubSlug]) }}"
                         class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.club_acc.charity.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
                     >
                         <span class="text-lg">🤝</span>
                         <span>Charity &amp; Festival</span>
+                    </a>
+
+                    <!-- 12. Club Settings -->
+                    <a
+                        href="{{ route('admin.settings.show', ['clubSlug' => $clubSlug]) }}"
+                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
+                    >
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Club Settings</span>
                     </a>
                 </nav>
             </div>
