@@ -149,12 +149,12 @@ const copyInviteLink = () => {
         </div>
 
         <!-- Navigation Links -->
-        <nav class="p-4 space-y-1 text-sm font-medium">
+        <nav class="p-3 space-y-0.5 text-sm font-medium">
           <!-- 1. Dashboard / Analytics -->
           <Link 
             :href="route('admin.analytics', clubSlug)" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'dashboard' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -170,7 +170,7 @@ const copyInviteLink = () => {
           <Link 
             :href="route('admin.meetings.index', { clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'meetings' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -186,7 +186,7 @@ const copyInviteLink = () => {
           <a 
             :href="route('admin.committee.index', { clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'committee' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -202,7 +202,7 @@ const copyInviteLink = () => {
           <Link 
             :href="route('admin.events.index', { clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'events' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -218,7 +218,7 @@ const copyInviteLink = () => {
           <a 
             :href="route('admin.club_acc.members.index', { clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'users' || activeTab === 'members' || activeTab === 'candidates' || activeTab === 'subscriptions'
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -234,7 +234,7 @@ const copyInviteLink = () => {
           <Link 
             :href="route('admin.posts.index', { clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'posts' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -250,7 +250,7 @@ const copyInviteLink = () => {
           <Link 
             :href="route('admin.newsletters.index', { clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'newsletters' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -266,7 +266,7 @@ const copyInviteLink = () => {
           <Link 
             :href="route('admin.pages.index', { clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'pages' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -282,7 +282,7 @@ const copyInviteLink = () => {
           <Link 
             :href="route('admin.settings.show', { clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'settings' || activeTab === 'profile' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -299,7 +299,7 @@ const copyInviteLink = () => {
           <Link
             :href="route('admin.media.page', { clubSlug })"
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'media'
                 ? 'bg-slate-800 text-white font-bold shadow-sm'
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -315,7 +315,7 @@ const copyInviteLink = () => {
           <Link
             :href="route('admin.accounting.index', { clubSlug })"
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'accounting'
                 ? 'bg-slate-800 text-white font-bold shadow-sm'
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -331,7 +331,7 @@ const copyInviteLink = () => {
           <a
             :href="route('admin.club_acc.charity.index', { clubSlug })"
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'charity'
                 ? 'bg-slate-800 text-white font-bold shadow-sm'
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'

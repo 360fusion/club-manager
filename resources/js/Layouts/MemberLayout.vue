@@ -99,12 +99,12 @@ const switchWorkspace = (targetClub) => {
         </div>
 
         <!-- Navigation Links -->
-        <nav class="p-4 space-y-1 text-sm font-medium">
+        <nav class="p-3 space-y-0.5 text-sm font-medium">
           <!-- 1. Member Dashboard -->
           <Link 
             :href="route('member.dashboard', clubSlug)" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'dashboard' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -120,7 +120,7 @@ const switchWorkspace = (targetClub) => {
           <Link 
             :href="route('member.clubs', { slug: clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'clubs' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -136,7 +136,7 @@ const switchWorkspace = (targetClub) => {
           <Link 
             :href="route('member.events', { slug: clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'events' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -152,7 +152,7 @@ const switchWorkspace = (targetClub) => {
           <Link 
             :href="route('member.dues', { slug: clubSlug })" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'dues' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -168,7 +168,7 @@ const switchWorkspace = (targetClub) => {
           <Link 
             :href="route('portal.subscriptions')" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'subscriptions' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
@@ -184,7 +184,7 @@ const switchWorkspace = (targetClub) => {
           <Link 
             :href="route('directory.index')" 
             :class="[
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
               activeTab === 'directory' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
