@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Models\BankImport;
+use App\Domains\ClubAccounting\Models\BankTransaction;
+use App\Domains\ClubAccounting\Models\MemberSubscription;
+use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
+use App\Domains\ClubAccounting\Services\BankStatementParserService;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\AccountingContact;
 use App\Models\Accounting\Bill;
@@ -213,6 +218,87 @@ class AccountingAdminController extends Controller
             'auto_invoice_days_before' => 7,
         ], $club->settings ?? []);
 
+        // Reconciliation Data Assembly
+        $matcher = app(BankReconciliationMatcherService::class);
+        $unmatchedTxModels = BankTransaction::where('club_id', $club->id)
+            ->where('status', 'unmatched')
+            ->orderBy('transaction_date', 'asc')
+            ->get();
+
+        $unmatchedTransactions = $unmatchedTxModels->map(function ($tx) use ($matcher) {
+            $suggestions = $matcher->suggestMatches($tx);
+            return [
+                'id' => $tx->id,
+                'transaction_date' => $tx->transaction_date->format('d M Y'),
+                'raw_description' => $tx->raw_description,
+                'reference' => $tx->reference,
+                'amount' => (float)$tx->amount,
+                'formatted_amount' => '£' . number_format((float)$tx->amount, 2),
+                'status' => $tx->status->value ?? (string)$tx->status,
+                'suggested_matches' => array_map(function ($m) {
+                    return [
+                        'match_type' => $m['match_type'],
+                        'target_id' => $m['target_id'],
+                        'target_title' => $m['target_title'],
+                        'target_amount' => (float)$m['target_amount'],
+                        'confidence_score' => $m['confidence_score'],
+                        'confidence_level' => $m['confidence_level'],
+                        'match_reason' => $m['match_reason'],
+                    ];
+                }, $suggestions),
+            ];
+        });
+
+        $reconciledTransactions = BankTransaction::where('club_id', $club->id)
+            ->where('status', 'reconciled')
+            ->orderByDesc('updated_at')
+            ->take(30)
+            ->get()
+            ->map(fn ($tx) => [
+                'id' => $tx->id,
+                'transaction_date' => $tx->transaction_date->format('d M Y'),
+                'raw_description' => $tx->raw_description,
+                'reference' => $tx->reference,
+                'amount' => (float)$tx->amount,
+                'formatted_amount' => '£' . number_format((float)$tx->amount, 2),
+                'status' => $tx->status->value ?? (string)$tx->status,
+                'updated_at' => $tx->updated_at->format('d M Y H:i'),
+            ]);
+
+        $bankImports = BankImport::where('club_id', $club->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn ($imp) => [
+                'id' => $imp->id,
+                'filename' => $imp->filename,
+                'account_number' => $imp->account_number,
+                'sort_code' => $imp->sort_code,
+                'total_lines' => $imp->total_lines,
+                'total_amount' => (float)$imp->total_amount,
+                'formatted_total' => '£' . number_format((float)$imp->total_amount, 2),
+                'created_at' => $imp->created_at->format('d M Y H:i'),
+            ]);
+
+        $unpaidSubscriptions = MemberSubscription::where('club_id', $club->id)
+            ->unpaid()
+            ->with('member')
+            ->get()
+            ->map(fn ($sub) => [
+                'id' => $sub->id,
+                'invoice_reference' => $sub->invoice_reference,
+                'member_name' => $sub->member ? $sub->member->full_name : 'Unknown Member',
+                'amount_due' => (float)$sub->balance_due,
+                'formatted_amount' => '£' . number_format((float)$sub->balance_due, 2),
+            ]);
+
+        $reconciliation = [
+            'unmatched_transactions' => $unmatchedTransactions,
+            'reconciled_transactions' => $reconciledTransactions,
+            'bank_imports' => $bankImports,
+            'unpaid_subscriptions' => $unpaidSubscriptions,
+            'unpaid_bills' => array_values(array_filter($bills->toArray(), fn ($b) => $b['status'] === 'unpaid')),
+        ];
+
         return Inertia::render('Admin/Accounting/Index', [
             'club' => [
                 'id' => $club->id,
@@ -228,7 +314,61 @@ class AccountingAdminController extends Controller
             'summary' => $summary,
             'reports' => $reports,
             'settings' => $clubSettings,
+            'reconciliation' => $reconciliation,
         ]);
+    }
+
+    public function reconcileBankTransaction(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $validated = $request->validate([
+            'transaction_id' => 'required|integer',
+            'match_type' => 'required|string',
+            'target_id' => 'required',
+            'nominal_code' => 'nullable|string',
+        ]);
+
+        $tx = BankTransaction::where('club_id', $club->id)
+            ->findOrFail($validated['transaction_id']);
+
+        $matcher = app(BankReconciliationMatcherService::class);
+        $matcher->reconcileTransaction($tx, $validated['match_type'], $validated['target_id'], [
+            'nominal_code' => $validated['nominal_code'] ?? 'GENERAL',
+        ]);
+
+        return redirect()->back()->with('success', 'Transaction successfully reconciled!');
+    }
+
+    public function ignoreBankTransaction(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $validated = $request->validate([
+            'transaction_id' => 'required|integer',
+        ]);
+
+        $tx = BankTransaction::where('club_id', $club->id)
+            ->findOrFail($validated['transaction_id']);
+
+        $matcher = app(BankReconciliationMatcherService::class);
+        $matcher->ignoreTransaction($tx);
+
+        return redirect()->back()->with('success', 'Transaction line ignored.');
+    }
+
+    public function importBankStatement(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $request->validate([
+            'statement_file' => 'required|file|mimes:csv,txt,ofx,qfx|max:10240',
+        ]);
+
+        $parser = app(BankStatementParserService::class);
+        $file = $request->file('statement_file');
+
+        $bundle = $parser->parseFile($file->getRealPath(), $file->getClientOriginalName(), $club->id);
+        $parser->importParsedBundle($club, $bundle);
+
+        return redirect()->back()->with('success', "Imported {$bundle['new_lines_count']} new statement lines successfully!");
     }
 
     public function storeAccount(Request $request, string $clubSlug): RedirectResponse

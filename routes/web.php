@@ -204,6 +204,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/accounting/contacts', [\App\Http\Controllers\AccountingAdminController::class, 'storeContact'])->name('admin.accounting.contacts.store');
     Route::put('/clubs/{clubSlug}/admin/accounting/contacts/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'updateContact'])->name('admin.accounting.contacts.update');
     Route::delete('/clubs/{clubSlug}/admin/accounting/contacts/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'destroyContact'])->name('admin.accounting.contacts.destroy');
+    Route::post('/clubs/{clubSlug}/admin/accounting/reconcile', [\App\Http\Controllers\AccountingAdminController::class, 'reconcileBankTransaction'])->name('admin.accounting.reconcile');
+    Route::post('/clubs/{clubSlug}/admin/accounting/ignore-transaction', [\App\Http\Controllers\AccountingAdminController::class, 'ignoreBankTransaction'])->name('admin.accounting.ignore_transaction');
+    Route::post('/clubs/{clubSlug}/admin/accounting/import-statement', [\App\Http\Controllers\AccountingAdminController::class, 'importBankStatement'])->name('admin.accounting.import_statement');
 
     // Lodge Committee & Board Governance Routes (Livewire Domain)
     Route::get('/clubs/{clubSlug}/admin/committee', \App\Domains\ClubAccounting\Livewire\Committee\MeetingIndex::class)->name('admin.committee.index');
@@ -232,7 +235,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/candidates', \App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline::class)->name('admin.club_acc.candidates.index');
     Route::get('/clubs/{clubSlug}/admin/dues-subscriptions', \App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex::class)->name('admin.club_acc.subscriptions.index');
     Route::get('/clubs/{clubSlug}/admin/bank-imports', \App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex::class)->name('admin.club_acc.bank_imports.index');
-    Route::get('/clubs/{clubSlug}/admin/bank-reconciliation', \App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace::class)->name('admin.club_acc.bank_reconciliation.index');
+    Route::get('/clubs/{clubSlug}/admin/bank-reconciliation', function ($clubSlug) {
+        return redirect()->route('admin.accounting.index', ['clubSlug' => $clubSlug, 'tab' => 'reconciliation']);
+    })->name('admin.club_acc.bank_reconciliation.index');
     Route::get('/clubs/{clubSlug}/admin/charity', \App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard::class)->name('admin.club_acc.charity.index');
 
     Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');

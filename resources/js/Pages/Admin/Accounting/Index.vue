@@ -76,9 +76,19 @@ const props = defineProps({
       auto_invoice_days_before: 7,
     }),
   },
+  reconciliation: {
+    type: Object,
+    default: () => ({
+      unmatched_transactions: [],
+      reconciled_transactions: [],
+      bank_imports: [],
+      unpaid_subscriptions: [],
+      unpaid_bills: [],
+    }),
+  },
 });
 
-const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'contacts', 'settings'];
+const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'reconciliation', 'contacts', 'settings'];
 
 const getTabFromUrl = () => {
   const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '').trim() : '';
@@ -113,6 +123,9 @@ onMounted(() => {
   if (typeof window !== 'undefined') {
     window.addEventListener('hashchange', syncTabWithUrl);
   }
+  if (props.reconciliation?.unmatched_transactions?.length > 0) {
+    selectedTx.value = props.reconciliation.unmatched_transactions[0];
+  }
 });
 
 onUnmounted(() => {
@@ -128,7 +141,92 @@ const showJournalModal = ref(false);
 const showInvoiceModal = ref(false);
 const showBillModal = ref(false);
 const showContactModal = ref(false);
+const showImportModal = ref(false);
+const showManualModal = ref(false);
 const editingContactId = ref(null);
+
+const selectedTx = ref(null);
+const reconSearch = ref('');
+const manualMatchType = ref('member_subscription');
+const manualTargetId = ref('');
+const manualNominalCode = ref('4000');
+
+const reconcileForm = useForm({
+  transaction_id: null,
+  match_type: '',
+  target_id: '',
+  nominal_code: 'GENERAL',
+});
+
+const ignoreForm = useForm({
+  transaction_id: null,
+});
+
+const importForm = useForm({
+  statement_file: null,
+});
+
+const filteredUnmatchedTx = computed(() => {
+  let list = props.reconciliation?.unmatched_transactions || [];
+  const q = reconSearch.value.trim().toLowerCase();
+  if (q) {
+    list = list.filter(t =>
+      t.raw_description?.toLowerCase().includes(q) ||
+      t.reference?.toLowerCase().includes(q) ||
+      t.formatted_amount?.includes(q)
+    );
+  }
+  return list;
+});
+
+const selectTx = (tx) => {
+  selectedTx.value = tx;
+};
+
+const openManualMatchModal = () => {
+  if (!selectedTx.value) return;
+  manualMatchType.value = selectedTx.value.amount > 0 ? 'member_subscription' : 'supplier_bill';
+  manualTargetId.value = '';
+  manualNominalCode.value = '4000';
+  showManualModal.value = true;
+};
+
+const submitReconcile = (matchType, targetId, nominalCode = 'GENERAL') => {
+  if (!selectedTx.value) return;
+  reconcileForm.transaction_id = selectedTx.value.id;
+  reconcileForm.match_type = matchType;
+  reconcileForm.target_id = targetId;
+  reconcileForm.nominal_code = nominalCode;
+  reconcileForm.post(route('admin.accounting.reconcile', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showManualModal.value = false;
+      const remaining = props.reconciliation?.unmatched_transactions?.filter(t => t.id !== selectedTx.value.id);
+      selectedTx.value = remaining && remaining.length > 0 ? remaining[0] : null;
+    },
+  });
+};
+
+const submitIgnore = (txId) => {
+  ignoreForm.transaction_id = txId;
+  ignoreForm.post(route('admin.accounting.ignore_transaction', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      const remaining = props.reconciliation?.unmatched_transactions?.filter(t => t.id !== txId);
+      selectedTx.value = remaining && remaining.length > 0 ? remaining[0] : null;
+    },
+  });
+};
+
+const submitStatementImport = () => {
+  importForm.post(route('admin.accounting.import_statement', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      importForm.reset('statement_file');
+      showImportModal.value = false;
+    },
+  });
+};
 
 const contactFilter = ref('all');
 
@@ -562,6 +660,20 @@ const getTypeBadge = (type) => {
             ]"
           >
             <span>Accounting</span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeTab = 'reconciliation'"
+            :class="[
+              'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
+              activeTab === 'reconciliation' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+            ]"
+          >
+            <span>⚡ Reconciliation</span>
+            <span v-if="reconciliation?.unmatched_transactions?.length > 0" class="px-1.5 py-0.5 text-[10px] font-black rounded-full bg-amber-500 text-slate-950">
+              {{ reconciliation.unmatched_transactions.length }}
+            </span>
           </button>
 
           <button
@@ -1733,6 +1845,244 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
+      <!-- VIEW 8: BANK RECONCILIATION WORKSPACE -->
+      <div v-if="activeTab === 'reconciliation'" class="space-y-6">
+        <!-- Header Banner & Action bar -->
+        <div class="p-6 bg-slate-900 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="p-2.5 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30 text-xl">⚡</span>
+            <div>
+              <h3 class="text-xl font-black tracking-tight">Bank Reconciliation Workspace</h3>
+              <p class="text-xs text-slate-400 mt-1 font-medium">Rule-Based Automatic Matcher for Member Subscriptions, Supplier Bills &amp; Relief Chest</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              @click="showImportModal = true"
+              class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-2"
+            >
+              <span>📂 Import Bank Statement (CSV/OFX)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2 Column Workspace Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- LEFT COLUMN: Unmatched Statement Lines List (5 Cols) -->
+          <div class="lg:col-span-5 space-y-4">
+            <div class="p-4 bg-white border border-slate-200/80 rounded-2xl shadow-sm space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="font-black text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <span>📥</span>
+                  <span>Unmatched Statement Lines</span>
+                </h4>
+                <span class="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-amber-100 text-amber-900">
+                  {{ reconciliation.unmatched_transactions?.length || 0 }} Pending
+                </span>
+              </div>
+
+              <div class="relative">
+                <input
+                  v-model="reconSearch"
+                  type="text"
+                  placeholder="Search description, reference, amount..."
+                  class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-sky-500"
+                />
+                <span class="absolute left-2.5 top-2.5 text-slate-400 text-xs">🔍</span>
+              </div>
+            </div>
+
+            <!-- List Stack -->
+            <div class="space-y-2 max-h-[620px] overflow-y-auto pr-1">
+              <div
+                v-for="tx in filteredUnmatchedTx"
+                :key="tx.id"
+                @click="selectTx(tx)"
+                :class="[
+                  'p-4 rounded-2xl border transition-all cursor-pointer space-y-2',
+                  selectedTx?.id === tx.id
+                    ? 'bg-sky-50/90 border-sky-400 shadow-md ring-2 ring-sky-400/20'
+                    : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                ]"
+              >
+                <div class="flex items-start justify-between gap-2">
+                  <div class="space-y-0.5">
+                    <span class="text-[10px] font-mono text-slate-400 block">{{ tx.transaction_date }}</span>
+                    <h5 class="text-xs font-bold text-slate-900 line-clamp-1">{{ tx.raw_description }}</h5>
+                  </div>
+                  <span :class="['text-xs font-black font-mono shrink-0', tx.amount > 0 ? 'text-emerald-600' : 'text-slate-900']">
+                    {{ tx.amount > 0 ? '+' : '' }}{{ tx.formatted_amount }}
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-[10px]">
+                  <span v-if="tx.reference" class="text-slate-500 font-mono">Ref: {{ tx.reference }}</span>
+                  <span v-else class="text-slate-400 italic">No ref</span>
+
+                  <span v-if="tx.suggested_matches && tx.suggested_matches.length > 0" class="px-2 py-0.5 font-bold rounded-full bg-emerald-100 text-emerald-800">
+                    {{ tx.suggested_matches.length }} Candidate{{ tx.suggested_matches.length > 1 ? 's' : '' }}
+                  </span>
+                  <span v-else class="px-2 py-0.5 font-bold rounded-full bg-slate-100 text-slate-600">
+                    Manual Allocation
+                  </span>
+                </div>
+              </div>
+
+              <div v-if="filteredUnmatchedTx.length === 0" class="p-8 text-center bg-white border border-slate-200 rounded-2xl space-y-2">
+                <span class="text-2xl block">🎉</span>
+                <h5 class="text-xs font-black text-slate-800">No Unmatched Transactions</h5>
+                <p class="text-[11px] text-slate-500">All bank statement lines are reconciled or matched!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Rule-Based Matcher & Detail Workspace (7 Cols) -->
+          <div class="lg:col-span-7 space-y-4">
+            <div v-if="selectedTx" class="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 space-y-6">
+              
+              <!-- Transaction Summary Box -->
+              <div class="p-4 bg-slate-900 text-white rounded-2xl space-y-3">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="space-y-1">
+                    <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded bg-slate-800 text-slate-300">
+                      Statement Line #{{ selectedTx.id }}
+                    </span>
+                    <h4 class="text-base font-black leading-tight">{{ selectedTx.raw_description }}</h4>
+                    <p v-if="selectedTx.reference" class="text-xs text-slate-400 font-mono">Reference: {{ selectedTx.reference }}</p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <span class="text-[10px] text-slate-400 block font-mono">{{ selectedTx.transaction_date }}</span>
+                    <span :class="['text-xl font-black font-mono block', selectedTx.amount > 0 ? 'text-emerald-400' : 'text-amber-400']">
+                      {{ selectedTx.amount > 0 ? '+' : '' }}{{ selectedTx.formatted_amount }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rule Matcher Suggestions Stack -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <h5 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🧠</span>
+                    <span>Smart Match Suggestions</span>
+                  </h5>
+                  <span class="text-[11px] text-slate-500 font-medium">Auto-Ranked Matcher</span>
+                </div>
+
+                <div v-if="selectedTx.suggested_matches && selectedTx.suggested_matches.length > 0" class="space-y-3">
+                  <div
+                    v-for="(m, idx) in selectedTx.suggested_matches"
+                    :key="idx"
+                    class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 hover:border-slate-300 transition-all"
+                  >
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-2">
+                        <span :class="[
+                          'px-2.5 py-0.5 text-[10px] font-black rounded-full uppercase tracking-wider',
+                          m.confidence_level === 'high' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+                        ]">
+                          {{ m.confidence_score }}% Match — {{ m.confidence_level }}
+                        </span>
+                      </div>
+                      <span class="text-xs font-mono font-bold text-slate-900">Target: £{{ number_format(m.target_amount, 2) }}</span>
+                    </div>
+
+                    <div>
+                      <h6 class="text-xs font-bold text-slate-900">{{ m.target_title }}</h6>
+                      <p class="text-[11px] text-slate-500 mt-0.5">Reason: {{ m.match_reason }}</p>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
+                      <button
+                        type="button"
+                        @click="submitReconcile(m.match_type, m.target_id)"
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        <span>✓ Confirm Match &amp; Reconcile</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="p-6 bg-slate-50 border border-dashed border-slate-300 rounded-2xl text-center space-y-2">
+                  <span class="text-xl block">🔍</span>
+                  <h6 class="text-xs font-bold text-slate-800">No Automated Match Identified</h6>
+                  <p class="text-[11px] text-slate-500">No exact subscription reference or vendor bill was found matching this statement line.</p>
+                </div>
+              </div>
+
+              <!-- Manual Allocation & Ignore Options -->
+              <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  @click="openManualMatchModal"
+                  class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>🔧 Manual Match / Nominate Ledger Code</span>
+                </button>
+
+                <button
+                  type="button"
+                  @click="submitIgnore(selectedTx.id)"
+                  class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  <span>🚫 Ignore Line</span>
+                </button>
+              </div>
+            </div>
+
+            <div v-else class="p-12 bg-white border border-slate-200 rounded-3xl shadow-sm text-center space-y-3">
+              <span class="text-3xl block">🏦</span>
+              <h4 class="text-sm font-black text-slate-900">Select a Statement Line</h4>
+              <p class="text-xs text-slate-500 max-w-sm mx-auto">Click any unmatched line from the left list stack to preview candidate matches and execute reconciliation.</p>
+            </div>
+
+            <!-- Statement Imports & Recent Reconciled History Card -->
+            <div class="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 space-y-4">
+              <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <span>📜</span>
+                <span>Recent Reconciled Statement History</span>
+              </h4>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                    <tr>
+                      <th class="py-2.5 px-3">Date</th>
+                      <th class="py-2.5 px-3">Description</th>
+                      <th class="py-2.5 px-3">Reference</th>
+                      <th class="py-2.5 px-3 text-right">Amount</th>
+                      <th class="py-2.5 px-3 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 font-medium">
+                    <tr v-for="tx in reconciliation.reconciled_transactions" :key="tx.id">
+                      <td class="py-2 px-3 text-slate-500 font-mono text-[11px]">{{ tx.transaction_date }}</td>
+                      <td class="py-2 px-3 text-slate-900 font-bold max-w-[200px] truncate">{{ tx.raw_description }}</td>
+                      <td class="py-2 px-3 text-slate-500 font-mono text-[11px]">{{ tx.reference || '—' }}</td>
+                      <td :class="['py-2 px-3 text-right font-mono font-bold', tx.amount > 0 ? 'text-emerald-600' : 'text-slate-900']">
+                        {{ tx.formatted_amount }}
+                      </td>
+                      <td class="py-2 px-3 text-center">
+                        <span class="px-2 py-0.5 text-[9px] font-black rounded-full bg-emerald-100 text-emerald-800">
+                          Reconciled
+                        </span>
+                      </td>
+                    </tr>
+                    <tr v-if="!reconciliation.reconciled_transactions || reconciliation.reconciled_transactions.length === 0">
+                      <td colspan="5" class="py-6 text-center text-slate-400 italic">No reconciled transactions recorded yet.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
       <!-- VIEW 9: SETTINGS (Financial & Organization Settings) -->
       <div v-if="activeTab === 'settings'" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
         <div class="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -2253,13 +2603,6 @@ const getTypeBadge = (type) => {
             </div>
           </div>
 
-          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[11px] space-y-1">
-            <span class="font-extrabold block">⚖️ Balanced Double-Entry System</span>
-            <p class="text-amber-800">
-              Posting an opening balance automatically credits/debits <strong>Account 3000 (Retained Earnings / Prior Year Reserves)</strong> to keep your general ledger 100% balanced ($Assets = Liabilities + Equity$).
-            </p>
-          </div>
-
           <div class="pt-2 flex items-center justify-end gap-2">
             <button
               type="button"
@@ -2277,6 +2620,139 @@ const getTypeBadge = (type) => {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Modal 7: Import Bank Statement -->
+    <div v-if="showImportModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showImportModal = false">
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-base font-black text-slate-900">Import Bank Statement</h3>
+            <p class="text-xs text-slate-500">Upload UK CSV or OFX bank export for automated matcher staging.</p>
+          </div>
+          <button type="button" @click="showImportModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+
+        <form @submit.prevent="submitStatementImport" class="space-y-4 text-xs">
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Bank Statement File (CSV/OFX) *</label>
+            <input
+              type="file"
+              @change="importForm.statement_file = $event.target.files[0]"
+              accept=".csv,.txt,.ofx,.qfx"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-sky-500"
+              required
+            />
+          </div>
+
+          <div class="p-3 bg-sky-50 rounded-xl border border-sky-200 text-sky-900 text-[11px] space-y-1">
+            <span class="font-extrabold block">💡 Supported Formats</span>
+            <p class="text-sky-800">
+              Standard UK bank CSV exports (Barclays, HSBC, Lloyds, NatWest, Santander, Starling) and OFX/QFX files.
+            </p>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              @click="showImportModal = false"
+              class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="importForm.processing"
+              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+            >
+              Upload &amp; Process Statement
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 8: Manual Target Allocation -->
+    <div v-if="showManualModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showManualModal = false">
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-base font-black text-slate-900">Manual Target Allocation</h3>
+            <p class="text-xs text-slate-500">Nominate custom allocation for statement line: <span class="font-bold text-slate-900">{{ selectedTx?.raw_description }}</span></p>
+          </div>
+          <button type="button" @click="showManualModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Allocation Destination Type</label>
+            <select
+              v-model="manualMatchType"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-sky-500"
+            >
+              <option value="member_subscription">Member Subscription Dues Invoice</option>
+              <option value="supplier_bill">Audited Supplier Bill</option>
+              <option value="charity_relief">Charity Relief Chest / Provincial Contribution</option>
+              <option value="ledger_account">Nominal Ledger Account Code</option>
+            </select>
+          </div>
+
+          <div v-if="manualMatchType === 'member_subscription'" class="space-y-1">
+            <label class="block font-bold text-slate-700">Select Unpaid Subscription *</label>
+            <select
+              v-model="manualTargetId"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-sky-500"
+            >
+              <option value="" disabled>Choose Unpaid Subscription...</option>
+              <option v-for="sub in reconciliation.unpaid_subscriptions" :key="sub.id" :value="sub.id">
+                {{ sub.member_name }} (Inv: {{ sub.invoice_reference || 'N/A' }} - £{{ number_format(sub.amount_due, 2) }})
+              </option>
+            </select>
+          </div>
+
+          <div v-if="manualMatchType === 'supplier_bill'" class="space-y-1">
+            <label class="block font-bold text-slate-700">Select Unpaid Supplier Bill *</label>
+            <select
+              v-model="manualTargetId"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-sky-500"
+            >
+              <option value="" disabled>Choose Unpaid Bill...</option>
+              <option v-for="bill in reconciliation.unpaid_bills" :key="bill.id" :value="bill.id">
+                Vendor: {{ bill.vendor_name }} (Bill: {{ bill.bill_number }} - £{{ number_format(bill.amount, 2) }})
+              </option>
+            </select>
+          </div>
+
+          <div v-if="manualMatchType === 'ledger_account'" class="space-y-1">
+            <label class="block font-bold text-slate-700">Select Ledger Account Code *</label>
+            <select
+              v-model="manualNominalCode"
+              class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-sky-500"
+            >
+              <option v-for="acc in accounts" :key="acc.id" :value="acc.code">
+                {{ acc.code }} - {{ acc.name }} ({{ acc.type }})
+              </option>
+            </select>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              @click="showManualModal = false"
+              class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              @click="submitReconcile(manualMatchType, manualTargetId || 0, manualNominalCode)"
+              class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+            >
+              Confirm Allocation &amp; Reconcile
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </AdminLayout>
