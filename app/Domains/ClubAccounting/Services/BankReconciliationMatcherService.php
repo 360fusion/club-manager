@@ -172,34 +172,100 @@ class BankReconciliationMatcherService
     {
         return DB::transaction(function () use ($transaction, $matchType, $targetId, $options) {
             $amount = (float)$transaction->amount;
+            $club = Club::find($transaction->club_id);
+            $accountingService = app(\App\Services\AccountingService::class);
+            $accountingService->seedDefaultAccounts($club);
+
             $note = "Reconciled via Bank Statement Match on " . Carbon::now()->format('Y-m-d H:i');
+            $targetCode = '4000'; // Default Revenue
+            $memo = $transaction->raw_description ?: 'Bank Statement Match';
 
             if ($matchType === 'member_subscription') {
-                $sub = MemberSubscription::where('club_id', $transaction->club_id)->findOrFail((int)$targetId);
-                $this->billingService->recordPayment(
-                    $sub,
-                    abs($amount),
-                    $transaction->reference ?: 'Bank Import Match',
-                    $transaction->raw_description
-                );
-                $note .= " [Member Subscription Invoice: {$sub->invoice_reference}]";
+                $sub = MemberSubscription::where('club_id', $transaction->club_id)->find((int)$targetId);
+                if ($sub) {
+                    $this->billingService->recordPayment(
+                        $sub,
+                        abs($amount),
+                        $transaction->reference ?: 'Bank Import Match',
+                        $transaction->raw_description
+                    );
+                    $note .= " [Member Subscription Invoice: {$sub->invoice_reference}]";
+                }
+                $targetCode = '4000'; // Membership Dues Income
             } elseif ($matchType === 'supplier_bill') {
-                $bill = Bill::where('club_id', $transaction->club_id)->findOrFail((int)$targetId);
-                $bill->update([
-                    'status' => 'paid',
-                    'paid_at' => Carbon::now(),
-                ]);
-                $note .= " [Audited Vendor Bill: {$bill->bill_number} - {$bill->vendor_name}]";
+                $bill = Bill::where('club_id', $transaction->club_id)->find((int)$targetId);
+                if ($bill) {
+                    $bill->update([
+                        'status' => 'paid',
+                        'paid_at' => Carbon::now(),
+                    ]);
+                    $note .= " [Audited Vendor Bill: {$bill->bill_number} - {$bill->vendor_name}]";
+                }
+                $targetCode = '5000'; // Facility & Clubhouse Maintenance / Expenses
             } elseif ($matchType === 'charity_relief') {
                 $note .= " [Charity Relief Chest / Provincial Contribution]";
+                $targetCode = '4300'; // Raffle & Charity Contributions
             } elseif ($matchType === 'ledger_account') {
-                $code = $options['nominal_code'] ?? 'GENERAL';
-                $note .= " [Allocated to Ledger Code: {$code}]";
+                $rawCode = $options['nominal_code'] ?? ($amount > 0 ? '4000' : '5000');
+                preg_match('/^(\d+)/', (string) $rawCode, $matches);
+                $targetCode = !empty($matches[1]) ? $matches[1] : ($amount > 0 ? '4000' : '5000');
+                $note .= " [Allocated to Ledger Code: {$targetCode}]";
+            }
+
+            // Post double-entry journal entry to general ledger if not already posted
+            $bankAcc = \App\Models\Accounting\Account::where('club_id', $club->id)->where('code', '1000')->first();
+            $offsetAcc = \App\Models\Accounting\Account::where('club_id', $club->id)->where('code', $targetCode)->first();
+            if (!$offsetAcc) {
+                $offsetAcc = \App\Models\Accounting\Account::create([
+                    'club_id' => $club->id,
+                    'code' => $targetCode,
+                    'name' => 'General Account (' . $targetCode . ')',
+                    'type' => $amount > 0 ? 'revenue' : 'expense',
+                    'currency' => 'GBP',
+                    'is_active' => true,
+                ]);
+            }
+
+            $alreadyPosted = \App\Models\Accounting\JournalEntry::where('club_id', $club->id)
+                ->where('source_type', 'bank_transaction')
+                ->where('source_id', $transaction->id)
+                ->exists();
+
+            if ($bankAcc && $offsetAcc && !$alreadyPosted) {
+                $absAmount = abs($amount);
+                $txDate = $transaction->transaction_date ? Carbon::parse($transaction->transaction_date)->format('Y-m-d') : date('Y-m-d');
+                if ($amount > 0) {
+                    // Money Received: Debit Bank (1000), Credit Revenue/Offset
+                    $accountingService->postJournalEntry($club, [
+                        'entry_date' => $txDate,
+                        'reference_number' => 'RECON-' . $transaction->id,
+                        'description' => "Bank Match: {$memo}",
+                        'source_type' => 'bank_transaction',
+                        'source_id' => $transaction->id,
+                        'items' => [
+                            ['account_id' => $bankAcc->id, 'debit' => $absAmount, 'credit' => 0, 'memo' => $memo],
+                            ['account_id' => $offsetAcc->id, 'debit' => 0, 'credit' => $absAmount, 'memo' => $memo],
+                        ],
+                    ]);
+                } else {
+                    // Money Spent: Credit Bank (1000), Debit Expense/Offset
+                    $accountingService->postJournalEntry($club, [
+                        'entry_date' => $txDate,
+                        'reference_number' => 'RECON-' . $transaction->id,
+                        'description' => "Bank Match: {$memo}",
+                        'source_type' => 'bank_transaction',
+                        'source_id' => $transaction->id,
+                        'items' => [
+                            ['account_id' => $offsetAcc->id, 'debit' => $absAmount, 'credit' => 0, 'memo' => $memo],
+                            ['account_id' => $bankAcc->id, 'debit' => 0, 'credit' => $absAmount, 'memo' => $memo],
+                        ],
+                    ]);
+                }
             }
 
             $transaction->update([
                 'status' => BankTransactionStatus::Matched,
-                'reference' => $transaction->reference ? $transaction->reference . ' (Matched)' : 'Reconciled',
+                'reference' => str_contains($transaction->reference ?? '', '(Matched)') ? $transaction->reference : ($transaction->reference ? $transaction->reference . ' (Matched)' : 'Reconciled'),
             ]);
 
             return true;
