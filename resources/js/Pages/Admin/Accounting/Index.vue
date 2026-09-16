@@ -118,10 +118,19 @@ watch(activeTab, (newTab) => {
   }
 });
 
+const handleGlobalDocumentClick = (e) => {
+  if (!e.target.closest('.who-dropdown-container')) {
+    Object.values(rowStates.value).forEach(state => {
+      if (state) state.showWhoDropdown = false;
+    });
+  }
+};
+
 onMounted(() => {
   activeTab.value = getTabFromUrl();
   if (typeof window !== 'undefined') {
     window.addEventListener('hashchange', syncTabWithUrl);
+    document.addEventListener('click', handleGlobalDocumentClick);
   }
   if (props.reconciliation?.unmatched_transactions?.length > 0) {
     selectedTx.value = props.reconciliation.unmatched_transactions[0];
@@ -131,6 +140,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('hashchange', syncTabWithUrl);
+    document.removeEventListener('click', handleGlobalDocumentClick);
   }
 });
 
@@ -2354,7 +2364,7 @@ const getTypeBadge = (type) => {
                     <div v-if="getRowState(tx.id, tx).tab === 'Create'" class="space-y-2 text-xs">
                       <div class="grid grid-cols-12 items-center gap-2">
                         <label class="col-span-2 text-right font-semibold text-slate-500">Who</label>
-                        <div class="col-span-10 relative">
+                        <div class="col-span-10 relative who-dropdown-container">
                           <input
                             v-model="getRowState(tx.id, tx).who"
                             @focus="getRowState(tx.id, tx).showWhoDropdown = true"
@@ -2547,7 +2557,7 @@ const getTypeBadge = (type) => {
                     <input type="checkbox" :value="tx.id" v-model="selectedCashCodingTx" class="rounded text-sky-600 focus:ring-sky-500" />
                   </td>
                   <td class="py-2 px-3 text-slate-500 font-mono text-[11px] whitespace-nowrap">{{ tx.transaction_date }}</td>
-                  <td class="py-2 px-3 relative">
+                  <td class="py-2 px-3 relative who-dropdown-container">
                     <input
                       v-model="getRowState(tx.id, tx).who"
                       @focus="getRowState(tx.id, tx).showWhoDropdown = true"
