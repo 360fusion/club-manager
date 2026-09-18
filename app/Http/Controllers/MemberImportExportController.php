@@ -28,31 +28,26 @@ class MemberImportExportController extends Controller
         $imported = 0;
 
         while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) < 2) {
-                continue;
-            }
+            if (count($row) >= 2) {
+                $name = trim($row[0]);
+                $email = trim($row[1]);
+                $role = isset($row[2]) ? strtolower(trim($row[2])) : 'member';
+                $memberNumber = isset($row[3]) ? trim($row[3]) : null;
 
-            $name = trim($row[0] ?? '');
-            $email = strtolower(trim($row[1] ?? ''));
-            $role = trim($row[2] ?? 'member');
-            $memberNumber = trim($row[3] ?? 'MEM-'.rand(100, 999));
+                if (empty($email)) {
+                    continue;
+                }
 
-            if (empty($name) || empty($email)) {
-                continue;
-            }
+                $user = User::firstOrCreate(
+                    ['email' => $email],
+                    [
+                        'name' => $name,
+                        'password' => Hash::make('password123'),
+                    ]
+                );
 
-            // Find or create User
-            $user = User::firstOrCreate(
-                ['email' => $email],
-                [
-                    'name' => $name,
-                    'password' => Hash::make('password123'),
-                ]
-            );
-
-            // Attach user to club if not attached
-            if (! $club->users()->where('user_id', $user->id)->exists()) {
-                $club->users()->attach($user->id, [
+                $club->users()->syncWithoutDetaching([$user->id]);
+                $club->users()->updateExistingPivot($user->id, [
                     'role' => in_array($role, ['admin', 'coach', 'member', 'treasurer']) ? $role : 'member',
                     'member_number' => $memberNumber,
                     'status' => 'active',
