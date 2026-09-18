@@ -13,6 +13,10 @@ const currentUser = computed(() => page.props.auth?.user);
 
 const selectedType = ref('all');
 
+const defaultClubSlug = computed(() => {
+    return props.clubs && props.clubs.length > 0 ? props.clubs[0].slug : 'lodge-of-fraternity';
+});
+
 const filterClubs = () => {
     if (selectedType.value === 'all') return props.clubs;
     return props.clubs.filter(c => c.type_code === selectedType.value);
@@ -66,13 +70,13 @@ const getIcon = (typeCode) => {
                 </div>
 
                 <div class="flex items-center gap-4 text-sm font-medium">
-                    <Link href="/clubs/lodge-of-fraternity/admin/pages" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <Link :href="`/clubs/${defaultClubSlug}/admin/pages`" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         🎨 CMS Pages
                     </Link>
-                    <a href="/site/lodge-of-fraternity" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <a :href="`/site/${defaultClubSlug}`" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         🌐 Live Site
                     </a>
-                    <Link href="/clubs/lodge-of-fraternity/admin/subscriptions" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <Link :href="`/clubs/${defaultClubSlug}/admin/subscriptions`" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         💳 Subscriptions
                     </Link>
                     <Link href="/admin/profile" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">

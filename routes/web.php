@@ -53,13 +53,15 @@ Route::post('/summons/rsvp/{token}', [\App\Http\Controllers\PasswordlessRsvpCont
 // Multi-Tenant Public Admin & Workspace Landing Routes
 Route::get('/', [ClubController::class, 'index'])->name('home');
 
-// Legacy Redirects for old oxford-boating URLs
+// Legacy Redirects for old club URLs (e.g. oxford-boating)
 Route::get('/clubs/oxford-boating/{path?}', function ($path = null) {
-    return redirect('/clubs/lodge-of-fraternity' . ($path ? '/' . $path : ''), 301);
+    $activeSlug = \App\Models\Club::first()?->slug ?? 'lodge-of-fraternity';
+    return redirect('/clubs/' . $activeSlug . ($path ? '/' . $path : ''), 301);
 })->where('path', '.*');
 
 Route::get('/site/oxford-boating', function () {
-    return redirect('/site/lodge-of-fraternity', 301);
+    $activeSlug = \App\Models\Club::first()?->slug ?? 'lodge-of-fraternity';
+    return redirect('/site/' . $activeSlug, 301);
 });
 
 Route::get('/site/{clubSlug}/{pageSlug?}', [\App\Http\Controllers\PublicSiteController::class, 'showPage'])->name('public.site');
