@@ -172,8 +172,6 @@ class MemberManagementDomainTest extends TestCase
             ->assertSet('activeTab', 'details')
             ->assertSee('Bro Gottfried Leibniz')
             ->assertSee('Junior Warden')
-            ->set('activeTab', 'offices')
-            ->assertSee('Current & Historical Lodge Offices')
             ->set('activeTab', 'finances')
             ->assertSee('Subscription Balance Snapshot')
             ->call('toggleEdit')
@@ -184,5 +182,25 @@ class MemberManagementDomainTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertEquals('PPrGStdB', $member->fresh()->provincial_rank);
+
+        // Test Archive Member
+        Livewire::test(MemberProfile::class, [
+            'clubSlug' => $this->club->slug,
+            'memberId' => $member->id,
+        ])
+            ->call('archiveMember')
+            ->assertHasNoErrors();
+
+        $this->assertEquals(MembershipStatus::Resigned, $member->fresh()->membership_status);
+
+        // Test Delete Member
+        Livewire::test(MemberProfile::class, [
+            'clubSlug' => $this->club->slug,
+            'memberId' => $member->id,
+        ])
+            ->call('deleteMember')
+            ->assertRedirect(route('admin.club_acc.members.index', ['clubSlug' => $this->club->slug]));
+
+        $this->assertDatabaseMissing('club_acc_members', ['id' => $member->id]);
     }
 }

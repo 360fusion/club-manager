@@ -25,13 +25,17 @@ class Member extends Model
         'subscription_tier_id',
         'title',
         'first_name',
+        'middle_names',
         'last_name',
+        'preferred_name',
         'email',
         'phone',
         'address_line_1',
         'address_line_2',
         'city',
+        'county',
         'postcode',
+        'country',
         'masonic_rank',
         'grand_rank',
         'provincial_rank',
@@ -62,7 +66,15 @@ class Member extends Model
     // Accessors
     public function getFullNameAttribute(): string
     {
-        return trim("{$this->first_name} {$this->last_name}");
+        $firstName = !empty($this->preferred_name) ? trim($this->preferred_name) : $this->first_name;
+        $nameParts = array_filter([$firstName, $this->middle_names, $this->last_name]);
+        return implode(' ', $nameParts);
+    }
+
+    public function getOfficialFullNameAttribute(): string
+    {
+        $nameParts = array_filter([$this->first_name, $this->middle_names, $this->last_name]);
+        return implode(' ', $nameParts);
     }
 
     public function getFormattedRankNameAttribute(): string
@@ -80,12 +92,27 @@ class Member extends Model
         return in_array($this->masonic_rank, ['WBro', 'VWBro', 'RWBro', 'MWBro']);
     }
 
+    public function getFormattedAddressAttribute(): ?string
+    {
+        $parts = array_filter([
+            $this->address_line_1,
+            $this->address_line_2,
+            $this->city,
+            $this->county,
+            $this->postcode,
+            $this->country,
+        ]);
+
+        return count($parts) > 0 ? implode(', ', $parts) : null;
+    }
+
     // Scopes
     public function scopeActive(Builder $query): Builder
     {
         return $query->whereIn('membership_status', [
             MembershipStatus::Active->value,
             MembershipStatus::Honorary->value,
+            MembershipStatus::Historical->value,
         ]);
     }
 
@@ -141,5 +168,32 @@ class Member extends Model
     public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(MemberSubscription::class, 'member_id');
+    }
+
+    public function annualAssignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AnnualOfficerAssignment::class, 'member_id');
+    }
+
+    public function getActiveOfficesAttribute(): array
+    {
+        $latestRoster = AnnualOfficerRoster::where('club_id', $this->club_id)
+            ->where('status', 'confirmed')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (! $latestRoster) {
+            return $this->current_office ? [$this->current_office] : [];
+        }
+
+        $assignments = AnnualOfficerAssignment::where('roster_id', $latestRoster->id)
+            ->where('member_id', $this->id)
+            ->get();
+
+        if ($assignments->isEmpty()) {
+            return $this->current_office ? [$this->current_office] : [];
+        }
+
+        return $assignments->map(fn ($a) => $a->lodge_office)->filter()->values()->all();
     }
 }

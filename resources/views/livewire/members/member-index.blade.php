@@ -3,15 +3,23 @@
     <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 shadow-inner">
         <a
             href="{{ route('admin.club_acc.members.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.members.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 bg-slate-900 text-white shadow-md font-black"
         >
             <span>👥</span>
             <span>Members Roster</span>
         </a>
 
         <a
+            href="{{ route('admin.officers.index', ['clubSlug' => $club->slug]) }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60"
+        >
+            <span>👔</span>
+            <span>Annual Officer Rosters &amp; History</span>
+        </a>
+
+        <a
             href="{{ route('admin.club_acc.candidates.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.candidates.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60"
         >
             <span>📋</span>
             <span>Candidates (Form P Vetting)</span>
@@ -19,7 +27,7 @@
 
         <a
             href="{{ route('admin.club_acc.subscriptions.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.subscriptions.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60"
         >
             <span>💳</span>
             <span>Subscriptions &amp; Dues</span>
@@ -39,7 +47,7 @@
                 </div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tight">Lodge Member Directory</h1>
                 <p class="text-xs text-slate-500">
-                    Comprehensive roster of lodge members, masonic ranks, progressive offices, and Liberu Accounting ledger integration.
+                    Comprehensive roster of lodge members, masonic ranks, progressive offices, and accounting ledger integration.
                 </p>
             </div>
 
@@ -104,7 +112,12 @@
             <!-- Search Input -->
             <div class="w-full md:w-80 relative">
                 <input
-                    type="text"
+                    type="search"
+                    name="member_search_query"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
                     wire:model.live.debounce.300ms="search"
                     placeholder="Search name, email, Hermes ID, rank..."
                     class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
@@ -158,10 +171,9 @@
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                         <th class="py-3.5 px-6 cursor-pointer" wire:click="sortBy('full_name')">
-                            Member &amp; Masonic Title
+                            Member Name
                             @if($sortField === 'full_name') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
-                        <th class="py-3.5 px-4">Hermes / GL ID</th>
                         <th class="py-3.5 px-4 cursor-pointer" wire:click="sortBy('current_office')">
                             Lodge Office
                             @if($sortField === 'current_office') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
@@ -171,14 +183,12 @@
                             Status
                             @if($sortField === 'membership_status') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
-                        <th class="py-3.5 px-4">Joined / Initiated</th>
-                        <th class="py-3.5 px-6 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($members as $m)
                         <tr class="hover:bg-slate-50/70 transition-colors">
-                            <!-- Member Name & Rank -->
+                            <!-- Member Name -->
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
                                     <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
@@ -186,23 +196,22 @@
                                     </div>
                                     <div>
                                         <a href="{{ route('admin.club_acc.members.show', ['clubSlug' => $club->slug, 'memberId' => $m->id]) }}" class="font-extrabold text-slate-900 hover:text-indigo-600 block text-sm tracking-tight">
-                                            {{ $m->formatted_rank_name }}
+                                            {{ $m->full_name }}
                                         </a>
                                         <span class="text-[11px] text-slate-500 font-medium block">{{ $m->email ?: 'No email on record' }}</span>
                                     </div>
                                 </div>
                             </td>
 
-                            <!-- Hermes / GL ID -->
-                            <td class="py-4 px-4 font-mono font-bold text-slate-700">
-                                {{ $m->grand_lodge_number ?: '—' }}
-                            </td>
-
                             <!-- Office -->
                             <td class="py-4 px-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $m->current_office->badgeClass() }}">
-                                    {{ $m->current_office->label() }}
-                                </span>
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($m->active_offices as $office)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $office->badgeClass() }}">
+                                            {{ $office->label() }}
+                                        </span>
+                                    @endforeach
+                                </div>
                             </td>
 
                             <!-- Grand / Provincial Ranks -->
@@ -229,46 +238,6 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $m->membership_status->badgeClass() }}">
                                     {{ $m->membership_status->label() }}
                                 </span>
-                            </td>
-
-                            <!-- Key Dates -->
-                            <td class="py-4 px-4 text-slate-600 text-[11px]">
-                                <div>Joined: <strong>{{ $m->date_of_joining ? $m->date_of_joining->format('d M Y') : '—' }}</strong></div>
-                                @if($m->date_of_initiation)
-                                    <div class="text-[10px] text-slate-400">Init: {{ $m->date_of_initiation->format('d M Y') }}</div>
-                                @endif
-                            </td>
-
-                            <!-- Actions -->
-                            <td class="py-4 px-6 text-right">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <a
-                                        href="{{ route('admin.club_acc.members.show', ['clubSlug' => $club->slug, 'memberId' => $m->id]) }}"
-                                        class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                                        title="View member profile"
-                                    >
-                                        👁️
-                                    </a>
-
-                                    <button
-                                        type="button"
-                                        wire:click="openEditModal({{ $m->id }})"
-                                        class="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
-                                        title="Edit member details"
-                                    >
-                                        ✏️
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        wire:click="deleteMember({{ $m->id }})"
-                                        wire:confirm="Are you sure you want to remove {{ $m->full_name }} from the roster?"
-                                        class="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer"
-                                        title="Remove member"
-                                    >
-                                        🗑️
-                                    </button>
-                                </div>
                             </td>
                         </tr>
                     @empty
@@ -319,28 +288,70 @@
                             <label class="block font-bold text-slate-700 mb-1">Title Prefix</label>
                             <input type="text" wire:model="title" placeholder="Bro / WBro / Dr" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                         </div>
-                        <div class="sm:col-span-1">
+                        <div>
                             <label class="block font-bold text-slate-700 mb-1">First Name *</label>
                             <input type="text" wire:model="first_name" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
                             @error('first_name') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
                         </div>
-                        <div class="sm:col-span-2">
-                            <label class="block font-bold text-slate-700 mb-1">Last Name *</label>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Middle Names</label>
+                            <input type="text" wire:model="middle_names" placeholder="David Arthur" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Surname / Last Name *</label>
                             <input type="text" wire:model="last_name" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" required />
                             @error('last_name') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
-                    <!-- Grid 2: Contact Details -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">Email Address</label>
-                            <input type="email" wire:model="email" placeholder="brother@example.org" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-                            @error('email') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
+                            <label class="block font-bold text-slate-700 mb-1">Preferred Name</label>
+                            <input type="text" wire:model="preferred_name" placeholder="Dave" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                         </div>
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1">Phone Number</label>
-                            <input type="text" wire:model="phone" placeholder="07123 456789" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                    </div>
+
+                    <!-- Grid 2: Contact & Residential Address -->
+                    <div class="space-y-3 p-4 bg-slate-50 border border-slate-200/80 rounded-2xl">
+                        <span class="font-extrabold text-slate-900 block text-xs">Contact &amp; Residential Address</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Email Address</label>
+                                <input type="email" wire:model="email" placeholder="brother@example.org" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                                @error('email') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Phone Number</label>
+                                <input type="text" wire:model="phone" placeholder="07123 456789" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Address Line 1</label>
+                                <input type="text" wire:model="address_line_1" placeholder="Building name, house number & street" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Address Line 2</label>
+                                <input type="text" wire:model="address_line_2" placeholder="Apartment, suite, unit, etc." class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Town / City</label>
+                                <input type="text" wire:model="city" placeholder="Oxford" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">County / Region</label>
+                                <input type="text" wire:model="county" placeholder="Oxfordshire" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Postcode / ZIP</label>
+                                <input type="text" wire:model="postcode" placeholder="OX1 2JD" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs uppercase focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Country</label>
+                                <input type="text" wire:model="country" placeholder="United Kingdom" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            </div>
                         </div>
                     </div>
 
@@ -419,7 +430,7 @@
                     <!-- Accounting Customer Link -->
                     @if($accountingContacts->isNotEmpty())
                         <div class="space-y-1">
-                            <label class="block font-bold text-slate-700">Liberu Accounting Ledger Contact Link</label>
+                            <label class="block font-bold text-slate-700">Accounting Ledger Contact Link</label>
                             <select wire:model="customer_account_id" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                                 <option value="">-- No Ledger Account Linked --</option>
                                 @foreach($accountingContacts as $ac)

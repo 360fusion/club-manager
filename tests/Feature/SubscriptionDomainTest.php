@@ -188,4 +188,12 @@ class SubscriptionDomainTest extends TestCase
             'amount_due' => 160.00,
         ]);
     }
+
+    public function test_billing_portal_route_redirection(): void
+    {
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('billing.portal', ['clubSlug' => $this->club->slug]));
+
+        $response->assertRedirect(route('billing.index', ['clubSlug' => $this->club->slug]));
+    }
 }

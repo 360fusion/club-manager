@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import MeetingsTabs from '@/Components/MeetingsTabs.vue';
 
 const props = defineProps({
   club: Object,
@@ -131,6 +132,9 @@ const duplicateMeeting = (id) => {
     
     <div class="space-y-6">
       
+      <!-- Meetings & Governance Tab Bar -->
+      <MeetingsTabs :club="club" active-tab="lodge" />
+      
       <!-- Top Header & Action Bar -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
         <div>
@@ -139,10 +143,10 @@ const duplicateMeeting = (id) => {
         </div>
         
         <div class="flex flex-wrap items-center gap-3">
-          <a :href="route('admin.committee.index', { clubSlug: club.slug })" class="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold rounded-xl border border-amber-300 transition-all flex items-center gap-1.5 shadow-sm">
-            🏛️ Lodge Committee & Board
+          <a :href="route('admin.officers.index', { clubSlug: club.slug })" class="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold rounded-xl border border-amber-300 transition-all flex items-center gap-1.5 shadow-sm">
+            👑 Annual Officers Roster & Board
           </a>
-          <button @click="showSeasonModal = true" class="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all">
+          <button @click="showSeasonModal = true" class="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all cursor-pointer">
             ⚡ Generate Season / Masonic Year
           </button>
           <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5">

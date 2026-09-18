@@ -24,14 +24,24 @@ const form = useForm({
   amount: '',
   notes: '',
   due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  attachment: null,
 });
+
+const handleFileChange = (e) => {
+  form.attachment = e.target.files[0] || null;
+};
 
 const selectedMember = computed(() =>
   props.members.find(m => m.id === Number(form.user_id)) ?? null
 );
 
-const submit = () => {
-  form.post(route('admin.accounting.invoices.store', props.club.slug));
+const submit = (isDraft = false) => {
+  form.transform((data) => ({
+    ...data,
+    title: data.title || (isDraft ? 'Draft Invoice' : ''),
+    amount: data.amount !== '' && data.amount !== null && data.amount !== undefined ? data.amount : (isDraft ? 0 : data.amount),
+    is_draft: isDraft,
+  })).post(route('admin.accounting.invoices.store', props.club.slug));
 };
 
 // Invoice number preview
@@ -42,7 +52,7 @@ const previewNumber = computed(() => {
 </script>
 
 <template>
-  <AdminLayout :club="club" title="Create Invoice">
+  <AdminLayout :club="club" title="Create Invoice" active-tab="accounting">
     <Head :title="`Create Invoice — ${club.name}`" />
 
     <div class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
@@ -220,6 +230,29 @@ const previewNumber = computed(() => {
             ></textarea>
           </div>
 
+          <!-- Section 4: File Attachment -->
+          <div class="space-y-4 pt-4 border-t border-slate-100">
+            <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
+              4. Document Attachment (Optional)
+            </h2>
+            <div>
+              <label for="invoice-attachment" class="block text-xs font-bold text-slate-800 mb-1">
+                Upload File (PDF, PNG, JPG, WEBP — Max 10MB)
+              </label>
+              <input
+                id="invoice-attachment"
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
+                @change="handleFileChange"
+                class="w-full text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
+              />
+              <p v-if="form.errors.attachment" class="text-xs text-red-600 font-semibold mt-1">{{ form.errors.attachment }}</p>
+              <p v-if="form.attachment" class="text-[11px] text-emerald-600 font-bold mt-1">
+                Selected file: {{ form.attachment.name }} ({{ (form.attachment.size / 1024 / 1024).toFixed(2) }} MB)
+              </p>
+            </div>
+          </div>
+
           <!-- Ledger preview callout -->
           <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs text-slate-600 space-y-1">
             <p class="font-extrabold text-slate-800 mb-1">📒 What happens in the ledger when you save:</p>
@@ -244,14 +277,26 @@ const previewNumber = computed(() => {
             Cancel
           </Link>
 
-          <button
-            type="submit"
-            :disabled="form.processing || !form.user_id || !form.title || !form.amount"
-            class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl shadow-sm transition-colors cursor-pointer flex items-center gap-2"
-          >
-            <span v-if="form.processing" class="animate-spin">⌛</span>
-            <span>🧾 Issue Invoice</span>
-          </button>
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              @click="submit(true)"
+              :disabled="form.processing"
+              class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed text-slate-800 font-extrabold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <span>📝 Save as Draft</span>
+            </button>
+
+            <button
+              type="button"
+              @click="submit(false)"
+              :disabled="form.processing"
+              class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl shadow-sm transition-colors cursor-pointer flex items-center gap-2"
+            >
+              <span v-if="form.processing" class="animate-spin">⌛</span>
+              <span>🧾 Issue Invoice</span>
+            </button>
+          </div>
         </div>
       </form>
     </div>

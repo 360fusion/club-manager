@@ -126,6 +126,42 @@ class AccountingService
     }
 
     /**
+     * Update an existing Journal Entry & recalculate balance
+     */
+    public function updateJournalEntry(Club $club, int $entryId, array $data): JournalEntry
+    {
+        $entry = JournalEntry::where('club_id', $club->id)->where('id', $entryId)->firstOrFail();
+
+        $items = $data['items'] ?? [];
+        $totalDebit = array_reduce($items, fn ($sum, $i) => $sum + (float) ($i['debit'] ?? 0), 0.0);
+        $totalCredit = array_reduce($items, fn ($sum, $i) => $sum + (float) ($i['credit'] ?? 0), 0.0);
+
+        if (abs($totalDebit - $totalCredit) > 0.001) {
+            throw new \InvalidArgumentException('Journal entry must be balanced. Total Debit (£' . number_format($totalDebit, 2) . ') does not equal Total Credit (£' . number_format($totalCredit, 2) . ').');
+        }
+
+        return DB::transaction(function () use ($entry, $data, $items) {
+            $entry->update([
+                'entry_date' => $data['entry_date'] ?? $entry->entry_date,
+                'description' => $data['description'] ?? $entry->description,
+            ]);
+
+            $entry->items()->delete();
+
+            foreach ($items as $item) {
+                $entry->items()->create([
+                    'account_id' => $item['account_id'],
+                    'debit' => (float) ($item['debit'] ?? 0),
+                    'credit' => (float) ($item['credit'] ?? 0),
+                    'memo' => $item['memo'] ?? null,
+                ]);
+            }
+
+            return $entry;
+        });
+    }
+
+    /**
      * Record Member Dues Payment in Double-Entry Ledger
      */
     public function recordMemberDuesPayment(Club $club, float $amount, string $description, ?int $sourceId = null): JournalEntry
@@ -185,6 +221,8 @@ class AccountingService
                 $mediaId = $media->id;
             }
 
+            $status = !empty($data['is_draft']) ? 'draft' : 'unpaid';
+
             $bill = Bill::create([
                 'club_id' => $club->id,
                 'bill_number' => $billNum,
@@ -192,24 +230,26 @@ class AccountingService
                 'category' => $data['category'] ?? 'General Expense',
                 'amount' => $data['amount'],
                 'due_date' => $data['due_date'] ?? date('Y-m-d', strtotime('+30 days')),
-                'status' => 'unpaid',
+                'status' => $status,
                 'notes' => $data['notes'] ?? null,
                 'media_id' => $mediaId,
             ]);
 
-            // Post Ledger: Debit Expense (5000), Credit Accounts Payable (2000)
-            $expenseAcc = $this->getAccount($club, '5000');
-            $apAcc = $this->getAccount($club, '2000');
+            if ($status !== 'draft') {
+                // Post Ledger: Debit Expense (5000), Credit Accounts Payable (2000)
+                $expenseAcc = $this->getAccount($club, '5000');
+                $apAcc = $this->getAccount($club, '2000');
 
-            $this->postJournalEntry($club, [
-                'description' => "Vendor Bill: {$bill->vendor_name} ({$bill->bill_number})",
-                'source_type' => 'VendorBill',
-                'source_id' => $bill->id,
-                'items' => [
-                    ['account_id' => $expenseAcc->id, 'debit' => $bill->amount, 'credit' => 0, 'memo' => $bill->category],
-                    ['account_id' => $apAcc->id, 'debit' => 0, 'credit' => $bill->amount, 'memo' => 'Accounts Payable'],
-                ],
-            ]);
+                $this->postJournalEntry($club, [
+                    'description' => "Vendor Bill: {$bill->vendor_name} ({$bill->bill_number})",
+                    'source_type' => 'VendorBill',
+                    'source_id' => $bill->id,
+                    'items' => [
+                        ['account_id' => $expenseAcc->id, 'debit' => $bill->amount, 'credit' => 0, 'memo' => $bill->category],
+                        ['account_id' => $apAcc->id, 'debit' => 0, 'credit' => $bill->amount, 'memo' => 'Accounts Payable'],
+                    ],
+                ]);
+            }
 
             return $bill;
         });

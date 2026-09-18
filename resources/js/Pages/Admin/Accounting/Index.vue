@@ -159,11 +159,39 @@ const navigateTo = (tabName, reportName = null) => {
   }
 };
 
+const activeDetailsTxId = ref(null);
+
+const toggleDetailsPopover = (txId) => {
+  activeDetailsTxId.value = activeDetailsTxId.value === txId ? null : txId;
+};
+
 const handleGlobalDocumentClick = (e) => {
   if (!e.target.closest('.who-dropdown-container')) {
     Object.values(rowStates.value).forEach(state => {
       if (state) state.showWhoDropdown = false;
     });
+  }
+  if (!e.target.closest('.statement-details-container')) {
+    activeDetailsTxId.value = null;
+  }
+  if (!e.target.closest('.statement-options-container')) {
+    activeOptionsTxId.value = null;
+  }
+  if (!e.target.closest('.manage-account-container')) {
+    showManageAccountMenu.value = false;
+  }
+  if (!e.target.closest('.add-menu-container')) {
+    showAddMenu.value = false;
+  }
+};
+
+const handleGlobalKeyDown = (e) => {
+  if (e.key === 'Escape') {
+    activeDetailsTxId.value = null;
+    activeOptionsTxId.value = null;
+    showManageAccountMenu.value = false;
+    showAddMenu.value = false;
+    showStatementLineDetailsModal.value = false;
   }
 };
 
@@ -173,6 +201,7 @@ onMounted(() => {
     window.addEventListener('hashchange', syncTabWithUrl);
     window.addEventListener('popstate', syncTabWithUrl);
     document.addEventListener('click', handleGlobalDocumentClick);
+    document.addEventListener('keydown', handleGlobalKeyDown);
   }
   if (props.reconciliation?.unmatched_transactions?.length > 0) {
     selectedTx.value = props.reconciliation.unmatched_transactions[0];
@@ -184,6 +213,7 @@ onUnmounted(() => {
     window.removeEventListener('hashchange', syncTabWithUrl);
     window.removeEventListener('popstate', syncTabWithUrl);
     document.removeEventListener('click', handleGlobalDocumentClick);
+    document.removeEventListener('keydown', handleGlobalKeyDown);
   }
 });
 
@@ -263,6 +293,7 @@ const compactView = ref(false);
 const autoReconcile = ref(false);
 const showFilterPanel = ref(false);
 const showManageAccountMenu = ref(false);
+const showAddMenu = ref(false);
 const selectedCashCodingTx = ref([]);
 const selectedStatementLineIds = ref([]);
 const statementLinesFilter = ref('statement_lines');
@@ -322,6 +353,34 @@ const restoreSelectedStatementLines = () => {
       selectedStatementLineIds.value = [];
     }
   });
+};
+
+const activeOptionsTxId = ref(null);
+
+const toggleOptionsDropdown = (txId) => {
+  if (activeOptionsTxId.value === txId) {
+    activeOptionsTxId.value = null;
+  } else {
+    activeOptionsTxId.value = txId;
+  }
+};
+
+const deleteSingleStatementLine = (txId) => {
+  activeOptionsTxId.value = null;
+  if (!confirm('Are you sure you want to delete this statement line?')) return;
+  router.post(route('admin.accounting.statement_lines.delete', props.club.slug), {
+    transaction_ids: [txId],
+  }, {
+    preserveScroll: true,
+  });
+};
+
+const selectedStatementLineDetails = ref(null);
+const showStatementLineDetailsModal = ref(false);
+
+const openStatementLineDetails = (tx) => {
+  selectedStatementLineDetails.value = tx;
+  showStatementLineDetailsModal.value = true;
 };
 
 const selectedAccountTxIds = ref([]);
@@ -804,8 +863,13 @@ const invoiceForm = useForm({
   amount: '',
 });
 
-const submitInvoice = () => {
-  invoiceForm.post(route('admin.accounting.invoices.store', props.club.slug), {
+const submitInvoice = (isDraft = false) => {
+  invoiceForm.transform((data) => ({
+    ...data,
+    title: data.title || (isDraft ? 'Draft Invoice' : ''),
+    amount: data.amount !== '' && data.amount !== null && data.amount !== undefined ? data.amount : (isDraft ? 0 : data.amount),
+    is_draft: isDraft,
+  })).post(route('admin.accounting.invoices.store', props.club.slug), {
     onSuccess: () => {
       showInvoiceModal.value = false;
       invoiceForm.reset();
@@ -820,13 +884,149 @@ const billForm = useForm({
   amount: '',
   due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   notes: '',
+  attachment: null,
+  is_draft: false,
 });
 
-const submitBill = () => {
-  billForm.post(route('admin.accounting.bills.store', props.club.slug), {
+const handleBillFileChange = (e) => {
+  billForm.attachment = e.target.files[0] || null;
+};
+
+const submitBill = (isDraft = false) => {
+  billForm.transform((data) => ({
+    ...data,
+    is_draft: isDraft,
+  })).post(route('admin.accounting.bills.store', props.club.slug), {
     onSuccess: () => {
       showBillModal.value = false;
       billForm.reset();
+    },
+  });
+};
+
+const publishInvoice = (id) => {
+  if (confirm('Are you sure you want to issue/publish this invoice? It will post to Accounts Receivable.')) {
+    router.post(route('admin.accounting.invoices.publish', { clubSlug: props.club.slug, id }));
+  }
+};
+
+const publishBill = (id) => {
+  if (confirm('Are you sure you want to approve and post this vendor bill to Accounts Payable?')) {
+    router.post(route('admin.accounting.bills.publish', { clubSlug: props.club.slug, id }));
+  }
+};
+
+// ── Edit Invoice & Edit Vendor Bill Modal State & Handlers ──────────────────
+const showEditInvoiceModal = ref(false);
+const editInvoiceForm = useForm({
+  id: null,
+  user_id: '',
+  invoice_number: '',
+  title: '',
+  amount: 0,
+  status: 'draft',
+  attachment: null,
+  existingAttachment: null,
+});
+
+const handleEditInvoiceFileChange = (e) => {
+  editInvoiceForm.attachment = e.target.files[0] || null;
+};
+
+const openEditInvoiceModal = (inv) => {
+  if (!inv) return;
+  router.visit(route('admin.accounting.invoices.edit', { clubSlug: props.club.slug, id: inv.id }));
+};
+
+const openEditBillModal = (bill) => {
+  if (!bill) return;
+  router.visit(route('admin.accounting.bills.edit', { clubSlug: props.club.slug, id: bill.id }));
+};
+
+const submitUpdateBill = (overrideStatus = null) => {
+  const statusToSave = overrideStatus || editBillForm.status;
+  editBillForm.transform((data) => ({
+    ...data,
+    status: statusToSave,
+    _method: 'PUT',
+  })).post(route('admin.accounting.bills.update', { clubSlug: props.club.slug, id: editBillForm.id }), {
+    onSuccess: () => {
+      showEditBillModal.value = false;
+      editBillForm.reset();
+    },
+  });
+};
+
+const confirmDeleteBill = (bill) => {
+  if (!bill) return;
+  if (bill.status === 'paid') {
+    alert('Paid bills cannot be deleted.');
+    return;
+  }
+  if (confirm(`Are you sure you want to delete vendor bill ${bill.bill_number}? This action cannot be undone.`)) {
+    router.delete(route('admin.accounting.bills.destroy', { clubSlug: props.club.slug, id: bill.id }), {
+      onSuccess: () => {
+        showEditBillModal.value = false;
+      },
+    });
+  }
+};
+
+// ── Attachment Preview Modal State & Controls ────────────────────────────────
+const previewModal = ref({
+  show: false,
+  type: '', // 'invoice' or 'bill'
+  itemId: null,
+  title: '',
+  url: '',
+  mimeType: '',
+  fileName: '',
+});
+
+const zoomLevel = ref(1);
+const rotation = ref(0);
+
+const openAttachmentModal = (item, type) => {
+  if (!item || !item.attachment) return;
+  previewModal.value = {
+    show: true,
+    type,
+    itemId: item.id,
+    title: item.title || item.bill_number || item.invoice_number || 'Attachment',
+    url: item.attachment.original_url,
+    mimeType: item.attachment.mime_type || (item.attachment.file_name?.endsWith('.pdf') ? 'application/pdf' : 'image/png'),
+    fileName: item.attachment.file_name || 'document',
+  };
+  zoomLevel.value = 1;
+  rotation.value = 0;
+};
+
+const zoomIn = () => {
+  if (zoomLevel.value < 3) zoomLevel.value = parseFloat((zoomLevel.value + 0.25).toFixed(2));
+};
+
+const zoomOut = () => {
+  if (zoomLevel.value > 0.4) zoomLevel.value = parseFloat((zoomLevel.value - 0.25).toFixed(2));
+};
+
+const resetZoom = () => {
+  zoomLevel.value = 1;
+  rotation.value = 0;
+};
+
+const rotateImage = () => {
+  rotation.value = (rotation.value + 90) % 360;
+};
+
+const deleteAttachment = () => {
+  if (!confirm('Are you sure you want to delete this attachment? This action cannot be undone.')) return;
+  const routeName = previewModal.value.type === 'invoice'
+    ? 'admin.accounting.invoices.attachment.destroy'
+    : 'admin.accounting.bills.attachment.destroy';
+
+  router.delete(route(routeName, { clubSlug: props.club.slug, id: previewModal.value.itemId }), {
+    onSuccess: () => {
+      previewModal.value.show = false;
     },
   });
 };
@@ -949,14 +1149,14 @@ const getTypeBadge = (type) => {
 </script>
 
 <template>
-  <AdminLayout :club="club" title="Accounting">
+  <AdminLayout :club="club" title="Accounting" active-tab="accounting">
     <Head :title="`Accounting - ${club.name}`" />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-4">
       
       <!-- Sleek Slate Navigation Bar at Top -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-sm p-1.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 overflow-x-auto">
-        <nav class="flex items-center px-1 min-w-max text-xs sm:text-sm font-semibold text-slate-300">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-sm p-1.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 relative">
+        <nav class="flex items-center px-1 text-xs sm:text-sm font-semibold text-slate-300 overflow-x-auto">
           <button
             type="button"
             @click="navigateTo('home')"
@@ -1037,36 +1237,59 @@ const getTypeBadge = (type) => {
             <span>Contacts</span>
           </button>
 
+        </nav>
+
+        <!-- Quick Action Dropdown and Settings Link in Header Bar -->
+        <div class="flex items-center gap-2 px-2 py-1 shrink-0">
+          <!-- + Add Pop-Out Menu -->
+          <div class="relative add-menu-container">
+            <button
+              type="button"
+              @click.stop="showAddMenu = !showAddMenu"
+              class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <span>+ Add</span>
+              <span class="text-[10px]">▾</span>
+            </button>
+
+            <div
+              v-if="showAddMenu"
+              class="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-50 text-xs font-semibold text-slate-700"
+            >
+              <Link
+                :href="route('admin.accounting.invoices.create', club.slug)"
+                @click="showAddMenu = false"
+                class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-50 transition-colors text-slate-700 hover:text-slate-900"
+              >
+                <span>🧾</span>
+                <span>Create Invoice</span>
+              </Link>
+              <Link
+                :href="route('admin.accounting.bills.create', club.slug)"
+                @click="showAddMenu = false"
+                class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-50 transition-colors text-slate-700 hover:text-slate-900"
+              >
+                <span>📄</span>
+                <span>Add Bill</span>
+              </Link>
+              <Link
+                :href="route('admin.accounting.journal.create', club.slug)"
+                @click="showAddMenu = false"
+                class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-50 transition-colors text-slate-700 hover:text-slate-900"
+              >
+                <span>📖</span>
+                <span>Post Journal</span>
+              </Link>
+            </div>
+          </div>
+
+          <!-- Settings Link (Far Right) -->
           <Link
             :href="route('admin.settings.show', club.slug) + '#accounting'"
-            class="px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80"
+            class="px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800/80 font-semibold text-xs sm:text-sm rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
           >
             <span>⚙️ Settings</span>
           </Link>
-        </nav>
-
-        <!-- Quick Action Buttons in Header Bar -->
-        <div class="flex items-center gap-2 px-2 py-1 shrink-0">
-          <Link
-            :href="route('admin.accounting.invoices.create', club.slug)"
-            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
-          >
-            <span>🧾 Create Invoice</span>
-          </Link>
-          <button
-            type="button"
-            @click="showBillModal = true"
-            class="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
-          >
-            <span>📄 + Add Bill</span>
-          </button>
-          <button
-            type="button"
-            @click="showJournalModal = true"
-            class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
-          >
-            <span>📖 Post Journal</span>
-          </button>
         </div>
       </div>
 
@@ -1270,26 +1493,64 @@ const getTypeBadge = (type) => {
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
               <tr v-for="inv in filteredInvoices" :key="inv.id" class="hover:bg-slate-50/80 transition-colors">
-                <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ inv.invoice_number }}</td>
+                <td class="py-3 px-4">
+                  <button
+                    type="button"
+                    @click="openEditInvoiceModal(inv)"
+                    class="font-mono font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+                  >
+                    {{ inv.invoice_number }}
+                  </button>
+                </td>
                 <td class="py-3 px-4 font-bold text-slate-900">{{ inv.recipient_name }}</td>
-                <td class="py-3 px-4 text-slate-600">{{ inv.title }}</td>
+                <td class="py-3 px-4 text-slate-600">
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      @click="openEditInvoiceModal(inv)"
+                      class="font-bold text-slate-900 hover:text-indigo-600 hover:underline text-left cursor-pointer"
+                    >
+                      {{ inv.title }}
+                    </button>
+                    <button
+                      v-if="inv.attachment"
+                      type="button"
+                      @click="openAttachmentModal(inv, 'invoice')"
+                      title="View & Zoom Attachment"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-extrabold rounded-md border border-indigo-200 transition-colors cursor-pointer"
+                    >
+                      📎 View Document
+                    </button>
+                  </div>
+                </td>
                 <td class="py-3 px-4 text-slate-500">{{ inv.created_at }}</td>
                 <td class="py-3 px-4">
-                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
+                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : inv.status === 'draft' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-amber-50 text-amber-700 border-amber-200']">
                     {{ inv.status }}
                   </span>
                 </td>
                 <td class="py-3 px-4 text-right font-black text-slate-900 font-mono">{{ inv.formatted_amount }}</td>
                 <td class="py-3 px-4 text-center">
-                  <button
-                    v-if="inv.status !== 'paid'"
-                    type="button"
-                    @click="markInvoicePaid(inv.id)"
-                    class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
-                  >
-                    ✓ Mark Paid
-                  </button>
-                  <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ inv.paid_at }}</span>
+                  <div class="flex items-center justify-center gap-1.5">
+                    <button
+                      v-if="inv.status === 'draft'"
+                      type="button"
+                      @click="publishInvoice(inv.id)"
+                      title="Issue/Publish Invoice & Post to Ledger"
+                      class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white border border-sky-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                    >
+                      🚀 Issue
+                    </button>
+                    <button
+                      v-else-if="inv.status !== 'paid'"
+                      type="button"
+                      @click="markInvoicePaid(inv.id)"
+                      class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    >
+                      ✓ Mark Paid
+                    </button>
+                    <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ inv.paid_at }}</span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -1306,13 +1567,12 @@ const getTypeBadge = (type) => {
             <h3 class="text-lg font-black text-slate-900">Purchases & Vendor Bills</h3>
             <p class="text-xs text-slate-500">Track equipment purchases, facility bills, and accounts payable.</p>
           </div>
-          <button
-            type="button"
-            @click="showBillModal = true"
-            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer flex items-center gap-1.5"
+          <Link
+            :href="route('admin.accounting.bills.create', club.slug)"
+            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm flex items-center gap-1.5 transition-colors"
           >
             <span>📄 Record Vendor Bill</span>
-          </button>
+          </Link>
         </div>
 
         <!-- Filter Bar -->
@@ -1383,26 +1643,66 @@ const getTypeBadge = (type) => {
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
               <tr v-for="b in filteredBills" :key="b.id" class="hover:bg-slate-50/80 transition-colors">
-                <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ b.bill_number }}</td>
-                <td class="py-3 px-4 font-bold text-slate-900">{{ b.vendor_name }}</td>
-                <td class="py-3 px-4 text-slate-600">{{ b.category }}</td>
+                <td class="py-3 px-4">
+                  <button
+                    type="button"
+                    @click="openEditBillModal(b)"
+                    class="font-mono font-bold text-amber-700 hover:text-amber-900 hover:underline cursor-pointer"
+                  >
+                    {{ b.bill_number }}
+                  </button>
+                </td>
+                <td class="py-3 px-4 font-bold text-slate-900">
+                  <button
+                    type="button"
+                    @click="openEditBillModal(b)"
+                    class="font-bold text-slate-900 hover:text-amber-700 hover:underline text-left cursor-pointer"
+                  >
+                    {{ b.vendor_name }}
+                  </button>
+                </td>
+                <td class="py-3 px-4 text-slate-600">
+                  <div class="flex items-center gap-2">
+                    <span>{{ b.category }}</span>
+                    <button
+                      v-if="b.attachment"
+                      type="button"
+                      @click="openAttachmentModal(b, 'bill')"
+                      title="View & Zoom Receipt Attachment"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[10px] font-extrabold rounded-md border border-amber-200 transition-colors cursor-pointer"
+                    >
+                      📎 View Receipt
+                    </button>
+                  </div>
+                </td>
                 <td class="py-3 px-4 text-slate-500">{{ b.due_date }}</td>
                 <td class="py-3 px-4">
-                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', b.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200']">
+                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', b.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : b.status === 'draft' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-rose-50 text-rose-700 border-rose-200']">
                     {{ b.status }}
                   </span>
                 </td>
                 <td class="py-3 px-4 text-right font-black text-slate-900 font-mono">{{ b.formatted_amount }}</td>
                 <td class="py-3 px-4 text-center">
-                  <button
-                    v-if="b.status !== 'paid'"
-                    type="button"
-                    @click="markBillPaid(b.id)"
-                    class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
-                  >
-                    ✓ Pay Bill
-                  </button>
-                  <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ b.paid_at }}</span>
+                  <div class="flex items-center justify-center gap-1.5">
+                    <button
+                      v-if="b.status === 'draft'"
+                      type="button"
+                      @click="publishBill(b.id)"
+                      title="Approve & Post Bill to Accounts Payable"
+                      class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white border border-amber-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                    >
+                      🚀 Approve
+                    </button>
+                    <button
+                      v-else-if="b.status !== 'paid'"
+                      type="button"
+                      @click="markBillPaid(b.id)"
+                      class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    >
+                      ✓ Pay Bill
+                    </button>
+                    <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ b.paid_at }}</span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -2209,13 +2509,12 @@ const getTypeBadge = (type) => {
               <h3 class="text-base font-extrabold text-slate-900">General Ledger Journal Entries</h3>
               <p class="text-xs text-slate-500">Historical double-entry records posted to the ledger.</p>
             </div>
-            <button
-              type="button"
-              @click="showJournalModal = true"
-              class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+            <Link
+              :href="route('admin.accounting.journal.create', club.slug)"
+              class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all"
             >
               + Add Journal Entry
-            </button>
+            </Link>
           </div>
 
           <div class="p-6 space-y-4">
@@ -2243,6 +2542,12 @@ const getTypeBadge = (type) => {
                     <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold uppercase text-[9px]">
                       {{ entry.status }}
                     </span>
+                    <Link
+                      :href="route('admin.accounting.journal.edit', { clubSlug: club.slug, id: entry.id })"
+                      class="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px] rounded-lg transition-colors"
+                    >
+                      Edit
+                    </Link>
                   </div>
                 </div>
 
@@ -2397,13 +2702,12 @@ const getTypeBadge = (type) => {
                     >
                       Edit
                     </Link>
-                    <button
-                      type="button"
-                      @click="showBillModal = true; billForm.vendor_name = c.name"
-                      class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    <Link
+                      :href="route('admin.accounting.bills.create', { clubSlug: club.slug, vendor: c.name })"
+                      class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-extrabold rounded-lg transition-all"
                     >
                       + Record Bill
-                    </button>
+                    </Link>
                   </div>
                 </td>
               </tr>
@@ -2445,10 +2749,10 @@ const getTypeBadge = (type) => {
               Reconciliation Report
             </button>
 
-            <div class="relative">
+            <div class="relative manage-account-container">
               <button
                 type="button"
-                @click="showManageAccountMenu = !showManageAccountMenu"
+                @click.stop="showManageAccountMenu = !showManageAccountMenu"
                 class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg transition-all flex items-center gap-1 cursor-pointer"
               >
                 <span>Manage Account</span>
@@ -2591,16 +2895,7 @@ const getTypeBadge = (type) => {
 
         <!-- SUB-TAB 1: RECONCILE WORKSPACE -->
         <div v-if="reconSubTab === 'reconcile'" class="space-y-4">
-          <!-- Header Sub-banner -->
-          <div class="px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500 font-medium">
-            <div>
-              <a href="#" @click.prevent class="text-sky-600 font-bold hover:underline">What's this?</a>
-              <span class="ml-1">Review your bank statement lines...</span>
-            </div>
-            <div class="text-slate-400 font-normal">
-              ...then match with your transactions in the system
-            </div>
-          </div>
+
 
           <!-- Statement Line Rows Stack -->
           <div class="space-y-4">
@@ -2622,9 +2917,34 @@ const getTypeBadge = (type) => {
                   ]"
                 >
                   <div>
-                    <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center justify-between text-xs relative">
                       <span class="font-semibold text-slate-400">{{ tx.transaction_date }}</span>
-                      <a href="#" @click.prevent class="text-sky-600 hover:underline font-medium">Options ▾</a>
+                      
+                      <div class="relative statement-options-container">
+                        <button
+                          type="button"
+                          @click.stop="toggleOptionsDropdown(tx.id)"
+                          class="text-sky-600 hover:text-sky-800 hover:underline font-medium focus:outline-none cursor-pointer"
+                        >
+                          Options ▾
+                        </button>
+                        
+                        <div
+                          v-if="activeOptionsTxId === tx.id"
+                          class="absolute right-0 top-5 z-30 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 text-xs font-semibold text-slate-700 animate-in fade-in duration-100"
+                        >
+                          <button
+                            type="button"
+                            @click="deleteSingleStatementLine(tx.id)"
+                            class="w-full text-left px-3.5 py-2 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer transition-colors"
+                          >
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete statement line
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     <div class="mt-1">
                       <h4 class="font-extrabold text-slate-900 text-sm leading-snug truncate">{{ tx.raw_description }}</h4>
@@ -2632,7 +2952,78 @@ const getTypeBadge = (type) => {
                         {{ tx.reference || (tx.amount > 0 ? 'FASTER PAYMENT' : 'DIRECT DEBIT') }}
                       </span>
                     </div>
-                    <a href="#" @click.prevent class="text-xs text-sky-600 hover:underline inline-block mt-1 font-medium">More details</a>
+                    <div class="relative statement-details-container inline-block mt-1">
+                      <a
+                        href="#"
+                        @click.prevent.stop="toggleDetailsPopover(tx.id)"
+                        class="text-xs text-sky-600 hover:underline inline-block font-medium cursor-pointer"
+                      >
+                        More details
+                      </a>
+
+                      <!-- Statement Details Popover -->
+                      <div
+                        v-if="activeDetailsTxId === tx.id"
+                        class="absolute left-0 top-full mt-2.5 z-50 w-80 sm:w-96 bg-white border border-slate-300 rounded-lg shadow-2xl p-4 text-xs font-sans animate-in fade-in duration-100"
+                        @click.stop
+                      >
+                        <!-- Top Pointer Arrow -->
+                        <div class="absolute -top-1.5 left-6 w-3 h-3 bg-white border-t border-l border-slate-300 rotate-45 z-10"></div>
+
+                        <!-- Header -->
+                        <div class="flex items-center justify-between pb-3">
+                          <h3 class="text-sm font-extrabold text-slate-900">Statement Details</h3>
+                          <div class="flex items-center gap-2 text-[11px] text-slate-500">
+                            <span>Esc to close</span>
+                            <button
+                              type="button"
+                              @click="activeDetailsTxId = null"
+                              class="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer focus:outline-none"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Details Table -->
+                        <table class="w-full border-collapse border border-slate-200 text-xs">
+                          <tbody>
+                            <tr>
+                              <td class="w-1/2 border border-slate-200 p-2 text-right text-slate-600 font-normal">Transaction Date</td>
+                              <td class="w-1/2 border border-slate-200 p-2 text-left text-slate-900 font-medium">{{ tx.transaction_date }}</td>
+                            </tr>
+                            <tr>
+                              <td class="border border-slate-200 p-2 text-right text-slate-600 font-normal">Payee</td>
+                              <td class="border border-slate-200 p-2 text-left text-slate-900 font-medium">{{ tx.payee || '' }}</td>
+                            </tr>
+                            <tr>
+                              <td class="border border-slate-200 p-2 text-right text-slate-600 font-normal">Reference</td>
+                              <td class="border border-slate-200 p-2 text-left text-slate-900 font-medium break-all">{{ tx.reference || (tx.amount > 0 ? 'CREDIT' : 'DEBIT') }}</td>
+                            </tr>
+                            <tr>
+                              <td class="border border-slate-200 p-2 text-right text-slate-600 font-normal">Description</td>
+                              <td class="border border-slate-200 p-2 text-left text-slate-900 font-medium break-words">{{ tx.raw_description }}</td>
+                            </tr>
+                            <tr>
+                              <td class="border border-slate-200 p-2 text-right text-slate-600 font-normal">Transaction Amount</td>
+                              <td class="border border-slate-200 p-2 text-left text-slate-900 font-medium">{{ number_format(Math.abs(tx.amount), 2) }}</td>
+                            </tr>
+                            <tr>
+                              <td class="border border-slate-200 p-2 text-right text-slate-600 font-normal">Transaction Type</td>
+                              <td class="border border-slate-200 p-2 text-left text-slate-900 font-medium">{{ tx.amount < 0 ? 'Debit' : 'Credit' }}</td>
+                            </tr>
+                            <tr>
+                              <td class="border border-slate-200 p-2 text-right text-slate-600 font-normal">Cheque No.</td>
+                              <td class="border border-slate-200 p-2 text-left text-slate-900 font-medium">{{ tx.cheque_number || '' }}</td>
+                            </tr>
+                            <tr>
+                              <td class="border border-slate-200 p-2 text-right text-slate-600 font-normal">Analysis Code</td>
+                              <td class="border border-slate-200 p-2 text-left text-slate-900 font-medium">{{ tx.analysis_code || '' }}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="pt-2 border-t border-slate-100 flex items-end justify-between">
@@ -3536,7 +3927,7 @@ const getTypeBadge = (type) => {
             />
           </div>
 
-          <div class="pt-2 flex items-center justify-end gap-2">
+          <div class="pt-2 flex items-center justify-between gap-2">
             <button
               type="button"
               @click="showInvoiceModal = false"
@@ -3544,13 +3935,24 @@ const getTypeBadge = (type) => {
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              :disabled="invoiceForm.processing"
-              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
-            >
-              Issue Invoice
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="submitInvoice(true)"
+                :disabled="invoiceForm.processing"
+                class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                📝 Save Draft
+              </button>
+              <button
+                type="button"
+                @click="submitInvoice(false)"
+                :disabled="invoiceForm.processing"
+                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+              >
+                Issue Invoice
+              </button>
+            </div>
           </div>
         </form>
       </div>
@@ -3621,7 +4023,21 @@ const getTypeBadge = (type) => {
             ></textarea>
           </div>
 
-          <div class="pt-2 flex items-center justify-end gap-2">
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Receipt / Invoice File (PDF, PNG, JPG, WEBP)</label>
+            <input
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg,.webp"
+              @change="handleBillFileChange"
+              class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
+            />
+            <p v-if="billForm.errors.attachment" class="text-[11px] text-red-600 font-semibold mt-0.5">{{ billForm.errors.attachment }}</p>
+            <p v-if="billForm.attachment" class="text-[10px] text-emerald-600 font-bold mt-0.5">
+              Attached: {{ billForm.attachment.name }}
+            </p>
+          </div>
+
+          <div class="pt-2 flex items-center justify-between gap-2">
             <button
               type="button"
               @click="showBillModal = false"
@@ -3629,13 +4045,24 @@ const getTypeBadge = (type) => {
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              :disabled="billForm.processing"
-              class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
-            >
-              Record Bill
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="submitBill(true)"
+                :disabled="billForm.processing"
+                class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                📝 Save Draft
+              </button>
+              <button
+                type="button"
+                @click="submitBill(false)"
+                :disabled="billForm.processing"
+                class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+              >
+                Record & Post Bill
+              </button>
+            </div>
           </div>
         </form>
       </div>
@@ -3842,6 +4269,493 @@ const getTypeBadge = (type) => {
             </button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal 9: Statement Line Details -->
+    <div
+      v-if="showStatementLineDetailsModal && selectedStatementLineDetails"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4"
+      @click="showStatementLineDetailsModal = false"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5"
+        @click.stop
+      >
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-base font-black text-slate-900">Bank Statement Line Details</h3>
+            <p class="text-xs text-slate-500">Full metadata imported from bank statement feed.</p>
+          </div>
+          <button
+            type="button"
+            @click="showStatementLineDetailsModal = false"
+            class="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+            <div>
+              <span class="text-[10px] font-extrabold uppercase text-slate-400 block mb-0.5">Transaction Date</span>
+              <span class="font-bold text-slate-900 text-sm">{{ selectedStatementLineDetails.transaction_date }}</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-extrabold uppercase text-slate-400 block mb-0.5">Amount</span>
+              <span :class="['font-black text-base', selectedStatementLineDetails.amount < 0 ? 'text-slate-900' : 'text-emerald-700']">
+                {{ selectedStatementLineDetails.amount < 0 ? 'Spent £' : 'Received £' }}{{ number_format(Math.abs(selectedStatementLineDetails.amount), 2) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Raw Bank Description / Payee</span>
+            <div class="bg-white p-3 rounded-xl border border-slate-200 font-extrabold text-slate-900 text-sm leading-snug">
+              {{ selectedStatementLineDetails.raw_description }}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Reference</span>
+              <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 font-mono font-bold text-slate-800">
+                {{ selectedStatementLineDetails.reference || (selectedStatementLineDetails.amount > 0 ? 'FASTER PAYMENT' : 'DIRECT DEBIT') }}
+              </div>
+            </div>
+            <div class="space-y-1">
+              <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Running Balance</span>
+              <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 font-mono font-bold text-slate-800">
+                {{ selectedStatementLineDetails.balance_after ? '£' + number_format(selectedStatementLineDetails.balance_after, 2) : 'N/A' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div>
+              <span class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1">Status</span>
+              <span
+                :class="[
+                  'px-2.5 py-1 text-[10px] font-black rounded-full uppercase tracking-wider inline-block',
+                  selectedStatementLineDetails.status === 'Reconciled' ? 'bg-emerald-100 text-emerald-800' :
+                  selectedStatementLineDetails.status === 'Deleted' ? 'bg-rose-100 text-rose-800' :
+                  'bg-amber-100 text-amber-800'
+                ]"
+              >
+                {{ selectedStatementLineDetails.status || 'Unmatched' }}
+              </span>
+            </div>
+            <div>
+              <span class="text-[10px] font-extrabold uppercase text-slate-400 block mb-1">System Record ID</span>
+              <span class="font-mono text-slate-500 font-bold text-xs">#{{ selectedStatementLineDetails.id }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <button
+            type="button"
+            @click="deleteSingleStatementLine(selectedStatementLineDetails.id); showStatementLineDetailsModal = false;"
+            class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete Statement Line
+          </button>
+          <button
+            type="button"
+            @click="showStatementLineDetailsModal = false"
+            class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Modal 10: Attachment Pop-Out Viewer with Zoom & Delete -->
+    <div
+      v-if="previewModal.show"
+      class="fixed inset-0 z-50 flex flex-col bg-slate-950/90 backdrop-blur-md p-4 sm:p-6 text-white"
+      @click="previewModal.show = false"
+    >
+      <div
+        class="flex-1 flex flex-col max-w-6xl w-full mx-auto bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden"
+        @click.stop
+      >
+        <!-- Modal Toolbar Header -->
+        <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">📎</span>
+            <div>
+              <h3 class="text-sm font-black text-white tracking-tight">{{ previewModal.title }}</h3>
+              <p class="text-[11px] font-mono text-slate-400">{{ previewModal.fileName }}</p>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+            <!-- Zoom Controls -->
+            <div class="flex items-center bg-slate-800 rounded-xl p-1 border border-slate-700">
+              <button
+                type="button"
+                @click="zoomOut"
+                title="Zoom Out"
+                class="px-2.5 py-1 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors cursor-pointer"
+              >
+                🔍−
+              </button>
+              <span class="px-2.5 font-mono text-[11px] text-sky-400 w-12 text-center">
+                {{ Math.round(zoomLevel * 100) }}%
+              </span>
+              <button
+                type="button"
+                @click="zoomIn"
+                title="Zoom In"
+                class="px-2.5 py-1 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors cursor-pointer"
+              >
+                🔍+
+              </button>
+              <button
+                type="button"
+                @click="resetZoom"
+                title="Reset Zoom"
+                class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors cursor-pointer border-l border-slate-700 ml-1 text-[11px]"
+              >
+                ↺ Reset
+              </button>
+            </div>
+
+            <!-- Rotate control (Image only) -->
+            <button
+              v-if="!previewModal.mimeType.includes('pdf')"
+              type="button"
+              @click="rotateImage"
+              title="Rotate Image"
+              class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
+            >
+              ↻ Rotate
+            </button>
+
+            <!-- Open in New Tab -->
+            <a
+              :href="previewModal.url"
+              target="_blank"
+              class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
+            >
+              ↗ New Tab
+            </a>
+
+            <!-- Delete Attachment -->
+            <button
+              type="button"
+              @click="deleteAttachment"
+              class="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-xl transition-colors cursor-pointer flex items-center gap-1 font-extrabold"
+            >
+              🗑 Delete
+            </button>
+
+            <!-- Close Modal -->
+            <button
+              type="button"
+              @click="previewModal.show = false"
+              class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors font-bold text-sm cursor-pointer ml-2"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <!-- Document / Image Viewer Canvas -->
+        <div class="flex-1 bg-slate-950 overflow-auto flex items-center justify-center p-6 relative">
+          <!-- Image View -->
+          <div
+            v-if="!previewModal.mimeType.includes('pdf')"
+            class="transition-transform duration-150 ease-out origin-center flex items-center justify-center"
+            :style="{ transform: `scale(${zoomLevel}) rotate(${rotation}deg)` }"
+          >
+            <img
+              :src="previewModal.url"
+              :alt="previewModal.title"
+              class="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl border border-slate-800"
+            />
+          </div>
+
+          <!-- PDF View -->
+          <iframe
+            v-else
+            :src="previewModal.url"
+            class="w-full h-[75vh] rounded-2xl bg-white border border-slate-800 shadow-2xl transition-transform duration-150 ease-out origin-center"
+            :style="{ transform: `scale(${zoomLevel})` }"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Invoice Modal -->
+    <div v-if="showEditInvoiceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="showEditInvoiceModal = false">
+      <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-8" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-base font-black text-slate-900">Edit Invoice {{ editingInvoice?.invoice_number }}</h3>
+            <p class="text-xs text-slate-500">Update draft sales invoice details, customer, date or line items.</p>
+          </div>
+          <button type="button" @click="showEditInvoiceModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+
+        <form @submit.prevent="submitEditInvoice" class="space-y-4 text-xs">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Customer *</label>
+              <select
+                v-model="editInvoiceForm.contact_id"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-sky-500"
+                required
+              >
+                <option value="" disabled>Select Customer...</option>
+                <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Invoice Date *</label>
+              <input
+                v-model="editInvoiceForm.issue_date"
+                type="date"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold text-xs focus:outline-none focus:border-sky-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Due Date</label>
+              <input
+                v-model="editInvoiceForm.due_date"
+                type="date"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold text-xs focus:outline-none focus:border-sky-500"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Reference / PO #</label>
+              <input
+                v-model="editInvoiceForm.reference"
+                type="text"
+                placeholder="e.g. PO-10492"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold text-xs focus:outline-none focus:border-sky-500"
+              />
+            </div>
+          </div>
+
+          <!-- Line Items Section -->
+          <div class="space-y-2 border-t border-slate-100 pt-3">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-slate-800">Line Items</span>
+              <button
+                type="button"
+                @click="addEditInvoiceLine"
+                class="px-2.5 py-1 text-[11px] font-bold bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-lg transition-all"
+              >
+                + Add Line
+              </button>
+            </div>
+
+            <div v-for="(line, idx) in editInvoiceForm.lines" :key="idx" class="grid grid-cols-12 gap-2 items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+              <div class="col-span-5">
+                <input
+                  v-model="line.description"
+                  type="text"
+                  placeholder="Item Description..."
+                  class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-sky-500 bg-white"
+                  required
+                />
+              </div>
+              <div class="col-span-3">
+                <select
+                  v-model="line.account_id"
+                  class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:border-sky-500 bg-white"
+                  required
+                >
+                  <option value="" disabled>Account...</option>
+                  <option v-for="acc in revenueAccounts" :key="acc.id" :value="acc.id">
+                    {{ acc.code }} - {{ acc.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-span-3">
+                <input
+                  v-model="line.amount"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-mono font-bold focus:outline-none focus:border-sky-500 bg-white text-right"
+                  required
+                />
+              </div>
+              <div class="col-span-1 text-center">
+                <button
+                  type="button"
+                  @click="removeEditInvoiceLine(idx)"
+                  class="text-rose-500 hover:text-rose-700 font-bold text-xs"
+                  title="Remove Line"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 border-t border-slate-100 pt-3">
+            <button
+              type="button"
+              @click="showEditInvoiceModal = false"
+              class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="savingEditInvoice"
+              class="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-extrabold shadow-sm transition-all disabled:opacity-50"
+            >
+              {{ savingEditInvoice ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Bill Modal -->
+    <div v-if="showEditBillModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="showEditBillModal = false">
+      <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-8" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-base font-black text-slate-900">Edit Bill {{ editingBill?.bill_number }}</h3>
+            <p class="text-xs text-slate-500">Update draft purchase bill details, supplier, date or expense line items.</p>
+          </div>
+          <button type="button" @click="showEditBillModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+
+        <form @submit.prevent="submitEditBill" class="space-y-4 text-xs">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Supplier / Vendor *</label>
+              <select
+                v-model="editBillForm.contact_id"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-amber-500"
+                required
+              >
+                <option value="" disabled>Select Supplier...</option>
+                <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Bill Date *</label>
+              <input
+                v-model="editBillForm.issue_date"
+                type="date"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold text-xs focus:outline-none focus:border-amber-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Due Date</label>
+              <input
+                v-model="editBillForm.due_date"
+                type="date"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold text-xs focus:outline-none focus:border-amber-500"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="block font-bold text-slate-700">Supplier Invoice / Ref #</label>
+              <input
+                v-model="editBillForm.reference"
+                type="text"
+                placeholder="e.g. INV-9982"
+                class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold text-xs focus:outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+
+          <!-- Line Items Section -->
+          <div class="space-y-2 border-t border-slate-100 pt-3">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-slate-800">Line Items</span>
+              <button
+                type="button"
+                @click="addEditBillLine"
+                class="px-2.5 py-1 text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg transition-all"
+              >
+                + Add Line
+              </button>
+            </div>
+
+            <div v-for="(line, idx) in editBillForm.lines" :key="idx" class="grid grid-cols-12 gap-2 items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+              <div class="col-span-5">
+                <input
+                  v-model="line.description"
+                  type="text"
+                  placeholder="Item Description..."
+                  class="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-amber-500 bg-white"
+                  required
+                />
+              </div>
+              <div class="col-span-3">
+                <select
+                  v-model="line.account_id"
+                  class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:border-amber-500 bg-white"
+                  required
+                >
+                  <option value="" disabled>Expense Account...</option>
+                  <option v-for="acc in expenseAccounts" :key="acc.id" :value="acc.id">
+                    {{ acc.code }} - {{ acc.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-span-3">
+                <input
+                  v-model="line.amount"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-mono font-bold focus:outline-none focus:border-amber-500 bg-white text-right"
+                  required
+                />
+              </div>
+              <div class="col-span-1 text-center">
+                <button
+                  type="button"
+                  @click="removeEditBillLine(idx)"
+                  class="text-rose-500 hover:text-rose-700 font-bold text-xs"
+                  title="Remove Line"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 border-t border-slate-100 pt-3">
+            <button
+              type="button"
+              @click="showEditBillModal = false"
+              class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="savingEditBill"
+              class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-extrabold shadow-sm transition-all disabled:opacity-50"
+            >
+              {{ savingEditBill ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </AdminLayout>

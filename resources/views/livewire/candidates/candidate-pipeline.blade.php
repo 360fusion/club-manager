@@ -3,15 +3,23 @@
     <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 shadow-inner">
         <a
             href="{{ route('admin.club_acc.members.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.members.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60"
         >
             <span>👥</span>
             <span>Members Roster</span>
         </a>
 
         <a
+            href="{{ route('admin.officers.index', ['clubSlug' => $club->slug]) }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60"
+        >
+            <span>👔</span>
+            <span>Annual Officer Rosters &amp; History</span>
+        </a>
+
+        <a
             href="{{ route('admin.club_acc.candidates.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.candidates.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 bg-slate-900 text-white shadow-md font-black"
         >
             <span>📋</span>
             <span>Candidates (Form P Vetting)</span>
@@ -19,7 +27,7 @@
 
         <a
             href="{{ route('admin.club_acc.subscriptions.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.subscriptions.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60"
         >
             <span>💳</span>
             <span>Subscriptions &amp; Dues</span>
@@ -92,19 +100,19 @@
         </div>
     </div>
 
-    <!-- Search & Filter Controls -->
+    <!-- Search & Filter Controls + View Mode Switcher -->
     <div class="p-4 bg-white border border-slate-200/80 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        <div class="relative w-full md:w-80">
-            <input
-                type="text"
-                wire:model.live.debounce.300ms="search"
-                placeholder="Search candidate name, email..."
-                class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
-            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        </div>
+        <div class="flex items-center gap-3 w-full md:w-auto flex-wrap">
+            <div class="relative w-full sm:w-80">
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Search candidate name, email..."
+                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
 
-        <div class="flex items-center gap-3 w-full md:w-auto">
             <select
                 wire:model.live="stageFilter"
                 class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -115,131 +123,262 @@
                 @endforeach
             </select>
         </div>
+
+        <!-- View Mode Switcher (2 Icons: Kanban & Table List) -->
+        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0 self-end md:self-auto">
+            <button
+                type="button"
+                wire:click="$set('viewMode', 'kanban')"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer {{ $viewMode === 'kanban' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+                title="Kanban Board View"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2m0 10V7m6 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+                <span>Board</span>
+            </button>
+            <button
+                type="button"
+                wire:click="$set('viewMode', 'list')"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer {{ $viewMode === 'list' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+                title="Table List View"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                <span>List</span>
+            </button>
+        </div>
     </div>
 
-    <!-- Kanban Pipeline Board -->
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 overflow-x-auto pb-4">
-        @foreach($stages as $stg)
-            @php
-                $colCandidates = $kanbanColumns[$stg->value]['candidates'];
-            @endphp
-            <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 flex flex-col min-h-[500px]">
-                <!-- Column Header -->
-                <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
-                    <h3 class="font-black text-xs text-slate-800 tracking-tight">{{ $stg->label() }}</h3>
-                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full {{ $stg->badgeClasses() }}">
-                        {{ $colCandidates->count() }}
-                    </span>
-                </div>
+    @if($viewMode === 'kanban')
+        <!-- Kanban Pipeline Board -->
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 overflow-x-auto pb-4">
+            @foreach($stages as $stg)
+                @php
+                    $colCandidates = $kanbanColumns[$stg->value]['candidates'];
+                @endphp
+                <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 flex flex-col min-h-[500px]">
+                    <!-- Column Header -->
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
+                        <h3 class="font-black text-xs text-slate-800 tracking-tight">{{ $stg->label() }}</h3>
+                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full {{ $stg->badgeClasses() }}">
+                            {{ $colCandidates->count() }}
+                        </span>
+                    </div>
 
-                <!-- Candidate Card Stack -->
-                <div class="space-y-3 flex-1">
-                    @forelse($colCandidates as $cand)
-                        <div class="p-3.5 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all space-y-2">
-                            <div class="flex items-start justify-between gap-1">
-                                <div>
-                                    <h4 class="font-bold text-xs text-slate-900">{{ $cand->full_name }}</h4>
-                                    @if($cand->occupation)
-                                        <p class="text-[10px] text-slate-500 font-medium">{{ $cand->occupation }}</p>
-                                    @endif
-                                </div>
-                                <span class="px-2 py-0.5 text-[9px] font-bold rounded border {{ $cand->stage->badgeClasses() }}">
-                                    {{ $cand->stage->value }}
-                                </span>
-                            </div>
-
-                            @if($cand->email || $cand->phone)
-                                <div class="text-[10px] text-slate-600 space-y-0.5">
-                                    @if($cand->email)<p>📧 {{ $cand->email }}</p>@endif
-                                    @if($cand->phone)<p>📞 {{ $cand->phone }}</p>@endif
-                                </div>
-                            @endif
-
-                            <!-- Proposer / Seconder Badges -->
-                            <div class="pt-1.5 border-t border-slate-100 flex flex-col gap-1 text-[10px]">
-                                @if($cand->proposer && $cand->seconder)
-                                    <div class="flex items-center gap-1 text-emerald-700 font-semibold">
-                                        <span>🤝</span>
-                                        <span>Prop: {{ $cand->proposer->last_name }} / Sec: {{ $cand->seconder->last_name }}</span>
+                    <!-- Candidate Card Stack -->
+                    <div class="space-y-3 flex-1">
+                        @forelse($colCandidates as $cand)
+                            <div class="p-3.5 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all space-y-2">
+                                <div class="flex items-start justify-between gap-1">
+                                    <div>
+                                        <h4 class="font-bold text-xs text-slate-900">{{ $cand->full_name }}</h4>
+                                        @if($cand->occupation)
+                                            <p class="text-[10px] text-slate-500 font-medium">{{ $cand->occupation }}</p>
+                                        @endif
                                     </div>
-                                @else
-                                    <div class="flex items-center gap-1 text-amber-700 font-medium">
-                                        <span>⚠️</span>
-                                        <span>Proposer/Seconder Pending</span>
+                                    <span class="px-2 py-0.5 text-[9px] font-bold rounded border {{ $cand->stage->badgeClasses() }}">
+                                        {{ $cand->stage->value }}
+                                    </span>
+                                </div>
+
+                                @if($cand->email || $cand->phone)
+                                    <div class="text-[10px] text-slate-600 space-y-0.5">
+                                        @if($cand->email)
+                                            <div class="truncate">✉️ {{ $cand->email }}</div>
+                                        @endif
+                                        @if($cand->phone)
+                                            <div class="truncate">📞 {{ $cand->phone }}</div>
+                                        @endif
                                     </div>
                                 @endif
 
-                                <!-- Form P Checklist Pills -->
-                                <div class="flex flex-wrap gap-1 mt-1">
-                                    @if($cand->form_p_signed_at)
-                                        <span class="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[9px] font-bold">Form P ✓</span>
-                                    @else
-                                        <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 border border-slate-200 rounded text-[9px]">Form P Missing</span>
-                                    @endif
+                                @if($cand->proposer || $cand->seconder)
+                                    <div class="pt-2 border-t border-slate-100 text-[10px] text-slate-500 space-y-0.5">
+                                        @if($cand->proposer)
+                                            <div class="truncate">P: <strong>{{ $cand->proposer->formatted_rank_name }}</strong></div>
+                                        @endif
+                                        @if($cand->seconder)
+                                            <div class="truncate">S: <strong>{{ $cand->seconder->formatted_rank_name }}</strong></div>
+                                        @endif
+                                    </div>
+                                @endif
 
-                                    @if($cand->rule_159_cleared)
-                                        <span class="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[9px] font-bold">Rule 159 Cleared</span>
-                                    @endif
+                                <!-- Quick Stage Transition & Action Buttons -->
+                                <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-1">
+                                    <select
+                                        wire:change="moveStage({{ $cand->id }}, $event.target.value)"
+                                        class="px-1.5 py-1 bg-slate-50 border border-slate-200 rounded text-[10px] font-semibold text-slate-700 cursor-pointer focus:outline-none"
+                                    >
+                                        @foreach($stages as $stgOpt)
+                                            <option value="{{ $stgOpt->value }}" {{ $cand->stage->value === $stgOpt->value ? 'selected' : '' }}>
+                                                → {{ $stgOpt->label() }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+
+                                    <div class="flex items-center gap-1">
+                                        <!-- Form P Vetting Modal Trigger -->
+                                        <button
+                                            type="button"
+                                            wire:click="openFormPModal({{ $cand->id }})"
+                                            class="p-1 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-md transition"
+                                            title="Form P Statutory Vetting"
+                                        >
+                                            📜
+                                        </button>
+
+                                        <!-- Edit Candidate -->
+                                        <button
+                                            type="button"
+                                            wire:click="editCandidate({{ $cand->id }})"
+                                            class="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition"
+                                            title="Edit Candidate"
+                                        >
+                                            ✏️
+                                        </button>
+
+                                        <!-- Delete Candidate -->
+                                        <button
+                                            type="button"
+                                            wire:click="deleteCandidate({{ $cand->id }})"
+                                            wire:confirm="Are you sure you want to remove {{ $cand->full_name }} from the pipeline?"
+                                            class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition"
+                                            title="Delete Candidate"
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-
-                            <!-- Actions Toolbar -->
-                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-1">
-                                <!-- Stage Select Dropdown -->
-                                <select
-                                    wire:change="moveStage({{ $cand->id }}, $event.target.value)"
-                                    class="text-[10px] font-bold bg-slate-100 border border-slate-200 text-slate-700 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
-                                >
-                                    @foreach($stages as $stgOpt)
-                                        <option value="{{ $stgOpt->value }}" {{ $cand->stage->value === $stgOpt->value ? 'selected' : '' }}>
-                                            → {{ $stgOpt->label() }}
-                                        </option>
-                                    @endforeach
-                                </select>
-
-                                <div class="flex items-center gap-1">
-                                    <!-- Form P Vetting Modal Trigger -->
-                                    <button
-                                        type="button"
-                                        wire:click="openFormPModal({{ $cand->id }})"
-                                        class="p-1 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-md transition"
-                                        title="Form P Statutory Vetting"
-                                    >
-                                        📜
-                                    </button>
-
-                                    <!-- Edit Candidate -->
-                                    <button
-                                        type="button"
-                                        wire:click="editCandidate({{ $cand->id }})"
-                                        class="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition"
-                                        title="Edit Candidate"
-                                    >
-                                        ✏️
-                                    </button>
-
-                                    <!-- Delete Candidate -->
-                                    <button
-                                        type="button"
-                                        wire:click="deleteCandidate({{ $cand->id }})"
-                                        wire:confirm="Are you sure you want to remove {{ $cand->full_name }} from the pipeline?"
-                                        class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition"
-                                        title="Delete Candidate"
-                                    >
-                                        🗑️
-                                    </button>
-                                </div>
+                        @empty
+                            <div class="p-4 text-center text-slate-400 text-[11px] italic bg-white/50 border border-dashed border-slate-200 rounded-xl">
+                                No candidates in this stage.
                             </div>
-                        </div>
-                    @empty
-                        <div class="p-4 text-center text-slate-400 text-[11px] italic bg-white/50 border border-dashed border-slate-200 rounded-xl">
-                            No candidates in this stage.
-                        </div>
-                    @endforelse
+                        @endforelse
+                    </div>
                 </div>
+            @endforeach
+        </div>
+    @else
+        <!-- Table / List View -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden text-xs">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-extrabold uppercase tracking-wider text-[10px]">
+                            <th class="py-3.5 px-4">Candidate &amp; Contact Details</th>
+                            <th class="py-3.5 px-4">Current Stage</th>
+                            <th class="py-3.5 px-4">Form P Vetting (Proposer / Seconder)</th>
+                            <th class="py-3.5 px-4">Clearance &amp; Status</th>
+                            <th class="py-3.5 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-800">
+                        @forelse($allCandidates as $cand)
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="py-3.5 px-4">
+                                    <div class="space-y-0.5">
+                                        <div class="font-bold text-slate-900 text-xs">{{ $cand->full_name }}</div>
+                                        @if($cand->occupation)
+                                            <div class="text-[11px] text-slate-500 font-medium">{{ $cand->occupation }}</div>
+                                        @endif
+                                        <div class="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap">
+                                            @if($cand->email) <span>✉️ {{ $cand->email }}</span> @endif
+                                            @if($cand->phone) <span>📞 {{ $cand->phone }}</span> @endif
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="py-3.5 px-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <select
+                                            wire:change="moveStage({{ $cand->id }}, $event.target.value)"
+                                            class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                        >
+                                            @foreach($stages as $stgOpt)
+                                                <option value="{{ $stgOpt->value }}" {{ $cand->stage->value === $stgOpt->value ? 'selected' : '' }}>
+                                                    {{ $stgOpt->label() }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </td>
+
+                                <td class="py-3.5 px-4">
+                                    <div class="space-y-0.5 text-[11px]">
+                                        <div><span class="text-slate-400">Proposer:</span> <strong class="text-slate-700">{{ $cand->proposer?->formatted_rank_name ?: 'Not assigned' }}</strong></div>
+                                        <div><span class="text-slate-400">Seconder:</span> <strong class="text-slate-700">{{ $cand->seconder?->formatted_rank_name ?: 'Not assigned' }}</strong></div>
+                                    </div>
+                                </td>
+
+                                <td class="py-3.5 px-4 whitespace-nowrap text-[11px]">
+                                    @if($cand->rule_159_cleared)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            Rule 159 Cleared
+                                        </span>
+                                    @else
+                                        <span class="text-slate-400">—</span>
+                                    @endif
+                                </td>
+
+                                <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button
+                                            type="button"
+                                            wire:click="openFormPModal({{ $cand->id }})"
+                                            class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                                            title="Form P Statutory Vetting"
+                                        >
+                                            📜 Form P
+                                        </button>
+                                        @if($cand->stage->value === 'ballot_approved')
+                                            <button
+                                                type="button"
+                                                wire:click="openInitiationModal({{ $cand->id }})"
+                                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                                                title="Initiate Candidate"
+                                            >
+                                                🏛️ Initiate
+                                            </button>
+                                        @endif
+                                        <button
+                                            type="button"
+                                            wire:click="editCandidate({{ $cand->id }})"
+                                            class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                                            title="Edit Candidate"
+                                        >
+                                            ✏️
+                                        </button>
+                                        <button
+                                            type="button"
+                                            wire:click="deleteCandidate({{ $cand->id }})"
+                                            wire:confirm="Are you sure you want to remove {{ $cand->full_name }} from the pipeline?"
+                                            class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                            title="Delete Candidate"
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="py-12 text-center text-slate-400">
+                                    <div class="space-y-2">
+                                        <span class="text-2xl block">👥</span>
+                                        <p class="font-bold text-slate-700">No candidates found in pipeline.</p>
+                                        <p class="text-xs text-slate-400">Click "+ New Candidate Enquiry" to register a candidate.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        @endforeach
-    </div>
+        </div>
+    @endif
 
     <!-- Candidate Add / Edit Modal -->
     @if($showCandidateModal)

@@ -3,6 +3,7 @@
 namespace App\Domains\ClubAccounting\Services\Governance;
 
 use App\Domains\ClubAccounting\Enums\AttendanceType;
+use App\Domains\ClubAccounting\Enums\CommitteeMeetingStatus;
 use App\Domains\ClubAccounting\Mail\CommitteeAgendaPackMailable;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAttendee;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
@@ -205,6 +206,10 @@ class CommitteePackCompilerService
         ClubCommitteeAttendee::where('committee_meeting_id', $meeting->id)
             ->whereIn('user_id', $recipientMemberIds)
             ->update(['pack_sent_at' => Carbon::now()]);
+
+        if ($dispatchedCount > 0) {
+            $meeting->update(['status' => CommitteeMeetingStatus::Scheduled]);
+        }
 
         return $dispatchedCount;
     }

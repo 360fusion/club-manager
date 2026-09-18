@@ -19,17 +19,40 @@ class AnalyticsController extends Controller
             ->withCount(['users', 'events', 'posts'])
             ->firstOrFail();
 
-        // 1. Membership Revenue Projection
-        $monthlyDuesEst = $club->membershipPlans->sum('price') * max(1, $club->users_count);
+        // 1. Members Count from Lodge Roster & Active Membership Database
+        $accMembersCount = \App\Domains\ClubAccounting\Models\Member::where('club_id', $club->id)->active()->count();
+        $totalMembersCount = max($accMembersCount, $club->users_count);
 
-        // 2. Event & RSVP Revenue
+        // 2. Pending Users & Applications Count
+        $pendingUsersCount = DB::table('club_user')
+            ->where('club_id', $club->id)
+            ->where('status', 'pending')
+            ->count();
+
+        // 3. Open Unpaid Invoices & Vendor Bills Count
+        $openInvoicesCount = \App\Models\Invoice::where('club_id', $club->id)->where('status', 'unpaid')->count();
+        $openBillsCount = \App\Models\Accounting\Bill::where('club_id', $club->id)->where('status', 'unpaid')->count();
+        $totalOpenInvoices = $openInvoicesCount + $openBillsCount;
+
+        // 4. Event & RSVP Revenue
         $totalEventRevenue = DB::table('event_user')
             ->join('events', 'events.id', '=', 'event_user.event_id')
             ->where('events.club_id', $club->id)
             ->where('event_user.payment_status', 'paid')
             ->sum('event_user.amount_paid');
 
-        // 3. RSVP Attendance Metrics
+        // 5. Total Sales / Revenue Projection
+        $paidInvoicesSum = (float) \App\Models\Invoice::where('club_id', $club->id)->where('status', 'paid')->sum('amount');
+        $paidSubscriptionsSum = (float) \App\Domains\ClubAccounting\Models\MemberSubscription::where('club_id', $club->id)->sum('amount_paid');
+        $revenueTotal = $paidInvoicesSum + $paidSubscriptionsSum + (float) $totalEventRevenue;
+
+        if ($revenueTotal <= 0) {
+            $tier = \App\Domains\ClubAccounting\Models\SubscriptionTier::where('club_id', $club->id)->first();
+            $tierRate = $tier ? (float) $tier->annual_amount : 180.00;
+            $revenueTotal = $totalMembersCount * $tierRate;
+        }
+
+        // 6. RSVP Attendance Metrics
         $totalRSVPs = DB::table('event_user')
             ->join('events', 'events.id', '=', 'event_user.event_id')
             ->where('events.club_id', $club->id)
@@ -72,8 +95,10 @@ class AnalyticsController extends Controller
             'club' => $club,
             'upcomingMeetings' => $upcomingMeetings,
             'metrics' => [
-                'total_members' => $club->users_count,
-                'monthly_dues_est' => number_format($monthlyDuesEst, 2),
+                'total_members' => $totalMembersCount,
+                'pending_users_count' => $pendingUsersCount,
+                'open_invoices_count' => $totalOpenInvoices,
+                'monthly_dues_est' => number_format($revenueTotal, 2),
                 'total_event_revenue' => number_format($totalEventRevenue, 2),
                 'total_rsvps' => $totalRSVPs,
                 'attending_rsvps' => $attendingRSVPs,

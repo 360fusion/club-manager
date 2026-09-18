@@ -205,6 +205,24 @@ class UserAdminController extends Controller
             'invited_at' => $sendInvite ? now() : null,
         ]);
 
+        // Sync with club_acc_members domain roster
+        $nameParts = explode(' ', trim($user->name), 2);
+        \App\Domains\ClubAccounting\Models\Member::firstOrCreate(
+            [
+                'club_id' => $club->id,
+                'email' => strtolower($user->email),
+            ],
+            [
+                'user_id' => $user->id,
+                'first_name' => $nameParts[0] ?? $user->name,
+                'last_name' => $nameParts[1] ?? '',
+                'title' => 'Bro',
+                'masonic_rank' => $validated['rank'] ?? 'Bro',
+                'membership_status' => \App\Domains\ClubAccounting\Enums\MembershipStatus::Active,
+                'current_office' => \App\Domains\ClubAccounting\Enums\LodgeOffice::Member,
+            ]
+        );
+
         if ($sendInvite && $token) {
             $acceptUrl = route('invitation.accept', ['slug' => $club->slug, 'token' => $token]);
             try {

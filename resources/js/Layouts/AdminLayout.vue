@@ -51,6 +51,30 @@ const copyInviteLink = () => {
   navigator.clipboard.writeText(inviteUrl);
   alert('Invite link copied to clipboard: ' + inviteUrl);
 };
+
+const currentActiveTab = computed(() => {
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname;
+    if (path.includes('/admin/meetings')) return 'meetings';
+    if (path.includes('/admin/committee')) return 'committee';
+    if (path.includes('/admin/events')) return 'events';
+    if (path.includes('/admin/accounting')) return 'accounting';
+    if (path.includes('/admin/members') || path.includes('/admin/users') || path.includes('/admin/candidates') || path.includes('/admin/subscriptions')) return 'members';
+    if (path.includes('/admin/posts')) return 'posts';
+    if (path.includes('/admin/newsletters')) return 'newsletters';
+    if (path.includes('/admin/pages')) return 'pages';
+    if (path.includes('/admin/media')) return 'media';
+    if (path.includes('/admin/charity')) return 'charity';
+    if (path.includes('/admin/settings') || path.includes('/admin/profile')) return 'settings';
+    if (path.includes('/admin/analytics') || path.endsWith('/admin') || path.endsWith('/admin/')) return 'dashboard';
+  }
+
+  if (props.activeTab && props.activeTab !== 'dashboard') {
+    return props.activeTab;
+  }
+
+  return props.activeTab || 'dashboard';
+});
 </script>
 
 <template>
@@ -155,7 +179,7 @@ const copyInviteLink = () => {
             :href="route('admin.analytics', clubSlug)" 
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'dashboard' 
+              currentActiveTab === 'dashboard' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
@@ -166,12 +190,12 @@ const copyInviteLink = () => {
             <span>Dashboard</span>
           </Link>
 
-          <!-- 2. Meetings & Summonses -->
+          <!-- 2. Meetings & Governance -->
           <Link 
             :href="route('admin.meetings.index', { clubSlug })" 
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'meetings' 
+              currentActiveTab === 'meetings' || currentActiveTab === 'committee'
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
@@ -182,28 +206,12 @@ const copyInviteLink = () => {
             <span>Meetings</span>
           </Link>
 
-          <!-- 2b. Committee & Board Governance -->
-          <a 
-            :href="route('admin.committee.index', { clubSlug })" 
-            :class="[
-              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'committee' 
-                ? 'bg-slate-800 text-white font-bold shadow-sm' 
-                : 'hover:bg-slate-800 hover:text-white text-slate-300'
-            ]"
-          >
-            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0V7m0 4h4m-4 0H7" />
-            </svg>
-            <span>Committee</span>
-          </a>
-
           <!-- 3. Events -->
           <Link 
             :href="route('admin.events.index', { clubSlug })" 
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'events' 
+              currentActiveTab === 'events' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
@@ -219,7 +227,7 @@ const copyInviteLink = () => {
             :href="route('admin.club_acc.members.index', { clubSlug })" 
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'users' || activeTab === 'members' || activeTab === 'candidates' || activeTab === 'subscriptions'
+              currentActiveTab === 'users' || currentActiveTab === 'members' || currentActiveTab === 'candidates' || currentActiveTab === 'subscriptions'
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
@@ -230,12 +238,12 @@ const copyInviteLink = () => {
             <span>Members</span>
           </a>
 
-          <!-- 5. Communications & Posts -->
+          <!-- 5. Communications -->
           <Link 
             :href="route('admin.posts.index', { clubSlug })" 
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'posts' 
+              currentActiveTab === 'posts' || currentActiveTab === 'newsletters' || currentActiveTab === 'updates'
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
@@ -246,28 +254,12 @@ const copyInviteLink = () => {
             <span>Communications</span>
           </Link>
 
-          <!-- Newsletters -->
-          <Link 
-            :href="route('admin.newsletters.index', { clubSlug })" 
-            :class="[
-              'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'newsletters' 
-                ? 'bg-slate-800 text-white font-bold shadow-sm' 
-                : 'hover:bg-slate-800 hover:text-white text-slate-300'
-            ]"
-          >
-            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            <span>Newsletters</span>
-          </Link>
-
           <!-- 7. CMS Pages -->
           <Link 
             :href="route('admin.pages.index', { clubSlug })" 
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'pages' 
+              currentActiveTab === 'pages' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
@@ -283,7 +275,7 @@ const copyInviteLink = () => {
             :href="route('admin.media.page', { clubSlug })"
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'media'
+              currentActiveTab === 'media'
                 ? 'bg-slate-800 text-white font-bold shadow-sm'
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
@@ -299,7 +291,7 @@ const copyInviteLink = () => {
             :href="route('admin.accounting.index', { clubSlug })"
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'accounting'
+              currentActiveTab === 'accounting'
                 ? 'bg-slate-800 text-white font-bold shadow-sm'
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
@@ -315,7 +307,7 @@ const copyInviteLink = () => {
             :href="route('admin.club_acc.charity.index', { clubSlug })"
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'charity'
+              currentActiveTab === 'charity'
                 ? 'bg-slate-800 text-white font-bold shadow-sm'
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
@@ -329,7 +321,7 @@ const copyInviteLink = () => {
             :href="route('admin.settings.show', { clubSlug })" 
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
-              activeTab === 'settings' || activeTab === 'profile' 
+              currentActiveTab === 'settings' || currentActiveTab === 'profile' 
                 ? 'bg-slate-800 text-white font-bold shadow-sm' 
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
@@ -358,12 +350,12 @@ const copyInviteLink = () => {
 
         <!-- Quick Actions & User Profile Dropdown -->
         <div class="flex items-center gap-3">
-          <Link :href="route('clubs.show', clubSlug)" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5">
+          <a :href="`/site/${clubSlug}`" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5">
             <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             <span>Live Site</span>
-          </Link>
+          </a>
 
           <Link :href="route('member.dashboard', clubSlug)" class="hidden sm:flex px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold rounded-xl transition-all items-center gap-1.5 shadow-sm">
             <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

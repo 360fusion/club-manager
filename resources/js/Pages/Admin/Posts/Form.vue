@@ -111,6 +111,18 @@ const onCoverImageFileSelect = (e) => {
   }
 };
 
+const removeCoverImage = () => {
+  form.cover_image_url = '';
+  form.cover_image = null;
+  coverImageFile.value = null;
+  coverImagePreview.value = '';
+};
+
+const removeBlockImage = (block) => {
+  block.url = '';
+  block.file = null;
+};
+
 const triggerFileInput = () => {
   if (fileInput.value) {
     fileInput.value.click();
@@ -387,7 +399,7 @@ const submitWithAction = (actionType) => {
         
         <!-- Header Metadata Section -->
         <div class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Article Title *</label>
               <input v-model="form.title" type="text" required placeholder="Summer Regatta Results & Trophy Ceremony" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500" />
@@ -396,6 +408,11 @@ const submitWithAction = (actionType) => {
             <div>
               <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">URL Slug *</label>
               <input v-model="form.slug" type="text" required placeholder="summer-regatta-results" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-sky-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Post Date & Time *</label>
+              <input v-model="form.published_at" type="datetime-local" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-sky-500" />
             </div>
           </div>
 
@@ -408,13 +425,23 @@ const submitWithAction = (actionType) => {
           <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
             <div class="flex items-center justify-between">
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">🖼️ Article Banner / Cover Image</label>
-              <button
-                type="button"
-                @click="openMediaLibrary('cover', null, 'news')"
-                class="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all flex items-center gap-1 cursor-pointer"
-              >
-                📁 Choose from Media Library
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  v-if="coverImagePreview || form.cover_image_url"
+                  type="button"
+                  @click="removeCoverImage"
+                  class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  🗑️ Remove Image
+                </button>
+                <button
+                  type="button"
+                  @click="openMediaLibrary('cover', null, 'news')"
+                  class="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  📁 Choose from Media Library
+                </button>
+              </div>
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -429,8 +456,16 @@ const submitWithAction = (actionType) => {
               </div>
             </div>
 
-            <div v-if="coverImagePreview || form.cover_image_url" class="relative max-w-sm rounded-xl overflow-hidden border border-slate-200 mt-2">
+            <div v-if="coverImagePreview || form.cover_image_url" class="relative max-w-sm rounded-xl overflow-hidden border border-slate-200 mt-2 group">
               <img :src="coverImagePreview || form.cover_image_url" class="w-full h-36 object-cover" />
+              <button
+                type="button"
+                @click="removeCoverImage"
+                class="absolute top-2 right-2 px-2.5 py-1 bg-rose-600/90 hover:bg-rose-700 text-white font-bold text-[10px] rounded-lg shadow-md transition-all flex items-center gap-1 cursor-pointer"
+                title="Remove cover image"
+              >
+                ✕ Remove
+              </button>
             </div>
           </div>
         </div>
@@ -593,13 +628,23 @@ const submitWithAction = (actionType) => {
                       <div class="col-span-1 md:col-span-1">
                         <div class="flex items-center justify-between mb-1">
                           <label class="block font-bold text-slate-700">Image URL</label>
-                          <button
-                            type="button"
-                            @click="openMediaLibrary('block_image', block, 'images')"
-                            class="px-2 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-bold rounded-lg border border-sky-200 transition-all cursor-pointer"
-                          >
-                            📁 Media Library
-                          </button>
+                          <div class="flex items-center gap-1.5">
+                            <button
+                              v-if="block.url"
+                              type="button"
+                              @click="removeBlockImage(block)"
+                              class="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold rounded-lg border border-rose-200 transition-all cursor-pointer"
+                            >
+                              🗑️ Clear
+                            </button>
+                            <button
+                              type="button"
+                              @click="openMediaLibrary('block_image', block, 'images')"
+                              class="px-2 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-bold rounded-lg border border-sky-200 transition-all cursor-pointer"
+                            >
+                              📁 Media Library
+                            </button>
+                          </div>
                         </div>
                         <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
                       </div>

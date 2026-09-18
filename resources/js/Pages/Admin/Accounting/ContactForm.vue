@@ -62,7 +62,7 @@ const deleteContact = () => {
 </script>
 
 <template>
-  <AdminLayout :club="club" :title="isEditing ? 'Edit Contact Details' : 'Add New Contact'">
+  <AdminLayout :club="club" :title="isEditing ? 'Edit Contact Details' : 'Add New Contact'" active-tab="accounting">
     <Head :title="`${isEditing ? 'Edit Contact Details' : 'Add New Contact'} - ${club.name}`" />
 
     <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">

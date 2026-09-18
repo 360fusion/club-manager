@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import CommunicationsTabs from '@/Components/CommunicationsTabs.vue';
 
 const props = defineProps({
   club: Object,
@@ -80,8 +81,10 @@ const deleteNewsletter = (id) => {
 
 <template>
   <AdminLayout title="Newsletters & Email Broadcasts" :club="club" active-tab="newsletters">
-    
-    <div class="space-y-6">
+    <Head title="Newsletters & Email Broadcasts" />
+
+    <div class="max-w-6xl mx-auto space-y-6">
+      <CommunicationsTabs :club="club" active-tab="newsletters" />
       
       <!-- Top Action Bar -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">

@@ -25,6 +25,15 @@ class NewsletterType extends Model
         'default_roles',
         'sender_name',
         'sender_email',
+        'is_automated_digest',
+        'digest_frequency',
+        'digest_send_day',
+        'digest_send_time',
+        'include_updates',
+        'include_upcoming_meetings',
+        'include_upcoming_events',
+        'include_news_posts',
+        'inbound_email_address',
     ];
 
     protected function casts(): array
@@ -34,6 +43,11 @@ class NewsletterType extends Model
             'require_approval' => 'boolean',
             'is_mandatory' => 'boolean',
             'require_home_club_info' => 'boolean',
+            'is_automated_digest' => 'boolean',
+            'include_updates' => 'boolean',
+            'include_upcoming_meetings' => 'boolean',
+            'include_upcoming_events' => 'boolean',
+            'include_news_posts' => 'boolean',
             'default_roles' => 'array',
         ];
     }

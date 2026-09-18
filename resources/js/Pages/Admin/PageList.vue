@@ -21,9 +21,9 @@ const props = defineProps({
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <Link :href="`/site/${club.slug}`" target="_blank" class="py-2.5 px-4 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs">
+                    <a :href="`/site/${club.slug}`" target="_blank" class="py-2.5 px-4 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs">
                         🌐 View Live Site
-                    </Link>
+                    </a>
                     <Link :href="`/clubs/${club.slug}/admin/pages/create`" class="py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20">
                         ➕ Create New Page
                     </Link>
@@ -68,9 +68,9 @@ const props = defineProps({
                                 <Link :href="`/clubs/${club.slug}/admin/pages/${p.id}/edit`" class="py-1.5 px-3 rounded-lg bg-indigo-600 text-white font-bold text-xs">
                                     Edit Builder
                                 </Link>
-                                <Link :href="p.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${p.slug}`" target="_blank" class="py-1.5 px-3 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200">
+                                <a :href="p.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${p.slug}`" target="_blank" class="py-1.5 px-3 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200">
                                     View
-                                </Link>
+                                </a>
                             </td>
                         </tr>
                     </tbody>

@@ -92,7 +92,7 @@ class CommitteeGovernanceDomainTest extends TestCase
         $this->assertDatabaseHas('club_acc_committee_meetings', [
             'club_id' => $this->club->id,
             'title' => 'Regular Lodge Committee - October 2026',
-            'status' => 'scheduled',
+            'status' => 'draft',
         ]);
     }
 
@@ -136,6 +136,73 @@ class CommitteeGovernanceDomainTest extends TestCase
         ]);
 
         $this->assertEquals(CommitteeMeetingStatus::InProgress, $meeting->fresh()->status);
+    }
+
+    public function test_admin_can_edit_committee_meeting_details_in_workspace(): void
+    {
+        $this->actingAs($this->admin);
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Original Committee Title',
+            'meeting_date' => Carbon::now()->addDays(3),
+            'location' => 'Original Room',
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        $newDate = Carbon::now()->addDays(7)->format('Y-m-d\T18:30');
+
+        Livewire::test(MeetingWorkspace::class, [
+            'clubSlug' => $this->club->slug,
+            'meetingId' => $meeting->id,
+        ])
+            ->call('openEditModal')
+            ->assertSet('showEditModal', true)
+            ->assertSet('editTitle', 'Original Committee Title')
+            ->set('editTitle', 'Updated Committee Title')
+            ->set('editDate', $newDate)
+            ->set('editLocation', 'Grand Committee Hall')
+            ->call('updateMeeting')
+            ->assertSet('showEditModal', false)
+            ->assertHasNoErrors();
+
+        $fresh = $meeting->fresh();
+        $this->assertEquals('Updated Committee Title', $fresh->title);
+        $this->assertEquals('Grand Committee Hall', $fresh->location);
+        $this->assertEquals(Carbon::parse($newDate)->format('Y-m-d H:i'), $fresh->meeting_date->format('Y-m-d H:i'));
+    }
+
+    public function test_admin_can_edit_committee_meeting_details_in_index(): void
+    {
+        $this->actingAs($this->admin);
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Index Meeting Title',
+            'meeting_date' => Carbon::now()->addDays(2),
+            'location' => 'Old Venue',
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        $newDate = Carbon::now()->addDays(10)->format('Y-m-d\T19:00');
+
+        Livewire::test(MeetingIndex::class, [
+            'clubSlug' => $this->club->slug,
+        ])
+            ->call('openEditModal', $meeting->id)
+            ->assertSet('showEditModal', true)
+            ->assertSet('editTitle', 'Index Meeting Title')
+            ->set('editTitle', 'Renamed Index Meeting')
+            ->set('editDate', $newDate)
+            ->set('editLocation', 'New Temple Hall')
+            ->call('updateMeeting')
+            ->assertSet('showEditModal', false)
+            ->assertHasNoErrors();
+
+        $fresh = $meeting->fresh();
+        $this->assertEquals('Renamed Index Meeting', $fresh->title);
+        $this->assertEquals('New Temple Hall', $fresh->location);
+        $this->assertEquals(Carbon::parse($newDate)->format('Y-m-d H:i'), $fresh->meeting_date->format('Y-m-d H:i'));
     }
 
     public function test_notes_parser_service_extracts_mentions_tasks_and_motions(): void
@@ -437,6 +504,85 @@ TEXT;
             'user_id' => $guestMember->id,
             'role_title' => 'Lodge Steward / Guest',
             'attendance_type' => 'present',
+        ]);
+    }
+
+    public function test_select_all_committee_selects_members_assigned_in_annual_officer_roster(): void
+    {
+        $this->actingAs($this->admin);
+
+        // Create club members
+        $memberA = \App\Domains\ClubAccounting\Models\Member::create([
+            'club_id' => $this->club->id,
+            'user_id' => $this->member1->id,
+            'first_name' => 'James',
+            'last_name' => 'Sterling',
+            'status' => 'active',
+        ]);
+
+        $memberB = \App\Domains\ClubAccounting\Models\Member::create([
+            'club_id' => $this->club->id,
+            'user_id' => null, // Unlinked member
+            'first_name' => 'Oliver',
+            'last_name' => 'Pembroke',
+            'status' => 'active',
+        ]);
+
+        $now = Carbon::now();
+        $mYear = $now->format('Y') . '-' . ($now->year + 1);
+
+        $roster = \App\Domains\ClubAccounting\Models\AnnualOfficerRoster::create([
+            'club_id' => $this->club->id,
+            'masonic_year' => $mYear,
+            'status' => 'draft',
+        ]);
+
+        \App\Domains\ClubAccounting\Models\AnnualOfficerAssignment::create([
+            'roster_id' => $roster->id,
+            'member_id' => $memberA->id,
+            'office' => 'committee_member',
+            'category' => 'additional',
+        ]);
+
+        \App\Domains\ClubAccounting\Models\AnnualOfficerAssignment::create([
+            'roster_id' => $roster->id,
+            'member_id' => $memberB->id,
+            'office' => 'committee_member',
+            'category' => 'additional',
+        ]);
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Committee Meeting with Roster Sync',
+            'meeting_date' => $now->addDays(1),
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        $lw = Livewire::test(MeetingWorkspace::class, [
+            'clubSlug' => $this->club->slug,
+            'meetingId' => $meeting->id,
+        ]);
+
+        // selectAllCommittee should select both James (user id) and Oliver (m_ID)
+        $lw->call('selectAllCommittee');
+        $selected = $lw->get('selectedMemberIds');
+
+        $this->assertContains($this->member1->id, $selected);
+        $this->assertContains('m_' . $memberB->id, $selected);
+
+        // Add them to roll call
+        $lw->call('addSelectedAttendees');
+
+        $this->assertDatabaseHas('club_acc_committee_attendees', [
+            'committee_meeting_id' => $meeting->id,
+            'user_id' => $this->member1->id,
+            'role_title' => 'Committee Member',
+        ]);
+
+        $this->assertDatabaseHas('club_acc_committee_attendees', [
+            'committee_meeting_id' => $meeting->id,
+            'name' => 'Oliver Pembroke',
+            'role_title' => 'Committee Member',
         ]);
     }
 
@@ -824,5 +970,90 @@ TEXT;
             'title' => 'Committee Meeting – 5th December 2026',
             'location' => 'Lodge Hall',
         ]);
+    }
+
+    public function test_invites_sent_changes_meeting_status_to_scheduled(): void
+    {
+        Mail::fake();
+        $this->actingAs($this->admin);
+
+        $meeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Draft Committee Meeting',
+            'meeting_date' => Carbon::now()->addDays(5),
+            'status' => CommitteeMeetingStatus::Draft,
+        ]);
+
+        ClubCommitteeAttendee::create([
+            'committee_meeting_id' => $meeting->id,
+            'user_id' => $this->member1->id,
+            'name' => $this->member1->name,
+            'role_title' => 'Member',
+            'attendance_type' => AttendanceType::Present,
+        ]);
+
+        $this->assertEquals(CommitteeMeetingStatus::Draft, $meeting->status);
+
+        Livewire::test(AgendaPackPreviewModal::class, [
+            'clubSlug' => $this->club->slug,
+            'meetingId' => $meeting->id,
+        ])
+            ->call('openModal')
+            ->set('selectedRecipientIds', [$this->member1->id])
+            ->call('sendAgendaPack')
+            ->assertDispatched('pack-dispatched');
+
+        $this->assertEquals(CommitteeMeetingStatus::Scheduled, $meeting->fresh()->status);
+        $this->assertEquals('Scheduled', $meeting->fresh()->displayStatusLabel());
+    }
+
+    public function test_meeting_index_filters_by_scheduled_draft_and_past(): void
+    {
+        $this->actingAs($this->admin);
+
+        // Upcoming draft
+        $draftMeeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Upcoming Draft Meeting',
+            'meeting_date' => Carbon::now()->addDays(4),
+            'status' => CommitteeMeetingStatus::Draft,
+        ]);
+
+        // Upcoming scheduled
+        $scheduledMeeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Upcoming Scheduled Meeting',
+            'meeting_date' => Carbon::now()->addDays(2),
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        // Past meeting (happened yesterday)
+        $pastMeeting = ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Past Concluded Meeting',
+            'meeting_date' => Carbon::now()->subDays(2),
+            'status' => CommitteeMeetingStatus::Scheduled,
+        ]);
+
+        // 1. Filter: draft
+        Livewire::test(MeetingIndex::class, ['clubSlug' => $this->club->slug])
+            ->set('statusFilter', 'draft')
+            ->assertSee('Upcoming Draft Meeting')
+            ->assertDontSee('Upcoming Scheduled Meeting')
+            ->assertDontSee('Past Concluded Meeting');
+
+        // 2. Filter: scheduled
+        Livewire::test(MeetingIndex::class, ['clubSlug' => $this->club->slug])
+            ->set('statusFilter', 'scheduled')
+            ->assertSee('Upcoming Scheduled Meeting')
+            ->assertDontSee('Upcoming Draft Meeting')
+            ->assertDontSee('Past Concluded Meeting');
+
+        // 3. Filter: past
+        Livewire::test(MeetingIndex::class, ['clubSlug' => $this->club->slug])
+            ->set('statusFilter', 'past')
+            ->assertSee('Past Concluded Meeting')
+            ->assertDontSee('Upcoming Draft Meeting')
+            ->assertDontSee('Upcoming Scheduled Meeting');
     }
 }

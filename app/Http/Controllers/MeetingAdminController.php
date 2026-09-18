@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
+use App\Domains\ClubAccounting\Models\AnnualOfficerRoster;
+use App\Domains\ClubAccounting\Models\CharityGrant;
+use App\Domains\ClubAccounting\Models\Member;
+use App\Domains\ClubAccounting\Services\AnnualOfficerRosterService;
 use App\Models\Club;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
@@ -90,8 +95,8 @@ class MeetingAdminController extends Controller
                 'dress_code' => 'Dinner Jacket, White Gloves',
                 'dining_cost_member' => 20.00,
                 'dining_cost_guest' => 20.00,
-                'bank_sort_code' => '20-82-18',
-                'bank_account_number' => '80288373',
+                'bank_sort_code' => $club->settings['bank_sort_code'] ?? '20-65-18',
+                'bank_account_number' => $club->settings['bank_account_number'] ?? '83920145',
                 'status' => 'draft',
                 'officers_year_label' => 'OFFICERS FOR 2025-2026',
             ]),
@@ -110,10 +115,36 @@ class MeetingAdminController extends Controller
             ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user'])
             ->firstOrFail();
 
+        if (empty($meeting->bank_sort_code) && !empty($club->settings['bank_sort_code'])) {
+            $meeting->bank_sort_code = $club->settings['bank_sort_code'];
+        }
+        if (empty($meeting->bank_account_number) && !empty($club->settings['bank_account_number'])) {
+            $meeting->bank_account_number = $club->settings['bank_account_number'];
+        }
+
+        $charityGrants = CharityGrant::where('club_id', $club->id)
+            ->with(['proposer', 'seconder'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return Inertia::render('Admin/Meetings/Form', [
             'club' => $club,
             'meeting' => $meeting,
             'members' => $club->users,
+            'charityGrants' => $charityGrants,
+        ]);
+    }
+
+    /**
+     * Return club settings as JSON (used by the reload-from-settings button).
+     */
+    public function settingsJson(string $clubSlug): \Illuminate\Http\JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        return response()->json([
+            'officers_roster' => $club->settings['officers_roster'] ?? [],
+            'officers_year_label' => $club->settings['officers_year_label'] ?? '',
         ]);
     }
 
@@ -137,6 +168,7 @@ class MeetingAdminController extends Controller
             'intro_text' => 'nullable|string',
             'rehearsal_text' => 'nullable|string',
             'festive_board_theme' => 'nullable|string',
+            'festive_board_menu' => 'nullable|string',
             'dining_cost_member' => 'required|numeric|min:0',
             'dining_cost_guest' => 'required|numeric|min:0',
             'bank_sort_code' => 'nullable|string|max:20',
@@ -149,6 +181,7 @@ class MeetingAdminController extends Controller
             'provincial_header_text' => 'nullable|string',
             'fraternal_visits_text' => 'nullable|string',
             'officers_year_label' => 'nullable|string|max:255',
+            'officers_roster' => 'nullable|array',
             'front_page_logo' => 'nullable|string|max:1000',
             'front_page_logo_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
             'front_page_title' => 'nullable|string|max:255',
@@ -190,8 +223,8 @@ class MeetingAdminController extends Controller
             }
         }
 
-        return redirect()->route('admin.meetings.index', ['clubSlug' => $club->slug])
-            ->with('success', 'Meeting summons updated successfully.');
+        return redirect()->route('admin.meetings.edit', ['clubSlug' => $club->slug, 'id' => $meeting->id])
+            ->with('success', 'Meeting summons saved successfully.');
     }
 
     /**
@@ -208,6 +241,11 @@ class MeetingAdminController extends Controller
         $secretaryUser = $club->users()->wherePivot('role', 'secretary')->first() ?: $club->users->first();
         $worshipfulMaster = $club->users()->wherePivot('role', 'master')->first() ?: $club->users->first();
 
+        $charityGrants = CharityGrant::where('club_id', $club->id)
+            ->with(['proposer', 'seconder'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         $viewData = [
             'club' => $club,
             'meeting' => $meeting,
@@ -215,6 +253,7 @@ class MeetingAdminController extends Controller
             'officerAssignments' => $meeting->officerAssignments,
             'secretaryUser' => $secretaryUser,
             'worshipfulMaster' => $worshipfulMaster,
+            'charityGrants' => $charityGrants,
         ];
 
         if (request()->has('download')) {
@@ -454,8 +493,8 @@ class MeetingAdminController extends Controller
                     'dress_code' => 'Dark Suit, Craft Regalia',
                     'dining_cost_member' => 35.00,
                     'dining_cost_guest' => 35.00,
-                    'bank_sort_code' => '20-65-18',
-                    'bank_account_number' => '83920145',
+                    'bank_sort_code' => $club->settings['bank_sort_code'] ?? '20-65-18',
+                    'bank_account_number' => $club->settings['bank_account_number'] ?? '83920145',
                     'payment_reference_prefix' => 'SUMMONS',
                     'rsvp_cutoff_at' => $date->copy()->subDays(5)->endOfDay(),
                     'status' => 'draft',
@@ -742,5 +781,111 @@ class MeetingAdminController extends Controller
 
         return redirect()->route('admin.meetings.show', ['clubSlug' => $club->slug, 'id' => $meeting->id])
             ->with('success', 'Meeting financial return posted successfully to Accounts Payable and General Ledger!');
+    }
+
+    /**
+     * Get or create Annual Officer Roster for a meeting agenda.
+     */
+    public function officerElectionData(string $clubSlug, int $id)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $masonicYear = Carbon::parse($meeting->meeting_date)->format('Y') . '-' . (Carbon::parse($meeting->meeting_date)->year + 1);
+
+        $roster = AnnualOfficerRoster::where('club_id', $club->id)
+            ->where('masonic_year', $masonicYear)
+            ->with('assignments.member')
+            ->first();
+
+        $members = Member::where('club_id', $club->id)->active()->get()->map(function ($m) {
+            return [
+                'id' => $m->id,
+                'name' => $m->formatted_rank_name,
+                'current_office' => $m->current_office?->value,
+                'current_office_label' => $m->current_office?->label(),
+            ];
+        });
+
+        $offices = collect(LodgeOffice::cases())
+            ->filter(fn ($o) => $o !== LodgeOffice::Member && $o !== LodgeOffice::IPM)
+            ->map(fn ($o) => [
+                'value' => $o->value,
+                'label' => $o->label(),
+                'category' => $o->category(),
+                'is_progressive' => $o->isProgressive(),
+                'is_administrative' => $o->isAdministrative(),
+            ])
+            ->values();
+
+        return response()->json([
+            'masonic_year' => $masonicYear,
+            'roster' => $roster,
+            'members' => $members,
+            'offices' => $offices,
+        ]);
+    }
+
+    /**
+     * Save annual officer election draft from meeting agenda discussion.
+     */
+    public function storeOfficerElection(Request $request, string $clubSlug, int $id, AnnualOfficerRosterService $rosterService)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'masonic_year' => 'required|string',
+            'assignments' => 'present|array',
+            'assignments.*.member_id' => 'required|integer',
+            'assignments.*.office' => 'required|string',
+            'notes' => 'nullable|string',
+            'status' => 'nullable|string',
+        ]);
+
+        try {
+            $roster = $rosterService->saveRoster(
+                $club,
+                $validated['masonic_year'],
+                $validated['assignments'],
+                $meeting->id,
+                $validated['status'] ?? 'proposed',
+                $validated['notes'] ?? null
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Annual officer roster draft saved successfully.',
+                'roster' => $roster,
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Confirm annual officer election and apply to active member profiles.
+     */
+    public function confirmOfficerElection(Request $request, string $clubSlug, int $id, AnnualOfficerRosterService $rosterService)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $masonicYear = $request->input('masonic_year') ?: (Carbon::parse($meeting->meeting_date)->format('Y') . '-' . (Carbon::parse($meeting->meeting_date)->year + 1));
+
+        $roster = AnnualOfficerRoster::where('club_id', $club->id)
+            ->where('masonic_year', $masonicYear)
+            ->firstOrFail();
+
+        $confirmedRoster = $rosterService->confirmRoster($roster);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Annual officer roster for {$masonicYear} confirmed and applied to active members!",
+            'roster' => $confirmedRoster,
+        ]);
     }
 }

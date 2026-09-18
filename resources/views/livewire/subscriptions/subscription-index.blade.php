@@ -3,15 +3,23 @@
     <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 shadow-inner">
         <a
             href="{{ route('admin.club_acc.members.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.members.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60"
         >
             <span>👥</span>
             <span>Members Roster</span>
         </a>
 
         <a
+            href="{{ route('admin.officers.index', ['clubSlug' => $club->slug]) }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60"
+        >
+            <span>👔</span>
+            <span>Annual Officer Rosters &amp; History</span>
+        </a>
+
+        <a
             href="{{ route('admin.club_acc.candidates.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.candidates.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60"
         >
             <span>📋</span>
             <span>Candidates (Form P Vetting)</span>
@@ -19,7 +27,7 @@
 
         <a
             href="{{ route('admin.club_acc.subscriptions.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 {{ request()->routeIs('admin.club_acc.subscriptions.*') ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}"
+            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 bg-slate-900 text-white shadow-md font-black"
         >
             <span>💳</span>
             <span>Subscriptions &amp; Dues</span>
@@ -33,7 +41,7 @@
                 <span class="p-2.5 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/30">💳</span>
                 <div>
                     <h1 class="text-2xl font-black tracking-tight">Subscriptions</h1>
-                    <p class="text-xs text-slate-400 mt-1 font-medium">UGLE Rule 181 Arrears Audit &amp; Liberu Accounts Receivable Ledger Integration</p>
+                    <p class="text-xs text-slate-400 mt-1 font-medium">UGLE Rule 181 Arrears Audit &amp; Accounts Receivable Ledger Integration</p>
                 </div>
             </div>
         </div>
@@ -165,7 +173,12 @@
     <div class="p-4 bg-white border border-slate-200/80 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="relative w-full md:w-80">
             <input
-                type="text"
+                type="search"
+                name="sub_search_query"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
                 wire:model.live.debounce.300ms="search"
                 placeholder="Search member name, email..."
                 class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -241,7 +254,7 @@
                             <td class="py-3 px-4 font-mono text-[11px] text-slate-600">
                                 {{ $sub->invoice_reference ?: '—' }}
                                 @if($sub->member->customerAccount)
-                                    <span class="inline-block px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[9px] font-bold" title="Linked to Liberu Accounting Contact">Liberu ✓</span>
+                                    <span class="inline-block px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[9px] font-bold" title="Linked to Accounting Contact">Linked ✓</span>
                                 @endif
                             </td>
 

@@ -12,6 +12,8 @@ use App\Domains\ClubAccounting\Models\ClubNoticeOfMotion;
 use App\Domains\ClubAccounting\Notifications\CommitteeTaskAssignedNotification;
 use App\Domains\ClubAccounting\Services\Governance\CommitteeNotesParserService;
 use App\Domains\ClubAccounting\Services\Integration\MemberMentionSearchService;
+use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
+use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Models\Club;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -173,6 +175,35 @@ class LiveMinuteTaker extends Component
         session()->flash('success', "Motion '{$motion->title}' approved for open lodge summons.");
     }
 
+    public function approveGrantForSummons(int $grantId): void
+    {
+        $grant = CharityGrant::where('club_id', $this->meeting->club_id)->findOrFail($grantId);
+        $grant->update([
+            'approval_status' => GrantApprovalStatus::CommitteeApproved,
+            'committee_meeting_id' => $this->meetingId,
+        ]);
+
+        $proposerName = $grant->proposer ? " (Proposed by {$grant->proposer->formatted_rank_name})" : '';
+        $seconderName = $grant->seconder ? " (Seconded by {$grant->seconder->formatted_rank_name})" : '';
+        $noteSnippet = "\n- **Charitable Grant Approved by Committee:** £" . number_format($grant->amount, 2) . " to {$grant->recipient_name} ({$grant->purpose}){$proposerName}{$seconderName}. Recommended for Open Lodge sanction.\n";
+
+        $this->notesRaw .= $noteSnippet;
+        $this->updatedNotesRaw();
+
+        session()->flash('success', "Charitable grant of £" . number_format($grant->amount, 2) . " to {$grant->recipient_name} approved for Open Lodge Summons.");
+    }
+
+    public function lodgeVoteGrant(int $grantId): void
+    {
+        $grant = CharityGrant::where('club_id', $this->meeting->club_id)->findOrFail($grantId);
+        $grant->update([
+            'approval_status' => GrantApprovalStatus::LodgeVoted,
+            'committee_meeting_id' => $this->meetingId,
+        ]);
+
+        session()->flash('success', "Charitable grant to {$grant->recipient_name} marked as Open Lodge Voted.");
+    }
+
     public function finalizeMinutes(): void
     {
         $this->autoSave();
@@ -213,6 +244,7 @@ class LiveMinuteTaker extends Component
             'task' => "\n[ ] @MemberName Action to be completed by " . Carbon::now()->addDays(14)->format('Y-m-d') . "\n",
             'motion' => "\n/motion That the lodge bylaws be amended to specify...\n",
             'candidate' => "\n### Candidate Vetting:\n- Candidate: @CandidateName\n- Proposer / Seconder check: Vetted and in order under Rule 159.\n- Recommendation: Approved to proceed to open lodge ballot.\n",
+            'donation' => "\n### Charitable Donation Proposal:\n- Recipient Name: Local Hospice\n- Proposed Amount: £250.00\n- Proposed By: @ProposerName\n- Seconded By: @SeconderName\n- Committee Recommendation: Approved by committee and recommended for open lodge sanction.\n",
             'audit' => "\n### Accounts & Bill Audit (Rule 158):\n- Audited invoices: Catering bill and hall rental confirmed against receipts.\n- Recommendation: Approved for payment by the Treasurer.\n",
             default => '',
         };
@@ -303,6 +335,11 @@ class LiveMinuteTaker extends Component
     {
         $meeting = $this->getMeeting();
 
+        $charityGrants = CharityGrant::where('club_id', $meeting->club_id)
+            ->with(['proposer', 'seconder'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('livewire.committee.live-minute-taker', [
             'meeting' => $meeting,
             'club' => $meeting->club,
@@ -310,6 +347,7 @@ class LiveMinuteTaker extends Component
             'attendees' => $meeting->attendees,
             'tasks' => $meeting->tasks,
             'motions' => $meeting->noticesOfMotion,
+            'charityGrants' => $charityGrants,
         ])->layout('components.layouts.app', [
             'title' => $meeting->title . ' — Live Minutes',
             'club' => $meeting->club,

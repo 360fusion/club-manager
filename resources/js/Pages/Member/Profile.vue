@@ -213,6 +213,41 @@ const submitProfile = () => {
         </form>
       </div>
 
+      <!-- Section 2: Read-Only Masonic Progress & Key Dates -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
+        <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🏛️</span>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Masonic Progress &amp; Key Dates</h3>
+              <p class="text-xs text-slate-500">Official lodge advancement records. Managed and updated by the Lodge Secretary.</p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+            🔒 Read-Only Record
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+          <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Initiated</span>
+            <span class="font-black text-slate-900 block text-sm">{{ memberProfile.date_of_initiation || '—' }}</span>
+          </div>
+          <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Passed</span>
+            <span class="font-black text-slate-900 block text-sm">{{ memberProfile.date_of_passing || '—' }}</span>
+          </div>
+          <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Raised</span>
+            <span class="font-black text-slate-900 block text-sm">{{ memberProfile.date_of_raising || '—' }}</span>
+          </div>
+          <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Joined Lodge</span>
+            <span class="font-black text-slate-900 block text-sm">{{ memberProfile.date_of_joining || '—' }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Section 2: Global Account & Security Banner -->
       <div class="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-6 text-white shadow-lg space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

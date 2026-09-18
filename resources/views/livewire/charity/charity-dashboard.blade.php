@@ -204,6 +204,18 @@
                             <span class="font-black text-purple-950 text-sm whitespace-nowrap">£{{ number_format($grant->amount, 2) }}</span>
                         </div>
 
+                        <div class="flex items-center gap-2 text-[10px] text-slate-500 pt-1 flex-wrap">
+                            <span>Proposed: <strong class="text-slate-800">{{ $grant->proposer?->formatted_rank_name ?: 'Not specified' }}</strong></span>
+                            <span>•</span>
+                            <span>Seconded: <strong class="text-slate-800">{{ $grant->seconder?->formatted_rank_name ?: 'Pending Seconder' }}</strong></span>
+                            @if($grant->committeeMeeting)
+                                <span>•</span>
+                                <span class="bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded border border-indigo-100">
+                                    🏛️ {{ $grant->committeeMeeting->title }}
+                                </span>
+                            @endif
+                        </div>
+
                         <div class="flex items-center justify-between pt-2 border-t border-slate-200/60">
                             <span class="px-2.5 py-0.5 text-[10px] font-extrabold rounded-full border {{ $grant->approval_status->badgeClasses() }}">
                                 {{ $grant->approval_status->label() }}
@@ -405,6 +417,38 @@
                             <label class="font-bold text-slate-700 block mb-1">Relief Chest No.</label>
                             <input type="text" wire:model="relief_chest_number" placeholder="Optional" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none" />
                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="font-bold text-slate-700 block mb-1">Proposed By (Proposer)</label>
+                            <select wire:model="proposer_member_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                <option value="">Select Proposer...</option>
+                                @foreach($activeMembers as $m)
+                                    <option value="{{ $m->id }}">{{ $m->formatted_rank_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-bold text-slate-700 block mb-1">Seconded By (Seconder)</label>
+                            <select wire:model="seconder_member_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                <option value="">Select Seconder...</option>
+                                @foreach($activeMembers as $m)
+                                    <option value="{{ $m->id }}">{{ $m->formatted_rank_name }}</option>
+                                @endforeach
+                            </select>
+                            @error('seconder_member_id') <span class="text-rose-600 text-[10px] block mt-0.5">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">Logged Committee Meeting</label>
+                        <select wire:model="committee_meeting_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                            <option value="">Assign to Committee Meeting (Optional)...</option>
+                            @foreach($committeeMeetings as $cm)
+                                <option value="{{ $cm->id }}">{{ $cm->title }} ({{ $cm->meeting_date ? $cm->meeting_date->format('d M Y') : 'TBD' }})</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div>

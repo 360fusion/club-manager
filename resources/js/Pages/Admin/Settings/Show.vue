@@ -210,6 +210,8 @@ const form = useForm({
   default_expense_account_code: props.settings.default_expense_account_code || '5000',
   require_bill_approval: props.settings.require_bill_approval ?? false,
   default_bank_account_code: props.settings.default_bank_account_code || '1000',
+  bank_sort_code: props.settings.bank_sort_code || '20-65-18',
+  bank_account_number: props.settings.bank_account_number || '83920145',
   enforce_balanced_journals: props.settings.enforce_balanced_journals ?? true,
 
   // Events & Check-Ins
@@ -1207,107 +1209,25 @@ const moveOfficerDown = (index) => {
           </div>
         </div>
 
-        <!-- Annual Officers Roster Card -->
-        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-3">
-            <div>
-              <h2 class="text-lg font-bold text-slate-900">👔 Annual Officers Roster</h2>
-              <p class="text-xs text-slate-500 mt-1">Maintain the master Lodge Officers list for the current installation year. Secretaries can import this into summonses with one click.</p>
+        <!-- Annual Officers Roster Managed Card -->
+        <div class="bg-indigo-50/60 rounded-2xl p-6 border border-indigo-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-indigo-600">👔 Lodge Governance</span>
+              <span class="text-xs px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-extrabold text-[10px]">Active Domain</span>
             </div>
-            <button
-              type="button"
-              @click="addOfficerRow"
-              class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
-            >
-              + Add Officer Role
-            </button>
+            <h3 class="text-base font-black text-slate-900">Annual Officer Rosters &amp; History</h3>
+            <p class="text-xs text-slate-600">
+              Lodge Officer rosters, multi-year installation dates, progressive ladder seats, and committee approvals are now managed centrally in the Member Directory.
+            </p>
           </div>
-
-          <div class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Officers Year Banner Label</label>
-              <input v-model="form.officers_year_label" type="text" placeholder="OFFICERS FOR 2025-2026" class="w-full sm:w-96 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500" />
-            </div>
-
-            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
-                    <th class="py-3 px-3 w-12 text-center">#</th>
-                    <th class="py-3 px-4">Officer Role Title</th>
-                    <th class="py-3 px-4">Assigned Member / Officer Name</th>
-                    <th class="py-3 px-3 text-right w-32">Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-xs">
-                  <tr v-for="(item, idx) in form.officers_roster" :key="idx" class="hover:bg-slate-50/50">
-                    <td class="py-2.5 px-3 text-center font-bold text-slate-400">
-                      {{ idx + 1 }}
-                    </td>
-
-                    <td class="py-2.5 px-4">
-                      <input
-                        v-model="item.role"
-                        type="text"
-                        placeholder="e.g. Worshipful Master"
-                        class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    </td>
-
-                    <td class="py-2.5 px-4">
-                      <div class="flex items-center gap-2">
-                        <input
-                          v-model="item.name"
-                          type="text"
-                          placeholder="e.g. W. Bro. K. D. Lord"
-                          class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <select
-                          @change="e => { if (e.target.value) item.name = e.target.value }"
-                          class="px-2 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-medium cursor-pointer text-slate-600"
-                        >
-                          <option value="">Select Member...</option>
-                          <option v-for="m in members" :key="m.id" :value="`${m.pivot?.rank_prefix || 'W. Bro.'} ${m.name}`">
-                            {{ m.name }} ({{ m.pivot?.rank || 'Member' }})
-                          </option>
-                        </select>
-                      </div>
-                    </td>
-
-                    <td class="py-2.5 px-3 text-right space-x-1">
-                      <button
-                        type="button"
-                        @click="moveOfficerUp(idx)"
-                        :disabled="idx === 0"
-                        class="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
-                        title="Move Up"
-                      >
-                        ▲
-                      </button>
-                      <button
-                        type="button"
-                        @click="moveOfficerDown(idx)"
-                        :disabled="idx === form.officers_roster.length - 1"
-                        class="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
-                        title="Move Down"
-                      >
-                        ▼
-                      </button>
-                      <button
-                        type="button"
-                        @click="removeOfficerRow(idx)"
-                        class="p-1 text-rose-500 hover:text-rose-700 cursor-pointer"
-                        title="Delete Role"
-                      >
-                        🗑️
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-          </div>
+          <a
+            :href="route('admin.officers.index', { clubSlug: club.slug })"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex-shrink-0 flex items-center gap-1.5"
+          >
+            <span>Manage Officers Roster</span>
+            <span>→</span>
+          </a>
         </div>
 
       </div>
@@ -1550,6 +1470,16 @@ const moveOfficerDown = (index) => {
             <div>
               <label class="block font-bold text-slate-700 mb-1">Operating Bank Account Code</label>
               <input v-model="form.default_bank_account_code" type="text" placeholder="1000" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Bank Sort Code (Summons Dues/Dining)</label>
+              <input v-model="form.bank_sort_code" type="text" placeholder="20-65-18" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Bank Account Number (Summons Dues/Dining)</label>
+              <input v-model="form.bank_account_number" type="text" placeholder="83920145" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
             </div>
 
             <div>

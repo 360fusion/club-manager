@@ -147,9 +147,9 @@ const getIcon = (typeCode) => {
                     <Link :href="`/clubs/${club.slug}/admin/analytics`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                         📊 Analytics
                     </Link>
-                    <Link :href="`/site/${club.slug}`" target="_blank" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:text-white">
+                    <a :href="`/site/${club.slug}`" target="_blank" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:text-white">
                         🌐 Live Site
-                    </Link>
+                    </a>
                 </div>
             </div>
         </header>

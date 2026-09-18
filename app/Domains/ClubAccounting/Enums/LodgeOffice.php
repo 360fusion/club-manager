@@ -21,6 +21,8 @@ enum LodgeOffice: string
     case InnerGuard = 'inner_guard';
     case Steward = 'steward';
     case Tyler = 'tyler';
+    case IPM = 'ipm';
+    case CommitteeMember = 'committee_member';
     case Member = 'member';
 
     public function label(): string
@@ -43,22 +45,28 @@ enum LodgeOffice: string
             self::InnerGuard => 'Inner Guard',
             self::Steward => 'Steward',
             self::Tyler => 'Tyler',
+            self::IPM => 'Immediate Past Master',
+            self::CommitteeMember => 'Committee Member',
             self::Member => 'Member / Brethren',
         };
     }
 
     public function shortCode(): string
     {
-        return strtoupper($this->value);
+        return match ($this) {
+            self::CommitteeMember => 'COMM',
+            default => strtoupper($this->value),
+        };
     }
 
     public function badgeClass(): string
     {
         return match ($this) {
-            self::WorshipfulMaster => 'bg-amber-100 text-amber-900 border-amber-300 font-extrabold',
+            self::WorshipfulMaster, self::IPM => 'bg-amber-100 text-amber-900 border-amber-300 font-extrabold',
             self::SeniorWarden, self::JuniorWarden => 'bg-indigo-100 text-indigo-900 border-indigo-200 font-bold',
             self::Secretary, self::Treasurer => 'bg-purple-100 text-purple-900 border-purple-200 font-bold',
             self::Almoner, self::CharitySteward => 'bg-emerald-100 text-emerald-900 border-emerald-200 font-bold',
+            self::CommitteeMember => 'bg-teal-100 text-teal-900 border-teal-200 font-bold',
             self::Member => 'bg-slate-100 text-slate-600 border-slate-200',
             default => 'bg-blue-50 text-blue-800 border-blue-200',
         };
@@ -75,5 +83,27 @@ enum LodgeOffice: string
             self::SeniorWarden,
             self::WorshipfulMaster,
         ]);
+    }
+
+    public function isAdministrative(): bool
+    {
+        return ! $this->isProgressive() && $this !== self::Member && $this !== self::IPM && $this !== self::CommitteeMember;
+    }
+
+    public function category(): string
+    {
+        if ($this->isProgressive()) {
+            return 'progressive';
+        }
+
+        if ($this->isAdministrative()) {
+            return 'administrative';
+        }
+
+        if ($this === self::CommitteeMember) {
+            return 'committee';
+        }
+
+        return 'other';
     }
 }

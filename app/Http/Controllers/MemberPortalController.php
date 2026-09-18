@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Models\CharityGrant;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
 use App\Models\Event;
 use App\Models\Invoice;
@@ -292,6 +294,7 @@ class MemberPortalController extends Controller
 
         $invoices = $user ? Invoice::where('club_id', $club->id)
             ->where('user_id', $user->id)
+            ->where('status', '!=', 'draft')
             ->orderByDesc('created_at')
             ->get()
             ->map(fn ($inv) => [
@@ -330,6 +333,7 @@ class MemberPortalController extends Controller
         $club = Club::where('slug', $slug)->firstOrFail();
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
+        $accMember = $user ? Member::where('club_id', $club->id)->where('user_id', $user->id)->first() : null;
 
         return Inertia::render('Member/Profile', [
             'club' => $club,
@@ -348,6 +352,14 @@ class MemberPortalController extends Controller
                 'phone' => $memberPivot->phone ?? '',
                 'emergency_contact' => $memberPivot->emergency_contact ?? '',
                 'dietary_notes' => $memberPivot->dietary_notes ?? '',
+                'masonic_rank' => $accMember?->masonic_rank ?? 'Bro',
+                'grand_rank' => $accMember?->grand_rank ?? null,
+                'provincial_rank' => $accMember?->provincial_rank ?? null,
+                'grand_lodge_number' => $accMember?->grand_lodge_number ?? null,
+                'date_of_initiation' => $accMember?->date_of_initiation?->format('d M Y') ?? null,
+                'date_of_passing' => $accMember?->date_of_passing?->format('d M Y') ?? null,
+                'date_of_raising' => $accMember?->date_of_raising?->format('d M Y') ?? null,
+                'date_of_joining' => $accMember?->date_of_joining?->format('d M Y') ?? null,
             ],
         ]);
     }
@@ -524,6 +536,11 @@ class MemberPortalController extends Controller
         $secretaryUser = $club->users()->wherePivot('role', 'secretary')->first() ?: $club->users->first();
         $worshipfulMaster = $club->users()->wherePivot('role', 'master')->first() ?: $club->users->first();
 
+        $charityGrants = CharityGrant::where('club_id', $club->id)
+            ->with(['proposer', 'seconder'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return Inertia::render('Member/Meetings/Summons', [
             'club' => $club,
             'meeting' => $meeting,
@@ -533,6 +550,7 @@ class MemberPortalController extends Controller
             'worshipfulMaster' => $worshipfulMaster,
             'memberRole' => $memberPivot->role ?? 'member',
             'isCutoffPassed' => $meeting->rsvp_cutoff_at ? Carbon::now()->isAfter($meeting->rsvp_cutoff_at) : false,
+            'charityGrants' => $charityGrants,
         ]);
     }
 

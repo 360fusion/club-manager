@@ -20,6 +20,14 @@ const form = useForm({
   default_roles: props.type.default_roles || ['member'],
   sender_name: props.type.sender_name || '',
   sender_email: props.type.sender_email || '',
+  is_automated_digest: props.type.is_automated_digest ?? false,
+  digest_frequency: props.type.digest_frequency || 'weekly',
+  digest_send_day: props.type.digest_send_day || 'friday',
+  digest_send_time: props.type.digest_send_time || '09:00',
+  include_updates: props.type.include_updates ?? true,
+  include_upcoming_meetings: props.type.include_upcoming_meetings ?? true,
+  include_upcoming_events: props.type.include_upcoming_events ?? true,
+  include_news_posts: props.type.include_news_posts ?? true,
 });
 
 const availableRoles = [
@@ -159,6 +167,75 @@ const saveChannel = () => {
             >
               <span>{{ role.label }}</span>
               <span v-if="form.default_roles.includes(role.id)" class="text-indigo-600">✓</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Automated Digest & Content Sources -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+            4. Automated Digest & Content Sources
+          </h3>
+
+          <label class="flex items-start gap-3 cursor-pointer bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition-all">
+            <input v-model="form.is_automated_digest" type="checkbox" class="mt-1 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+            <div>
+              <span class="font-bold text-slate-900 text-sm">🤖 Enable Automated Weekly Digest Schedule</span>
+              <p class="text-slate-500 text-xs mt-0.5">Automatically compiles and sends a consolidated newsletter on a scheduled day and time.</p>
+            </div>
+          </label>
+
+          <div v-if="form.is_automated_digest" class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Frequency</label>
+              <select v-model="form.digest_frequency" class="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs font-bold">
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Bi-Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Dispatch Day</label>
+              <select v-model="form.digest_send_day" class="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs font-bold">
+                <option value="monday">Monday</option>
+                <option value="tuesday">Tuesday</option>
+                <option value="wednesday">Wednesday</option>
+                <option value="thursday">Thursday</option>
+                <option value="friday">Friday</option>
+                <option value="saturday">Saturday</option>
+                <option value="sunday">Sunday</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Dispatch Time</label>
+              <input v-model="form.digest_send_time" type="time" class="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold" />
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-2">
+            <span class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Automated Content Modules to Aggregate:</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                <input v-model="form.include_updates" type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" />
+                <span class="text-xs font-bold text-slate-800">📜 Approved Updates & Forwarded Summonses</span>
+              </label>
+
+              <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                <input v-model="form.include_upcoming_meetings" type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" />
+                <span class="text-xs font-bold text-slate-800">📅 Upcoming Lodge & Committee Meetings</span>
+              </label>
+
+              <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                <input v-model="form.include_upcoming_events" type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" />
+                <span class="text-xs font-bold text-slate-800">🎟️ Upcoming Events & Dining (Next 30 Days)</span>
+              </label>
+
+              <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
+                <input v-model="form.include_news_posts" type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" />
+                <span class="text-xs font-bold text-slate-800">📰 Recent News Articles</span>
+              </label>
             </div>
           </div>
         </div>

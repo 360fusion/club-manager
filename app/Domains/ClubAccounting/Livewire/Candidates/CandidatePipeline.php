@@ -18,6 +18,7 @@ class CandidatePipeline extends Component
     public string $clubSlug;
     public string $search = '';
     public ?string $stageFilter = null;
+    public string $viewMode = 'kanban'; // kanban, list
 
     // Modals visibility
     public bool $showCandidateModal = false;

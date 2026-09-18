@@ -22,6 +22,7 @@ use App\Http\Controllers\NewsletterAdminController;
 use App\Http\Controllers\NewsletterTypeAdminController;
 use App\Http\Controllers\PageAdminController;
 use App\Http\Controllers\PostAdminController;
+use App\Http\Controllers\UpdateAdminController;
 use App\Http\Controllers\UserAdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +61,8 @@ Route::get('/clubs/oxford-boating/{path?}', function ($path = null) {
 Route::get('/site/oxford-boating', function () {
     return redirect('/site/lodge-of-fraternity', 301);
 });
+
+Route::get('/site/{clubSlug}/{pageSlug?}', [\App\Http\Controllers\PublicSiteController::class, 'showPage'])->name('public.site');
 
 Route::get('/clubs/{slug}', [ClubController::class, 'show'])->name('clubs.show');
 Route::get('/clubs/{slug}/visitor-register', [\App\Http\Controllers\VisitorRegistrationController::class, 'create'])->name('clubs.visitor.register');
@@ -123,6 +126,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/meetings', [\App\Http\Controllers\MeetingAdminController::class, 'index'])->name('admin.meetings.index');
     Route::get('/clubs/{clubSlug}/admin/meetings/create', [\App\Http\Controllers\MeetingAdminController::class, 'create'])->name('admin.meetings.create');
     Route::get('/clubs/{clubSlug}/admin/meetings/{id}/edit', [\App\Http\Controllers\MeetingAdminController::class, 'edit'])->name('admin.meetings.edit');
+    Route::get('/clubs/{clubSlug}/admin/meetings/settings-json', [\App\Http\Controllers\MeetingAdminController::class, 'settingsJson'])->name('admin.meetings.settings_json');
     Route::post('/clubs/{clubSlug}/admin/meetings', [\App\Http\Controllers\MeetingAdminController::class, 'store'])->name('admin.meetings.store');
     Route::get('/clubs/{clubSlug}/admin/meetings/{id}', [\App\Http\Controllers\MeetingAdminController::class, 'show'])->name('admin.meetings.show');
     Route::post('/clubs/{clubSlug}/admin/meetings/{id}/rsvp', [\App\Http\Controllers\MeetingAdminController::class, 'updateRsvp'])->name('admin.meetings.rsvp.update');
@@ -133,11 +137,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/meetings/generate-season', [\App\Http\Controllers\MeetingAdminController::class, 'generateSeason'])->name('admin.meetings.generate_season');
     Route::post('/clubs/{clubSlug}/admin/meetings/{id}/publish', [\App\Http\Controllers\MeetingAdminController::class, 'publishSummons'])->name('admin.meetings.publish');
     Route::post('/clubs/{clubSlug}/admin/meetings/{id}/duplicate', [\App\Http\Controllers\MeetingAdminController::class, 'duplicate'])->name('admin.meetings.duplicate');
+    Route::get('/clubs/{clubSlug}/admin/meetings/{id}/officer-election', [\App\Http\Controllers\MeetingAdminController::class, 'officerElectionData'])->name('admin.meetings.officer_election.data');
+    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/officer-election', [\App\Http\Controllers\MeetingAdminController::class, 'storeOfficerElection'])->name('admin.meetings.officer_election.store');
+    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/officer-election/confirm', [\App\Http\Controllers\MeetingAdminController::class, 'confirmOfficerElection'])->name('admin.meetings.officer_election.confirm');
+    Route::get('/clubs/{clubSlug}/admin/officers', [\App\Http\Controllers\OfficerRosterAdminController::class, 'index'])->name('admin.officers.index');
+    Route::post('/clubs/{clubSlug}/admin/officers', [\App\Http\Controllers\OfficerRosterAdminController::class, 'store'])->name('admin.officers.store');
+    Route::post('/clubs/{clubSlug}/admin/officers/quick-member', [\App\Http\Controllers\OfficerRosterAdminController::class, 'storeQuickMember'])->name('admin.officers.quick_member');
+    Route::post('/clubs/{clubSlug}/admin/officers/{id}/status', [\App\Http\Controllers\OfficerRosterAdminController::class, 'updateStatus'])->name('admin.officers.status');
+    Route::post('/clubs/{clubSlug}/admin/officers/{id}/install', [\App\Http\Controllers\OfficerRosterAdminController::class, 'install'])->name('admin.officers.install');
     Route::delete('/clubs/{clubSlug}/admin/meetings/{id}', [\App\Http\Controllers\MeetingAdminController::class, 'destroy'])->name('admin.meetings.destroy');
 
     // Admin Blog & News Posts Routes
     Route::get('/clubs/{clubSlug}/admin/posts', [PostAdminController::class, 'index'])->name('admin.posts.index');
     Route::get('/clubs/{clubSlug}/admin/posts/create', [PostAdminController::class, 'edit'])->name('admin.posts.create');
+    Route::get('/clubs/{clubSlug}/admin/posts/{id}', [PostAdminController::class, 'show'])->name('admin.posts.show');
     Route::get('/clubs/{clubSlug}/admin/posts/{id}/edit', [PostAdminController::class, 'edit'])->name('admin.posts.edit');
     Route::post('/clubs/{clubSlug}/admin/posts', [PostAdminController::class, 'store'])->name('admin.posts.store');
     Route::delete('/clubs/{clubSlug}/admin/posts/{id}', [PostAdminController::class, 'destroy'])->name('admin.posts.destroy');
@@ -156,6 +169,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'store'])->name('admin.newsletters.store');
     Route::post('/clubs/{clubSlug}/admin/newsletters/{id}/send', [NewsletterAdminController::class, 'send'])->name('admin.newsletters.send');
     Route::delete('/clubs/{clubSlug}/admin/newsletters/{id}', [NewsletterAdminController::class, 'destroy'])->name('admin.newsletters.destroy');
+
+    // Admin Updates & Weekly Digest Routes
+    Route::get('/clubs/{clubSlug}/admin/updates', [UpdateAdminController::class, 'index'])->name('admin.updates.index');
+    Route::post('/clubs/{clubSlug}/admin/updates', [UpdateAdminController::class, 'store'])->name('admin.updates.store');
+    Route::post('/clubs/{clubSlug}/admin/updates/{id}/status', [UpdateAdminController::class, 'updateStatus'])->name('admin.updates.status.update');
+    Route::delete('/clubs/{clubSlug}/admin/updates/{id}', [UpdateAdminController::class, 'destroy'])->name('admin.updates.destroy');
+    Route::post('/clubs/{clubSlug}/admin/updates/dispatch-digest', [UpdateAdminController::class, 'triggerDigest'])->name('admin.updates.dispatch_digest');
 
     // National Directory & Member Subscriptions Hub Routes
     Route::get('/directory', [ClubDirectoryController::class, 'index'])->name('directory.index');
@@ -183,17 +203,30 @@ Route::middleware(['auth'])->group(function () {
 
     // Billing & Subscription Management Routes
     Route::get('/clubs/{clubSlug}/admin/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
+    Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::post('/clubs/{clubSlug}/admin/billing/provider', [BillingController::class, 'updateProvider'])->name('billing.provider.update');
 
-    // Admin Accounting & ERP Routes (Liberu Accounting Integration)
+    // Admin Accounting & ERP Routes
     Route::post('/clubs/{clubSlug}/admin/accounting/accounts', [\App\Http\Controllers\AccountingAdminController::class, 'storeAccount'])->name('admin.accounting.accounts.store');
     Route::post('/clubs/{clubSlug}/admin/accounting/opening-balance', [\App\Http\Controllers\AccountingAdminController::class, 'storeOpeningBalance'])->name('admin.accounting.opening_balance.store');
+    Route::get('/clubs/{clubSlug}/admin/accounting/journal-entries/create', [\App\Http\Controllers\AccountingAdminController::class, 'createJournal'])->name('admin.accounting.journal.create');
     Route::post('/clubs/{clubSlug}/admin/accounting/journal-entries', [\App\Http\Controllers\AccountingAdminController::class, 'storeJournalEntry'])->name('admin.accounting.journal.store');
+    Route::get('/clubs/{clubSlug}/admin/accounting/journal-entries/{id}/edit', [\App\Http\Controllers\AccountingAdminController::class, 'editJournalEntry'])->name('admin.accounting.journal.edit');
+    Route::put('/clubs/{clubSlug}/admin/accounting/journal-entries/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'updateJournalEntry'])->name('admin.accounting.journal.update');
     Route::get('/clubs/{clubSlug}/admin/accounting/invoices/create', [\App\Http\Controllers\AccountingAdminController::class, 'createInvoice'])->name('admin.accounting.invoices.create');
+    Route::get('/clubs/{clubSlug}/admin/accounting/invoices/{id}/edit', [\App\Http\Controllers\AccountingAdminController::class, 'editInvoice'])->name('admin.accounting.invoices.edit');
     Route::post('/clubs/{clubSlug}/admin/accounting/invoices', [\App\Http\Controllers\AccountingAdminController::class, 'storeInvoice'])->name('admin.accounting.invoices.store');
+    Route::put('/clubs/{clubSlug}/admin/accounting/invoices/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'updateInvoice'])->name('admin.accounting.invoices.update');
+    Route::delete('/clubs/{clubSlug}/admin/accounting/invoices/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'destroyInvoice'])->name('admin.accounting.invoices.destroy');
+    Route::post('/clubs/{clubSlug}/admin/accounting/invoices/{id}/publish', [\App\Http\Controllers\AccountingAdminController::class, 'publishInvoice'])->name('admin.accounting.invoices.publish');
     Route::post('/clubs/{clubSlug}/admin/accounting/invoices/{id}/pay', [\App\Http\Controllers\AccountingAdminController::class, 'markInvoicePaid'])->name('admin.accounting.invoices.pay');
     Route::delete('/clubs/{clubSlug}/admin/accounting/invoices/{id}/attachment', [\App\Http\Controllers\AccountingAdminController::class, 'deleteInvoiceAttachment'])->name('admin.accounting.invoices.attachment.destroy');
+    Route::get('/clubs/{clubSlug}/admin/accounting/bills/create', [\App\Http\Controllers\AccountingAdminController::class, 'createBill'])->name('admin.accounting.bills.create');
     Route::post('/clubs/{clubSlug}/admin/accounting/bills', [\App\Http\Controllers\AccountingAdminController::class, 'storeBill'])->name('admin.accounting.bills.store');
+    Route::get('/clubs/{clubSlug}/admin/accounting/bills/{id}/edit', [\App\Http\Controllers\AccountingAdminController::class, 'editBill'])->name('admin.accounting.bills.edit');
+    Route::put('/clubs/{clubSlug}/admin/accounting/bills/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'updateBill'])->name('admin.accounting.bills.update');
+    Route::post('/clubs/{clubSlug}/admin/accounting/bills/{id}/publish', [\App\Http\Controllers\AccountingAdminController::class, 'publishBill'])->name('admin.accounting.bills.publish');
     Route::post('/clubs/{clubSlug}/admin/accounting/bills/{id}/pay', [\App\Http\Controllers\AccountingAdminController::class, 'markBillPaid'])->name('admin.accounting.bills.pay');
     Route::delete('/clubs/{clubSlug}/admin/accounting/bills/{id}/attachment', [\App\Http\Controllers\AccountingAdminController::class, 'deleteBillAttachment'])->name('admin.accounting.bills.attachment.destroy');
     Route::delete('/clubs/{clubSlug}/admin/accounting/bills/{id}', [\App\Http\Controllers\AccountingAdminController::class, 'destroyBill'])->name('admin.accounting.bills.destroy');
@@ -243,6 +276,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('admin.club_acc.bank_reconciliation.index');
     Route::get('/clubs/{clubSlug}/admin/charity', \App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard::class)->name('admin.club_acc.charity.index');
 
+    Route::post('/clubs/{clubSlug}/admin/billing/business-account', [BillingController::class, 'updateBusinessAccount'])->name('billing.business.update');
     Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 

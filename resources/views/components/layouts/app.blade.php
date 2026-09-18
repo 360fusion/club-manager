@@ -121,7 +121,7 @@
                     <!-- 1. Dashboard -->
                     <a
                         href="{{ route('admin.analytics', ['slug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
+                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.analytics') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
                     >
                         <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -129,10 +129,10 @@
                         <span>Dashboard</span>
                     </a>
 
-                    <!-- 2. Meetings & Summonses -->
+                    <!-- 2. Meetings & Governance -->
                     <a
                         href="{{ route('admin.meetings.index', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
+                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.meetings.*', 'admin.committee.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
                     >
                         <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -140,21 +140,10 @@
                         <span>Meetings</span>
                     </a>
 
-                    <!-- 2b. Committee & Board Governance (ACTIVE HERE) -->
-                    <a
-                        href="{{ route('admin.committee.index', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.committee.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
-                    >
-                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0V7m0 4h4m-4 0H7" />
-                        </svg>
-                        <span>Committee</span>
-                    </a>
-
                     <!-- 3. Events -->
                     <a
                         href="{{ route('admin.events.index', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
+                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.events.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
                     >
                         <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -165,7 +154,7 @@
                     <!-- 5. Members Hub -->
                     <a
                         href="{{ route('admin.club_acc.members.index', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.club_acc.members.*', 'admin.club_acc.candidates.*', 'admin.club_acc.subscriptions.*', 'admin.users.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
+                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.club_acc.members.*', 'admin.club_acc.candidates.*', 'admin.club_acc.subscriptions.*', 'admin.users.*', 'admin.officers.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
                     >
                         <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -176,7 +165,7 @@
                     <!-- 6. Communications -->
                     <a
                         href="{{ route('admin.posts.index', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
+                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.posts.*', 'admin.newsletters.*', 'admin.updates.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
                     >
                         <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
@@ -184,21 +173,10 @@
                         <span>Communications</span>
                     </a>
 
-                    <!-- 7. Newsletters -->
-                    <a
-                        href="{{ route('admin.newsletters.index', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
-                    >
-                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        <span>Newsletters</span>
-                    </a>
-
                     <!-- 8. Website Builder -->
                     <a
                         href="{{ route('admin.pages.index', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
+                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.pages.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
                     >
                         <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -209,7 +187,7 @@
                     <!-- 9. File Manager -->
                     <a
                         href="{{ route('admin.media.page', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
+                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.media.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
                     >
                         <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
@@ -240,7 +218,7 @@
                     <!-- 12. Club Settings -->
                     <a
                         href="{{ route('admin.settings.show', ['clubSlug' => $clubSlug]) }}"
-                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all hover:bg-slate-800 hover:text-white text-slate-300"
+                        class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.settings.*', 'admin.profile.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
                     >
                         <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />

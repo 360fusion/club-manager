@@ -80,6 +80,33 @@ class NewsletterAdminController extends Controller
             ->orderByDesc('published_at')
             ->get();
 
+        $pickerApprovedUpdates = \App\Models\ClubUpdate::where('club_id', $club->id)
+            ->where('status', 'approved')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $pickerMeetings = \App\Domains\ClubAccounting\Models\ClubCommitteeMeeting::where('club_id', $club->id)
+            ->where('meeting_date', '>=', \Carbon\Carbon::now())
+            ->orderBy('meeting_date', 'asc')
+            ->get()
+            ->map(fn($m) => [
+                'id' => $m->id,
+                'title' => $m->title,
+                'date' => \Carbon\Carbon::parse($m->meeting_date)->format('M d, Y g:i A'),
+                'room' => $m->location ?? 'Main Lodge Room',
+            ]);
+
+        $pickerEvents = \App\Models\Event::where('club_id', $club->id)
+            ->where('starts_at', '>=', \Carbon\Carbon::now())
+            ->orderBy('starts_at', 'asc')
+            ->get()
+            ->map(fn($e) => [
+                'id' => $e->id,
+                'title' => $e->title,
+                'date' => \Carbon\Carbon::parse($e->starts_at)->format('M d, Y g:i A'),
+                'price' => $e->price ? '£' . number_format($e->price, 2) : 'Free',
+            ]);
+
         $newsletter = $id
             ? Newsletter::where('club_id', $club->id)->findOrFail($id)
             : new Newsletter([
@@ -97,6 +124,9 @@ class NewsletterAdminController extends Controller
             'newsletter' => $newsletter,
             'types' => $types,
             'posts' => $posts,
+            'pickerApprovedUpdates' => $pickerApprovedUpdates,
+            'pickerMeetings' => $pickerMeetings,
+            'pickerEvents' => $pickerEvents,
         ]);
     }
 
@@ -122,8 +152,8 @@ class NewsletterAdminController extends Controller
 
         if ($request->hasFile('new_attachments')) {
             foreach ($request->file('new_attachments') as $file) {
-                if ($file->isValid()) {
-                    $path = $file->store("newsletter_attachments/{$club->id}", 'public');
+                if ($file && $file->isValid()) {
+                    $media = $club->addMedia($file)->toMediaCollection('newsletters');
                     $bytes = $file->getSize();
                     $sizeFormatted = $bytes >= 1048576 
                         ? round($bytes / 1048576, 1) . ' MB' 
@@ -131,7 +161,7 @@ class NewsletterAdminController extends Controller
 
                     $attachments[] = [
                         'name' => $file->getClientOriginalName(),
-                        'url' => "/storage/{$path}",
+                        'url' => "/storage/{$media->id}/{$media->file_name}",
                         'size' => $sizeFormatted,
                         'mime_type' => $file->getMimeType(),
                     ];

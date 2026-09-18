@@ -241,4 +241,114 @@ class AccountingErpTest extends TestCase
         $this->assertEquals('paid', $bill->fresh()->status);
         $this->assertEquals(0.00, $apAcc->fresh()->balance);
     }
+
+    public function test_admin_can_view_create_and_edit_forms_for_accounting_items(): void
+    {
+        $this->actingAs($this->adminUser);
+        $this->accountingService->seedDefaultAccounts($this->club);
+
+        $member = User::factory()->create();
+        $invoice = Invoice::create([
+            'club_id' => $this->club->id,
+            'user_id' => $member->id,
+            'title' => 'Test Member Fee',
+            'amount' => 50.00,
+            'status' => 'draft',
+            'invoice_number' => 'INV-TEST-1',
+        ]);
+
+        $bill = Bill::create([
+            'club_id' => $this->club->id,
+            'bill_number' => 'BILL-TEST-1',
+            'vendor_name' => 'Supplier Co',
+            'category' => 'Utilities',
+            'amount' => 100.00,
+            'due_date' => '2026-10-01',
+            'status' => 'draft',
+        ]);
+
+        $bankAcc = Account::where('club_id', $this->club->id)->where('code', '1000')->firstOrFail();
+        $duesAcc = Account::where('club_id', $this->club->id)->where('code', '4000')->firstOrFail();
+
+        $journal = $this->accountingService->postJournalEntry($this->club, [
+            'description' => 'Initial Capital',
+            'entry_date' => '2026-09-01',
+            'items' => [
+                ['account_id' => $bankAcc->id, 'debit' => 500.00, 'credit' => 0],
+                ['account_id' => $duesAcc->id, 'debit' => 0, 'credit' => 500.00],
+            ],
+        ]);
+
+        $this->get(route('admin.accounting.invoices.create', $this->club->slug))->assertOk();
+        $this->get(route('admin.accounting.invoices.edit', ['clubSlug' => $this->club->slug, 'id' => $invoice->id]))->assertOk();
+
+        $this->get(route('admin.accounting.bills.create', $this->club->slug))->assertOk();
+        $this->get(route('admin.accounting.bills.edit', ['clubSlug' => $this->club->slug, 'id' => $bill->id]))->assertOk();
+
+        $this->get(route('admin.accounting.journal.create', $this->club->slug))->assertOk();
+        $this->get(route('admin.accounting.journal.edit', ['clubSlug' => $this->club->slug, 'id' => $journal->id]))->assertOk();
+    }
+
+    public function test_admin_can_update_and_publish_invoice(): void
+    {
+        $this->actingAs($this->adminUser);
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $member = User::factory()->create();
+
+        $invoice = Invoice::create([
+            'club_id' => $this->club->id,
+            'user_id' => $member->id,
+            'title' => 'Draft Invoice',
+            'amount' => 80.00,
+            'status' => 'draft',
+            'invoice_number' => 'INV-DRAFT-1',
+        ]);
+
+        $updateResponse = $this->put(route('admin.accounting.invoices.update', ['clubSlug' => $this->club->slug, 'id' => $invoice->id]), [
+            'user_id' => $member->id,
+            'title' => 'Updated Invoice Title',
+            'amount' => 95.00,
+            'status' => 'draft',
+        ]);
+        $updateResponse->assertRedirect();
+        $this->assertEquals('Updated Invoice Title', $invoice->fresh()->title);
+        $this->assertEquals(95.00, $invoice->fresh()->amount);
+
+        $publishResponse = $this->post(route('admin.accounting.invoices.publish', ['clubSlug' => $this->club->slug, 'id' => $invoice->id]));
+        $publishResponse->assertRedirect();
+        $this->assertEquals('unpaid', $invoice->fresh()->status);
+    }
+
+    public function test_admin_can_delete_draft_invoice_and_bill(): void
+    {
+        $this->actingAs($this->adminUser);
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $member = User::factory()->create();
+
+        $invoice = Invoice::create([
+            'club_id' => $this->club->id,
+            'user_id' => $member->id,
+            'title' => 'Invoice To Delete',
+            'amount' => 40.00,
+            'status' => 'draft',
+            'invoice_number' => 'INV-DEL-1',
+        ]);
+
+        $bill = Bill::create([
+            'club_id' => $this->club->id,
+            'bill_number' => 'BILL-DEL-1',
+            'vendor_name' => 'Delete Vendor',
+            'category' => 'Supplies',
+            'amount' => 60.00,
+            'due_date' => '2026-10-01',
+            'status' => 'draft',
+        ]);
+
+        $this->delete(route('admin.accounting.invoices.destroy', ['clubSlug' => $this->club->slug, 'id' => $invoice->id]))->assertRedirect();
+        $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
+
+        $this->delete(route('admin.accounting.bills.destroy', ['clubSlug' => $this->club->slug, 'id' => $bill->id]))->assertRedirect();
+        $this->assertDatabaseMissing('accounting_bills', ['id' => $bill->id]);
+    }
 }
+

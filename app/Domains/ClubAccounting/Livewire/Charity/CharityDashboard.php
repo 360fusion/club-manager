@@ -39,6 +39,9 @@ class CharityDashboard extends Component
     public string $relief_chest_number = '';
     public string $approval_status = 'proposed';
     public string $bacs_reference = '';
+    public ?int $proposer_member_id = null;
+    public ?int $seconder_member_id = null;
+    public ?int $committee_meeting_id = null;
 
     // Festival Target Form
     public string $festival_name = 'Durham 2029 Festival';
@@ -130,6 +133,9 @@ class CharityDashboard extends Component
             $this->relief_chest_number = $grant->relief_chest_number ?? '';
             $this->approval_status = $grant->approval_status->value;
             $this->bacs_reference = $grant->bacs_reference ?? '';
+            $this->proposer_member_id = $grant->proposer_member_id;
+            $this->seconder_member_id = $grant->seconder_member_id;
+            $this->committee_meeting_id = $grant->committee_meeting_id;
         } else {
             $this->resetGrantForm();
         }
@@ -145,6 +151,11 @@ class CharityDashboard extends Component
             'purpose' => 'required|string',
             'grant_amount' => 'required|numeric|min:0.01',
             'approval_status' => 'required|string',
+            'proposer_member_id' => 'nullable|exists:club_acc_members,id',
+            'seconder_member_id' => 'nullable|exists:club_acc_members,id|different:proposer_member_id',
+            'committee_meeting_id' => 'nullable|exists:club_acc_committee_meetings,id',
+        ], [
+            'seconder_member_id.different' => 'The Seconder must be a different Brother than the Proposer.',
         ]);
 
         $data = [
@@ -155,6 +166,9 @@ class CharityDashboard extends Component
             'relief_chest_number' => $this->relief_chest_number ?: null,
             'approval_status' => GrantApprovalStatus::from($this->approval_status),
             'bacs_reference' => $this->bacs_reference ?: 'BACS-G' . sprintf('%04d', rand(1, 9999)),
+            'proposer_member_id' => $this->proposer_member_id ?: null,
+            'seconder_member_id' => $this->seconder_member_id ?: null,
+            'committee_meeting_id' => $this->committee_meeting_id ?: null,
         ];
 
         if ($this->grantId) {
@@ -288,7 +302,7 @@ class CharityDashboard extends Component
 
     private function resetGrantForm(): void
     {
-        $this->reset(['grantId', 'recipient_name', 'purpose', 'relief_chest_number', 'bacs_reference']);
+        $this->reset(['grantId', 'recipient_name', 'purpose', 'relief_chest_number', 'bacs_reference', 'proposer_member_id', 'seconder_member_id', 'committee_meeting_id']);
         $this->grant_amount = '0.00';
         $this->approval_status = 'proposed';
     }
@@ -306,7 +320,7 @@ class CharityDashboard extends Component
                 'relief_chest_ref' => 'E1418',
                 'target_amount' => 25000.00,
                 'bronze_tier' => 5000.00,
-                'silver_tier' => 10000.00,
+                'silver_tier' => 18000.00,
                 'gold_tier' => 18000.00,
                 'platinum_tier' => 25000.00,
             ]);
@@ -324,11 +338,15 @@ class CharityDashboard extends Component
         $totalCollectionsAmount = $totalCollectionsCash + $totalCollectionsCheque;
 
         // 3. Grants
-        $grants = CharityGrant::where('club_id', $club->id)->orderBy('created_at', 'desc')->get();
+        $grants = CharityGrant::where('club_id', $club->id)
+            ->with(['proposer', 'seconder', 'committeeMeeting'])
+            ->orderBy('created_at', 'desc')
+            ->get();
         $totalGrantsDisbursed = CharityGrant::where('club_id', $club->id)->where('approval_status', GrantApprovalStatus::Disbursed->value)->sum('amount');
 
-        // 4. Member Festival Giving
+        // 4. Member Festival Giving & Committee Meetings
         $activeMembers = Member::where('club_id', $club->id)->active()->orderBy('last_name')->get();
+        $committeeMeetings = \App\Domains\ClubAccounting\Models\ClubCommitteeMeeting::where('club_id', $club->id)->orderBy('meeting_date', 'desc')->get();
         $memberGivingRecords = MemberFestivalGiving::whereIn('member_id', $activeMembers->pluck('id'))->get()->keyBy('member_id');
 
         $totalMemberDonations = $memberGivingRecords->sum('total_donated_to_date');
@@ -348,6 +366,7 @@ class CharityDashboard extends Component
             'grants' => $grants,
             'totalGrantsDisbursed' => $totalGrantsDisbursed,
             'activeMembers' => $activeMembers,
+            'committeeMeetings' => $committeeMeetings,
             'memberGivingRecords' => $memberGivingRecords,
             'collectionTypes' => CollectionType::cases(),
             'grantStatuses' => GrantApprovalStatus::cases(),

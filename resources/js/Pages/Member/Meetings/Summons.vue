@@ -12,6 +12,7 @@ const props = defineProps({
   worshipfulMaster: { type: Object, default: null },
   memberRole: { type: String, default: 'member' },
   isCutoffPassed: { type: Boolean, default: false },
+  charityGrants: { type: Array, default: () => [] },
 });
 
 const showRsvpModal = ref(false);
@@ -222,6 +223,36 @@ function formatDateTime(dateTimeVal) {
 
           <div v-else class="p-6 text-center text-slate-400 bg-slate-50 rounded-2xl text-sm">
             Standard business and agenda items will be transacted.
+          </div>
+        </div>
+
+        <!-- Charitable Donation Proposals & Alms Voting -->
+        <div v-if="charityGrants?.length" class="space-y-4 pt-2">
+          <h3 class="text-lg font-extrabold text-slate-900 border-b border-slate-200 pb-2 flex items-center justify-between">
+            <span class="flex items-center gap-2"><span>❤️</span> Charitable Donation Proposals & Alms Voting</span>
+            <span class="text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-300">
+              {{ charityGrants.length }} Grant Proposal(s)
+            </span>
+          </h3>
+
+          <div class="space-y-3">
+            <div v-for="grant in charityGrants" :key="grant.id" class="p-4 bg-amber-50/70 rounded-2xl border border-amber-200/90 space-y-2">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-2">
+                <div>
+                  <h4 class="text-base font-black text-slate-900">
+                    £{{ numberFormat(grant.amount) }} — {{ grant.recipient_name }}
+                  </h4>
+                  <p class="text-xs text-amber-900 font-semibold mt-0.5">{{ grant.purpose }}</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold capitalize bg-amber-200/80 text-amber-900 border border-amber-300 self-start sm:self-center">
+                  {{ (grant.approval_status || 'proposed').replace('_', ' ') }}
+                </span>
+              </div>
+              <div class="flex flex-wrap items-center gap-x-4 text-xs text-slate-600 font-medium">
+                <span v-if="grant.proposer">Proposed by: <strong class="text-slate-900">{{ grant.proposer.first_name }} {{ grant.proposer.last_name }}</strong></span>
+                <span v-if="grant.seconder">Seconded by: <strong class="text-slate-900">{{ grant.seconder.first_name }} {{ grant.seconder.last_name }}</strong></span>
+              </div>
+            </div>
           </div>
         </div>
 

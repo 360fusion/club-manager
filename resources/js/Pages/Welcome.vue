@@ -69,9 +69,9 @@ const getIcon = (typeCode) => {
                     <Link href="/clubs/lodge-of-fraternity/admin/pages" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         🎨 CMS Pages
                     </Link>
-                    <Link href="/site/lodge-of-fraternity" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <a href="/site/lodge-of-fraternity" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         🌐 Live Site
-                    </Link>
+                    </a>
                     <Link href="/clubs/lodge-of-fraternity/admin/subscriptions" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         💳 Subscriptions
                     </Link>

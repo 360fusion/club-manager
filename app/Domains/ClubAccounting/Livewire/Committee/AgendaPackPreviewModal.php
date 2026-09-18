@@ -59,16 +59,14 @@ class AgendaPackPreviewModal extends Component
         $compiler = app(CommitteePackCompilerService::class);
         $this->emailBody = $compiler->compileEmailBody($meeting);
 
-        // Select all committee attendees marked as present or remote link by default
+        // Select all committee attendees by default
         $this->selectedRecipientIds = $meeting->attendees
-            ->whereIn('attendance_type', [AttendanceType::Present, AttendanceType::RemoteLink])
-            ->pluck('user_id')
-            ->filter()
+            ->pluck('id')
             ->map(fn ($id) => (int) $id)
             ->values()
             ->all();
 
-        // If attendees don't have user_id linked yet, fallback to club committee members
+        // If attendees don't exist yet, fallback to club committee member user IDs
         if (empty($this->selectedRecipientIds)) {
             $this->selectedRecipientIds = $club->users()
                 ->wherePivotIn('committee_role', ['chair', 'secretary', 'member'])
@@ -84,23 +82,23 @@ class AgendaPackPreviewModal extends Component
         }
     }
 
-    public function toggleRecipient(int $userId): void
+    public function toggleRecipient(int $attendeeId): void
     {
-        if (in_array($userId, $this->selectedRecipientIds)) {
-            $this->selectedRecipientIds = array_values(array_diff($this->selectedRecipientIds, [$userId]));
+        if (in_array($attendeeId, $this->selectedRecipientIds)) {
+            $this->selectedRecipientIds = array_values(array_diff($this->selectedRecipientIds, [$attendeeId]));
         } else {
-            $this->selectedRecipientIds[] = $userId;
+            $this->selectedRecipientIds[] = $attendeeId;
         }
     }
 
     public function selectAllRecipients(): void
     {
         $meeting = $this->getMeeting();
-        $userIds = $meeting->attendees->pluck('user_id')->filter()->map(fn ($id) => (int) $id)->all();
-        if (empty($userIds)) {
-            $userIds = $meeting->club->users()->pluck('users.id')->map(fn ($id) => (int) $id)->all();
+        $attendeeIds = $meeting->attendees->pluck('id')->map(fn ($id) => (int) $id)->all();
+        if (empty($attendeeIds)) {
+            $attendeeIds = $meeting->club->users()->pluck('users.id')->map(fn ($id) => (int) $id)->all();
         }
-        $this->selectedRecipientIds = array_values(array_unique($userIds));
+        $this->selectedRecipientIds = array_values(array_unique($attendeeIds));
     }
 
     public function deselectAllRecipients(): void
@@ -123,13 +121,23 @@ class AgendaPackPreviewModal extends Component
         $meeting = $this->getMeeting();
         $compiler = app(CommitteePackCompilerService::class);
 
+        $selectedAttendees = $meeting->attendees->whereIn('id', $this->selectedRecipientIds);
+        $userMemberIds = $selectedAttendees->pluck('user_id')->filter()->map(fn ($id) => (int) $id)->values()->all();
+
+        if (empty($userMemberIds)) {
+            $userMemberIds = $this->selectedRecipientIds;
+        }
+
         $sentCount = $compiler->dispatchPack(
             meeting: $meeting,
-            recipientMemberIds: $this->selectedRecipientIds,
+            recipientMemberIds: $userMemberIds,
             emailSubject: $this->emailSubject,
             customEmailBody: $this->emailBody,
             attachPdf: $this->includePdfAttachment,
         );
+
+        \App\Domains\ClubAccounting\Models\ClubCommitteeAttendee::whereIn('id', $this->selectedRecipientIds)
+            ->update(['pack_sent_at' => Carbon::now()]);
 
         $this->isSending = false;
         $this->isOpen = false;

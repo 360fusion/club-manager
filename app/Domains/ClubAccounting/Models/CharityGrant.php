@@ -23,6 +23,9 @@ class CharityGrant extends Model
         'relief_chest_number',
         'approval_status',
         'bacs_reference',
+        'proposer_member_id',
+        'seconder_member_id',
+        'committee_meeting_id',
     ];
 
     protected function casts(): array
@@ -36,5 +39,20 @@ class CharityGrant extends Model
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function proposer(): BelongsTo
+    {
+        return $this->belongsTo(Member::class, 'proposer_member_id');
+    }
+
+    public function seconder(): BelongsTo
+    {
+        return $this->belongsTo(Member::class, 'seconder_member_id');
+    }
+
+    public function committeeMeeting(): BelongsTo
+    {
+        return $this->belongsTo(ClubCommitteeMeeting::class, 'committee_meeting_id');
     }
 }

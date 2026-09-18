@@ -197,6 +197,8 @@ class ClubSettingsController extends Controller
             'default_expense_account_code' => '5000',
             'require_bill_approval' => false,
             'default_bank_account_code' => '1000',
+            'bank_sort_code' => '20-65-18',
+            'bank_account_number' => '83920145',
             'enforce_balanced_journals' => true,
 
             // Events & Check-Ins
@@ -241,15 +243,47 @@ class ClubSettingsController extends Controller
             $club->settings['permission_matrix'] ?? []
         );
 
-        $members = $club->users->map(fn ($u) => [
-            'id' => $u->id,
-            'name' => $u->name,
-            'email' => $u->email,
-            'role' => $u->pivot->role ?? 'member',
-            'rank' => $u->pivot->rank ?? '',
-            'member_number' => $u->pivot->member_number ?? '',
-            'status' => $u->pivot->status ?? 'active',
-        ]);
+        $domainMembers = \App\Domains\ClubAccounting\Models\Member::where('club_id', $club->id)
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        $userAccounts = $club->users->keyBy('id');
+
+        $members = $domainMembers->map(function ($m) use ($userAccounts) {
+            $user = $m->user_id ? $userAccounts->get($m->user_id) : null;
+
+            return [
+                'id' => $user?->id ?? $m->id,
+                'user_id' => $m->user_id,
+                'member_id' => $m->id,
+                'name' => $m->full_name ?: ($user?->name ?? 'Unknown Member'),
+                'formatted_rank_name' => $m->formatted_rank_name,
+                'email' => $m->email ?: ($user?->email ?? ''),
+                'role' => $user?->pivot->role ?? 'member',
+                'rank' => $m->masonic_rank ?: ($user?->pivot->rank ?? ''),
+                'member_number' => $user?->pivot->member_number ?? '',
+                'status' => $m->membership_status?->value ?? ($user?->pivot->status ?? 'active'),
+            ];
+        });
+
+        $existingUserIds = $domainMembers->pluck('user_id')->filter()->all();
+        foreach ($userAccounts as $user) {
+            if (! in_array($user->id, $existingUserIds)) {
+                $members->push([
+                    'id' => $user->id,
+                    'user_id' => $user->id,
+                    'member_id' => null,
+                    'name' => $user->name,
+                    'formatted_rank_name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->pivot->role ?? 'member',
+                    'rank' => $user->pivot->rank ?? '',
+                    'member_number' => $user->pivot->member_number ?? '',
+                    'status' => $user->pivot->status ?? 'active',
+                ]);
+            }
+        }
 
         return Inertia::render('Admin/Settings/Show', [
             'club' => $club,
@@ -340,6 +374,8 @@ class ClubSettingsController extends Controller
             'default_expense_account_code' => 'nullable|string|max:30',
             'require_bill_approval' => 'nullable|boolean',
             'default_bank_account_code' => 'nullable|string|max:30',
+            'bank_sort_code' => 'nullable|string|max:20',
+            'bank_account_number' => 'nullable|string|max:30',
             'enforce_balanced_journals' => 'nullable|boolean',
 
             // Events & Check-Ins

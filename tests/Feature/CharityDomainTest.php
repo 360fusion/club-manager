@@ -189,4 +189,34 @@ class CharityDomainTest extends TestCase
             'cheque_amount' => 30.00,
         ]);
     }
+
+    public function test_can_propose_grant_with_proposer_seconder_and_committee_meeting(): void
+    {
+        $meeting = \App\Domains\ClubAccounting\Models\ClubCommitteeMeeting::create([
+            'club_id' => $this->club->id,
+            'title' => 'Lodge Committee Q3 Meeting',
+            'meeting_date' => now()->addDays(5),
+            'status' => 'scheduled',
+        ]);
+
+        Livewire::actingAs($this->user)
+            ->test(CharityDashboard::class, ['clubSlug' => $this->club->slug])
+            ->set('recipient_name', 'Local Hospices Care Fund')
+            ->set('purpose', 'Annual Equipment Grant')
+            ->set('grant_amount', '450.00')
+            ->set('proposer_member_id', $this->counterMember->id)
+            ->set('seconder_member_id', $this->witnessMember->id)
+            ->set('committee_meeting_id', $meeting->id)
+            ->call('saveGrant')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('club_acc_charity_grants', [
+            'club_id' => $this->club->id,
+            'recipient_name' => 'Local Hospices Care Fund',
+            'amount' => 450.00,
+            'proposer_member_id' => $this->counterMember->id,
+            'seconder_member_id' => $this->witnessMember->id,
+            'committee_meeting_id' => $meeting->id,
+        ]);
+    }
 }

@@ -387,17 +387,33 @@
       <h2>{{ $meeting->officers_year_label ?? 'OFFICERS FOR 2025-2026' }}</h2>
       
       <table class="officer-table">
-        @forelse($officerAssignments as $assignment)
-          <tr>
-            <td class="role-name"><strong>{{ $assignment->officerRole->title }}:</strong></td>
-            <td class="holder-name">
-              {{ $assignment->prefix_titles ?? 'WBro' }} {{ $assignment->user ? $assignment->user->name : $assignment->custom_name }}
-              @if($assignment->suffix_titles)
-                <span style="font-size: 7.5pt; color: #444;">{{ $assignment->suffix_titles }}</span>
-              @endif
-            </td>
-          </tr>
-        @empty
+        @if(!empty($meeting->officers_roster) && is_array($meeting->officers_roster) && count($meeting->officers_roster) > 0)
+          @foreach($meeting->officers_roster as $officer)
+            <tr>
+              <td class="role-name"><strong>{{ $officer['role'] ?? '' }}:</strong></td>
+              <td class="holder-name">{{ $officer['name'] ?? '' }}</td>
+            </tr>
+          @endforeach
+        @elseif(isset($officerAssignments) && count($officerAssignments) > 0)
+          @foreach($officerAssignments as $assignment)
+            <tr>
+              <td class="role-name"><strong>{{ $assignment->officerRole->title }}:</strong></td>
+              <td class="holder-name">
+                {{ $assignment->prefix_titles ?? 'WBro' }} {{ $assignment->user ? $assignment->user->name : $assignment->custom_name }}
+                @if($assignment->suffix_titles)
+                  <span style="font-size: 7.5pt; color: #444;">{{ $assignment->suffix_titles }}</span>
+                @endif
+              </td>
+            </tr>
+          @endforeach
+        @elseif(!empty($club->settings['officers_roster']) && is_array($club->settings['officers_roster']))
+          @foreach($club->settings['officers_roster'] as $officer)
+            <tr>
+              <td class="role-name"><strong>{{ $officer['role'] ?? '' }}:</strong></td>
+              <td class="holder-name">{{ $officer['name'] ?? '' }}</td>
+            </tr>
+          @endforeach
+        @else
           <tr><td>Worshipful Master:</td><td>WBro Kristopher D Lord.</td></tr>
           <tr><td>Senior Warden:</td><td>Bro Corey N Irons.</td></tr>
           <tr><td>Junior Warden:</td><td>Bro David A Chapman.</td></tr>
@@ -411,7 +427,7 @@
           <tr><td>Junior Deacon:</td><td>Bro Alfie TS Mensah.</td></tr>
           <tr><td>Inner Guard:</td><td>Bro Jonathon A Corney.</td></tr>
           <tr><td>Tyler:</td><td>WBro Donald Marshall PM PPJGW.</td></tr>
-        @endforelse
+        @endif
       </table>
 
       @if($meeting->honorary_members_text || $club->default_honorary_members_text)
@@ -467,6 +483,23 @@
         @endforelse
       </div>
 
+      @if(isset($charityGrants) && count($charityGrants) > 0)
+        <div class="section-title" style="margin-top: 8px;">CHARITABLE DONATION PROPOSALS & VOTE</div>
+        <div style="font-size: 8.5pt; line-height: 1.3; color: #222;">
+          @foreach($charityGrants as $grant)
+            <div style="margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed #ccc;">
+              <strong>£{{ number_format($grant->amount, 2) }}</strong> to <strong>{{ $grant->recipient_name }}</strong> — {{ $grant->purpose }}
+              @if($grant->proposer || $grant->seconder)
+                <div style="font-size: 7.5pt; color: #555;">
+                  @if($grant->proposer) Proposed by: Bro {{ $grant->proposer->first_name }} {{ $grant->proposer->last_name }} @endif
+                  @if($grant->seconder) | Seconded by: Bro {{ $grant->seconder->first_name }} {{ $grant->seconder->last_name }} @endif
+                </div>
+              @endif
+            </div>
+          @endforeach
+        </div>
+      @endif
+
       <div style="font-size: 8.5pt; margin-top: 6px;">
         <strong>Dress:</strong> {{ $meeting->dress_code ?? 'Dinner Jacket, White Gloves' }}<br>
         <strong>Rehearsal:</strong> {{ $meeting->rehearsal_text ?? ('The rehearsal should it be necessary will be at ' . ($meeting->rehearsal_starts_at ?: '6:00pm') . ' at ' . $meeting->venue . '.') }}
@@ -476,12 +509,18 @@
       <div class="notice-box" style="background: #fdfdfd; border: 1px solid #ccc; padding: 6px 8px; font-size: 8.5pt;">
         {{ $meeting->festive_board_theme ?? 'The Lodge of Fraternity will be holding their Festive Board.' }} Please confirm your attendance to {{ $secretaryUser->name ?? 'Secretary' }} by emailing {{ $secretaryUser->email ?? 'secretary@lodge.org' }}.<br>
         Price: <strong>£{{ number_format($meeting->dining_cost_member, 2) }}</strong><br>
-        Sort Code: <strong>{{ $meeting->bank_sort_code ?? '20-82-18' }}</strong> | Acc No: <strong>{{ $meeting->bank_account_number ?? '80288373' }}</strong><br>
+        Sort Code: <strong>{{ $meeting->bank_sort_code ?: ($club->settings['bank_sort_code'] ?? '20-65-18') }}</strong> | Acc No: <strong>{{ $meeting->bank_account_number ?: ($club->settings['bank_account_number'] ?? '83920145') }}</strong><br>
         Reference: <strong>your name or names</strong>.<br>
         @if($meeting->payment_link)
           Pay Online: <strong><a href="{{ $meeting->payment_link }}" style="color: #000; text-decoration: underline;">{{ $meeting->payment_link }}</a></strong><br>
         @endif
         Bookings must be made by {{ \Carbon\Carbon::parse($meeting->rsvp_cutoff_at)->format('jS F Y') }}.
+        @if(!empty(trim($meeting->festive_board_menu ?? '')))
+          <div style="margin-top: 6px; border-top: 1px solid #ddd; padding-top: 4px;">
+            <strong>Menu:</strong><br>
+            {!! nl2br(e($meeting->festive_board_menu)) !!}
+          </div>
+        @endif
       </div>
 
       @if($meeting->fraternal_visits_text)

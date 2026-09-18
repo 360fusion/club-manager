@@ -6,8 +6,8 @@
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-bold text-slate-400">Lodge Committee</span>
                     <span class="text-slate-300">•</span>
-                    <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border {{ $meeting->status->badgeClass() }}">
-                        {{ $meeting->status->label() }}
+                    <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border {{ $meeting->displayBadgeClass() }}">
+                        {{ $meeting->displayStatusLabel() }}
                     </span>
                 </div>
                 <h1 class="text-2xl font-black text-slate-900 tracking-tight">{{ $meeting->title }}</h1>
@@ -18,18 +18,15 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                <!-- Status controls -->
-                <div class="inline-flex rounded-xl bg-slate-100 p-1 text-xs font-bold">
-                    @foreach(['scheduled' => 'Scheduled', 'in_progress' => 'In Progress', 'draft_saved' => 'Draft', 'finalized' => 'Finalize'] as $val => $lbl)
-                        <button
-                            type="button"
-                            wire:click="setStatus('{{ $val }}')"
-                            class="px-2.5 py-1 rounded-lg transition-all {{ $meeting->status->value === $val ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900' }}"
-                        >
-                            {{ $lbl }}
-                        </button>
-                    @endforeach
-                </div>
+                <button
+                    type="button"
+                    wire:click="openEditModal"
+                    class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 font-bold text-xs rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5"
+                    title="Edit Meeting Details (Title, Date, Location)"
+                >
+                    <span>✏️</span>
+                    <span>Edit Details</span>
+                </button>
 
                 <button
                     type="button"
@@ -39,16 +36,6 @@
                     <span>📄</span>
                     <span>Preview &amp; Send Pack</span>
                 </button>
-
-                <a
-                    href="{{ route('admin.committee.pack.pdf', ['clubSlug' => $club->slug, 'meetingId' => $meeting->id, 'download' => 1]) }}"
-                    class="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5"
-                    title="Download PDF Agenda Pack"
-                    target="_blank"
-                >
-                    <span>📥</span>
-                    <span>PDF</span>
-                </a>
 
                 <a
                     href="{{ route('admin.committee.minutes', ['clubSlug' => $club->slug, 'meetingId' => $meeting->id]) }}"
@@ -302,10 +289,156 @@
                     </div>
                 </div>
 
+                <!-- Charitable Donation Proposals Queue -->
+                <div class="space-y-3 pt-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">🎁</span>
+                            <h3 class="font-black text-slate-900 text-sm">Charitable Donation Proposals</h3>
+                            <button
+                                type="button"
+                                wire:click="openCharityModal"
+                                class="text-xs font-bold text-purple-600 hover:text-purple-800"
+                            >
+                                + Propose
+                            </button>
+                        </div>
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                            {{ count($charityGrants) }} Proposals
+                        </span>
+                    </div>
+
+                    <div class="space-y-2">
+                        @forelse($charityGrants as $grant)
+                            <div class="p-3 bg-purple-50/40 border border-purple-200/70 rounded-2xl space-y-2 text-xs">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <span class="font-bold text-slate-900 block">{{ $grant->recipient_name }}</span>
+                                        <span class="text-[11px] font-black text-purple-950">£{{ number_format($grant->amount, 2) }}</span>
+                                    </div>
+                                    <span class="px-2 py-0.5 text-[9px] font-black rounded-full border {{ $grant->approval_status->badgeClasses() }}">
+                                        {{ $grant->approval_status->label() }}
+                                    </span>
+                                </div>
+
+                                <div class="text-[10px] text-slate-500 space-y-0.5">
+                                    <div>Proposed by: <strong class="text-slate-800">{{ $grant->proposer?->formatted_rank_name ?: 'Not assigned' }}</strong></div>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span>Seconded by: <strong class="text-slate-800">{{ $grant->seconder?->formatted_rank_name ?: 'Pending Seconder' }}</strong></span>
+                                        @if(!$grant->seconder_member_id)
+                                            <select
+                                                wire:change="updateGrantSeconder({{ $grant->id }}, $event.target.value)"
+                                                class="text-[9px] font-bold p-1 bg-white border border-purple-200 rounded focus:outline-none"
+                                            >
+                                                <option value="">+ Assign Seconder</option>
+                                                @foreach($clubMembers as $m)
+                                                    @if($m->member_id && $m->member_id !== $grant->proposer_member_id)
+                                                        <option value="{{ $m->member_id }}">{{ $m->name }}</option>
+                                                    @endif
+                                                @endforeach
+                                            </select>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-end gap-1 pt-1.5 border-t border-purple-100">
+                                    @if($grant->approval_status->value === 'proposed')
+                                        <button
+                                            type="button"
+                                            wire:click="updateGrantApprovalStatus({{ $grant->id }}, 'committee_approved')"
+                                            class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition"
+                                        >
+                                            ✅ Committee Approve
+                                        </button>
+                                    @elseif($grant->approval_status->value === 'committee_approved')
+                                        <button
+                                            type="button"
+                                            wire:click="updateGrantApprovalStatus({{ $grant->id }}, 'lodge_voted')"
+                                            class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition"
+                                        >
+                                            🏛️ Lodge Sanction
+                                        </button>
+                                    @else
+                                        <span class="text-[10px] text-emerald-700 font-bold">Approved for Payment ✓</span>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-center text-xs text-slate-400">
+                                No charitable donation proposals logged for this meeting.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
             </div>
 
         </div>
     </div>
+
+    <!-- Propose Charity Grant Modal from Meeting Workspace -->
+    @if($showCharityModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5 border border-slate-100">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">🎁</span>
+                        <h3 class="font-black text-slate-900 text-base">Propose Charitable Grant</h3>
+                    </div>
+                    <button type="button" wire:click="$set('showCharityModal', false)" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+                </div>
+
+                <form wire:submit.prevent="saveCharityGrantFromMeeting" class="space-y-4 text-xs">
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">Recipient Charity / Cause *</label>
+                        <input type="text" wire:model="grantRecipient" placeholder="e.g. Local Children's Hospice" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none" required />
+                    </div>
+
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">Grant Purpose / Details *</label>
+                        <textarea wire:model="grantPurpose" rows="2" placeholder="Reason for grant request..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none" required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">Proposed Amount (£) *</label>
+                        <input type="number" step="0.01" wire:model="grantAmount" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none" required />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="font-bold text-slate-700 block mb-1">Proposer</label>
+                            <select wire:model="grantProposerId" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                <option value="">Select Proposer...</option>
+                                @foreach($clubMembers as $m)
+                                    @if($m->member_id)
+                                        <option value="{{ $m->member_id }}">{{ $m->name }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="font-bold text-slate-700 block mb-1">Seconder</label>
+                            <select wire:model="grantSeconderId" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                <option value="">Select Seconder...</option>
+                                @foreach($clubMembers as $m)
+                                    @if($m->member_id)
+                                        <option value="{{ $m->member_id }}">{{ $m->name }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                            @error('grantSeconderId') <span class="text-rose-600 text-[10px] block mt-0.5">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                        <button type="button" wire:click="$set('showCharityModal', false)" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition">Cancel</button>
+                        <button type="submit" class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-black rounded-xl shadow-md transition">Save &amp; Log Proposal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 
     <!-- Modals -->
     @livewire(\App\Domains\ClubAccounting\Livewire\Committee\Modals\CandidateVettingModal::class)
@@ -438,7 +571,7 @@
                         <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                             <span class="font-bold text-slate-900 block">Platform Workflow</span>
                             <p class="text-slate-600 leading-relaxed">
-                                Integrates directly with Liberu Accounting's Accounts Payable ledger, pulling pending invoices (e.g. hall rental, dining catering, per-capita dues, regalia).
+                                Integrates directly with the Accounts Payable ledger, pulling pending invoices (e.g. hall rental, dining catering, per-capita dues, regalia).
                             </p>
                         </div>
 
@@ -500,6 +633,90 @@
                     <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
                         <button type="button" wire:click="$set('showAgendaModal', false)" class="px-4 py-2 bg-slate-100 rounded-xl font-bold text-slate-700">Cancel</button>
                         <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm">Add Item</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- Edit Committee Meeting Modal -->
+    @if($showEditModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-5 text-xs">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                            <span>✏️</span>
+                            <span>Edit Committee Meeting</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Update the meeting title, scheduled date &amp; time, and location.</p>
+                    </div>
+                    <button type="button" wire:click="closeEditModal" class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 font-bold transition-all">✕</button>
+                </div>
+
+                <form wire:submit="updateMeeting" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700">Meeting Title / Name <span class="text-rose-500">*</span></label>
+                        <input
+                            type="text"
+                            wire:model="editTitle"
+                            placeholder="e.g. Committee Meeting – October 2026"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-medium text-slate-800"
+                            required
+                        />
+                        @error('editTitle') <span class="text-rose-500 text-[11px]">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700">Date &amp; Time <span class="text-rose-500">*</span></label>
+                        <input
+                            type="datetime-local"
+                            wire:model="editDate"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-medium text-slate-800"
+                            required
+                        />
+                        @error('editDate') <span class="text-rose-500 text-[11px]">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700">Meeting Location</label>
+                        <input
+                            type="text"
+                            wire:model="editLocation"
+                            placeholder="e.g. Lodge Committee Room or Masonic Hall"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-medium text-slate-800"
+                        />
+                        @error('editLocation') <span class="text-rose-500 text-[11px]">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700">Meeting Status</label>
+                        <select
+                            wire:model="editStatus"
+                            class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs font-medium text-slate-800"
+                        >
+                            <option value="draft">Draft (invites not yet dispatched)</option>
+                            <option value="scheduled">Scheduled (invites dispatched)</option>
+                        </select>
+                        @error('editStatus') <span class="text-rose-500 text-[11px]">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                        <button
+                            type="button"
+                            wire:click="closeEditModal"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-slate-700 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            wire:loading.attr="disabled"
+                            class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-sm transition-all flex items-center gap-1.5"
+                        >
+                            <span wire:loading.remove wire:target="updateMeeting">Save Changes</span>
+                            <span wire:loading wire:target="updateMeeting">Saving...</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -568,8 +785,9 @@
 
                         @forelse($committeeMembers as $member)
                             @php
-                                $isAlreadyAttendee = in_array($member->id, $existingAttendeeUserIds);
-                                $roleKey = $member->pivot->committee_role;
+                                $isAlreadyAttendee = ($member->user_id && in_array($member->user_id, $existingAttendeeUserIds))
+                                    || in_array($member->name, $existingAttendeeNames ?? []);
+                                $roleKey = $member->committee_role ?? 'member';
                                 $defaultRoleText = match($roleKey) {
                                     'chair' => 'Committee Chair',
                                     'secretary' => 'Committee Secretary',
@@ -577,7 +795,7 @@
                                     default => 'Committee Member'
                                 };
                             @endphp
-                            <div class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 {{ $isAlreadyAttendee ? 'bg-slate-50/70 border-slate-200 opacity-60' : (in_array($member->id, $selectedMemberIds) ? 'bg-indigo-50/40 border-indigo-300 ring-1 ring-indigo-200' : 'bg-white border-slate-200/80 hover:border-slate-300') }}">
+                            <div class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 {{ $isAlreadyAttendee ? 'bg-slate-50/70 border-slate-200 opacity-60' : (in_array((string) $member->id, array_map('strval', $selectedMemberIds)) ? 'bg-indigo-50/40 border-indigo-300 ring-1 ring-indigo-200' : 'bg-white border-slate-200/80 hover:border-slate-300') }}">
                                 <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0 {{ $isAlreadyAttendee ? 'cursor-not-allowed' : '' }}">
                                     <input
                                         type="checkbox"
@@ -636,9 +854,10 @@
 
                         @forelse($nonCommitteeMembers as $member)
                             @php
-                                $isAlreadyAttendee = in_array($member->id, $existingAttendeeUserIds);
+                                $isAlreadyAttendee = ($member->user_id && in_array($member->user_id, $existingAttendeeUserIds))
+                                    || in_array($member->name, $existingAttendeeNames ?? []);
                             @endphp
-                            <div class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 {{ $isAlreadyAttendee ? 'bg-slate-50/70 border-slate-200 opacity-60' : (in_array($member->id, $selectedMemberIds) ? 'bg-indigo-50/40 border-indigo-300 ring-1 ring-indigo-200' : 'bg-white border-slate-200/80 hover:border-slate-300') }}">
+                            <div class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 {{ $isAlreadyAttendee ? 'bg-slate-50/70 border-slate-200 opacity-60' : (in_array((string) $member->id, array_map('strval', $selectedMemberIds)) ? 'bg-indigo-50/40 border-indigo-300 ring-1 ring-indigo-200' : 'bg-white border-slate-200/80 hover:border-slate-300') }}">
                                 <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0 {{ $isAlreadyAttendee ? 'cursor-not-allowed' : '' }}">
                                     <input
                                         type="checkbox"

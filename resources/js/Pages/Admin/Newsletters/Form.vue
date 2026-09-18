@@ -3,13 +3,104 @@ import { ref, computed } from 'vue';
 import { useForm, Head, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
+import ContentPickerModal from '@/Components/ContentPickerModal.vue';
+import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
 
 const props = defineProps({
   club: Object,
   newsletter: Object,
   types: Array,
   posts: Array,
+  pickerApprovedUpdates: { type: Array, default: () => [] },
+  pickerMeetings: { type: Array, default: () => [] },
+  pickerEvents: { type: Array, default: () => [] },
 });
+
+const showContentPicker = ref(false);
+const showMediaModal = ref(false);
+
+const handleMediaSelect = (media) => {
+  if (media && media.original_url) {
+    existingAttachments.value.push({
+      name: media.name || media.file_name,
+      url: media.original_url,
+      size: media.human_size || '',
+      mime_type: media.mime_type || '',
+    });
+    form.existing_attachments = existingAttachments.value;
+  }
+  showMediaModal.value = false;
+};
+
+const handleContentSelectedFromPicker = ({ updateIds, meetingIds, eventIds, newsIds }) => {
+  let html = `<div style="margin: 20px 0; font-family: Arial, sans-serif;">`;
+
+  // 1. Approved Updates
+  if (updateIds && updateIds.length) {
+    const selectedUpdates = (props.pickerApprovedUpdates || []).filter(u => updateIds.includes(u.id));
+    if (selectedUpdates.length) {
+      html += `<h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #4f46e5;">📜 Summonses & Member Bulletins</h3>`;
+      selectedUpdates.forEach(u => {
+        html += `<div style="background: #ffffff; padding: 14px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0;">`;
+        html += `<h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">${u.title}</h4>`;
+        if (u.summary) html += `<div style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 8px;">${u.summary}</div>`;
+        if (u.attachments && u.attachments.length) {
+          html += `<div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1;">`;
+          u.attachments.forEach(att => {
+            html += `<a href="${att.url}" target="_blank" style="display: inline-block; font-size: 11px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 4px 10px; border-radius: 6px; text-decoration: none; margin-right: 6px;">📄 ${att.name}</a>`;
+          });
+          html += `</div>`;
+        }
+        html += `</div>`;
+      });
+    }
+  }
+
+  // 2. Upcoming Meetings
+  if (meetingIds && meetingIds.length) {
+    const selectedMeetings = (props.pickerMeetings || []).filter(m => meetingIds.includes(m.id));
+    if (selectedMeetings.length) {
+      html += `<h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 20px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #059669;">📅 Upcoming Meetings</h3>`;
+      selectedMeetings.forEach(m => {
+        html += `<div style="background: #ffffff; padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0;">`;
+        html += `<h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">${m.title}</h4>`;
+        html += `<p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">🗓️ ${m.date} • 📍 ${m.room}</p>`;
+        html += `</div>`;
+      });
+    }
+  }
+
+  // 3. Upcoming Events
+  if (eventIds && eventIds.length) {
+    const selectedEvts = (props.pickerEvents || []).filter(e => eventIds.includes(e.id));
+    if (selectedEvts.length) {
+      html += `<h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 20px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #d97706;">🎟️ Upcoming Events & Dining</h3>`;
+      selectedEvts.forEach(e => {
+        html += `<div style="background: #ffffff; padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0;">`;
+        html += `<h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">${e.title}</h4>`;
+        html += `<p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">🗓️ ${e.date} • 💰 ${e.price}</p>`;
+        html += `</div>`;
+      });
+    }
+  }
+
+  // 4. Published News Posts
+  if (newsIds && newsIds.length) {
+    const selectedNews = (props.posts || []).filter(n => newsIds.includes(n.id));
+    if (selectedNews.length) {
+      html += `<h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 20px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #0284c7;">📰 News & Announcements</h3>`;
+      selectedNews.forEach(n => {
+        html += `<div style="background: #ffffff; padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0;">`;
+        html += `<h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #0f172a;">${n.title}</h4>`;
+        if (n.excerpt) html += `<p style="margin: 0; font-size: 12px; color: #64748b;">${n.excerpt}</p>`;
+        html += `</div>`;
+      });
+    }
+  }
+
+  html += `</div><p><br></p>`;
+  form.content = (form.content || '') + html;
+};
 
 const existingAttachments = ref([...(props.newsletter.attachments || [])]);
 const newFiles = ref([]);
@@ -242,6 +333,23 @@ const sendBroadcast = () => {
           </div>
         </div>
 
+        <!-- System Content Picker Trigger Card -->
+        <div class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-100 flex items-center justify-between">
+          <div>
+            <h4 class="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+              <span>🧩</span> Select & Insert System Content
+            </h4>
+            <p class="text-[11px] text-emerald-800/80 mt-0.5">Select approved summonses, upcoming meetings, events, or news posts to automatically embed into your email body.</p>
+          </div>
+          <button
+            type="button"
+            @click="showContentPicker = true"
+            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <span>🧩</span> Select Content Items
+          </button>
+        </div>
+
         <!-- News Items Builder Toggle Bar -->
         <div class="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 flex items-center justify-between">
           <div>
@@ -384,13 +492,22 @@ const sendBroadcast = () => {
               <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">📎 Attachments & Downloads</label>
               <p class="text-[11px] text-slate-500">Attach Summons PDFs, meeting agendas, financial reports, or image circulars for recipients.</p>
             </div>
-            <button
-              type="button"
-              @click="triggerFileInput"
-              class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all flex items-center gap-1 cursor-pointer"
-            >
-              + Add Attachments
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="showMediaModal = true"
+                class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200 transition-all flex items-center gap-1 cursor-pointer"
+              >
+                📁 Select from File Manager
+              </button>
+              <button
+                type="button"
+                @click="triggerFileInput"
+                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all flex items-center gap-1 cursor-pointer"
+              >
+                + Upload New Attachment
+              </button>
+            </div>
             <input
               ref="fileInput"
               type="file"
@@ -473,6 +590,26 @@ const sendBroadcast = () => {
       </form>
 
     </div>
+
+    <!-- Interactive Content Picker Modal -->
+    <ContentPickerModal
+      :show="showContentPicker"
+      :updates="pickerApprovedUpdates"
+      :meetings="pickerMeetings"
+      :events="pickerEvents"
+      :news="posts"
+      @close="showContentPicker = false"
+      @select-content="handleContentSelectedFromPicker"
+    />
+
+    <!-- Media Library Modal -->
+    <MediaLibraryModal
+      :show="showMediaModal"
+      :club-slug="club.slug"
+      default-folder="newsletters"
+      @close="showMediaModal = false"
+      @select="handleMediaSelect"
+    />
 
   </AdminLayout>
 </template>

@@ -52,6 +52,37 @@ class ClubCommitteeMeeting extends Model
         ];
     }
 
+    public function isPast(): bool
+    {
+        return $this->meeting_date && $this->meeting_date->isPast();
+    }
+
+    public function displayStatusLabel(): string
+    {
+        if ($this->isPast()) {
+            return 'Past';
+        }
+
+        return match ($this->status) {
+            CommitteeMeetingStatus::Draft, CommitteeMeetingStatus::DraftSaved => 'Draft',
+            CommitteeMeetingStatus::Scheduled => 'Scheduled',
+            default => $this->status->label(),
+        };
+    }
+
+    public function displayBadgeClass(): string
+    {
+        if ($this->isPast()) {
+            return 'bg-slate-100 text-slate-600 border-slate-200';
+        }
+
+        return match ($this->status) {
+            CommitteeMeetingStatus::Draft, CommitteeMeetingStatus::DraftSaved => 'bg-amber-50 text-amber-800 border-amber-200',
+            CommitteeMeetingStatus::Scheduled => 'bg-sky-100 text-sky-800 border-sky-200',
+            default => $this->status->badgeClass(),
+        };
+    }
+
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);

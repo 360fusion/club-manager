@@ -99,7 +99,7 @@ const formatCurrency = (val) => {
 </script>
 
 <template>
-  <AdminLayout :club="club" title="Meeting Financial Return">
+  <AdminLayout :club="club" title="Meeting Financial Return" active-tab="meetings">
     <Head :title="`Meeting Financial Return - ${club.name}`" />
 
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">

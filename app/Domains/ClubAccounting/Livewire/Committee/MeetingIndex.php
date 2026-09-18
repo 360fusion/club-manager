@@ -23,6 +23,14 @@ class MeetingIndex extends Component
     public ?int $linked_regular_meeting_id = null;
     public bool $isCustomTitle = false;
 
+    // Edit Modal State
+    public bool $showEditModal = false;
+    public ?int $editingMeetingId = null;
+    public string $editTitle = '';
+    public string $editDate = '';
+    public string $editLocation = '';
+    public string $editStatus = 'draft';
+
     public function mount(string $clubSlug): void
     {
         $this->clubSlug = $clubSlug;
@@ -137,19 +145,80 @@ class MeetingIndex extends Component
             'title' => $this->newTitle,
             'meeting_date' => Carbon::parse($this->newDate),
             'location' => $this->newLocation ?: 'Masonic Hall',
-            'status' => CommitteeMeetingStatus::Scheduled,
+            'status' => CommitteeMeetingStatus::Draft,
         ]);
 
         $this->closeCreateModal();
         session()->flash('success', "Committee meeting '{$meeting->title}' scheduled successfully.");
     }
 
+    public function openEditModal(int $id): void
+    {
+        $club = Club::where('slug', $this->clubSlug)->firstOrFail();
+        $meeting = ClubCommitteeMeeting::where('club_id', $club->id)->findOrFail($id);
+
+        $this->editingMeetingId = $meeting->id;
+        $this->editTitle = $meeting->title;
+        $this->editDate = $meeting->meeting_date ? $meeting->meeting_date->format('Y-m-d\TH:i') : '';
+        $this->editLocation = $meeting->location ?? '';
+        $this->editStatus = $meeting->status === CommitteeMeetingStatus::Scheduled ? 'scheduled' : 'draft';
+        $this->showEditModal = true;
+    }
+
+    public function closeEditModal(): void
+    {
+        $this->showEditModal = false;
+        $this->editingMeetingId = null;
+        $this->resetValidation();
+    }
+
+    public function updateMeeting(): void
+    {
+        $this->validate([
+            'editTitle' => 'required|string|max:255',
+            'editDate' => 'required|date',
+            'editLocation' => 'nullable|string|max:255',
+            'editStatus' => 'nullable|string|in:draft,scheduled',
+        ]);
+
+        $club = Club::where('slug', $this->clubSlug)->firstOrFail();
+        $meeting = ClubCommitteeMeeting::where('club_id', $club->id)->findOrFail($this->editingMeetingId);
+
+        $statusEnum = $this->editStatus === 'scheduled'
+            ? CommitteeMeetingStatus::Scheduled
+            : CommitteeMeetingStatus::Draft;
+
+        $meeting->update([
+            'title' => trim($this->editTitle),
+            'meeting_date' => Carbon::parse($this->editDate),
+            'location' => trim($this->editLocation) ?: 'Masonic Hall',
+            'status' => $statusEnum,
+        ]);
+
+        $this->closeEditModal();
+        session()->flash('success', "Committee meeting '{$meeting->title}' updated successfully.");
+    }
+
     public function render()
     {
         $club = Club::where('slug', $this->clubSlug)->firstOrFail();
+        $now = Carbon::now();
 
         $meetings = ClubCommitteeMeeting::where('club_id', $club->id)
-            ->when($this->statusFilter !== 'all', fn ($q) => $q->where('status', $this->statusFilter))
+            ->when($this->statusFilter === 'scheduled', function ($q) use ($now) {
+                $q->where('status', CommitteeMeetingStatus::Scheduled)
+                  ->where('meeting_date', '>=', $now);
+            })
+            ->when($this->statusFilter === 'draft', function ($q) use ($now) {
+                $q->whereIn('status', [CommitteeMeetingStatus::Draft, CommitteeMeetingStatus::DraftSaved])
+                  ->where('meeting_date', '>=', $now);
+            })
+            ->when($this->statusFilter === 'past', function ($q) use ($now) {
+                $q->where('meeting_date', '<', $now);
+            })
+            ->when(! in_array($this->statusFilter, ['all', 'scheduled', 'draft', 'past']), function ($q) {
+                $q->where('status', $this->statusFilter);
+            })
             ->when(!empty($this->search), fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
             ->orderByDesc('meeting_date')
             ->with(['chair', 'secretary', 'attendees', 'agendaItems', 'tasks'])

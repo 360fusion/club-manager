@@ -9,6 +9,7 @@ enum MembershipStatus: string
     case Honorary = 'honorary';
     case ExcludedRule181 = 'excluded_rule_181';
     case Deceased = 'deceased';
+    case Historical = 'historical';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum MembershipStatus: string
             self::Honorary => 'Honorary Member',
             self::ExcludedRule181 => 'Excluded (Rule 181)',
             self::Deceased => 'Deceased',
+            self::Historical => 'Historical Member',
         };
     }
 
@@ -29,6 +31,7 @@ enum MembershipStatus: string
             self::Honorary => 'bg-amber-100 text-amber-900 border-amber-300 font-bold',
             self::ExcludedRule181 => 'bg-rose-100 text-rose-800 border-rose-300',
             self::Deceased => 'bg-purple-100 text-purple-800 border-purple-200',
+            self::Historical => 'bg-slate-100 text-slate-800 border-slate-300 font-medium',
         };
     }
 

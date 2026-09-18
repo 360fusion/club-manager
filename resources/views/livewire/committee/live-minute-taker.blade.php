@@ -254,6 +254,15 @@
                     >
                         🔍 Audit
                     </button>
+
+                    <button
+                        type="button"
+                        wire:click="insertTemplate('donation')"
+                        class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
+                        title="Insert charitable donation proposal template"
+                    >
+                        ❤️ Donation
+                    </button>
                 </div>
 
                 <!-- Interactive Member @mention Autocomplete -->
@@ -365,6 +374,13 @@
                         class="flex-1 py-1.5 text-center rounded-xl transition-all cursor-pointer {{ $activeRightTab === 'motions' ? 'bg-white text-slate-900 shadow-sm font-black' : 'hover:text-slate-900' }}"
                     >
                         <span>📜 Motions</span>
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="$set('activeRightTab', 'grants')"
+                        class="flex-1 py-1.5 text-center rounded-xl transition-all cursor-pointer {{ $activeRightTab === 'grants' ? 'bg-white text-slate-900 shadow-sm font-black' : 'hover:text-slate-900' }}"
+                    >
+                        <span>❤️ Grants ({{ $charityGrants->count() }})</span>
                     </button>
                 </div>
 
@@ -536,6 +552,70 @@
                             @empty
                                 <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                                     No formal notices of motion drafted yet. Use /motion in notes.
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                @endif
+
+                <!-- TAB 4: Charitable Donation Proposals -->
+                @if($activeRightTab === 'grants')
+                    <div class="space-y-2.5 text-xs">
+                        <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                            <span>Charitable Donation Proposals</span>
+                            <span class="font-bold text-slate-700">{{ $charityGrants->count() }} total</span>
+                        </div>
+
+                        <div class="space-y-2 max-h-[520px] overflow-y-auto pr-1">
+                            @forelse($charityGrants as $grant)
+                                <div class="p-3 bg-amber-50/70 border border-amber-200/90 rounded-2xl space-y-2 text-xs">
+                                    <div class="flex items-start justify-between gap-1.5">
+                                        <div>
+                                            <span class="font-black text-slate-900 block">£{{ number_format($grant->amount, 2) }} — {{ $grant->recipient_name }}</span>
+                                            <span class="text-[10px] text-amber-900 font-medium block mt-0.5">{{ $grant->purpose }}</span>
+                                        </div>
+                                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded border shrink-0 bg-amber-100 text-amber-900 border-amber-300">
+                                            {{ str_replace('_', ' ', $grant->approval_status->value ?? $grant->approval_status) }}
+                                        </span>
+                                    </div>
+
+                                    <div class="space-y-0.5 text-[10px] text-slate-600 bg-white p-2 rounded-xl border border-amber-100">
+                                        @if($grant->proposer)
+                                            <div>Proposed by: <strong>{{ $grant->proposer->formatted_rank_name }}</strong></div>
+                                        @endif
+                                        @if($grant->seconder)
+                                            <div>Seconded by: <strong>{{ $grant->seconder->formatted_rank_name }}</strong></div>
+                                        @endif
+                                        @if($grant->relief_chest_number)
+                                            <div class="text-slate-400">Relief Chest: {{ $grant->relief_chest_number }}</div>
+                                        @endif
+                                    </div>
+
+                                    <div class="flex items-center justify-end gap-2 text-[10px] pt-1">
+                                        @if(($grant->approval_status->value ?? $grant->approval_status) === 'proposed')
+                                            <button
+                                                type="button"
+                                                wire:click="approveGrantForSummons({{ $grant->id }})"
+                                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm text-[10px] flex items-center gap-1 cursor-pointer"
+                                            >
+                                                <span>✅</span>
+                                                <span>Approve for Summons</span>
+                                            </button>
+                                        @elseif(($grant->approval_status->value ?? $grant->approval_status) === 'committee_approved')
+                                            <button
+                                                type="button"
+                                                wire:click="lodgeVoteGrant({{ $grant->id }})"
+                                                class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-sm text-[10px] flex items-center gap-1 cursor-pointer"
+                                            >
+                                                <span>🏛️</span>
+                                                <span>Mark Lodge Voted</span>
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                    No charitable donation proposals logged yet.
                                 </div>
                             @endforelse
                         </div>

@@ -23,6 +23,7 @@ class Meeting extends Model
         'summons_published_at',
         'rsvp_cutoff_at',
         'festive_board_theme',
+        'festive_board_menu',
         'dining_cost_member',
         'dining_cost_guest',
         'bank_sort_code',
@@ -38,6 +39,7 @@ class Meeting extends Model
         'provincial_header_text',
         'fraternal_visits_text',
         'officers_year_label',
+        'officers_roster',
         'payment_link',
         'front_page_logo',
         'front_page_title',
@@ -57,6 +59,7 @@ class Meeting extends Model
         'postal_batch_generated_at' => 'datetime',
         'dining_cost_member' => 'decimal:2',
         'dining_cost_guest' => 'decimal:2',
+        'officers_roster' => 'array',
     ];
 
     public function club()

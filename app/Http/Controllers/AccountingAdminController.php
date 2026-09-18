@@ -520,6 +520,30 @@ class AccountingAdminController extends Controller
         return redirect()->back()->with('success', "Opening balance updated for {$account->code} - {$account->name}.");
     }
 
+    public function createJournal(string $clubSlug): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $accounts = Account::where('club_id', $club->id)
+            ->orderBy('code')
+            ->get()
+            ->map(fn ($a) => [
+                'id'   => $a->id,
+                'code' => $a->code,
+                'name' => $a->name,
+                'type' => $a->type,
+            ]);
+
+        return Inertia::render('Admin/Accounting/JournalCreate', [
+            'club' => [
+                'id'   => $club->id,
+                'name' => $club->name,
+                'slug' => $club->slug,
+            ],
+            'accounts' => $accounts,
+        ]);
+    }
+
     public function storeJournalEntry(Request $request, string $clubSlug): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
@@ -536,7 +560,8 @@ class AccountingAdminController extends Controller
 
         $this->accountingService->postJournalEntry($club, $validated);
 
-        return redirect()->back()->with('success', 'Double-entry journal entry posted successfully.');
+        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, 'tab' => 'accounting'])
+            ->with('success', 'Double-entry journal entry posted successfully.');
     }
 
     public function createInvoice(string $clubSlug): Response
@@ -568,13 +593,19 @@ class AccountingAdminController extends Controller
     public function storeInvoice(Request $request, string $clubSlug): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $isDraft = $request->boolean('is_draft');
 
         $validated = $request->validate([
             'user_id' => ['required', 'exists:users,id'],
-            'title' => ['required', 'string', 'max:255'],
-            'amount' => ['required', 'numeric', 'min:0.01'],
+            'title' => [$isDraft ? 'nullable' : 'required', 'string', 'max:255'],
+            'amount' => [$isDraft ? 'nullable' : 'required', 'numeric', 'min:0'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
+            'is_draft' => ['nullable', 'boolean'],
         ]);
+
+        $status = $isDraft ? 'draft' : 'unpaid';
+        $title = !empty($validated['title']) ? $validated['title'] : 'Draft Invoice';
+        $amount = isset($validated['amount']) ? (float)$validated['amount'] : 0.00;
 
         $invCount = Invoice::where('club_id', $club->id)->count() + 1;
         $invNum = 'INV-' . date('Y') . '-' . str_pad((string) $invCount, 4, '0', STR_PAD_LEFT);
@@ -586,7 +617,7 @@ class AccountingAdminController extends Controller
                     'is_accounting_protected' => true,
                     'source' => 'accounting',
                     'invoice_number' => $invNum,
-                    'invoice_title' => $validated['title'],
+                    'invoice_title' => $title,
                 ])
                 ->toMediaCollection('accounting');
             $mediaId = $media->id;
@@ -596,29 +627,76 @@ class AccountingAdminController extends Controller
             'club_id' => $club->id,
             'user_id' => $validated['user_id'],
             'invoice_number' => $invNum,
-            'title' => $validated['title'],
-            'amount' => $validated['amount'],
-            'status' => 'unpaid',
+            'title' => $title,
+            'amount' => $amount,
+            'status' => $status,
             'media_id' => $mediaId,
         ]);
 
-        // Auto post receivable ledger entry
-        $arAcc = $this->accountingService->getAccount($club, '1200');
-        $duesAcc = $this->accountingService->getAccount($club, '4000');
+        if ($status !== 'draft') {
+            // Auto post receivable ledger entry
+            $arAcc = $this->accountingService->getAccount($club, '1200');
+            $duesAcc = $this->accountingService->getAccount($club, '4000');
 
-        $this->accountingService->postJournalEntry($club, [
-            'description' => "Member Invoice Issued: {$invoice->title} ({$invoice->invoice_number})",
-            'source_type' => 'Invoice',
-            'source_id' => $invoice->id,
-            'items' => [
-                ['account_id' => $arAcc->id, 'debit' => $invoice->amount, 'credit' => 0, 'memo' => 'Accounts Receivable'],
-                ['account_id' => $duesAcc->id, 'debit' => 0, 'credit' => $invoice->amount, 'memo' => 'Membership Income'],
-            ],
-        ]);
+            $this->accountingService->postJournalEntry($club, [
+                'description' => "Member Invoice Issued: {$invoice->title} ({$invoice->invoice_number})",
+                'source_type' => 'Invoice',
+                'source_id' => $invoice->id,
+                'items' => [
+                    ['account_id' => $arAcc->id, 'debit' => $invoice->amount, 'credit' => 0, 'memo' => 'Accounts Receivable'],
+                    ['account_id' => $duesAcc->id, 'debit' => 0, 'credit' => $invoice->amount, 'memo' => 'Membership Income'],
+                ],
+            ]);
+            $msg = 'Invoice created and posted to Accounts Receivable.';
+        } else {
+            $msg = 'Invoice saved as draft.';
+        }
 
         return redirect()
             ->route('admin.accounting.index', ['clubSlug' => $clubSlug, 'tab' => 'sales'])
-            ->with('success', 'Invoice created and posted to Accounts Receivable.');
+            ->with('success', $msg);
+    }
+
+    public function publishInvoice(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        if ($invoice->status === 'draft') {
+            $invoice->update(['status' => 'unpaid']);
+
+            // Auto post receivable ledger entry
+            $arAcc = $this->accountingService->getAccount($club, '1200');
+            $duesAcc = $this->accountingService->getAccount($club, '4000');
+
+            $this->accountingService->postJournalEntry($club, [
+                'description' => "Member Invoice Issued: {$invoice->title} ({$invoice->invoice_number})",
+                'source_type' => 'Invoice',
+                'source_id' => $invoice->id,
+                'items' => [
+                    ['account_id' => $arAcc->id, 'debit' => $invoice->amount, 'credit' => 0, 'memo' => 'Accounts Receivable'],
+                    ['account_id' => $duesAcc->id, 'debit' => 0, 'credit' => $invoice->amount, 'memo' => 'Membership Income'],
+                ],
+            ]);
+
+            return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} published and posted to Accounts Receivable.");
+        }
+
+        return redirect()->back();
+    }
+
+    public function createBill(Request $request, string $clubSlug): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        return Inertia::render('Admin/Accounting/BillCreate', [
+            'club' => [
+                'id'   => $club->id,
+                'name' => $club->name,
+                'slug' => $club->slug,
+            ],
+            'initialVendor' => $request->query('vendor', ''),
+        ]);
     }
 
     public function storeBill(Request $request, string $clubSlug): RedirectResponse
@@ -632,13 +710,48 @@ class AccountingAdminController extends Controller
             'due_date' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:500'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
+            'is_draft' => ['nullable', 'boolean'],
         ]);
 
         $attachmentFile = $request->hasFile('attachment') ? $request->file('attachment') : null;
 
         $this->accountingService->createVendorBill($club, $validated, $attachmentFile);
 
-        return redirect()->back()->with('success', 'Vendor bill recorded and posted to Accounts Payable.');
+        $msg = !empty($validated['is_draft'])
+            ? 'Vendor bill saved as draft.'
+            : 'Vendor bill recorded and posted to Accounts Payable.';
+
+        return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, 'tab' => 'purchases'])
+            ->with('success', $msg);
+    }
+
+    public function publishBill(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $bill = Bill::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        if ($bill->status === 'draft') {
+            \DB::transaction(function () use ($club, $bill) {
+                $bill->update(['status' => 'unpaid']);
+
+                $expenseAcc = $this->accountingService->getAccount($club, '5000');
+                $apAcc = $this->accountingService->getAccount($club, '2000');
+
+                $this->accountingService->postJournalEntry($club, [
+                    'description' => "Vendor Bill: {$bill->vendor_name} ({$bill->bill_number})",
+                    'source_type' => 'VendorBill',
+                    'source_id' => $bill->id,
+                    'items' => [
+                        ['account_id' => $expenseAcc->id, 'debit' => $bill->amount, 'credit' => 0, 'memo' => $bill->category],
+                        ['account_id' => $apAcc->id, 'debit' => 0, 'credit' => $bill->amount, 'memo' => 'Accounts Payable'],
+                    ],
+                ]);
+            });
+
+            return redirect()->back()->with('success', "Vendor bill {$bill->bill_number} published and posted to Accounts Payable.");
+        }
+
+        return redirect()->back();
     }
 
     /**
@@ -697,6 +810,273 @@ class AccountingAdminController extends Controller
         $bill->delete();
 
         return redirect()->back()->with('success', "Vendor bill {$bill->bill_number} deleted.");
+    }
+
+    public function updateInvoice(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'user_id'    => ['required', 'exists:users,id'],
+            'title'      => ['required', 'string', 'max:255'],
+            'amount'     => ['required', 'numeric', 'min:0'],
+            'status'     => ['required', 'string', 'in:draft,unpaid,paid'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
+        ]);
+
+        if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
+            if ($invoice->media_id && $invoice->media) {
+                $invoice->media->forceDelete();
+            }
+            $media = $club->addMedia($request->file('attachment'))
+                ->withCustomProperties([
+                    'is_accounting_protected' => true,
+                    'source' => 'accounting',
+                    'invoice_number' => $invoice->invoice_number,
+                    'invoice_title' => $validated['title'],
+                ])
+                ->toMediaCollection('accounting');
+            $validated['media_id'] = $media->id;
+        }
+
+        $wasDraft = $invoice->status === 'draft';
+        $invoice->update([
+            'user_id' => $validated['user_id'],
+            'title' => $validated['title'],
+            'amount' => $validated['amount'],
+            'status' => $validated['status'],
+            'media_id' => $validated['media_id'] ?? $invoice->media_id,
+        ]);
+
+        if ($wasDraft && $invoice->status === 'unpaid') {
+            $arAcc = $this->accountingService->getAccount($club, '1200');
+            $duesAcc = $this->accountingService->getAccount($club, '4000');
+
+            $this->accountingService->postJournalEntry($club, [
+                'description' => "Member Invoice Issued: {$invoice->title} ({$invoice->invoice_number})",
+                'source_type' => 'Invoice',
+                'source_id' => $invoice->id,
+                'items' => [
+                    ['account_id' => $arAcc->id, 'debit' => $invoice->amount, 'credit' => 0, 'memo' => 'Accounts Receivable'],
+                    ['account_id' => $duesAcc->id, 'debit' => 0, 'credit' => $invoice->amount, 'memo' => 'Membership Income'],
+                ],
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} updated successfully.");
+    }
+
+    public function destroyInvoice(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        if ($invoice->status === 'paid') {
+            return redirect()->back()->with('error', 'Paid invoices cannot be deleted.');
+        }
+
+        if ($invoice->media_id && $invoice->media) {
+            $invoice->media->forceDelete();
+        }
+
+        \App\Models\Accounting\JournalEntry::where('club_id', $club->id)
+            ->where('source_type', 'Invoice')
+            ->where('source_id', $invoice->id)
+            ->delete();
+
+        $invoice->delete();
+
+        return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} deleted.");
+    }
+
+    public function updateBill(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $bill = Bill::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'vendor_name' => ['required', 'string', 'max:255'],
+            'category'    => ['required', 'string', 'max:255'],
+            'amount'      => ['required', 'numeric', 'min:0'],
+            'due_date'    => ['required', 'date'],
+            'notes'       => ['nullable', 'string', 'max:500'],
+            'status'      => ['required', 'string', 'in:draft,unpaid,paid'],
+            'attachment'  => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
+        ]);
+
+        if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
+            if ($bill->media_id && $bill->media) {
+                $bill->media->forceDelete();
+            }
+            $media = $club->addMedia($request->file('attachment'))
+                ->withCustomProperties([
+                    'is_accounting_protected' => true,
+                    'source' => 'accounting',
+                    'bill_number' => $bill->bill_number,
+                    'vendor_name' => $validated['vendor_name'],
+                ])
+                ->toMediaCollection('accounting');
+            $validated['media_id'] = $media->id;
+        }
+
+        $wasDraft = $bill->status === 'draft';
+        $bill->update([
+            'vendor_name' => $validated['vendor_name'],
+            'category'    => $validated['category'],
+            'amount'      => $validated['amount'],
+            'due_date'    => $validated['due_date'],
+            'notes'       => $validated['notes'] ?? null,
+            'status'      => $validated['status'],
+            'media_id'    => $validated['media_id'] ?? $bill->media_id,
+        ]);
+
+        if ($wasDraft && $bill->status === 'unpaid') {
+            $expenseAcc = $this->accountingService->getAccount($club, '5000');
+            $apAcc = $this->accountingService->getAccount($club, '2000');
+
+            $this->accountingService->postJournalEntry($club, [
+                'description' => "Vendor Bill: {$bill->vendor_name} ({$bill->bill_number})",
+                'source_type' => 'VendorBill',
+                'source_id' => $bill->id,
+                'items' => [
+                    ['account_id' => $expenseAcc->id, 'debit' => $bill->amount, 'credit' => 0, 'memo' => $bill->category],
+                    ['account_id' => $apAcc->id, 'debit' => 0, 'credit' => $bill->amount, 'memo' => 'Accounts Payable'],
+                ],
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Vendor bill {$bill->bill_number} updated successfully.");
+    }
+
+    public function editInvoice(string $clubSlug, int $id): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $members = \DB::table('club_user')
+            ->join('users', 'club_user.user_id', '=', 'users.id')
+            ->where('club_user.club_id', $club->id)
+            ->select('users.id', 'users.name', 'users.email')
+            ->orderBy('users.name')
+            ->get()
+            ->map(fn ($u) => [
+                'id'    => $u->id,
+                'name'  => $u->name,
+                'email' => $u->email,
+            ]);
+
+        return Inertia::render('Admin/Accounting/InvoiceEdit', [
+            'club' => [
+                'id'   => $club->id,
+                'name' => $club->name,
+                'slug' => $club->slug,
+            ],
+            'invoice' => [
+                'id' => $invoice->id,
+                'user_id' => $invoice->user_id,
+                'title' => $invoice->title,
+                'amount' => (float) $invoice->amount,
+                'status' => $invoice->status,
+                'invoice_number' => $invoice->invoice_number,
+                'attachment_url' => $invoice->media_id && $invoice->media ? $invoice->media->getFullUrl() : null,
+                'created_at' => $invoice->created_at->format('d M Y'),
+            ],
+            'members' => $members,
+        ]);
+    }
+
+    public function editBill(string $clubSlug, int $id): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $bill = Bill::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        return Inertia::render('Admin/Accounting/BillEdit', [
+            'club' => [
+                'id'   => $club->id,
+                'name' => $club->name,
+                'slug' => $club->slug,
+            ],
+            'bill' => [
+                'id' => $bill->id,
+                'vendor_name' => $bill->vendor_name,
+                'category' => $bill->category,
+                'amount' => (float) $bill->amount,
+                'due_date' => $bill->due_date ? $bill->due_date->format('Y-m-d') : '',
+                'notes' => $bill->notes ?? '',
+                'status' => $bill->status,
+                'bill_number' => $bill->bill_number,
+                'attachment_url' => $bill->media_id && $bill->media ? $bill->media->getFullUrl() : null,
+                'created_at' => $bill->created_at->format('d M Y'),
+            ],
+        ]);
+    }
+
+    public function editJournalEntry(string $clubSlug, int $id): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $entry = JournalEntry::with('items.account')
+            ->where('club_id', $club->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $accounts = Account::where('club_id', $club->id)
+            ->orderBy('code')
+            ->get()
+            ->map(fn ($a) => [
+                'id'   => $a->id,
+                'code' => $a->code,
+                'name' => $a->name,
+                'type' => $a->type,
+            ]);
+
+        return Inertia::render('Admin/Accounting/JournalEdit', [
+            'club' => [
+                'id'   => $club->id,
+                'name' => $club->name,
+                'slug' => $club->slug,
+            ],
+            'journalEntry' => [
+                'id' => $entry->id,
+                'reference_number' => $entry->reference_number,
+                'entry_date' => $entry->entry_date ? $entry->entry_date->format('Y-m-d') : date('Y-m-d'),
+                'description' => $entry->description,
+                'status' => $entry->status,
+                'items' => $entry->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'account_id' => $item->account_id,
+                    'debit' => (float) $item->debit,
+                    'credit' => (float) $item->credit,
+                    'memo' => $item->memo ?? '',
+                ]),
+            ],
+            'accounts' => $accounts,
+        ]);
+    }
+
+    public function updateJournalEntry(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $validated = $request->validate([
+            'description' => ['required', 'string', 'max:255'],
+            'entry_date' => ['required', 'date'],
+            'items' => ['required', 'array', 'min:2'],
+            'items.*.account_id' => ['required', 'exists:accounting_accounts,id'],
+            'items.*.debit' => ['numeric', 'min:0'],
+            'items.*.credit' => ['numeric', 'min:0'],
+            'items.*.memo' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        try {
+            $this->accountingService->updateJournalEntry($club, $id, $validated);
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->withErrors(['items' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('admin.accounting.index', ['clubSlug' => $clubSlug, 'tab' => 'general_ledger'])
+            ->with('success', 'Journal entry updated successfully.');
     }
 
     public function markBillPaid(string $clubSlug, int $id): RedirectResponse

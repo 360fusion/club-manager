@@ -32,9 +32,12 @@ const folders = computed(() => [
   { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100', text: 'text-slate-700' },
   { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
   { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50', text: 'text-blue-700' },
+  { id: 'events', label: 'Events', icon: '🎟️', bg: 'bg-amber-50', text: 'text-amber-700' },
+  { id: 'updates', label: 'Updates', icon: '📜', bg: 'bg-purple-50', text: 'text-purple-700' },
   { id: 'newsletters', label: 'Newsletters', icon: '✉️', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+  { id: 'pages', label: 'CMS Pages', icon: '📄', bg: 'bg-teal-50', text: 'text-teal-700' },
   { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-sky-50', text: 'text-sky-700' },
-  { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-purple-50', text: 'text-purple-700' },
+  { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
   { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50', text: 'text-amber-700' },
   { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50', text: 'text-rose-700' },
 ]);

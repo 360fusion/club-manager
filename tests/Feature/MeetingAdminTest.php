@@ -332,4 +332,51 @@ class MeetingAdminTest extends TestCase
         $createResponse = $this->get("/clubs/{$club->slug}/admin/meetings/create");
         $createResponse->assertOk();
     }
+
+    public function test_meeting_can_save_custom_officers_roster(): void
+    {
+        $clubType = \App\Models\ClubType::create([
+            'name' => 'Masonic Lodge',
+            'code' => 'masonic-custom',
+            'available_modules' => ['meetings'],
+            'default_settings' => [],
+        ]);
+
+        $club = Club::create([
+            'club_type_id' => $clubType->id,
+            'name' => 'Lodge of Fraternity No. 1418',
+            'slug' => 'lodge-of-fraternity-custom',
+            'status' => 'active',
+            'settings' => [],
+        ]);
+
+        $adminUser = User::factory()->create();
+        $club->users()->attach($adminUser->id, ['role' => 'admin']);
+
+        $this->actingAs($adminUser);
+
+        $response = $this->post("/clubs/{$club->slug}/admin/meetings", [
+            'title' => 'Custom Officers Meeting',
+            'meeting_date' => '2026-10-15',
+            'starts_at' => '19:00',
+            'venue' => 'Masonic Hall',
+            'dress_code' => 'Dark Suit',
+            'dining_cost_member' => 20,
+            'dining_cost_guest' => 20,
+            'status' => 'draft',
+            'officers_year_label' => 'CUSTOM OFFICERS 2026',
+            'officers_roster' => [
+                ['role' => 'Worshipful Master', 'name' => 'WBro Custom Master'],
+                ['role' => 'Senior Warden', 'name' => 'Bro Custom Senior Warden'],
+            ],
+        ]);
+
+        $response->assertRedirect();
+        
+        $meeting = Meeting::where('club_id', $club->id)->first();
+        $this->assertNotNull($meeting);
+        $this->assertEquals('CUSTOM OFFICERS 2026', $meeting->officers_year_label);
+        $this->assertCount(2, $meeting->officers_roster);
+        $this->assertEquals('WBro Custom Master', $meeting->officers_roster[0]['name']);
+    }
 }

@@ -29,6 +29,34 @@ class PostAdminController extends Controller
     }
 
     /**
+     * Preview a news article inside the admin portal.
+     */
+    public function show(string $clubSlug, int $id): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $post = Post::where('club_id', $club->id)
+            ->with('author')
+            ->findOrFail($id);
+
+        return Inertia::render('Admin/Posts/Show', [
+            'club' => $club,
+            'post' => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'excerpt' => $post->excerpt,
+                'content' => $post->content,
+                'blocks' => $post->blocks ?? [],
+                'attachments' => $post->attachments ?? [],
+                'cover_image_url' => $post->cover_image_url,
+                'status' => $post->status,
+                'published_at' => ($post->published_at ?? $post->created_at)?->format('M d, Y'),
+                'author_name' => $post->author?->name ?? 'Club Admin',
+            ],
+        ]);
+    }
+
+    /**
      * Show form for creating or editing a blog post.
      */
     public function edit(string $clubSlug, ?int $id = null): Response
@@ -40,12 +68,13 @@ class PostAdminController extends Controller
             : new Post([
                 'club_id' => $club->id,
                 'status' => 'published',
-                'published_at' => null,
+                'published_at' => \Carbon\Carbon::now(),
                 'expires_at' => null,
             ]);
 
         $postArray = $post->toArray();
-        $postArray['published_at'] = $post->published_at ? $post->published_at->format('Y-m-d\TH:i') : null;
+        $publishedAt = $post->published_at ?? ($post->created_at ?? \Carbon\Carbon::now());
+        $postArray['published_at'] = $publishedAt ? $publishedAt->format('Y-m-d\TH:i') : \Carbon\Carbon::now()->format('Y-m-d\TH:i');
         $postArray['expires_at'] = $post->expires_at ? $post->expires_at->format('Y-m-d\TH:i') : null;
 
         return Inertia::render('Admin/Posts/Form', [
@@ -81,15 +110,15 @@ class PostAdminController extends Controller
 
         $coverImageUrl = $validated['cover_image_url'] ?? null;
         if ($request->hasFile('cover_image') && $request->file('cover_image')->isValid()) {
-            $path = $request->file('cover_image')->store("post_images/{$club->id}", 'public');
-            $coverImageUrl = "/storage/{$path}";
+            $media = $club->addMediaFromRequest('cover_image')->toMediaCollection('news');
+            $coverImageUrl = "/storage/{$media->id}/{$media->file_name}";
         }
 
         $attachments = $validated['existing_attachments'] ?? [];
         if ($request->hasFile('new_attachments')) {
             foreach ($request->file('new_attachments') as $file) {
-                if ($file->isValid()) {
-                    $path = $file->store("post_attachments/{$club->id}", 'public');
+                if ($file && $file->isValid()) {
+                    $media = $club->addMedia($file)->toMediaCollection('news');
                     $bytes = $file->getSize();
                     $sizeFormatted = $bytes >= 1048576 
                         ? round($bytes / 1048576, 1) . ' MB' 
@@ -97,7 +126,7 @@ class PostAdminController extends Controller
 
                     $attachments[] = [
                         'name' => $file->getClientOriginalName(),
-                        'url' => "/storage/{$path}",
+                        'url' => "/storage/{$media->id}/{$media->file_name}",
                         'size' => $sizeFormatted,
                         'mime_type' => $file->getMimeType(),
                     ];
