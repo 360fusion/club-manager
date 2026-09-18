@@ -130,7 +130,7 @@ class MeetingAdminController extends Controller
         return Inertia::render('Admin/Meetings/Form', [
             'club' => $club,
             'meeting' => $meeting,
-            'members' => $club->users,
+            'members' => $club->users()->select('users.id', 'users.name', 'users.email')->get(),
             'charityGrants' => $charityGrants,
         ]);
     }

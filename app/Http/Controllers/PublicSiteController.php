@@ -15,7 +15,7 @@ class PublicSiteController extends Controller
     public function showPage(string $clubSlug, ?string $pageSlug = null): Response
     {
         $club = Club::where('slug', $clubSlug)
-            ->with(['clubType', 'membershipPlans', 'posts.author', 'events.menuItems', 'events.attendees', 'donations.contributions'])
+            ->with(['clubType', 'membershipPlans', 'posts.author', 'events', 'donations.contributions'])
             ->firstOrFail();
 
         // Determine target page (Homepage or specific page slug)

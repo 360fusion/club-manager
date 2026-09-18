@@ -103,7 +103,7 @@ class ClubController extends Controller
     public function show(string $slug): Response
     {
         $club = Club::where('slug', $slug)
-            ->with(['clubType', 'membershipPlans', 'users', 'posts.author', 'newsletters', 'events.menuItems', 'events.ticketTiers', 'events.promos', 'events.attendees'])
+            ->with(['clubType', 'membershipPlans', 'users', 'posts.author', 'newsletters', 'events'])
             ->firstOrFail();
 
         $enabledModules = $club->settings['enabled_modules'] ?? $club->clubType->available_modules;
