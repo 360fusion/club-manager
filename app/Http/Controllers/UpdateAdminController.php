@@ -118,6 +118,8 @@ class UpdateAdminController extends Controller
             return true;
         }));
 
+        $collectionName = ($validated['category'] === 'summons') ? 'summons' : 'updates';
+
         if ($request->hasFile('attachment_files')) {
             foreach ($request->file('attachment_files') as $file) {
                 if ($file && $file->isValid()) {
@@ -125,7 +127,7 @@ class UpdateAdminController extends Controller
                     $bytes = $file->getSize();
                     $mime = $file->getClientMimeType();
 
-                    $media = $club->addMedia($file)->toMediaCollection('updates');
+                    $media = $club->addMedia($file)->toMediaCollection($collectionName);
                     $attachments[] = [
                         'name' => $name,
                         'url' => "/storage/{$media->id}/{$media->file_name}",
@@ -146,7 +148,7 @@ class UpdateAdminController extends Controller
             $approvedAt = now();
         }
 
-        ClubUpdate::updateOrCreate(
+        $update = ClubUpdate::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
             [
                 'author_id' => auth()->id(),
@@ -160,6 +162,19 @@ class UpdateAdminController extends Controller
                 'approved_at' => $approvedAt,
             ]
         );
+
+        if ($validated['category'] === 'summons' && !empty($attachments)) {
+            foreach ($attachments as $att) {
+                if (isset($att['url']) && preg_match('/\/storage\/(\d+)\//', $att['url'], $m)) {
+                    $mediaId = (int) $m[1];
+                    $mObj = $club->media()->find($mediaId);
+                    if ($mObj && $mObj->collection_name !== 'summons') {
+                        $mObj->collection_name = 'summons';
+                        $mObj->save();
+                    }
+                }
+            }
+        }
 
         return redirect()->back()->with('success', 'Update item saved successfully.');
     }

@@ -38,6 +38,7 @@ const trashCount = ref(0);
 
 const folders = computed(() => [
   { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100', text: 'text-slate-700' },
+  { id: 'summons', label: 'Summonses', icon: '📜', bg: 'bg-indigo-50', text: 'text-indigo-700' },
   { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
   { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50', text: 'text-blue-700' },
   { id: 'newsletters', label: 'Newsletters', icon: '✉️', bg: 'bg-emerald-50', text: 'text-emerald-700' },
@@ -48,6 +49,7 @@ const folders = computed(() => [
 ]);
 
 const selectableFolders = [
+  { id: 'summons', label: 'Summonses' },
   { id: 'logos', label: 'Logos' },
   { id: 'news', label: 'News Items' },
   { id: 'newsletters', label: 'Newsletters' },

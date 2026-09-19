@@ -147,7 +147,7 @@ class MediaAdminController extends Controller
         $allowedRule = in_array($folder, $imageOnlyFolders) ? $imageExtensions : $allAllowedExtensions;
 
         $request->validate([
-            'folder' => 'required|string|in:logos,news,events,updates,newsletters,pages,images,galleries,documents,accounting',
+            'folder' => 'required|string|in:logos,news,events,updates,newsletters,pages,images,galleries,documents,accounting,summons',
             'file' => [
                 'required',
                 'file',
@@ -411,7 +411,7 @@ class MediaAdminController extends Controller
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'integer',
-            'folder' => 'required|string|in:logos,news,events,updates,newsletters,pages,images,galleries,documents,accounting',
+            'folder' => 'required|string|in:logos,news,events,updates,newsletters,pages,images,galleries,documents,accounting,summons',
         ]);
 
         $targetFolder = $request->input('folder');
