@@ -32,7 +32,7 @@ const handleMediaSelect = (media) => {
   showMediaModal.value = false;
 };
 
-const handleContentSelectedFromPicker = ({ updateIds, meetingIds, eventIds, newsIds }) => {
+const handleContentSelectedFromPicker = ({ updateIds, meetingIds, eventIds, newsIds, attachFiles = true }) => {
   let html = `<div style="margin: 20px 0; font-family: Arial, sans-serif;">`;
 
   // 1. Approved Updates
@@ -41,19 +41,52 @@ const handleContentSelectedFromPicker = ({ updateIds, meetingIds, eventIds, news
     if (selectedUpdates.length) {
       html += `<h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #4f46e5;">📜 Summonses & Member Bulletins</h3>`;
       selectedUpdates.forEach(u => {
-        html += `<div style="background: #ffffff; padding: 14px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0;">`;
+        html += `<div style="background: #ffffff; padding: 16px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">`;
         html += `<h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">${u.title}</h4>`;
-        if (u.summary) html += `<div style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 8px;">${u.summary}</div>`;
+
+        let cleanSummary = u.summary || '';
         if (u.attachments && u.attachments.length) {
-          html += `<div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1;">`;
           u.attachments.forEach(att => {
-            html += `<a href="${att.url}" target="_blank" style="display: inline-block; font-size: 11px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 4px 10px; border-radius: 6px; text-decoration: none; margin-right: 6px;">📄 ${att.name}</a>`;
+            if (att.name) {
+              const escapedName = att.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              cleanSummary = cleanSummary.replace(new RegExp(`📄\\s*${escapedName}`, 'gi'), '');
+              cleanSummary = cleanSummary.replace(new RegExp(`${escapedName}`, 'gi'), '');
+            }
+          });
+          cleanSummary = cleanSummary.trim();
+        }
+
+        if (cleanSummary) {
+          html += `<div style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 10px;">${cleanSummary}</div>`;
+        }
+
+        if (u.attachments && u.attachments.length) {
+          html += `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1;">`;
+          html += `<p style="font-size: 11px; font-weight: 700; color: #64748b; margin: 0 0 6px 0;">📎 Downloadable Documents:</p>`;
+          u.attachments.forEach(att => {
+            html += `<a href="${att.url}" target="_blank" style="display: inline-block; font-size: 12px; font-weight: 700; color: #ffffff; background-color: #4f46e5; padding: 6px 14px; border-radius: 8px; text-decoration: none; margin-right: 8px; margin-bottom: 6px;">📥 Download ${att.name}</a>`;
+
+            if (attachFiles) {
+              const alreadyAttached = existingAttachments.value.some(existing => existing.url === att.url || existing.name === att.name);
+              if (!alreadyAttached) {
+                existingAttachments.value.push({
+                  name: att.name,
+                  url: att.url,
+                  size: att.size ? (typeof att.size === 'number' ? formatBytes(att.size) : att.size) : 'Attached Document',
+                  mime_type: att.mime_type || 'application/pdf',
+                });
+              }
+            }
           });
           html += `</div>`;
         }
         html += `</div>`;
       });
     }
+  }
+
+  if (attachFiles) {
+    form.existing_attachments = existingAttachments.value;
   }
 
   // 2. Upcoming Meetings

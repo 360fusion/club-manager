@@ -18,6 +18,8 @@ const selectedMeetingIds = ref([]);
 const selectedEventIds = ref([]);
 const selectedNewsIds = ref([]);
 
+const attachFilesToNewsletter = ref(true);
+
 const toggleSelection = (list, id) => {
   const index = list.indexOf(id);
   if (index > -1) {
@@ -40,6 +42,7 @@ const confirmInsertion = () => {
     meetingIds: selectedMeetingIds.value,
     eventIds: selectedEventIds.value,
     newsIds: selectedNewsIds.value,
+    attachFiles: attachFilesToNewsletter.value,
   });
   emit('close');
 };
@@ -223,8 +226,15 @@ const confirmInsertion = () => {
       </div>
 
       <!-- Modal Footer -->
-      <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-        <span class="text-xs font-semibold text-slate-600">Selected Items: <strong class="text-slate-900">{{ totalSelected }}</strong></span>
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-semibold text-slate-600">Selected Items: <strong class="text-slate-900">{{ totalSelected }}</strong></span>
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-700 cursor-pointer select-none border-l border-slate-300 pl-3">
+            <input type="checkbox" v-model="attachFilesToNewsletter" class="rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+            <span>📎 Also attach document files (PDFs) to Newsletter</span>
+          </label>
+        </div>
+
         <div class="flex items-center gap-2">
           <button
             type="button"

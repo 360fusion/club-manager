@@ -95,12 +95,12 @@ class WeeklyUpdateDigestService
 
                 // Downloadable attachments
                 if (!empty($update->attachments) && is_array($update->attachments)) {
-                    $html .= '<div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1;">';
-                    $html .= '<p style="font-size: 11px; font-weight: 700; color: #64748b; margin: 0 0 4px 0;">📎 Downloadable Documents:</p>';
+                    $html .= '<div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1;">';
+                    $html .= '<p style="font-size: 11px; font-weight: 700; color: #64748b; margin: 0 0 6px 0;">📎 Downloadable Documents:</p>';
                     foreach ($update->attachments as $att) {
                         $attName = e($att['name'] ?? 'Download File');
                         $attUrl = e($att['url'] ?? '#');
-                        $html .= '<a href="' . $attUrl . '" target="_blank" style="display: inline-block; font-size: 11px; font-weight: 600; color: #2563eb; background: #eff6ff; padding: 4px 10px; border-radius: 6px; text-decoration: none; margin-right: 6px; margin-bottom: 4px;">📄 ' . $attName . '</a>';
+                        $html .= '<a href="' . $attUrl . '" target="_blank" style="display: inline-block; font-size: 12px; font-weight: 700; color: #ffffff; background-color: #4f46e5; padding: 6px 14px; border-radius: 8px; text-decoration: none; margin-right: 8px; margin-bottom: 6px;">📥 Download ' . $attName . '</a>';
                     }
                     $html .= '</div>';
                 }
@@ -262,12 +262,28 @@ class WeeklyUpdateDigestService
             'include_news_posts' => $digestType->include_news_posts,
         ]);
 
+        // Collect attachments from updates into newsletter attachments
+        $newsletterAttachments = [];
+        foreach ($updates as $update) {
+            if (!empty($update->attachments) && is_array($update->attachments)) {
+                foreach ($update->attachments as $att) {
+                    $newsletterAttachments[] = [
+                        'name' => $att['name'] ?? 'Attached Document',
+                        'url' => $att['url'] ?? '#',
+                        'size' => $att['size'] ?? '',
+                        'mime_type' => $att['mime_type'] ?? 'application/pdf',
+                    ];
+                }
+            }
+        }
+
         // 4. Create Newsletter
         $newsletter = Newsletter::create([
             'club_id' => $club->id,
             'newsletter_type_id' => $digestType->id,
             'subject' => $club->name . ' - Weekly Digest (' . Carbon::now()->format('M d, Y') . ')',
             'content' => $htmlContent,
+            'attachments' => $newsletterAttachments,
             'target_roles' => $recipientRoles ?? $digestType->default_roles ?? ['member', 'admin'],
             'status' => 'sent',
             'sent_at' => Carbon::now(),
