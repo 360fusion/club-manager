@@ -96,7 +96,6 @@ class WeeklyUpdateDigestService
                 // Downloadable attachments
                 if (!empty($update->attachments) && is_array($update->attachments)) {
                     $html .= '<div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1;">';
-                    $html .= '<p style="font-size: 11px; font-weight: 700; color: #64748b; margin: 0 0 6px 0;">📎 Downloadable Documents:</p>';
                     foreach ($update->attachments as $att) {
                         $attName = e($att['name'] ?? 'Download File');
                         $attUrl = e($att['url'] ?? '#');
