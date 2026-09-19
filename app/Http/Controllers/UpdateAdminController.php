@@ -110,7 +110,14 @@ class UpdateAdminController extends Controller
             $coverImageUrl = "/storage/{$media->id}/{$media->file_name}";
         }
 
-        $attachments = $validated['attachments'] ?? [];
+        $rawAttachments = $validated['attachments'] ?? [];
+        $attachments = array_values(array_filter($rawAttachments, function ($att) {
+            if (!is_array($att)) return false;
+            if (!empty($att['isPendingFile'])) return false;
+            if (isset($att['url']) && str_starts_with($att['url'], 'blob:')) return false;
+            return true;
+        }));
+
         if ($request->hasFile('attachment_files')) {
             foreach ($request->file('attachment_files') as $file) {
                 if ($file && $file->isValid()) {

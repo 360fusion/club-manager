@@ -114,7 +114,14 @@ class PostAdminController extends Controller
             $coverImageUrl = "/storage/{$media->id}/{$media->file_name}";
         }
 
-        $attachments = $validated['existing_attachments'] ?? [];
+        $rawAttachments = $validated['existing_attachments'] ?? [];
+        $attachments = array_values(array_filter($rawAttachments, function ($att) {
+            if (!is_array($att)) return false;
+            if (!empty($att['isPendingFile'])) return false;
+            if (isset($att['url']) && str_starts_with($att['url'], 'blob:')) return false;
+            return true;
+        }));
+
         if ($request->hasFile('new_attachments')) {
             foreach ($request->file('new_attachments') as $file) {
                 if ($file && $file->isValid()) {

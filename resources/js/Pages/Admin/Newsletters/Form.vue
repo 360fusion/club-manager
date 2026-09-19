@@ -61,24 +61,37 @@ const handleContentSelectedFromPicker = ({ updateIds, meetingIds, eventIds, news
         }
 
         if (u.attachments && u.attachments.length) {
-          html += `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1;">`;
-          html += `<p style="font-size: 11px; font-weight: 700; color: #64748b; margin: 0 0 6px 0;">📎 Downloadable Documents:</p>`;
-          u.attachments.forEach(att => {
-            html += `<a href="${att.url}" target="_blank" style="display: inline-block; font-size: 12px; font-weight: 700; color: #ffffff; background-color: #4f46e5; padding: 6px 14px; border-radius: 8px; text-decoration: none; margin-right: 8px; margin-bottom: 6px;">📥 Download ${att.name}</a>`;
-
-            if (attachFiles) {
-              const alreadyAttached = existingAttachments.value.some(existing => existing.url === att.url || existing.name === att.name);
-              if (!alreadyAttached) {
-                existingAttachments.value.push({
-                  name: att.name,
-                  url: att.url,
-                  size: att.size ? (typeof att.size === 'number' ? formatBytes(att.size) : att.size) : 'Attached Document',
-                  mime_type: att.mime_type || 'application/pdf',
-                });
-              }
+          const validAttachments = (u.attachments || []).filter(att => att && att.url && !att.url.startsWith('blob:') && !att.isPendingFile);
+          const uniqueAttachments = [];
+          const seenKeys = new Set();
+          validAttachments.forEach(att => {
+            const key = (att.name || att.url).toLowerCase();
+            if (!seenKeys.has(key)) {
+              seenKeys.add(key);
+              uniqueAttachments.push(att);
             }
           });
-          html += `</div>`;
+
+          if (uniqueAttachments.length) {
+            html += `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1;">`;
+            html += `<p style="font-size: 11px; font-weight: 700; color: #64748b; margin: 0 0 6px 0;">📎 Downloadable Documents:</p>`;
+            uniqueAttachments.forEach(att => {
+              html += `<a href="${att.url}" target="_blank" style="display: inline-block; font-size: 12px; font-weight: 700; color: #ffffff; background-color: #4f46e5; padding: 6px 14px; border-radius: 8px; text-decoration: none; margin-right: 8px; margin-bottom: 6px;">📥 Download ${att.name}</a>`;
+
+              if (attachFiles) {
+                const alreadyAttached = existingAttachments.value.some(existing => existing.url === att.url || existing.name === att.name);
+                if (!alreadyAttached) {
+                  existingAttachments.value.push({
+                    name: att.name,
+                    url: att.url,
+                    size: att.size ? (typeof att.size === 'number' ? formatBytes(att.size) : att.size) : 'Attached Document',
+                    mime_type: att.mime_type || 'application/pdf',
+                  });
+                }
+              }
+            });
+            html += `</div>`;
+          }
         }
         html += `</div>`;
       });
