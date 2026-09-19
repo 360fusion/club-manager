@@ -62,6 +62,7 @@ const currentActiveTab = computed(() => {
     if (path.includes('/admin/members') || path.includes('/admin/users') || path.includes('/admin/candidates') || path.includes('/admin/subscriptions')) return 'members';
     if (path.includes('/admin/posts')) return 'posts';
     if (path.includes('/admin/newsletters')) return 'newsletters';
+    if (path.includes('/admin/updates')) return 'updates';
     if (path.includes('/admin/pages')) return 'pages';
     if (path.includes('/admin/media')) return 'media';
     if (path.includes('/admin/charity')) return 'charity';
