@@ -65,6 +65,7 @@ Route::get('/site/oxford-boating', function () {
 });
 
 Route::get('/site/{clubSlug}/{pageSlug?}', [\App\Http\Controllers\PublicSiteController::class, 'showPage'])->name('public.site');
+Route::post('/site/{clubSlug}/contact-form', [\App\Http\Controllers\PublicSiteController::class, 'submitContactForm'])->name('public.site.contact_form');
 
 Route::get('/clubs/{slug}', [ClubController::class, 'show'])->name('clubs.show');
 Route::get('/clubs/{slug}/visitor-register', [\App\Http\Controllers\VisitorRegistrationController::class, 'create'])->name('clubs.visitor.register');
@@ -112,8 +113,15 @@ Route::middleware(['auth'])->group(function () {
     // Admin Website Builder Routes
     Route::get('/clubs/{clubSlug}/admin/pages', [PageAdminController::class, 'index'])->name('admin.pages.index');
     Route::get('/clubs/{clubSlug}/admin/pages/create', [PageAdminController::class, 'edit'])->name('admin.pages.create');
+    Route::get('/clubs/{clubSlug}/admin/pages/settings', [PageAdminController::class, 'settings'])->name('admin.pages.settings');
+    Route::post('/clubs/{clubSlug}/admin/pages/settings', [PageAdminController::class, 'updateSettings'])->name('admin.pages.settings.update');
+    Route::get('/clubs/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'themes'])->name('admin.pages.themes');
+    Route::post('/clubs/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'updateTheme'])->name('admin.pages.themes.update');
     Route::get('/clubs/{clubSlug}/admin/pages/{id}/edit', [PageAdminController::class, 'edit'])->name('admin.pages.edit');
     Route::post('/clubs/{clubSlug}/admin/pages', [PageAdminController::class, 'store'])->name('admin.pages.store');
+    Route::post('/clubs/{clubSlug}/admin/pages/reorder', [PageAdminController::class, 'reorder'])->name('admin.pages.reorder');
+    Route::post('/clubs/{clubSlug}/admin/pages/{id}/toggle-publish', [PageAdminController::class, 'togglePublish'])->name('admin.pages.toggle_publish');
+    Route::delete('/clubs/{clubSlug}/admin/pages/{id}', [PageAdminController::class, 'destroy'])->name('admin.pages.destroy');
 
     // Admin Event Management Routes
     Route::get('/clubs/{clubSlug}/admin/events', [EventAdminController::class, 'index'])->name('admin.events.index');

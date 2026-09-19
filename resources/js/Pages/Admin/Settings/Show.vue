@@ -514,7 +514,7 @@ const moveOfficerDown = (index) => {
                 <option value="general">🏢 General Profile & Access</option>
                 <option value="positions">🎖️ Club Positions & Ranks</option>
                 <option value="officers">👔 Provincial & Officers Roster</option>
-                <option value="branding">🎨 Branding & Custom Domain</option>
+                <option value="branding">🎨 Branding & Styling</option>
                 <option value="roles">🛡️ Roles & Permissions</option>
                 <option value="modules">⚡ Active Feature Modules</option>
               </optgroup>
@@ -527,7 +527,6 @@ const moveOfficerDown = (index) => {
                 <option value="communications">✉️ Communications & Emails</option>
               </optgroup>
               <optgroup label="Module Policies">
-                <option value="website">🌐 Website Builder & SEO</option>
                 <option value="bookings">🚣 Pitch & Equipment Bookings</option>
                 <option value="performance">📊 Athletic & Erg Logs</option>
               </optgroup>
@@ -578,7 +577,7 @@ const moveOfficerDown = (index) => {
                     activeTab === 'branding' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>🎨</span> Branding & Domain</span>
+                  <span class="flex items-center gap-2.5"><span>🎨</span> Branding & Styling</span>
                 </button>
 
                 <button
@@ -673,16 +672,6 @@ const moveOfficerDown = (index) => {
             <div>
               <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Module Policies</div>
               <div class="space-y-0.5 text-xs font-bold">
-                <button
-                  @click="activeTab = 'website'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'website' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🌐</span> Website Builder</span>
-                </button>
-
                 <button
                   @click="activeTab = 'bookings'"
                   :class="[
@@ -1149,27 +1138,6 @@ const moveOfficerDown = (index) => {
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900">🌐 Custom Domain Setup</h2>
-            <p class="text-xs text-slate-500 mt-1">Connect your custom branded domain (e.g. <code class="bg-slate-100 text-slate-700 px-1 py-0.5 rounded">members.oxfordboating.org</code>) to this club portal.</p>
-          </div>
-
-          <div class="space-y-4 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Custom Domain Name</label>
-              <input v-model="form.custom_domain" type="text" placeholder="members.oxfordboating.org" class="w-full sm:w-96 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
-            </div>
-
-            <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2 text-amber-900">
-              <div class="font-bold text-xs">DNS Configuration Instructions:</div>
-              <p class="text-[11px]">Add a CNAME record at your DNS provider pointing your subdomain to this server's target hostname.</p>
-              <div class="font-mono text-[11px] bg-white p-2.5 rounded-xl border border-amber-200 font-bold">
-                Host: members • Type: CNAME • Target: manager.360fusionhosting.co.uk
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- TAB: PROVINCIAL & OFFICERS ROSTER -->
@@ -1751,27 +1719,7 @@ const moveOfficerDown = (index) => {
         </div>
       </div>
 
-      <!-- TAB 8: WEBSITE BUILDER -->
-      <div v-if="activeTab === 'website'" class="space-y-6">
-        <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900">🌐 Public Website & SEO Metadata</h2>
-            <p class="text-xs text-slate-500 mt-1">Configure global search engine optimization (SEO) defaults for your public website.</p>
-          </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Page Title Suffix</label>
-              <input v-model="form.seo_title_suffix" type="text" placeholder="| The Lodge of Fraternity" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
-            </div>
-
-            <div class="sm:col-span-2">
-              <label class="block font-bold text-slate-700 mb-1">Default Meta Description</label>
-              <textarea v-model="form.seo_meta_description" rows="3" placeholder="Official homepage for The Lodge of Fraternity events, membership, and news." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- TAB 9: BOOKINGS -->
       <div v-if="activeTab === 'bookings'" class="space-y-6">

@@ -54,6 +54,27 @@ const addBlock = (type) => {
             type: 'pricing_cards',
             heading: 'Membership Dues',
         });
+    } else if (type === 'contact_details') {
+        form.blocks.push({
+            type: 'contact_details',
+            eyebrow: 'CONTACT',
+            title: 'Get in Touch',
+            description: 'Whether you\'re interested in joining our club, a visiting member, or simply want to learn more, we\'d be delighted to hear from you.',
+        });
+    } else if (type === 'contact_form') {
+        form.blocks.push({
+            type: 'contact_form',
+            heading: 'Send Us a Message',
+            subtitle: 'Have questions or need assistance? Fill out the form below.',
+            recipient_email: props.club?.contact_email || props.club?.email || '',
+            cc_emails: '',
+            name_required: true,
+            email_required: true,
+            phone_required: false,
+            message_required: true,
+            button_text: 'Send Message',
+            success_message: 'Thank you! Your message has been sent successfully.',
+        });
     }
 };
 
@@ -133,7 +154,7 @@ const submit = () => {
                         ➕ Rich Text Block
                     </button>
                     <button @click="addBlock('news_feed')" class="py-2 px-3 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">
-                        ➕ Dynamic News Feed Block
+                        ➕ News Items Block
                     </button>
                     <button @click="addBlock('donation_campaign')" class="py-2 px-3 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold">
                         ➕ Dynamic Donation Campaign Block

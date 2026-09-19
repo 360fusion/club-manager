@@ -321,7 +321,7 @@ class ClubSeeder extends Seeder
         // 9. Seed Custom Website Pages
         Page::create([
             'club_id' => $oxfordRowing->id,
-            'title' => 'Welcome to The Lodge of Fraternity',
+            'title' => 'Home',
             'slug' => 'home',
             'is_homepage' => true,
             'is_published' => true,

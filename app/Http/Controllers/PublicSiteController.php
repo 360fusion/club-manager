@@ -18,6 +18,8 @@ class PublicSiteController extends Controller
             ->with(['clubType', 'membershipPlans', 'posts.author', 'events', 'donations.contributions'])
             ->firstOrFail();
 
+        $club->ensureDefaultPages();
+
         // Determine target page (Homepage or specific page slug)
         $query = Page::where('club_id', $club->id)->where('is_published', true);
 
@@ -35,7 +37,12 @@ class PublicSiteController extends Controller
             ->orderBy('sort_order')
             ->get(['id', 'title', 'slug', 'is_homepage']);
 
+        $validThemes = ['classic', 'obsidian', 'masonic', 'minimal', 'vibrant', 'light_navy', 'executive_light', 'masonic_light', 'warm_light'];
+        $rawPreviewTheme = request('preview_theme');
+        $previewTheme = in_array($rawPreviewTheme, $validThemes) ? $rawPreviewTheme : null;
+
         return Inertia::render('Public/Site', [
+            'previewTheme' => $previewTheme,
             'club' => [
                 'id' => $club->id,
                 'name' => $club->name,
@@ -43,6 +50,9 @@ class PublicSiteController extends Controller
                 'type_name' => $club->clubType->name,
                 'tagline' => $club->settings['tagline'] ?? '',
                 'primary_color' => $club->settings['primary_color'] ?? '#0369a1',
+                'contact_email' => $club->settings['contact_email'] ?? $club->email,
+                'meeting_formula' => $club->settings['meeting_formula'] ?? '',
+                'address' => $club->settings['address'] ?? '',
             ],
             'page' => [
                 'id' => $page->id,
@@ -53,13 +63,14 @@ class PublicSiteController extends Controller
                 'is_members_only' => $page->is_members_only,
             ],
             'navigation' => $navigationPages,
-            'latestPosts' => $club->posts()->published()->take(3)->get()->map(fn ($p) => [
+            'latestPosts' => $club->posts()->published()->take(24)->get()->map(fn ($p) => [
                 'id' => $p->id,
                 'title' => $p->title,
                 'slug' => $p->slug,
                 'excerpt' => $p->excerpt,
                 'content' => $p->content,
-                'author_name' => $p->author->name,
+                'cover_image_url' => $p->cover_image_url ?: ($p->getFirstMediaUrl('cover') ?: null),
+                'author_name' => $p->author?->name ?? 'Club Admin',
                 'published_at' => ($p->published_at ?? $p->created_at)?->format('M d, Y'),
             ]),
             'upcomingEvents' => $club->events->take(3)->values()->map(fn ($e) => [
@@ -92,5 +103,55 @@ class PublicSiteController extends Controller
                 'contributions_count' => $d->contributions->count(),
             ]),
         ]);
+    }
+
+    /**
+     * Handle contact form submission from public website.
+     */
+    public function submitContactForm(\Illuminate\Http\Request $request, string $clubSlug): \Illuminate\Http\RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'message' => 'nullable|string|max:5000',
+            'recipient_email' => 'nullable|email',
+            'cc_emails' => 'nullable|string',
+            'success_message' => 'nullable|string',
+        ]);
+
+        $recipientEmail = $validated['recipient_email']
+            ?: ($club->settings['contact_email'] ?? $club->email);
+
+        $ccEmails = [];
+        if (! empty($validated['cc_emails'])) {
+            $rawCcs = preg_split('/[\s,]+/', $validated['cc_emails']);
+            foreach ($rawCcs as $emailCandidate) {
+                $trimmed = trim($emailCandidate);
+                if (filter_var($trimmed, FILTER_VALIDATE_EMAIL)) {
+                    $ccEmails[] = $trimmed;
+                }
+            }
+        }
+
+        $mailable = new \App\Mail\ContactFormSubmittedMail(
+            club: $club,
+            senderName: $validated['name'] ?? 'Anonymous Visitor',
+            senderEmail: $validated['email'],
+            senderPhone: $validated['phone'] ?? null,
+            messageContent: $validated['message'] ?? ''
+        );
+
+        $mail = \Illuminate\Support\Facades\Mail::to($recipientEmail);
+        if (! empty($ccEmails)) {
+            $mail->cc($ccEmails);
+        }
+        $mail->send($mailable);
+
+        $msg = $validated['success_message'] ?? 'Thank you! Your message has been sent successfully.';
+
+        return back()->with('success', $msg);
     }
 }

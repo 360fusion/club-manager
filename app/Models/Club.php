@@ -76,6 +76,181 @@ class Club extends Model implements HasMedia
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::created(function (Club $club) {
+            $club->ensureDefaultPages();
+        });
+    }
+
+    /**
+     * Ensure default navigation pages and standard website settings exist for this club.
+     */
+    public function ensureDefaultPages(): void
+    {
+        $settings = $this->settings ?? [];
+        $settingsUpdated = false;
+
+        if (empty($settings['website_theme'])) {
+            $settings['website_theme'] = 'classic';
+            $settingsUpdated = true;
+        }
+
+        if (empty($settings['contact_email'])) {
+            $settings['contact_email'] = $this->email;
+            $settingsUpdated = true;
+        }
+
+        if (empty($settings['seo_title_suffix'])) {
+            $settings['seo_title_suffix'] = ' - ' . $this->name;
+            $settingsUpdated = true;
+        }
+
+        if (empty($settings['footer_copyright'])) {
+            $settings['footer_copyright'] = '© ' . date('Y') . ' ' . $this->name . '. All rights reserved.';
+            $settingsUpdated = true;
+        }
+
+        if ($settingsUpdated) {
+            $this->settings = $settings;
+            $this->save();
+        }
+
+        $defaultPages = [
+            [
+                'title' => 'Home',
+                'slug' => 'home',
+                'is_homepage' => true,
+                'is_published' => true,
+                'show_in_navigation' => true,
+                'sort_order' => 1,
+                'blocks' => [
+                    [
+                        'type' => 'hero',
+                        'title' => 'Welcome to ' . $this->name,
+                        'subtitle' => 'Official Website & Portal',
+                        'cta_text' => 'Join Us',
+                        'cta_link' => '/site/' . $this->slug . '/join-us',
+                    ],
+                    [
+                        'type' => 'news_feed',
+                        'heading' => 'Latest News & Updates',
+                    ],
+                    [
+                        'type' => 'events_calendar',
+                        'heading' => 'Upcoming Events & Meetings',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'About',
+                'slug' => 'about',
+                'is_homepage' => false,
+                'is_published' => true,
+                'show_in_navigation' => true,
+                'sort_order' => 2,
+                'blocks' => [
+                    [
+                        'type' => 'hero',
+                        'title' => 'About ' . $this->name,
+                        'subtitle' => 'History, Values & Community',
+                    ],
+                    [
+                        'type' => 'rich_text',
+                        'heading' => 'Our History & Mission',
+                        'content' => '<p>Welcome to ' . e($this->name) . '. Our organization is dedicated to fostering community, excellence, and fellowship.</p>',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Join Us',
+                'slug' => 'join-us',
+                'is_homepage' => false,
+                'is_published' => true,
+                'show_in_navigation' => true,
+                'sort_order' => 3,
+                'blocks' => [
+                    [
+                        'type' => 'hero',
+                        'title' => 'Join ' . $this->name,
+                        'subtitle' => 'Become a Member Today',
+                    ],
+                    [
+                        'type' => 'pricing_cards',
+                        'heading' => 'Membership Options & Dues',
+                    ],
+                    [
+                        'type' => 'rich_text',
+                        'heading' => 'Application Process',
+                        'content' => '<p>To enquire about membership, please reach out to our secretary or complete our visitor registration form.</p>',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'News',
+                'slug' => 'news',
+                'is_homepage' => false,
+                'is_published' => true,
+                'show_in_navigation' => true,
+                'sort_order' => 4,
+                'blocks' => [
+                    [
+                        'type' => 'hero',
+                        'title' => 'Club News & Updates',
+                        'subtitle' => 'Latest Articles & Announcements',
+                    ],
+                    [
+                        'type' => 'news_feed',
+                        'heading' => 'Recent Articles',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Contact',
+                'slug' => 'contact',
+                'is_homepage' => false,
+                'is_published' => true,
+                'show_in_navigation' => true,
+                'sort_order' => 5,
+                'blocks' => [
+                    [
+                        'type' => 'hero',
+                        'title' => 'Contact Us',
+                        'subtitle' => 'Get in touch with our team',
+                    ],
+                    [
+                        'type' => 'contact_details',
+                        'eyebrow' => 'CONTACT',
+                        'title' => 'Get in Touch',
+                        'description' => 'Whether you\'re interested in joining ' . $this->name . ', a visiting member, or simply want to learn more, we\'d be delighted to hear from you.',
+                    ],
+                    [
+                        'type' => 'contact_form',
+                        'heading' => 'Send Us a Message',
+                        'subtitle' => 'Have questions or need assistance? Fill out the form below.',
+                        'recipient_email' => $this->settings['contact_email'] ?? $this->email,
+                        'cc_emails' => '',
+                        'name_required' => true,
+                        'email_required' => true,
+                        'phone_required' => false,
+                        'message_required' => true,
+                        'button_text' => 'Send Message',
+                        'success_message' => 'Thank you! Your message has been sent successfully.',
+                    ],
+                ],
+            ],
+        ];
+
+        foreach ($defaultPages as $def) {
+            $existingPage = $this->pages()->where('slug', $def['slug'])->first();
+            if (! $existingPage) {
+                $this->pages()->create($def);
+            } elseif ($def['slug'] === 'home' && $existingPage->title !== 'Home') {
+                $existingPage->update(['title' => 'Home']);
+            }
+        }
+    }
+
     public function clubType(): BelongsTo
     {
         return $this->belongsTo(ClubType::class);

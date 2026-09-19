@@ -1,83 +1,2783 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import RichTextEditor from '@/Components/RichTextEditor.vue';
+import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
+import ObfuscatedEmail from '@/Components/ObfuscatedEmail.vue';
 
 const props = defineProps({
-    club: Object,
-    pages: Array,
+    club: {
+        type: Object,
+        required: true,
+    },
+    pages: {
+        type: Array,
+        default: () => [],
+    },
+    selectedId: {
+        type: [Number, String],
+        default: null,
+    },
+    websiteSettings: {
+        type: Object,
+        default: () => ({}),
+    },
+    latestPosts: {
+        type: Array,
+        default: () => [],
+    },
+    upcomingEvents: {
+        type: Array,
+        default: () => [],
+    },
+    membershipPlans: {
+        type: Array,
+        default: () => [],
+    },
+    donations: {
+        type: Array,
+        default: () => [],
+    },
 });
+
+const DEFAULT_SLUGS = ['home', 'about', 'join-us', 'news', 'contact'];
+
+const isDefaultPage = (page) => {
+    if (!page) return false;
+    return page.is_homepage || DEFAULT_SLUGS.includes(page.slug);
+};
+
+const activeNavSelection = ref(props.selectedId ? String(props.selectedId) : (props.pages.length > 0 ? String(props.pages[0].id) : 'new'));
+const pageViewMode = ref('preview'); // 'preview' or 'edit'
+const isSavedSuccess = ref(false);
+
+const settingsForm = useForm({
+    seo_title_suffix: props.websiteSettings?.seo_title_suffix || '',
+    seo_meta_description: props.websiteSettings?.seo_meta_description || '',
+    custom_domain: props.websiteSettings?.custom_domain || '',
+    primary_color: props.websiteSettings?.primary_color || '#0369a1',
+    contact_email: props.websiteSettings?.contact_email || '',
+    phone: props.websiteSettings?.phone || '',
+    address: props.websiteSettings?.address || '',
+    social_facebook: props.websiteSettings?.social_facebook || '',
+    social_instagram: props.websiteSettings?.social_instagram || '',
+    social_twitter: props.websiteSettings?.social_twitter || '',
+    header_cta_text: props.websiteSettings?.header_cta_text || '',
+    header_cta_link: props.websiteSettings?.header_cta_link || '',
+    footer_copyright: props.websiteSettings?.footer_copyright || '',
+});
+
+const submitWebsiteSettings = () => {
+    settingsForm.post(route('admin.pages.settings.update', { clubSlug: props.club.slug }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            isSavedSuccess.value = true;
+            setTimeout(() => { isSavedSuccess.value = false; }, 3000);
+        },
+    });
+};
+const showDeleteConfirmModal = ref(false);
+const pageToDelete = ref(null);
+
+// Spatie Media Library Modal State
+const showMediaModal = ref(false);
+const mediaTarget = ref(null);
+const mediaDefaultFolder = ref('pages');
+
+const openMediaLibrary = (type, targetObj = null, folder = 'pages') => {
+    mediaTarget.value = { type, targetObj };
+    mediaDefaultFolder.value = folder;
+    showMediaModal.value = true;
+};
+
+const onMediaSelect = (mediaItem) => {
+    if (!mediaTarget.value) return;
+    const { type, targetObj } = mediaTarget.value;
+    if (type === 'block_image' && targetObj) {
+        targetObj.url = mediaItem.url;
+    } else if (type === 'gallery_image' && targetObj) {
+        targetObj.url = mediaItem.url;
+    }
+};
+
+const THEMES = [
+    {
+        id: 'light_navy',
+        name: 'Pure White & Oxford Navy',
+        badge: 'White Canvas / Navy',
+        isLight: true,
+        description: 'Pristine pure white background with Oxford Navy typography, crisp card borders, and subtle sky blue accents.',
+        previewBg: 'bg-gradient-to-br from-white via-slate-50 to-slate-100 border border-slate-200 shadow-inner',
+        palette: ['#ffffff', '#0f172a', '#0284c7', '#38bdf8'],
+        features: ['100% White background', 'Oxford Navy typography', 'Crisp card borders', 'Clean corporate header'],
+    },
+    {
+        id: 'executive_light',
+        name: 'Executive Slate & Indigo',
+        badge: 'Executive Light',
+        isLight: true,
+        description: 'Off-white light background with elevated white cards, deep slate headings, and royal indigo highlights.',
+        previewBg: 'bg-gradient-to-br from-slate-100 via-indigo-50/50 to-slate-200 border border-slate-200 shadow-inner',
+        palette: ['#f8fafc', '#1e1b4b', '#4f46e5', '#6366f1'],
+        features: ['Soft off-white background', 'Indigo accent bar', 'Elevated white cards', 'Modern floating header'],
+    },
+    {
+        id: 'masonic_light',
+        name: 'White Gold Masonic Lodge',
+        badge: 'White & Royal Gold',
+        isLight: true,
+        description: 'Traditional fraternal lodge layout set on a pure white background with gold foil borders and dark navy serif typography.',
+        previewBg: 'bg-gradient-to-br from-white via-amber-50/30 to-slate-100 border border-amber-300 shadow-inner',
+        palette: ['#ffffff', '#0c1938', '#d97706', '#fbbf24'],
+        features: ['Pure white background', 'Gold foil card borders', 'Dark navy serif typography', 'Regal gold badges'],
+    },
+    {
+        id: 'minimal',
+        name: 'Minimalist Emerald Light',
+        badge: 'Clean & Flat Light',
+        isLight: true,
+        description: 'Bright, airy, contemporary design with generous whitespace, crisp emerald green accents, high-contrast typography, and flat white cards.',
+        previewBg: 'bg-gradient-to-br from-white via-emerald-50/30 to-slate-100 border border-emerald-200 shadow-inner',
+        palette: ['#ffffff', '#059669', '#10b981', '#1e293b'],
+        features: ['Airy whitespace layout', 'Emerald green highlights', 'Flat modern borders', 'High-contrast typography'],
+    },
+    {
+        id: 'warm_light',
+        name: 'Warm Cream & Bronze',
+        badge: 'Warm Light',
+        isLight: true,
+        description: 'Soft warm ivory background with rich bronze accents, rounded white cards, and inviting warm tones.',
+        previewBg: 'bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-amber-100/50 border border-amber-200 shadow-inner',
+        palette: ['#fffbe6', '#78350f', '#b45309', '#f59e0b'],
+        features: ['Warm ivory backdrop', 'Bronze & Amber accents', 'Rounded white cards', 'Inviting layout'],
+    },
+    {
+        id: 'classic',
+        name: 'Classic Dark Heritage',
+        badge: 'Classic Dark',
+        isLight: false,
+        description: 'Clean, timeless corporate and club layout featuring crisp white cards on dark slate, rich navy accents, gold highlights, and subtle shadows.',
+        previewBg: 'bg-gradient-to-br from-slate-900 via-sky-900 to-indigo-950 shadow-inner',
+        palette: ['#0f172a', '#0284c7', '#d97706', '#f8fafc'],
+        features: ['Navy & Amber accents', 'Classic serif headings', 'Subtle card elevations', 'Centered footer navigation'],
+    },
+    {
+        id: 'obsidian',
+        name: 'Obsidian Dark',
+        badge: 'Modern Dark Mode',
+        isLight: false,
+        description: 'Sleek, high-tech dark mode aesthetic with midnight background, glassmorphism panel surfaces, and glowing cyan/indigo accents.',
+        previewBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 shadow-inner',
+        palette: ['#020617', '#38bdf8', '#818cf8', '#1e293b'],
+        features: ['Midnight dark backdrop', 'Glassmorphism panels', 'Neon accent glows', 'Compact dark header bar'],
+    },
+    {
+        id: 'masonic',
+        name: 'Royal Masonic Dark & Gold',
+        badge: 'Regal Dark',
+        isLight: false,
+        description: 'Traditional Masonic & fraternal lodge aesthetic featuring deep royal navy, rich gold foil borders, crest embellishments, and classic serif typography.',
+        previewBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-indigo-950 shadow-inner',
+        palette: ['#0c1938', '#f59e0b', '#d97706', '#1e1b4b'],
+        features: ['Royal Navy & Gold palette', 'Lodge crest detailing', 'Regal badge styling', 'Ornate section dividers'],
+    },
+    {
+        id: 'vibrant',
+        name: 'Vibrant Sunset Dark',
+        badge: 'High Impact Banners',
+        isLight: false,
+        description: 'Dynamic, high-energy theme with bold gradient hero banners, warm coral and amber tones, rounded cards, and prominent action buttons.',
+        previewBg: 'bg-gradient-to-br from-amber-900 via-rose-950 to-purple-950 shadow-inner',
+        palette: ['#f43f5e', '#fb923c', '#4c1d95', '#fff1f2'],
+        features: ['Sunset gradient headers', 'Warm coral & amber tones', 'Rounded card borders', 'Prominent action CTAs'],
+    },
+];
+
+const currentThemeKey = computed(() => props.club?.settings?.website_theme || 'classic');
+const activePreviewThemeId = ref(null);
+const selectedThemeForModal = ref(null);
+const showThemeConfirmModal = ref(false);
+
+const themeForm = useForm({
+    website_theme: 'classic',
+});
+
+const previewThemeInBuilder = (theme) => {
+    activePreviewThemeId.value = theme.id;
+    const targetPageId = props.pages.length > 0 ? props.pages[0].id : 'new';
+    requestNavigation(targetPageId, 'preview');
+};
+
+const effectivePreviewThemeKey = computed(() => activePreviewThemeId.value || currentThemeKey.value);
+
+const previewThemeClasses = computed(() => {
+    const key = effectivePreviewThemeKey.value;
+    if (key === 'light_navy') {
+        return {
+            container: 'bg-white text-slate-900 border-slate-200 shadow-xl',
+            nav: 'bg-white/95 border-slate-200 text-slate-900 shadow-sm',
+            navActive: 'bg-slate-900 text-white font-bold',
+            navInactive: 'text-slate-600',
+            heroBg: 'bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white border-slate-800',
+            heroPill: 'bg-sky-500/20 border-sky-400/30 text-sky-300',
+            heroCta: 'bg-sky-500 text-white font-bold',
+            cardBg: 'bg-white border border-slate-200 text-slate-900 shadow-sm',
+            headingText: 'text-slate-900',
+            bodyText: 'text-slate-700',
+            accentText: 'text-sky-600',
+        };
+    }
+    if (key === 'executive_light') {
+        return {
+            container: 'bg-slate-50 text-slate-900 border-slate-200 shadow-xl',
+            nav: 'bg-white/90 border-slate-200 text-slate-900 shadow-sm',
+            navActive: 'bg-indigo-50 text-indigo-700 border-indigo-200 font-bold',
+            navInactive: 'text-slate-600',
+            heroBg: 'bg-white border border-slate-200/90 text-slate-900 shadow-md',
+            heroPill: 'bg-indigo-50 border-indigo-200 text-indigo-700',
+            heroCta: 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-bold',
+            cardBg: 'bg-white border border-slate-200 text-slate-900 shadow-sm',
+            headingText: 'text-slate-900',
+            bodyText: 'text-slate-700',
+            accentText: 'text-indigo-600',
+        };
+    }
+    if (key === 'masonic_light') {
+        return {
+            container: 'bg-white text-slate-900 font-serif border-amber-300 shadow-xl',
+            nav: 'bg-white/95 border-amber-500/40 text-slate-900 shadow-sm',
+            navActive: 'bg-amber-50 text-amber-900 border-amber-300 font-sans font-bold',
+            navInactive: 'text-slate-700 font-sans',
+            heroBg: 'bg-gradient-to-br from-blue-950 via-indigo-950 to-slate-950 text-white border-amber-500/40 shadow-xl',
+            heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300 font-sans',
+            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-sans font-black',
+            cardBg: 'bg-white border border-amber-500/30 text-slate-900 shadow-sm',
+            headingText: 'text-slate-900',
+            bodyText: 'text-slate-700',
+            accentText: 'text-amber-700',
+        };
+    }
+    if (key === 'minimal') {
+        return {
+            container: 'bg-white text-slate-900 border-emerald-200 shadow-xl',
+            nav: 'bg-white/95 border-slate-200 text-slate-900 shadow-sm',
+            navActive: 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold',
+            navInactive: 'text-slate-600',
+            heroBg: 'bg-slate-50 border border-slate-200 text-slate-900 shadow-sm',
+            heroPill: 'bg-emerald-50 border border-emerald-200 text-emerald-700',
+            heroCta: 'bg-emerald-600 text-white font-bold',
+            cardBg: 'bg-white border border-slate-200 text-slate-900 shadow-sm',
+            headingText: 'text-slate-900',
+            bodyText: 'text-slate-700',
+            accentText: 'text-emerald-600',
+        };
+    }
+    if (key === 'warm_light') {
+        return {
+            container: 'bg-amber-50/30 text-slate-900 border-amber-200 shadow-xl',
+            nav: 'bg-white/95 border-amber-200/60 text-slate-900 shadow-sm',
+            navActive: 'bg-amber-100/70 text-amber-900 border-amber-300 font-bold',
+            navInactive: 'text-slate-600',
+            heroBg: 'bg-gradient-to-br from-amber-900 via-amber-950 to-orange-950 text-amber-50 border border-amber-700/50 shadow-xl',
+            heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300',
+            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-amber-950 font-bold',
+            cardBg: 'bg-white border border-amber-200 text-slate-900 shadow-sm',
+            headingText: 'text-slate-900',
+            bodyText: 'text-slate-700',
+            accentText: 'text-amber-700',
+        };
+    }
+    if (key === 'obsidian') {
+        return {
+            container: 'bg-slate-950 text-slate-100 border-slate-800 shadow-2xl',
+            nav: 'bg-slate-900/80 border-slate-800 text-white shadow-inner',
+            navActive: 'bg-sky-500/20 text-sky-300 font-bold border-sky-500/30',
+            navInactive: 'text-slate-400',
+            heroBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 text-white',
+            heroPill: 'bg-sky-500/10 border-sky-500/20 text-sky-400',
+            heroCta: 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold',
+            cardBg: 'bg-slate-900 border border-slate-800 text-slate-100 shadow-md',
+            headingText: 'text-white',
+            bodyText: 'text-slate-300',
+            accentText: 'text-sky-400',
+        };
+    }
+    if (key === 'masonic') {
+        return {
+            container: 'bg-slate-950 text-slate-100 border-amber-500/40 shadow-2xl font-serif',
+            nav: 'bg-blue-950/90 border-amber-500/40 text-amber-100 shadow-md',
+            navActive: 'bg-amber-500/20 text-amber-300 font-sans font-bold border-amber-500/40',
+            navInactive: 'text-slate-300 font-sans',
+            heroBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-indigo-950 border border-amber-500/40 text-white',
+            heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300 font-sans',
+            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-sans font-black',
+            cardBg: 'bg-blue-950/50 border border-amber-500/30 text-amber-50 shadow-md',
+            headingText: 'text-amber-100',
+            bodyText: 'text-slate-300',
+            accentText: 'text-amber-400',
+        };
+    }
+    if (key === 'vibrant') {
+        return {
+            container: 'bg-slate-950 text-slate-100 border-rose-900/50 shadow-2xl',
+            nav: 'bg-slate-900/90 border-rose-900/40 text-white shadow-md',
+            navActive: 'bg-rose-500/20 text-rose-300 font-bold border-rose-500/40',
+            navInactive: 'text-slate-400',
+            heroBg: 'bg-gradient-to-br from-amber-900 via-rose-950 to-purple-950 border border-rose-800/50 text-white',
+            heroPill: 'bg-rose-500/20 border-rose-400/30 text-rose-300',
+            heroCta: 'bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold',
+            cardBg: 'bg-slate-900/90 border border-rose-900/30 text-slate-100 shadow-md',
+            headingText: 'text-white',
+            bodyText: 'text-slate-300',
+            accentText: 'text-rose-400',
+        };
+    }
+    // Default 'classic'
+    return {
+        container: 'bg-slate-950 text-slate-100 border-slate-800 shadow-2xl',
+        nav: 'bg-slate-900/80 border-slate-800 text-white shadow-inner',
+        navActive: 'bg-sky-500/20 text-sky-300 font-bold border-sky-500/30',
+        navInactive: 'text-slate-400',
+        heroBg: 'bg-gradient-to-r from-slate-900 via-sky-950/40 to-slate-900 border border-slate-800 text-white',
+        heroPill: 'bg-sky-500/10 border-sky-500/20 text-sky-400',
+        heroCta: 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold',
+        cardBg: 'bg-slate-900 border border-slate-800 text-slate-100 shadow-md',
+        headingText: 'text-white',
+        bodyText: 'text-slate-300',
+        accentText: 'text-sky-400',
+    };
+});
+
+const applyPreviewTheme = (themeId = null) => {
+    const targetThemeId = themeId || effectivePreviewThemeKey.value;
+    themeForm.website_theme = targetThemeId;
+    themeForm.post(route('admin.pages.themes.update', { clubSlug: props.club.slug }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            activePreviewThemeId.value = null;
+            isSavedSuccess.value = true;
+            setTimeout(() => { isSavedSuccess.value = false; }, 3000);
+        },
+    });
+};
+
+const openApplyThemeModal = (theme) => {
+    selectedThemeForModal.value = theme;
+    showThemeConfirmModal.value = true;
+};
+
+const confirmApplyTheme = () => {
+    if (!selectedThemeForModal.value) return;
+    applyPreviewTheme(selectedThemeForModal.value.id);
+    showThemeConfirmModal.value = false;
+    selectedThemeForModal.value = null;
+};
+
+const activePage = computed(() => {
+    if (activeNavSelection.value === 'overview' || activeNavSelection.value === 'new' || activeNavSelection.value === 'settings' || activeNavSelection.value === 'themes') {
+        return null;
+    }
+    return props.pages.find(p => String(p.id) === String(activeNavSelection.value)) || null;
+});
+
+const form = useForm({
+    id: null,
+    title: '',
+    slug: '',
+    is_published: true,
+    is_homepage: false,
+    show_in_navigation: true,
+    blocks: [],
+});
+
+const initialFormSnapshot = ref('');
+const isBypassingDirtyGuard = ref(false);
+const showUnsavedModal = ref(false);
+const pendingNavigationTarget = ref(null); // { selection: string, mode: 'edit'|'preview' }
+
+const getFormStateString = () => {
+    return JSON.stringify({
+        id: form.id,
+        title: form.title,
+        slug: form.slug,
+        is_published: form.is_published,
+        is_homepage: form.is_homepage,
+        show_in_navigation: form.show_in_navigation,
+        blocks: form.blocks,
+    });
+};
+
+const takeFormSnapshot = () => {
+    initialFormSnapshot.value = getFormStateString();
+};
+
+const isDirty = computed(() => {
+    if (activeNavSelection.value === 'overview' || activeNavSelection.value === 'settings' || activeNavSelection.value === 'themes') {
+        return false;
+    }
+    return initialFormSnapshot.value !== '' && getFormStateString() !== initialFormSnapshot.value;
+});
+
+const loadPageIntoForm = (page) => {
+    if (page) {
+        form.id = page.id;
+        form.title = page.title || '';
+        form.slug = page.slug || '';
+        form.is_published = page.is_published ?? true;
+        form.is_homepage = page.is_homepage ?? false;
+        form.show_in_navigation = page.show_in_navigation ?? true;
+        form.blocks = page.blocks ? JSON.parse(JSON.stringify(page.blocks)) : [];
+    } else {
+        form.id = null;
+        form.title = 'New Custom Page';
+        form.slug = 'new-custom-page';
+        form.is_published = true;
+        form.is_homepage = false;
+        form.show_in_navigation = true;
+        form.blocks = [
+            {
+                id: 'block-' + Date.now(),
+                type: 'hero',
+                title: 'Welcome to Our New Page',
+                subtitle: 'Discover more about our club',
+                cta_text: 'Get Started',
+                cta_link: `/site/${props.club.slug}`,
+            },
+            {
+                id: 'block-' + (Date.now() + 1),
+                type: 'text',
+                heading: 'Page Overview',
+                content: '<p>Add detailed custom content here.</p>',
+            }
+        ];
+    }
+    nextTick(() => {
+        takeFormSnapshot();
+    });
+};
+
+// Initialize form
+if (activePage.value) {
+    loadPageIntoForm(activePage.value);
+} else if (activeNavSelection.value === 'new') {
+    loadPageIntoForm(null);
+}
+
+watch(activeNavSelection, (newVal) => {
+    if (newVal === 'overview' || newVal === 'settings' || newVal === 'themes') {
+        return;
+    }
+    if (newVal === 'new') {
+        loadPageIntoForm(null);
+    } else {
+        const found = props.pages.find(p => String(p.id) === String(newVal));
+        if (found) {
+            loadPageIntoForm(found);
+        }
+    }
+});
+
+watch(() => props.pages, (newPages) => {
+    if (activeNavSelection.value !== 'overview' && activeNavSelection.value !== 'new' && activeNavSelection.value !== 'settings' && activeNavSelection.value !== 'themes') {
+        const current = newPages.find(p => String(p.id) === String(activeNavSelection.value));
+        if (current) {
+            loadPageIntoForm(current);
+        }
+    }
+}, { deep: true });
+
+const getPageIcon = (p) => {
+    if (!p) return '📄';
+    if (p.is_homepage || p.slug === 'home') return '🏠';
+    if (p.slug === 'about') return 'ℹ️';
+    if (p.slug === 'join-us') return '🤝';
+    if (p.slug === 'news') return '📰';
+    if (p.slug === 'contact') return '✉️';
+    return '📄';
+};
+
+const requestNavigation = (targetSelection, mode = 'edit') => {
+    const selectionStr = String(targetSelection);
+    if (activeNavSelection.value === selectionStr && pageViewMode.value === mode) {
+        return;
+    }
+    if (isDirty.value && !isBypassingDirtyGuard.value) {
+        pendingNavigationTarget.value = { selection: selectionStr, mode };
+        showUnsavedModal.value = true;
+    } else {
+        executeNavigation(selectionStr, mode);
+    }
+};
+
+const executeNavigation = (selectionStr, mode = 'edit') => {
+    activeNavSelection.value = selectionStr;
+    pageViewMode.value = mode;
+    showUnsavedModal.value = false;
+    pendingNavigationTarget.value = null;
+};
+
+const selectPage = (pageId) => {
+    requestNavigation(pageId, pageViewMode.value || 'edit');
+};
+
+const selectPageForEdit = (pageId) => {
+    requestNavigation(pageId, 'edit');
+};
+
+const selectPageForPreview = (pageId) => {
+    requestNavigation(pageId, 'preview');
+};
+
+const startCreateNewPage = () => {
+    requestNavigation('new', 'edit');
+};
+
+// Block Element Types Palette
+const blockTypes = [
+    { type: 'text', icon: '📝', label: 'Text Block', desc: 'Rich text paragraph or formatted text', color: 'text-blue-600', bg: 'bg-blue-50' },
+    { type: 'image', icon: '🖼️', label: 'Single Image', desc: 'Image with positioning & size controls', color: 'text-sky-600', bg: 'bg-sky-50' },
+    { type: 'images', icon: '🖼️', label: 'Image Gallery', desc: 'Multi-image grid layout', color: 'text-purple-600', bg: 'bg-purple-50' },
+    { type: 'notice', icon: '📢', label: 'Callout Box', desc: 'Highlighted notice or announcement box', color: 'text-amber-600', bg: 'bg-amber-50' },
+    { type: 'button', icon: '🔗', label: 'Button Link', desc: 'Call to action button link', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { type: 'hero', icon: '🚀', label: 'Hero Banner', desc: 'Large title & subtitle header banner', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { type: 'news_feed', icon: '📰', label: 'News Items', desc: 'Pulls published articles automatically', color: 'text-sky-600', bg: 'bg-sky-50' },
+    { type: 'events_calendar', icon: '📅', label: 'Events & Summons', desc: 'Displays upcoming events & dinners', color: 'text-purple-600', bg: 'bg-purple-50' },
+    { type: 'pricing_cards', icon: '💳', label: 'Membership Dues', desc: 'Shows active membership plans', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { type: 'donation_campaign', icon: '💰', label: 'Dynamic Donation', desc: 'Fundraising campaign progress bar', color: 'text-rose-600', bg: 'bg-rose-50' },
+    { type: 'contact_details', icon: '📇', label: 'Contact Details & Cards', desc: 'Email, meeting times & location cards', color: 'text-amber-600', bg: 'bg-amber-50' },
+    { type: 'contact_form', icon: '📝', label: 'Interactive Contact Form', desc: 'Form with email notification & options', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+];
+
+const blockColumns = computed(() => [
+    {
+        title: 'Content & Media (Left Column)',
+        items: [
+            { type: 'text', icon: '📝', label: 'Text Block', desc: 'Rich text paragraph or formatted text', color: 'text-blue-600', bg: 'bg-blue-50' },
+            { type: 'image', icon: '🖼️', label: 'Single Image', desc: 'Image with positioning & size controls', color: 'text-sky-600', bg: 'bg-sky-50' },
+            { type: 'images', icon: '🖼️', label: 'Image Gallery', desc: 'Multi-image grid layout', color: 'text-purple-600', bg: 'bg-purple-50' },
+            { type: 'button', icon: '🔗', label: 'Button Link', desc: 'Call to action button link', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+            { type: 'notice', icon: '📢', label: 'Callout Box', desc: 'Highlighted notice or announcement box', color: 'text-amber-600', bg: 'bg-amber-50' },
+        ],
+    },
+    {
+        title: 'Banners & Dynamic Feeds',
+        items: [
+            { type: 'hero', icon: '🚀', label: 'Hero Banner', desc: 'Large title & subtitle header banner', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { type: 'news_feed', icon: '📰', label: 'News Items', desc: 'Pulls published articles automatically', color: 'text-sky-600', bg: 'bg-sky-50' },
+            { type: 'events_calendar', icon: '📅', label: 'Events & Summons', desc: 'Displays upcoming events & dinners', color: 'text-purple-600', bg: 'bg-purple-50' },
+            { type: 'pricing_cards', icon: '💳', label: 'Membership Dues', desc: 'Shows active membership plans', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        ],
+    },
+    {
+        title: 'Contact & Forms',
+        items: [
+            { type: 'donation_campaign', icon: '💰', label: 'Dynamic Donation', desc: 'Fundraising campaign progress bar', color: 'text-rose-600', bg: 'bg-rose-50' },
+            { type: 'contact_details', icon: '📇', label: 'Contact Details & Cards', desc: 'Email, meeting times & location cards', color: 'text-amber-600', bg: 'bg-amber-50' },
+            { type: 'contact_form', icon: '📝', label: 'Interactive Contact Form', desc: 'Form with email notification & options', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        ],
+    },
+]);
+
+const activeInsertIndex = ref(null);
+const insertMenuPlacement = ref('down');
+
+const toggleInsertMenu = (index, event = null) => {
+    if (activeInsertIndex.value === index) {
+        activeInsertIndex.value = null;
+        return;
+    }
+
+    activeInsertIndex.value = index;
+
+    if (event && event.currentTarget) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+
+        if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+            insertMenuPlacement.value = 'up';
+        } else {
+            insertMenuPlacement.value = 'down';
+        }
+    } else {
+        insertMenuPlacement.value = 'down';
+    }
+};
+
+const handleDocumentClick = (e) => {
+    if (activeInsertIndex.value !== null && !e.target.closest('.insert-menu-container')) {
+        activeInsertIndex.value = null;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('click', handleDocumentClick);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleDocumentClick);
+});
+
+const addBlock = (type, targetIndex = null) => {
+    const id = 'block-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+    let newBlock = null;
+
+    if (type === 'text' || type === 'rich_text') {
+        newBlock = { id, type: 'text', heading: '', content: '' };
+    } else if (type === 'image') {
+        newBlock = { id, type: 'image', url: '', caption: '', position: 'center', size: 'large' };
+    } else if (type === 'images') {
+        newBlock = {
+            id,
+            type: 'images',
+            columns: 3,
+            items: [
+                { id: id + '-g1', url: '', caption: '' },
+                { id: id + '-g2', url: '', caption: '' }
+            ]
+        };
+    } else if (type === 'notice') {
+        newBlock = { id, type: 'notice', style: 'info', title: 'Important Notice', text: '' };
+    } else if (type === 'button') {
+        newBlock = { id, type: 'button', label: 'Learn More →', url: '', align: 'center' };
+    } else if (type === 'hero') {
+        newBlock = {
+            id,
+            type: 'hero',
+            title: 'Welcome to ' + props.club.name,
+            subtitle: 'Join us for training, events and community.',
+            cta_text: 'Explore Membership',
+            cta_link: `/site/${props.club.slug}/join-us`
+        };
+    } else if (type === 'news_feed' || type === 'news_list') {
+        newBlock = { id, type: 'news_feed', heading: 'Latest Club News', columns: '3', limit: 6 };
+    } else if (type === 'events_calendar') {
+        newBlock = { id, type: 'events_calendar', heading: 'Upcoming Events & Meetings', limit: 3 };
+    } else if (type === 'pricing_cards') {
+        newBlock = { id, type: 'pricing_cards', heading: 'Membership Options & Dues' };
+    } else if (type === 'donation_campaign') {
+        newBlock = { id, type: 'donation_campaign', heading: 'Active Fundraising Campaign' };
+    } else if (type === 'contact_details') {
+        newBlock = {
+            id,
+            type: 'contact_details',
+            eyebrow: 'CONTACT',
+            title: 'Get in Touch',
+            description: `Whether you're interested in joining ${props.club.name}, a visiting member, or simply want to learn more, we'd be delighted to hear from you.`,
+            email_heading: 'Email',
+            email: '',
+            times_heading: 'Meeting Times',
+            times: props.websiteSettings?.meeting_formula || props.club.settings?.meeting_formula || '7:00 pm, 4th Thursday\nSept–Nov & Jan–May\nInstallation: April, 5:30 pm',
+            location_heading: 'Location',
+            location: props.websiteSettings?.address || props.club.address || 'Stockton Masonic Hall,\nWellington Street,\nStockton-on-Tees, TS18 1RD',
+        };
+    } else if (type === 'contact_form') {
+        newBlock = {
+            id,
+            type: 'contact_form',
+            heading: 'Send Us a Message',
+            subtitle: 'Have questions or need assistance? Fill out the form below.',
+            recipient_email: '',
+            cc_emails: '',
+            name_required: true,
+            email_required: true,
+            phone_required: false,
+            message_required: true,
+            button_text: 'Send Message',
+            success_message: 'Thank you! Your message has been sent successfully.',
+        };
+    }
+
+    if (newBlock) {
+        if (targetIndex !== null && targetIndex >= 0 && targetIndex <= form.blocks.length) {
+            form.blocks.splice(targetIndex, 0, newBlock);
+        } else {
+            form.blocks.push(newBlock);
+        }
+    }
+    activeInsertIndex.value = null;
+};
+
+const removeBlock = (index) => {
+    form.blocks.splice(index, 1);
+};
+
+const moveBlockUp = (index) => {
+    if (index > 0) {
+        const temp = form.blocks[index];
+        form.blocks[index] = form.blocks[index - 1];
+        form.blocks[index - 1] = temp;
+    }
+};
+
+const moveBlockDown = (index) => {
+    if (index < form.blocks.length - 1) {
+        const temp = form.blocks[index];
+        form.blocks[index] = form.blocks[index + 1];
+        form.blocks[index + 1] = temp;
+    }
+};
+
+const duplicateBlock = (index) => {
+    const source = form.blocks[index];
+    const copy = JSON.parse(JSON.stringify(source));
+    copy.id = 'block-' + Date.now();
+    form.blocks.splice(index + 1, 0, copy);
+};
+
+const removeBlockImage = (block) => {
+    block.url = '';
+};
+
+const addGalleryImage = (block) => {
+    const gId = block.id + '-g' + Date.now();
+    block.items.push({ id: gId, url: '', caption: '' });
+};
+
+const removeGalleryImage = (block, idx) => {
+    block.items.splice(idx, 1);
+};
+
+const submitForm = (onSuccessCallback = null) => {
+    isBypassingDirtyGuard.value = true;
+    form.post(`/clubs/${props.club.slug}/admin/pages`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            isSavedSuccess.value = true;
+            nextTick(() => {
+                takeFormSnapshot();
+                isBypassingDirtyGuard.value = false;
+            });
+            setTimeout(() => {
+                isSavedSuccess.value = false;
+            }, 3000);
+            if (typeof onSuccessCallback === 'function') {
+                onSuccessCallback();
+            }
+        },
+        onError: () => {
+            isBypassingDirtyGuard.value = false;
+        }
+    });
+};
+
+const handleSaveAndProceed = () => {
+    const target = pendingNavigationTarget.value;
+    submitForm(() => {
+        if (target) {
+            executeNavigation(target.selection, target.mode);
+        } else {
+            showUnsavedModal.value = false;
+        }
+    });
+};
+
+const handleDiscardAndProceed = () => {
+    const target = pendingNavigationTarget.value;
+    showUnsavedModal.value = false;
+    if (target) {
+        executeNavigation(target.selection, target.mode);
+    }
+};
+
+const handleStayAndEdit = () => {
+    showUnsavedModal.value = false;
+    pendingNavigationTarget.value = null;
+};
+
+const handleBeforeUnload = (e) => {
+    if (isDirty.value && !isBypassingDirtyGuard.value) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+};
+
+let unbindInertiaGuard = null;
+
+onMounted(() => {
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    unbindInertiaGuard = router.on('before', (event) => {
+        if (isDirty.value && !isBypassingDirtyGuard.value && event.detail.visit.method === 'get') {
+            const confirmLeave = window.confirm(
+                `⚠️ You have unsaved changes on "${form.title || 'this page'}".\n\nIf you leave now, your edits will be lost.\n\nDo you want to leave without saving?`
+            );
+            if (!confirmLeave) {
+                event.preventDefault();
+            }
+        }
+    });
+});
+
+onUnmounted(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    if (unbindInertiaGuard) {
+        unbindInertiaGuard();
+    }
+});
+
+const togglePublishPage = (p) => {
+    if (p.is_homepage || p.slug === 'home') return;
+    router.post(`/clubs/${props.club.slug}/admin/pages/${p.id}/toggle-publish`, {}, { preserveScroll: true });
+};
+
+const movePageUp = (index) => {
+    if (index <= 1) return;
+    const newPages = [...props.pages];
+    const temp = newPages[index];
+    newPages[index] = newPages[index - 1];
+    newPages[index - 1] = temp;
+
+    const orderIds = newPages.map(p => p.id);
+    router.post(`/clubs/${props.club.slug}/admin/pages/reorder`, { order: orderIds }, { preserveScroll: true });
+};
+
+const movePageDown = (index) => {
+    if (index === 0 || index >= props.pages.length - 1) return;
+    const newPages = [...props.pages];
+    const temp = newPages[index];
+    newPages[index] = newPages[index + 1];
+    newPages[index + 1] = temp;
+
+    const orderIds = newPages.map(p => p.id);
+    router.post(`/clubs/${props.club.slug}/admin/pages/reorder`, { order: orderIds }, { preserveScroll: true });
+};
+
+const triggerDeleteModal = (page) => {
+    if (isDefaultPage(page)) return;
+    pageToDelete.value = page;
+    showDeleteConfirmModal.value = true;
+};
+
+const confirmDeleteActivePage = () => {
+    const targetId = pageToDelete.value ? pageToDelete.value.id : form.id;
+    if (!targetId) return;
+
+    router.delete(`/clubs/${props.club.slug}/admin/pages/${targetId}`, {
+        onSuccess: () => {
+            showDeleteConfirmModal.value = false;
+            pageToDelete.value = null;
+            activeNavSelection.value = props.pages.length > 0 ? String(props.pages[0].id) : 'overview';
+        }
+    });
+};
+
+const newsBlockPages = ref({});
+
+const getNewsCurrentPage = (blockId) => {
+    return newsBlockPages.value[blockId] || 1;
+};
+
+const setNewsPage = (blockId, pageNum) => {
+    newsBlockPages.value[blockId] = pageNum;
+};
+
+const getNewsTotalPages = (block) => {
+    if (!props.latestPosts || !props.latestPosts.length) return 1;
+    const perPage = parseInt(block.limit) || 999;
+    return Math.ceil(props.latestPosts.length / perPage);
+};
+
+const getNewsGridClass = (block) => {
+    const cols = String(block.columns || '3');
+    if (cols === '1') return 'grid grid-cols-1 gap-6';
+    if (cols === '2') return 'grid grid-cols-1 md:grid-cols-2 gap-6';
+    if (cols === '3') return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+    if (cols === '4') return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6';
+    if (cols === 'masonry') return 'columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6';
+    return 'grid grid-cols-1 md:grid-cols-3 gap-6';
+};
+
+const getPostImagePos = (block, idx) => {
+    const pos = String(block.image_position || 'above');
+    if (pos === 'alternate') {
+        return idx % 2 === 0 ? 'left' : 'right';
+    }
+    return pos;
+};
+
+const getFilteredPosts = (block) => {
+    if (!props.latestPosts) return [];
+    const perPage = parseInt(block.limit) || 999;
+    const page = getNewsCurrentPage(block.id);
+    const start = (page - 1) * perPage;
+    return props.latestPosts.slice(start, start + perPage);
+};
 </script>
 
 <template>
     <AdminLayout title="Website Builder" :club="club" active-tab="pages">
-        
-        <div class="space-y-6">
+        <Head :title="`Website Builder - ${club.name}`" />
+
+        <div class="space-y-6 max-w-7xl mx-auto">
             
-            <!-- Top Action Bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+            <!-- Top Action Bar & Header Card -->
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-900">Website Builder & Page Manager</h2>
-                    <p class="text-xs text-slate-500 mt-1">Manage public pages, section blocks, and navigation links.</p>
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Website Builder & Navigation</h1>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            {{ club.slug }}
+                        </span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Manage public site pages, customize layout blocks, preview rendered pages, and arrange navigation links.</p>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <a :href="`/site/${club.slug}`" target="_blank" class="py-2.5 px-4 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs">
-                        🌐 View Live Site
+                <div class="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
+                    <a :href="`/site/${club.slug}`" target="_blank" class="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 transition-all flex items-center gap-2">
+                        <span>🌐 View Live Site</span>
                     </a>
-                    <Link :href="`/clubs/${club.slug}/admin/pages/create`" class="py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20">
-                        ➕ Create New Page
-                    </Link>
                 </div>
             </div>
 
-            <!-- Pages Table -->
-            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
-                        <tr>
-                            <th class="p-4">Page Title</th>
-                            <th class="p-4">URL Slug</th>
-                            <th class="p-4">Section Blocks</th>
-                            <th class="p-4">Homepage</th>
-                            <th class="p-4">Status</th>
-                            <th class="p-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <tr v-for="p in pages" :key="p.id" class="hover:bg-slate-50/50 transition-colors">
-                            <td class="p-4 font-bold text-slate-900">
-                                {{ p.title }}
-                            </td>
-                            <td class="p-4 font-mono text-slate-500">
-                                /{{ p.slug }}
-                            </td>
-                            <td class="p-4">
-                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                    {{ p.blocks ? p.blocks.length : 0 }} Blocks
+            <!-- 2-Column Responsive Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+                
+                <!-- Left Sidebar Navigation Panel -->
+                <div class="lg:col-span-1 space-y-4">
+                    
+                    <!-- Mobile Page Selector Dropdown -->
+                    <div class="lg:hidden bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Website Navigation Page</label>
+                        <select :value="activeNavSelection" @change="e => requestNavigation(e.target.value)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                            <optgroup label="Public Website Pages">
+                                <option v-for="p in pages" :key="p.id" :value="String(p.id)">
+                                    {{ getPageIcon(p) }} {{ p.title }} {{ p.is_homepage ? '(Homepage)' : '' }}
+                                </option>
+                            </optgroup>
+                            <optgroup label="Management">
+                                <option value="settings">⚙️ Website & SEO Settings</option>
+                                <option value="themes">🎨 Website Themes</option>
+                                <option value="new">➕ Add Custom New Page</option>
+                                <option value="overview">📋 Manage Pages</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Desktop Vertical Sidebar Navigation Card -->
+                    <div class="hidden lg:block bg-white p-3.5 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 sticky top-6">
+                        
+                        <!-- Navigation Pages Group -->
+                        <div>
+                            <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                                <span>Navigation Pages</span>
+                                <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold">{{ pages.length }} Pages</span>
+                            </div>
+
+                            <div class="space-y-1 text-xs font-bold">
+                                <button
+                                    v-for="p in pages"
+                                    :key="p.id"
+                                    @click="selectPage(p.id)"
+                                    :class="[
+                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left group font-bold',
+                                        activeNavSelection === String(p.id) ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                                    ]"
+                                >
+                                    <span class="text-base leading-none">{{ getPageIcon(p) }}</span>
+                                    <span class="truncate font-bold">{{ p.title }}</span>
+                                </button>
+                            </div>
+
+                            <!-- Add New Page Quick Action -->
+                            <button
+                                @click="startCreateNewPage"
+                                :class="[
+                                    'w-full mt-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-sm',
+                                    activeNavSelection === 'new'
+                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-2 ring-indigo-400/50'
+                                        : 'bg-slate-900 hover:bg-slate-800 text-white hover:shadow-md hover:scale-[1.01]'
+                                ]"
+                            >
+                                <span class="text-sm leading-none">➕</span>
+                                <span>Add New Custom Page</span>
+                            </button>
+                        </div>
+
+                        <!-- Management & Tools Group -->
+                        <div class="border-t border-slate-100 pt-4 space-y-1">
+                            <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Management</div>
+                            <div class="space-y-1 text-xs font-bold">
+                                <button
+                                    @click="requestNavigation('settings')"
+                                    :class="[
+                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
+                                        activeNavSelection === 'settings' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                    ]"
+                                >
+                                    <span>⚙️</span> Website & SEO Settings
+                                </button>
+
+                                <button
+                                    @click="requestNavigation('themes')"
+                                    :class="[
+                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
+                                        activeNavSelection === 'themes' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                    ]"
+                                >
+                                    <span>🎨</span> Website Themes
+                                </button>
+
+                                <button
+                                    @click="requestNavigation('overview')"
+                                    :class="[
+                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
+                                        activeNavSelection === 'overview' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                    ]"
+                                >
+                                    <span>📋</span> Manage Pages
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Right Main Content Panel -->
+                <div class="lg:col-span-3 space-y-6">
+
+                    <!-- View Mode Container (Edit / Live Preview Toggle) -->
+                    <div v-if="activeNavSelection !== 'overview' && activeNavSelection !== 'settings' && activeNavSelection !== 'themes'" class="space-y-6">
+
+                        <!-- View Mode Selector Header Card -->
+                        <div class="bg-white px-6 py-4 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between gap-4 flex-wrap">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-900">
+                                    {{ form.id ? form.title : 'New Page' }}
+                                </h2>
+                                <span class="text-xs text-slate-400 font-mono">/site/{{ club.slug }}/{{ form.slug }}</span>
+                            </div>
+
+                            <!-- Segmented Pill Control: Edit vs Live Preview -->
+                            <div class="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner">
+                                <button
+                                    type="button"
+                                    @click="pageViewMode = 'edit'"
+                                    :class="[
+                                        'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
+                                        pageViewMode === 'edit' ? 'bg-white text-indigo-700 shadow-md shadow-slate-200' : 'text-slate-600 hover:text-slate-900'
+                                    ]"
+                                >
+                                    <span>✏️ Edit Builder</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="pageViewMode = 'preview'"
+                                    :class="[
+                                        'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
+                                        pageViewMode === 'preview' ? 'bg-amber-400 text-amber-950 shadow-md shadow-amber-500/20' : 'text-slate-600 hover:text-slate-900'
+                                    ]"
+                                >
+                                    <span>👁️ Live Preview</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- SUB-VIEW 1: EDIT BUILDER VIEW -->
+                        <div v-if="pageViewMode === 'edit'" class="space-y-6">
+                            
+                            <!-- Page Particulars Card -->
+                            <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                                    <div>
+                                        <h3 class="text-base font-bold text-slate-900">Page Particulars & Navigation Settings</h3>
+                                        <p class="text-xs text-slate-500 mt-0.5">Configure page title, permalink URL slug, and navigation visibility.</p>
+                                    </div>
+
+                                    <div class="flex items-center gap-2.5">
+                                        <button
+                                            @click="submitForm"
+                                            :disabled="form.processing"
+                                            :class="[
+                                                'px-4 py-2 font-bold text-xs rounded-xl shadow-md transition-all duration-300 flex items-center gap-2 cursor-pointer',
+                                                form.processing ? 'bg-indigo-500 text-white cursor-wait opacity-80' :
+                                                isSavedSuccess ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 scale-105 ring-2 ring-emerald-400/50' :
+                                                'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                                            ]"
+                                        >
+                                            <svg v-if="form.processing" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <svg v-else-if="isSavedSuccess" class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved!' : 'Save Page') }}</span>
+                                        </button>
+
+                                        <a v-if="form.id && form.slug" :href="form.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${form.slug}`" target="_blank" class="py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 transition-colors flex items-center gap-1.5">
+                                            <span>🔗 Preview Link</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-1.5">Page Title</label>
+                                        <input v-model="form.title" type="text" class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl p-3 text-slate-900 font-semibold outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="e.g. About Our Club" />
+                                    </div>
+
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1.5">
+                                            <label class="block font-bold text-slate-700 uppercase tracking-wider text-[11px]">URL Slug (Permalink)</label>
+                                            <span class="text-slate-300">|</span>
+                                            <span class="text-slate-400 font-mono text-[11px]">/site/{{ club.slug }}/</span>
+                                        </div>
+                                        <div>
+                                            <input v-model="form.slug" type="text" class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl p-3 text-slate-900 font-mono font-bold outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="about" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-6 pt-2 border-t border-slate-100">
+                                    <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                                        <input type="checkbox" v-model="form.is_published" :disabled="form.is_homepage || form.slug === 'home'" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-emerald-600 cursor-pointer disabled:opacity-50" />
+                                        <span>Published & Active</span>
+                                    </label>
+
+                                    <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 select-none">
+                                        <input type="checkbox" v-model="form.show_in_navigation" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 accent-indigo-600 cursor-pointer" />
+                                        <span>Show in Top Header Menu</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Reorderable Block Element Stack List -->
+                            <div class="space-y-3">
+                                <template v-for="(block, bIdx) in form.blocks" :key="block.id || bIdx">
+                                    
+                                    <!-- Insert Divider Above First Block (Index 0) -->
+                                    <div v-if="bIdx === 0" class="relative py-1 flex items-center justify-center insert-menu-container">
+                                        <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                                            <div class="w-full border-t border-dashed border-slate-200 hover:border-slate-300 transition-colors"></div>
+                                        </div>
+                                        <div class="relative flex justify-center">
+                                            <button
+                                                type="button"
+                                                @click.stop="toggleInsertMenu(0, $event)"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-sky-300 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
+                                            >
+                                                <span class="w-4 h-4 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-black">+</span>
+                                                <span>Insert block at top</span>
+                                            </button>
+
+                                            <!-- Insert Menu Dropdown Popover -->
+                                            <div
+                                                v-if="activeInsertIndex === 0"
+                                                :class="[
+                                                    'absolute z-40 w-[680px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 -translate-x-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
+                                                    insertMenuPlacement === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
+                                                ]"
+                                            >
+                                                <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                                                    <span>Insert Element Here</span>
+                                                    <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer p-1">✕</button>
+                                                </div>
+
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                                                    <div v-for="(col, cIdx) in blockColumns" :key="cIdx" class="space-y-1.5">
+                                                        <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                                                            {{ col.title }}
+                                                        </div>
+                                                        <div class="space-y-1">
+                                                            <button
+                                                                v-for="item in col.items"
+                                                                :key="item.type"
+                                                                type="button"
+                                                                @click="addBlock(item.type, 0)"
+                                                                class="w-full flex items-start gap-2.5 p-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 border border-slate-100 hover:border-sky-200 rounded-xl transition-all cursor-pointer group"
+                                                            >
+                                                                <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shrink-0 transition-transform group-hover:scale-110" :class="[item.bg, item.color]">
+                                                                    {{ item.icon }}
+                                                                </span>
+                                                                <div class="min-w-0">
+                                                                    <span class="block font-bold text-slate-900 group-hover:text-sky-600 transition-colors truncate">{{ item.label }}</span>
+                                                                    <span class="text-[10px] text-slate-400 font-normal leading-tight block line-clamp-2">{{ item.desc }}</span>
+                                                                </div>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Block Item Card Container -->
+                                    <div class="bg-white rounded-2xl border border-slate-200 shadow-md shadow-slate-200/60 overflow-hidden transition-all hover:shadow-lg">
+                                        
+                                        <!-- Block Header & Controls -->
+                                        <div class="flex items-center justify-between px-4 py-2.5 bg-slate-200/80 border-b border-slate-300/80 text-xs font-bold text-slate-800">
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-5 h-5 rounded bg-white text-slate-600 flex items-center justify-center text-[11px] font-black border border-slate-200">
+                                                    {{ bIdx + 1 }}
+                                                </span>
+
+                                                <!-- Type Badges -->
+                                                <span v-if="block.type === 'text' || block.type === 'rich_text'" class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px] uppercase font-bold">
+                                                    📝 Text Block
+                                                </span>
+                                                <span v-else-if="block.type === 'image'" class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 text-[10px] uppercase font-bold">
+                                                    🖼️ Single Image
+                                                </span>
+                                                <span v-else-if="block.type === 'images'" class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[10px] uppercase font-bold">
+                                                    🖼️ Image Gallery ({{ block.columns || 3 }} Cols)
+                                                </span>
+                                                <span v-else-if="block.type === 'notice'" class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold">
+                                                    📢 Callout Box
+                                                </span>
+                                                <span v-else-if="block.type === 'button'" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] uppercase font-bold">
+                                                    🔗 Button Link
+                                                </span>
+                                                <span v-else-if="block.type === 'hero'" class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] uppercase font-bold">
+                                                    🚀 Hero Banner
+                                                </span>
+                                                <span v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 text-[10px] uppercase font-bold">
+                                                    📰 News List ({{ String(block.columns) === 'masonry' ? 'Masonry' : (block.columns || 3) + ' Cols' }})
+                                                </span>
+                                                <span v-else-if="block.type === 'events_calendar'" class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[10px] uppercase font-bold">
+                                                    📅 Dynamic Events & Summons
+                                                </span>
+                                                <span v-else-if="block.type === 'pricing_cards'" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] uppercase font-bold">
+                                                    💳 Membership Dues
+                                                </span>
+                                                <span v-else-if="block.type === 'donation_campaign'" class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[10px] uppercase font-bold">
+                                                    💰 Dynamic Donation
+                                                </span>
+                                                <span v-else-if="block.type === 'contact_details'" class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold">
+                                                    📇 Contact Cards
+                                                </span>
+                                                <span v-else-if="block.type === 'contact_form'" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] uppercase font-bold">
+                                                    📝 Contact Form
+                                                </span>
+                                            </div>
+
+                                            <!-- Control Buttons (Up, Down, Duplicate, Delete) -->
+                                            <div class="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    @click="moveBlockUp(bIdx)"
+                                                    :disabled="bIdx === 0"
+                                                    class="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 cursor-pointer"
+                                                    title="Move Up"
+                                                >
+                                                    ▲
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    @click="moveBlockDown(bIdx)"
+                                                    :disabled="bIdx === form.blocks.length - 1"
+                                                    class="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 cursor-pointer"
+                                                    title="Move Down"
+                                                >
+                                                    ▼
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    @click="duplicateBlock(bIdx)"
+                                                    class="p-1 text-slate-500 hover:text-indigo-600 cursor-pointer"
+                                                    title="Duplicate Element"
+                                                >
+                                                    📋
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    @click="removeBlock(bIdx)"
+                                                    class="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                                                    title="Delete Element"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Block Body Editors -->
+                                        <div class="p-4 space-y-3">
+                                            
+                                            <!-- 1. Text / Rich Text Block -->
+                                            <div v-if="block.type === 'text' || block.type === 'rich_text'" class="space-y-3">
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 text-xs mb-1">Section Heading (Optional)</label>
+                                                    <input v-model="block.heading" type="text" placeholder="e.g. Our History & Mission" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold" />
+                                                </div>
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 text-xs mb-1">Body Text Content</label>
+                                                    <RichTextEditor v-model="block.content" placeholder="Write formatted text content here..." />
+                                                </div>
+                                            </div>
+
+                                            <!-- 2. Single Image Block -->
+                                            <div v-else-if="block.type === 'image'" class="space-y-3 text-xs">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    <div>
+                                                        <div class="flex items-center justify-between mb-1">
+                                                            <label class="block font-bold text-slate-700">Image URL</label>
+                                                            <div class="flex items-center gap-1.5">
+                                                                <button
+                                                                    v-if="block.url"
+                                                                    type="button"
+                                                                    @click="removeBlockImage(block)"
+                                                                    class="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold rounded-lg border border-rose-200 cursor-pointer"
+                                                                >
+                                                                    🗑️ Clear
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    @click="openMediaLibrary('block_image', block, 'pages')"
+                                                                    class="px-2 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-bold rounded-lg border border-sky-200 cursor-pointer"
+                                                                >
+                                                                    📁 Media Library
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Caption / Alt Text</label>
+                                                        <input v-model="block.caption" type="text" placeholder="e.g. Annual Dinner at the Lodge" class="w-full p-2 bg-white border border-slate-300 rounded-xl" />
+                                                    </div>
+                                                </div>
+
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white rounded-xl border border-slate-200">
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Image Positioning</label>
+                                                        <select v-model="block.position" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold">
+                                                            <option value="left">Left Aligned</option>
+                                                            <option value="center">Centered</option>
+                                                            <option value="right">Right Aligned</option>
+                                                            <option value="full">Full Width Banner</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Image Sizing</label>
+                                                        <select v-model="block.size" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold">
+                                                            <option value="small">Small (25% Width)</option>
+                                                            <option value="medium">Medium (50% Width)</option>
+                                                            <option value="large">Large (75% Width)</option>
+                                                            <option value="full">Full Container Width (100%)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div v-if="block.url" class="pt-2">
+                                                    <span class="text-[10px] font-bold text-slate-400 block mb-1">Preview Thumbnail:</span>
+                                                    <div :class="['flex', block.position === 'left' ? 'justify-start' : block.position === 'right' ? 'justify-end' : block.position === 'center' ? 'justify-center' : 'w-full']">
+                                                        <div :class="[
+                                                            'rounded-xl overflow-hidden border border-slate-200 bg-white p-1',
+                                                            block.size === 'small' ? 'w-1/4' : block.size === 'medium' ? 'w-1/2' : block.size === 'large' ? 'w-3/4' : 'w-full'
+                                                        ]">
+                                                            <img :src="block.url" class="w-full h-auto max-h-48 object-cover rounded-lg" />
+                                                            <p v-if="block.caption" class="text-[11px] text-center text-slate-500 italic mt-1">{{ block.caption }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- 3. Image Gallery Block -->
+                                            <div v-else-if="block.type === 'images'" class="space-y-3 text-xs">
+                                                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200">
+                                                    <div class="flex items-center gap-2">
+                                                        <label class="font-bold text-slate-700">Grid Columns Layout:</label>
+                                                        <select v-model="block.columns" class="p-1.5 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+                                                            <option :value="2">2 Columns</option>
+                                                            <option :value="3">3 Columns</option>
+                                                            <option :value="4">4 Columns</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        @click="addGalleryImage(block)"
+                                                        class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-xl border border-purple-200 transition-all cursor-pointer flex items-center gap-1"
+                                                    >
+                                                        ➕ Add Image Item
+                                                    </button>
+                                                </div>
+
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <div v-for="(gItem, gIdx) in block.items" :key="gItem.id || gIdx" class="p-3 bg-white rounded-xl border border-slate-200 space-y-2 relative">
+                                                        <div class="flex items-center justify-between">
+                                                            <span class="font-bold text-slate-600 text-[11px]">Image #{{ gIdx + 1 }}</span>
+                                                            <div class="flex items-center gap-1">
+                                                                <button
+                                                                    type="button"
+                                                                    @click="openMediaLibrary('gallery_image', gItem, 'pages')"
+                                                                    class="px-2 py-0.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-[10px] font-bold rounded-lg border border-purple-200 cursor-pointer"
+                                                                >
+                                                                    📁 Media Library
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    @click="removeGalleryImage(block, gIdx)"
+                                                                    class="text-rose-500 hover:text-rose-700 font-bold px-1 text-xs cursor-pointer"
+                                                                >
+                                                                    ✕
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <input v-model="gItem.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-[11px]" />
+                                                        <input v-model="gItem.caption" type="text" placeholder="Caption / Alt Text" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs" />
+
+                                                        <img v-if="gItem.url" :src="gItem.url" class="w-full h-24 object-cover rounded-lg border border-slate-200 mt-1" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- 4. Notice / Callout Box Block -->
+                                            <div v-else-if="block.type === 'notice'" class="space-y-3 text-xs">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Callout Style</label>
+                                                        <select v-model="block.style" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-semibold">
+                                                            <option value="info">💡 Info Box (Sky Blue)</option>
+                                                            <option value="warning">⚠️ Warning Box (Amber Gold)</option>
+                                                            <option value="important">❗ Important Notice (Rose Red)</option>
+                                                            <option value="success">✅ Success Box (Emerald Green)</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Box Header Title</label>
+                                                        <input v-model="block.title" type="text" placeholder="e.g. Important Announcement" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold" />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 mb-1">Notice Body Message</label>
+                                                    <textarea v-model="block.text" rows="3" placeholder="Write callout announcement text here..." class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-xs"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <!-- 5. Button Link Block -->
+                                            <div v-else-if="block.type === 'button'" class="space-y-3 text-xs">
+                                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Button Label</label>
+                                                        <input v-model="block.label" type="text" placeholder="e.g. Learn More →" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold" />
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Link Target URL</label>
+                                                        <input v-model="block.url" type="text" placeholder="https://..." class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Button Alignment</label>
+                                                        <select v-model="block.align" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-semibold">
+                                                            <option value="left">Left Aligned</option>
+                                                            <option value="center">Centered</option>
+                                                            <option value="right">Right Aligned</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- 6. Hero Banner Block -->
+                                            <div v-else-if="block.type === 'hero'" class="space-y-3 text-xs">
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 mb-1">Banner Title</label>
+                                                    <input v-model="block.title" placeholder="Hero Title" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                </div>
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 mb-1">Banner Subtitle</label>
+                                                    <input v-model="block.subtitle" placeholder="Hero Subtitle" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800" />
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">CTA Button Text</label>
+                                                        <input v-model="block.cta_text" placeholder="e.g. Join Us" class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800 w-full font-semibold" />
+                                                    </div>
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">CTA Button Target Link</label>
+                                                        <input v-model="block.cta_link" placeholder="e.g. /site/lodge-of-fraternity/join-us" class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800 w-full font-mono text-[11px]" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- 7. Dynamic News Feed & News List Block -->
+                                            <div v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="space-y-3 text-xs">
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 mb-1">Section Heading</label>
+                                                    <input v-model="block.heading" placeholder="e.g. Latest Club News & Articles" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                </div>
+
+                                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">News Layout & Columns</label>
+                                                        <select v-model="block.columns" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500">
+                                                            <option value="1">1 Column (Vertical List)</option>
+                                                            <option value="2">2 Columns Grid</option>
+                                                            <option value="3">3 Columns Grid (Default)</option>
+                                                            <option value="4">4 Columns Grid</option>
+                                                            <option value="masonry">Masonry Grid Layout</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Featured Image Position</label>
+                                                        <select v-model="block.image_position" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500">
+                                                            <option value="above">Image Above Content (Top Banner)</option>
+                                                            <option value="below">Image Below Content (Bottom Banner)</option>
+                                                            <option value="left">Image on Left (Horizontal Layout)</option>
+                                                            <option value="right">Image on Right (Horizontal Layout)</option>
+                                                            <option value="alternate">Alternate Left & Right</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Articles Per Page (Pagination)</label>
+                                                        <select v-model="block.limit" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500">
+                                                            <option :value="3">3 Articles per page</option>
+                                                            <option :value="6">6 Articles per page</option>
+                                                            <option :value="9">9 Articles per page</option>
+                                                            <option :value="12">12 Articles per page</option>
+                                                            <option :value="24">24 Articles per page</option>
+                                                            <option :value="999">Show All Articles (No pagination)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="p-3 bg-sky-50 border border-sky-200/80 rounded-xl text-sky-900 text-xs">
+                                                    ⚡ <strong>Dynamic Paginated News List:</strong> Renders published news items in a <strong>{{ String(block.columns) === 'masonry' ? 'Masonry Grid' : (block.columns || 3) + ' Column' }}</strong> with automatic Previous / Next page controls when articles exceed {{ block.limit == 999 ? 'all articles' : block.limit + ' per page' }}.
+                                                </div>
+                                            </div>
+
+                                            <!-- 8. Dynamic Events Calendar Block -->
+                                            <div v-else-if="block.type === 'events_calendar'" class="space-y-3 text-xs">
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 mb-1">Section Heading</label>
+                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                </div>
+                                                <div class="p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl text-emerald-900 text-xs">
+                                                    ⚡ <strong>Dynamic Events & Summons Feed:</strong> Automatically displays upcoming club events, dinners, and meetings.
+                                                </div>
+                                            </div>
+
+                                            <!-- 9. Dynamic Pricing Cards Block -->
+                                            <div v-else-if="block.type === 'pricing_cards'" class="space-y-3 text-xs">
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 mb-1">Section Heading</label>
+                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                </div>
+                                                <div class="p-3 bg-purple-50 border border-purple-200/80 rounded-xl text-purple-900 text-xs">
+                                                    ⚡ <strong>Dynamic Membership Dues:</strong> Automatically renders active membership plans and pricing packages configured in Club Settings.
+                                                </div>
+                                            </div>
+
+                                            <!-- 10. Dynamic Donation Campaign Block -->
+                                            <div v-else-if="block.type === 'donation_campaign'" class="space-y-3 text-xs">
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 mb-1">Section Heading</label>
+                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                </div>
+                                                <div class="p-3 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-900 text-xs">
+                                                    ⚡ <strong>Dynamic Fundraising Feed:</strong> Automatically renders active fundraising campaigns and progress bars.
+                                                </div>
+                                            </div>
+
+                                            <!-- 11. Contact Details Block -->
+                                            <div v-else-if="block.type === 'contact_details'" class="space-y-4 text-xs">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Eyebrow Subtitle</label>
+                                                        <input v-model="block.eyebrow" placeholder="e.g. CONTACT" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                    </div>
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Main Section Title</label>
+                                                        <input v-model="block.title" placeholder="e.g. Get in Touch" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 mb-1">Introductory Description</label>
+                                                    <textarea v-model="block.description" rows="2" placeholder="Introductory paragraph..." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium"></textarea>
+                                                </div>
+
+                                                <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-3">
+                                                    <div class="font-bold text-amber-900 text-xs flex items-center gap-1.5">
+                                                        <span>📇 Contact Cards Details</span>
+                                                        <span class="text-[10px] text-amber-700/70 font-normal">(Initial defaults loaded from Website Settings)</span>
+                                                    </div>
+
+                                                    <!-- Email Card -->
+                                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                        <div>
+                                                            <label class="block font-bold text-slate-700 mb-1">Email Heading</label>
+                                                            <input v-model="block.email_heading" placeholder="Email" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold" />
+                                                        </div>
+                                                        <div class="sm:col-span-2">
+                                                            <label class="block font-bold text-slate-700 mb-1">Contact Email</label>
+                                                            <input v-model="block.email" :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'Not configured')" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold" />
+                                                            <span class="text-[10px] text-slate-500 mt-1 block">Leave blank to automatically use the Contact Email from Organization Settings.</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Meeting Times Card -->
+                                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                        <div>
+                                                            <label class="block font-bold text-slate-700 mb-1">Times Heading</label>
+                                                            <input v-model="block.times_heading" placeholder="Meeting Times" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold" />
+                                                        </div>
+                                                        <div class="sm:col-span-2">
+                                                            <label class="block font-bold text-slate-700 mb-1">Meeting Times & Schedule</label>
+                                                            <textarea v-model="block.times" rows="2" placeholder="e.g. 7:00 pm, 4th Thursday..." class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold"></textarea>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Location Card -->
+                                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                        <div>
+                                                            <label class="block font-bold text-slate-700 mb-1">Location Heading</label>
+                                                            <input v-model="block.location_heading" placeholder="Location" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold" />
+                                                        </div>
+                                                        <div class="sm:col-span-2">
+                                                            <label class="block font-bold text-slate-700 mb-1">Full Address / Location</label>
+                                                            <textarea v-model="block.location" rows="3" placeholder="e.g. Masonic Hall, Street, Town..." class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- 12. Contact Form Block -->
+                                            <div v-else-if="block.type === 'contact_form'" class="space-y-4 text-xs">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Section Heading</label>
+                                                        <input v-model="block.heading" placeholder="e.g. Send Us a Message" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                    </div>
+                                                    <div>
+                                                        <label class="block font-bold text-slate-700 mb-1">Submit Button Label</label>
+                                                        <input v-model="block.button_text" placeholder="e.g. Send Message" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 mb-1">Subtitle / Instructions</label>
+                                                    <textarea v-model="block.subtitle" rows="2" placeholder="Subheading or instructions..." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium"></textarea>
+                                                </div>
+
+                                                <div class="p-3.5 bg-indigo-50/70 border border-indigo-200/80 rounded-xl space-y-3">
+                                                    <div class="font-bold text-indigo-900 text-xs flex items-center justify-between">
+                                                        <span>📬 Email Routing & Notification Settings</span>
+                                                    </div>
+
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label class="block font-bold text-slate-700 mb-1">Secretary / Recipient Email</label>
+                                                            <div class="space-y-1.5">
+                                                                <input 
+                                                                    v-model="block.recipient_email" 
+                                                                    type="email"
+                                                                    :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'secretary@' + club.slug + '.org.uk')" 
+                                                                    class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold text-xs" 
+                                                                />
+                                                                <div class="flex flex-wrap items-center gap-1.5 text-[10px]">
+                                                                    <button 
+                                                                        type="button" 
+                                                                        @click="block.recipient_email = ''"
+                                                                        class="px-2 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition-colors cursor-pointer"
+                                                                    >
+                                                                        ⚡ Use Organization Default (Dynamic)
+                                                                    </button>
+                                                                    <button 
+                                                                        v-if="settingsForm.contact_email || club.contact_email"
+                                                                        type="button" 
+                                                                        @click="block.recipient_email = settingsForm.contact_email || club.contact_email"
+                                                                        class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold border border-slate-200 transition-colors cursor-pointer"
+                                                                    >
+                                                                        ✉️ Fill: {{ settingsForm.contact_email || club.contact_email }}
+                                                                    </button>
+                                                                </div>
+                                                                <span class="text-[10px] text-slate-500 block leading-tight">
+                                                                    Form submissions route here. Leave blank to automatically use the Contact Email from Organization Settings ({{ settingsForm.contact_email || club.contact_email || 'Not configured' }}).
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <label class="block font-bold text-slate-700 mb-1">CC Email Addresses (Comma-separated)</label>
+                                                            <input v-model="block.cc_emails" placeholder="e.g. treasurer@lodge.org, assistant@lodge.org" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold text-xs" />
+                                                            <span class="text-[10px] text-slate-500 mt-1 block">Copies of form submissions will be sent here.</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                                                    <div class="font-bold text-slate-800 text-xs">
+                                                        ⚙️ Mandatory Field Rules (Admin Configuration)
+                                                    </div>
+
+                                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                        <label class="flex items-center gap-2 text-slate-700 font-semibold text-xs cursor-pointer">
+                                                            <input type="checkbox" v-model="block.name_required" class="w-4 h-4 rounded text-indigo-600 accent-indigo-600" />
+                                                            Name Required
+                                                        </label>
+                                                        <label class="flex items-center gap-2 text-slate-700 font-semibold text-xs cursor-pointer">
+                                                            <input type="checkbox" v-model="block.email_required" class="w-4 h-4 rounded text-indigo-600 accent-indigo-600" />
+                                                            Email Required
+                                                        </label>
+                                                        <label class="flex items-center gap-2 text-slate-700 font-semibold text-xs cursor-pointer">
+                                                            <input type="checkbox" v-model="block.phone_required" class="w-4 h-4 rounded text-indigo-600 accent-indigo-600" />
+                                                            Phone Required
+                                                        </label>
+                                                        <label class="flex items-center gap-2 text-slate-700 font-semibold text-xs cursor-pointer">
+                                                            <input type="checkbox" v-model="block.message_required" class="w-4 h-4 rounded text-indigo-600 accent-indigo-600" />
+                                                            Message Required
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label class="block font-bold text-slate-700 mb-1">Success Message Displayed on Submission</label>
+                                                    <input v-model="block.success_message" placeholder="e.g. Thank you! Your message has been sent successfully." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <!-- Insert Divider Below Block -->
+                                    <div class="relative py-1 flex items-center justify-center insert-menu-container">
+                                        <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                                            <div class="w-full border-t border-dashed border-slate-200 hover:border-slate-300 transition-colors"></div>
+                                        </div>
+                                        <div class="relative flex justify-center">
+                                            <button
+                                                type="button"
+                                                @click.stop="toggleInsertMenu(bIdx + 1, $event)"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-sky-300 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
+                                            >
+                                                <span class="w-4 h-4 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-black">+</span>
+                                                <span>Insert block here</span>
+                                            </button>
+
+                                            <!-- Insert Menu Dropdown Popover -->
+                                            <div
+                                                v-if="activeInsertIndex === bIdx + 1"
+                                                :class="[
+                                                    'absolute z-40 w-[680px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 -translate-x-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
+                                                    insertMenuPlacement === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
+                                                ]"
+                                            >
+                                                <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                                                    <span>Insert Element Here</span>
+                                                    <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer p-1">✕</button>
+                                                </div>
+
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                                                    <div v-for="(col, cIdx) in blockColumns" :key="cIdx" class="space-y-1.5">
+                                                        <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                                                            {{ col.title }}
+                                                        </div>
+                                                        <div class="space-y-1">
+                                                            <button
+                                                                v-for="item in col.items"
+                                                                :key="item.type"
+                                                                type="button"
+                                                                @click="addBlock(item.type, bIdx + 1)"
+                                                                class="w-full flex items-start gap-2.5 p-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 border border-slate-100 hover:border-sky-200 rounded-xl transition-all cursor-pointer group"
+                                                            >
+                                                                <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shrink-0 transition-transform group-hover:scale-110" :class="[item.bg, item.color]">
+                                                                    {{ item.icon }}
+                                                                </span>
+                                                                <div class="min-w-0">
+                                                                    <span class="block font-bold text-slate-900 group-hover:text-sky-600 transition-colors truncate">{{ item.label }}</span>
+                                                                    <span class="text-[10px] text-slate-400 font-normal leading-tight block line-clamp-2">{{ item.desc }}</span>
+                                                                </div>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div v-if="!form.blocks.length" class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-3">
+                                    <span class="text-3xl">🧩</span>
+                                    <p class="text-xs font-bold text-slate-500">No content elements added yet.</p>
+                                    <button type="button" @click="addBlock('text')" class="py-2 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md">
+                                        ➕ Add First Text Block
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Page Action Footer -->
+                            <div class="flex items-center justify-between pt-4">
+                                <button
+                                    v-if="form.id && !isDefaultPage(activePage)"
+                                    @click="triggerDeleteModal(activePage)"
+                                    type="button"
+                                    class="py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition-colors cursor-pointer"
+                                >
+                                    🗑️ Delete Custom Page
+                                </button>
+                                <span v-else class="text-xs text-slate-400 font-semibold">
+                                    ℹ️ Default system pages cannot be deleted (only published/unpublished).
                                 </span>
-                            </td>
-                            <td class="p-4">
-                                <span v-if="p.is_homepage" class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">HOMEPAGE</span>
-                                <span v-else class="text-slate-400">-</span>
-                            </td>
-                            <td class="p-4">
-                                <span v-if="p.is_published" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">PUBLISHED</span>
-                                <span v-else class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">DRAFT</span>
-                            </td>
-                            <td class="p-4 text-right space-x-2">
-                                <Link :href="`/clubs/${club.slug}/admin/pages/${p.id}/edit`" class="py-1.5 px-3 rounded-lg bg-indigo-600 text-white font-bold text-xs">
-                                    Edit Builder
-                                </Link>
-                                <a :href="p.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${p.slug}`" target="_blank" class="py-1.5 px-3 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200">
-                                    View
-                                </a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+
+                                <button
+                                    @click="submitForm"
+                                    :disabled="form.processing"
+                                    :class="[
+                                        'px-6 py-3 font-bold text-xs rounded-xl shadow-md transition-all duration-300 flex items-center gap-2 cursor-pointer',
+                                        form.processing ? 'bg-indigo-500 text-white cursor-wait opacity-80' :
+                                        isSavedSuccess ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 scale-105 ring-2 ring-emerald-400/50' :
+                                        'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                                    ]"
+                                >
+                                    <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved Successfully!' : '💾 Save & Publish Page') }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- SUB-VIEW 2: LIVE PREVIEW VIEW -->
+                        <div v-else-if="pageViewMode === 'preview'" class="space-y-4">
+                            <!-- Theme Preview Control Toolbar -->
+                            <div class="bg-slate-900 text-white p-4 sm:px-6 rounded-3xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+                                <div class="flex items-center gap-3 flex-wrap">
+                                    <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                                        <span>🎨 Previewing Theme:</span>
+                                    </span>
+                                    <select
+                                        :value="effectivePreviewThemeKey"
+                                        @change="e => activePreviewThemeId = e.target.value"
+                                        class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                                    >
+                                        <option v-for="t in THEMES" :key="t.id" :value="t.id">
+                                            {{ t.name }} {{ currentThemeKey === t.id ? '(Active Live)' : '' }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="flex items-center gap-2 shrink-0 flex-nowrap">
+                                    <button
+                                        v-if="effectivePreviewThemeKey !== currentThemeKey"
+                                        type="button"
+                                        @click="applyPreviewTheme()"
+                                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                                    >
+                                        <span>✨ Apply This Theme</span>
+                                    </button>
+                                    <a
+                                        :href="`/site/${club.slug}?preview_theme=${effectivePreviewThemeKey}`"
+                                        target="_blank"
+                                        class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                                    >
+                                        <span>🌐 Open Full Site ↗</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Preview Canvas Frame -->
+                            <div :class="['font-sans rounded-3xl p-6 sm:p-10 border space-y-12 overflow-hidden relative transition-colors duration-300', previewThemeClasses.container]">
+                                
+                                <!-- Website Nav Bar Mockup -->
+                                <div :class="['rounded-2xl p-4 border flex items-center justify-between transition-colors', previewThemeClasses.nav]">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs">
+                                            🏆
+                                        </div>
+                                        <div>
+                                            <div :class="['font-extrabold text-sm', previewThemeClasses.headingText]">{{ club.name }}</div>
+                                            <div v-if="club.tagline" class="text-[10px] opacity-75">{{ club.tagline }}</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span 
+                                            v-for="item in pages" 
+                                            :key="item.id"
+                                            :class="item.slug === form.slug || (form.is_homepage && item.is_homepage) ? previewThemeClasses.navActive : previewThemeClasses.navInactive"
+                                            class="px-2.5 py-1 rounded-lg text-xs"
+                                        >
+                                            {{ item.title }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Dynamic Blocks Render Engine -->
+                                <div class="space-y-12">
+                                    <div v-for="(block, index) in form.blocks" :key="index" class="w-full">
+                                        
+                                        <!-- 1. Hero Block -->
+                                        <section v-if="block.type === 'hero'" :class="['relative p-8 sm:p-12 rounded-3xl text-center overflow-hidden border transition-colors', previewThemeClasses.heroBg]">
+                                            <div class="relative z-10 max-w-2xl mx-auto space-y-4">
+                                                <div :class="['inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border', previewThemeClasses.heroPill]">
+                                                    Official Website
+                                                </div>
+                                                <h1 class="text-3xl sm:text-5xl font-black leading-tight">
+                                                    {{ block.title || 'Welcome' }}
+                                                </h1>
+                                                <p v-if="block.subtitle" class="opacity-90 text-base sm:text-lg">
+                                                    {{ block.subtitle }}
+                                                </p>
+                                                <div v-if="block.cta_text" class="pt-2">
+                                                    <span :class="['inline-block py-3 px-6 rounded-xl text-xs shadow-lg transition-transform hover:scale-105', previewThemeClasses.heroCta]">
+                                                        {{ block.cta_text }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <!-- 2. Text / Rich Text Block -->
+                                        <section v-else-if="block.type === 'text' || block.type === 'rich_text'" class="prose max-w-4xl mx-auto">
+                                            <h2 v-if="block.heading" :class="['text-2xl font-bold mb-3', previewThemeClasses.headingText]">{{ block.heading }}</h2>
+                                            <div :class="previewThemeClasses.bodyText" v-html="block.content"></div>
+                                        </section>
+
+                                    <!-- 3. Single Image Block -->
+                                    <section v-else-if="block.type === 'image' && block.url" class="max-w-4xl mx-auto">
+                                        <div :class="['flex', block.position === 'left' ? 'justify-start' : block.position === 'right' ? 'justify-end' : 'justify-center']">
+                                            <figure :class="[
+                                                'space-y-2',
+                                                block.size === 'small' ? 'w-1/3' : block.size === 'medium' ? 'w-1/2' : block.size === 'large' ? 'w-3/4' : 'w-full'
+                                            ]">
+                                                <img :src="block.url" :alt="block.caption || 'Image'" class="w-full h-auto rounded-2xl border border-slate-800 shadow-xl object-cover" />
+                                                <figcaption v-if="block.caption" class="text-xs text-center text-slate-400 italic">
+                                                    {{ block.caption }}
+                                                </figcaption>
+                                            </figure>
+                                        </div>
+                                    </section>
+
+                                    <!-- 4. Image Gallery Block -->
+                                    <section v-else-if="block.type === 'images' && block.items && block.items.length" class="max-w-5xl mx-auto space-y-3">
+                                        <div :class="[
+                                            'grid gap-4',
+                                            block.columns === 2 ? 'grid-cols-2' : block.columns === 4 ? 'grid-cols-4' : 'grid-cols-3'
+                                        ]">
+                                            <div v-for="(item, iIdx) in block.items" :key="iIdx" class="space-y-1.5">
+                                                <img v-if="item.url" :src="item.url" class="w-full h-40 object-cover rounded-xl border border-slate-800" />
+                                                <p v-if="item.caption" class="text-[11px] text-center text-slate-400 italic">{{ item.caption }}</p>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <!-- 5. Callout Box / Notice Block -->
+                                    <section v-else-if="block.type === 'notice'" class="max-w-3xl mx-auto">
+                                        <div :class="[
+                                            'p-5 rounded-2xl border space-y-1.5',
+                                            block.style === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' :
+                                            block.style === 'important' ? 'bg-rose-500/10 border-rose-500/30 text-rose-200' :
+                                            block.style === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' :
+                                            'bg-sky-500/10 border-sky-500/30 text-sky-200'
+                                        ]">
+                                            <h4 v-if="block.title" class="font-extrabold text-sm flex items-center gap-2">
+                                                <span>📢</span> {{ block.title }}
+                                            </h4>
+                                            <p class="text-xs font-medium leading-relaxed">{{ block.text }}</p>
+                                        </div>
+                                    </section>
+
+                                    <!-- 6. Button Link Block -->
+                                    <section v-else-if="block.type === 'button'" class="max-w-3xl mx-auto">
+                                        <div :class="['flex', block.align === 'left' ? 'justify-start' : block.align === 'right' ? 'justify-end' : 'justify-center']">
+                                            <span class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold text-xs shadow-md">
+                                                {{ block.label || 'Learn More →' }}
+                                            </span>
+                                        </div>
+                                    </section>
+
+                                    <!-- 7. Dynamic Membership Pricing Cards Block -->
+                                    <section v-else-if="block.type === 'pricing_cards'" class="max-w-5xl mx-auto space-y-4">
+                                        <h3 class="text-xl font-bold text-white text-center">{{ block.heading || 'Membership Options & Dues' }}</h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div v-for="plan in membershipPlans" :key="plan.id" class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+                                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase">
+                                                    {{ plan.billing_period }}
+                                                </span>
+                                                <h4 class="text-base font-bold text-white">{{ plan.name }}</h4>
+                                                <p class="text-xs text-slate-400">{{ plan.description }}</p>
+                                                <div class="pt-2 border-t border-slate-800 flex items-baseline justify-between">
+                                                    <span class="text-lg font-black text-white">£{{ plan.price }}</span>
+                                                    <span class="text-xs text-sky-400 font-bold">Subscribe →</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <!-- 8. Dynamic Donation Campaign Block -->
+                                    <section v-else-if="block.type === 'donation_campaign'" class="space-y-4">
+                                        <div v-for="d in donations" :key="d.id" class="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+                                            <div class="flex justify-between items-start">
+                                                <div>
+                                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
+                                                        🎁 Active Fundraising Campaign
+                                                    </span>
+                                                    <h3 class="text-xl font-black text-white mt-1">{{ d.campaign_name }}</h3>
+                                                </div>
+                                                <span class="py-2 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs">
+                                                    💖 Contribute
+                                                </span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <div class="w-full h-3 rounded-full bg-slate-950 border border-slate-800 overflow-hidden">
+                                                    <div class="h-full bg-gradient-to-r from-amber-500 to-emerald-400" :style="{ width: `${d.percentage}%` }"></div>
+                                                </div>
+                                                <div class="flex justify-between text-xs text-slate-400 font-medium">
+                                                    <span>Raised: £{{ d.current_amount }}</span>
+                                                    <span class="text-amber-400 font-bold">{{ d.percentage }}% Funded</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <!-- 9. Dynamic News Feed & News List Block -->
+                                    <section v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="space-y-4">
+                                        <h3 class="text-xl font-bold text-white">{{ block.heading || 'Latest Club News' }}</h3>
+                                        <div :class="getNewsGridClass(block)">
+                                            <template v-for="(post, pIdx) in getFilteredPosts(block)" :key="post.id">
+                                                
+                                                <!-- No Image Layout (Text-only card, no placeholder) -->
+                                                <div v-if="!post.cover_image_url" :class="['rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-1.5 flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
+                                                    <div class="space-y-1.5">
+                                                        <div class="flex items-center justify-between text-[10px] text-slate-400">
+                                                            <span v-if="post.author_name">By {{ post.author_name }}</span>
+                                                            <span>{{ post.published_at }}</span>
+                                                        </div>
+                                                        <h4 class="text-sm font-bold text-white leading-snug">{{ post.title }}</h4>
+                                                        <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ post.excerpt || post.content }}</p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Image Left Layout -->
+                                                <div v-else-if="getPostImagePos(block, pIdx) === 'left'" :class="['rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden grid grid-cols-1 sm:grid-cols-3 gap-0 transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
+                                                    <div class="sm:col-span-1 min-h-[140px] bg-slate-800 overflow-hidden relative">
+                                                        <img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" />
+                                                    </div>
+                                                    <div class="sm:col-span-2 p-4 space-y-2 flex flex-col justify-between">
+                                                        <div class="space-y-1.5">
+                                                            <div class="flex items-center justify-between text-[10px] text-slate-400">
+                                                                <span v-if="post.author_name">By {{ post.author_name }}</span>
+                                                                <span>{{ post.published_at }}</span>
+                                                            </div>
+                                                            <h4 class="text-sm font-bold text-white leading-snug">{{ post.title }}</h4>
+                                                            <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ post.excerpt || post.content }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Image Right Layout -->
+                                                <div v-else-if="getPostImagePos(block, pIdx) === 'right'" :class="['rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden grid grid-cols-1 sm:grid-cols-3 gap-0 transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
+                                                    <div class="sm:col-span-2 p-4 space-y-2 flex flex-col justify-between order-2 sm:order-1">
+                                                        <div class="space-y-1.5">
+                                                            <div class="flex items-center justify-between text-[10px] text-slate-400">
+                                                                <span v-if="post.author_name">By {{ post.author_name }}</span>
+                                                                <span>{{ post.published_at }}</span>
+                                                            </div>
+                                                            <h4 class="text-sm font-bold text-white leading-snug">{{ post.title }}</h4>
+                                                            <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ post.excerpt || post.content }}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="sm:col-span-1 min-h-[140px] bg-slate-800 overflow-hidden relative order-1 sm:order-2">
+                                                        <img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" />
+                                                    </div>
+                                                </div>
+
+                                                <!-- Image Below Layout -->
+                                                <div v-else-if="getPostImagePos(block, pIdx) === 'below'" :class="['rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
+                                                    <div class="p-4 space-y-1.5">
+                                                        <div class="flex items-center justify-between text-[10px] text-slate-400">
+                                                            <span v-if="post.author_name">By {{ post.author_name }}</span>
+                                                            <span>{{ post.published_at }}</span>
+                                                        </div>
+                                                        <h4 class="text-sm font-bold text-white leading-snug">{{ post.title }}</h4>
+                                                        <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ post.excerpt || post.content }}</p>
+                                                    </div>
+                                                    <div class="h-36 w-full bg-slate-800 overflow-hidden relative border-t border-slate-800">
+                                                        <img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" />
+                                                    </div>
+                                                </div>
+
+                                                <!-- Image Above Layout (Default) -->
+                                                <div v-else :class="['rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
+                                                    <div class="h-36 w-full bg-slate-800 overflow-hidden relative border-b border-slate-800">
+                                                        <img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" />
+                                                    </div>
+                                                    <div class="p-4 space-y-1.5">
+                                                        <div class="flex items-center justify-between text-[10px] text-slate-400">
+                                                            <span v-if="post.author_name">By {{ post.author_name }}</span>
+                                                            <span>{{ post.published_at }}</span>
+                                                        </div>
+                                                        <h4 class="text-sm font-bold text-white leading-snug">{{ post.title }}</h4>
+                                                        <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ post.excerpt || post.content }}</p>
+                                                    </div>
+                                                </div>
+
+                                            </template>
+                                        </div>
+
+                                        <!-- Pagination Bar -->
+                                        <div v-if="getNewsTotalPages(block) > 1" class="flex items-center justify-between pt-4 border-t border-slate-800">
+                                            <button
+                                                type="button"
+                                                @click="setNewsPage(block.id, getNewsCurrentPage(block.id) - 1)"
+                                                :disabled="getNewsCurrentPage(block.id) <= 1"
+                                                class="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-xs font-bold text-slate-300 border border-slate-800 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                                            >
+                                                ← Previous
+                                            </button>
+
+                                            <span class="text-xs font-bold text-slate-400">
+                                                Page <span class="text-white font-black">{{ getNewsCurrentPage(block.id) }}</span> of {{ getNewsTotalPages(block) }}
+                                            </span>
+
+                                            <button
+                                                type="button"
+                                                @click="setNewsPage(block.id, getNewsCurrentPage(block.id) + 1)"
+                                                :disabled="getNewsCurrentPage(block.id) >= getNewsTotalPages(block)"
+                                                class="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-xs font-bold text-slate-300 border border-slate-800 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                                            >
+                                                Next →
+                                            </button>
+                                        </div>
+                                    </section>
+
+                                    <!-- 10. Dynamic Events Calendar Block -->
+                                    <section v-else-if="block.type === 'events_calendar'" class="space-y-4">
+                                        <h3 class="text-xl font-bold text-white">{{ block.heading || 'Upcoming Events & Dinners' }}</h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div v-for="e in upcomingEvents" :key="e.id" class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+                                                <h4 class="text-sm font-bold text-white">{{ e.title }}</h4>
+                                                <p class="text-[11px] text-slate-400">📍 {{ e.location }} • 🕒 {{ e.starts_at }}</p>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <!-- 11. Contact Details Block -->
+                                    <section v-else-if="block.type === 'contact_details'" class="py-6 space-y-8 text-center">
+                                        <div class="max-w-3xl mx-auto space-y-2">
+                                            <span v-if="block.eyebrow" class="text-xs font-bold text-amber-500 uppercase tracking-widest block">{{ block.eyebrow }}</span>
+                                            <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">{{ block.title || 'Get in Touch' }}</h2>
+                                            <div class="w-12 h-1 bg-amber-500/80 mx-auto my-3 rounded-full"></div>
+                                            <p v-if="block.description" class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl mx-auto">{{ block.description }}</p>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                                            <!-- Email Card -->
+                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
+                                                <div class="w-12 h-12 rounded-full bg-slate-900 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
+                                                    ✉️
+                                                </div>
+                                                <h3 class="font-bold text-white text-base">{{ block.email_heading || 'Email' }}</h3>
+                                                <ObfuscatedEmail
+                                                    v-if="block.email || club.contact_email"
+                                                    :email="block.email || club.contact_email"
+                                                    custom-class="text-amber-400 hover:text-amber-300 font-semibold text-xs sm:text-sm break-all cursor-pointer transition-colors"
+                                                />
+                                                <span v-else class="text-slate-500 text-xs italic">No email address configured</span>
+                                            </div>
+
+                                            <!-- Meeting Times Card -->
+                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
+                                                <div class="w-12 h-12 rounded-full bg-slate-900 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
+                                                    📅
+                                                </div>
+                                                <h3 class="font-bold text-white text-base">{{ block.times_heading || 'Meeting Times' }}</h3>
+                                                <p v-if="block.times || club.meeting_formula" class="text-slate-300 text-xs sm:text-sm whitespace-pre-line leading-relaxed">
+                                                    {{ block.times || club.meeting_formula }}
+                                                </p>
+                                                <span v-else class="text-slate-500 text-xs italic">No meeting schedule configured</span>
+                                            </div>
+
+                                            <!-- Location Card -->
+                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
+                                                <div class="w-12 h-12 rounded-full bg-slate-900 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
+                                                    📍
+                                                </div>
+                                                <h3 class="font-bold text-white text-base">{{ block.location_heading || 'Location' }}</h3>
+                                                <p v-if="block.location || club.address" class="text-slate-300 text-xs sm:text-sm whitespace-pre-line leading-relaxed">
+                                                    {{ block.location || club.address }}
+                                                </p>
+                                                <span v-else class="text-slate-500 text-xs italic">No location address configured</span>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <!-- 12. Contact Form Preview -->
+                                    <section v-else-if="block.type === 'contact_form'" class="py-6 space-y-6 max-w-2xl mx-auto">
+                                        <div class="text-center space-y-2">
+                                            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">{{ block.heading || 'Send Us a Message' }}</h2>
+                                            <p v-if="block.subtitle" class="text-xs sm:text-sm text-slate-300">{{ block.subtitle }}</p>
+                                        </div>
+
+                                        <div class="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4 text-xs">
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-slate-300 font-bold mb-1">
+                                                        Your Name <span v-if="block.name_required" class="text-rose-400">*</span>
+                                                    </label>
+                                                    <input type="text" disabled placeholder="e.g. John Doe" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-400 opacity-80 cursor-not-allowed" />
+                                                </div>
+                                                <div>
+                                                    <label class="block text-slate-300 font-bold mb-1">
+                                                        Email Address <span v-if="block.email_required" class="text-rose-400">*</span>
+                                                    </label>
+                                                    <input type="email" disabled placeholder="e.g. john@example.org" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-400 opacity-80 cursor-not-allowed" />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-slate-300 font-bold mb-1">
+                                                    Phone Number <span v-if="block.phone_required" class="text-rose-400">*</span>
+                                                </label>
+                                                <input type="tel" disabled placeholder="e.g. +44 7123 456789" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-400 opacity-80 cursor-not-allowed" />
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-slate-300 font-bold mb-1">
+                                                    Message <span v-if="block.message_required" class="text-rose-400">*</span>
+                                                </label>
+                                                <textarea rows="4" disabled placeholder="Write your message here..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-400 opacity-80 cursor-not-allowed"></textarea>
+                                            </div>
+
+                                            <button type="button" disabled class="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-extrabold shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 cursor-not-allowed opacity-90">
+                                                <span>✉️ {{ block.button_text || 'Send Message' }}</span>
+                                            </button>
+
+                                            <div class="text-[11px] text-slate-500 text-center flex items-center justify-center gap-1">
+                                                <span>🔒 Submissions will route to:</span>
+                                                <strong class="text-slate-300">{{ block.recipient_email || settingsForm.contact_email || club.contact_email || club.email }}</strong>
+                                                <span v-if="block.cc_emails" class="text-slate-400">(CC: {{ block.cc_emails }})</span>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                </div>
+                            </div>
+
+                            <!-- Website Footer Mockup -->
+                            <div class="border-t border-slate-800 pt-8 text-center text-xs text-slate-500 space-y-1">
+                                <p>© 2026 {{ club.name }}. All rights reserved.</p>
+                                <p>Powered by ClubManager Multi-Tenant Platform</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- View Mode: Global Website & SEO Settings -->
+                    <div v-else-if="activeNavSelection === 'settings'" class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-900">🌐 Global Website & SEO Settings</h2>
+                                <p class="text-xs text-slate-500 mt-0.5">Manage custom domain, global search engine optimization, social links, and header/footer branding.</p>
+                            </div>
+                            <button
+                                type="button"
+                                @click="submitWebsiteSettings"
+                                :disabled="settingsForm.processing"
+                                class="py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                            >
+                                <span>💾 Save Website Settings</span>
+                            </button>
+                        </div>
+
+                        <!-- Saved Success Alert -->
+                        <div v-if="isSavedSuccess" class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center gap-2">
+                            <span>✅ Website settings saved successfully!</span>
+                        </div>
+
+                        <form @submit.prevent="submitWebsiteSettings" class="space-y-6 text-xs">
+                            
+                            <!-- Section 1: Custom Domain Setup -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Custom Domain Setup</h3>
+                                <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Custom Domain Name</label>
+                                        <input v-model="settingsForm.custom_domain" type="text" placeholder="e.g. members.oxfordboating.org" class="w-full sm:w-96 px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
+                                        <p class="text-[10px] text-slate-500 mt-1">Connect your custom domain (e.g. <code class="bg-slate-200 text-slate-800 px-1 py-0.5 rounded font-bold">members.oxfordboating.org</code>) to your club portal.</p>
+                                    </div>
+
+                                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2 text-amber-900">
+                                        <div class="font-bold text-xs">DNS Configuration Instructions:</div>
+                                        <p class="text-[11px]">Add a CNAME record at your DNS provider pointing your subdomain/domain to this server's target hostname.</p>
+                                        <div class="font-mono text-[11px] bg-white p-2.5 rounded-xl border border-amber-200 font-bold">
+                                            Host: @ or members • Type: CNAME • Target: manager.360fusionhosting.co.uk
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-100" />
+
+                            <!-- Section 2: Search Engine Optimization (SEO) -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Search Engine Optimization (SEO)</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Page Title Suffix</label>
+                                        <input v-model="settingsForm.seo_title_suffix" type="text" placeholder="| The Lodge of Fraternity" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        <p class="text-[10px] text-slate-400 mt-1">Appended to page titles in browser tabs and search engines.</p>
+                                    </div>
+
+                                    <div class="sm:col-span-2">
+                                        <label class="block font-bold text-slate-700 mb-1">Default Meta Description</label>
+                                        <textarea v-model="settingsForm.seo_meta_description" rows="3" placeholder="Official homepage for events, membership, news, and history." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-100" />
+
+                            <!-- Section 2: Header Navigation & Call to Action -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Header Navigation & Action Button</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Header CTA Button Text</label>
+                                        <input v-model="settingsForm.header_cta_text" type="text" placeholder="e.g. Join Our Club" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Header CTA Button Link</label>
+                                        <input v-model="settingsForm.header_cta_link" type="text" placeholder="e.g. /site/oxford-boating/join-us" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-100" />
+
+                            <!-- Section 3: Public Contact & Social Links -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Public Contact Details & Social Channels</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Public Contact Email</label>
+                                        <input v-model="settingsForm.contact_email" type="email" placeholder="admin@club.org" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Public Phone Number</label>
+                                        <input v-model="settingsForm.phone" type="text" placeholder="+44 20 7946 0912" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Facebook Page URL</label>
+                                        <input v-model="settingsForm.social_facebook" type="text" placeholder="https://facebook.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Instagram Profile URL</label>
+                                        <input v-model="settingsForm.social_instagram" type="text" placeholder="https://instagram.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                    </div>
+
+                                    <div class="sm:col-span-2">
+                                        <label class="block font-bold text-slate-700 mb-1">Twitter / X Handle URL</label>
+                                        <input v-model="settingsForm.social_twitter" type="text" placeholder="https://x.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-100" />
+
+                            <!-- Section 4: Footer Copyright -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Footer Copyright & Branding</h3>
+                                <div>
+                                    <label class="block font-bold text-slate-700 mb-1">Footer Copyright Line</label>
+                                    <input v-model="settingsForm.footer_copyright" type="text" placeholder="© 2026 Lodge of Fraternity. All rights reserved." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                </div>
+                            </div>
+
+                            <div class="pt-4 flex justify-end">
+                                <button
+                                    type="submit"
+                                    :disabled="settingsForm.processing"
+                                    class="py-3 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                                >
+                                    <span>💾 Save Website Settings</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- View Mode 3: Website Theme Selection Gallery -->
+                    <div v-else-if="activeNavSelection === 'themes'" class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4 flex-wrap gap-3">
+                            <div>
+                                <div class="flex items-center gap-2.5">
+                                    <h2 class="text-xl font-bold text-slate-900">🎨 Website Themes & Layout Designs</h2>
+                                    <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        Active: {{ THEMES.find(t => t.id === currentThemeKey)?.name || 'Classic Heritage' }}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">Select a theme layout to transform your public website appearance. All page content, news, events, and forms remain unchanged.</p>
+                            </div>
+                        </div>
+
+                        <!-- Theme Gallery Cards Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div 
+                                v-for="theme in THEMES" 
+                                :key="theme.id"
+                                :class="[
+                                    'rounded-3xl border p-6 space-y-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between',
+                                    currentThemeKey === theme.id ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg bg-indigo-50/20' : 'border-slate-200/90 hover:border-slate-300 bg-white shadow-sm hover:shadow-md'
+                                ]"
+                            >
+                                <!-- Card Header & Palette Preview -->
+                                <div class="space-y-4 pt-1">
+                                    <!-- Visual Header Mockup Bar -->
+                                    <div :class="['h-28 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden', theme.previewBg]">
+                                        <div :class="['flex items-center justify-between text-xs font-extrabold', theme.isLight ? 'text-slate-900' : 'text-white']">
+                                            <span class="flex items-center gap-1.5">
+                                                <span :class="['w-2.5 h-2.5 rounded-full', theme.isLight ? 'bg-indigo-600' : 'bg-amber-400']"></span>
+                                                <span class="drop-shadow-sm">{{ theme.name }}</span>
+                                            </span>
+                                            <span :class="['text-[9px] px-2 py-0.5 rounded font-black border', theme.isLight ? 'bg-slate-900/10 text-slate-900 border-slate-300' : 'bg-white/15 text-white border-white/30 backdrop-blur-md']">
+                                                Layout Preview
+                                            </span>
+                                        </div>
+
+                                        <div class="space-y-1">
+                                            <div :class="['w-3/4 h-3 rounded-full', theme.isLight ? 'bg-slate-900/70' : 'bg-white/80']"></div>
+                                            <div :class="['w-1/2 h-2 rounded-full', theme.isLight ? 'bg-slate-900/35' : 'bg-white/40']"></div>
+                                        </div>
+
+                                        <!-- Color Swatches Bar -->
+                                        <div class="flex items-center gap-1.5 pt-1">
+                                            <span v-for="(color, cIdx) in theme.palette" :key="cIdx" :style="{ backgroundColor: color }" class="w-4 h-4 rounded-full border border-slate-400/40 shadow-sm" :title="color"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                                            <h3 class="text-base font-extrabold text-slate-900">{{ theme.name }}</h3>
+                                            <span v-if="currentThemeKey === theme.id" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-600 text-white shadow-sm flex items-center gap-1">
+                                                ✓ ACTIVE LIVE THEME
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-600 leading-relaxed">{{ theme.description }}</p>
+                                    </div>
+
+                                    <!-- Feature Pills -->
+                                    <div class="flex flex-wrap gap-1.5 pt-1">
+                                        <span v-for="(feat, fIdx) in theme.features" :key="fIdx" class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-semibold border border-slate-200">
+                                            • {{ feat }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons Footer -->
+                                <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-2.5 mt-4 flex-wrap">
+                                    <div class="flex items-center gap-1.5">
+                                        <button
+                                            type="button"
+                                            @click="previewThemeInBuilder(theme)"
+                                            class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
+                                            title="Preview this theme in the Website Builder"
+                                        >
+                                            <span>👁️ Preview</span>
+                                        </button>
+                                        <a
+                                            :href="`/site/${club.slug}?preview_theme=${theme.id}`"
+                                            target="_blank"
+                                            class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
+                                            title="Open full live preview with this theme in a new tab"
+                                        >
+                                            <span>🌐 Live ↗</span>
+                                        </a>
+                                    </div>
+
+                                    <button
+                                        v-if="currentThemeKey === theme.id"
+                                        disabled
+                                        class="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold text-xs flex items-center gap-1.5 cursor-default"
+                                    >
+                                        <span>✓ Active Theme</span>
+                                    </button>
+
+                                    <button
+                                        v-else
+                                        type="button"
+                                        @click="openApplyThemeModal(theme)"
+                                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-1.5"
+                                    >
+                                        <span>✨ Select Theme</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- View Mode 4: All Pages Overview Table -->
+                    <div v-else class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-slate-100">
+                            <h2 class="text-base font-bold text-slate-900">Manage Pages</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Comprehensive view of all pages configured for {{ club.name }}.</p>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs whitespace-nowrap">
+                                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                                    <tr>
+                                        <th class="p-4 w-12 text-center">#</th>
+                                        <th class="p-4">Page Title</th>
+                                        <th class="p-4">URL Slug</th>
+                                        <th class="p-4">Blocks</th>
+                                        <th class="p-4">Status</th>
+                                        <th class="p-4 text-right min-w-[200px]">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-medium">
+                                    <tr v-for="(p, idx) in pages" :key="p.id" class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="p-4 text-center font-bold text-slate-400">
+                                            {{ idx + 1 }}
+                                        </td>
+
+                                        <td class="p-4 font-bold text-slate-900 flex items-center gap-2">
+                                            <span class="text-base">{{ getPageIcon(p) }}</span>
+                                            <span>{{ p.title }}</span>
+                                        </td>
+
+                                        <td class="p-4 font-mono text-slate-500">
+                                            /{{ p.slug }}
+                                        </td>
+
+                                        <td class="p-4">
+                                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                                {{ p.blocks ? p.blocks.length : 0 }} Blocks
+                                            </span>
+                                        </td>
+
+                                        <td class="p-4">
+                                            <span v-if="p.is_published" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">PUBLISHED</span>
+                                            <span v-else class="text-[10px] font-extrabold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">DRAFT</span>
+                                        </td>
+
+                                        <td class="p-4 text-right">
+                                            <div class="flex items-center justify-end gap-1.5 flex-nowrap">
+                                                <button
+                                                    @click="movePageUp(idx)"
+                                                    :disabled="idx <= 1"
+                                                    :class="[
+                                                        'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all cursor-pointer',
+                                                        idx <= 1 ? 'bg-slate-100 text-slate-300 opacity-40 cursor-not-allowed' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                                                    ]"
+                                                    :title="idx === 0 ? 'Home page is anchored at top' : (idx === 1 ? 'First non-home page' : 'Move page up')"
+                                                >
+                                                    ▲
+                                                </button>
+
+                                                <button
+                                                    @click="movePageDown(idx)"
+                                                    :disabled="idx === 0 || idx >= pages.length - 1"
+                                                    :class="[
+                                                        'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all cursor-pointer',
+                                                        (idx === 0 || idx >= pages.length - 1) ? 'bg-slate-100 text-slate-300 opacity-40 cursor-not-allowed' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                                                    ]"
+                                                    :title="idx === 0 ? 'Home page is anchored at top' : 'Move page down'"
+                                                >
+                                                    ▼
+                                                </button>
+
+                                                <button
+                                                    @click="togglePublishPage(p)"
+                                                    :disabled="p.is_homepage || p.slug === 'home'"
+                                                    :class="[
+                                                        'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all cursor-pointer',
+                                                        p.is_homepage ? 'bg-emerald-50 text-emerald-600 opacity-60 cursor-not-allowed' :
+                                                        p.is_published ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200'
+                                                    ]"
+                                                    :title="p.is_homepage ? 'Homepage must remain published' : (p.is_published ? 'Published - Click to hide/unpublish' : 'Hidden - Click to publish')"
+                                                >
+                                                    <svg v-if="p.is_published" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
+                                                    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a10.007 10.007 0 014.122-.963c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21m-4.225-4.225L3 3" />
+                                                    </svg>
+                                                </button>
+
+                                                <button
+                                                    @click="selectPageForEdit(p.id)"
+                                                    class="w-8 h-8 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+                                                    title="Edit Page Builder"
+                                                >
+                                                    ✏️
+                                                </button>
+
+                                                <button
+                                                    @click="selectPageForPreview(p.id)"
+                                                    class="w-8 h-8 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+                                                    title="Live Page Preview"
+                                                >
+                                                    👁️
+                                                </button>
+
+                                                <a
+                                                    :href="p.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${p.slug}`"
+                                                    target="_blank"
+                                                    class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 flex items-center justify-center text-xs font-bold transition-colors"
+                                                    title="Open Live Site in New Tab"
+                                                >
+                                                    🌐
+                                                </a>
+
+                                                <button
+                                                    v-if="!isDefaultPage(p)"
+                                                    @click="triggerDeleteModal(p)"
+                                                    class="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+                                                    title="Delete Custom Page"
+                                                >
+                                                    🗑️
+                                                </button>
+                                                <button
+                                                    v-else
+                                                    disabled
+                                                    class="w-8 h-8 rounded-xl bg-slate-50 text-slate-300 border border-slate-100 flex items-center justify-center text-xs opacity-40 cursor-not-allowed"
+                                                    title="Original default page cannot be deleted"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
 
         </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div v-if="showDeleteConfirmModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+                <h3 class="text-lg font-bold text-slate-900">Delete Page?</h3>
+                <p class="text-xs text-slate-600">Are you sure you want to delete <strong>{{ pageToDelete ? pageToDelete.title : form.title }}</strong>? This action cannot be undone.</p>
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button @click="showDeleteConfirmModal = false; pageToDelete = null;" class="py-2 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                    <button @click="confirmDeleteActivePage" class="py-2 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md cursor-pointer">Confirm Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spatie Media Library Modal Component -->
+        <MediaLibraryModal
+            :show="showMediaModal"
+            :club="club"
+            :default-folder="mediaDefaultFolder"
+            @close="showMediaModal = false"
+            @select="onMediaSelect"
+        />
+
+        <!-- Unsaved Changes Interception Modal -->
+        <Teleport to="body">
+            <div 
+                v-if="showUnsavedModal" 
+                class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
+            >
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 text-amber-600 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                            ⚠️
+                        </div>
+                        <div class="space-y-1 pt-0.5">
+                            <h3 class="text-lg font-black text-slate-900 leading-tight">Unsaved Changes</h3>
+                            <p class="text-xs font-semibold text-slate-500">
+                                You have modified <strong class="text-slate-900 font-bold">"{{ form.title || 'this page' }}"</strong>. 
+                                What would you like to do with your changes before leaving?
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2">
+                        <button
+                            @click="handleSaveAndProceed"
+                            :disabled="form.processing"
+                            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 flex items-center justify-between transition-all cursor-pointer disabled:opacity-50"
+                        >
+                            <span class="flex items-center gap-2">
+                                <span>💾</span>
+                                <span>{{ form.processing ? 'Saving Changes...' : 'Save Changes & Proceed' }}</span>
+                            </span>
+                            <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-black">Recommended</span>
+                        </button>
+
+                        <button
+                            @click="handleDiscardAndProceed"
+                            :disabled="form.processing"
+                            class="w-full py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                        >
+                            <span>🗑️</span>
+                            <span>Discard Changes & Switch Page</span>
+                        </button>
+
+                        <button
+                            @click="handleStayAndEdit"
+                            :disabled="form.processing"
+                            class="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                        >
+                            <span>✏️</span>
+                            <span>Stay & Continue Editing</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- Theme Apply Confirmation Modal -->
+        <Teleport to="body">
+            <div 
+                v-if="showThemeConfirmModal && selectedThemeForModal" 
+                class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
+            >
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-100 border border-indigo-200 text-indigo-600 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                            🎨
+                        </div>
+                        <div class="space-y-1 pt-0.5">
+                            <h3 class="text-lg font-black text-slate-900 leading-tight">Apply New Website Theme?</h3>
+                            <p class="text-xs font-semibold text-slate-500">
+                                You are about to switch your active design to <strong class="text-indigo-600 font-bold">"{{ selectedThemeForModal.name }}"</strong>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 bg-amber-50 border border-amber-200/80 rounded-2xl text-xs space-y-1.5">
+                        <div class="font-bold text-amber-900 flex items-center gap-1.5">
+                            <span>⚠️ Notice</span>
+                        </div>
+                        <p class="text-amber-800 text-[11px] leading-relaxed">
+                            This will immediately change the visual appearance, color scheme, and layout of your live public site. 
+                            <strong>All your existing pages, news, events, and forms will stay intact.</strong>
+                        </p>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-2">
+                        <button
+                            @click="showThemeConfirmModal = false; selectedThemeForModal = null;"
+                            :disabled="themeForm.processing"
+                            class="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            @click="confirmApplyTheme"
+                            :disabled="themeForm.processing"
+                            class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-2"
+                        >
+                            <span>{{ themeForm.processing ? 'Applying Theme...' : '✨ Apply Theme to Live Site' }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
 
     </AdminLayout>
 </template>
