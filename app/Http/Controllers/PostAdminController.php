@@ -118,17 +118,20 @@ class PostAdminController extends Controller
         if ($request->hasFile('new_attachments')) {
             foreach ($request->file('new_attachments') as $file) {
                 if ($file && $file->isValid()) {
-                    $media = $club->addMedia($file)->toMediaCollection('news');
+                    $name = $file->getClientOriginalName();
                     $bytes = $file->getSize();
+                    $mime = $file->getClientMimeType();
+
+                    $media = $club->addMedia($file)->toMediaCollection('news');
                     $sizeFormatted = $bytes >= 1048576 
                         ? round($bytes / 1048576, 1) . ' MB' 
                         : round($bytes / 1024, 1) . ' KB';
 
                     $attachments[] = [
-                        'name' => $file->getClientOriginalName(),
+                        'name' => $name,
                         'url' => "/storage/{$media->id}/{$media->file_name}",
                         'size' => $sizeFormatted,
-                        'mime_type' => $file->getMimeType(),
+                        'mime_type' => $mime,
                     ];
                 }
             }

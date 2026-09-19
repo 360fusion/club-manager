@@ -114,12 +114,16 @@ class UpdateAdminController extends Controller
         if ($request->hasFile('attachment_files')) {
             foreach ($request->file('attachment_files') as $file) {
                 if ($file && $file->isValid()) {
+                    $name = $file->getClientOriginalName();
+                    $bytes = $file->getSize();
+                    $mime = $file->getClientMimeType();
+
                     $media = $club->addMedia($file)->toMediaCollection('updates');
                     $attachments[] = [
-                        'name' => $file->getClientOriginalName(),
+                        'name' => $name,
                         'url' => "/storage/{$media->id}/{$media->file_name}",
-                        'size' => $file->getSize(),
-                        'mime_type' => $file->getClientMimeType(),
+                        'size' => $bytes,
+                        'mime_type' => $mime,
                     ];
                 }
             }

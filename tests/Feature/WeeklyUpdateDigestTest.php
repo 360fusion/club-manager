@@ -114,4 +114,32 @@ class WeeklyUpdateDigestTest extends TestCase
             'status' => 'sent',
         ]);
     }
+
+    public function test_store_update_entry_with_attachment_files(): void
+    {
+        $club = $this->createClub();
+        $user = User::factory()->create();
+        $club->users()->attach($user->id, ['role' => 'admin']);
+
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('Summons.pdf', 100, 'application/pdf');
+
+        $response = $this->actingAs($user)
+            ->post(route('admin.updates.store', ['clubSlug' => $club->slug]), [
+                'title' => 'Visiting Summons Attachment Test',
+                'category' => 'summons',
+                'summary' => 'Test summary text.',
+                'status' => 'approved',
+                'attachment_files' => [$file],
+            ]);
+
+        $response->assertRedirect();
+
+        $update = ClubUpdate::where('club_id', $club->id)->first();
+        $this->assertNotNull($update);
+        $this->assertEquals('Visiting Summons Attachment Test', $update->title);
+        $this->assertNotEmpty($update->attachments);
+        $this->assertEquals('Summons.pdf', $update->attachments[0]['name']);
+    }
 }
