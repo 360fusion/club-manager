@@ -127,18 +127,18 @@ function dbEntry(code) {
         <div class="space-y-6">
 
             <!-- Page Header -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5 dark:border-slate-800">
                 <div>
-                    <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1">
-                        <Link :href="route('superadmin.dashboard')" class="hover:text-slate-900 transition">Dashboard</Link>
+                    <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">
+                        <Link :href="route('superadmin.dashboard')" class="hover:text-slate-900 transition dark:hover:text-white">Dashboard</Link>
                         <span>/</span>
-                        <span class="text-emerald-700 font-bold">US Grand Lodges</span>
+                        <span class="text-emerald-700 font-bold dark:text-emerald-400">US Grand Lodges</span>
                     </div>
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2 dark:text-white">
                         <span>🇺🇸</span>
                         <span>United States Grand Lodges</span>
                     </h1>
-                    <p class="text-xs text-slate-500 mt-0.5">
+                    <p class="text-xs text-slate-500 mt-0.5 dark:text-slate-400">
                         The United States has no national Grand Lodge. Each state and the District of Columbia operates a fully independent, sovereign Grand Lodge.
                     </p>
                 </div>
@@ -146,51 +146,51 @@ function dbEntry(code) {
 
             <!-- KPI Cards -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1">
-                    <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">Jurisdictions</span>
-                    <span class="text-2xl font-black text-slate-900 block">{{ TOTAL }}</span>
-                    <span class="text-[11px] text-slate-500 block font-medium">50 states + D.C.</span>
+                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1 dark:bg-slate-900 dark:border-slate-800">
+                    <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block dark:text-emerald-400">Jurisdictions</span>
+                    <span class="text-2xl font-black text-slate-900 block dark:text-white">{{ TOTAL }}</span>
+                    <span class="text-[11px] text-slate-500 block font-medium dark:text-slate-400">50 states + D.C.</span>
                 </div>
-                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1">
-                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">In Database</span>
-                    <span class="text-2xl font-black text-slate-900 block">{{ seededCount }}</span>
-                    <span class="text-[11px] text-slate-500 block font-medium">of {{ TOTAL }} seeded</span>
+                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1 dark:bg-slate-900 dark:border-slate-800">
+                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block dark:text-blue-400">In Database</span>
+                    <span class="text-2xl font-black text-slate-900 block dark:text-white">{{ seededCount }}</span>
+                    <span class="text-[11px] text-slate-500 block font-medium dark:text-slate-400">of {{ TOTAL }} seeded</span>
                 </div>
-                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1">
-                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Total Registered Lodges</span>
-                    <span class="text-2xl font-black text-slate-900 block">{{ totalClubs || '—' }}</span>
-                    <span class="text-[11px] text-slate-500 block font-medium">Across all US jurisdictions</span>
+                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1 dark:bg-slate-900 dark:border-slate-800">
+                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block dark:text-blue-400">Total Registered Lodges</span>
+                    <span class="text-2xl font-black text-slate-900 block dark:text-white">{{ totalClubs || '—' }}</span>
+                    <span class="text-[11px] text-slate-500 block font-medium dark:text-slate-400">Across all US jurisdictions</span>
                 </div>
-                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1">
-                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Oldest Jurisdiction</span>
-                    <span class="text-sm font-black text-slate-900 block leading-tight">Pennsylvania · {{ oldestFounded }}</span>
-                    <span class="text-[11px] text-slate-500 block font-medium">Earliest in North America</span>
+                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1 dark:bg-slate-900 dark:border-slate-800">
+                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block dark:text-blue-400">Oldest Jurisdiction</span>
+                    <span class="text-sm font-black text-slate-900 block leading-tight dark:text-white">Pennsylvania · {{ oldestFounded }}</span>
+                    <span class="text-[11px] text-slate-500 block font-medium dark:text-slate-400">Earliest in North America</span>
                 </div>
             </div>
 
             <!-- Search + Region Filter -->
-            <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-4">
+            <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-4 dark:bg-slate-900 dark:border-slate-800">
                 <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                     <div class="relative flex-1 max-w-md">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs dark:text-slate-400">
                             🔍
                         </div>
                         <input
                             v-model="searchQuery"
                             type="text"
                             placeholder="Search by state, code, city, or name..."
-                            class="w-full bg-slate-100 border border-slate-300 text-slate-900 placeholder-slate-400 text-xs rounded-xl pl-9 pr-8 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            class="w-full bg-slate-100 border border-slate-300 text-slate-900 placeholder-slate-400 text-xs rounded-xl pl-9 pr-8 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder-slate-500"
                         />
                         <button
                             v-if="searchQuery"
                             @click="searchQuery = ''"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-900 text-xs"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-900 text-xs dark:text-slate-400 dark:hover:text-white"
                         >
                             ✕
                         </button>
                     </div>
-                    <div class="text-xs text-slate-500 font-medium">
-                        Showing <strong class="text-slate-900">{{ filteredLodges.length }}</strong> of {{ TOTAL }} Grand Lodges
+                    <div class="text-xs text-slate-500 font-medium dark:text-slate-400">
+                        Showing <strong class="text-slate-900 dark:text-white">{{ filteredLodges.length }}</strong> of {{ TOTAL }} Grand Lodges
                     </div>
                 </div>
 
@@ -203,7 +203,7 @@ function dbEntry(code) {
                             'px-3 py-1.5 rounded-lg text-[11px] font-bold transition border',
                             activeRegion === region
                                 ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
-                                : 'bg-slate-100 text-slate-500 border-slate-300 hover:text-slate-900 hover:border-slate-400'
+                                : 'bg-slate-100 text-slate-500 border-slate-300 hover:text-slate-900 hover:border-slate-400 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:text-white dark:hover:border-slate-600'
                         ]"
                     >
                         {{ region }}
@@ -213,12 +213,12 @@ function dbEntry(code) {
             </div>
 
             <!-- Table -->
-            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl">
-                <div class="p-4 border-b border-slate-200 flex items-center justify-between">
-                    <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl dark:bg-slate-900 dark:border-slate-800">
+                <div class="p-4 border-b border-slate-200 flex items-center justify-between dark:border-slate-800">
+                    <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">
                         Showing {{ filteredLodges.length }} of {{ TOTAL }} US Grand Lodges
                     </h2>
-                    <span v-if="seededCount < TOTAL" class="text-[10px] text-amber-700 font-semibold">
+                    <span v-if="seededCount < TOTAL" class="text-[10px] text-amber-700 font-semibold dark:text-amber-400">
                         ⚠️ {{ TOTAL - seededCount }} not yet in database
                     </span>
                 </div>
@@ -226,7 +226,7 @@ function dbEntry(code) {
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-500 uppercase tracking-wider dark:bg-slate-900/60 dark:border-slate-800 dark:text-slate-400">
                                 <th class="py-3 px-4">Grand Lodge</th>
                                 <th class="py-3 px-3">State</th>
                                 <th class="py-3 px-3">Region</th>
@@ -238,76 +238,76 @@ function dbEntry(code) {
                                 <th class="py-3 px-3">Website</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-200 text-xs">
-                            <tr v-for="gl in filteredLodges" :key="gl.code" class="hover:bg-slate-50 transition group">
+                        <tbody class="divide-y divide-slate-200 text-xs dark:divide-slate-800">
+                            <tr v-for="gl in filteredLodges" :key="gl.code" class="hover:bg-slate-50 transition group dark:hover:bg-slate-800/40">
 
                                 <!-- Name -->
                                 <td class="py-3.5 px-4">
-                                    <div class="font-bold text-slate-900 group-hover:text-emerald-700 transition">{{ gl.name }}</div>
-                                    <div class="text-[10px] text-slate-500 mt-0.5">{{ gl.shortName }}</div>
+                                    <div class="font-bold text-slate-900 group-hover:text-emerald-700 transition dark:text-white dark:group-hover:text-emerald-400">{{ gl.name }}</div>
+                                    <div class="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">{{ gl.shortName }}</div>
                                 </td>
 
                                 <!-- State -->
                                 <td class="py-3.5 px-3">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800/50">
                                         🇺🇸 {{ gl.stateCode }}
                                     </span>
-                                    <div class="text-[10px] text-slate-500 mt-0.5">{{ gl.state }}</div>
+                                    <div class="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">{{ gl.state }}</div>
                                 </td>
 
                                 <!-- Region -->
-                                <td class="py-3.5 px-3 text-slate-500">
+                                <td class="py-3.5 px-3 text-slate-500 dark:text-slate-400">
                                     {{ gl.region }}
                                 </td>
 
                                 <!-- Code -->
-                                <td class="py-3.5 px-3 font-mono text-blue-600">
+                                <td class="py-3.5 px-3 font-mono text-blue-600 dark:text-blue-400">
                                     {{ gl.code }}
                                 </td>
 
                                 <!-- HQ -->
-                                <td class="py-3.5 px-3 text-slate-700 font-semibold">
+                                <td class="py-3.5 px-3 text-slate-700 font-semibold dark:text-slate-300">
                                     {{ gl.headquartersCity }}
                                 </td>
 
                                 <!-- Founded -->
-                                <td class="py-3.5 px-3 text-slate-500">
+                                <td class="py-3.5 px-3 text-slate-500 dark:text-slate-400">
                                     {{ gl.founded }}
                                 </td>
 
                                 <!-- Lodge Count -->
                                 <td class="py-3.5 px-3">
-                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60">
                                         {{ gl.lodgeCount }}
                                     </span>
                                 </td>
 
                                 <!-- DB Status -->
                                 <td class="py-3.5 px-3">
-                                    <span v-if="dbEntry(gl.code)" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded border border-emerald-200">
+                                    <span v-if="dbEntry(gl.code)" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800/50">
                                         ✓ Seeded
                                     </span>
-                                    <span v-else class="px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-bold rounded border border-rose-200">
+                                    <span v-else class="px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-bold rounded border border-rose-200 dark:bg-rose-950/50 dark:text-rose-400 dark:border-rose-800/50">
                                         ✗ Missing
                                     </span>
                                 </td>
 
                                 <!-- Website -->
                                 <td class="py-3.5 px-3">
-                                    <a v-if="gl.website" :href="gl.website" target="_blank" rel="noopener" class="text-blue-600 hover:underline flex items-center gap-1 whitespace-nowrap">
+                                    <a v-if="gl.website" :href="gl.website" target="_blank" rel="noopener" class="text-blue-600 hover:underline flex items-center gap-1 whitespace-nowrap dark:text-blue-400">
                                         <span>Website</span>
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                         </svg>
                                     </a>
-                                    <span v-else class="text-slate-400 text-[11px]">None known</span>
+                                    <span v-else class="text-slate-400 text-[11px] dark:text-slate-500">None known</span>
                                 </td>
                             </tr>
 
                             <tr v-if="filteredLodges.length === 0">
-                                <td colspan="9" class="py-12 px-4 text-center text-slate-500 space-y-2">
+                                <td colspan="9" class="py-12 px-4 text-center text-slate-500 space-y-2 dark:text-slate-400">
                                     <span class="text-2xl block">🔍</span>
-                                    <p class="font-bold text-sm text-slate-700">No Grand Lodges found matching your search</p>
+                                    <p class="font-bold text-sm text-slate-700 dark:text-slate-300">No Grand Lodges found matching your search</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -316,13 +316,13 @@ function dbEntry(code) {
             </div>
 
             <!-- Info footer -->
-            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 dark:bg-amber-950/30 dark:border-amber-800/40">
                 <span class="text-lg mt-0.5">ℹ️</span>
-                <p class="text-xs text-amber-800 leading-relaxed">
-                    <span class="font-bold text-amber-700">Note:</span>
+                <p class="text-xs text-amber-800 leading-relaxed dark:text-amber-300">
+                    <span class="font-bold text-amber-700 dark:text-amber-400">Note:</span>
                     These {{ TOTAL }} Grand Lodges are all fully sovereign — equivalent in standing to UGLE itself. None is subordinate to another, and there is no national American Grand Lodge.
                     Lodges hold their warrant directly from their state Grand Lodge. Mutual recognition is coordinated through the
-                    <span class="font-semibold text-slate-900">Conference of Grand Masters of Masons in North America</span> (advisory only).
+                    <span class="font-semibold text-slate-900 dark:text-white">Conference of Grand Masters of Masons in North America</span> (advisory only).
                     Prince Hall Affiliation Grand Lodges form a separate parallel system and are not listed here.
                 </p>
             </div>
