@@ -17,31 +17,45 @@ class SubscriptionIndex extends Component
     use WithPagination;
 
     public string $clubSlug;
+
     public string $search = '';
+
     public int $selectedYear = 2026;
+
     public ?string $statusFilter = null;
 
     // Modals visibility
     public bool $showBillingModal = false;
+
     public bool $showTierModal = false;
+
     public bool $showPaymentModal = false;
+
     public bool $showArrearsModal = false;
 
     // Annual Billing Run Form
     public int $billing_year = 2026;
+
     public ?string $billing_due_date = null;
 
     // Tier Form
     public ?int $tierId = null;
+
     public string $tier_name = '';
+
     public string $tier_amount = '160.00';
+
     public string $tier_description = '';
+
     public bool $tier_active = true;
 
     // Payment Form
     public ?int $selectedSubscriptionId = null;
+
     public string $payment_amount = '0.00';
+
     public string $payment_reference = '';
+
     public string $payment_notes = '';
 
     public function mount(string $clubSlug): void
@@ -88,7 +102,7 @@ class SubscriptionIndex extends Component
             Carbon::parse($this->billing_due_date)
         );
 
-        session()->flash('success', "Annual billing run completed for {$this->billing_year}: {$result['created_count']} new invoices created (£" . number_format($result['total_billed'], 2) . " total billed), {$result['skipped_count']} existing skipped.");
+        session()->flash('success', "Annual billing run completed for {$this->billing_year}: {$result['created_count']} new invoices created (£".number_format($result['total_billed'], 2)." total billed), {$result['skipped_count']} existing skipped.");
         $this->showBillingModal = false;
         $this->selectedYear = $this->billing_year;
     }
@@ -158,7 +172,7 @@ class SubscriptionIndex extends Component
 
         $this->selectedSubscriptionId = $sub->id;
         $this->payment_amount = (string) $sub->balance_due;
-        $this->payment_reference = 'BAC-' . Carbon::now()->format('Ymd');
+        $this->payment_reference = 'BAC-'.Carbon::now()->format('Ymd');
         $this->payment_notes = '';
         $this->showPaymentModal = true;
     }
@@ -181,7 +195,7 @@ class SubscriptionIndex extends Component
             $this->payment_notes
         );
 
-        session()->flash('success', "Payment of £" . number_format((float)$this->payment_amount, 2) . " recorded for {$sub->member->full_name}.");
+        session()->flash('success', 'Payment of £'.number_format((float) $this->payment_amount, 2)." recorded for {$sub->member->full_name}.");
         $this->showPaymentModal = false;
     }
 
@@ -191,7 +205,7 @@ class SubscriptionIndex extends Component
         $sub = MemberSubscription::where('club_id', $club->id)->findOrFail($subscriptionId);
         $sub->update([
             'status' => SubscriptionStatus::Waived,
-            'notes' => trim(($sub->notes ?? '') . "\nDues waived by Lodge Secretary on " . Carbon::now()->format('Y-m-d')),
+            'notes' => trim(($sub->notes ?? '')."\nDues waived by Lodge Secretary on ".Carbon::now()->format('Y-m-d')),
         ]);
 
         session()->flash('success', "Dues waived for {$sub->member->full_name}.");
@@ -202,7 +216,7 @@ class SubscriptionIndex extends Component
         $club = $this->getClub();
         $arrearsList = $billingService->checkRule181Arrears($club, 90);
 
-        session()->flash('success', "Rule 181 Arrears Audit completed: " . $arrearsList->count() . " members identified with statutory arrears warning.");
+        session()->flash('success', 'Rule 181 Arrears Audit completed: '.$arrearsList->count().' members identified with statutory arrears warning.');
         $this->showArrearsModal = true;
     }
 
@@ -230,16 +244,16 @@ class SubscriptionIndex extends Component
             ->where('club_id', $club->id)
             ->year($this->selectedYear);
 
-        if (!empty($this->search)) {
-            $term = '%' . trim($this->search) . '%';
+        if (! empty($this->search)) {
+            $term = '%'.trim($this->search).'%';
             $query->whereHas('member', function ($q) use ($term) {
                 $q->where('first_name', 'like', $term)
-                  ->orWhere('last_name', 'like', $term)
-                  ->orWhere('email', 'like', $term);
+                    ->orWhere('last_name', 'like', $term)
+                    ->orWhere('email', 'like', $term);
             });
         }
 
-        if (!empty($this->statusFilter)) {
+        if (! empty($this->statusFilter)) {
             $query->where('status', $this->statusFilter);
         }
 
@@ -272,7 +286,7 @@ class SubscriptionIndex extends Component
             'activeMembers' => $activeMembers,
             'statuses' => SubscriptionStatus::cases(),
         ])->layout('components.layouts.app', [
-            'title' => 'Subscriptions — ' . $club->name,
+            'title' => 'Subscriptions — '.$club->name,
             'club' => $club,
         ]);
     }

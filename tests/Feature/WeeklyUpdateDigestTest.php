@@ -8,6 +8,8 @@ use App\Models\ClubUpdate;
 use App\Models\User;
 use App\Services\WeeklyUpdateDigestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class WeeklyUpdateDigestTest extends TestCase
@@ -27,7 +29,7 @@ class WeeklyUpdateDigestTest extends TestCase
         return Club::create([
             'club_type_id' => $clubType->id,
             'name' => 'Oxford Apollo Lodge',
-            'slug' => 'oxford-apollo-' . uniqid(),
+            'slug' => 'oxford-apollo-'.uniqid(),
             'lodge_number' => '357',
             'is_active' => true,
         ]);
@@ -74,11 +76,11 @@ class WeeklyUpdateDigestTest extends TestCase
             'summary' => 'Provincial Grand Lodge announcements and circulars.',
             'status' => 'approved',
             'attachments' => [
-                ['name' => 'Bulletin PDF', 'url' => 'https://example.com/bulletin.pdf']
+                ['name' => 'Bulletin PDF', 'url' => 'https://example.com/bulletin.pdf'],
             ],
         ]);
 
-        $digestService = new WeeklyUpdateDigestService();
+        $digestService = new WeeklyUpdateDigestService;
         $newsletter = $digestService->dispatchWeeklyDigest($club);
 
         $this->assertNotNull($newsletter);
@@ -121,9 +123,9 @@ class WeeklyUpdateDigestTest extends TestCase
         $user = User::factory()->create();
         $club->users()->attach($user->id, ['role' => 'admin']);
 
-        \Illuminate\Support\Facades\Storage::fake('public');
+        Storage::fake('public');
 
-        $file = \Illuminate\Http\UploadedFile::fake()->create('Summons.pdf', 100, 'application/pdf');
+        $file = UploadedFile::fake()->create('Summons.pdf', 100, 'application/pdf');
 
         $response = $this->actingAs($user)
             ->post(route('admin.updates.store', ['clubSlug' => $club->slug]), [

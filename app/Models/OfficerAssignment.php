@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OfficerAssignment extends Model
 {
@@ -20,31 +21,32 @@ class OfficerAssignment extends Model
         'suffix_titles',
     ];
 
-    public function club()
+    public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
-    public function meeting()
+    public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class);
     }
 
-    public function officerRole()
+    public function officerRole(): BelongsTo
     {
         return $this->belongsTo(OfficerRole::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function getFormattedNameAttribute()
+    public function getFormattedNameAttribute(): string
     {
         $name = $this->user ? $this->user->name : $this->custom_name;
-        $prefix = $this->prefix_titles ? $this->prefix_titles . ' ' : '';
-        $suffix = $this->suffix_titles ? ', ' . $this->suffix_titles : '';
+        $prefix = $this->prefix_titles ? $this->prefix_titles.' ' : '';
+        $suffix = $this->suffix_titles ? ', '.$this->suffix_titles : '';
+
         return trim("{$prefix}{$name}{$suffix}");
     }
 }

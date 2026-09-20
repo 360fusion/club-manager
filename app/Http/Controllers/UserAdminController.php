@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
+use App\Domains\ClubAccounting\Enums\MembershipStatus;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Mail\MemberInvitationMail;
 use App\Models\Club;
 use App\Models\Invoice;
@@ -207,7 +210,7 @@ class UserAdminController extends Controller
 
         // Sync with club_acc_members domain roster
         $nameParts = explode(' ', trim($user->name), 2);
-        \App\Domains\ClubAccounting\Models\Member::firstOrCreate(
+        Member::firstOrCreate(
             [
                 'club_id' => $club->id,
                 'email' => strtolower($user->email),
@@ -218,8 +221,8 @@ class UserAdminController extends Controller
                 'last_name' => $nameParts[1] ?? '',
                 'title' => 'Bro',
                 'masonic_rank' => $validated['rank'] ?? 'Bro',
-                'membership_status' => \App\Domains\ClubAccounting\Enums\MembershipStatus::Active,
-                'current_office' => \App\Domains\ClubAccounting\Enums\LodgeOffice::Member,
+                'membership_status' => MembershipStatus::Active,
+                'current_office' => LodgeOffice::Member,
             ]
         );
 
@@ -227,6 +230,7 @@ class UserAdminController extends Controller
             $acceptUrl = route('invitation.accept', ['slug' => $club->slug, 'token' => $token]);
             try {
                 Mail::to($user->email)->send(new MemberInvitationMail($club, $user, $token, $acceptUrl));
+
                 return redirect()->back()->with('success', "Member added to roster & invitation email sent to {$user->email}.");
             } catch (\Exception $e) {
                 return redirect()->back()->with('success', "Member added to roster. Invitation link: {$acceptUrl}");
@@ -260,6 +264,7 @@ class UserAdminController extends Controller
 
         try {
             Mail::to($user->email)->send(new MemberInvitationMail($club, $user, $token, $acceptUrl));
+
             return redirect()->back()->with('success', "Invitation email sent successfully to {$user->email}.");
         } catch (\Exception $e) {
             return redirect()->back()->with('success', "Invitation token created. Share activation link: {$acceptUrl}");
@@ -309,7 +314,7 @@ class UserAdminController extends Controller
             'committee_role' => 'nullable|in:chair,secretary,member',
         ]);
 
-        $roleValue = !empty($validated['committee_role']) ? $validated['committee_role'] : null;
+        $roleValue = ! empty($validated['committee_role']) ? $validated['committee_role'] : null;
 
         $club->users()->updateExistingPivot($userId, ['committee_role' => $roleValue]);
 

@@ -22,15 +22,15 @@ class CandidateTransitionService
 
         return DB::transaction(function () use ($candidate, $targetStage, $attributes) {
             // Apply any provided attributes (e.g. proposer, seconder, notes, statutory declarations)
-            if (!empty($attributes)) {
+            if (! empty($attributes)) {
                 $candidate->fill($attributes);
             }
 
             // Stage specific rules
             if ($targetStage === CandidateStage::LodgeCommittee) {
                 // Statutory requirement for committee vetting: Proposer & Seconder required
-                if (!$candidate->proposer_member_id || !$candidate->seconder_member_id) {
-                    throw new InvalidArgumentException("Candidate requires both a proposer and seconder before moving to Lodge Committee.");
+                if (! $candidate->proposer_member_id || ! $candidate->seconder_member_id) {
+                    throw new InvalidArgumentException('Candidate requires both a proposer and seconder before moving to Lodge Committee.');
                 }
             }
 
@@ -44,6 +44,7 @@ class CandidateTransitionService
                 $candidate->save();
 
                 $this->convertCandidateToMember($candidate, $initDate);
+
                 return $candidate->fresh();
             }
 

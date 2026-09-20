@@ -16,12 +16,16 @@ class BankImportIndex extends Component
     use WithFileUploads, WithPagination;
 
     public string $clubSlug;
+
     public string $search = '';
+
     public ?string $statusFilter = null;
 
     // File Upload & Preview State
     public $statementFile;
+
     public ?array $previewBundle = null;
+
     public bool $showPreviewModal = false;
 
     public function mount(string $clubSlug): void
@@ -55,7 +59,7 @@ class BankImportIndex extends Component
             $this->previewBundle = $parserService->parseFile($realPath, $originalName, $club->id);
             $this->showPreviewModal = true;
         } catch (\Exception $e) {
-            session()->flash('error', "Failed to parse bank statement file: " . $e->getMessage());
+            session()->flash('error', 'Failed to parse bank statement file: '.$e->getMessage());
             $this->reset('statementFile');
         }
     }
@@ -112,11 +116,11 @@ class BankImportIndex extends Component
         $txQuery = BankTransaction::with('import')
             ->where('club_id', $club->id);
 
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $txQuery->search($this->search);
         }
 
-        if (!empty($this->statusFilter)) {
+        if (! empty($this->statusFilter)) {
             $txQuery->where('status', $this->statusFilter);
         }
 
@@ -144,7 +148,7 @@ class BankImportIndex extends Component
             'totalNetAmount' => $totalNetAmount,
             'statuses' => BankTransactionStatus::cases(),
         ])->layout('components.layouts.app', [
-            'title' => 'Bank Statement Import Engine — ' . $club->name,
+            'title' => 'Bank Statement Import Engine — '.$club->name,
             'club' => $club,
         ]);
     }

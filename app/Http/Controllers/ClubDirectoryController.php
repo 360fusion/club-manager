@@ -124,7 +124,7 @@ class ClubDirectoryController extends Controller
 
         $msg = $status === 'pending_approval'
             ? 'Subscription request submitted! The Secretary will review your request.'
-            : 'Successfully subscribed to ' . $type->name . ' for ' . $club->name . '!';
+            : 'Successfully subscribed to '.$type->name.' for '.$club->name.'!';
 
         return redirect()->back()->with('success', $msg);
     }

@@ -3,7 +3,6 @@
 namespace App\Domains\ClubAccounting\Services\Integration;
 
 use App\Models\Club;
-use App\Models\User;
 use Illuminate\Support\Collection;
 
 class MemberMentionSearchService
@@ -31,7 +30,7 @@ class MemberMentionSearchService
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->pivot->role ?? 'Member',
-                'mention_tag' => '@' . $user->name,
+                'mention_tag' => '@'.$user->name,
             ]);
     }
 }

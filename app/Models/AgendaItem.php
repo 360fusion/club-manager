@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AgendaItem extends Model
 {
@@ -24,12 +25,12 @@ class AgendaItem extends Model
         'is_installation' => 'boolean',
     ];
 
-    public function meeting()
+    public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class);
     }
 
-    public function presenter()
+    public function presenter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'presenter_user_id');
     }

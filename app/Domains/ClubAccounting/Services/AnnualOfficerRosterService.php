@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\AnnualOfficerAssignment;
 use App\Domains\ClubAccounting\Models\AnnualOfficerRoster;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
+use App\Models\Meeting;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -188,7 +189,7 @@ class AnnualOfficerRosterService
         $installationMonthName = $club->settings['installation_month'] ?? 'October';
 
         // Find meetings in the installation month that have passed
-        $passedInstallationMeetings = \App\Models\Meeting::where('club_id', $club->id)
+        $passedInstallationMeetings = Meeting::where('club_id', $club->id)
             ->where('meeting_date', '<', Carbon::today())
             ->get()
             ->filter(function ($meeting) use ($installationMonthName) {

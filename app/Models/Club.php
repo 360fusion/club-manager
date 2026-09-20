@@ -54,6 +54,7 @@ class Club extends Model implements HasMedia
         'province_id',
         'name',
         'slug',
+        'email',
         'logo_url',
         'custom_domain',
         'domain_status',

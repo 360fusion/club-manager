@@ -28,13 +28,13 @@ class CommitteePackController extends Controller
             'attendees',
             'agendaItems' => fn ($q) => $q->orderBy('order'),
             'tasks.assignedTo',
-            'noticesOfMotion'
+            'noticesOfMotion',
         ])->findOrFail($id);
 
         $compiler = app(CommitteePackCompilerService::class);
         $pdfOutput = $compiler->compilePdf($meeting);
 
-        $filename = 'Agenda-Pack-' . Str::slug($meeting->title) . '.pdf';
+        $filename = 'Agenda-Pack-'.Str::slug($meeting->title).'.pdf';
         $disposition = $request->boolean('download') ? 'attachment' : 'inline';
 
         return response($pdfOutput, 200, [

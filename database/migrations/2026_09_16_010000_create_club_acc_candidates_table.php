@@ -15,7 +15,7 @@ return new class extends Migration
             Schema::create('club_acc_candidates', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('club_id')->constrained('clubs')->cascadeOnDelete();
-                
+
                 // Identity & Contact
                 $table->string('first_name');
                 $table->string('last_name');

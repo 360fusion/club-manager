@@ -2,7 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Models\Member;
+use App\Domains\ClubAccounting\Models\MemberSubscription;
+use App\Domains\ClubAccounting\Models\SubscriptionTier;
+use App\Models\Accounting\Bill;
 use App\Models\Club;
+use App\Models\Invoice;
+use App\Models\Meeting;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,7 +27,7 @@ class AnalyticsController extends Controller
             ->firstOrFail();
 
         // 1. Members Count from Lodge Roster & Active Membership Database
-        $accMembersCount = \App\Domains\ClubAccounting\Models\Member::where('club_id', $club->id)->active()->count();
+        $accMembersCount = Member::where('club_id', $club->id)->active()->count();
         $totalMembersCount = max($accMembersCount, $club->users_count);
 
         // 2. Pending Users & Applications Count
@@ -30,8 +37,8 @@ class AnalyticsController extends Controller
             ->count();
 
         // 3. Open Unpaid Invoices & Vendor Bills Count
-        $openInvoicesCount = \App\Models\Invoice::where('club_id', $club->id)->where('status', 'unpaid')->count();
-        $openBillsCount = \App\Models\Accounting\Bill::where('club_id', $club->id)->where('status', 'unpaid')->count();
+        $openInvoicesCount = Invoice::where('club_id', $club->id)->where('status', 'unpaid')->count();
+        $openBillsCount = Bill::where('club_id', $club->id)->where('status', 'unpaid')->count();
         $totalOpenInvoices = $openInvoicesCount + $openBillsCount;
 
         // 4. Event & RSVP Revenue
@@ -42,12 +49,12 @@ class AnalyticsController extends Controller
             ->sum('event_user.amount_paid');
 
         // 5. Total Sales / Revenue Projection
-        $paidInvoicesSum = (float) \App\Models\Invoice::where('club_id', $club->id)->where('status', 'paid')->sum('amount');
-        $paidSubscriptionsSum = (float) \App\Domains\ClubAccounting\Models\MemberSubscription::where('club_id', $club->id)->sum('amount_paid');
+        $paidInvoicesSum = (float) Invoice::where('club_id', $club->id)->where('status', 'paid')->sum('amount');
+        $paidSubscriptionsSum = (float) MemberSubscription::where('club_id', $club->id)->sum('amount_paid');
         $revenueTotal = $paidInvoicesSum + $paidSubscriptionsSum + (float) $totalEventRevenue;
 
         if ($revenueTotal <= 0) {
-            $tier = \App\Domains\ClubAccounting\Models\SubscriptionTier::where('club_id', $club->id)->first();
+            $tier = SubscriptionTier::where('club_id', $club->id)->first();
             $tierRate = $tier ? (float) $tier->annual_amount : 180.00;
             $revenueTotal = $totalMembersCount * $tierRate;
         }
@@ -66,7 +73,7 @@ class AnalyticsController extends Controller
 
         $attendanceRate = $totalRSVPs > 0 ? round(($attendingRSVPs / $totalRSVPs) * 100, 1) : 0;
 
-        $upcomingMeetings = \App\Models\Meeting::where('club_id', $club->id)
+        $upcomingMeetings = Meeting::where('club_id', $club->id)
             ->withCount([
                 'rsvps as dining_count' => function ($query) {
                     $query->where('attendance_status', 'attending_dining');
@@ -81,8 +88,8 @@ class AnalyticsController extends Controller
             ->map(function ($m) {
                 return [
                     'id' => $m->id,
-                    'title' => $m->title && !str_contains($m->title, 'Regular Meeting No.') ? $m->title : ('Meeting - ' . \Illuminate\Support\Carbon::parse($m->meeting_date)->format('jS F Y')),
-                    'meeting_date' => \Illuminate\Support\Carbon::parse($m->meeting_date)->format('D, jS M Y'),
+                    'title' => $m->title && ! str_contains($m->title, 'Regular Meeting No.') ? $m->title : ('Meeting - '.Carbon::parse($m->meeting_date)->format('jS F Y')),
+                    'meeting_date' => Carbon::parse($m->meeting_date)->format('D, jS M Y'),
                     'starts_at' => $m->starts_at ? substr($m->starts_at, 0, 5) : '18:30',
                     'venue' => $m->venue,
                     'status' => $m->status,

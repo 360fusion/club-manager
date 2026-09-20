@@ -3,6 +3,7 @@
 namespace App\Domains\ClubAccounting\Services\Governance;
 
 use App\Domains\ClubAccounting\Models\ClubNoticeOfMotion;
+use App\Models\AgendaItem;
 use App\Models\Meeting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -21,11 +22,11 @@ class NoticeOfMotionBridgeService
 
             $itemNumber = $targetMeeting->agendaItems()->count() + 1;
 
-            \App\Models\AgendaItem::create([
+            AgendaItem::create([
                 'meeting_id' => $targetMeeting->id,
                 'item_number' => $itemNumber,
                 'title' => "NOTICE OF MOTION: {$motion->title}",
-                'description' => "To be proposed by {$proposerText}{$seconderText}:\n\"{$motion->motion_text}\"" . ($motion->rationale ? "\n\nRationale: {$motion->rationale}" : ''),
+                'description' => "To be proposed by {$proposerText}{$seconderText}:\n\"{$motion->motion_text}\"".($motion->rationale ? "\n\nRationale: {$motion->rationale}" : ''),
                 'presenter_user_id' => $motion->proposer_user_id,
             ]);
 

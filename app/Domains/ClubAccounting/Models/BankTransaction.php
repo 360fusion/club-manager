@@ -43,14 +43,14 @@ class BankTransaction extends Model
     public function isIncome(): Attribute
     {
         return Attribute::make(
-            get: fn () => (float)$this->amount > 0
+            get: fn () => (float) $this->amount > 0
         );
     }
 
     public function isExpense(): Attribute
     {
         return Attribute::make(
-            get: fn () => (float)$this->amount < 0
+            get: fn () => (float) $this->amount < 0
         );
     }
 
@@ -90,11 +90,12 @@ class BankTransaction extends Model
             return $query;
         }
 
-        $search = '%' . trim($term) . '%';
+        $search = '%'.trim($term).'%';
+
         return $query->where(function (Builder $q) use ($search) {
             $q->where('raw_description', 'like', $search)
-              ->orWhere('reference', 'like', $search)
-              ->orWhere('transaction_hash', 'like', $search);
+                ->orWhere('reference', 'like', $search)
+                ->orWhere('transaction_hash', 'like', $search);
         });
     }
 }

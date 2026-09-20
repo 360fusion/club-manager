@@ -14,6 +14,7 @@ class PostPublishSettingsTest extends TestCase
     use RefreshDatabase;
 
     private Club $club;
+
     private User $admin;
 
     protected function setUp(): void

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\Post;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -68,13 +69,13 @@ class PostAdminController extends Controller
             : new Post([
                 'club_id' => $club->id,
                 'status' => 'published',
-                'published_at' => \Carbon\Carbon::now(),
+                'published_at' => Carbon::now(),
                 'expires_at' => null,
             ]);
 
         $postArray = $post->toArray();
-        $publishedAt = $post->published_at ?? ($post->created_at ?? \Carbon\Carbon::now());
-        $postArray['published_at'] = $publishedAt ? $publishedAt->format('Y-m-d\TH:i') : \Carbon\Carbon::now()->format('Y-m-d\TH:i');
+        $publishedAt = $post->published_at ?? ($post->created_at ?? Carbon::now());
+        $postArray['published_at'] = $publishedAt ? $publishedAt->format('Y-m-d\TH:i') : Carbon::now()->format('Y-m-d\TH:i');
         $postArray['expires_at'] = $post->expires_at ? $post->expires_at->format('Y-m-d\TH:i') : null;
 
         return Inertia::render('Admin/Posts/Form', [
@@ -116,9 +117,16 @@ class PostAdminController extends Controller
 
         $rawAttachments = $validated['existing_attachments'] ?? [];
         $attachments = array_values(array_filter($rawAttachments, function ($att) {
-            if (!is_array($att)) return false;
-            if (!empty($att['isPendingFile'])) return false;
-            if (isset($att['url']) && str_starts_with($att['url'], 'blob:')) return false;
+            if (! is_array($att)) {
+                return false;
+            }
+            if (! empty($att['isPendingFile'])) {
+                return false;
+            }
+            if (isset($att['url']) && str_starts_with($att['url'], 'blob:')) {
+                return false;
+            }
+
             return true;
         }));
 
@@ -130,9 +138,9 @@ class PostAdminController extends Controller
                     $mime = $file->getClientMimeType();
 
                     $media = $club->addMedia($file)->toMediaCollection('news');
-                    $sizeFormatted = $bytes >= 1048576 
-                        ? round($bytes / 1048576, 1) . ' MB' 
-                        : round($bytes / 1024, 1) . ' KB';
+                    $sizeFormatted = $bytes >= 1048576
+                        ? round($bytes / 1048576, 1).' MB'
+                        : round($bytes / 1024, 1).' KB';
 
                     $attachments[] = [
                         'name' => $name,
@@ -154,12 +162,12 @@ class PostAdminController extends Controller
                     $url = "/storage/{$path}";
 
                     foreach ($blocks as &$b) {
-                        if (isset($b['id']) && (string)$b['id'] === (string)$blockKey && $b['type'] === 'image') {
+                        if (isset($b['id']) && (string) $b['id'] === (string) $blockKey && $b['type'] === 'image') {
                             $b['url'] = $url;
                         }
                         if (isset($b['type']) && $b['type'] === 'images' && isset($b['items']) && is_array($b['items'])) {
                             foreach ($b['items'] as &$gItem) {
-                                if (isset($gItem['id']) && (string)$gItem['id'] === (string)$blockKey) {
+                                if (isset($gItem['id']) && (string) $gItem['id'] === (string) $blockKey) {
                                     $gItem['url'] = $url;
                                 }
                             }
@@ -208,8 +216,8 @@ class PostAdminController extends Controller
             }
         }
 
-        $publishedAt = !empty($validated['published_at']) ? $validated['published_at'] : null;
-        $expiresAt = !empty($validated['expires_at']) ? $validated['expires_at'] : null;
+        $publishedAt = ! empty($validated['published_at']) ? $validated['published_at'] : null;
+        $expiresAt = ! empty($validated['expires_at']) ? $validated['expires_at'] : null;
 
         $post = Post::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
@@ -237,8 +245,8 @@ class PostAdminController extends Controller
 
         if ($actionType === 'save_and_duplicate') {
             $duplicate = $post->replicate(['slug']);
-            $duplicate->title = $post->title . ' (Copy)';
-            $duplicate->slug = $post->slug . '-copy-' . time();
+            $duplicate->title = $post->title.' (Copy)';
+            $duplicate->slug = $post->slug.'-copy-'.time();
             $duplicate->save();
 
             return redirect()->route('admin.posts.edit', ['clubSlug' => $club->slug, 'id' => $duplicate->id])

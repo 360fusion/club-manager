@@ -41,6 +41,6 @@ class Invoice extends Model
 
     public function media(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Media::class, 'media_id');
+        return $this->belongsTo(Media::class, 'media_id');
     }
 }

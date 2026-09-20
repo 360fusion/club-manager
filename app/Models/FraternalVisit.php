@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FraternalVisit extends Model
 {
@@ -18,7 +19,7 @@ class FraternalVisit extends Model
         'notes',
     ];
 
-    public function meeting()
+    public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class);
     }

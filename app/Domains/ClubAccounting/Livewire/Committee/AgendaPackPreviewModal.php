@@ -2,7 +2,7 @@
 
 namespace App\Domains\ClubAccounting\Livewire\Committee;
 
-use App\Domains\ClubAccounting\Enums\AttendanceType;
+use App\Domains\ClubAccounting\Models\ClubCommitteeAttendee;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Models\Club;
@@ -14,7 +14,9 @@ use Livewire\Component;
 class AgendaPackPreviewModal extends Component
 {
     public string $clubSlug;
+
     public int $meetingId;
+
     public bool $isOpen = false;
 
     // Dual-tab: 'pdf' or 'email'
@@ -22,8 +24,11 @@ class AgendaPackPreviewModal extends Component
 
     // Email dispatch fields
     public string $emailSubject = '';
+
     public string $emailBody = '';
+
     public array $selectedRecipientIds = [];
+
     public bool $includePdfAttachment = true;
 
     // Processing state
@@ -136,13 +141,13 @@ class AgendaPackPreviewModal extends Component
             attachPdf: $this->includePdfAttachment,
         );
 
-        \App\Domains\ClubAccounting\Models\ClubCommitteeAttendee::whereIn('id', $this->selectedRecipientIds)
+        ClubCommitteeAttendee::whereIn('id', $this->selectedRecipientIds)
             ->update(['pack_sent_at' => Carbon::now()]);
 
         $this->isSending = false;
         $this->isOpen = false;
 
-        $message = "Agenda Pack successfully dispatched to {$sentCount} committee " . Str::plural('member', $sentCount) . '.';
+        $message = "Agenda Pack successfully dispatched to {$sentCount} committee ".Str::plural('member', $sentCount).'.';
         session()->flash('success', $message);
 
         $this->dispatch('notify', [
@@ -166,6 +171,7 @@ class AgendaPackPreviewModal extends Component
     public function getMeeting(): ClubCommitteeMeeting
     {
         $club = Club::where('slug', $this->clubSlug)->firstOrFail();
+
         return ClubCommitteeMeeting::where('club_id', $club->id)
             ->where('id', $this->meetingId)
             ->with([
@@ -175,7 +181,7 @@ class AgendaPackPreviewModal extends Component
                 'attendees.user',
                 'agendaItems' => fn ($q) => $q->orderBy('order'),
                 'tasks.assignedTo',
-                'noticesOfMotion'
+                'noticesOfMotion',
             ])
             ->firstOrFail();
     }

@@ -17,6 +17,7 @@ class CommitteeAgendaPackMailable extends Mailable
     use Queueable, SerializesModels;
 
     public string $emailSubject;
+
     public bool $attachPdf = true;
 
     public function __construct(
@@ -28,7 +29,7 @@ class CommitteeAgendaPackMailable extends Mailable
         public ?string $pdfFilename = null,
     ) {
         $this->emailSubject = $this->customSubject;
-        $this->attachPdf = !empty($this->pdfBinary);
+        $this->attachPdf = ! empty($this->pdfBinary);
     }
 
     public function envelope(): Envelope

@@ -13,9 +13,13 @@ use Livewire\Component;
 class CandidateVettingModal extends Component
 {
     public int $meetingId;
+
     public ?int $candidateId = null;
+
     public bool $isOpen = false;
+
     public string $vettingNotes = '';
+
     public bool $isRecommended = true;
 
     protected $listeners = ['openCandidateVetting' => 'loadCandidate'];
@@ -25,7 +29,7 @@ class CandidateVettingModal extends Component
         $this->candidateId = $candidateId;
         $this->meetingId = $meetingId;
         $this->isOpen = true;
-        $this->vettingNotes = "Candidate vetted under UGLE Rule 159. Identity verified, age qualification and proposer/seconder credentials confirmed in good standing.";
+        $this->vettingNotes = 'Candidate vetted under UGLE Rule 159. Identity verified, age qualification and proposer/seconder credentials confirmed in good standing.';
     }
 
     public function closeModal(): void
@@ -69,7 +73,7 @@ class CandidateVettingModal extends Component
             'discussion_notes' => $this->vettingNotes,
             'recommendation_text' => $this->isRecommended
                 ? "RECOMMENDED: Committee approves candidate {$name} to proceed to Summons ballot."
-                : "DEFERRED: Committee requests further enquiry before proceeding.",
+                : 'DEFERRED: Committee requests further enquiry before proceeding.',
             'is_approved' => $this->isRecommended,
             'reference_id' => $refId,
             'reference_type' => $refType,

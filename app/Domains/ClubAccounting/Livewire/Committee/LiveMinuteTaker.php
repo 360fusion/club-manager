@@ -4,16 +4,15 @@ namespace App\Domains\ClubAccounting\Livewire\Committee;
 
 use App\Domains\ClubAccounting\Enums\AttendanceType;
 use App\Domains\ClubAccounting\Enums\CommitteeMeetingStatus;
+use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
 use App\Domains\ClubAccounting\Enums\TaskStatus;
+use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAgendaItem;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Models\ClubCommitteeTask;
 use App\Domains\ClubAccounting\Models\ClubNoticeOfMotion;
 use App\Domains\ClubAccounting\Notifications\CommitteeTaskAssignedNotification;
-use App\Domains\ClubAccounting\Services\Governance\CommitteeNotesParserService;
 use App\Domains\ClubAccounting\Services\Integration\MemberMentionSearchService;
-use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
-use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Models\Club;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -21,11 +20,17 @@ use Livewire\Component;
 class LiveMinuteTaker extends Component
 {
     public string $clubSlug;
+
     public int $meetingId;
+
     public ?ClubCommitteeMeeting $meeting = null;
+
     public string $notesRaw = '';
+
     public ?string $content = null;
+
     public ?string $notes = null;
+
     public string $lastSavedAt = '';
 
     // Active Tab in Right Sidebar ('live', 'tasks', 'motions')
@@ -36,6 +41,7 @@ class LiveMinuteTaker extends Component
 
     // Member search for autocomplete
     public string $memberQuery = '';
+
     public array $mentionSuggestions = [];
 
     public function mount(string $clubSlug, int $meetingId): void
@@ -95,7 +101,7 @@ class LiveMinuteTaker extends Component
 
     public function commitDetectedItems(?string $editorContent = null): void
     {
-        if (!$this->meeting) {
+        if (! $this->meeting) {
             $this->meeting = $this->getMeeting();
         }
 
@@ -185,12 +191,12 @@ class LiveMinuteTaker extends Component
 
         $proposerName = $grant->proposer ? " (Proposed by {$grant->proposer->formatted_rank_name})" : '';
         $seconderName = $grant->seconder ? " (Seconded by {$grant->seconder->formatted_rank_name})" : '';
-        $noteSnippet = "\n- **Charitable Grant Approved by Committee:** £" . number_format($grant->amount, 2) . " to {$grant->recipient_name} ({$grant->purpose}){$proposerName}{$seconderName}. Recommended for Open Lodge sanction.\n";
+        $noteSnippet = "\n- **Charitable Grant Approved by Committee:** £".number_format($grant->amount, 2)." to {$grant->recipient_name} ({$grant->purpose}){$proposerName}{$seconderName}. Recommended for Open Lodge sanction.\n";
 
         $this->notesRaw .= $noteSnippet;
         $this->updatedNotesRaw();
 
-        session()->flash('success', "Charitable grant of £" . number_format($grant->amount, 2) . " to {$grant->recipient_name} approved for Open Lodge Summons.");
+        session()->flash('success', 'Charitable grant of £'.number_format($grant->amount, 2)." to {$grant->recipient_name} approved for Open Lodge Summons.");
     }
 
     public function lodgeVoteGrant(int $grantId): void
@@ -232,7 +238,7 @@ class LiveMinuteTaker extends Component
 
     public function insertMention(string $mentionTag): void
     {
-        $this->notesRaw .= ' ' . $mentionTag . ' ';
+        $this->notesRaw .= ' '.$mentionTag.' ';
         $this->memberQuery = '';
         $this->mentionSuggestions = [];
         $this->updatedNotesRaw();
@@ -241,7 +247,7 @@ class LiveMinuteTaker extends Component
     public function insertTemplate(string $type): void
     {
         $snippet = match ($type) {
-            'task' => "\n[ ] @MemberName Action to be completed by " . Carbon::now()->addDays(14)->format('Y-m-d') . "\n",
+            'task' => "\n[ ] @MemberName Action to be completed by ".Carbon::now()->addDays(14)->format('Y-m-d')."\n",
             'motion' => "\n/motion That the lodge bylaws be amended to specify...\n",
             'candidate' => "\n### Candidate Vetting:\n- Candidate: @CandidateName\n- Proposer / Seconder check: Vetted and in order under Rule 159.\n- Recommendation: Approved to proceed to open lodge ballot.\n",
             'donation' => "\n### Charitable Donation Proposal:\n- Recipient Name: Local Hospice\n- Proposed Amount: £250.00\n- Proposed By: @ProposerName\n- Seconded By: @SeconderName\n- Committee Recommendation: Approved by committee and recommended for open lodge sanction.\n",
@@ -256,7 +262,7 @@ class LiveMinuteTaker extends Component
     public function toggleAgendaApproval(int $itemId): void
     {
         $item = ClubCommitteeAgendaItem::where('committee_meeting_id', $this->meetingId)->findOrFail($itemId);
-        $item->update(['is_approved' => !$item->is_approved]);
+        $item->update(['is_approved' => ! $item->is_approved]);
     }
 
     public function insertAgendaItem(int $itemId): void
@@ -283,14 +289,14 @@ class LiveMinuteTaker extends Component
         $items = $meeting->agendaItems;
 
         $outline = "# Meeting Minutes: {$meeting->title}\n";
-        $outline .= "**Date:** " . ($meeting->meeting_date ? $meeting->meeting_date->format('jS F Y, H:i') : 'TBD') . "\n\n";
+        $outline .= '**Date:** '.($meeting->meeting_date ? $meeting->meeting_date->format('jS F Y, H:i') : 'TBD')."\n\n";
 
         // Attendees Roll Call summary
         $attendees = $meeting->attendees;
         if ($attendees->isNotEmpty()) {
             $present = $attendees->where('attendance_type', AttendanceType::Present)->pluck('name')->implode(', ');
             $apologies = $attendees->where('attendance_type', AttendanceType::Apology)->pluck('name')->implode(', ');
-            $outline .= "**Present:** " . ($present ?: 'None recorded') . "\n";
+            $outline .= '**Present:** '.($present ?: 'None recorded')."\n";
             if ($apologies) {
                 $outline .= "**Apologies for Absence:** {$apologies}\n";
             }
@@ -309,7 +315,7 @@ class LiveMinuteTaker extends Component
             $outline .= "- Proceedings: \n\n";
         }
 
-        $this->notesRaw = trim($this->notesRaw) ? $this->notesRaw . "\n\n" . $outline : $outline;
+        $this->notesRaw = trim($this->notesRaw) ? $this->notesRaw."\n\n".$outline : $outline;
         $this->updatedNotesRaw();
         session()->flash('success', 'Agenda outline loaded into meeting minutes.');
     }
@@ -317,6 +323,7 @@ class LiveMinuteTaker extends Component
     private function getMeeting(): ClubCommitteeMeeting
     {
         $club = Club::where('slug', $this->clubSlug)->firstOrFail();
+
         return ClubCommitteeMeeting::where('club_id', $club->id)
             ->where('id', $this->meetingId)
             ->with([
@@ -326,7 +333,7 @@ class LiveMinuteTaker extends Component
                 'attendees',
                 'agendaItems' => fn ($q) => $q->orderBy('order'),
                 'tasks.assignedTo',
-                'noticesOfMotion'
+                'noticesOfMotion',
             ])
             ->firstOrFail();
     }
@@ -349,7 +356,7 @@ class LiveMinuteTaker extends Component
             'motions' => $meeting->noticesOfMotion,
             'charityGrants' => $charityGrants,
         ])->layout('components.layouts.app', [
-            'title' => $meeting->title . ' — Live Minutes',
+            'title' => $meeting->title.' — Live Minutes',
             'club' => $meeting->club,
         ]);
     }

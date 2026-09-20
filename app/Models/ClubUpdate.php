@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -52,22 +53,22 @@ class ClubUpdate extends Model
         return $this->belongsTo(Newsletter::class);
     }
 
-    public function scopeDraft($query)
+    public function scopeDraft(Builder $query): Builder
     {
         return $query->where('status', 'draft');
     }
 
-    public function scopeApproved($query)
+    public function scopeApproved(Builder $query): Builder
     {
         return $query->where('status', 'approved');
     }
 
-    public function scopeSent($query)
+    public function scopeSent(Builder $query): Builder
     {
         return $query->where('status', 'sent');
     }
 
-    public function scopeByCategory($query, string $category)
+    public function scopeByCategory(Builder $query, string $category): Builder
     {
         return $query->where('category', $category);
     }

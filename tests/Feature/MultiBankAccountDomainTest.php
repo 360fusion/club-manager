@@ -18,6 +18,7 @@ class MultiBankAccountDomainTest extends TestCase
     use RefreshDatabase;
 
     protected Club $club;
+
     protected User $adminUser;
 
     protected function setUp(): void
@@ -41,7 +42,7 @@ class MultiBankAccountDomainTest extends TestCase
         $this->adminUser->clubs()->attach($this->club->id, ['role' => 'admin']);
 
         // Seed Chart of Accounts
-        $accService = new AccountingService();
+        $accService = new AccountingService;
         $accService->seedDefaultAccounts($this->club);
     }
 

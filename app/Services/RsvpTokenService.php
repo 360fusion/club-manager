@@ -18,7 +18,7 @@ class RsvpTokenService
     {
         $entropy = Str::random(40);
         $payload = "meeting:{$meeting->id}:user:{$user->id}:exp:{$expiresAt->timestamp}:{$entropy}";
-        
+
         $rawToken = hash_hmac('sha256', $payload, config('app.key'));
         $tokenHash = hash('sha256', $rawToken);
 
@@ -44,7 +44,7 @@ class RsvpTokenService
             ->with(['meeting.club', 'user', 'guests'])
             ->first();
 
-        if (!$rsvp) {
+        if (! $rsvp) {
             return null;
         }
 

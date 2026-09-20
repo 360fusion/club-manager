@@ -11,9 +11,7 @@ class CommitteeTaskAssignedNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(public ClubCommitteeTask $task)
-    {
-    }
+    public function __construct(public ClubCommitteeTask $task) {}
 
     public function via(object $notifiable): array
     {

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class Event extends Model
 {
@@ -64,21 +65,23 @@ class Event extends Model
         return ! empty($parts) ? implode(', ', $parts) : ($this->location ?? '');
     }
 
-    public function getBookingCutoffAtAttribute(): ?\Illuminate\Support\Carbon
+    public function getBookingCutoffAtAttribute(): ?Carbon
     {
         if ($this->rsvp_deadline) {
-            return \Illuminate\Support\Carbon::parse($this->rsvp_deadline);
+            return Carbon::parse($this->rsvp_deadline);
         }
         if ($this->booking_cutoff_days !== null && $this->starts_at) {
-            return \Illuminate\Support\Carbon::parse($this->starts_at)->subDays((int) $this->booking_cutoff_days);
+            return Carbon::parse($this->starts_at)->subDays((int) $this->booking_cutoff_days);
         }
+
         return null;
     }
 
     public function getIsBookingClosedAttribute(): bool
     {
         $cutoff = $this->booking_cutoff_at;
-        return $cutoff ? \Illuminate\Support\Carbon::now()->isAfter($cutoff) : false;
+
+        return $cutoff ? Carbon::now()->isAfter($cutoff) : false;
     }
 
     public function club(): BelongsTo

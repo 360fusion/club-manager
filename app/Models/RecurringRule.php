@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RecurringRule extends Model
 {
@@ -25,12 +27,12 @@ class RecurringRule extends Model
         'active_months' => 'array',
     ];
 
-    public function club()
+    public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
-    public function meetings()
+    public function meetings(): HasMany
     {
         return $this->hasMany(Meeting::class);
     }

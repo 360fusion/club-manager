@@ -14,6 +14,7 @@ class AccountingContactTest extends TestCase
     use RefreshDatabase;
 
     protected Club $club;
+
     protected User $adminUser;
 
     protected function setUp(): void

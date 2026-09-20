@@ -13,12 +13,19 @@ class BankAccountsIndex extends Component
 
     // Modal state for adding a bank account
     public bool $showCreateModal = false;
+
     public string $bank_name = '';
+
     public string $account_name = '';
+
     public string $account_type = 'current'; // current, savings, credit_card, payment_gateway, merchant, cash
+
     public string $account_number = '';
+
     public string $sort_code = '';
+
     public string $currency = 'GBP';
+
     public float $opening_balance = 0.00;
 
     public function mount(string $clubSlug): void
@@ -75,13 +82,13 @@ class BankAccountsIndex extends Component
             ->toArray();
 
         $codeNum = 1010;
-        while (in_array((string)$codeNum, $existingCodes)) {
+        while (in_array((string) $codeNum, $existingCodes)) {
             $codeNum += 10;
         }
 
         $ledgerAcc = Account::create([
             'club_id' => $club->id,
-            'code' => (string)$codeNum,
+            'code' => (string) $codeNum,
             'name' => "{$this->bank_name} — {$this->account_name}",
             'type' => 'asset',
             'currency' => $this->currency,
@@ -110,9 +117,9 @@ class BankAccountsIndex extends Component
     {
         $club = $this->getClub();
         $account = BankAccount::where('club_id', $club->id)->findOrFail($bankAccountId);
-        $account->update(['is_active' => !$account->is_active]);
+        $account->update(['is_active' => ! $account->is_active]);
 
-        session()->flash('success', "Bank account status updated.");
+        session()->flash('success', 'Bank account status updated.');
     }
 
     public function render()

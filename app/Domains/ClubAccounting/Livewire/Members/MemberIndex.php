@@ -18,42 +18,73 @@ class MemberIndex extends Component
 
     // Filters & Search
     public string $search = '';
+
     public string $statusFilter = 'active';
+
     public string $officeFilter = 'all';
+
     public string $rankFilter = 'all';
+
     public string $sortField = 'last_name';
+
     public string $sortDirection = 'asc';
 
     // Add / Edit Member Modal State
     public bool $showMemberModal = false;
+
     public ?int $editingMemberId = null;
 
     // Form fields
     public string $title = 'Bro';
+
     public string $first_name = '';
+
     public string $middle_names = '';
+
     public string $last_name = '';
+
     public string $preferred_name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $address_line_1 = '';
+
     public string $address_line_2 = '';
+
     public string $city = '';
+
     public string $county = '';
+
     public string $postcode = '';
+
     public string $country = '';
+
     public string $masonic_rank = 'Bro';
+
     public string $grand_rank = '';
+
     public string $provincial_rank = '';
+
     public string $grand_lodge_number = '';
+
     public string $membership_status = 'active';
+
     public string $current_office = 'member';
+
     public ?string $date_of_initiation = null;
+
     public ?string $date_of_passing = null;
+
     public ?string $date_of_raising = null;
+
     public ?string $date_of_joining = null;
+
     public ?string $annual_dues_override = null;
+
     public string $notes = '';
+
     public ?int $customer_account_id = null;
 
     public function mount(string $clubSlug): void
@@ -305,7 +336,7 @@ class MemberIndex extends Component
             ->orderBy('first_name')
             ->get();
 
-        $filename = "Lodge-Roster-{$club->slug}-" . now()->format('Y-m-d') . ".csv";
+        $filename = "Lodge-Roster-{$club->slug}-".now()->format('Y-m-d').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -315,7 +346,7 @@ class MemberIndex extends Component
             'Expires' => '0',
         ];
 
-        $callback = function () use ($members, $club) {
+        $callback = function () use ($members) {
             $file = fopen('php://output', 'w');
             fputcsv($file, [
                 'Hermes/GL ID',

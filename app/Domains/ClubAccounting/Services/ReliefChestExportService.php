@@ -19,9 +19,9 @@ class ReliefChestExportService
         $clubObj = $club instanceof Club ? $club : Club::findOrFail($club);
         $target = FestivalTarget::where('club_id', $clubObj->id)->first();
         $chestRef = $target?->relief_chest_ref ?: 'E1418';
-        $provincialRef = 'L' . ($clubObj->id ?: '1418') . 'BEN' . Carbon::now()->format('Y');
+        $provincialRef = 'L'.($clubObj->id ?: '1418').'BEN'.Carbon::now()->format('Y');
 
-        if (!$collections) {
+        if (! $collections) {
             $collections = CharityCollection::where('club_id', $clubObj->id)->with(['countedBy', 'witnessedBy'])->get();
         }
 
@@ -30,9 +30,9 @@ class ReliefChestExportService
         foreach ($collections as $col) {
             $date = $col->created_at ? $col->created_at->format('Y-m-d') : Carbon::now()->format('Y-m-d');
             $type = $col->collection_type?->label() ?? 'Meeting Collection';
-            $cash = number_format((float)$col->cash_amount, 2, '.', '');
-            $cheque = number_format((float)$col->cheque_amount, 2, '.', '');
-            $total = number_format((float)$col->total_amount, 2, '.', '');
+            $cash = number_format((float) $col->cash_amount, 2, '.', '');
+            $cheque = number_format((float) $col->cheque_amount, 2, '.', '');
+            $total = number_format((float) $col->total_amount, 2, '.', '');
             $counter = $col->countedBy?->full_name ?? 'Charity Steward';
             $witness = $col->witnessedBy?->full_name ?? 'Assistant DC';
 
@@ -49,18 +49,18 @@ class ReliefChestExportService
     {
         $clubObj = $club instanceof Club ? $club : Club::findOrFail($club);
 
-        if (!$grants) {
+        if (! $grants) {
             $grants = CharityGrant::where('club_id', $clubObj->id)->get();
         }
 
         $csv = "BACS Ref,Recipient Name,Relief Chest Number,Purpose,Amount (£),Approval Status,Date\n";
 
         foreach ($grants as $g) {
-            $bacsRef = $g->bacs_reference ?: 'BACS-' . ($g->id ?: '001');
+            $bacsRef = $g->bacs_reference ?: 'BACS-'.($g->id ?: '001');
             $recipient = $g->recipient_name;
             $chestNo = $g->relief_chest_number ?: 'N/A';
             $purpose = str_replace('"', '""', $g->purpose);
-            $amount = number_format((float)$g->amount, 2, '.', '');
+            $amount = number_format((float) $g->amount, 2, '.', '');
             $status = $g->approval_status?->label() ?? 'Proposed';
             $date = $g->updated_at ? $g->updated_at->format('Y-m-d') : Carbon::now()->format('Y-m-d');
 

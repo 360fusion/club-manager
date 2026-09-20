@@ -18,6 +18,7 @@ class AccountingAttachmentsTest extends TestCase
     use RefreshDatabase;
 
     private Club $club;
+
     private User $user;
 
     protected function setUp(): void

@@ -12,37 +12,64 @@ use Livewire\Component;
 class MemberProfile extends Component
 {
     public string $clubSlug;
+
     public int $memberId;
 
     public string $activeTab = 'details'; // details, finances
 
     // Quick Edit fields
     public bool $isEditing = false;
+
     public string $title = '';
+
     public string $first_name = '';
+
     public string $middle_names = '';
+
     public string $last_name = '';
+
     public string $preferred_name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $address_line_1 = '';
+
     public string $address_line_2 = '';
+
     public string $city = '';
+
     public string $county = '';
+
     public string $postcode = '';
+
     public string $country = '';
+
     public string $masonic_rank = '';
+
     public string $grand_rank = '';
+
     public string $provincial_rank = '';
+
     public string $grand_lodge_number = '';
+
     public string $membership_status = '';
+
     public string $current_office = '';
+
     public ?string $date_of_initiation = null;
+
     public ?string $date_of_passing = null;
+
     public ?string $date_of_raising = null;
+
     public ?string $date_of_joining = null;
+
     public ?string $annual_dues_override = null;
+
     public string $notes = '';
+
     public ?int $customer_account_id = null;
 
     public function mount(string $clubSlug, int $memberId): void
@@ -94,8 +121,8 @@ class MemberProfile extends Component
 
     public function toggleEdit(): void
     {
-        $this->isEditing = !$this->isEditing;
-        if (!$this->isEditing) {
+        $this->isEditing = ! $this->isEditing;
+        if (! $this->isEditing) {
             $this->loadMemberData();
         }
     }
@@ -216,12 +243,14 @@ class MemberProfile extends Component
         $member->delete();
 
         session()->flash('success', "Member {$name} removed from roster.");
+
         return redirect()->route('admin.club_acc.members.index', ['clubSlug' => $this->clubSlug]);
     }
 
     public function getMember(): Member
     {
         $club = Club::where('slug', $this->clubSlug)->firstOrFail();
+
         return Member::where('club_id', $club->id)
             ->where('id', $this->memberId)
             ->with(['club', 'user', 'customerAccount', 'subscriptionTier', 'subscriptions.tier'])
@@ -242,7 +271,7 @@ class MemberProfile extends Component
             'offices' => LodgeOffice::cases(),
             'statuses' => MembershipStatus::cases(),
         ])->layout('components.layouts.app', [
-            'title' => $member->formatted_rank_name . ' — Profile',
+            'title' => $member->formatted_rank_name.' — Profile',
             'club' => $club,
         ]);
     }

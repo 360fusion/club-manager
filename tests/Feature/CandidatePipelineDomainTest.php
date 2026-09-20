@@ -10,6 +10,7 @@ use App\Domains\ClubAccounting\Models\Candidate;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\CandidateTransitionService;
 use App\Models\Club;
+use App\Models\ClubType;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,15 +22,18 @@ class CandidatePipelineDomainTest extends TestCase
     use RefreshDatabase;
 
     protected Club $club;
+
     protected User $adminUser;
+
     protected Member $proposer;
+
     protected Member $seconder;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'lodge',
             'available_modules' => ['accounting', 'meetings', 'members'],
@@ -102,7 +106,7 @@ class CandidatePipelineDomainTest extends TestCase
             'stage' => CandidateStage::Enquiry,
         ]);
 
-        $service = new CandidateTransitionService();
+        $service = new CandidateTransitionService;
 
         // Must fail transition to committee without proposer/seconder
         $this->expectException(\InvalidArgumentException::class);
@@ -119,7 +123,7 @@ class CandidatePipelineDomainTest extends TestCase
             'stage' => CandidateStage::Enquiry,
         ]);
 
-        $service = new CandidateTransitionService();
+        $service = new CandidateTransitionService;
 
         $service->updateFormPVetting($candidate, [
             'proposer_member_id' => $this->proposer->id,
@@ -156,7 +160,7 @@ class CandidatePipelineDomainTest extends TestCase
             'no_bankruptcies' => true,
         ]);
 
-        $service = new CandidateTransitionService();
+        $service = new CandidateTransitionService;
         $initiationDate = Carbon::parse('2026-09-15');
 
         $member = $service->convertCandidateToMember($candidate, $initiationDate);

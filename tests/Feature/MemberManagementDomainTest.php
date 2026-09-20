@@ -7,11 +7,9 @@ use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Livewire\Members\MemberIndex;
 use App\Domains\ClubAccounting\Livewire\Members\MemberProfile;
 use App\Domains\ClubAccounting\Models\Member;
-use App\Models\Accounting\AccountingContact;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -21,6 +19,7 @@ class MemberManagementDomainTest extends TestCase
     use RefreshDatabase;
 
     private Club $club;
+
     private User $admin;
 
     protected function setUp(): void
@@ -147,7 +146,7 @@ class MemberManagementDomainTest extends TestCase
 
         Livewire::test(MemberIndex::class, ['clubSlug' => $this->club->slug])
             ->call('exportCsv')
-            ->assertFileDownloaded('Lodge-Roster-lodge-of-fraternity-' . now()->format('Y-m-d') . '.csv');
+            ->assertFileDownloaded('Lodge-Roster-lodge-of-fraternity-'.now()->format('Y-m-d').'.csv');
     }
 
     public function test_member_profile_livewire_component_and_tab_switching(): void

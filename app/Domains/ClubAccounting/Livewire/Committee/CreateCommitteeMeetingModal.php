@@ -13,13 +13,19 @@ use Livewire\Component;
 class CreateCommitteeMeetingModal extends Component
 {
     public ?string $clubSlug = null;
+
     public bool $isOpen = false;
 
     public ?string $meeting_date = null;
+
     public string $title = '';
+
     public string $location = '';
+
     public string $time_opened = '19:00';
+
     public ?int $linked_regular_meeting_id = null;
+
     public bool $isCustomTitle = false;
 
     public function mount(?string $clubSlug = null): void
@@ -45,8 +51,8 @@ class CreateCommitteeMeetingModal extends Component
         $club = $this->getClub();
 
         // 2. Default location to lodge meeting venue, address, or fallback
-        $this->location = $club->meeting_venue 
-            ?? $club->address 
+        $this->location = $club->meeting_venue
+            ?? $club->address
             ?? $club->settings['default_meeting_location']
             ?? $club->settings['meeting_venue']
             ?? $club->settings['meeting_location']
@@ -73,7 +79,7 @@ class CreateCommitteeMeetingModal extends Component
      */
     public function updatedMeetingDate(): void
     {
-        if (!$this->isCustomTitle || empty(trim($this->title))) {
+        if (! $this->isCustomTitle || empty(trim($this->title))) {
             $this->generateTitle();
         }
     }
@@ -81,7 +87,7 @@ class CreateCommitteeMeetingModal extends Component
     public function updatedTitle(): void
     {
         // If user explicitly typed or edited title, mark it as custom unless blank
-        $this->isCustomTitle = !empty(trim($this->title));
+        $this->isCustomTitle = ! empty(trim($this->title));
         if (empty(trim($this->title))) {
             $this->generateTitle();
         }
@@ -104,7 +110,7 @@ class CreateCommitteeMeetingModal extends Component
                 $this->isCustomTitle = false;
                 $this->generateTitle();
 
-                if (!empty($regularMeeting->venue) && empty(trim($this->location))) {
+                if (! empty($regularMeeting->venue) && empty(trim($this->location))) {
                     $this->location = $regularMeeting->venue;
                 }
             }
@@ -131,33 +137,33 @@ class CreateCommitteeMeetingModal extends Component
         }
 
         if (empty(trim($this->title))) {
-            $this->title = 'Committee Meeting – ' . now()->format('jS F Y');
+            $this->title = 'Committee Meeting – '.now()->format('jS F Y');
         }
 
         $validated = $this->validate([
-            'meeting_date'              => ['required', 'date'],
-            'title'                     => ['required', 'string', 'max:255'],
-            'location'                  => ['required', 'string', 'max:255'],
-            'time_opened'               => ['nullable', 'string', 'max:20'],
+            'meeting_date' => ['required', 'date'],
+            'title' => ['required', 'string', 'max:255'],
+            'location' => ['required', 'string', 'max:255'],
+            'time_opened' => ['nullable', 'string', 'max:20'],
             'linked_regular_meeting_id' => ['nullable', 'integer'],
         ]);
 
         $club = $this->getClub();
 
         $meetingDateTime = Carbon::parse($validated['meeting_date']);
-        if (!empty($validated['time_opened']) && str_contains($validated['time_opened'], ':')) {
+        if (! empty($validated['time_opened']) && str_contains($validated['time_opened'], ':')) {
             $parts = explode(':', $validated['time_opened']);
-            $meetingDateTime->setTime((int)$parts[0], (int)$parts[1]);
+            $meetingDateTime->setTime((int) $parts[0], (int) $parts[1]);
         }
 
         $meeting = ClubCommitteeMeeting::create([
-            'club_id'                   => $club->id,
-            'title'                     => $validated['title'],
-            'meeting_date'              => $meetingDateTime,
-            'time_opened'               => $validated['time_opened'] ?? '19:00',
-            'location'                  => $validated['location'],
+            'club_id' => $club->id,
+            'title' => $validated['title'],
+            'meeting_date' => $meetingDateTime,
+            'time_opened' => $validated['time_opened'] ?? '19:00',
+            'location' => $validated['location'],
             'linked_regular_meeting_id' => $validated['linked_regular_meeting_id'] ?? null,
-            'status'                    => CommitteeMeetingStatus::Scheduled,
+            'status' => CommitteeMeetingStatus::Scheduled,
         ]);
 
         $this->dispatch('meetingCreated', meetingId: $meeting->id);
@@ -176,7 +182,7 @@ class CreateCommitteeMeetingModal extends Component
 
     public function getClub(): Club
     {
-        if (!empty($this->clubSlug)) {
+        if (! empty($this->clubSlug)) {
             return Club::where('slug', $this->clubSlug)->firstOrFail();
         }
 

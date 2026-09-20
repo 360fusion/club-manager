@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\AnnualOfficerRosterService;
 use App\Models\Club;
+use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,15 +18,18 @@ class AnnualOfficerRosterTest extends TestCase
     use RefreshDatabase;
 
     private Club $club;
+
     private Member $member1;
+
     private Member $member2;
+
     private Meeting $meeting;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'masonic',
             'available_modules' => ['meetings'],
@@ -68,7 +72,7 @@ class AnnualOfficerRosterTest extends TestCase
 
     public function test_prevents_assigning_multiple_progressive_offices_to_same_member(): void
     {
-        $service = new AnnualOfficerRosterService();
+        $service = new AnnualOfficerRosterService;
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('cannot hold more than one Progressive Office');
@@ -81,7 +85,7 @@ class AnnualOfficerRosterTest extends TestCase
 
     public function test_allows_multiple_administrative_offices_to_same_member(): void
     {
-        $service = new AnnualOfficerRosterService();
+        $service = new AnnualOfficerRosterService;
 
         // Bro Arthur is DC (Admin) AND Charity Steward (Admin) AND Almoner (Admin) -> Valid!
         $assignments = [
@@ -101,7 +105,7 @@ class AnnualOfficerRosterTest extends TestCase
 
     public function test_confirms_roster_and_syncs_member_profiles(): void
     {
-        $service = new AnnualOfficerRosterService();
+        $service = new AnnualOfficerRosterService;
 
         $assignments = [
             ['member_id' => $this->member1->id, 'office' => 'dc'],
@@ -166,7 +170,7 @@ class AnnualOfficerRosterTest extends TestCase
 
     public function test_auto_installs_roster_after_installation_meeting_passes(): void
     {
-        $service = new AnnualOfficerRosterService();
+        $service = new AnnualOfficerRosterService;
 
         // Installation meeting in October 2025 (in the past)
         $pastInstallationMeeting = Meeting::create([

@@ -40,7 +40,7 @@ return new class extends Migration
             $table->string('status')->default('draft'); // draft, published, completed, cancelled
             $table->timestamp('summons_published_at')->nullable();
             $table->timestamp('rsvp_cutoff_at')->nullable();
-            
+
             // Festive Board / Dining Details
             $table->string('festive_board_theme')->nullable();
             $table->decimal('dining_cost_member', 10, 2)->default(0.00);
@@ -48,7 +48,7 @@ return new class extends Migration
             $table->string('bank_sort_code')->nullable();
             $table->string('bank_account_number')->nullable();
             $table->string('payment_reference_prefix')->nullable();
-            
+
             // Pastoral & Almoner Notes
             $table->text('almoner_notice')->nullable();
             $table->text('sick_distressed_notes')->nullable();

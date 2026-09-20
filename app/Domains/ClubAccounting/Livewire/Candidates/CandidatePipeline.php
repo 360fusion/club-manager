@@ -16,13 +16,18 @@ class CandidatePipeline extends Component
     use WithPagination;
 
     public string $clubSlug;
+
     public string $search = '';
+
     public ?string $stageFilter = null;
+
     public string $viewMode = 'kanban'; // kanban, list
 
     // Modals visibility
     public bool $showCandidateModal = false;
+
     public bool $showFormPModal = false;
+
     public bool $showInitiationModal = false;
 
     // Selected Candidate ID
@@ -30,24 +35,40 @@ class CandidatePipeline extends Component
 
     // Candidate Form Fields
     public string $first_name = '';
+
     public string $last_name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public ?string $date_of_birth = null;
+
     public string $occupation = '';
+
     public string $address = '';
+
     public string $postcode = '';
+
     public string $stage = 'enquiry';
+
     public string $notes = '';
 
     // Form P Vetting Fields
     public ?int $proposer_member_id = null;
+
     public ?int $seconder_member_id = null;
+
     public ?string $form_p_signed_at = null;
+
     public bool $belief_in_supreme_being = false;
+
     public bool $no_criminal_record = false;
+
     public bool $no_bankruptcies = false;
+
     public bool $rule_159_cleared = false;
+
     public ?string $hermes_clearance_date = null;
 
     // Initiation Fields
@@ -147,11 +168,12 @@ class CandidatePipeline extends Component
 
             if ($targetStage === CandidateStage::Initiated) {
                 $this->openInitiationModal($candidate->id);
+
                 return;
             }
 
             $transitionService->transitionStage($candidate, $targetStage);
-            session()->flash('success', "Candidate '{$candidate->full_name}' moved to stage: " . $targetStage->label());
+            session()->flash('success', "Candidate '{$candidate->full_name}' moved to stage: ".$targetStage->label());
         } catch (\InvalidArgumentException $e) {
             session()->flash('error', $e->getMessage());
             // Open Form P modal if proposer/seconder is missing
@@ -287,11 +309,11 @@ class CandidatePipeline extends Component
         $query = Candidate::with(['proposer', 'seconder', 'convertedMember'])
             ->where('club_id', $club->id);
 
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $query->search($this->search);
         }
 
-        if (!empty($this->stageFilter)) {
+        if (! empty($this->stageFilter)) {
             $query->stage($this->stageFilter);
         }
 
@@ -320,7 +342,7 @@ class CandidatePipeline extends Component
             'allCandidates' => $allCandidates,
             'activeMembers' => $activeMembers,
         ])->layout('components.layouts.app', [
-            'title' => 'Candidate Pipeline — ' . $club->name,
+            'title' => 'Candidate Pipeline — '.$club->name,
             'club' => $club,
         ]);
     }

@@ -107,6 +107,7 @@ class Candidate extends Model
     public function scopeStage(Builder $query, CandidateStage|string $stage): Builder
     {
         $stageVal = $stage instanceof CandidateStage ? $stage->value : $stage;
+
         return $query->where('stage', $stageVal);
     }
 
@@ -122,12 +123,13 @@ class Candidate extends Model
 
     public function scopeSearch(Builder $query, string $term): Builder
     {
-        $term = '%' . trim($term) . '%';
+        $term = '%'.trim($term).'%';
+
         return $query->where(function (Builder $q) use ($term) {
             $q->where('first_name', 'like', $term)
-              ->orWhere('last_name', 'like', $term)
-              ->orWhere('email', 'like', $term)
-              ->orWhere('occupation', 'like', $term);
+                ->orWhere('last_name', 'like', $term)
+                ->orWhere('email', 'like', $term)
+                ->orWhere('occupation', 'like', $term);
         });
     }
 }

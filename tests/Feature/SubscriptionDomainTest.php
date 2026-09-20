@@ -23,10 +23,15 @@ class SubscriptionDomainTest extends TestCase
     use RefreshDatabase;
 
     protected Club $club;
+
     protected User $adminUser;
+
     protected SubscriptionTier $fullTier;
+
     protected SubscriptionTier $countryTier;
+
     protected Member $member1;
+
     protected Member $member2;
 
     protected function setUp(): void
@@ -104,7 +109,7 @@ class SubscriptionDomainTest extends TestCase
 
     public function test_annual_billing_run_generates_invoices_for_active_members(): void
     {
-        $service = new SubscriptionBillingService();
+        $service = new SubscriptionBillingService;
         $result = $service->generateAnnualBillingRun($this->club, 2026, Carbon::parse('2026-04-01'));
 
         $this->assertEquals(2, $result['created_count']);
@@ -129,7 +134,7 @@ class SubscriptionDomainTest extends TestCase
 
     public function test_record_payment_updates_subscription_status(): void
     {
-        $service = new SubscriptionBillingService();
+        $service = new SubscriptionBillingService;
         $service->generateAnnualBillingRun($this->club, 2026);
 
         $sub = MemberSubscription::where('member_id', $this->member1->id)->first();
@@ -164,7 +169,7 @@ class SubscriptionDomainTest extends TestCase
             'invoice_reference' => 'INV-2025-M001',
         ]);
 
-        $service = new SubscriptionBillingService();
+        $service = new SubscriptionBillingService;
         $arrearsList = $service->checkRule181Arrears($this->club, 90);
 
         $this->assertCount(1, $arrearsList);

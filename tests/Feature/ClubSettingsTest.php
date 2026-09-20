@@ -13,6 +13,7 @@ class ClubSettingsTest extends TestCase
     use RefreshDatabase;
 
     private Club $club;
+
     private User $adminUser;
 
     protected function setUp(): void
@@ -97,7 +98,7 @@ class ClubSettingsTest extends TestCase
             ->put(route('admin.settings.update', ['clubSlug' => $this->club->slug]), $payload);
 
         $response->assertRedirect();
-        
+
         $this->club->refresh();
         $this->assertEquals(['owner', 'admin', 'treasurer'], $this->club->settings['permission_matrix']['manage_roster']['roles']);
     }
@@ -114,7 +115,7 @@ class ClubSettingsTest extends TestCase
             ->put(route('admin.settings.update', ['clubSlug' => $this->club->slug]), $payload);
 
         $response->assertRedirect();
-        
+
         $this->club->refresh();
         $this->assertEquals('rowing.oxford.ac.uk', $this->club->custom_domain);
         $this->assertEquals(['website_builder', 'memberships', 'events'], $this->club->settings['enabled_modules']);

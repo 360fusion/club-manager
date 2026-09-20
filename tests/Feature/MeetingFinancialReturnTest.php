@@ -2,17 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
-use App\Models\Accounting\JournalEntry;
-use App\Models\Accounting\MeetingFinancialReturn;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
 use App\Services\AccountingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class MeetingFinancialReturnTest extends TestCase
@@ -20,7 +16,9 @@ class MeetingFinancialReturnTest extends TestCase
     use RefreshDatabase;
 
     protected Club $club;
+
     protected Meeting $meeting;
+
     protected User $user;
 
     protected function setUp(): void

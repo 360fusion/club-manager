@@ -24,7 +24,7 @@ class ContactFormSubmittedMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $fromName = $this->club->name . ' Website Contact Form';
+        $fromName = $this->club->name.' Website Contact Form';
 
         return new Envelope(
             subject: "[Contact Inquiry] Message from {$this->senderName} - {$this->club->name}",

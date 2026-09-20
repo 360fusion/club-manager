@@ -8,6 +8,8 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeTask;
 use App\Domains\ClubAccounting\Models\ClubNoticeOfMotion;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CommitteeNotesParserService
 {
@@ -52,9 +54,9 @@ class CommitteeNotesParserService
                 // A. Exact or space-stripped match with club members
                 foreach ($clubMembers as $member) {
                     $noSpace = str_replace(' ', '', $member->name);
-                    if (stripos($taskContent, '@' . $member->name) !== false
-                        || stripos($taskContent, '@' . $noSpace) !== false
-                        || stripos($taskContent, '@' . $member->email) !== false) {
+                    if (stripos($taskContent, '@'.$member->name) !== false
+                        || stripos($taskContent, '@'.$noSpace) !== false
+                        || stripos($taskContent, '@'.$member->email) !== false) {
                         $taskAssignedUser = $member;
                         $assignedName = $member->name;
                         break;
@@ -62,7 +64,7 @@ class CommitteeNotesParserService
                 }
 
                 // B. If not matched, extract the token directly following @
-                if (!$taskAssignedUser && preg_match('/@([A-Za-z0-9_\-\.]+)/u', $taskContent, $tagMatch)) {
+                if (! $taskAssignedUser && preg_match('/@([A-Za-z0-9_\-\.]+)/u', $taskContent, $tagMatch)) {
                     $rawTag = $tagMatch[1];
 
                     // Check if rawTag matches any member by first name, last name, or email prefix
@@ -71,7 +73,7 @@ class CommitteeNotesParserService
                     });
 
                     // Also check meeting attendees if available
-                    if (!$matched && $meeting && $meeting->attendees) {
+                    if (! $matched && $meeting && $meeting->attendees) {
                         $attendee = $meeting->attendees->first(function ($att) use ($rawTag) {
                             return stripos($att->name, $rawTag) !== false || stripos($rawTag, $att->name) !== false;
                         });
@@ -104,9 +106,9 @@ class CommitteeNotesParserService
             // 2. Detect /motion or MOTION: lines (supports leading bullet or number)
             if (preg_match('/^(?:[-*•]|\d+\.)?\s*(?:\/motion|motion:)\s*(.*)$/i', $trimmed, $motionMatch)) {
                 $motionText = trim($motionMatch[1]);
-                if (!empty($motionText)) {
+                if (! empty($motionText)) {
                     $extractedMotions[] = [
-                        'title' => 'Motion: ' . \Illuminate\Support\Str::limit($motionText, 60),
+                        'title' => 'Motion: '.Str::limit($motionText, 60),
                         'motion_text' => $motionText,
                     ];
                 }
@@ -114,7 +116,7 @@ class CommitteeNotesParserService
 
             // 3. Detect general @mentions throughout line
             foreach ($clubMembers as $member) {
-                if (stripos($trimmed, '@' . $member->name) !== false && !isset($extractedMentions[$member->id])) {
+                if (stripos($trimmed, '@'.$member->name) !== false && ! isset($extractedMentions[$member->id])) {
                     $extractedMentions[$member->id] = [
                         'id' => $member->id,
                         'name' => $member->name,
@@ -158,10 +160,10 @@ class CommitteeNotesParserService
                     ->where('title', $taskData['title'])
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     // Ensure assigned_to_user_id exists in users table to prevent FK violations
                     $assignedUserId = null;
-                    if (!empty($taskData['assigned_to_id']) && User::where('id', $taskData['assigned_to_id'])->exists()) {
+                    if (! empty($taskData['assigned_to_id']) && User::where('id', $taskData['assigned_to_id'])->exists()) {
                         $assignedUserId = $taskData['assigned_to_id'];
                     }
 
@@ -176,7 +178,7 @@ class CommitteeNotesParserService
                     $createdTasks++;
                 }
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to sync committee task: ' . $e->getMessage());
+                Log::warning('Failed to sync committee task: '.$e->getMessage());
             }
         }
 
@@ -187,7 +189,7 @@ class CommitteeNotesParserService
                     ->where('motion_text', $motionData['motion_text'])
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     $proposerId = null;
                     if ($meeting->chair_user_id && User::where('id', $meeting->chair_user_id)->exists()) {
                         $proposerId = $meeting->chair_user_id;
@@ -205,7 +207,7 @@ class CommitteeNotesParserService
                     $createdMotions++;
                 }
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to sync committee motion: ' . $e->getMessage());
+                Log::warning('Failed to sync committee motion: '.$e->getMessage());
             }
         }
 

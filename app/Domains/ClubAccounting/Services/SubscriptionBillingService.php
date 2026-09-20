@@ -40,6 +40,7 @@ class SubscriptionBillingService
 
                 if ($exists) {
                     $skippedCount++;
+
                     continue;
                 }
 
@@ -73,7 +74,7 @@ class SubscriptionBillingService
                     'amount_paid' => 0.00,
                     'status' => $status,
                     'invoice_reference' => $invoiceRef,
-                    'notes' => "Annual Subscription Invoice {$billingYear}/" . ($billingYear + 1),
+                    'notes' => "Annual Subscription Invoice {$billingYear}/".($billingYear + 1),
                 ]);
 
                 $createdCount++;
@@ -94,8 +95,8 @@ class SubscriptionBillingService
     public function recordPayment(MemberSubscription $subscription, float $amount, ?string $reference = null, ?string $notes = null): MemberSubscription
     {
         return DB::transaction(function () use ($subscription, $amount, $reference, $notes) {
-            $newPaid = (float)$subscription->amount_paid + $amount;
-            $due = (float)$subscription->amount_due;
+            $newPaid = (float) $subscription->amount_paid + $amount;
+            $due = (float) $subscription->amount_due;
 
             $status = SubscriptionStatus::Paid;
             if ($newPaid < $due) {
@@ -105,7 +106,7 @@ class SubscriptionBillingService
             $noteText = $subscription->notes ?? '';
             if ($notes || $reference) {
                 $paymentLog = sprintf("\nPayment of £%.2f recorded on %s (Ref: %s)", $amount, Carbon::now()->format('Y-m-d'), $reference ?: 'Direct');
-                $noteText .= $paymentLog . ($notes ? " - {$notes}" : "");
+                $noteText .= $paymentLog.($notes ? " - {$notes}" : '');
             }
 
             $subscription->update([

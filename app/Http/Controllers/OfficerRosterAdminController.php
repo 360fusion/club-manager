@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
+use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Models\AnnualOfficerRoster;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\AnnualOfficerRosterService;
@@ -169,7 +170,7 @@ class OfficerRosterAdminController extends Controller
         $title = in_array($masonicRank, ['WBro', 'VWBro', 'RWBro', 'MWBro']) ? 'W. Bro.' : 'Bro.';
 
         $statusStr = $validated['membership_status'] ?? 'historical';
-        $membershipStatus = \App\Domains\ClubAccounting\Enums\MembershipStatus::tryFrom($statusStr) ?? \App\Domains\ClubAccounting\Enums\MembershipStatus::Historical;
+        $membershipStatus = MembershipStatus::tryFrom($statusStr) ?? MembershipStatus::Historical;
 
         $member = Member::create([
             'club_id' => $club->id,
@@ -180,7 +181,7 @@ class OfficerRosterAdminController extends Controller
             'grand_rank' => $validated['grand_rank'] ?: null,
             'provincial_rank' => $validated['provincial_rank'] ?: null,
             'membership_status' => $membershipStatus,
-            'current_office' => \App\Domains\ClubAccounting\Enums\LodgeOffice::Member,
+            'current_office' => LodgeOffice::Member,
         ]);
 
         $memberData = [

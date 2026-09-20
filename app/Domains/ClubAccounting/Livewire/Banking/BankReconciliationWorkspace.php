@@ -3,7 +3,6 @@
 namespace App\Domains\ClubAccounting\Livewire\Banking;
 
 use App\Domains\ClubAccounting\Models\BankTransaction;
-use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
 use App\Models\Accounting\Bill;
@@ -16,13 +15,18 @@ class BankReconciliationWorkspace extends Component
     use WithPagination;
 
     public string $clubSlug;
+
     public ?int $selectedTransactionId = null;
+
     public string $search = '';
 
     // Manual Lookup Drawer State
     public bool $showManualDrawer = false;
+
     public string $manualSearch = '';
+
     public string $manualAllocationType = 'member_subscription'; // member_subscription, supplier_bill, ledger_account
+
     public string $manualNominalCode = '4000';
 
     public function mount(string $clubSlug): void
@@ -56,7 +60,7 @@ class BankReconciliationWorkspace extends Component
 
         $matcher->reconcileTransaction($tx, $matchType, $targetId);
 
-        session()->flash('success', "Transaction reconciled successfully!");
+        session()->flash('success', 'Transaction reconciled successfully!');
         $this->autoSelectFirstUnmatched();
     }
 
@@ -80,7 +84,7 @@ class BankReconciliationWorkspace extends Component
             'nominal_code' => $this->manualNominalCode,
         ]);
 
-        session()->flash('success', "Manual allocation reconciled for transaction.");
+        session()->flash('success', 'Manual allocation reconciled for transaction.');
         $this->showManualDrawer = false;
         $this->autoSelectFirstUnmatched();
     }
@@ -92,7 +96,7 @@ class BankReconciliationWorkspace extends Component
 
         $matcher->ignoreTransaction($tx);
 
-        session()->flash('success', "Transaction line marked as ignored.");
+        session()->flash('success', 'Transaction line marked as ignored.');
         $this->autoSelectFirstUnmatched();
     }
 
@@ -110,7 +114,7 @@ class BankReconciliationWorkspace extends Component
             ->unmatched()
             ->orderBy('transaction_date', 'asc');
 
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $txQuery->search($this->search);
         }
 
@@ -128,15 +132,15 @@ class BankReconciliationWorkspace extends Component
         if ($this->showManualDrawer && $selectedTx) {
             if ($this->manualAllocationType === 'member_subscription') {
                 $subQuery = MemberSubscription::where('club_id', $club->id)->unpaid()->with('member');
-                if (!empty($this->manualSearch)) {
-                    $term = '%' . trim($this->manualSearch) . '%';
+                if (! empty($this->manualSearch)) {
+                    $term = '%'.trim($this->manualSearch).'%';
                     $subQuery->whereHas('member', fn ($q) => $q->where('first_name', 'like', $term)->orWhere('last_name', 'like', $term));
                 }
                 $manualCandidates = $subQuery->take(15)->get();
             } elseif ($this->manualAllocationType === 'supplier_bill') {
                 $billQuery = Bill::where('club_id', $club->id)->where('status', 'unpaid');
-                if (!empty($this->manualSearch)) {
-                    $term = '%' . trim($this->manualSearch) . '%';
+                if (! empty($this->manualSearch)) {
+                    $term = '%'.trim($this->manualSearch).'%';
                     $billQuery->where(fn ($q) => $q->where('vendor_name', 'like', $term)->orWhere('bill_number', 'like', $term));
                 }
                 $manualCandidates = $billQuery->take(15)->get();
@@ -156,7 +160,7 @@ class BankReconciliationWorkspace extends Component
             'unmatchedCount' => $unmatchedCount,
             'reconciledCount' => $reconciledCount,
         ])->layout('components.layouts.app', [
-            'title' => 'Bank Reconciliation Workspace — ' . $club->name,
+            'title' => 'Bank Reconciliation Workspace — '.$club->name,
             'club' => $club,
         ]);
     }

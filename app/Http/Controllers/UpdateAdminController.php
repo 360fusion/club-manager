@@ -42,7 +42,7 @@ class UpdateAdminController extends Controller
             ->orderBy('meeting_date', 'asc')
             ->take(10)
             ->get()
-            ->map(fn($m) => [
+            ->map(fn ($m) => [
                 'id' => $m->id,
                 'title' => $m->title,
                 'date' => Carbon::parse($m->meeting_date)->format('M d, Y g:i A'),
@@ -54,11 +54,11 @@ class UpdateAdminController extends Controller
             ->orderBy('starts_at', 'asc')
             ->take(10)
             ->get()
-            ->map(fn($e) => [
+            ->map(fn ($e) => [
                 'id' => $e->id,
                 'title' => $e->title,
                 'date' => Carbon::parse($e->starts_at)->format('M d, Y g:i A'),
-                'price' => $e->price ? '£' . number_format($e->price, 2) : 'Free',
+                'price' => $e->price ? '£'.number_format($e->price, 2) : 'Free',
             ]);
 
         $recentNews = Post::where('club_id', $club->id)
@@ -66,7 +66,7 @@ class UpdateAdminController extends Controller
             ->orderByDesc('created_at')
             ->take(10)
             ->get()
-            ->map(fn($p) => [
+            ->map(fn ($p) => [
                 'id' => $p->id,
                 'title' => $p->title,
                 'date' => $p->published_at ? Carbon::parse($p->published_at)->format('M d, Y') : $p->created_at->format('M d, Y'),
@@ -112,9 +112,16 @@ class UpdateAdminController extends Controller
 
         $rawAttachments = $validated['attachments'] ?? [];
         $attachments = array_values(array_filter($rawAttachments, function ($att) {
-            if (!is_array($att)) return false;
-            if (!empty($att['isPendingFile'])) return false;
-            if (isset($att['url']) && str_starts_with($att['url'], 'blob:')) return false;
+            if (! is_array($att)) {
+                return false;
+            }
+            if (! empty($att['isPendingFile'])) {
+                return false;
+            }
+            if (isset($att['url']) && str_starts_with($att['url'], 'blob:')) {
+                return false;
+            }
+
             return true;
         }));
 
@@ -139,7 +146,7 @@ class UpdateAdminController extends Controller
         }
 
         $summary = $validated['summary'] ?? '';
-        if (!empty($validated['clean_text']) && $summary) {
+        if (! empty($validated['clean_text']) && $summary) {
             $summary = WeeklyUpdateDigestService::cleanForwardedText($summary);
         }
 
@@ -163,7 +170,7 @@ class UpdateAdminController extends Controller
             ]
         );
 
-        if ($validated['category'] === 'summons' && !empty($attachments)) {
+        if ($validated['category'] === 'summons' && ! empty($attachments)) {
             foreach ($attachments as $att) {
                 if (isset($att['url']) && preg_match('/\/storage\/(\d+)\//', $att['url'], $m)) {
                     $mediaId = (int) $m[1];
@@ -198,7 +205,7 @@ class UpdateAdminController extends Controller
 
         $update->update($updateData);
 
-        return redirect()->back()->with('success', 'Item status updated to ' . ucfirst($validated['status']) . '.');
+        return redirect()->back()->with('success', 'Item status updated to '.ucfirst($validated['status']).'.');
     }
 
     /**
@@ -222,11 +229,11 @@ class UpdateAdminController extends Controller
         $selectedIds = $request->input('selected_ids');
 
         $approvedCount = ClubUpdate::where('club_id', $club->id)
-            ->when(!empty($selectedIds), fn($q) => $q->whereIn('id', $selectedIds))
+            ->when(! empty($selectedIds), fn ($q) => $q->whereIn('id', $selectedIds))
             ->where('status', 'approved')
             ->count();
 
-        if ($approvedCount === 0 && !$request->boolean('force')) {
+        if ($approvedCount === 0 && ! $request->boolean('force')) {
             return redirect()->back()->with('error', 'No approved update items ready to send.');
         }
 

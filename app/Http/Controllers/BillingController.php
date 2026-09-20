@@ -17,7 +17,7 @@ class BillingController extends Controller
         $settings = $club->settings ?? [];
 
         $currentProvider = $settings['payment_provider'] ?? 'stripe';
-        
+
         $businessDetails = [
             'business_name' => $settings['business_name'] ?? $club->name,
             'company_number' => $settings['company_number'] ?? '12948573',

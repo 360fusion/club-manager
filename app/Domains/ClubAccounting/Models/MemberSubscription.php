@@ -43,7 +43,7 @@ class MemberSubscription extends Model
     public function balanceDue(): Attribute
     {
         return Attribute::make(
-            get: fn () => max(0, (float)$this->amount_due - (float)$this->amount_paid)
+            get: fn () => max(0, (float) $this->amount_due - (float) $this->amount_paid)
         );
     }
 

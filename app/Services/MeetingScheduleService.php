@@ -8,13 +8,13 @@ use InvalidArgumentException;
 class MeetingScheduleService
 {
     private const DAY_MAP = [
-        'Sunday'    => Carbon::SUNDAY,
-        'Monday'    => Carbon::MONDAY,
-        'Tuesday'   => Carbon::TUESDAY,
+        'Sunday' => Carbon::SUNDAY,
+        'Monday' => Carbon::MONDAY,
+        'Tuesday' => Carbon::TUESDAY,
         'Wednesday' => Carbon::WEDNESDAY,
-        'Thursday'  => Carbon::THURSDAY,
-        'Friday'    => Carbon::FRIDAY,
-        'Saturday'  => Carbon::SATURDAY,
+        'Thursday' => Carbon::THURSDAY,
+        'Friday' => Carbon::FRIDAY,
+        'Saturday' => Carbon::SATURDAY,
     ];
 
     /**
@@ -22,7 +22,7 @@ class MeetingScheduleService
      */
     public function calculateNthWeekday(int $year, int $month, string $occurrence, string $dayOfWeek): Carbon
     {
-        if (!isset(self::DAY_MAP[$dayOfWeek])) {
+        if (! isset(self::DAY_MAP[$dayOfWeek])) {
             throw new InvalidArgumentException("Invalid day of week: {$dayOfWeek}");
         }
 
@@ -34,11 +34,12 @@ class MeetingScheduleService
             while ($date->dayOfWeek !== $targetDay) {
                 $date->subDay();
             }
+
             return $date->startOfDay();
         }
 
         $nMap = ['1st' => 1, '2nd' => 2, '3rd' => 3, '4th' => 4];
-        if (!isset($nMap[$occurrence])) {
+        if (! isset($nMap[$occurrence])) {
             throw new InvalidArgumentException("Invalid occurrence: {$occurrence}");
         }
 
@@ -65,8 +66,9 @@ class MeetingScheduleService
     {
         $dates = [];
         foreach ($activeMonths as $month) {
-            $dates[] = $this->calculateNthWeekday($year, (int)$month, $occurrence, $dayOfWeek);
+            $dates[] = $this->calculateNthWeekday($year, (int) $month, $occurrence, $dayOfWeek);
         }
+
         return $dates;
     }
 }

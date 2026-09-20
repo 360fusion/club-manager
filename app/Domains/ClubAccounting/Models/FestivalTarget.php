@@ -43,16 +43,16 @@ class FestivalTarget extends Model
 
     public function getCurrentTier(float $totalRaised): string
     {
-        if ($totalRaised >= (float)$this->platinum_tier) {
+        if ($totalRaised >= (float) $this->platinum_tier) {
             return 'Platinum Honor';
         }
-        if ($totalRaised >= (float)$this->gold_tier) {
+        if ($totalRaised >= (float) $this->gold_tier) {
             return 'Gold Honor';
         }
-        if ($totalRaised >= (float)$this->silver_tier) {
+        if ($totalRaised >= (float) $this->silver_tier) {
             return 'Silver Honor';
         }
-        if ($totalRaised >= (float)$this->bronze_tier) {
+        if ($totalRaised >= (float) $this->bronze_tier) {
             return 'Bronze Honor';
         }
 
@@ -61,10 +61,10 @@ class FestivalTarget extends Model
 
     public function getPercentage(float $totalRaised): float
     {
-        if ((float)$this->target_amount <= 0) {
+        if ((float) $this->target_amount <= 0) {
             return 0.0;
         }
 
-        return min(100.0, round(($totalRaised / (float)$this->target_amount) * 100, 1));
+        return min(100.0, round(($totalRaised / (float) $this->target_amount) * 100, 1));
     }
 }

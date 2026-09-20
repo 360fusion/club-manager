@@ -5,10 +5,12 @@ namespace App\Domains\ClubAccounting\Services;
 use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
+use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
+use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
+use App\Services\AccountingService;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class BankReconciliationMatcherService
@@ -28,7 +30,7 @@ class BankReconciliationMatcherService
         $clubId = $transaction->club_id;
         $desc = strtolower($transaction->raw_description);
         $ref = strtolower($transaction->reference ?? '');
-        $amount = (float)$transaction->amount;
+        $amount = (float) $transaction->amount;
         $matches = [];
 
         // 1. Incoming Credits (+ amount) -> Match against Unpaid Member Subscriptions or Charity Relief
@@ -54,7 +56,7 @@ class BankReconciliationMatcherService
 
             foreach ($unpaidSubs as $sub) {
                 $member = $sub->member;
-                if (!$member) {
+                if (! $member) {
                     continue;
                 }
 
@@ -62,7 +64,7 @@ class BankReconciliationMatcherService
                 $lastName = strtolower($member->last_name);
                 $firstName = strtolower($member->first_name);
                 $email = strtolower($member->email ?? '');
-                $duesAmount = (float)$sub->balance_due;
+                $duesAmount = (float) $sub->balance_due;
 
                 $score = 0;
                 $reason = '';
@@ -75,7 +77,7 @@ class BankReconciliationMatcherService
                 // Rule B: Name & Exact Dues Amount Match (95%)
                 elseif (($lastName && str_contains($desc, $lastName)) && abs($duesAmount - $amount) < 0.01) {
                     $score = 95;
-                    $reason = "Member Name ({$member->last_name}) & Dues Amount (£" . number_format($duesAmount, 2) . ") Match";
+                    $reason = "Member Name ({$member->last_name}) & Dues Amount (£".number_format($duesAmount, 2).') Match';
                 }
                 // Rule C: First Name & Last Name in description (85%)
                 elseif ($lastName && $firstName && str_contains($desc, $lastName) && str_contains($desc, $firstName)) {
@@ -90,7 +92,7 @@ class BankReconciliationMatcherService
                 // Rule E: Dues Amount Match alone (60%)
                 elseif (abs($duesAmount - $amount) < 0.01) {
                     $score = 60;
-                    $reason = "Dues Amount Match (£" . number_format($duesAmount, 2) . ")";
+                    $reason = 'Dues Amount Match (£'.number_format($duesAmount, 2).')';
                 }
 
                 if ($score > 0) {
@@ -118,7 +120,7 @@ class BankReconciliationMatcherService
             foreach ($unpaidBills as $bill) {
                 $vendorName = strtolower($bill->vendor_name ?? '');
                 $billNo = strtolower($bill->bill_number ?? '');
-                $billAmount = (float)$bill->amount;
+                $billAmount = (float) $bill->amount;
 
                 $score = 0;
                 $reason = '';
@@ -141,7 +143,7 @@ class BankReconciliationMatcherService
                 // Rule D: Bill Amount Match (60%)
                 elseif (abs($billAmount - $absAmount) < 0.01) {
                     $score = 60;
-                    $reason = "Vendor Bill Amount Match (£" . number_format($billAmount, 2) . ")";
+                    $reason = 'Vendor Bill Amount Match (£'.number_format($billAmount, 2).')';
                 }
 
                 if ($score > 0) {
@@ -171,17 +173,17 @@ class BankReconciliationMatcherService
     public function reconcileTransaction(BankTransaction $transaction, string $matchType, int|string $targetId, array $options = []): bool
     {
         return DB::transaction(function () use ($transaction, $matchType, $targetId, $options) {
-            $amount = (float)$transaction->amount;
+            $amount = (float) $transaction->amount;
             $club = Club::find($transaction->club_id);
-            $accountingService = app(\App\Services\AccountingService::class);
+            $accountingService = app(AccountingService::class);
             $accountingService->seedDefaultAccounts($club);
 
-            $note = "Reconciled via Bank Statement Match on " . Carbon::now()->format('Y-m-d H:i');
+            $note = 'Reconciled via Bank Statement Match on '.Carbon::now()->format('Y-m-d H:i');
             $targetCode = '4000'; // Default Revenue
             $memo = $transaction->raw_description ?: 'Bank Statement Match';
 
             if ($matchType === 'member_subscription') {
-                $sub = MemberSubscription::where('club_id', $transaction->club_id)->find((int)$targetId);
+                $sub = MemberSubscription::where('club_id', $transaction->club_id)->find((int) $targetId);
                 if ($sub) {
                     $this->billingService->recordPayment(
                         $sub,
@@ -193,7 +195,7 @@ class BankReconciliationMatcherService
                 }
                 $targetCode = '4000'; // Membership Dues Income
             } elseif ($matchType === 'supplier_bill') {
-                $bill = Bill::where('club_id', $transaction->club_id)->find((int)$targetId);
+                $bill = Bill::where('club_id', $transaction->club_id)->find((int) $targetId);
                 if ($bill) {
                     $bill->update([
                         'status' => 'paid',
@@ -203,42 +205,42 @@ class BankReconciliationMatcherService
                 }
                 $targetCode = '5000'; // Facility & Clubhouse Maintenance / Expenses
             } elseif ($matchType === 'charity_relief') {
-                $note .= " [Charity Relief Chest / Provincial Contribution]";
+                $note .= ' [Charity Relief Chest / Provincial Contribution]';
                 $targetCode = '4300'; // Raffle & Charity Contributions
             } elseif ($matchType === 'ledger_account') {
                 $rawCode = $options['nominal_code'] ?? ($amount > 0 ? '4000' : '5000');
                 preg_match('/^(\d+)/', (string) $rawCode, $matches);
-                $targetCode = !empty($matches[1]) ? $matches[1] : ($amount > 0 ? '4000' : '5000');
+                $targetCode = ! empty($matches[1]) ? $matches[1] : ($amount > 0 ? '4000' : '5000');
                 $note .= " [Allocated to Ledger Code: {$targetCode}]";
             }
 
             // Post double-entry journal entry to general ledger if not already posted
-            $bankAcc = \App\Models\Accounting\Account::where('club_id', $club->id)->where('code', '1000')->first();
-            $offsetAcc = \App\Models\Accounting\Account::where('club_id', $club->id)->where('code', $targetCode)->first();
-            if (!$offsetAcc) {
-                $offsetAcc = \App\Models\Accounting\Account::create([
+            $bankAcc = Account::where('club_id', $club->id)->where('code', '1000')->first();
+            $offsetAcc = Account::where('club_id', $club->id)->where('code', $targetCode)->first();
+            if (! $offsetAcc) {
+                $offsetAcc = Account::create([
                     'club_id' => $club->id,
                     'code' => $targetCode,
-                    'name' => 'General Account (' . $targetCode . ')',
+                    'name' => 'General Account ('.$targetCode.')',
                     'type' => $amount > 0 ? 'revenue' : 'expense',
                     'currency' => 'GBP',
                     'is_active' => true,
                 ]);
             }
 
-            $alreadyPosted = \App\Models\Accounting\JournalEntry::where('club_id', $club->id)
+            $alreadyPosted = JournalEntry::where('club_id', $club->id)
                 ->where('source_type', 'bank_transaction')
                 ->where('source_id', $transaction->id)
                 ->exists();
 
-            if ($bankAcc && $offsetAcc && !$alreadyPosted) {
+            if ($bankAcc && $offsetAcc && ! $alreadyPosted) {
                 $absAmount = abs($amount);
                 $txDate = $transaction->transaction_date ? Carbon::parse($transaction->transaction_date)->format('Y-m-d') : date('Y-m-d');
                 if ($amount > 0) {
                     // Money Received: Debit Bank (1000), Credit Revenue/Offset
                     $accountingService->postJournalEntry($club, [
                         'entry_date' => $txDate,
-                        'reference_number' => 'RECON-' . $transaction->id,
+                        'reference_number' => 'RECON-'.$transaction->id,
                         'description' => "Bank Match: {$memo}",
                         'source_type' => 'bank_transaction',
                         'source_id' => $transaction->id,
@@ -251,7 +253,7 @@ class BankReconciliationMatcherService
                     // Money Spent: Credit Bank (1000), Debit Expense/Offset
                     $accountingService->postJournalEntry($club, [
                         'entry_date' => $txDate,
-                        'reference_number' => 'RECON-' . $transaction->id,
+                        'reference_number' => 'RECON-'.$transaction->id,
                         'description' => "Bank Match: {$memo}",
                         'source_type' => 'bank_transaction',
                         'source_id' => $transaction->id,
@@ -265,7 +267,7 @@ class BankReconciliationMatcherService
 
             $transaction->update([
                 'status' => BankTransactionStatus::Matched,
-                'reference' => str_contains($transaction->reference ?? '', '(Matched)') ? $transaction->reference : ($transaction->reference ? $transaction->reference . ' (Matched)' : 'Reconciled'),
+                'reference' => str_contains($transaction->reference ?? '', '(Matched)') ? $transaction->reference : ($transaction->reference ? $transaction->reference.' (Matched)' : 'Reconciled'),
             ]);
 
             return true;

@@ -28,9 +28,13 @@ class BankReconciliationDomainTest extends TestCase
     use RefreshDatabase;
 
     protected Club $club;
+
     protected User $adminUser;
+
     protected Member $member;
+
     protected MemberSubscription $subscription;
+
     protected Bill $supplierBill;
 
     protected function setUp(): void
@@ -113,7 +117,7 @@ class BankReconciliationDomainTest extends TestCase
             'status' => BankTransactionStatus::Unmatched,
         ]);
 
-        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService());
+        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
         $suggestions = $matcher->suggestMatches($tx);
 
         $this->assertNotEmpty($suggestions);
@@ -142,7 +146,7 @@ class BankReconciliationDomainTest extends TestCase
             'status' => BankTransactionStatus::Unmatched,
         ]);
 
-        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService());
+        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
         $suggestions = $matcher->suggestMatches($tx);
 
         $this->assertNotEmpty($suggestions);
@@ -170,7 +174,7 @@ class BankReconciliationDomainTest extends TestCase
             'status' => BankTransactionStatus::Unmatched,
         ]);
 
-        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService());
+        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
         $result = $matcher->reconcileTransaction($tx, 'member_subscription', $this->subscription->id);
 
         $this->assertTrue($result);

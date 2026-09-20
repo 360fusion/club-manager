@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactFormSubmittedMail;
 use App\Models\Club;
 use App\Models\Page;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -108,7 +112,7 @@ class PublicSiteController extends Controller
     /**
      * Handle contact form submission from public website.
      */
-    public function submitContactForm(\Illuminate\Http\Request $request, string $clubSlug): \Illuminate\Http\RedirectResponse
+    public function submitContactForm(Request $request, string $clubSlug): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
@@ -136,7 +140,7 @@ class PublicSiteController extends Controller
             }
         }
 
-        $mailable = new \App\Mail\ContactFormSubmittedMail(
+        $mailable = new ContactFormSubmittedMail(
             club: $club,
             senderName: $validated['name'] ?? 'Anonymous Visitor',
             senderEmail: $validated['email'],
@@ -144,7 +148,7 @@ class PublicSiteController extends Controller
             messageContent: $validated['message'] ?? ''
         );
 
-        $mail = \Illuminate\Support\Facades\Mail::to($recipientEmail);
+        $mail = Mail::to($recipientEmail);
         if (! empty($ccEmails)) {
             $mail->cc($ccEmails);
         }

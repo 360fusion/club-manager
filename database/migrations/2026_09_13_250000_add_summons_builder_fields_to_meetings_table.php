@@ -9,40 +9,40 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('meetings', function (Blueprint $table) {
-            if (!Schema::hasColumn('meetings', 'salutation')) {
+            if (! Schema::hasColumn('meetings', 'salutation')) {
                 $table->string('salutation')->nullable()->default('Dear Sir and Brother,');
             }
-            if (!Schema::hasColumn('meetings', 'intro_text')) {
+            if (! Schema::hasColumn('meetings', 'intro_text')) {
                 $table->text('intro_text')->nullable();
             }
-            if (!Schema::hasColumn('meetings', 'rehearsal_text')) {
+            if (! Schema::hasColumn('meetings', 'rehearsal_text')) {
                 $table->text('rehearsal_text')->nullable();
             }
-            if (!Schema::hasColumn('meetings', 'honorary_members_text')) {
+            if (! Schema::hasColumn('meetings', 'honorary_members_text')) {
                 $table->text('honorary_members_text')->nullable();
             }
-            if (!Schema::hasColumn('meetings', 'provincial_header_text')) {
+            if (! Schema::hasColumn('meetings', 'provincial_header_text')) {
                 $table->text('provincial_header_text')->nullable();
             }
-            if (!Schema::hasColumn('meetings', 'fraternal_visits_text')) {
+            if (! Schema::hasColumn('meetings', 'fraternal_visits_text')) {
                 $table->text('fraternal_visits_text')->nullable();
             }
-            if (!Schema::hasColumn('meetings', 'officers_year_label')) {
+            if (! Schema::hasColumn('meetings', 'officers_year_label')) {
                 $table->string('officers_year_label')->nullable()->default('OFFICERS FOR 2025-2026');
             }
         });
 
         Schema::table('clubs', function (Blueprint $table) {
-            if (!Schema::hasColumn('clubs', 'default_provincial_header_text')) {
+            if (! Schema::hasColumn('clubs', 'default_provincial_header_text')) {
                 $table->text('default_provincial_header_text')->nullable();
             }
-            if (!Schema::hasColumn('clubs', 'default_honorary_members_text')) {
+            if (! Schema::hasColumn('clubs', 'default_honorary_members_text')) {
                 $table->text('default_honorary_members_text')->nullable();
             }
-            if (!Schema::hasColumn('clubs', 'lodge_number')) {
+            if (! Schema::hasColumn('clubs', 'lodge_number')) {
                 $table->string('lodge_number')->nullable()->default('1418');
             }
-            if (!Schema::hasColumn('clubs', 'motto')) {
+            if (! Schema::hasColumn('clubs', 'motto')) {
                 $table->string('motto')->nullable()->default('Fraternus Amor Maneto');
             }
         });
@@ -59,8 +59,8 @@ return new class extends Migration
                 'provincial_header_text',
                 'fraternal_visits_text',
                 'officers_year_label',
-            ], fn($col) => Schema::hasColumn('meetings', $col));
-            if (!empty($columns)) {
+            ], fn ($col) => Schema::hasColumn('meetings', $col));
+            if (! empty($columns)) {
                 $table->dropColumn($columns);
             }
         });
@@ -71,8 +71,8 @@ return new class extends Migration
                 'default_honorary_members_text',
                 'lodge_number',
                 'motto',
-            ], fn($col) => Schema::hasColumn('clubs', $col));
-            if (!empty($columns)) {
+            ], fn ($col) => Schema::hasColumn('clubs', $col));
+            if (! empty($columns)) {
                 $table->dropColumn($columns);
             }
         });

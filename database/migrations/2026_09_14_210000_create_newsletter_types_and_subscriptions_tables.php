@@ -13,22 +13,22 @@ return new class extends Migration
     {
         // Add Directory & Location fields to Clubs if not already present
         Schema::table('clubs', function (Blueprint $table) {
-            if (!Schema::hasColumn('clubs', 'province_region')) {
+            if (! Schema::hasColumn('clubs', 'province_region')) {
                 $table->string('province_region')->nullable();
             }
-            if (!Schema::hasColumn('clubs', 'lodge_number')) {
+            if (! Schema::hasColumn('clubs', 'lodge_number')) {
                 $table->string('lodge_number')->nullable();
             }
-            if (!Schema::hasColumn('clubs', 'town_city')) {
+            if (! Schema::hasColumn('clubs', 'town_city')) {
                 $table->string('town_city')->nullable();
             }
-            if (!Schema::hasColumn('clubs', 'is_directory_listed')) {
+            if (! Schema::hasColumn('clubs', 'is_directory_listed')) {
                 $table->boolean('is_directory_listed')->default(true);
             }
         });
 
         // Newsletter Types / Subscription Channels
-        if (!Schema::hasTable('newsletter_types')) {
+        if (! Schema::hasTable('newsletter_types')) {
             Schema::create('newsletter_types', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('club_id')->constrained('clubs')->onDelete('cascade');
@@ -51,7 +51,7 @@ return new class extends Migration
         }
 
         // Newsletter Subscriptions (Explicit Subscribers)
-        if (!Schema::hasTable('newsletter_subscriptions')) {
+        if (! Schema::hasTable('newsletter_subscriptions')) {
             Schema::create('newsletter_subscriptions', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('club_id')->constrained('clubs')->onDelete('cascade');
@@ -74,7 +74,7 @@ return new class extends Migration
 
         // Add newsletter_type_id to newsletters table
         Schema::table('newsletters', function (Blueprint $table) {
-            if (!Schema::hasColumn('newsletters', 'newsletter_type_id')) {
+            if (! Schema::hasColumn('newsletters', 'newsletter_type_id')) {
                 $table->foreignId('newsletter_type_id')->nullable()->after('club_id')->constrained('newsletter_types')->onDelete('set null');
             }
         });

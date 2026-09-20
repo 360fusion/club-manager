@@ -45,7 +45,7 @@ class VisitorRegistrationController extends Controller
         // Find or create user account
         $user = User::where('email', strtolower($validated['email']))->first();
 
-        if (!$user) {
+        if (! $user) {
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => strtolower($validated['email']),

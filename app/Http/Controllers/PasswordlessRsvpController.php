@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MeetingRsvp;
 use App\Models\MeetingRsvpGuest;
 use App\Services\RsvpTokenService;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +19,7 @@ class PasswordlessRsvpController extends Controller
     {
         $rsvp = $tokenService->validateToken($token);
 
-        if (!$rsvp) {
+        if (! $rsvp) {
             return Inertia::render('Summons/Expired', [
                 'message' => 'This RSVP link is invalid or has expired. Please contact your Secretary for assistance.',
             ]);
@@ -32,7 +31,7 @@ class PasswordlessRsvpController extends Controller
         $isCutoffPassed = Carbon::now()->isAfter($meeting->rsvp_cutoff_at);
         $clubUser = $user->clubs()->where('club_id', $club->id)->first()?->pivot;
         $isVisitor = $clubUser && $clubUser->role === 'visitor';
-        $visitorHomeClub = $isVisitor ? trim(($clubUser->home_club_name ?? '') . ($clubUser->home_club_number ? ' No ' . $clubUser->home_club_number : '')) : null;
+        $visitorHomeClub = $isVisitor ? trim(($clubUser->home_club_name ?? '').($clubUser->home_club_number ? ' No '.$clubUser->home_club_number : '')) : null;
 
         return Inertia::render('Summons/Rsvp', [
             'token' => $token,
@@ -53,7 +52,7 @@ class PasswordlessRsvpController extends Controller
     {
         $rsvp = $tokenService->validateToken($token);
 
-        if (!$rsvp) {
+        if (! $rsvp) {
             return redirect()->back()->withErrors(['token' => 'Token has expired or is invalid.']);
         }
 
@@ -71,7 +70,7 @@ class PasswordlessRsvpController extends Controller
         $allowedStatuses = $isVisitor ? 'in:attending_dining,attending_meeting_only' : 'in:attending_dining,attending_meeting_only,apologies';
 
         $validated = $request->validate([
-            'attendance_status' => 'required|' . $allowedStatuses,
+            'attendance_status' => 'required|'.$allowedStatuses,
             'apology_reason' => 'nullable|string',
             'dietary_requirements' => 'nullable|string',
             'guests' => 'nullable|array',
@@ -83,7 +82,7 @@ class PasswordlessRsvpController extends Controller
         ]);
 
         $surname = strtoupper(last(explode(' ', $rsvp->user->name)));
-        $paymentRef = ($meeting->payment_reference_prefix ?: 'SUMMONS') . '-' . $meeting->id . '-' . $surname;
+        $paymentRef = ($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname;
 
         $rsvp->update([
             'attendance_status' => $validated['attendance_status'],
@@ -95,7 +94,7 @@ class PasswordlessRsvpController extends Controller
 
         // Sync Guests
         MeetingRsvpGuest::where('meeting_rsvp_id', $rsvp->id)->delete();
-        if (!empty($validated['guests'])) {
+        if (! empty($validated['guests'])) {
             foreach ($validated['guests'] as $g) {
                 MeetingRsvpGuest::create([
                     'meeting_rsvp_id' => $rsvp->id,

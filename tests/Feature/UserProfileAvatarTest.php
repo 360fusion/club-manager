@@ -15,6 +15,7 @@ class UserProfileAvatarTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Club $club;
 
     protected function setUp(): void
@@ -59,7 +60,7 @@ class UserProfileAvatarTest extends TestCase
             ]);
 
         $response->assertRedirect();
-        
+
         $this->user->refresh();
         $this->assertEquals('Jane Rower Updated', $this->user->name);
         $this->assertEquals($avatarUrl, $this->user->avatar_url);

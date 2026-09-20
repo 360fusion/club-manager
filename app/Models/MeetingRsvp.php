@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MeetingRsvp extends Model
 {
@@ -31,17 +33,17 @@ class MeetingRsvp extends Model
         'is_postal_printed' => 'boolean',
     ];
 
-    public function meeting()
+    public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function guests()
+    public function guests(): HasMany
     {
         return $this->hasMany(MeetingRsvpGuest::class, 'meeting_rsvp_id');
     }

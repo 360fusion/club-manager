@@ -88,7 +88,7 @@ class VisitorRegistrationTest extends TestCase
             'rsvp_cutoff_at' => Carbon::now()->addDays(10),
         ]);
 
-        $tokenService = new RsvpTokenService();
+        $tokenService = new RsvpTokenService;
         $rawToken = $tokenService->createTokenForUser($meeting, $visitorUser, Carbon::now()->addDays(5));
 
         // Attempting to submit 'apologies' as a visitor should be rejected by validation

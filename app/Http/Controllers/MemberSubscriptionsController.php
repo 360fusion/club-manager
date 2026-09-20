@@ -41,15 +41,15 @@ class MemberSubscriptionsController extends Controller
         $userSubscriptions = NewsletterSubscription::where('user_id', $user->id)
             ->where('status', 'active')
             ->get()
-            ->keyBy(fn ($item) => $item->club_id . '_' . $item->newsletter_type_id);
+            ->keyBy(fn ($item) => $item->club_id.'_'.$item->newsletter_type_id);
 
         $clubMatrix = $allClubs->map(function ($club) use ($user, $userSubscriptions) {
             $isMember = $user->clubs()->where('clubs.id', $club->id)->exists();
 
             $channels = $club->newsletterTypes->map(function ($type) use ($club, $isMember, $userSubscriptions) {
-                $key = $club->id . '_' . $type->id;
+                $key = $club->id.'_'.$type->id;
                 $hasExplicitSub = isset($userSubscriptions[$key]);
-                
+
                 // Active status: mandatory channels for internal members are active by default, or if explicitly subscribed
                 $isActive = ($isMember && $type->is_mandatory) || $hasExplicitSub;
 

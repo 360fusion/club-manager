@@ -12,14 +12,17 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\RecurringRule;
 use App\Models\User;
+use App\Services\AccountingService;
 use App\Services\MeetingScheduleService;
 use App\Services\RsvpTokenService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class MeetingAdminController extends Controller
 {
@@ -60,7 +63,7 @@ class MeetingAdminController extends Controller
         // Convert any existing legacy meeting titles with numbers to date-based titles & compute visitor counts
         foreach ($meetings as $m) {
             if ($m->title && str_contains($m->title, 'Regular Meeting No.')) {
-                $m->title = 'Meeting - ' . Carbon::parse($m->meeting_date)->format('jS F Y');
+                $m->title = 'Meeting - '.Carbon::parse($m->meeting_date)->format('jS F Y');
                 $m->meeting_number = null;
                 $m->save();
             }
@@ -115,10 +118,10 @@ class MeetingAdminController extends Controller
             ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user'])
             ->firstOrFail();
 
-        if (empty($meeting->bank_sort_code) && !empty($club->settings['bank_sort_code'])) {
+        if (empty($meeting->bank_sort_code) && ! empty($club->settings['bank_sort_code'])) {
             $meeting->bank_sort_code = $club->settings['bank_sort_code'];
         }
-        if (empty($meeting->bank_account_number) && !empty($club->settings['bank_account_number'])) {
+        if (empty($meeting->bank_account_number) && ! empty($club->settings['bank_account_number'])) {
             $meeting->bank_account_number = $club->settings['bank_account_number'];
         }
 
@@ -138,7 +141,7 @@ class MeetingAdminController extends Controller
     /**
      * Return club settings as JSON (used by the reload-from-settings button).
      */
-    public function settingsJson(string $clubSlug): \Illuminate\Http\JsonResponse
+    public function settingsJson(string $clubSlug): JsonResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
@@ -198,7 +201,7 @@ class MeetingAdminController extends Controller
 
         if ($request->hasFile('front_page_logo_file')) {
             $path = $request->file('front_page_logo_file')->store('summons_logos', 'public');
-            $validated['front_page_logo'] = asset('storage/' . $path);
+            $validated['front_page_logo'] = asset('storage/'.$path);
         }
         unset($validated['front_page_logo_file']);
 
@@ -210,10 +213,10 @@ class MeetingAdminController extends Controller
 
         $meeting = Meeting::updateOrCreate(['id' => $request->id], $validated);
 
-        if (!empty($agendaData)) {
+        if (! empty($agendaData)) {
             $meeting->agendaItems()->delete();
             foreach ($agendaData as $idx => $item) {
-                if (!empty($item['title'])) {
+                if (! empty($item['title'])) {
                     $meeting->agendaItems()->create([
                         'item_number' => $idx + 1,
                         'title' => $item['title'],
@@ -257,7 +260,7 @@ class MeetingAdminController extends Controller
         ];
 
         if (request()->has('download')) {
-            $filename = 'Summons-' . \Illuminate\Support\Str::slug($club->name) . '-' . $meeting->meeting_date->format('Y-m-d') . '.pdf';
+            $filename = 'Summons-'.Str::slug($club->name).'-'.$meeting->meeting_date->format('Y-m-d').'.pdf';
 
             // Detect Node & Npm paths for Laravel Herd / macOS / Linux environments
             $nodeBinary = trim((string) shell_exec('which node 2>/dev/null'));
@@ -286,13 +289,13 @@ class MeetingAdminController extends Controller
             }
 
             try {
-                return \Spatie\LaravelPdf\Facades\Pdf::view('summons.pdf', $viewData)
+                return Pdf::view('summons.pdf', $viewData)
                     ->landscape()
                     ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
                         if ($nodeBinary && file_exists($nodeBinary)) {
                             $browsershot->setNodeBinary($nodeBinary);
                             $binDir = str_replace(' ', '\ ', dirname($nodeBinary));
-                            $browsershot->setIncludePath($binDir . ':/opt/homebrew/bin:/usr/local/bin:/usr/bin');
+                            $browsershot->setIncludePath($binDir.':/opt/homebrew/bin:/usr/local/bin:/usr/bin');
                         }
                         if ($npmBinary && file_exists($npmBinary)) {
                             $browsershot->setNpmBinary($npmBinary);
@@ -330,7 +333,8 @@ class MeetingAdminController extends Controller
             ->map(function ($rsvp) use ($club) {
                 $clubUser = $rsvp->user ? $rsvp->user->clubs->firstWhere('id', $club->id)?->pivot : null;
                 $rsvp->is_visitor = $clubUser && $clubUser->role === 'visitor';
-                $rsvp->visitor_home_club = $rsvp->is_visitor ? trim(($clubUser->home_club_name ?? '') . ($clubUser->home_club_number ? ' No ' . $clubUser->home_club_number : '')) : null;
+                $rsvp->visitor_home_club = $rsvp->is_visitor ? trim(($clubUser->home_club_name ?? '').($clubUser->home_club_number ? ' No '.$clubUser->home_club_number : '')) : null;
+
                 return $rsvp;
             });
 
@@ -369,7 +373,7 @@ class MeetingAdminController extends Controller
                 }
                 if ($guest->dietary_requirements) {
                     $dietaryConstraints[] = [
-                        'person' => $guest->guest_name . ' (Guest)',
+                        'person' => $guest->guest_name.' (Guest)',
                         'requirement' => $guest->dietary_requirements,
                     ];
                 }
@@ -389,7 +393,7 @@ class MeetingAdminController extends Controller
                 'rank' => $pivot->rank ?? null,
                 'home_club_name' => $pivot->home_club_name,
                 'home_club_number' => $pivot->home_club_number,
-                'home_club_info' => trim(($pivot->home_club_name ?? '') . ($pivot->home_club_number ? ' No ' . $pivot->home_club_number : '')),
+                'home_club_info' => trim(($pivot->home_club_name ?? '').($pivot->home_club_number ? ' No '.$pivot->home_club_number : '')),
                 'phone' => $pivot->phone,
                 'dietary_notes' => $rsvp?->dietary_requirements ?? $pivot->dietary_notes,
                 'attendance_status' => $rsvp?->attendance_status ?: ($summonsSent ? 'awaiting' : 'not_sent'),
@@ -470,7 +474,7 @@ class MeetingAdminController extends Controller
         ]);
 
         $dates = $scheduleService->generateSeasonDates(
-            (int)$request->year,
+            (int) $request->year,
             $request->active_months,
             $request->occurrence,
             $request->day_of_week
@@ -486,7 +490,7 @@ class MeetingAdminController extends Controller
                 [
                     'recurring_rule_id' => $rule->id,
                     'meeting_number' => null,
-                    'title' => 'Meeting - ' . $date->format('jS F Y'),
+                    'title' => 'Meeting - '.$date->format('jS F Y'),
                     'starts_at' => $startTime,
                     'rehearsal_starts_at' => $rehearsalTime,
                     'venue' => 'Masonic Hall, Oxford',
@@ -546,7 +550,7 @@ class MeetingAdminController extends Controller
             'updated_at',
         ]);
 
-        $newMeeting->title = $original->title ? ($original->title . ' (Copy)') : ('Meeting Copy - ' . Carbon::parse($original->meeting_date)->format('jS F Y'));
+        $newMeeting->title = $original->title ? ($original->title.' (Copy)') : ('Meeting Copy - '.Carbon::parse($original->meeting_date)->format('jS F Y'));
         $newMeeting->status = 'draft';
         $newMeeting->meeting_date = Carbon::parse($original->meeting_date)->addMonth()->format('Y-m-d');
         $newMeeting->rsvp_cutoff_at = Carbon::parse($newMeeting->meeting_date)->subDays(5)->endOfDay();
@@ -612,7 +616,7 @@ class MeetingAdminController extends Controller
 
         $user = User::find($validated['user_id']);
         $surname = $user ? strtoupper(last(explode(' ', $user->name))) : 'MEMBER';
-        $defaultRef = ($meeting->payment_reference_prefix ?: 'SUMMONS') . '-' . $meeting->id . '-' . $surname;
+        $defaultRef = ($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname;
 
         $updateData = [
             'token_hash' => Str::random(40),
@@ -641,7 +645,7 @@ class MeetingAdminController extends Controller
             $rsvp->guests()->delete();
             if (is_array($validated['guests'])) {
                 foreach ($validated['guests'] as $g) {
-                    if (!empty($g['guest_name'])) {
+                    if (! empty($g['guest_name'])) {
                         $rsvp->guests()->create([
                             'guest_name' => $g['guest_name'],
                             'dietary_requirements' => $g['dietary_requirements'] ?? null,
@@ -672,7 +676,7 @@ class MeetingAdminController extends Controller
 
         $user = User::findOrFail($validated['user_id']);
         $surname = strtoupper(last(explode(' ', $user->name)));
-        $paymentRef = $validated['payment_reference'] ?? (($meeting->payment_reference_prefix ?: 'SUMMONS') . '-' . $meeting->id . '-' . $surname);
+        $paymentRef = $validated['payment_reference'] ?? (($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname);
 
         $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $user->id)->first();
         if ($rsvp) {
@@ -694,6 +698,7 @@ class MeetingAdminController extends Controller
         }
 
         $statusLabel = ucfirst($validated['payment_status']);
+
         return redirect()->back()->with('success', "Payment status marked as {$statusLabel} for {$user->name}.");
     }
 
@@ -733,7 +738,7 @@ class MeetingAdminController extends Controller
     /**
      * Store financial return for a meeting and post to accounting ledger.
      */
-    public function storeFinancialReturn(Request $request, string $clubSlug, int $id, \App\Services\AccountingService $accountingService): RedirectResponse
+    public function storeFinancialReturn(Request $request, string $clubSlug, int $id, AccountingService $accountingService): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
@@ -791,7 +796,7 @@ class MeetingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
-        $masonicYear = Carbon::parse($meeting->meeting_date)->format('Y') . '-' . (Carbon::parse($meeting->meeting_date)->year + 1);
+        $masonicYear = Carbon::parse($meeting->meeting_date)->format('Y').'-'.(Carbon::parse($meeting->meeting_date)->year + 1);
 
         $roster = AnnualOfficerRoster::where('club_id', $club->id)
             ->where('masonic_year', $masonicYear)
@@ -874,7 +879,7 @@ class MeetingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
-        $masonicYear = $request->input('masonic_year') ?: (Carbon::parse($meeting->meeting_date)->format('Y') . '-' . (Carbon::parse($meeting->meeting_date)->year + 1));
+        $masonicYear = $request->input('masonic_year') ?: (Carbon::parse($meeting->meeting_date)->format('Y').'-'.(Carbon::parse($meeting->meeting_date)->year + 1));
 
         $roster = AnnualOfficerRoster::where('club_id', $club->id)
             ->where('masonic_year', $masonicYear)

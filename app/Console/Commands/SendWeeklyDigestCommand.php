@@ -40,6 +40,7 @@ class SendWeeklyDigestCommand extends Command
 
         if ($clubs->isEmpty()) {
             $this->error('No matching clubs found.');
+
             return Command::FAILURE;
         }
 
@@ -48,8 +49,9 @@ class SendWeeklyDigestCommand extends Command
         foreach ($clubs as $club) {
             $approvedCount = ClubUpdate::where('club_id', $club->id)->where('status', 'approved')->count();
 
-            if ($approvedCount === 0 && !$force) {
+            if ($approvedCount === 0 && ! $force) {
                 $this->info("Skipping {$club->name}: No approved updates waiting.");
+
                 continue;
             }
 
@@ -61,6 +63,7 @@ class SendWeeklyDigestCommand extends Command
         }
 
         $this->info("Completed. Dispatched weekly digest for {$dispatchedCount} club(s).");
+
         return Command::SUCCESS;
     }
 }

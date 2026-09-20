@@ -310,19 +310,19 @@ class PageAdminController extends Controller
     private function getWebsiteSettings(Club $club): array
     {
         $defaults = [
-            'seo_title_suffix' => '| ' . $club->name,
-            'seo_meta_description' => 'Official website and member portal for ' . $club->name,
+            'seo_title_suffix' => '| '.$club->name,
+            'seo_meta_description' => 'Official website and member portal for '.$club->name,
             'custom_domain' => $club->custom_domain ?? '',
             'primary_color' => '#0369a1',
-            'contact_email' => 'admin@' . $club->slug . '.org',
+            'contact_email' => 'admin@'.$club->slug.'.org',
             'phone' => '+44 20 7946 0912',
             'address' => '100 Boathouse Way, Oxford, UK',
             'social_facebook' => 'https://facebook.com',
             'social_instagram' => 'https://instagram.com',
             'social_twitter' => 'https://x.com',
             'header_cta_text' => 'Join Our Club',
-            'header_cta_link' => '/site/' . $club->slug . '/join-us',
-            'footer_copyright' => '© ' . date('Y') . ' ' . $club->name . '. All rights reserved.',
+            'header_cta_link' => '/site/'.$club->slug.'/join-us',
+            'footer_copyright' => '© '.date('Y').' '.$club->name.'. All rights reserved.',
         ];
 
         return array_merge($defaults, $club->settings ?? []);

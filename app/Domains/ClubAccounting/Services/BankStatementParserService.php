@@ -17,7 +17,7 @@ class BankStatementParserService
      */
     public function parseFile(string $filePath, ?string $originalFilename = null, int $clubId = 0): array
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             throw new InvalidArgumentException("Bank statement file not found at: {$filePath}");
         }
 
@@ -37,11 +37,11 @@ class BankStatementParserService
      */
     public function parseCsv(string $content, string $filename = 'statement.csv', int $clubId = 0): array
     {
-        $lines = explode("\n", str_replace("\r", "", $content));
+        $lines = explode("\n", str_replace("\r", '', $content));
         $rows = array_filter(array_map('str_getcsv', $lines));
 
         if (empty($rows)) {
-            throw new InvalidArgumentException("Empty or invalid CSV file.");
+            throw new InvalidArgumentException('Empty or invalid CSV file.');
         }
 
         // Detect header row
@@ -88,7 +88,7 @@ class BankStatementParserService
             }
 
             $parsedDate = $this->parseDate($dateStr);
-            if (!$parsedDate) {
+            if (! $parsedDate) {
                 continue;
             }
 
@@ -172,7 +172,7 @@ class BankStatementParserService
         foreach ($transactions[1] ?? [] as $trnXml) {
             $dateStr = $this->extractOfxTag($trnXml, 'DTPOSTED');
             $parsedDate = $this->parseOfxDate($dateStr);
-            if (!$parsedDate) {
+            if (! $parsedDate) {
                 continue;
             }
 
@@ -183,7 +183,7 @@ class BankStatementParserService
             $memo = $this->extractOfxTag($trnXml, 'MEMO');
             $ref = $this->extractOfxTag($trnXml, 'FITID') ?: $this->extractOfxTag($trnXml, 'CHECKNUM');
 
-            $fullDesc = trim("{$name} " . ($memo && $memo !== $name ? $memo : ''));
+            $fullDesc = trim("{$name} ".($memo && $memo !== $name ? $memo : ''));
 
             $hash = $this->generateTransactionHash($parsedDate->format('Y-m-d'), $amount, $fullDesc, null);
             $isDuplicate = in_array($hash, $existingHashes) || isset($parsedLines[$hash]);
@@ -226,7 +226,7 @@ class BankStatementParserService
     {
         $amountStr = number_format($amount, 2, '.', '');
         $balStr = $balance !== null ? number_format($balance, 2, '.', '') : '';
-        $rawString = "{$date}|{$amountStr}|" . trim($description) . "|{$balStr}";
+        $rawString = "{$date}|{$amountStr}|".trim($description)."|{$balStr}";
 
         return hash('sha256', $rawString);
     }
@@ -241,7 +241,7 @@ class BankStatementParserService
         return DB::transaction(function () use ($clubId, $parsedBundle, $importedByMemberId) {
             $newLines = array_filter($parsedBundle['lines'], fn ($l) => empty($l['is_duplicate']));
             $totalLines = count($newLines);
-            $totalAmount = array_reduce($newLines, fn ($acc, $l) => $acc + (float)$l['amount'], 0.0);
+            $totalAmount = array_reduce($newLines, fn ($acc, $l) => $acc + (float) $l['amount'], 0.0);
 
             $importBatch = BankImport::create([
                 'club_id' => $clubId,
@@ -290,12 +290,14 @@ class BankStatementParserService
                 return $idx;
             }
         }
+
         return null;
     }
 
     private function cleanAmount(string $val): float
     {
         $clean = preg_replace('/[^\d\.\-]/', '', $val);
+
         return floatval($clean);
     }
 
@@ -309,6 +311,7 @@ class BankStatementParserService
                 // Continue to next format
             }
         }
+
         return null;
     }
 
@@ -318,8 +321,10 @@ class BankStatementParserService
             $year = substr($val, 0, 4);
             $month = substr($val, 4, 2);
             $day = substr($val, 6, 2);
-            return Carbon::create((int)$year, (int)$month, (int)$day)->startOfDay();
+
+            return Carbon::create((int) $year, (int) $month, (int) $day)->startOfDay();
         }
+
         return null;
     }
 
@@ -328,6 +333,7 @@ class BankStatementParserService
         if (preg_match("/<{$tag}>([^<\r\n]+)/i", $xml, $m)) {
             return trim($m[1]);
         }
+
         return '';
     }
 }

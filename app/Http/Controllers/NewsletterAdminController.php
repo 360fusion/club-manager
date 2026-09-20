@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Club;
+use App\Models\ClubUpdate;
+use App\Models\Event;
 use App\Models\Newsletter;
 use App\Models\NewsletterType;
+use App\Models\Post;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -75,36 +80,36 @@ class NewsletterAdminController extends Controller
         NewsletterTypeAdminController::ensureDefaultTypes($club);
 
         $types = NewsletterType::where('club_id', $club->id)->get();
-        $posts = \App\Models\Post::where('club_id', $club->id)
+        $posts = Post::where('club_id', $club->id)
             ->where('status', 'published')
             ->orderByDesc('published_at')
             ->get();
 
-        $pickerApprovedUpdates = \App\Models\ClubUpdate::where('club_id', $club->id)
+        $pickerApprovedUpdates = ClubUpdate::where('club_id', $club->id)
             ->where('status', 'approved')
             ->orderByDesc('created_at')
             ->get();
 
-        $pickerMeetings = \App\Domains\ClubAccounting\Models\ClubCommitteeMeeting::where('club_id', $club->id)
-            ->where('meeting_date', '>=', \Carbon\Carbon::now())
+        $pickerMeetings = ClubCommitteeMeeting::where('club_id', $club->id)
+            ->where('meeting_date', '>=', Carbon::now())
             ->orderBy('meeting_date', 'asc')
             ->get()
-            ->map(fn($m) => [
+            ->map(fn ($m) => [
                 'id' => $m->id,
                 'title' => $m->title,
-                'date' => \Carbon\Carbon::parse($m->meeting_date)->format('M d, Y g:i A'),
+                'date' => Carbon::parse($m->meeting_date)->format('M d, Y g:i A'),
                 'room' => $m->location ?? 'Main Lodge Room',
             ]);
 
-        $pickerEvents = \App\Models\Event::where('club_id', $club->id)
-            ->where('starts_at', '>=', \Carbon\Carbon::now())
+        $pickerEvents = Event::where('club_id', $club->id)
+            ->where('starts_at', '>=', Carbon::now())
             ->orderBy('starts_at', 'asc')
             ->get()
-            ->map(fn($e) => [
+            ->map(fn ($e) => [
                 'id' => $e->id,
                 'title' => $e->title,
-                'date' => \Carbon\Carbon::parse($e->starts_at)->format('M d, Y g:i A'),
-                'price' => $e->price ? '£' . number_format($e->price, 2) : 'Free',
+                'date' => Carbon::parse($e->starts_at)->format('M d, Y g:i A'),
+                'price' => $e->price ? '£'.number_format($e->price, 2) : 'Free',
             ]);
 
         $newsletter = $id
@@ -150,9 +155,16 @@ class NewsletterAdminController extends Controller
 
         $rawAttachments = $validated['existing_attachments'] ?? [];
         $attachments = array_values(array_filter($rawAttachments, function ($att) {
-            if (!is_array($att)) return false;
-            if (!empty($att['isPendingFile'])) return false;
-            if (isset($att['url']) && str_starts_with($att['url'], 'blob:')) return false;
+            if (! is_array($att)) {
+                return false;
+            }
+            if (! empty($att['isPendingFile'])) {
+                return false;
+            }
+            if (isset($att['url']) && str_starts_with($att['url'], 'blob:')) {
+                return false;
+            }
+
             return true;
         }));
 
@@ -164,9 +176,9 @@ class NewsletterAdminController extends Controller
                     $mime = $file->getClientMimeType();
 
                     $media = $club->addMedia($file)->toMediaCollection('newsletters');
-                    $sizeFormatted = $bytes >= 1048576 
-                        ? round($bytes / 1048576, 1) . ' MB' 
-                        : round($bytes / 1024, 1) . ' KB';
+                    $sizeFormatted = $bytes >= 1048576
+                        ? round($bytes / 1048576, 1).' MB'
+                        : round($bytes / 1024, 1).' KB';
 
                     $attachments[] = [
                         'name' => $name,

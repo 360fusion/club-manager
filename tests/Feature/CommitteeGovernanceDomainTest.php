@@ -6,18 +6,25 @@ use App\Domains\ClubAccounting\Enums\AttendanceType;
 use App\Domains\ClubAccounting\Enums\CommitteeItemType;
 use App\Domains\ClubAccounting\Enums\CommitteeMeetingStatus;
 use App\Domains\ClubAccounting\Enums\TaskStatus;
+use App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal;
+use App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal;
 use App\Domains\ClubAccounting\Livewire\Committee\LiveMinuteTaker;
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingIndex;
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingWorkspace;
 use App\Domains\ClubAccounting\Livewire\Committee\Modals\BillAuditModal;
 use App\Domains\ClubAccounting\Livewire\Committee\Modals\CandidateVettingModal;
+use App\Domains\ClubAccounting\Mail\CommitteeAgendaPackMailable;
+use App\Domains\ClubAccounting\Models\AnnualOfficerAssignment;
+use App\Domains\ClubAccounting\Models\AnnualOfficerRoster;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAgendaItem;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAttendee;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Models\ClubCommitteeTask;
 use App\Domains\ClubAccounting\Models\ClubNoticeOfMotion;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Notifications\CommitteeTaskAssignedNotification;
 use App\Domains\ClubAccounting\Services\Governance\CommitteeNotesParserService;
+use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Domains\ClubAccounting\Services\Governance\NoticeOfMotionBridgeService;
 use App\Domains\ClubAccounting\Services\Integration\MemberMentionSearchService;
 use App\Models\Accounting\Account;
@@ -26,10 +33,6 @@ use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
-use App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal;
-use App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal;
-use App\Domains\ClubAccounting\Mail\CommitteeAgendaPackMailable;
-use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -42,8 +45,11 @@ class CommitteeGovernanceDomainTest extends TestCase
     use RefreshDatabase;
 
     private Club $club;
+
     private User $admin;
+
     private User $member1;
+
     private User $member2;
 
     protected function setUp(): void
@@ -207,9 +213,9 @@ class CommitteeGovernanceDomainTest extends TestCase
 
     public function test_notes_parser_service_extracts_mentions_tasks_and_motions(): void
     {
-        $parser = new CommitteeNotesParserService();
+        $parser = new CommitteeNotesParserService;
 
-        $notes = <<<TEXT
+        $notes = <<<'TEXT'
 Opened committee meeting at 19:30.
 Present: @Arthur Pendelton and @James Sterling.
 
@@ -245,7 +251,7 @@ TEXT;
             'status' => CommitteeMeetingStatus::InProgress,
         ]);
 
-        $notes = <<<TEXT
+        $notes = <<<'TEXT'
 [ ] @James Sterling Reconcile lodge bank accounts by 2026-11-01
 /motion That Brother William Ward be recommended for honorary membership
 TEXT;
@@ -301,7 +307,7 @@ TEXT;
             'custom_agenda_items' => [],
         ]);
 
-        $bridge = new NoticeOfMotionBridgeService();
+        $bridge = new NoticeOfMotionBridgeService;
         $success = $bridge->exportToSummons($motion, $lodgeMeeting);
 
         $this->assertTrue($success);
@@ -320,7 +326,7 @@ TEXT;
 
     public function test_member_mention_search_service(): void
     {
-        $service = new MemberMentionSearchService();
+        $service = new MemberMentionSearchService;
 
         $results = $service->search($this->club->id, 'Sterling');
         $this->assertCount(1, $results);
@@ -480,7 +486,7 @@ TEXT;
 
         // Add the non-committee member with a custom role
         $lw->set('selectedMemberIds', [$this->member1->id, $this->member2->id, $guestMember->id])
-            ->set('customRoles.' . $guestMember->id, 'Lodge Steward / Guest')
+            ->set('customRoles.'.$guestMember->id, 'Lodge Steward / Guest')
             ->call('addSelectedAttendees')
             ->assertHasNoErrors();
 
@@ -512,7 +518,7 @@ TEXT;
         $this->actingAs($this->admin);
 
         // Create club members
-        $memberA = \App\Domains\ClubAccounting\Models\Member::create([
+        $memberA = Member::create([
             'club_id' => $this->club->id,
             'user_id' => $this->member1->id,
             'first_name' => 'James',
@@ -520,7 +526,7 @@ TEXT;
             'status' => 'active',
         ]);
 
-        $memberB = \App\Domains\ClubAccounting\Models\Member::create([
+        $memberB = Member::create([
             'club_id' => $this->club->id,
             'user_id' => null, // Unlinked member
             'first_name' => 'Oliver',
@@ -529,22 +535,22 @@ TEXT;
         ]);
 
         $now = Carbon::now();
-        $mYear = $now->format('Y') . '-' . ($now->year + 1);
+        $mYear = $now->format('Y').'-'.($now->year + 1);
 
-        $roster = \App\Domains\ClubAccounting\Models\AnnualOfficerRoster::create([
+        $roster = AnnualOfficerRoster::create([
             'club_id' => $this->club->id,
             'masonic_year' => $mYear,
             'status' => 'draft',
         ]);
 
-        \App\Domains\ClubAccounting\Models\AnnualOfficerAssignment::create([
+        AnnualOfficerAssignment::create([
             'roster_id' => $roster->id,
             'member_id' => $memberA->id,
             'office' => 'committee_member',
             'category' => 'additional',
         ]);
 
-        \App\Domains\ClubAccounting\Models\AnnualOfficerAssignment::create([
+        AnnualOfficerAssignment::create([
             'roster_id' => $roster->id,
             'member_id' => $memberB->id,
             'office' => 'committee_member',
@@ -568,7 +574,7 @@ TEXT;
         $selected = $lw->get('selectedMemberIds');
 
         $this->assertContains($this->member1->id, $selected);
-        $this->assertContains('m_' . $memberB->id, $selected);
+        $this->assertContains('m_'.$memberB->id, $selected);
 
         // Add them to roll call
         $lw->call('addSelectedAttendees');
@@ -641,8 +647,8 @@ TEXT;
         ]);
 
         $editorText = "Meeting commenced at 19:30.\n\n"
-            . "[ ] @MemberName Review dining hall contract by 2026-10-15\n\n"
-            . "/motion That annual dues be increased to £120 per member\n";
+            ."[ ] @MemberName Review dining hall contract by 2026-10-15\n\n"
+            ."/motion That annual dues be increased to £120 per member\n";
 
         Livewire::test(LiveMinuteTaker::class, [
             'clubSlug' => $this->club->slug,
@@ -677,8 +683,8 @@ TEXT;
         ]);
 
         $editorText = "Intro notes.\n\n"
-            . "[ ] @BrotherSmith Setup projector and sound equipment by 2026-11-01\n\n"
-            . "/motion Approve annual financial statements for audit submission\n";
+            ."[ ] @BrotherSmith Setup projector and sound equipment by 2026-11-01\n\n"
+            ."/motion Approve annual financial statements for audit submission\n";
 
         Livewire::test(LiveMinuteTaker::class, [
             'clubSlug' => $this->club->slug,
@@ -688,6 +694,7 @@ TEXT;
             ->assertDispatched('notify', function ($eventName, ...$args) {
                 $payload = is_array($args[0] ?? null) ? $args[0] : $args;
                 $data = isset($payload['type']) ? $payload : ($payload[0] ?? []);
+
                 return ($data['type'] ?? '') === 'success'
                     && str_contains($data['message'] ?? '', 'Successfully committed 1 tasks and 1 motions.');
             })

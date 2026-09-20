@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Accounting\MeetingFinancialReturn;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Meeting extends Model
 {
@@ -62,38 +66,38 @@ class Meeting extends Model
         'officers_roster' => 'array',
     ];
 
-    public function club()
+    public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
-    public function recurringRule()
+    public function recurringRule(): BelongsTo
     {
         return $this->belongsTo(RecurringRule::class);
     }
 
-    public function agendaItems()
+    public function agendaItems(): HasMany
     {
         return $this->hasMany(AgendaItem::class)->orderBy('item_number');
     }
 
-    public function officerAssignments()
+    public function officerAssignments(): HasMany
     {
         return $this->hasMany(OfficerAssignment::class);
     }
 
-    public function fraternalVisits()
+    public function fraternalVisits(): HasMany
     {
         return $this->hasMany(FraternalVisit::class);
     }
 
-    public function rsvps()
+    public function rsvps(): HasMany
     {
         return $this->hasMany(MeetingRsvp::class);
     }
 
-    public function financialReturn()
+    public function financialReturn(): HasOne
     {
-        return $this->hasOne(\App\Models\Accounting\MeetingFinancialReturn::class);
+        return $this->hasOne(MeetingFinancialReturn::class);
     }
 }

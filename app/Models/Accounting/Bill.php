@@ -3,6 +3,7 @@
 namespace App\Models\Accounting;
 
 use App\Models\Club;
+use App\Models\Media;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,6 +43,6 @@ class Bill extends Model
 
     public function media(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Media::class, 'media_id');
+        return $this->belongsTo(Media::class, 'media_id');
     }
 }

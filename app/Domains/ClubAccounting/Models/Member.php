@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Member extends Model
 {
@@ -66,14 +67,16 @@ class Member extends Model
     // Accessors
     public function getFullNameAttribute(): string
     {
-        $firstName = !empty($this->preferred_name) ? trim($this->preferred_name) : $this->first_name;
+        $firstName = ! empty($this->preferred_name) ? trim($this->preferred_name) : $this->first_name;
         $nameParts = array_filter([$firstName, $this->middle_names, $this->last_name]);
+
         return implode(' ', $nameParts);
     }
 
     public function getOfficialFullNameAttribute(): string
     {
         $nameParts = array_filter([$this->first_name, $this->middle_names, $this->last_name]);
+
         return implode(' ', $nameParts);
     }
 
@@ -82,7 +85,7 @@ class Member extends Model
         $rankPrefix = $this->masonic_rank ? trim($this->masonic_rank) : 'Bro';
         $name = $this->full_name;
         $suffixes = array_filter([$this->grand_rank, $this->provincial_rank]);
-        $suffixStr = !empty($suffixes) ? ' ' . implode(', ', $suffixes) : '';
+        $suffixStr = ! empty($suffixes) ? ' '.implode(', ', $suffixes) : '';
 
         return "{$rankPrefix} {$name}{$suffixStr}";
     }
@@ -132,7 +135,7 @@ class Member extends Model
             return $query;
         }
 
-        $term = '%' . trim($search) . '%';
+        $term = '%'.trim($search).'%';
 
         return $query->where(function (Builder $q) use ($term) {
             $q->where('first_name', 'like', $term)
@@ -165,12 +168,12 @@ class Member extends Model
         return $this->belongsTo(SubscriptionTier::class, 'subscription_tier_id');
     }
 
-    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function subscriptions(): HasMany
     {
         return $this->hasMany(MemberSubscription::class, 'member_id');
     }
 
-    public function annualAssignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function annualAssignments(): HasMany
     {
         return $this->hasMany(AnnualOfficerAssignment::class, 'member_id');
     }

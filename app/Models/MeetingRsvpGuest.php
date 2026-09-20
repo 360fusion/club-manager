@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MeetingRsvpGuest extends Model
 {
@@ -27,7 +28,7 @@ class MeetingRsvpGuest extends Model
         'dining_fee' => 'decimal:2',
     ];
 
-    public function rsvp()
+    public function rsvp(): BelongsTo
     {
         return $this->belongsTo(MeetingRsvp::class, 'meeting_rsvp_id');
     }

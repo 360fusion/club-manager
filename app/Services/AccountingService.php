@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
-use App\Models\Accounting\JournalItem;
 use App\Models\Accounting\MeetingFinancialReturn;
 use App\Models\Club;
 use App\Models\Invoice;
@@ -68,7 +67,7 @@ class AccountingService
 
         $account = Account::where('club_id', $club->id)->where('code', $code)->first();
 
-        if (!$account) {
+        if (! $account) {
             throw new InvalidArgumentException("Account with code {$code} not found for club.");
         }
 
@@ -82,7 +81,7 @@ class AccountingService
     {
         $items = $data['items'] ?? [];
         if (count($items) < 2) {
-            throw new InvalidArgumentException("A journal entry must contain at least 2 line items.");
+            throw new InvalidArgumentException('A journal entry must contain at least 2 line items.');
         }
 
         $totalDebit = 0.0;
@@ -99,7 +98,7 @@ class AccountingService
 
         return DB::transaction(function () use ($club, $data, $items) {
             $entryCount = JournalEntry::where('club_id', $club->id)->count() + 1;
-            $ref = $data['reference_number'] ?? 'JE-' . date('Y') . '-' . str_pad((string) $entryCount, 4, '0', STR_PAD_LEFT);
+            $ref = $data['reference_number'] ?? 'JE-'.date('Y').'-'.str_pad((string) $entryCount, 4, '0', STR_PAD_LEFT);
 
             $entry = JournalEntry::create([
                 'club_id' => $club->id,
@@ -137,7 +136,7 @@ class AccountingService
         $totalCredit = array_reduce($items, fn ($sum, $i) => $sum + (float) ($i['credit'] ?? 0), 0.0);
 
         if (abs($totalDebit - $totalCredit) > 0.001) {
-            throw new \InvalidArgumentException('Journal entry must be balanced. Total Debit (£' . number_format($totalDebit, 2) . ') does not equal Total Credit (£' . number_format($totalCredit, 2) . ').');
+            throw new InvalidArgumentException('Journal entry must be balanced. Total Debit (£'.number_format($totalDebit, 2).') does not equal Total Credit (£'.number_format($totalCredit, 2).').');
         }
 
         return DB::transaction(function () use ($entry, $data, $items) {
@@ -206,7 +205,7 @@ class AccountingService
     {
         return DB::transaction(function () use ($club, $data, $attachmentFile) {
             $billCount = Bill::where('club_id', $club->id)->count() + 1;
-            $billNum = $data['bill_number'] ?? 'BILL-' . date('Y') . '-' . str_pad((string) $billCount, 4, '0', STR_PAD_LEFT);
+            $billNum = $data['bill_number'] ?? 'BILL-'.date('Y').'-'.str_pad((string) $billCount, 4, '0', STR_PAD_LEFT);
 
             $mediaId = null;
             if ($attachmentFile && $attachmentFile->isValid()) {
@@ -221,7 +220,7 @@ class AccountingService
                 $mediaId = $media->id;
             }
 
-            $status = !empty($data['is_draft']) ? 'draft' : 'unpaid';
+            $status = ! empty($data['is_draft']) ? 'draft' : 'unpaid';
 
             $bill = Bill::create([
                 'club_id' => $club->id,
@@ -260,7 +259,9 @@ class AccountingService
      */
     public function markBillAsPaid(Bill $bill): void
     {
-        if ($bill->status === 'paid') return;
+        if ($bill->status === 'paid') {
+            return;
+        }
 
         DB::transaction(function () use ($bill) {
             $bill->update([
@@ -460,9 +461,9 @@ class AccountingService
 
         // 4. Balance Sheet Summary
         $balanceSheet = [
-            'assets' => $accounts->where('type', 'asset')->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
-            'liabilities' => $accounts->where('type', 'liability')->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
-            'equity' => $accounts->where('type', 'equity')->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
+            'assets' => $accounts->where('type', 'asset')->values()->map(fn ($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
+            'liabilities' => $accounts->where('type', 'liability')->values()->map(fn ($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
+            'equity' => $accounts->where('type', 'equity')->values()->map(fn ($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
             'total_assets' => $summary['total_assets'],
             'total_liabilities' => $summary['total_liabilities'],
             'total_equity' => $summary['total_equity'],
@@ -472,7 +473,7 @@ class AccountingService
         $cashAccounts = $accounts->whereIn('code', ['1000', '1100']);
         $cashSummary = [
             'total_cash_on_hand' => round($cashAccounts->sum('balance'), 2),
-            'accounts' => $cashAccounts->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
+            'accounts' => $cashAccounts->values()->map(fn ($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
         ];
 
         // 6. Executive Summary
@@ -488,8 +489,8 @@ class AccountingService
 
         // 7. Profit and Loss
         $profitAndLoss = [
-            'revenues' => $accounts->where('type', 'revenue')->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'amount' => round($a->balance, 2)]),
-            'expenses' => $accounts->where('type', 'expense')->values()->map(fn($a) => ['code' => $a->code, 'name' => $a->name, 'amount' => round($a->balance, 2)]),
+            'revenues' => $accounts->where('type', 'revenue')->values()->map(fn ($a) => ['code' => $a->code, 'name' => $a->name, 'amount' => round($a->balance, 2)]),
+            'expenses' => $accounts->where('type', 'expense')->values()->map(fn ($a) => ['code' => $a->code, 'name' => $a->name, 'amount' => round($a->balance, 2)]),
             'total_revenue' => $summary['total_revenue'],
             'total_expenses' => $summary['total_expenses'],
             'net_income' => $summary['net_income'],
@@ -520,7 +521,7 @@ class AccountingService
             $paidDiners = (int) ($data['paid_diners_count'] ?? 0);
             $waivedDiners = (int) ($data['waived_diners_count'] ?? 0);
             $kitchenCostPerHead = (float) ($data['kitchen_cost_per_head'] ?? 0);
-            $kitchenVendor = !empty($data['kitchen_vendor_name']) ? $data['kitchen_vendor_name'] : 'Kitchen Caterer';
+            $kitchenVendor = ! empty($data['kitchen_vendor_name']) ? $data['kitchen_vendor_name'] : 'Kitchen Caterer';
 
             $raffleAmount = (float) ($data['raffle_amount'] ?? 0);
             $almsAmount = (float) ($data['alms_amount'] ?? 0);
@@ -534,7 +535,7 @@ class AccountingService
             $totalCharity = round($raffleAmount + $almsAmount + $donationsAmount + $bequestAmount, 2);
             $netBankDeposit = round($totalDiningRevenue + $totalCharity, 2);
 
-            $returnDate = !empty($meeting->meeting_date) ? date('Y-m-d', strtotime((string) $meeting->meeting_date)) : date('Y-m-d');
+            $returnDate = ! empty($meeting->meeting_date) ? date('Y-m-d', strtotime((string) $meeting->meeting_date)) : date('Y-m-d');
 
             // 1. Create Kitchen Vendor Bill (A/P)
             $vendorBill = null;
@@ -629,7 +630,7 @@ class AccountingService
         $paidDiners = (int) ($data['paid_diners_count'] ?? 0);
         $waivedDiners = (int) ($data['waived_diners_count'] ?? 0);
         $kitchenCostPerHead = (float) ($data['kitchen_cost_per_head'] ?? 0);
-        $kitchenVendor = !empty($data['kitchen_vendor_name']) ? $data['kitchen_vendor_name'] : 'Kitchen Caterer';
+        $kitchenVendor = ! empty($data['kitchen_vendor_name']) ? $data['kitchen_vendor_name'] : 'Kitchen Caterer';
 
         $raffleAmount = (float) ($data['raffle_amount'] ?? 0);
         $almsAmount = (float) ($data['alms_amount'] ?? 0);
@@ -643,9 +644,9 @@ class AccountingService
         $totalCharity = round($raffleAmount + $almsAmount + $donationsAmount + $bequestAmount, 2);
         $netBankDeposit = round($totalDiningRevenue + $totalCharity, 2);
 
-        $returnDate = !empty($data['return_date'])
+        $returnDate = ! empty($data['return_date'])
             ? date('Y-m-d', strtotime((string) $data['return_date']))
-            : (!empty($meeting->meeting_date) ? date('Y-m-d', strtotime((string) $meeting->meeting_date)) : date('Y-m-d'));
+            : (! empty($meeting->meeting_date) ? date('Y-m-d', strtotime((string) $meeting->meeting_date)) : date('Y-m-d'));
 
         return MeetingFinancialReturn::updateOrCreate(
             [
@@ -680,32 +681,44 @@ class AccountingService
      */
     public function getComparativeIncomeExpenditureData(Club $club): array
     {
-        $currentYearLabel = "2025 – 2026";
-        $priorYearLabel = "2024 – 2025";
+        $currentYearLabel = '2025 – 2026';
+        $priorYearLabel = '2024 – 2025';
 
         $returns = MeetingFinancialReturn::where('club_id', $club->id)->get();
 
         $curSubsIncome = (float) Invoice::where('club_id', $club->id)->where('status', 'paid')->sum('amount');
         $curSubsExp = (float) Bill::where('club_id', $club->id)->sum('amount');
-        if ($curSubsIncome == 0) $curSubsIncome = 11767.29;
-        if ($curSubsExp == 0) $curSubsExp = 8120.35;
+        if ($curSubsIncome == 0) {
+            $curSubsIncome = 11767.29;
+        }
+        if ($curSubsExp == 0) {
+            $curSubsExp = 8120.35;
+        }
 
         $curAccrualsIncome = 2060.00;
         $curAccrualsExp = 0.00;
 
         $curAlmonerIncome = (float) $returns->sum('alms_amount');
-        if ($curAlmonerIncome == 0) $curAlmonerIncome = 1420.42;
+        if ($curAlmonerIncome == 0) {
+            $curAlmonerIncome = 1420.42;
+        }
         $curAlmonerExp = 0.00;
 
         $curRaffleIncome = (float) $returns->sum('raffle_amount');
-        if ($curRaffleIncome == 0) $curRaffleIncome = 7132.96;
+        if ($curRaffleIncome == 0) {
+            $curRaffleIncome = 7132.96;
+        }
         $curRaffleExp = 1105.00;
 
         $curDonationsIncome = (float) $returns->sum('donations_amount');
-        if ($curDonationsIncome == 0) $curDonationsIncome = 1710.30;
+        if ($curDonationsIncome == 0) {
+            $curDonationsIncome = 1710.30;
+        }
 
         $curBequestIncome = (float) $returns->sum('bequest_amount');
-        if ($curBequestIncome == 0) $curBequestIncome = 3750.00;
+        if ($curBequestIncome == 0) {
+            $curBequestIncome = 3750.00;
+        }
 
         $rows = [
             [
@@ -779,7 +792,9 @@ class AccountingService
      */
     public function setOpeningBalance(Club $club, Account $account, float $amount, ?string $asOfDate = null): ?JournalEntry
     {
-        if ($amount == 0) return null;
+        if ($amount == 0) {
+            return null;
+        }
 
         $retainedEarningsAcc = $this->getAccount($club, '3000');
         $asOfDate = $asOfDate ?: date('Y-01-01');

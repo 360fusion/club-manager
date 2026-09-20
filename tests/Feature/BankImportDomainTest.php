@@ -4,8 +4,6 @@ namespace Tests\Feature;
 
 use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex;
-use App\Domains\ClubAccounting\Models\BankImport;
-use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Services\BankStatementParserService;
 use App\Models\Club;
 use App\Models\ClubType;
@@ -21,6 +19,7 @@ class BankImportDomainTest extends TestCase
     use RefreshDatabase;
 
     protected Club $club;
+
     protected User $adminUser;
 
     protected function setUp(): void
@@ -50,7 +49,7 @@ class BankImportDomainTest extends TestCase
         $csvContent .= "15/09/2026,Annual Dues Bro Smith,INV-2026-M001,160.00,,1160.00\n";
         $csvContent .= "16/09/2026,Hall Catering Supplier,INV-BILL-99,,85.50,1074.50\n";
 
-        $service = new BankStatementParserService();
+        $service = new BankStatementParserService;
         $bundle = $service->parseCsv($csvContent, 'barclays.csv', $this->club->id);
 
         $this->assertEquals(2, $bundle['total_lines']);
@@ -64,7 +63,7 @@ class BankImportDomainTest extends TestCase
 
     public function test_can_parse_ofx_statement_file(): void
     {
-        $ofxContent = <<<OFX
+        $ofxContent = <<<'OFX'
 <OFX>
 <BANKMSGSRSV1>
 <STMTTRNRS>
@@ -95,7 +94,7 @@ class BankImportDomainTest extends TestCase
 </OFX>
 OFX;
 
-        $service = new BankStatementParserService();
+        $service = new BankStatementParserService;
         $bundle = $service->parseOfx($ofxContent, 'natwest.ofx', $this->club->id);
 
         $this->assertEquals('12345678', $bundle['account_number']);
@@ -107,7 +106,7 @@ OFX;
 
     public function test_deduplication_hash_skips_previously_imported_transactions(): void
     {
-        $service = new BankStatementParserService();
+        $service = new BankStatementParserService;
 
         // 1. First import
         $csv1 = "Date,Description,Amount,Balance\n";

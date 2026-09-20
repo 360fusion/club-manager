@@ -12,23 +12,35 @@ use Livewire\Component;
 class MeetingIndex extends Component
 {
     public string $clubSlug;
+
     public string $statusFilter = 'all';
+
     public string $search = '';
 
     // Create Modal State
     public bool $showCreateModal = false;
+
     public string $newTitle = '';
+
     public string $newDate = '';
+
     public string $newLocation = '';
+
     public ?int $linked_regular_meeting_id = null;
+
     public bool $isCustomTitle = false;
 
     // Edit Modal State
     public bool $showEditModal = false;
+
     public ?int $editingMeetingId = null;
+
     public string $editTitle = '';
+
     public string $editDate = '';
+
     public string $editLocation = '';
+
     public string $editStatus = 'draft';
 
     public function mount(string $clubSlug): void
@@ -47,8 +59,8 @@ class MeetingIndex extends Component
         }
 
         if (empty($this->newLocation)) {
-            $this->newLocation = $club->meeting_venue 
-                ?? $club->address 
+            $this->newLocation = $club->meeting_venue
+                ?? $club->address
                 ?? $club->settings['default_meeting_location']
                 ?? $club->settings['meeting_venue']
                 ?? $club->settings['meeting_location']
@@ -70,7 +82,7 @@ class MeetingIndex extends Component
 
     public function updatedNewTitle(): void
     {
-        $this->isCustomTitle = !empty(trim($this->newTitle));
+        $this->isCustomTitle = ! empty(trim($this->newTitle));
         if (empty(trim($this->newTitle))) {
             $this->generateTitleFromDate();
         }
@@ -78,7 +90,7 @@ class MeetingIndex extends Component
 
     public function updatedNewDate(): void
     {
-        if (!$this->isCustomTitle || empty(trim($this->newTitle))) {
+        if (! $this->isCustomTitle || empty(trim($this->newTitle))) {
             $this->generateTitleFromDate();
         }
     }
@@ -95,7 +107,7 @@ class MeetingIndex extends Component
                 $this->newDate = $suggestedDate->format('Y-m-d\T19:00');
                 $this->generateTitleFromDate();
 
-                if (!empty($regularMeeting->venue)) {
+                if (! empty($regularMeeting->venue)) {
                     $this->newLocation = $regularMeeting->venue;
                 }
             }
@@ -104,7 +116,7 @@ class MeetingIndex extends Component
 
     public function generateTitleFromDate(): void
     {
-        if (!empty($this->newDate)) {
+        if (! empty($this->newDate)) {
             try {
                 $formattedDate = Carbon::parse($this->newDate)->format('jS F Y');
                 $this->newTitle = "Committee Meeting – {$formattedDate}";
@@ -127,7 +139,7 @@ class MeetingIndex extends Component
         }
 
         if (empty(trim($this->newTitle))) {
-            $this->newTitle = 'Committee Meeting – ' . now()->format('jS F Y');
+            $this->newTitle = 'Committee Meeting – '.now()->format('jS F Y');
         }
 
         $this->validate([
@@ -207,11 +219,11 @@ class MeetingIndex extends Component
         $meetings = ClubCommitteeMeeting::where('club_id', $club->id)
             ->when($this->statusFilter === 'scheduled', function ($q) use ($now) {
                 $q->where('status', CommitteeMeetingStatus::Scheduled)
-                  ->where('meeting_date', '>=', $now);
+                    ->where('meeting_date', '>=', $now);
             })
             ->when($this->statusFilter === 'draft', function ($q) use ($now) {
                 $q->whereIn('status', [CommitteeMeetingStatus::Draft, CommitteeMeetingStatus::DraftSaved])
-                  ->where('meeting_date', '>=', $now);
+                    ->where('meeting_date', '>=', $now);
             })
             ->when($this->statusFilter === 'past', function ($q) use ($now) {
                 $q->where('meeting_date', '<', $now);
@@ -219,7 +231,7 @@ class MeetingIndex extends Component
             ->when(! in_array($this->statusFilter, ['all', 'scheduled', 'draft', 'past']), function ($q) {
                 $q->where('status', $this->statusFilter);
             })
-            ->when(!empty($this->search), fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
+            ->when(! empty($this->search), fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
             ->orderByDesc('meeting_date')
             ->with(['chair', 'secretary', 'attendees', 'agendaItems', 'tasks'])
             ->get();

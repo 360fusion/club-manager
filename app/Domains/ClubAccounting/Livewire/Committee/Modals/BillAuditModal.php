@@ -11,9 +11,13 @@ use Livewire\Component;
 class BillAuditModal extends Component
 {
     public int $meetingId;
+
     public ?int $billId = null;
+
     public bool $isOpen = false;
+
     public string $auditNotes = '';
+
     public bool $isApprovedForPayment = true;
 
     protected $listeners = ['openBillAudit' => 'loadBill'];
@@ -23,7 +27,7 @@ class BillAuditModal extends Component
         $this->billId = $billId;
         $this->meetingId = $meetingId;
         $this->isOpen = true;
-        $this->auditNotes = "Audited under Rule 158. Supporting voucher/receipt inspected and confirmed against ledger expense code.";
+        $this->auditNotes = 'Audited under Rule 158. Supporting voucher/receipt inspected and confirmed against ledger expense code.';
     }
 
     public function closeModal(): void
@@ -42,11 +46,11 @@ class BillAuditModal extends Component
             'order' => $meeting->agendaItems()->count() + 1,
             'item_type' => CommitteeItemType::AccountsAudit,
             'title' => "Bill Audit: {$bill->vendor_name} ({$bill->bill_number})",
-            'description' => "Audit of {$bill->vendor_name} for £" . number_format($bill->amount, 2) . " ({$bill->category}).",
+            'description' => "Audit of {$bill->vendor_name} for £".number_format($bill->amount, 2)." ({$bill->category}).",
             'discussion_notes' => $this->auditNotes,
             'recommendation_text' => $this->isApprovedForPayment
-                ? "AUDITED & APPROVED: Committee recommends payment of bill {$bill->bill_number} (£" . number_format($bill->amount, 2) . ") to open lodge."
-                : "QUERY RAISED: Bill payment held pending clarification with vendor.",
+                ? "AUDITED & APPROVED: Committee recommends payment of bill {$bill->bill_number} (£".number_format($bill->amount, 2).') to open lodge.'
+                : 'QUERY RAISED: Bill payment held pending clarification with vendor.',
             'is_approved' => $this->isApprovedForPayment,
             'reference_id' => $bill->id,
             'reference_type' => Bill::class,

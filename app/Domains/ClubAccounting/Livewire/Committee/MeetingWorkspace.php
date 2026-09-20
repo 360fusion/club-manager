@@ -5,7 +5,9 @@ namespace App\Domains\ClubAccounting\Livewire\Committee;
 use App\Domains\ClubAccounting\Enums\AttendanceType;
 use App\Domains\ClubAccounting\Enums\CommitteeItemType;
 use App\Domains\ClubAccounting\Enums\CommitteeMeetingStatus;
+use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
 use App\Domains\ClubAccounting\Models\AnnualOfficerRoster;
+use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAgendaItem;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAttendee;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
@@ -21,6 +23,7 @@ use Livewire\Component;
 class MeetingWorkspace extends Component
 {
     public string $clubSlug;
+
     public int $meetingId;
 
     #[On('pack-dispatched')]
@@ -32,31 +35,48 @@ class MeetingWorkspace extends Component
 
     // Add Agenda Item Form
     public bool $showAgendaModal = false;
+
     public string $agendaTitle = '';
+
     public string $agendaItemType = 'general';
+
     public string $agendaDescription = '';
 
     // Add Attendee Form
     public bool $showAttendeeModal = false;
+
     public ?int $selectedUserId = null;
+
     public string $attendeeRole = 'Committee Member';
+
     public array $selectedMemberIds = [];
+
     public array $customRoles = [];
+
     public string $attendeeSearch = '';
 
     // Edit Meeting Details Form
     public bool $showEditModal = false;
+
     public string $editTitle = '';
+
     public string $editDate = '';
+
     public string $editLocation = '';
+
     public string $editStatus = 'draft';
 
     // Charity Grant Proposal Form inside Meeting Workspace
     public bool $showCharityModal = false;
+
     public string $grantRecipient = '';
+
     public string $grantPurpose = '';
+
     public string $grantAmount = '0.00';
+
     public ?int $grantProposerId = null;
+
     public ?int $grantSeconderId = null;
 
     public function openCharityModal(): void
@@ -78,7 +98,7 @@ class MeetingWorkspace extends Component
             'grantSeconderId.different' => 'The Seconder must be a different Brother than the Proposer.',
         ]);
 
-        \App\Domains\ClubAccounting\Models\CharityGrant::create([
+        CharityGrant::create([
             'club_id' => $meeting->club_id,
             'committee_meeting_id' => $meeting->id,
             'recipient_name' => trim($this->grantRecipient),
@@ -86,8 +106,8 @@ class MeetingWorkspace extends Component
             'amount' => (float) $this->grantAmount,
             'proposer_member_id' => $this->grantProposerId ?: null,
             'seconder_member_id' => $this->grantSeconderId ?: null,
-            'approval_status' => \App\Domains\ClubAccounting\Enums\GrantApprovalStatus::Proposed,
-            'bacs_reference' => 'BACS-G' . sprintf('%04d', rand(1, 9999)),
+            'approval_status' => GrantApprovalStatus::Proposed,
+            'bacs_reference' => 'BACS-G'.sprintf('%04d', rand(1, 9999)),
         ]);
 
         $this->showCharityModal = false;
@@ -98,8 +118,8 @@ class MeetingWorkspace extends Component
     public function updateGrantApprovalStatus(int $grantId, string $status): void
     {
         $meeting = $this->getMeeting();
-        $grant = \App\Domains\ClubAccounting\Models\CharityGrant::where('club_id', $meeting->club_id)->findOrFail($grantId);
-        $statusEnum = \App\Domains\ClubAccounting\Enums\GrantApprovalStatus::from($status);
+        $grant = CharityGrant::where('club_id', $meeting->club_id)->findOrFail($grantId);
+        $statusEnum = GrantApprovalStatus::from($status);
 
         $grant->update([
             'approval_status' => $statusEnum,
@@ -112,10 +132,11 @@ class MeetingWorkspace extends Component
     public function updateGrantSeconder(int $grantId, int $seconderId): void
     {
         $meeting = $this->getMeeting();
-        $grant = \App\Domains\ClubAccounting\Models\CharityGrant::where('club_id', $meeting->club_id)->findOrFail($grantId);
+        $grant = CharityGrant::where('club_id', $meeting->club_id)->findOrFail($grantId);
 
         if ($grant->proposer_member_id && $grant->proposer_member_id === $seconderId) {
             session()->flash('error', 'The Seconder must be a different Brother than the Proposer.');
+
             return;
         }
 
@@ -226,7 +247,7 @@ class MeetingWorkspace extends Component
         $item = ClubCommitteeAgendaItem::where('committee_meeting_id', $this->meetingId)
             ->findOrFail($itemId);
 
-        $item->update(['is_approved' => !$item->is_approved]);
+        $item->update(['is_approved' => ! $item->is_approved]);
     }
 
     public function openAttendeeModal(): void
@@ -243,12 +264,12 @@ class MeetingWorkspace extends Component
         // 1. Resolve Roster assignments for this meeting
         $meetingDate = $meeting->meeting_date ? Carbon::parse($meeting->meeting_date) : Carbon::now();
         $year = $meetingDate->format('Y');
-        $masonicYear = "{$year}-" . ($meetingDate->year + 1);
+        $masonicYear = "{$year}-".($meetingDate->year + 1);
 
         $roster = AnnualOfficerRoster::where('club_id', $club->id)
             ->where(function ($q) use ($masonicYear) {
                 $q->where('masonic_year', $masonicYear)
-                  ->orWhere('status', 'installed');
+                    ->orWhere('status', 'installed');
             })
             ->orderBy('masonic_year', 'desc')
             ->with(['assignments.member'])
@@ -303,7 +324,7 @@ class MeetingWorkspace extends Component
             $rosterRole = $rosterCommitteeMemberRoles[$member->id] ?? null;
 
             $candidates->push((object) [
-                'id' => 'm_' . $member->id,
+                'id' => 'm_'.$member->id,
                 'user_id' => null,
                 'member_id' => $member->id,
                 'name' => $member->full_name,
@@ -331,6 +352,7 @@ class MeetingWorkspace extends Component
                 if ($c->user_id && in_array($c->user_id, $existingUserIds)) {
                     return true;
                 }
+
                 return in_array($c->name, $existingNames);
             })
             ->map(function ($c) {
@@ -351,6 +373,7 @@ class MeetingWorkspace extends Component
     {
         if (empty($this->selectedMemberIds)) {
             session()->flash('error', 'Please select at least one member to add to roll-call.');
+
             return;
         }
 
@@ -386,9 +409,9 @@ class MeetingWorkspace extends Component
                 default => 'Non-Committee Member',
             };
 
-            $roleTitle = !empty($this->customRoles[$rawId])
+            $roleTitle = ! empty($this->customRoles[$rawId])
                 ? trim($this->customRoles[$rawId])
-                : (!empty($this->customRoles[$key]) ? trim($this->customRoles[$key]) : $defaultRole);
+                : (! empty($this->customRoles[$key]) ? trim($this->customRoles[$key]) : $defaultRole);
 
             if ($candidate->user_id) {
                 $attendee = ClubCommitteeAttendee::firstOrCreate([
@@ -417,7 +440,7 @@ class MeetingWorkspace extends Component
 
         $this->showAttendeeModal = false;
         $this->reset(['selectedMemberIds', 'customRoles', 'selectedUserId', 'attendeeRole', 'attendeeSearch']);
-        session()->flash('success', "Added {$addedCount} " . Str::plural('member', $addedCount) . " to committee roll-call.");
+        session()->flash('success', "Added {$addedCount} ".Str::plural('member', $addedCount).' to committee roll-call.');
     }
 
     public function addAttendee(): void
@@ -451,6 +474,7 @@ class MeetingWorkspace extends Component
     private function getMeeting(): ClubCommitteeMeeting
     {
         $club = Club::where('slug', $this->clubSlug)->firstOrFail();
+
         return ClubCommitteeMeeting::where('club_id', $club->id)
             ->where('id', $this->meetingId)
             ->firstOrFail();
@@ -473,10 +497,11 @@ class MeetingWorkspace extends Component
                 'member' => 3,
                 default => 4,
             };
-            return $priority . '_' . strtolower($c->name);
+
+            return $priority.'_'.strtolower($c->name);
         })->values();
 
-        if (!empty($this->attendeeSearch)) {
+        if (! empty($this->attendeeSearch)) {
             $search = strtolower(trim($this->attendeeSearch));
             $sorted = $sorted->filter(function ($c) use ($search) {
                 return str_contains(strtolower($c->name), $search)
@@ -486,12 +511,12 @@ class MeetingWorkspace extends Component
         }
 
         $committeeMembers = $sorted->filter(fn ($c) => $c->is_committee)->values();
-        $nonCommitteeMembers = $sorted->filter(fn ($c) => !$c->is_committee)->values();
+        $nonCommitteeMembers = $sorted->filter(fn ($c) => ! $c->is_committee)->values();
 
-        $charityGrants = \App\Domains\ClubAccounting\Models\CharityGrant::where('club_id', $meeting->club_id)
+        $charityGrants = CharityGrant::where('club_id', $meeting->club_id)
             ->where(function ($q) use ($meeting) {
                 $q->where('committee_meeting_id', $meeting->id)
-                  ->orWhere('approval_status', \App\Domains\ClubAccounting\Enums\GrantApprovalStatus::Proposed->value);
+                    ->orWhere('approval_status', GrantApprovalStatus::Proposed->value);
             })
             ->with(['proposer', 'seconder', 'committeeMeeting'])
             ->orderBy('created_at', 'desc')

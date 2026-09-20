@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Accounting\Bill;
 use App\Models\Club;
+use App\Models\Invoice;
+use App\Models\Post;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,6 +24,7 @@ class MediaAdminController extends Controller
             'club' => $club,
         ]);
     }
+
     /**
      * List media items for a club, filtered by folder collection, search query, type, extension, date, and sort order.
      */
@@ -40,7 +44,7 @@ class MediaAdminController extends Controller
         $allClubMedia = $club->media()->get();
 
         $availableExtensions = $allClubMedia
-            ->map(fn($m) => strtolower(pathinfo($m->file_name, PATHINFO_EXTENSION)))
+            ->map(fn ($m) => strtolower(pathinfo($m->file_name, PATHINFO_EXTENSION)))
             ->filter()
             ->unique()
             ->values()
@@ -71,7 +75,7 @@ class MediaAdminController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('file_name', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
@@ -89,7 +93,7 @@ class MediaAdminController extends Controller
             if (preg_match('/^\d{4}-\d{2}$/', $date)) {
                 [$year, $month] = explode('-', $date);
                 $query->whereYear('created_at', $year)
-                      ->whereMonth('created_at', $month);
+                    ->whereMonth('created_at', $month);
             }
         }
 
@@ -254,7 +258,7 @@ class MediaAdminController extends Controller
         $collection = $media->collection_name;
 
         if ($saveMode === 'variant') {
-            $variantName = $media->name . ' (Cropped)';
+            $variantName = $media->name.' (Cropped)';
             $newMedia = $club->addMediaFromRequest('file')
                 ->usingName($variantName)
                 ->toMediaCollection($collection);
@@ -276,14 +280,14 @@ class MediaAdminController extends Controller
         $originalFilePath = $media->getPath();
         $backupDir = storage_path("app/media-originals/{$club->id}");
 
-        if (!file_exists($backupDir)) {
+        if (! file_exists($backupDir)) {
             mkdir($backupDir, 0755, true);
         }
 
         $hasBackup = $media->getCustomProperty('has_original_backup', false);
         $masterBackupPath = $media->getCustomProperty('original_master_path', null);
 
-        if (!$hasBackup || !$masterBackupPath || !file_exists($masterBackupPath)) {
+        if (! $hasBackup || ! $masterBackupPath || ! file_exists($masterBackupPath)) {
             $ext = pathinfo($media->file_name, PATHINFO_EXTENSION) ?: 'png';
             $masterBackupPath = "{$backupDir}/{$media->id}_master.{$ext}";
             if (file_exists($originalFilePath)) {
@@ -326,7 +330,7 @@ class MediaAdminController extends Controller
 
         $masterBackupPath = $media->getCustomProperty('original_master_path');
 
-        if (!$masterBackupPath || !file_exists($masterBackupPath)) {
+        if (! $masterBackupPath || ! file_exists($masterBackupPath)) {
             return response()->json([
                 'success' => false,
                 'message' => 'No original master backup found for this image.',
@@ -377,6 +381,7 @@ class MediaAdminController extends Controller
             if ($media) {
                 if ($this->isAccountingProtected($media)) {
                     $skippedProtected++;
+
                     continue;
                 }
                 $media->delete();
@@ -391,9 +396,9 @@ class MediaAdminController extends Controller
             ], 422);
         }
 
-        $message = "Successfully deleted {$count} " . ($count === 1 ? 'file' : 'files') . '.';
+        $message = "Successfully deleted {$count} ".($count === 1 ? 'file' : 'files').'.';
         if ($skippedProtected > 0) {
-            $message .= " ({$skippedProtected} accounting-protected " . ($skippedProtected === 1 ? 'file was' : 'files were') . ' skipped).';
+            $message .= " ({$skippedProtected} accounting-protected ".($skippedProtected === 1 ? 'file was' : 'files were').' skipped).';
         }
 
         return response()->json([
@@ -428,7 +433,7 @@ class MediaAdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Successfully moved {$count} " . ($count === 1 ? 'file' : 'files') . " to '{$targetFolder}'.",
+            'message' => "Successfully moved {$count} ".($count === 1 ? 'file' : 'files')." to '{$targetFolder}'.",
         ]);
     }
 
@@ -448,13 +453,13 @@ class MediaAdminController extends Controller
         if ($club->logo_url && (str_contains($club->logo_url, $filename) || $club->logo_url === $url)) {
             $usages[] = [
                 'type' => 'Club Logo',
-                'title' => $club->name . ' Logo',
+                'title' => $club->name.' Logo',
                 'location' => 'Club Settings',
             ];
         }
 
         // Check if used in News Articles / Posts
-        $posts = \App\Models\Post::where('club_id', $club->id)->get();
+        $posts = Post::where('club_id', $club->id)->get();
         foreach ($posts as $post) {
             if ($post->cover_image && (str_contains($post->cover_image, $filename) || $post->cover_image === $url)) {
                 $usages[] = [
@@ -473,7 +478,7 @@ class MediaAdminController extends Controller
         }
 
         // Check if attached to Accounting Bills
-        $bills = \App\Models\Accounting\Bill::where('club_id', $club->id)->where('media_id', $media->id)->get();
+        $bills = Bill::where('club_id', $club->id)->where('media_id', $media->id)->get();
         foreach ($bills as $bill) {
             $usages[] = [
                 'type' => 'Accounting Bill Receipt',
@@ -483,7 +488,7 @@ class MediaAdminController extends Controller
         }
 
         // Check if attached to Accounting Invoices
-        $invoices = \App\Models\Invoice::where('club_id', $club->id)->where('media_id', $media->id)->get();
+        $invoices = Invoice::where('club_id', $club->id)->where('media_id', $media->id)->get();
         foreach ($invoices as $inv) {
             $usages[] = [
                 'type' => 'Member Invoice Document',
@@ -584,7 +589,7 @@ class MediaAdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Successfully restored {$count} " . ($count === 1 ? 'file' : 'files') . ' from Trash.',
+            'message' => "Successfully restored {$count} ".($count === 1 ? 'file' : 'files').' from Trash.',
         ]);
     }
 
@@ -606,6 +611,7 @@ class MediaAdminController extends Controller
             if ($media) {
                 if ($this->isAccountingProtected($media)) {
                     $skippedProtected++;
+
                     continue;
                 }
                 $media->forceDelete();
@@ -620,9 +626,9 @@ class MediaAdminController extends Controller
             ], 422);
         }
 
-        $message = "Successfully permanently deleted {$count} " . ($count === 1 ? 'file' : 'files') . '.';
+        $message = "Successfully permanently deleted {$count} ".($count === 1 ? 'file' : 'files').'.';
         if ($skippedProtected > 0) {
-            $message .= " ({$skippedProtected} accounting-protected " . ($skippedProtected === 1 ? 'file was' : 'files were') . ' skipped).';
+            $message .= " ({$skippedProtected} accounting-protected ".($skippedProtected === 1 ? 'file was' : 'files were').' skipped).';
         }
 
         return response()->json([
@@ -640,11 +646,11 @@ class MediaAdminController extends Controller
             return true;
         }
 
-        if (\App\Models\Accounting\Bill::where('media_id', $media->id)->exists()) {
+        if (Bill::where('media_id', $media->id)->exists()) {
             return true;
         }
 
-        if (\App\Models\Invoice::where('media_id', $media->id)->exists()) {
+        if (Invoice::where('media_id', $media->id)->exists()) {
             return true;
         }
 
@@ -655,19 +661,20 @@ class MediaAdminController extends Controller
     {
         $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
         $clean = preg_replace('/[_\-\.]+/', ' ', $nameWithoutExt);
+
         return ucwords(trim($clean));
     }
 
     private function downscaleImageIfNeeded($uploadedFile): void
     {
         $mime = $uploadedFile->getMimeType();
-        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'])) {
+        if (! in_array($mime, ['image/jpeg', 'image/png', 'image/webp'])) {
             return;
         }
 
         $path = $uploadedFile->getRealPath();
         [$width, $height] = @getimagesize($path);
-        if (!$width || !$height) {
+        if (! $width || ! $height) {
             return;
         }
 
@@ -686,12 +693,12 @@ class MediaAdminController extends Controller
 
         $srcImage = match ($mime) {
             'image/jpeg' => @imagecreatefromjpeg($path),
-            'image/png'  => @imagecreatefrompng($path),
+            'image/png' => @imagecreatefrompng($path),
             'image/webp' => @imagecreatefromwebp($path),
-            default      => null,
+            default => null,
         };
 
-        if (!$srcImage) {
+        if (! $srcImage) {
             return;
         }
 
@@ -705,7 +712,7 @@ class MediaAdminController extends Controller
 
         match ($mime) {
             'image/jpeg' => imagejpeg($dstImage, $path, 85),
-            'image/png'  => imagepng($dstImage, $path, 8),
+            'image/png' => imagepng($dstImage, $path, 8),
             'image/webp' => imagewebp($dstImage, $path, 85),
         };
 
@@ -744,8 +751,9 @@ class MediaAdminController extends Controller
     private function formatBytes(int $bytes): string
     {
         if ($bytes >= 1048576) {
-            return round($bytes / 1048576, 1) . ' MB';
+            return round($bytes / 1048576, 1).' MB';
         }
-        return round($bytes / 1024, 1) . ' KB';
+
+        return round($bytes / 1024, 1).' KB';
     }
 }

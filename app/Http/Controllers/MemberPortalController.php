@@ -9,14 +9,13 @@ use App\Models\Event;
 use App\Models\Invoice;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
-use App\Models\MeetingRsvpGuest;
 use App\Models\Newsletter;
+use App\Models\Post;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -422,7 +421,7 @@ class MemberPortalController extends Controller
 
         if ($event->is_booking_closed) {
             return redirect()->back()->withErrors([
-                'booking_closed' => 'Bookings for this event closed ' . ($event->booking_cutoff_days ? $event->booking_cutoff_days . ' days' : '') . ' before the event date.',
+                'booking_closed' => 'Bookings for this event closed '.($event->booking_cutoff_days ? $event->booking_cutoff_days.' days' : '').' before the event date.',
             ]);
         }
 
@@ -471,7 +470,7 @@ class MemberPortalController extends Controller
         ]);
 
         $surname = strtoupper(last(explode(' ', $user->name)));
-        $paymentRef = ($meeting->payment_reference_prefix ?: 'SUMMONS') . '-' . $meeting->id . '-' . $surname;
+        $paymentRef = ($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname;
 
         $rsvp = MeetingRsvp::updateOrCreate(
             ['meeting_id' => $meeting->id, 'user_id' => $user->id],
@@ -490,7 +489,7 @@ class MemberPortalController extends Controller
             $rsvp->guests()->delete();
             if (is_array($validated['guests'])) {
                 foreach ($validated['guests'] as $g) {
-                    if (!empty($g['guest_name'])) {
+                    if (! empty($g['guest_name'])) {
                         $rsvp->guests()->create([
                             'guest_name' => $g['guest_name'],
                             'dietary_requirements' => $g['dietary_requirements'] ?? null,
@@ -559,8 +558,9 @@ class MemberPortalController extends Controller
      */
     public function downloadMeetingPdf(string $slug, int $id)
     {
-        $adminController = app(\App\Http\Controllers\MeetingAdminController::class);
+        $adminController = app(MeetingAdminController::class);
         request()->merge(['download' => 1]);
+
         return $adminController->pdf($slug, $id);
     }
 
@@ -571,7 +571,7 @@ class MemberPortalController extends Controller
     {
         $user = Auth::user();
         $club = Club::where('slug', $slug)->firstOrFail();
-        $post = \App\Models\Post::where('club_id', $club->id)->published()->findOrFail($id);
+        $post = Post::where('club_id', $club->id)->published()->findOrFail($id);
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 

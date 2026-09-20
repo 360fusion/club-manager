@@ -2,14 +2,14 @@
 
 namespace App\Domains\ClubAccounting\Services\Governance;
 
-use App\Domains\ClubAccounting\Enums\AttendanceType;
+use App\Domains\ClubAccounting\Enums\CandidateStage;
 use App\Domains\ClubAccounting\Enums\CommitteeMeetingStatus;
 use App\Domains\ClubAccounting\Mail\CommitteeAgendaPackMailable;
+use App\Domains\ClubAccounting\Models\Candidate;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAttendee;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
-use App\Models\Club;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -34,8 +34,8 @@ class CommitteePackCompilerService
             ->first();
 
         // 2. Candidate Vetting Queue (Candidates pending initiation or joining)
-        $domainCandidates = \App\Domains\ClubAccounting\Models\Candidate::where('club_id', $club->id)
-            ->where('stage', \App\Domains\ClubAccounting\Enums\CandidateStage::LodgeCommittee->value)
+        $domainCandidates = Candidate::where('club_id', $club->id)
+            ->where('stage', CandidateStage::LodgeCommittee->value)
             ->get();
 
         if ($domainCandidates->isNotEmpty()) {
@@ -51,7 +51,7 @@ class CommitteePackCompilerService
         } else {
             $candidates = User::whereHas('clubs', function ($q) use ($club) {
                 $q->where('clubs.id', $club->id)
-                  ->whereIn('role', ['candidate', 'applicant', 'enquirer']);
+                    ->whereIn('role', ['candidate', 'applicant', 'enquirer']);
             })->get(['id', 'name', 'email', 'created_at']);
         }
 
@@ -124,7 +124,7 @@ class CommitteePackCompilerService
         $body .= "MEETING DETAILS:\n";
         $body .= "• Meeting: {$meeting->title}\n";
         $body .= "• Date & Time: {$dateStr}\n";
-        $body .= "• Location: " . ($meeting->location ?: 'Lodge Committee Room') . "\n";
+        $body .= '• Location: '.($meeting->location ?: 'Lodge Committee Room')."\n";
         $body .= "• Chairman: {$chairName}\n";
         $body .= "• Secretary: {$secretaryName}\n\n";
 
@@ -180,7 +180,7 @@ class CommitteePackCompilerService
         $pdfFilename = null;
         if ($attachPdf) {
             $pdfBinary = $this->compilePdf($meeting);
-            $pdfFilename = 'Agenda-Pack-' . Str::slug($meeting->title) . '-' . ($meeting->meeting_date ? $meeting->meeting_date->format('Y-m-d') : 'meeting') . '.pdf';
+            $pdfFilename = 'Agenda-Pack-'.Str::slug($meeting->title).'-'.($meeting->meeting_date ? $meeting->meeting_date->format('Y-m-d') : 'meeting').'.pdf';
         }
 
         $recipients = User::whereIn('id', $recipientMemberIds)->get();
@@ -198,7 +198,7 @@ class CommitteePackCompilerService
                 ));
                 $dispatchedCount++;
             } catch (\Throwable $e) {
-                Log::error("Failed to queue agenda pack email to {$recipient->email}: " . $e->getMessage());
+                Log::error("Failed to queue agenda pack email to {$recipient->email}: ".$e->getMessage());
             }
         }
 
