@@ -26,11 +26,22 @@ class MemberInvitationMail extends Mailable
     {
         $fromName = $this->club->settings['email_from_name'] ?? $this->club->name;
         $replyTo = $this->club->settings['email_reply_to'] ?? null;
-        $isExistingUser = ! empty($this->user->password) && $this->user->clubs()->where('clubs.id', '!=', $this->club->id)->exists();
+        $template = \App\Models\DefaultEmailTemplate::where('template_key', 'account_invitation')->first();
 
-        $subject = $isExistingUser
-            ? "Access granted to {$this->club->name} on Club Manager"
-            : "You're invited to join {$this->club->name}!";
+        if ($template) {
+            $replacements = [
+                '{{member_name}}' => e($this->user->name),
+                '{{club_name}}' => e($this->club->name),
+                '{{invite_url}}' => $this->acceptUrl,
+                '{{expiry_days}}' => 7,
+            ];
+            $subject = str_replace(array_keys($replacements), array_values($replacements), $template->subject);
+        } else {
+            $isExistingUser = ! empty($this->user->password) && $this->user->clubs()->where('clubs.id', '!=', $this->club->id)->exists();
+            $subject = $isExistingUser
+                ? "Access granted to {$this->club->name} on Club Manager"
+                : "You're invited to join {$this->club->name}!";
+        }
 
         $envelope = new Envelope(
             subject: $subject,
@@ -46,6 +57,22 @@ class MemberInvitationMail extends Mailable
 
     public function content(): Content
     {
+        $template = \App\Models\DefaultEmailTemplate::where('template_key', 'account_invitation')->first();
+
+        if ($template) {
+            $replacements = [
+                '{{member_name}}' => e($this->user->name),
+                '{{club_name}}' => e($this->club->name),
+                '{{invite_url}}' => $this->acceptUrl,
+                '{{expiry_days}}' => 7,
+            ];
+            $bodyHtml = str_replace(array_keys($replacements), array_values($replacements), $template->body_html);
+
+            return new Content(
+                htmlString: $bodyHtml
+            );
+        }
+
         $isExistingUser = ! empty($this->user->password) && $this->user->clubs()->where('clubs.id', '!=', $this->club->id)->exists();
 
         return new Content(

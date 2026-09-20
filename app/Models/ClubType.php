@@ -13,8 +13,12 @@ class ClubType extends Model
     protected $fillable = [
         'name',
         'code',
+        'description',
+        'website_url',
         'available_modules',
         'default_settings',
+        'terminology',
+        'rulers_schema',
     ];
 
     protected function casts(): array
@@ -22,11 +26,23 @@ class ClubType extends Model
         return [
             'available_modules' => 'array',
             'default_settings' => 'array',
+            'terminology' => 'array',
+            'rulers_schema' => 'array',
         ];
     }
 
     public function clubs(): HasMany
     {
-        return $table = $this->hasMany(Club::class);
+        return $this->hasMany(Club::class);
+    }
+
+    public function defaultOfficerRoles(): HasMany
+    {
+        return $this->hasMany(DefaultOfficerRole::class);
+    }
+
+    public function defaultRanks(): HasMany
+    {
+        return $this->hasMany(DefaultRank::class);
     }
 }

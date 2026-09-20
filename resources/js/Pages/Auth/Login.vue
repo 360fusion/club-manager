@@ -68,6 +68,10 @@ const submit = () => {
                         <input type="checkbox" v-model="form.remember" class="w-4 h-4 rounded accent-indigo-600" />
                         Remember Me
                     </label>
+
+                    <Link :href="route('password.request')" class="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
+                        Forgot / Reset Password?
+                    </Link>
                 </div>
 
                 <button 

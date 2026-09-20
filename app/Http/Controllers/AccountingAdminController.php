@@ -229,6 +229,7 @@ class AccountingAdminController extends Controller
             $suggestions = $matcher->suggestMatches($tx);
             return [
                 'id' => $tx->id,
+                'bank_account_id' => $tx->bank_account_id,
                 'transaction_date' => $tx->transaction_date->format('d M Y'),
                 'raw_description' => $tx->raw_description,
                 'reference' => $tx->reference,
@@ -256,6 +257,7 @@ class AccountingAdminController extends Controller
             ->get()
             ->map(fn ($tx) => [
                 'id' => $tx->id,
+                'bank_account_id' => $tx->bank_account_id,
                 'transaction_date' => $tx->transaction_date->format('d M Y'),
                 'raw_description' => $tx->raw_description,
                 'reference' => $tx->reference,
@@ -270,6 +272,7 @@ class AccountingAdminController extends Controller
             ->get()
             ->map(fn ($imp) => [
                 'id' => $imp->id,
+                'bank_account_id' => $imp->bank_account_id ?? null,
                 'filename' => $imp->filename,
                 'account_number' => $imp->account_number,
                 'sort_code' => $imp->sort_code,
@@ -296,6 +299,7 @@ class AccountingAdminController extends Controller
             ->get()
             ->map(fn ($tx) => [
                 'id' => $tx->id,
+                'bank_account_id' => $tx->bank_account_id,
                 'transaction_date' => $tx->transaction_date->format('d M Y'),
                 'type' => $tx->amount < 0 ? 'Debit' : 'Credit',
                 'raw_description' => $tx->raw_description,
@@ -317,6 +321,7 @@ class AccountingAdminController extends Controller
             ->get()
             ->map(fn ($tx) => [
                 'id' => 'tx_' . $tx->id,
+                'bank_account_id' => $tx->bank_account_id,
                 'transaction_date' => $tx->transaction_date->format('d M Y'),
                 'type' => $tx->amount < 0 ? 'Spend Money' : 'Receive Money',
                 'description' => $tx->raw_description,
@@ -329,6 +334,7 @@ class AccountingAdminController extends Controller
             ->concat(
                 $unpaidSubscriptions->map(fn ($sub) => [
                     'id' => 'sub_' . $sub['id'],
+                    'bank_account_id' => null,
                     'transaction_date' => date('d M Y'),
                     'type' => 'Invoice Payment',
                     'description' => 'Dues: ' . $sub['member_name'],
@@ -340,6 +346,10 @@ class AccountingAdminController extends Controller
                 ])
             )->values();
 
+        $giftAidService = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+        $giftAidSummary = $giftAidService->getGiftAidSummary($club);
+        $reconciledDonationsData = $giftAidService->getReconciledDonations($club);
+
         $reconciliation = [
             'unmatched_transactions' => $unmatchedTransactions,
             'reconciled_transactions' => $reconciledTransactions,
@@ -347,8 +357,55 @@ class AccountingAdminController extends Controller
             'account_transactions' => $accountTransactions,
             'bank_imports' => $bankImports,
             'unpaid_subscriptions' => $unpaidSubscriptions,
-            'unpaid_bills' => array_values(array_filter($bills->toArray(), fn ($b) => $b['status'] === 'unpaid')),
+            'gift_aid_summary' => $giftAidSummary,
+            'reconciled_donations' => $reconciledDonationsData,
         ];
+
+        // Bank Accounts Assembly
+        $bankAccountsQuery = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)
+            ->with(['account', 'transactions'])
+            ->orderBy('is_active', 'desc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        if ($bankAccountsQuery->isEmpty()) {
+            $ledgerAcc = Account::where('club_id', $club->id)->where('code', '1000')->first();
+            \App\Domains\ClubAccounting\Models\BankAccount::create([
+                'club_id' => $club->id,
+                'account_id' => $ledgerAcc?->id,
+                'bank_name' => 'High Street Bank',
+                'account_name' => 'Main Operating Account',
+                'account_type' => 'current',
+                'account_number' => '12345678',
+                'sort_code' => '20-00-00',
+                'currency' => 'GBP',
+                'opening_balance' => 0.00,
+                'is_active' => true,
+            ]);
+
+            $bankAccountsQuery = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)
+                ->with(['account', 'transactions'])
+                ->get();
+        }
+
+        $bankAccounts = $bankAccountsQuery->map(fn ($b) => [
+            'id' => $b->id,
+            'bank_name' => $b->bank_name,
+            'account_name' => $b->account_name,
+            'account_type' => $b->account_type,
+            'formatted_account_type' => $b->formatted_account_type,
+            'account_number' => $b->account_number,
+            'sort_code' => $b->sort_code,
+            'currency' => $b->currency,
+            'opening_balance' => (float)$b->opening_balance,
+            'statement_balance' => $b->statement_balance,
+            'formatted_statement_balance' => '£' . number_format($b->statement_balance, 2),
+            'ledger_balance' => $b->ledger_balance,
+            'formatted_ledger_balance' => '£' . number_format($b->ledger_balance, 2),
+            'unreconciled_count' => $b->unreconciled_count,
+            'is_active' => $b->is_active,
+            'account_code' => $b->account?->code ?? '1000',
+        ]);
 
         return Inertia::render('Admin/Accounting/Index', [
             'club' => [
@@ -359,6 +416,7 @@ class AccountingAdminController extends Controller
             'initialTab' => $tab,
             'initialReport' => $report,
             'accounts' => $accounts,
+            'bankAccounts' => $bankAccounts,
             'journalEntries' => $journalEntries,
             'invoices' => $invoices,
             'bills' => $bills,
@@ -1443,5 +1501,477 @@ class AccountingAdminController extends Controller
         $contact->delete();
 
         return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, 'tab' => 'contacts'])->with('success', 'Contact removed from directory.');
+    }
+
+    public function storeBankAccount(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $validated = $request->validate([
+            'bank_name' => 'required|string|max:100',
+            'account_name' => 'required|string|max:150',
+            'account_type' => 'required|string|in:current,savings,credit_card,payment_gateway,merchant,cash',
+            'account_number' => 'nullable|string|max:50',
+            'sort_code' => 'nullable|string|max:20',
+            'currency' => 'required|string|size:3',
+            'opening_balance' => 'required|numeric',
+        ]);
+
+        $existingCodes = Account::where('club_id', $club->id)
+            ->where('type', 'asset')
+            ->where('code', 'like', '10%')
+            ->pluck('code')
+            ->toArray();
+
+        $codeNum = 1010;
+        while (in_array((string)$codeNum, $existingCodes)) {
+            $codeNum += 10;
+        }
+
+        $ledgerAcc = Account::create([
+            'club_id' => $club->id,
+            'code' => (string)$codeNum,
+            'name' => "{$validated['bank_name']} — {$validated['account_name']}",
+            'type' => 'asset',
+            'currency' => strtoupper($validated['currency']),
+            'is_active' => true,
+        ]);
+
+        \App\Domains\ClubAccounting\Models\BankAccount::create([
+            'club_id' => $club->id,
+            'account_id' => $ledgerAcc->id,
+            'bank_name' => $validated['bank_name'],
+            'account_name' => $validated['account_name'],
+            'account_type' => $validated['account_type'],
+            'account_number' => $validated['account_number'] ?? null,
+            'sort_code' => $validated['sort_code'] ?? null,
+            'currency' => strtoupper($validated['currency']),
+            'opening_balance' => $validated['opening_balance'],
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', "Bank account '{$validated['bank_name']} — {$validated['account_name']}' created and linked to Nominal Code {$ledgerAcc->code}!");
+    }
+
+    public function toggleBankAccount(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $acc = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+        $acc->update(['is_active' => !$acc->is_active]);
+
+        return redirect()->back()->with('success', 'Bank account status updated.');
+    }
+
+    public function connectPayPal(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $validated = $request->validate([
+            'account_name' => 'required|string|max:150',
+            'paypal_client_id' => 'required|string',
+            'paypal_client_secret' => 'required|string',
+            'paypal_environment' => 'required|string|in:live,sandbox',
+            'currency' => 'required|string|size:3',
+            'opening_balance' => 'required|numeric',
+        ]);
+
+        $syncService = new \App\Domains\ClubAccounting\Services\PayPalSyncService();
+        $testResult = $syncService->testConnection(
+            $validated['paypal_client_id'],
+            $validated['paypal_client_secret'],
+            $validated['paypal_environment']
+        );
+
+        if (! $testResult['success']) {
+            return redirect()->back()->with('error', "PayPal Connection Failed: {$testResult['message']}");
+        }
+
+        $existingCodes = Account::where('club_id', $club->id)
+            ->where('type', 'asset')
+            ->where('code', 'like', '10%')
+            ->pluck('code')
+            ->toArray();
+
+        $codeNum = 1010;
+        while (in_array((string)$codeNum, $existingCodes)) {
+            $codeNum += 10;
+        }
+
+        $ledgerAcc = Account::create([
+            'club_id' => $club->id,
+            'code' => (string)$codeNum,
+            'name' => "PayPal — {$validated['account_name']}",
+            'type' => 'asset',
+            'currency' => strtoupper($validated['currency']),
+            'is_active' => true,
+        ]);
+
+        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::create([
+            'club_id' => $club->id,
+            'account_id' => $ledgerAcc->id,
+            'bank_name' => 'PayPal',
+            'account_name' => $validated['account_name'],
+            'account_type' => 'payment_gateway',
+            'currency' => strtoupper($validated['currency']),
+            'opening_balance' => $validated['opening_balance'],
+            'paypal_client_id' => $validated['paypal_client_id'],
+            'paypal_client_secret' => $validated['paypal_client_secret'],
+            'paypal_environment' => $validated['paypal_environment'],
+            'paypal_connected_at' => now(),
+            'sync_status' => 'connected',
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', "PayPal Account '{$validated['account_name']}' connected & linked to Nominal Code {$ledgerAcc->code}!");
+    }
+
+    public function testPayPalConnection(Request $request, string $clubSlug, int $id)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+
+        if (! $bankAccount->paypal_client_id || ! $bankAccount->paypal_client_secret) {
+            return response()->json(['success' => false, 'message' => 'PayPal credentials missing.'], 422);
+        }
+
+        $syncService = new \App\Domains\ClubAccounting\Services\PayPalSyncService();
+        $res = $syncService->testConnection(
+            $bankAccount->paypal_client_id,
+            $bankAccount->paypal_client_secret,
+            $bankAccount->paypal_environment ?? 'live'
+        );
+
+        return response()->json($res);
+    }
+
+    public function syncPayPalTransactions(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        try {
+            $syncService = new \App\Domains\ClubAccounting\Services\PayPalSyncService();
+            $result = $syncService->syncTransactions(
+                $bankAccount,
+                $validated['start_date'] ?? null,
+                $validated['end_date'] ?? null
+            );
+
+            $skippedMsg = isset($result['skipped_count']) && $result['skipped_count'] > 0
+                ? " ({$result['skipped_count']} duplicates safely ignored)"
+                : '';
+
+            return redirect()->back()->with('success', "PayPal API Sync Complete: {$result['synced_count']} new transactions imported{$skippedMsg}.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', "PayPal Sync Error: {$e->getMessage()}");
+        }
+    }
+
+    public function connectStripe(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $validated = $request->validate([
+            'account_name' => 'required|string|max:150',
+            'stripe_secret_key' => 'required|string',
+            'currency' => 'required|string|size:3',
+            'opening_balance' => 'required|numeric',
+        ]);
+
+        $syncService = new \App\Domains\ClubAccounting\Services\StripeSyncService();
+        $testResult = $syncService->testConnection($validated['stripe_secret_key']);
+
+        if (! $testResult['success']) {
+            return redirect()->back()->with('error', "Stripe Connection Failed: {$testResult['message']}");
+        }
+
+        $existingCodes = Account::where('club_id', $club->id)
+            ->where('type', 'asset')
+            ->where('code', 'like', '10%')
+            ->pluck('code')
+            ->toArray();
+
+        $codeNum = 1010;
+        while (in_array((string)$codeNum, $existingCodes)) {
+            $codeNum += 10;
+        }
+
+        $ledgerAcc = Account::create([
+            'club_id' => $club->id,
+            'code' => (string)$codeNum,
+            'name' => "Stripe — {$validated['account_name']}",
+            'type' => 'asset',
+            'currency' => strtoupper($validated['currency']),
+            'is_active' => true,
+        ]);
+
+        \App\Domains\ClubAccounting\Models\BankAccount::create([
+            'club_id' => $club->id,
+            'account_id' => $ledgerAcc->id,
+            'bank_name' => 'Stripe',
+            'account_name' => $validated['account_name'],
+            'account_type' => 'payment_gateway',
+            'currency' => strtoupper($validated['currency']),
+            'opening_balance' => $validated['opening_balance'],
+            'stripe_secret_key' => $validated['stripe_secret_key'],
+            'stripe_connected_at' => now(),
+            'sync_status' => 'connected',
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', "Stripe Account '{$validated['account_name']}' connected & linked to Nominal Code {$ledgerAcc->code}!");
+    }
+
+    public function syncStripeTransactions(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        try {
+            $syncService = new \App\Domains\ClubAccounting\Services\StripeSyncService();
+            $result = $syncService->syncTransactions(
+                $bankAccount,
+                $validated['start_date'] ?? null,
+                $validated['end_date'] ?? null
+            );
+
+            $skippedMsg = isset($result['skipped_count']) && $result['skipped_count'] > 0
+                ? " ({$result['skipped_count']} duplicates safely ignored)"
+                : '';
+
+            return redirect()->back()->with('success', "Stripe API Sync Complete: {$result['synced_count']} new transactions imported{$skippedMsg}.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', "Stripe Sync Error: {$e->getMessage()}");
+        }
+    }
+
+    public function connectSumUp(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $validated = $request->validate([
+            'account_name' => 'required|string|max:150',
+            'sumup_api_key' => 'required|string',
+            'currency' => 'required|string|size:3',
+            'opening_balance' => 'required|numeric',
+        ]);
+
+        $syncService = new \App\Domains\ClubAccounting\Services\SumUpSyncService();
+        $testResult = $syncService->testConnection($validated['sumup_api_key']);
+
+        if (! $testResult['success']) {
+            return redirect()->back()->with('error', "SumUp Connection Failed: {$testResult['message']}");
+        }
+
+        $existingCodes = Account::where('club_id', $club->id)
+            ->where('type', 'asset')
+            ->where('code', 'like', '10%')
+            ->pluck('code')
+            ->toArray();
+
+        $codeNum = 1010;
+        while (in_array((string)$codeNum, $existingCodes)) {
+            $codeNum += 10;
+        }
+
+        $ledgerAcc = Account::create([
+            'club_id' => $club->id,
+            'code' => (string)$codeNum,
+            'name' => "SumUp — {$validated['account_name']}",
+            'type' => 'asset',
+            'currency' => strtoupper($validated['currency']),
+            'is_active' => true,
+        ]);
+
+        \App\Domains\ClubAccounting\Models\BankAccount::create([
+            'club_id' => $club->id,
+            'account_id' => $ledgerAcc->id,
+            'bank_name' => 'SumUp',
+            'account_name' => $validated['account_name'],
+            'account_type' => 'merchant',
+            'currency' => strtoupper($validated['currency']),
+            'opening_balance' => $validated['opening_balance'],
+            'sumup_api_key' => $validated['sumup_api_key'],
+            'sumup_merchant_code' => $testResult['merchant_code'] ?? null,
+            'sumup_connected_at' => now(),
+            'sync_status' => 'connected',
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', "SumUp Account '{$validated['account_name']}' connected & linked to Nominal Code {$ledgerAcc->code}!");
+    }
+
+    public function syncSumUpTransactions(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        try {
+            $syncService = new \App\Domains\ClubAccounting\Services\SumUpSyncService();
+            $result = $syncService->syncTransactions(
+                $bankAccount,
+                $validated['start_date'] ?? null,
+                $validated['end_date'] ?? null
+            );
+
+            $skippedMsg = isset($result['skipped_count']) && $result['skipped_count'] > 0
+                ? " ({$result['skipped_count']} duplicates safely ignored)"
+                : '';
+
+            return redirect()->back()->with('success', "SumUp API Sync Complete: {$result['synced_count']} new transactions imported{$skippedMsg}.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', "SumUp Sync Error: {$e->getMessage()}");
+        }
+    }
+
+    public function connectGoCardless(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $validated = $request->validate([
+            'account_name' => 'required|string|max:150',
+            'gocardless_access_token' => 'required|string',
+            'gocardless_environment' => 'required|string|in:sandbox,live',
+            'gocardless_webhook_secret' => 'nullable|string',
+            'currency' => 'required|string|size:3',
+            'opening_balance' => 'required|numeric',
+        ]);
+
+        $syncService = new \App\Domains\ClubAccounting\Services\GoCardlessSyncService();
+        $testResult = $syncService->testConnection($validated['gocardless_access_token'], $validated['gocardless_environment']);
+
+        if (! $testResult['success']) {
+            return redirect()->back()->with('error', "GoCardless Connection Failed: {$testResult['message']}");
+        }
+
+        $existingCodes = Account::where('club_id', $club->id)
+            ->where('type', 'asset')
+            ->where('code', 'like', '10%')
+            ->pluck('code')
+            ->toArray();
+
+        $codeNum = 1010;
+        while (in_array((string)$codeNum, $existingCodes)) {
+            $codeNum += 10;
+        }
+
+        $ledgerAcc = Account::create([
+            'club_id' => $club->id,
+            'code' => (string)$codeNum,
+            'name' => "GoCardless — {$validated['account_name']}",
+            'type' => 'asset',
+            'currency' => strtoupper($validated['currency']),
+            'is_active' => true,
+        ]);
+
+        \App\Domains\ClubAccounting\Models\BankAccount::create([
+            'club_id' => $club->id,
+            'account_id' => $ledgerAcc->id,
+            'bank_name' => 'GoCardless',
+            'account_name' => $validated['account_name'],
+            'account_type' => 'payment_gateway',
+            'currency' => strtoupper($validated['currency']),
+            'opening_balance' => $validated['opening_balance'],
+            'gocardless_access_token' => $validated['gocardless_access_token'],
+            'gocardless_environment' => $validated['gocardless_environment'],
+            'gocardless_webhook_secret' => $validated['gocardless_webhook_secret'] ?? null,
+            'gocardless_connected_at' => now(),
+            'sync_status' => 'connected',
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', "GoCardless Account '{$validated['account_name']}' connected & linked to Nominal Code {$ledgerAcc->code}!");
+    }
+
+    public function syncGoCardlessTransactions(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        try {
+            $syncService = new \App\Domains\ClubAccounting\Services\GoCardlessSyncService();
+            $result = $syncService->syncTransactions(
+                $bankAccount,
+                $validated['start_date'] ?? null,
+                $validated['end_date'] ?? null
+            );
+
+            $skippedMsg = isset($result['skipped_count']) && $result['skipped_count'] > 0
+                ? " ({$result['skipped_count']} duplicates safely ignored)"
+                : '';
+
+            return redirect()->back()->with('success', "GoCardless API Sync Complete: {$result['synced_count']} new transactions imported{$skippedMsg}.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', "GoCardless Sync Error: {$e->getMessage()}");
+        }
+    }
+
+    public function autoReconcileGiftAid(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $service = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+
+        $result = $service->autoReconcileGiftAidAndReliefChest($club);
+
+        if ($result['reconciled_count'] > 0) {
+            return redirect()->back()->with('success', "Automated Gift Aid & Relief Chest Match: Reconciled {$result['reconciled_count']} deposit line(s) totaling {$result['formatted_total_amount']}.");
+        }
+
+        return redirect()->back()->with('info', "No unmatched HMRC Gift Aid or Relief Chest deposits found to reconcile.");
+    }
+
+    public function exportGiftAidSchedule(Request $request, string $clubSlug)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $service = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+
+        $csv = $service->generateHmrcGiftAidScheduleCsv($club);
+        $filename = 'Gift_Aid_Claim_Schedule_' . $club->slug . '_' . date('Y-m-d') . '.csv';
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    public function filterReconciledDonations(Request $request, string $clubSlug)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $service = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+
+        $data = $service->getReconciledDonations($club, $request->all());
+
+        return response()->json($data);
+    }
+
+    public function giftAidTransactionsPage(Request $request, string $clubSlug): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $service = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+
+        $giftAidSummary = $service->getGiftAidSummary($club);
+        $reconciledDonations = $service->getReconciledDonations($club, $request->all());
+
+        return Inertia::render('Admin/Accounting/GiftAidTransactions', [
+            'club' => $club,
+            'giftAidSummary' => $giftAidSummary,
+            'reconciledDonations' => $reconciledDonations,
+            'filters' => $request->only(['date_from', 'date_to', 'person_id', 'status', 'search']),
+        ]);
     }
 }

@@ -355,12 +355,18 @@ class CharityDashboard extends Component
         $targetPercentage = $target->getPercentage($totalRaisedForFestival);
         $currentHonorTier = $target->getCurrentTier($totalRaisedForFestival);
 
+        $giftAidService = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+        $giftAidSummary = $giftAidService->getGiftAidSummary($club);
+        $reconciledDonations = $giftAidService->getReconciledDonations($club);
+
         return view('livewire.charity.charity-dashboard', [
             'club' => $club,
             'target' => $target,
             'totalRaisedForFestival' => $totalRaisedForFestival,
             'targetPercentage' => $targetPercentage,
             'currentHonorTier' => $currentHonorTier,
+            'giftAidSummary' => $giftAidSummary,
+            'reconciledDonations' => $reconciledDonations,
             'collections' => $collections,
             'totalCollectionsAmount' => $totalCollectionsAmount,
             'grants' => $grants,
@@ -371,7 +377,7 @@ class CharityDashboard extends Component
             'collectionTypes' => CollectionType::cases(),
             'grantStatuses' => GrantApprovalStatus::cases(),
         ])->layout('components.layouts.app', [
-            'title' => 'Charity Steward & Festival Dashboard — ' . $club->name,
+            'title' => 'Charity Dashboard',
             'club' => $club,
         ]);
     }

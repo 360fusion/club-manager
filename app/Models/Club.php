@@ -52,6 +52,7 @@ class Club extends Model implements HasMedia
 
     protected $fillable = [
         'club_type_id',
+        'province_id',
         'name',
         'slug',
         'logo_url',
@@ -254,6 +255,11 @@ class Club extends Model implements HasMedia
     public function clubType(): BelongsTo
     {
         return $this->belongsTo(ClubType::class);
+    }
+
+    public function province(): BelongsTo
+    {
+        return $this->belongsTo(Province::class);
     }
 
     public function users(): BelongsToMany

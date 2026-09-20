@@ -1,11 +1,14 @@
 <div class="space-y-6">
+    <!-- Top Charity Section Sub-Navigation Bar -->
+    @include('livewire.charity.navigation', ['clubSlug' => $clubSlug])
+
     <!-- Header Banner -->
     <div class="p-6 bg-slate-900 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-3">
                 <span class="p-2.5 bg-purple-500/20 text-purple-400 rounded-2xl border border-purple-500/30">🤝</span>
                 <div>
-                    <h1 class="text-2xl font-black tracking-tight">Charity Steward &amp; Provincial Festival Hub</h1>
+                    <h1 class="text-2xl font-black tracking-tight">Charity Dashboard</h1>
                     <p class="text-xs text-slate-400 mt-1 font-medium">Dual-Custody Meeting Collections, Grant Voting &amp; Relief Chest Integration</p>
                 </div>
             </div>
@@ -139,6 +142,30 @@
             <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-800">Festival Jewel Holders</span>
             <div class="text-2xl font-black text-indigo-950 mt-1">{{ $memberGivingRecords->where('qualifies_for_jewel', true)->count() }}</div>
             <span class="text-[10px] text-indigo-700 mt-1 block">Brethren qualifying for Festival Jewel</span>
+        </div>
+    </div>
+
+    <!-- Gift Aid & Relief Chest Automated Reconciliation Summary Banner -->
+    <div class="p-5 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-300/80 rounded-3xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <span class="p-3 bg-amber-500/20 text-amber-800 rounded-2xl text-xl">🏛️</span>
+            <div>
+                <h3 class="font-black text-slate-900 text-sm">Automated Gift Aid &amp; Relief Chest Reconciliation Position</h3>
+                <p class="text-xs text-slate-600 mt-0.5">
+                    Pending Gift Aid 25% Tax Reclaim: <strong class="text-amber-900 font-black">{{ $giftAidSummary['formatted_pending_gift_aid'] }}</strong>
+                    ({{ $giftAidSummary['pending_claim_count'] }} collection batches pending)
+                    • Net Relief Chest Balance: <strong class="text-indigo-900 font-black">{{ $giftAidSummary['formatted_net_relief_chest_balance'] }}</strong>
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a
+                href="{{ route('admin.accounting.index', ['clubSlug' => $club->slug, 'tab' => 'reconciliation']) }}"
+                class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+                <span>⚡ Open Reconciliation Workspace</span>
+            </a>
         </div>
     </div>
 
@@ -311,6 +338,105 @@
                             </td>
                         </tr>
                     @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Reconciled Gift Aid & Donations Detailed Audit Table -->
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">📜</span>
+                <div>
+                    <h3 class="font-black text-slate-900 text-base">Reconciled Gift Aid &amp; Donations Detailed Audit</h3>
+                    <p class="text-xs text-slate-500">Breakdown of meeting collections, donors, 25% tax reclaims, and bank credit reconciliation status.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <a
+                    href="{{ route('admin.accounting.giftaid.export_schedule', $club->slug) }}"
+                    target="_blank"
+                    class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5"
+                >
+                    <span>📥 Export HMRC CSV</span>
+                </a>
+                <a
+                    href="{{ route('admin.accounting.index', ['clubSlug' => $club->slug, 'tab' => 'reconciliation']) }}"
+                    class="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+                >
+                    <span>⚡ Accounting Reconciliation</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-900 text-white text-[10px] font-extrabold uppercase tracking-wider">
+                        <th class="py-3 px-4">Collection Date</th>
+                        <th class="py-3 px-4">Donor / Person</th>
+                        <th class="py-3 px-4">Collection Type</th>
+                        <th class="py-3 px-4 text-right">Donation Total</th>
+                        <th class="py-3 px-4 text-right">25% Gift Aid</th>
+                        <th class="py-3 px-4 text-center">Status</th>
+                        <th class="py-3 px-4">Matched Bank Deposit</th>
+                        <th class="py-3 px-4">Notes</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-800 font-medium">
+                    @forelse($reconciledDonations['collections'] ?? [] as $col)
+                        <tr class="hover:bg-purple-50/40 transition-colors">
+                            <td class="py-3 px-4 font-mono text-[11px] text-slate-600 whitespace-nowrap">
+                                {{ $col['created_at'] }}
+                            </td>
+                            <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">
+                                👤 {{ $col['donor_name'] }}
+                            </td>
+                            <td class="py-3 px-4 whitespace-nowrap">
+                                <span class="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px]">
+                                    {{ $col['collection_type'] }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                                {{ $col['formatted_total'] }}
+                            </td>
+                            <td class="py-3 px-4 text-right font-mono font-extrabold text-purple-700 whitespace-nowrap">
+                                {{ $col['formatted_gift_aid'] }}
+                            </td>
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block {{ $col['gift_aid_status'] === 'reconciled' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : ($col['gift_aid_status'] === 'claimed' ? 'bg-purple-100 text-purple-800 border border-purple-300' : 'bg-amber-100 text-amber-900 border border-amber-300') }}">
+                                    @if($col['gift_aid_status'] === 'reconciled')
+                                        ✓ Reconciled
+                                    @elseif($col['gift_aid_status'] === 'claimed')
+                                        ⚡ Claimed
+                                    @else
+                                        ⏳ Pending
+                                    @endif
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-xs text-slate-600 max-w-xs">
+                                @if(!empty($col['bank_transaction']))
+                                    <div class="p-2 bg-emerald-50/70 border border-emerald-200 rounded-lg text-[11px]">
+                                        <div class="font-extrabold text-emerald-900">Credit: {{ $col['bank_transaction']['formatted_amount'] }} ({{ $col['bank_transaction']['transaction_date'] }})</div>
+                                        <div class="text-[10px] text-emerald-800 truncate" title="{{ $col['bank_transaction']['raw_description'] }}">
+                                            {{ $col['bank_transaction']['raw_description'] }}
+                                        </div>
+                                    </div>
+                                @else
+                                    <span class="text-slate-400 italic text-[11px]">Unlinked bank credit</span>
+                                @endif
+                            </td>
+                            <td class="py-3 px-4 text-slate-500 text-[11px] max-w-xs truncate" title="{{ $col['notes'] }}">
+                                {{ $col['notes'] ?: '—' }}
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="py-8 text-center text-slate-400 italic">No charity collection records found.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

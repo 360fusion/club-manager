@@ -23,6 +23,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  provinces: {
+    type: Array,
+    default: () => [],
+  },
   availableRoles: {
     type: Array,
     default: () => [],
@@ -103,6 +107,7 @@ onUnmounted(() => {
 // Primary Settings Form
 const form = useForm({
   name: props.club.name || '',
+  province_id: props.club.province_id || '',
   lodge_number: props.club.lodge_number || props.settings.lodge_number || '1418',
   lodge_status: props.settings.lodge_status || 'Normal',
   installed_masters: props.settings.installed_masters || 'No',
@@ -837,6 +842,16 @@ const moveOfficerDown = (index) => {
             <div>
               <label class="block font-bold text-slate-700 mb-1">Lodge / Club Number</label>
               <input v-model="form.lodge_number" type="text" placeholder="e.g. 1418" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-semibold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Assigned Masonic Province</label>
+              <select v-model="form.province_id" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">No Province Selected</option>
+                <option v-for="p in provinces" :key="p.id" :value="p.id">
+                  🏛️ {{ p.name }}
+                </option>
+              </select>
             </div>
 
             <div>

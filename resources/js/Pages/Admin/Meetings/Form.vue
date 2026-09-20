@@ -280,6 +280,19 @@ const addAgendaItem = () => {
   form.agenda_items.push({ title: '', description: '' });
 };
 
+const addGrantToAgenda = (grant) => {
+  const proposerName = grant.proposer ? `${grant.proposer.first_name} ${grant.proposer.last_name}` : '';
+  const seconderName = grant.seconder ? `${grant.seconder.first_name} ${grant.seconder.last_name}` : '';
+  let desc = `To consider and, if approved, pass a resolution proposing a Charity Grant of £${parseFloat(grant.amount).toFixed(2)} to ${grant.recipient_name} (${grant.purpose}).`;
+  if (proposerName) desc += ` Proposed by ${proposerName}.`;
+  if (seconderName) desc += ` Seconded by ${seconderName}.`;
+
+  form.agenda_items.push({
+    title: `Charity Grant Proposition: £${parseFloat(grant.amount).toFixed(2)} to ${grant.recipient_name}`,
+    description: desc,
+  });
+};
+
 const removeAgendaItem = (index) => {
   form.agenda_items.splice(index, 1);
 };
@@ -608,9 +621,18 @@ const submit = () => {
                         <span v-if="grant.seconder">Seconded by: <strong>{{ grant.seconder.first_name }} {{ grant.seconder.last_name }}</strong></span>
                       </div>
                     </div>
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-amber-100 text-amber-900 border border-amber-300 self-start sm:self-center">
-                      {{ (grant.approval_status || 'proposed').replace('_', ' ') }}
-                    </span>
+                    <div class="flex items-center gap-2 self-start sm:self-center">
+                      <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-amber-100 text-amber-900 border border-amber-300">
+                        {{ (grant.approval_status || 'proposed').replace('_', ' ') }}
+                      </span>
+                      <button
+                        type="button"
+                        @click="addGrantToAgenda(grant)"
+                        class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[10px] rounded-lg shadow-2xs transition cursor-pointer"
+                      >
+                        + Add to Agenda
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

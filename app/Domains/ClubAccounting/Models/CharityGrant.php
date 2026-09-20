@@ -26,6 +26,7 @@ class CharityGrant extends Model
         'proposer_member_id',
         'seconder_member_id',
         'committee_meeting_id',
+        'meeting_id',
     ];
 
     protected function casts(): array
@@ -54,5 +55,10 @@ class CharityGrant extends Model
     public function committeeMeeting(): BelongsTo
     {
         return $this->belongsTo(ClubCommitteeMeeting::class, 'committee_meeting_id');
+    }
+
+    public function meeting(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Meeting::class, 'meeting_id');
     }
 }

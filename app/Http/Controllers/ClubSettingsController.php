@@ -285,11 +285,14 @@ class ClubSettingsController extends Controller
             }
         }
 
+        $provinces = \App\Models\Province::orderBy('name')->get();
+
         return Inertia::render('Admin/Settings/Show', [
-            'club' => $club,
+            'club' => $club->load('province'),
             'settings' => $settings,
             'allModules' => $allModules,
             'members' => $members,
+            'provinces' => $provinces,
             'availableRoles' => [
                 ['code' => 'owner', 'name' => 'Owner', 'badge' => 'bg-purple-100 text-purple-800 border-purple-200'],
                 ['code' => 'admin', 'name' => 'Admin', 'badge' => 'bg-indigo-100 text-indigo-800 border-indigo-200'],
@@ -309,6 +312,7 @@ class ClubSettingsController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
+            'province_id' => 'nullable|exists:provinces,id',
             'tagline' => 'nullable|string|max:255',
             'lodge_number' => 'nullable|string|max:100',
             'lodge_status' => 'nullable|string|max:100',
@@ -412,6 +416,10 @@ class ClubSettingsController extends Controller
 
         if (isset($validated['name'])) {
             $club->name = $validated['name'];
+        }
+
+        if (array_key_exists('province_id', $validated)) {
+            $club->province_id = $validated['province_id'];
         }
 
         if (isset($validated['logo_url'])) {

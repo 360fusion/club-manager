@@ -66,6 +66,10 @@ class AppServiceProvider extends ServiceProvider
                 'charity.charity-dashboard',
                 \App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard::class
             );
+            Livewire::component(
+                'charity.charity-festival',
+                \App\Domains\ClubAccounting\Livewire\Charity\CharityFestival::class
+            );
         }
 
         if (class_exists(Cashier::class)) {
@@ -98,5 +102,35 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             });
         }
+
+        \Illuminate\Auth\Notifications\ResetPassword::toMailUsing(function (object $notifiable, string $token) {
+            $template = \App\Models\DefaultEmailTemplate::where('template_key', 'password_reset')->first();
+
+            $resetUrl = url(route('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+
+            $memberName = $notifiable->name ?? 'Member';
+            $clubName = config('app.name', 'Club Manager');
+            $expireMinutes = config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60);
+
+            $subject = $template?->subject ?? '{{club_name}} - Reset Your Account Password';
+            $bodyHtml = $template?->body_html ?? '<p>Dear {{member_name}},</p><p>We received a request to reset the password for your account.</p><p><a href="{{reset_url}}">Reset Password</a></p>';
+
+            $replacements = [
+                '{{member_name}}' => e($memberName),
+                '{{club_name}}' => e($clubName),
+                '{{reset_url}}' => $resetUrl,
+                '{{expire_minutes}}' => $expireMinutes,
+            ];
+
+            $subject = str_replace(array_keys($replacements), array_values($replacements), $subject);
+            $bodyHtml = str_replace(array_keys($replacements), array_values($replacements), $bodyHtml);
+
+            return (new \Illuminate\Notifications\Messages\MailMessage)
+                ->subject($subject)
+                ->line(new \Illuminate\Support\HtmlString($bodyHtml));
+        });
     }
 }

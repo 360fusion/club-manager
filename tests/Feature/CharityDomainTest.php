@@ -219,4 +219,47 @@ class CharityDomainTest extends TestCase
             'committee_meeting_id' => $meeting->id,
         ]);
     }
+
+    public function test_proposing_grant_linked_to_meeting_creates_agenda_item(): void
+    {
+        $meeting = \App\Models\Meeting::create([
+            'club_id' => $this->club->id,
+            'meeting_number' => 412,
+            'title' => 'Regular Autumn Meeting',
+            'meeting_date' => now()->addDays(14),
+            'starts_at' => '18:30',
+            'venue' => 'Masonic Hall, Durham',
+            'dress_code' => 'Dark Suit & Regalia',
+            'status' => 'scheduled',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->post(route('admin.charity.grants.store', $this->club->slug), [
+                'recipient_name' => 'Children Hospice UK',
+                'purpose' => 'Winter Heating Support',
+                'amount' => '600.00',
+                'proposer_member_id' => $this->counterMember->id,
+                'seconder_member_id' => $this->witnessMember->id,
+                'meeting_id' => $meeting->id,
+            ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('club_acc_charity_grants', [
+            'club_id' => $this->club->id,
+            'recipient_name' => 'Children Hospice UK',
+            'amount' => 600.00,
+            'meeting_id' => $meeting->id,
+        ]);
+
+        $this->assertDatabaseHas('agenda_items', [
+            'meeting_id' => $meeting->id,
+            'is_ballot' => true,
+        ]);
+
+        $agendaItem = \App\Models\AgendaItem::where('meeting_id', $meeting->id)->first();
+        $this->assertStringContainsString('Charity Grant Proposition: £600.00 to Children Hospice UK', $agendaItem->title);
+        $this->assertStringContainsString('Proposed by John Doe', $agendaItem->description);
+        $this->assertStringContainsString('Seconded by Arthur Pendelton', $agendaItem->description);
+    }
 }

@@ -348,20 +348,28 @@ const statusBadgeClass = (status) => {
             </div>
           </div>
 
-          <!-- Associated Clubs Card -->
+          <!-- Associated Clubs & Masonic Orders Card -->
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-            <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">🏆 Joined Clubs ({{ userClubs.length }})</h3>
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 class="text-base font-bold text-slate-900">🏛️ Affiliated Orders & Clubs ({{ userClubs.length }})</h3>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-extrabold border border-indigo-200">Cross-Order View</span>
+            </div>
             
             <div v-if="userClubs.length" class="space-y-2.5">
-              <div v-for="c in userClubs" :key="c.id" class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3 text-xs">
+              <div v-for="c in userClubs" :key="c.id" class="p-3 bg-slate-50 border border-slate-200/90 rounded-xl flex items-center justify-between gap-3 text-xs hover:border-indigo-300 transition-all">
                 <div class="overflow-hidden">
-                  <div class="font-bold text-slate-900 truncate">{{ c.name }}</div>
-                  <div class="text-[10px] text-slate-400 capitalize">{{ c.club_type?.name || 'General' }}</div>
+                  <div class="font-bold text-slate-900 truncate">{{ c.name }} <span v-if="c.lodge_number" class="text-slate-500 font-mono font-normal">No. {{ c.lodge_number }}</span></div>
+                  <div class="text-[10px] text-indigo-600 font-extrabold capitalize flex items-center gap-1 mt-0.5">
+                    <span>👑 {{ c.club_type?.name || 'Craft Lodge' }}</span>
+                  </div>
                 </div>
                 <span :class="['px-2 py-0.5 rounded text-[9px] font-extrabold uppercase border', roleBadgeClass(c.role)]">
                   {{ c.role }}
                 </span>
               </div>
+            </div>
+            <div v-else class="text-xs text-slate-400 text-center py-4 italic">
+              No additional affiliated clubs or side orders recorded.
             </div>
           </div>
 

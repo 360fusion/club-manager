@@ -12,6 +12,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  bankAccounts: {
+    type: Array,
+    default: () => [],
+  },
   journalEntries: {
     type: Array,
     default: () => [],
@@ -92,11 +96,25 @@ const props = defineProps({
       bank_imports: [],
       unpaid_subscriptions: [],
       unpaid_bills: [],
+      gift_aid_summary: {
+        total_donations: 0,
+        claimable_gift_aid: 0,
+        unclaimed_gift_aid: 0,
+        claimed_gift_aid: 0,
+        reconciled_gift_aid: 0,
+        pending_bank_reconciliation_count: 0,
+        total_eligible_count: 0,
+        formatted_total_donations: '£0.00',
+        formatted_claimable_gift_aid: '£0.00',
+        formatted_unclaimed_gift_aid: '£0.00',
+        formatted_claimed_gift_aid: '£0.00',
+        formatted_reconciled_gift_aid: '£0.00',
+      },
     }),
   },
 });
 
-const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'reconciliation', 'contacts', 'settings'];
+const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'bank-accounts', 'chart-of-accounts', 'reconciliation', 'contacts', 'settings'];
 const validReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'reconciliation_summary'];
 
 const parseUrlState = () => {
@@ -140,9 +158,38 @@ const syncTabWithUrl = () => {
   selectedReport.value = report;
 };
 
-const navigateTo = (tabName, reportName = null) => {
+const selectedBankAccountId = ref(null);
+const showConnectBankDropdown = ref(false);
+const rowStates = ref({});
+const activeOptionsTxId = ref(null);
+const showManageAccountMenu = ref(false);
+const showAddMenu = ref(false);
+const showAccountingDropdown = ref(false);
+const showStatementLineDetailsModal = ref(false);
+
+watch(() => props.bankAccounts, (accs) => {
+  if (accs && accs.length && !selectedBankAccountId.value) {
+    selectedBankAccountId.value = accs[0].id;
+  }
+}, { immediate: true });
+
+const activeBankAccount = computed(() => {
+  if (!props.bankAccounts || !props.bankAccounts.length) return null;
+  return props.bankAccounts.find(a => a.id === selectedBankAccountId.value) || props.bankAccounts[0];
+});
+
+const filteredAccountTransactions = computed(() => {
+  const list = props.reconciliation?.account_transactions || [];
+  if (!activeBankAccount.value) return list;
+  return list.filter(tx => !tx.bank_account_id || tx.bank_account_id === activeBankAccount.value.id);
+});
+
+const navigateTo = (tabName, reportName = null, bankAccountId = null) => {
   activeTab.value = tabName;
   selectedReport.value = reportName;
+  if (bankAccountId) {
+    selectedBankAccountId.value = bankAccountId;
+  }
 
   if (typeof window !== 'undefined') {
     const basePath = `/clubs/${props.club.slug}/admin/accounting`;
@@ -182,6 +229,12 @@ const handleGlobalDocumentClick = (e) => {
   }
   if (!e.target.closest('.add-menu-container')) {
     showAddMenu.value = false;
+  }
+  if (!e.target.closest('.accounting-dropdown-container')) {
+    showAccountingDropdown.value = false;
+  }
+  if (!e.target.closest('.connect-bank-dropdown-container')) {
+    showConnectBankDropdown.value = false;
   }
 };
 
@@ -259,6 +312,8 @@ const showBillModal = ref(false);
 const showContactModal = ref(false);
 const showImportModal = ref(false);
 const showManualModal = ref(false);
+const showDifferentBalancesModal = ref(false);
+const showWhatsThisModal = ref(false);
 const editingContactId = ref(null);
 
 const selectedTx = ref(null);
@@ -292,14 +347,316 @@ const reconSubTab = ref('reconcile');
 const compactView = ref(false);
 const autoReconcile = ref(false);
 const showFilterPanel = ref(false);
-const showManageAccountMenu = ref(false);
-const showAddMenu = ref(false);
+
+// Gift Aid & Relief Chest Detailed Ledger Filters
+const giftAidFilterDateFrom = ref('');
+const giftAidFilterDateTo = ref('');
+const giftAidFilterPerson = ref('');
+const giftAidFilterStatus = ref('all');
+const giftAidFilterSearch = ref('');
+
+const filteredReconciledDonations = computed(() => {
+  const list = props.reconciliation?.reconciled_donations?.collections || [];
+  return list.filter(item => {
+    if (giftAidFilterDateFrom.value && item.raw_date < giftAidFilterDateFrom.value) {
+      return false;
+    }
+    if (giftAidFilterDateTo.value && item.raw_date > giftAidFilterDateTo.value) {
+      return false;
+    }
+    if (giftAidFilterPerson.value) {
+      const p = giftAidFilterPerson.value.toString().toLowerCase();
+      const matchId = item.donor_id && item.donor_id.toString() === p;
+      const matchName = item.donor_name && item.donor_name.toLowerCase().includes(p);
+      const matchCounted = item.counted_by && item.counted_by.toLowerCase().includes(p);
+      if (!matchId && !matchName && !matchCounted) return false;
+    }
+    if (giftAidFilterStatus.value !== 'all') {
+      if (giftAidFilterStatus.value === 'reconciled' && item.gift_aid_status !== 'reconciled') return false;
+      if (giftAidFilterStatus.value === 'claimed' && item.gift_aid_status !== 'claimed') return false;
+      if (giftAidFilterStatus.value === 'pending' && item.gift_aid_status === 'reconciled') return false;
+    }
+    if (giftAidFilterSearch.value) {
+      const s = giftAidFilterSearch.value.toLowerCase();
+      const matchType = (item.collection_type || '').toLowerCase().includes(s);
+      const matchDonor = (item.donor_name || '').toLowerCase().includes(s);
+      const matchNotes = (item.notes || '').toLowerCase().includes(s);
+      const matchBank = item.bank_transaction ? ((item.bank_transaction.raw_description || '') + ' ' + (item.bank_transaction.reference || '')).toLowerCase().includes(s) : false;
+      if (!matchType && !matchDonor && !matchNotes && !matchBank) return false;
+    }
+    return true;
+  });
+});
+
+const filteredReconciledDonationsTotal = computed(() => {
+  return filteredReconciledDonations.value.reduce((acc, item) => acc + (item.total_amount || 0), 0);
+});
+
+const filteredReconciledGiftAidTotal = computed(() => {
+  return filteredReconciledDonations.value.reduce((acc, item) => acc + (item.gift_aid_amount || 0), 0);
+});
+
+const resetGiftAidFilters = () => {
+  giftAidFilterDateFrom.value = '';
+  giftAidFilterDateTo.value = '';
+  giftAidFilterPerson.value = '';
+  giftAidFilterStatus.value = 'all';
+  giftAidFilterSearch.value = '';
+};
+const toggleAccountingDropdown = (e) => {
+  if (e) e.stopPropagation();
+  showAccountingDropdown.value = !showAccountingDropdown.value;
+};
+const showBankAccountModal = ref(false);
+const showPayPalModal = ref(false);
+const showPayPalSecret = ref(false);
+const testConnectionStatus = ref(null);
+const testConnectionMessage = ref('');
+
+const bankAccountForm = useForm({
+  bank_name: '',
+  account_name: '',
+  account_type: 'current',
+  account_number: '',
+  sort_code: '',
+  currency: 'GBP',
+  opening_balance: 0,
+});
+
+const payPalForm = useForm({
+  account_name: 'Lodge PayPal Operating Account',
+  paypal_client_id: '',
+  paypal_client_secret: '',
+  paypal_environment: 'live',
+  currency: 'GBP',
+  opening_balance: 0,
+});
+
+const showAccountTypeWarning = ref(false);
+const accountTypeWarningBypassed = ref(false);
+
+const detectedMismatch = computed(() => {
+  const name = `${bankAccountForm.bank_name || ''} ${bankAccountForm.account_name || ''}`.toLowerCase();
+  const currentType = bankAccountForm.account_type;
+
+  if (!name.trim()) return null;
+
+  // Payment Gateways (Stripe, PayPal, GoCardless, etc.)
+  if (/stripe|paypal|gocardless|checkout|klarna|adyen/.test(name)) {
+    if (currentType !== 'payment_gateway') {
+      return {
+        suggestedType: 'payment_gateway',
+        suggestedLabel: 'Payment Gateway (Stripe/PayPal)',
+        reason: 'Selecting Payment Gateway enables fee tracking (Code 6000) and settlement reconciliation.',
+      };
+    }
+  }
+
+  // Merchant Readers (SumUp, Zettle, Square, Lopay, etc.)
+  if (/sumup|zettle|square|lopay|clover|dopos/.test(name)) {
+    if (currentType !== 'merchant') {
+      return {
+        suggestedType: 'merchant',
+        suggestedLabel: 'Card Reader / Merchant (SumUp)',
+        reason: 'Selecting Card Reader / Merchant optimizes daily merchant payout batch reconciliation.',
+      };
+    }
+  }
+
+  // Cash / Till / Petty Cash
+  if (/cash|till|float|petty|drawer|box/.test(name)) {
+    if (currentType !== 'cash') {
+      return {
+        suggestedType: 'cash',
+        suggestedLabel: 'Petty Cash / Cash Register',
+        reason: 'Selecting Petty Cash ignores sort codes and enables till count float reconciliations.',
+      };
+    }
+  }
+
+  // High Street Banks (Barclays, Lloyds, HSBC, NatWest, Santander, Starling, Revolut, Metro, etc.)
+  if (/barclays|lloyds|hsbc|natwest|santander|starling|revolut|metro|nationwide|tsb|halifax|coutts/.test(name)) {
+    if (['payment_gateway', 'merchant', 'cash'].includes(currentType)) {
+      return {
+        suggestedType: 'current',
+        suggestedLabel: 'High Street Current Account',
+        reason: 'High street banks are typically categorized under High Street Current Account.',
+      };
+    }
+  }
+
+  return null;
+});
+
+const submitBankAccount = () => {
+  if (detectedMismatch.value && !accountTypeWarningBypassed.value) {
+    showAccountTypeWarning.value = true;
+    return;
+  }
+
+  bankAccountForm.post(route('admin.accounting.bank_accounts.store', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showBankAccountModal.value = false;
+      showAccountTypeWarning.value = false;
+      accountTypeWarningBypassed.value = false;
+      bankAccountForm.reset();
+    },
+  });
+};
+
+const applySuggestedTypeAndSubmit = () => {
+  if (detectedMismatch.value) {
+    bankAccountForm.account_type = detectedMismatch.value.suggestedType;
+  }
+  accountTypeWarningBypassed.value = true;
+  submitBankAccount();
+};
+
+const proceedWithCurrentTypeAnyway = () => {
+  accountTypeWarningBypassed.value = true;
+  submitBankAccount();
+};
+
+const submitPayPalAccount = () => {
+  payPalForm.post(route('admin.accounting.bank_accounts.paypal.connect', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showPayPalModal.value = false;
+      payPalForm.reset();
+      testConnectionStatus.value = null;
+    },
+  });
+};
+
+const showStripeModal = ref(false);
+const showStripeSecret = ref(false);
+const stripeForm = useForm({
+  account_name: 'Lodge Stripe Account',
+  stripe_secret_key: '',
+  currency: 'GBP',
+  opening_balance: 0,
+});
+
+const submitStripeAccount = () => {
+  stripeForm.post(route('admin.accounting.bank_accounts.stripe.connect', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showStripeModal.value = false;
+      stripeForm.reset();
+    },
+  });
+};
+
+const showSumUpModal = ref(false);
+const showSumUpKey = ref(false);
+const sumUpForm = useForm({
+  account_name: 'Lodge SumUp Merchant Account',
+  sumup_api_key: '',
+  currency: 'GBP',
+  opening_balance: 0,
+});
+
+const submitSumUpAccount = () => {
+  sumUpForm.post(route('admin.accounting.bank_accounts.sumup.connect', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showSumUpModal.value = false;
+      sumUpForm.reset();
+    },
+  });
+};
+
+const showGoCardlessModal = ref(false);
+const showGoCardlessToken = ref(false);
+const showGoCardlessSecret = ref(false);
+const goCardlessForm = useForm({
+  account_name: 'Lodge GoCardless Direct Debit Account',
+  gocardless_access_token: '',
+  gocardless_environment: 'sandbox',
+  gocardless_webhook_secret: '',
+  currency: 'GBP',
+  opening_balance: 0,
+});
+
+const submitGoCardlessAccount = () => {
+  goCardlessForm.post(route('admin.accounting.bank_accounts.gocardless.connect', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showGoCardlessModal.value = false;
+      goCardlessForm.reset();
+    },
+  });
+};
+
+const showGatewaySyncModal = ref(false);
+const activeGatewaySyncAccId = ref(null);
+const gatewaySyncType = ref('paypal'); // 'paypal', 'stripe', 'sumup'
+const gatewaySyncForm = useForm({
+  start_date: '',
+  end_date: '',
+});
+
+const openGatewaySyncModal = (accId, type = 'paypal') => {
+  activeGatewaySyncAccId.value = accId;
+  gatewaySyncType.value = type;
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  gatewaySyncForm.start_date = thirtyDaysAgo.toISOString().slice(0, 10);
+  gatewaySyncForm.end_date = new Date().toISOString().slice(0, 10);
+  showGatewaySyncModal.value = true;
+};
+
+const submitGatewaySyncModal = () => {
+  if (!activeGatewaySyncAccId.value) return;
+
+  let routeName = 'admin.accounting.bank_accounts.paypal.sync';
+  if (gatewaySyncType.value === 'stripe') {
+    routeName = 'admin.accounting.bank_accounts.stripe.sync';
+  } else if (gatewaySyncType.value === 'sumup') {
+    routeName = 'admin.accounting.bank_accounts.sumup.sync';
+  } else if (gatewaySyncType.value === 'gocardless') {
+    routeName = 'admin.accounting.bank_accounts.gocardless.sync';
+  }
+
+  gatewaySyncForm.post(route(routeName, { clubSlug: props.club.slug, id: activeGatewaySyncAccId.value }), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showGatewaySyncModal.value = false;
+    },
+  });
+};
+
+const syncPayPalNow = (accId) => {
+  openGatewaySyncModal(accId, 'paypal');
+};
+
+const syncStripeNow = (accId) => {
+  openGatewaySyncModal(accId, 'stripe');
+};
+
+const syncSumUpNow = (accId) => {
+  openGatewaySyncModal(accId, 'sumup');
+};
+
+const syncGoCardlessNow = (accId) => {
+  openGatewaySyncModal(accId, 'gocardless');
+};
+
+const toggleBankAccountActive = (accId) => {
+  router.post(route('admin.accounting.bank_accounts.toggle', { clubSlug: props.club.slug, id: accId }), {}, {
+    preserveScroll: true,
+  });
+};
 const selectedCashCodingTx = ref([]);
 const selectedStatementLineIds = ref([]);
 const statementLinesFilter = ref('statement_lines');
 
 const filteredStatementLines = computed(() => {
   let list = props.reconciliation?.statement_lines || [];
+  if (activeBankAccount.value) {
+    list = list.filter(l => !l.bank_account_id || l.bank_account_id === activeBankAccount.value.id);
+  }
   if (statementLinesFilter.value === 'statement_lines') {
     return list.filter(l => l.status !== 'Deleted');
   } else if (statementLinesFilter.value === 'deleted') {
@@ -355,8 +712,6 @@ const restoreSelectedStatementLines = () => {
   });
 };
 
-const activeOptionsTxId = ref(null);
-
 const toggleOptionsDropdown = (txId) => {
   if (activeOptionsTxId.value === txId) {
     activeOptionsTxId.value = null;
@@ -376,7 +731,6 @@ const deleteSingleStatementLine = (txId) => {
 };
 
 const selectedStatementLineDetails = ref(null);
-const showStatementLineDetailsModal = ref(false);
 
 const openStatementLineDetails = (tx) => {
   selectedStatementLineDetails.value = tx;
@@ -412,6 +766,9 @@ const filterMaxAmount = ref('');
 
 const filteredUnmatchedTx = computed(() => {
   let list = props.reconciliation?.unmatched_transactions || [];
+  if (activeBankAccount.value) {
+    list = list.filter(t => !t.bank_account_id || t.bank_account_id === activeBankAccount.value.id);
+  }
   const q = reconSearch.value.trim().toLowerCase();
   if (q) {
     list = list.filter(t =>
@@ -516,8 +873,6 @@ const submitIgnore = (txId) => {
     },
   });
 };
-
-const rowStates = ref({});
 
 const getContactSuggestions = (query) => {
   const q = (query || '').trim().toLowerCase();
@@ -1152,11 +1507,11 @@ const getTypeBadge = (type) => {
   <AdminLayout :club="club" title="Accounting" active-tab="accounting">
     <Head :title="`Accounting - ${club.name}`" />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-4">
+    <div class="space-y-6">
       
       <!-- Sleek Slate Navigation Bar at Top -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-sm p-1.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 relative">
-        <nav class="flex items-center px-1 text-xs sm:text-sm font-semibold text-slate-300 overflow-x-auto">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-sm p-1.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 relative z-30">
+        <nav class="flex items-center px-1 text-xs sm:text-sm font-semibold text-slate-300 overflow-visible flex-wrap gap-1">
           <button
             type="button"
             @click="navigateTo('home')"
@@ -1201,15 +1556,71 @@ const getTypeBadge = (type) => {
             <span>Reporting</span>
           </button>
 
+          <!-- Accounting Dropdown Menu -->
+          <div class="relative accounting-dropdown-container">
+            <button
+              type="button"
+              @click="toggleAccountingDropdown"
+              :class="[
+                'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap rounded-xl',
+                ['accounting', 'bank-accounts', 'chart-of-accounts'].includes(activeTab) ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+              ]"
+            >
+              <span>Accounting</span>
+              <span class="text-[10px] transition-transform duration-200" :class="{ 'rotate-180': showAccountingDropdown }">▾</span>
+            </button>
+
+            <div
+              v-if="showAccountingDropdown"
+              class="absolute left-0 top-full mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1.5 z-50 text-xs font-semibold text-slate-200 animate-in fade-in zoom-in-95 duration-100"
+            >
+              <button
+                type="button"
+                @click="showAccountingDropdown = false; navigateTo('accounting')"
+                class="w-full text-left px-4 py-2.5 hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer transition-colors"
+              >
+                <span>🏦</span>
+                <span>Bank & Payment Accounts</span>
+              </button>
+
+              <button
+                type="button"
+                @click="showAccountingDropdown = false; navigateTo('chart-of-accounts')"
+                class="w-full text-left px-4 py-2.5 hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer transition-colors"
+              >
+                <span>📋</span>
+                <span>Chart of Accounts</span>
+              </button>
+
+              <button
+                type="button"
+                @click="showAccountingDropdown = false; navigateTo('accounting')"
+                class="w-full text-left px-4 py-2.5 hover:bg-slate-800 hover:text-white flex items-center gap-2 border-t border-slate-800 mt-1 pt-2 cursor-pointer transition-colors"
+              >
+                <span>📖</span>
+                <span>General Ledger & Journals</span>
+              </button>
+
+              <button
+                type="button"
+                @click="showAccountingDropdown = false; openOpeningBalanceModal()"
+                class="w-full text-left px-4 py-2.5 hover:bg-slate-800 hover:text-white flex items-center gap-2 cursor-pointer transition-colors"
+              >
+                <span>⚖️</span>
+                <span>Set Opening Balances</span>
+              </button>
+            </div>
+          </div>
+
           <button
             type="button"
-            @click="navigateTo('accounting')"
+            @click="navigateTo('contacts')"
             :class="[
               'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'accounting' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+              activeTab === 'contacts' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
             ]"
           >
-            <span>Accounting</span>
+            <span>Contacts</span>
           </button>
 
           <button
@@ -1224,17 +1635,6 @@ const getTypeBadge = (type) => {
             <span v-if="reconciliation?.unmatched_transactions?.length > 0" class="px-1.5 py-0.5 text-[10px] font-black rounded-full bg-amber-500 text-slate-950">
               {{ reconciliation.unmatched_transactions.length }}
             </span>
-          </button>
-
-          <button
-            type="button"
-            @click="navigateTo('contacts')"
-            :class="[
-              'px-4 py-2.5 relative transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap rounded-xl',
-              activeTab === 'contacts' ? 'font-extrabold text-white bg-indigo-600 shadow-sm' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
-            ]"
-          >
-            <span>Contacts</span>
           </button>
 
         </nav>
@@ -1404,6 +1804,70 @@ const getTypeBadge = (type) => {
                 {{ formatCurrency(summary.net_income) }}
               </span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Donations & Gift Aid Tax Recovery Summary Box -->
+      <div v-if="activeTab === 'home'" class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-lg border border-purple-100 shadow-sm">
+              🏛️
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900">Donations & Gift Aid Tax Recovery Summary</h3>
+              <p class="text-xs text-slate-500 font-medium">HMRC 25% Tax Relief & Relief Chest Bank Reconciliation Overview</p>
+            </div>
+          </div>
+          <button
+            @click="activeTab = 'reconciliation'"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-xl border border-purple-200/60 transition shadow-xs self-start sm:self-auto cursor-pointer"
+          >
+            <span>Manage Claims & Reconciliation</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+          <!-- 1. Total Eligible Donations -->
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/70 space-y-1">
+            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Eligible Donations</span>
+            <span class="text-lg font-black text-slate-900 block">
+              {{ reconciliation.gift_aid_summary?.formatted_total_donations || '£0.00' }}
+            </span>
+            <span class="text-[10px] text-slate-500 block font-medium">
+              {{ reconciliation.gift_aid_summary?.total_eligible_count || 0 }} charity collections
+            </span>
+          </div>
+
+          <!-- 2. Calculated 25% Gift Aid -->
+          <div class="p-4 bg-purple-50/60 rounded-2xl border border-purple-100/80 space-y-1">
+            <span class="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider block">25% Gift Aid Claimable</span>
+            <span class="text-lg font-black text-purple-700 block">
+              {{ reconciliation.gift_aid_summary?.formatted_claimable_gift_aid || '£0.00' }}
+            </span>
+            <span class="text-[10px] text-purple-600/80 block font-medium">Standard HMRC reclaim rate</span>
+          </div>
+
+          <!-- 3. Unclaimed Gift Aid -->
+          <div class="p-4 bg-amber-50/60 rounded-2xl border border-amber-100/80 space-y-1">
+            <span class="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider block">Unclaimed Relief</span>
+            <span class="text-lg font-black text-amber-700 block">
+              {{ reconciliation.gift_aid_summary?.formatted_unclaimed_gift_aid || '£0.00' }}
+            </span>
+            <span class="text-[10px] text-amber-700/80 block font-medium">Awaiting schedule export</span>
+          </div>
+
+          <!-- 4. Reconciled Bank Credits -->
+          <div class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100/80 space-y-1">
+            <span class="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider block">Reconciled Credits</span>
+            <span class="text-lg font-black text-emerald-700 block">
+              {{ reconciliation.gift_aid_summary?.formatted_reconciled_gift_aid || '£0.00' }}
+            </span>
+            <span class="text-[10px] text-emerald-700/80 block font-medium">Matched to bank deposits</span>
           </div>
         </div>
       </div>
@@ -2437,70 +2901,240 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
-      <!-- VIEW 6: ACCOUNTING (Chart of Accounts & General Ledger Journal) -->
-      <div v-if="activeTab === 'accounting'" class="space-y-6">
-        <!-- Chart of Accounts Table -->
-        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <!-- VIEW 6: ACCOUNTING — BANK & PAYMENT ACCOUNTS HUB DASHBOARD & GENERAL LEDGER -->
+      <div v-if="activeTab === 'accounting' || activeTab === 'bank-accounts'" class="space-y-6">
+        <!-- Bank & Payment Accounts Dashboard Cards -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
-              <h3 class="text-base font-extrabold text-slate-900">Chart of Accounts</h3>
-              <p class="text-xs text-slate-500">Categorized ledger accounts for club bookkeeping.</p>
+              <div class="flex items-center gap-2.5">
+                <span class="p-2 bg-sky-50 text-sky-600 rounded-xl text-lg">🏦</span>
+                <h3 class="text-lg font-extrabold text-slate-900">Bank &amp; Payment Accounts Hub</h3>
+              </div>
+              <p class="text-xs text-slate-500 mt-1 font-medium">Multi-Bank &amp; Payment Gateway Management (High Street Banks, Stripe, PayPal, SumUp)</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="relative connect-bank-dropdown-container">
               <button
                 type="button"
-                @click="openOpeningBalanceModal()"
-                class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                @click.stop="showConnectBankDropdown = !showConnectBankDropdown"
+                class="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-md transition-all cursor-pointer font-extrabold text-xs flex items-center gap-2"
               >
-                <span>⚖️ Set Opening Balances</span>
+                <span>💳 Connect Bank / API</span>
+                <span class="text-[10px]">▾</span>
               </button>
-              <button
-                type="button"
-                @click="showAccountModal = true"
-                class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm"
+
+              <div
+                v-if="showConnectBankDropdown"
+                class="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-40 text-xs font-semibold text-slate-800 space-y-1 divide-y divide-slate-100"
               >
-                + Add Account
-              </button>
+                <div class="px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  Bank Account &amp; Gateways
+                </div>
+
+                <div class="py-1">
+                  <button
+                    type="button"
+                    @click="showBankAccountModal = true; showConnectBankDropdown = false"
+                    class="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <span class="text-base">🏦</span>
+                    <div>
+                      <span class="font-bold text-slate-900 block">High Street Bank Account</span>
+                      <span class="text-[10px] text-slate-500 font-medium">Current, Savings or Cash Account</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    @click="showGoCardlessModal = true; showConnectBankDropdown = false"
+                    class="w-full text-left px-4 py-2 hover:bg-amber-50/70 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <span class="text-base">🟡</span>
+                    <div>
+                      <span class="font-bold text-slate-900 block">GoCardless Direct Debit API</span>
+                      <span class="text-[10px] text-amber-700 font-medium">Direct Debit Mandates &amp; Feed</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    @click="showStripeModal = true; showConnectBankDropdown = false"
+                    class="w-full text-left px-4 py-2 hover:bg-purple-50/70 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <span class="text-base">💜</span>
+                    <div>
+                      <span class="font-bold text-slate-900 block">Stripe API</span>
+                      <span class="text-[10px] text-purple-700 font-medium">Card Payments &amp; Payout Feed</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    @click="showSumUpModal = true; showConnectBankDropdown = false"
+                    class="w-full text-left px-4 py-2 hover:bg-emerald-50/70 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <span class="text-base">💚</span>
+                    <div>
+                      <span class="font-bold text-slate-900 block">SumUp Card Reader API</span>
+                      <span class="text-[10px] text-emerald-700 font-medium">Card Terminal Sales Feed</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    @click="showPayPalModal = true; showConnectBankDropdown = false"
+                    class="w-full text-left px-4 py-2 hover:bg-blue-50/70 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <span class="text-base">🟦</span>
+                    <div>
+                      <span class="font-bold text-slate-900 block">PayPal Merchant API</span>
+                      <span class="text-[10px] text-blue-700 font-medium">PayPal Checkout Feed</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                  <th class="py-3 px-6">Code</th>
-                  <th class="py-3 px-6">Account Name</th>
-                  <th class="py-3 px-6">Account Type</th>
-                  <th class="py-3 px-6 text-right">Current Balance</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                <tr v-for="acc in accounts" :key="acc.id" class="hover:bg-slate-50/80 transition-colors">
-                  <td class="py-3 px-6 font-mono text-slate-500 font-bold">{{ acc.code }}</td>
-                  <td class="py-3 px-6 font-bold text-slate-900">{{ acc.name }}</td>
-                  <td class="py-3 px-6">
-                    <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', getTypeBadge(acc.type)]">
-                      {{ acc.type }}
-                    </span>
-                  </td>
-                  <td class="py-3 px-6 text-right font-black text-slate-900 font-mono">
-                    <div class="flex items-center justify-end gap-3">
-                      <span>{{ acc.formatted_balance }}</span>
-                      <button
-                        type="button"
-                        @click="openOpeningBalanceModal(acc.id)"
-                        class="px-2.5 py-1 text-[10px] font-extrabold text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg border border-sky-200 transition-all cursor-pointer"
-                        title="Set opening / carry-over balance for this account"
-                      >
-                        ⚖️ Carry Over
-                      </button>
+          <!-- Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+              v-for="acc in (bankAccounts || [])"
+              :key="acc.id"
+              class="bg-slate-50/70 rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:border-sky-300 transition-all flex flex-col justify-between space-y-4"
+            >
+              <div>
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold bg-white border border-slate-200 text-slate-800 shadow-sm">
+                      <span v-if="acc.bank_name === 'GoCardless' || acc.gocardless_access_token">🟡</span>
+                      <span v-else-if="acc.bank_name === 'Stripe' || acc.stripe_secret_key">💜</span>
+                      <span v-else-if="acc.bank_name === 'SumUp' || acc.sumup_api_key">💚</span>
+                      <span v-else-if="acc.bank_name === 'PayPal' || acc.paypal_client_id">🟦</span>
+                      <span v-else-if="acc.account_type === 'payment_gateway'">💳</span>
+                      <span v-else-if="acc.account_type === 'merchant'">📱</span>
+                      <span v-else-if="acc.account_type === 'savings'">📈</span>
+                      <span v-else-if="acc.account_type === 'cash'">💵</span>
+                      <span v-else>🏦</span>
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    <div>
+                      <h4 class="font-extrabold text-slate-900 text-sm leading-snug">{{ acc.bank_name }}</h4>
+                      <p class="text-[11px] font-semibold text-slate-500">{{ acc.account_name }}</p>
+                    </div>
+                  </div>
+
+                  <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border', acc.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200']">
+                    {{ acc.is_active ? 'Active' : 'Inactive' }}
+                  </span>
+                </div>
+
+                <div class="mt-3 pt-2.5 border-t border-slate-200/60 grid grid-cols-2 gap-2 text-[11px]">
+                  <div>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Account Type</span>
+                    <span class="font-bold text-slate-700">{{ acc.formatted_account_type || acc.account_type }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Nominal Code</span>
+                    <span class="font-mono font-bold text-indigo-600">Code {{ acc.account_code || '1000' }}</span>
+                  </div>
+                  <div v-if="acc.sort_code || acc.account_number" class="col-span-2 text-[10px] text-slate-500 font-mono">
+                    <span>Sort: {{ acc.sort_code || 'N/A' }}</span> | <span>Acc: {{ acc.account_number || 'N/A' }}</span>
+                  </div>
+                </div>
+
+                <!-- GoCardless API Badge -->
+                <div v-if="acc.bank_name === 'GoCardless' || acc.gocardless_access_token" class="mt-2.5 p-2 bg-amber-50/90 rounded-xl border border-amber-200 flex items-center justify-between text-[11px]">
+                  <div>
+                    <span class="font-bold text-amber-900 block">🟡 GoCardless API Active ({{ acc.gocardless_environment || 'sandbox' }})</span>
+                    <span class="text-[10px] text-amber-700 font-medium">Direct Debit Payment Feed</span>
+                  </div>
+                  <button
+                    type="button"
+                    @click="syncGoCardlessNow(acc.id)"
+                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer"
+                  >
+                    Sync API Now
+                  </button>
+                </div>
+
+                <!-- Stripe API Badge -->
+                <div v-else-if="acc.bank_name === 'Stripe' || acc.stripe_secret_key" class="mt-2.5 p-2 bg-purple-50/90 rounded-xl border border-purple-200 flex items-center justify-between text-[11px]">
+                  <div>
+                    <span class="font-bold text-purple-900 block">🟢 Stripe API Sync Active</span>
+                    <span class="text-[10px] text-purple-700 font-medium">Balance &amp; Payout Feed</span>
+                  </div>
+                  <button
+                    type="button"
+                    @click="syncStripeNow(acc.id)"
+                    class="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer"
+                  >
+                    Sync API Now
+                  </button>
+                </div>
+
+                <!-- SumUp API Badge -->
+                <div v-else-if="acc.bank_name === 'SumUp' || acc.sumup_api_key" class="mt-2.5 p-2 bg-emerald-50/90 rounded-xl border border-emerald-200 flex items-center justify-between text-[11px]">
+                  <div>
+                    <span class="font-bold text-emerald-900 block">🟢 SumUp API Sync Active</span>
+                    <span class="text-[10px] text-emerald-700 font-medium">Card Reader Feed</span>
+                  </div>
+                  <button
+                    type="button"
+                    @click="syncSumUpNow(acc.id)"
+                    class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer"
+                  >
+                    Sync API Now
+                  </button>
+                </div>
+
+                <!-- PayPal API Badge -->
+                <div v-else-if="acc.bank_name === 'PayPal' || acc.paypal_client_id" class="mt-2.5 p-2 bg-blue-50/90 rounded-xl border border-blue-200 flex items-center justify-between text-[11px]">
+                  <div>
+                    <span class="font-bold text-blue-900 block">🟢 PayPal API Sync Active</span>
+                    <span class="text-[10px] text-blue-700 font-medium">Env: {{ acc.paypal_environment || 'live' }}</span>
+                  </div>
+                  <button
+                    type="button"
+                    @click="syncPayPalNow(acc.id)"
+                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer"
+                  >
+                    Sync API Now
+                  </button>
+                </div>
+
+                <div class="mt-3 p-3 bg-white rounded-xl border border-slate-200/80 space-y-1.5 text-xs">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-500">Statement Balance</span>
+                    <span class="font-black text-slate-900">{{ acc.formatted_statement_balance || '£0.00' }}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-500">Ledger Balance (Code {{ acc.account_code || '1000' }})</span>
+                    <span class="font-bold text-indigo-700">{{ acc.formatted_ledger_balance || '£0.00' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-200/60 text-xs">
+                <button
+                  type="button"
+                  @click="navigateTo('reconciliation', null, acc.id)"
+                  :class="['px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer', acc.unreconciled_count > 0 ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm' : 'bg-slate-200 hover:bg-slate-300 text-slate-800']"
+                >
+                  <span>⚡ Reconcile ({{ acc.unreconciled_count || 0 }})</span>
+                </button>
+
+                <button
+                  type="button"
+                  @click="toggleBankAccountActive(acc.id)"
+                  class="px-2.5 py-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 cursor-pointer"
+                >
+                  {{ acc.is_active ? 'Deactivate' : 'Activate' }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+
 
         <!-- General Ledger Journal Entries -->
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
@@ -2579,6 +3213,71 @@ const getTypeBadge = (type) => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 7: CHART OF ACCOUNTS (Dedicated View & Nominal Ledger) -->
+      <div v-if="activeTab === 'chart-of-accounts'" class="space-y-6">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900">Chart of Accounts</h3>
+              <p class="text-xs text-slate-500">Categorized nominal ledger accounts for club bookkeeping.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="openOpeningBalanceModal()"
+                class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                <span>⚖️ Set Opening Balances</span>
+              </button>
+              <button
+                type="button"
+                @click="showAccountModal = true"
+                class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm"
+              >
+                + Add Account
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                  <th class="py-3 px-6">Code</th>
+                  <th class="py-3 px-6">Account Name</th>
+                  <th class="py-3 px-6">Account Type</th>
+                  <th class="py-3 px-6 text-right">Current Balance</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                <tr v-for="acc in accounts" :key="acc.id" class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-6 font-mono text-slate-500 font-bold">{{ acc.code }}</td>
+                  <td class="py-3 px-6 font-bold text-slate-900">{{ acc.name }}</td>
+                  <td class="py-3 px-6">
+                    <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', getTypeBadge(acc.type)]">
+                      {{ acc.type }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-6 text-right font-black text-slate-900 font-mono">
+                    <div class="flex items-center justify-end gap-3">
+                      <span>{{ acc.formatted_balance }}</span>
+                      <button
+                        type="button"
+                        @click="openOpeningBalanceModal(acc.id)"
+                        class="px-2.5 py-1 text-[10px] font-extrabold text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg border border-sky-200 transition-all cursor-pointer"
+                        title="Set opening / carry-over balance for this account"
+                      >
+                        ⚖️ Carry Over
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -2721,23 +3420,45 @@ const getTypeBadge = (type) => {
         
         <!-- Top Bank Account Balance Header Bar -->
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="space-y-1">
+          <div class="space-y-2">
             <div class="flex items-center gap-3">
-              <span class="text-xl">💳</span>
-              <h3 class="text-base font-black text-slate-900 tracking-tight">AMERICAN EXPRESS (Operating Account)</h3>
+              <span class="text-xl">
+                <span v-if="activeBankAccount?.bank_name === 'GoCardless' || activeBankAccount?.gocardless_access_token">🟡</span>
+                <span v-else-if="activeBankAccount?.bank_name === 'Stripe' || activeBankAccount?.stripe_secret_key">💜</span>
+                <span v-else-if="activeBankAccount?.bank_name === 'SumUp' || activeBankAccount?.sumup_api_key">💚</span>
+                <span v-else-if="activeBankAccount?.bank_name === 'PayPal' || activeBankAccount?.paypal_client_id">🟦</span>
+                <span v-else>💳</span>
+              </span>
+
+              <!-- Bank Account Selector Dropdown -->
+              <div class="relative">
+                <select
+                  v-model="selectedBankAccountId"
+                  class="bg-slate-50 border border-slate-300 text-slate-900 font-black text-base rounded-xl px-3 py-1.5 focus:bg-white focus:ring-2 focus:ring-sky-500 cursor-pointer"
+                >
+                  <option
+                    v-for="acc in (bankAccounts || [])"
+                    :key="acc.id"
+                    :value="acc.id"
+                  >
+                    {{ acc.bank_name }} — {{ acc.account_name }} (Code {{ acc.account_code || '1000' }})
+                  </option>
+                </select>
+              </div>
             </div>
+
             <div class="flex flex-wrap items-center gap-4 text-xs font-semibold">
               <div>
-                <span class="font-extrabold text-slate-900 text-sm">({{ reconciliation.unmatched_transactions?.length ? '476.49' : '0.00' }})</span>
+                <span class="font-extrabold text-slate-900 text-sm">{{ activeBankAccount?.formatted_statement_balance || '£0.00' }}</span>
                 <span class="text-slate-500 ml-1">Statement Balance</span>
               </div>
               <div class="border-l border-slate-200 pl-4">
-                <span class="font-extrabold text-slate-900 text-sm">({{ reconciliation.unmatched_transactions?.length ? '401.33' : '0.00' }})</span>
+                <span class="font-extrabold text-slate-900 text-sm">{{ activeBankAccount?.formatted_ledger_balance || '£0.00' }}</span>
                 <span class="text-slate-500 ml-1">Balance in System</span>
-                <a href="#" @click.prevent class="text-sky-600 hover:underline ml-1 text-[11px] font-bold">— Different balances?</a>
+                <a href="#" @click.prevent="showDifferentBalancesModal = true" class="text-sky-600 hover:underline ml-1 text-[11px] font-bold">— Different balances?</a>
               </div>
             </div>
-            <a href="#" @click.prevent class="text-sky-600 text-xs font-semibold hover:underline inline-block mt-0.5">What's this?</a>
+            <a href="#" @click.prevent="showWhatsThisModal = true" class="text-sky-600 text-xs font-semibold hover:underline inline-block mt-0.5">What's this?</a>
           </div>
 
           <div class="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
@@ -2767,24 +3488,7 @@ const getTypeBadge = (type) => {
           </div>
         </div>
 
-        <!-- Notification / Import Summary Banner -->
-        <div class="bg-sky-50 border border-sky-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-semibold text-sky-900">
-          <div>
-            <span>11 statement lines imported in the last 30 days</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <button
-              type="button"
-              @click="autoReconcile = !autoReconcile"
-              :class="[
-                'px-3.5 py-1.5 text-white font-extrabold rounded-md shadow-sm transition-all cursor-pointer flex items-center gap-1.5',
-                autoReconcile ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-sky-600 hover:bg-sky-700'
-              ]"
-            >
-              <span>{{ autoReconcile ? 'Turn auto-reconcile off' : 'Turn auto-reconcile on' }}</span>
-            </button>
-          </div>
-        </div>
+
 
         <!-- Sub-Tab Navigation Bar & Compact View Toggle -->
         <div class="bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
@@ -2797,7 +3501,7 @@ const getTypeBadge = (type) => {
                 reconSubTab === 'reconcile' ? 'border-sky-600 text-sky-700 font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-800'
               ]"
             >
-              Reconcile ({{ reconciliation.unmatched_transactions?.length || 0 }})
+              Reconcile ({{ filteredUnmatchedTx.length }})
             </button>
 
             <button
@@ -2831,6 +3535,20 @@ const getTypeBadge = (type) => {
               ]"
             >
               Account transactions
+            </button>
+
+            <button
+              type="button"
+              @click="reconSubTab = 'gift_aid'"
+              :class="[
+                'px-4 py-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5',
+                reconSubTab === 'gift_aid' ? 'border-amber-600 text-amber-800 font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-800'
+              ]"
+            >
+              <span>🏛️ Gift Aid &amp; Relief Chest</span>
+              <span v-if="reconciliation?.gift_aid_summary?.pending_claim_count > 0" class="px-1.5 py-0.5 text-[10px] font-black rounded-full bg-amber-500 text-slate-950">
+                {{ reconciliation.gift_aid_summary.pending_claim_count }}
+              </span>
             </button>
           </div>
         </div>
@@ -3513,7 +4231,7 @@ const getTypeBadge = (type) => {
                     <input
                       type="checkbox"
                       @change="toggleAccountTxSelectAll"
-                      :checked="selectedAccountTxIds.length === (reconciliation.account_transactions || []).length && (reconciliation.account_transactions || []).length > 0"
+                      :checked="selectedAccountTxIds.length === filteredAccountTransactions.length && filteredAccountTransactions.length > 0"
                       class="rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
                     />
                   </th>
@@ -3527,7 +4245,7 @@ const getTypeBadge = (type) => {
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium">
-                <tr v-for="tx in reconciliation.account_transactions || []" :key="tx.id" class="hover:bg-slate-50/80 transition-colors">
+                <tr v-for="tx in filteredAccountTransactions" :key="tx.id" class="hover:bg-slate-50/80 transition-colors">
                   <td class="py-2.5 px-3">
                     <input
                       type="checkbox"
@@ -3553,11 +4271,305 @@ const getTypeBadge = (type) => {
                     </span>
                   </td>
                 </tr>
-                <tr v-if="!reconciliation.account_transactions || reconciliation.account_transactions.length === 0">
+                <tr v-if="filteredAccountTransactions.length === 0">
                   <td colspan="8" class="py-8 text-center text-slate-400 italic">No internal account transactions recorded yet.</td>
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 5: GIFT AID & RELIEF CHEST RECONCILIATION -->
+        <div v-else-if="reconSubTab === 'gift_aid'" class="space-y-6">
+          <div class="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">🏛️</span>
+                  <h4 class="font-black text-slate-900 text-base">Automated Gift Aid Recovery &amp; Relief Chest Reconciliation</h4>
+                </div>
+                <p class="text-xs text-slate-600 mt-1">
+                  Automatic matching engine for HMRC 25% Gift Aid tax reclaims and MCF Relief Chest (Ref: <span class="font-extrabold text-slate-900">{{ reconciliation?.gift_aid_summary?.relief_chest_ref || 'E1418' }}</span>) deposit distributions.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <Link
+                  :href="route('admin.accounting.giftaid.reconcile_auto', club.slug)"
+                  method="post"
+                  as="button"
+                  class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>⚡ Auto-Match Gift Aid &amp; Relief Chest Deposits</span>
+                </Link>
+                <a
+                  :href="route('admin.accounting.giftaid.export_schedule', club.slug)"
+                  target="_blank"
+                  class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+                >
+                  <span>📥 Export HMRC Schedule (CSV)</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Summary Position Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+              <div class="bg-white p-4 rounded-xl border border-amber-200/60 shadow-2xs space-y-1">
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Eligible Donations</span>
+                <span class="text-xl font-black text-slate-900 block">{{ reconciliation?.gift_aid_summary?.formatted_total_eligible || '£0.00' }}</span>
+                <span class="text-[10px] text-slate-400">Meeting Alms &amp; Envelopes</span>
+              </div>
+
+              <div class="bg-white p-4 rounded-xl border border-emerald-200/60 shadow-2xs space-y-1">
+                <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block">Reclaimed Gift Aid</span>
+                <span class="text-xl font-black text-emerald-800 block">{{ reconciliation?.gift_aid_summary?.formatted_gift_aid_reclaimed || '£0.00' }}</span>
+                <span class="text-[10px] text-emerald-600 font-bold">25% HMRC Tax Reclaims Reconciled</span>
+              </div>
+
+              <div class="bg-white p-4 rounded-xl border border-amber-300 shadow-2xs space-y-1">
+                <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wider block">Pending Reclaim</span>
+                <span class="text-xl font-black text-amber-900 block">{{ reconciliation?.gift_aid_summary?.formatted_pending_gift_aid || '£0.00' }}</span>
+                <span class="text-[10px] text-amber-700 font-bold">{{ reconciliation?.gift_aid_summary?.pending_claim_count || 0 }} collection batch(es) pending</span>
+              </div>
+
+              <div class="bg-white p-4 rounded-xl border border-sky-200/60 shadow-2xs space-y-1">
+                <span class="text-[11px] font-bold text-sky-800 uppercase tracking-wider block">Net Relief Chest Position</span>
+                <span class="text-xl font-black text-sky-900 block">{{ reconciliation?.gift_aid_summary?.formatted_net_relief_chest_balance || '£0.00' }}</span>
+                <span class="text-[10px] text-sky-700 font-bold">Chest Ref: {{ reconciliation?.gift_aid_summary?.relief_chest_ref || 'E1418' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Educational & Rule Explanation Banner -->
+          <div class="p-5 bg-white border border-slate-200 rounded-2xl space-y-3">
+            <h5 class="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <span>💡</span>
+              <span>How Automated Gift Aid &amp; Relief Chest Reconciliation Works</span>
+            </h5>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-600 leading-relaxed">
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span class="font-bold text-slate-900 block">1. 25% Tax Reclaim Calculation</span>
+                <p class="text-[11px] text-slate-500">
+                  Every Gift Aid envelope or alms donation recorded during dual-custody meeting counts generates a 25% reclaimable Gift Aid entitlement.
+                </p>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span class="font-bold text-slate-900 block">2. Automatic Bank Keyword Matching</span>
+                <p class="text-[11px] text-slate-500">
+                  Bank statement lines with keywords like <code>HMRC GIFT AID</code>, <code>MCF RELIEF CHEST</code>, or <code>PROVINCIAL RELIEF</code> are automatically matched.
+                </p>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span class="font-bold text-slate-900 block">3. Double-Entry General Ledger</span>
+                <p class="text-[11px] text-slate-500">
+                  Reconciled payouts post automatically to Nominal Code 4310 (Gift Aid Tax Reclaim Income) or Code 4300 (Relief Chest Contributions).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- DETAILED RECONCILED DONATIONS & GIFT AID TRANSACTIONS LEDGER WITH FILTERS -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+            
+            <!-- Header & Filter Summary -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between pb-4 border-b border-slate-100 gap-4">
+              <div>
+                <h4 class="font-black text-slate-900 text-base flex items-center gap-2">
+                  <span>📜</span>
+                  <span>Reconciled Donations &amp; Gift Aid Transactions Ledger</span>
+                </h4>
+                <p class="text-xs text-slate-500 mt-0.5 font-medium">
+                  Detailed listing of all meeting alms, festival giving, and gift aid tax reclaims with bank matching status.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 text-xs">
+                <span class="px-3 py-1 bg-purple-50 text-purple-800 font-extrabold rounded-xl border border-purple-200/60">
+                  Total Filtered Gift Aid: {{ formatCurrency(filteredReconciledGiftAidTotal) }}
+                </span>
+                <span class="px-3 py-1 bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-200">
+                  Showing {{ filteredReconciledDonations.length }} transaction(s)
+                </span>
+              </div>
+            </div>
+
+            <!-- Interactive Filters Form Bar -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span class="flex items-center gap-1.5">
+                  <span>🔍</span>
+                  <span>Filter Transactions by Date, Person &amp; Status</span>
+                </span>
+                <button
+                  type="button"
+                  @click="resetGiftAidFilters"
+                  class="text-purple-700 hover:text-purple-900 underline font-bold cursor-pointer"
+                >
+                  Reset Filters
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+                <!-- Date From -->
+                <div>
+                  <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">From Date</label>
+                  <input
+                    v-model="giftAidFilterDateFrom"
+                    type="date"
+                    class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <!-- Date To -->
+                <div>
+                  <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">To Date</label>
+                  <input
+                    v-model="giftAidFilterDateTo"
+                    type="date"
+                    class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <!-- Person / Donor Filter -->
+                <div>
+                  <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">Donor / Person</label>
+                  <select
+                    v-model="giftAidFilterPerson"
+                    class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 cursor-pointer"
+                  >
+                    <option value="">All Donors &amp; Stewards</option>
+                    <option
+                      v-for="m in (reconciliation?.reconciled_donations?.members || [])"
+                      :key="m.id"
+                      :value="m.id"
+                    >
+                      {{ m.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div>
+                  <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">Gift Aid Status</label>
+                  <select
+                    v-model="giftAidFilterStatus"
+                    class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 cursor-pointer"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="reconciled">Reconciled Only</option>
+                    <option value="claimed">Claimed</option>
+                    <option value="pending">Pending / Unclaimed</option>
+                  </select>
+                </div>
+
+                <!-- Keyword Search -->
+                <div>
+                  <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">Search Keywords</label>
+                  <input
+                    v-model="giftAidFilterSearch"
+                    type="text"
+                    placeholder="Search notes, donor..."
+                    class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-2xs">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-900 text-white text-[11px] font-extrabold uppercase tracking-wider">
+                  <tr>
+                    <th class="py-3 px-3.5">Date</th>
+                    <th class="py-3 px-3.5">Donor / Person</th>
+                    <th class="py-3 px-3.5">Collection Type</th>
+                    <th class="py-3 px-3.5 text-right">Donation Total</th>
+                    <th class="py-3 px-3.5 text-right">25% Gift Aid</th>
+                    <th class="py-3 px-3.5 text-center">Gift Aid Status</th>
+                    <th class="py-3 px-3.5">Matched Bank Deposit</th>
+                    <th class="py-3 px-3.5">Notes</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-800">
+                  <tr
+                    v-for="item in filteredReconciledDonations"
+                    :key="item.id"
+                    class="hover:bg-purple-50/40 transition-colors"
+                  >
+                    <!-- Date -->
+                    <td class="py-3 px-3.5 font-mono text-[11px] text-slate-600 whitespace-nowrap">
+                      {{ item.created_at }}
+                    </td>
+
+                    <!-- Donor / Person -->
+                    <td class="py-3 px-3.5 font-bold text-slate-900 whitespace-nowrap">
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-sm">👤</span>
+                        <span>{{ item.donor_name }}</span>
+                      </div>
+                    </td>
+
+                    <!-- Collection Type -->
+                    <td class="py-3 px-3.5 whitespace-nowrap">
+                      <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px]">
+                        {{ item.collection_type }}
+                      </span>
+                    </td>
+
+                    <!-- Donation Total -->
+                    <td class="py-3 px-3.5 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                      {{ item.formatted_total }}
+                    </td>
+
+                    <!-- 25% Gift Aid -->
+                    <td class="py-3 px-3.5 text-right font-mono font-extrabold text-purple-700 whitespace-nowrap">
+                      {{ item.formatted_gift_aid }}
+                    </td>
+
+                    <!-- Gift Aid Status -->
+                    <td class="py-3 px-3.5 text-center whitespace-nowrap">
+                      <span
+                        :class="[
+                          'px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1',
+                          item.gift_aid_status === 'reconciled' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                          (item.gift_aid_status === 'claimed' ? 'bg-purple-100 text-purple-800 border border-purple-300' :
+                          'bg-amber-100 text-amber-900 border border-amber-300')
+                        ]"
+                      >
+                        <span v-if="item.gift_aid_status === 'reconciled'">✓ Reconciled</span>
+                        <span v-else-if="item.gift_aid_status === 'claimed'">⚡ Claimed</span>
+                        <span v-else>⏳ Unclaimed</span>
+                      </span>
+                    </td>
+
+                    <!-- Matched Bank Deposit -->
+                    <td class="py-3 px-3.5 text-xs text-slate-600 max-w-xs">
+                      <div v-if="item.bank_transaction" class="p-2 bg-emerald-50/70 border border-emerald-200 rounded-lg text-[11px] space-y-0.5">
+                        <div class="font-extrabold text-emerald-900 flex items-center justify-between">
+                          <span>Bank Credit: {{ item.bank_transaction.formatted_amount }}</span>
+                          <span class="text-[9px] text-emerald-700">{{ item.bank_transaction.transaction_date }}</span>
+                        </div>
+                        <div class="text-[10px] text-emerald-800 truncate" :title="item.bank_transaction.raw_description">
+                          {{ item.bank_transaction.raw_description }}
+                        </div>
+                      </div>
+                      <span v-else class="text-slate-400 italic text-[11px]">No bank credit linked yet</span>
+                    </td>
+
+                    <!-- Notes -->
+                    <td class="py-3 px-3.5 text-slate-500 text-[11px] max-w-xs truncate" :title="item.notes || 'No notes'">
+                      {{ item.notes || '—' }}
+                    </td>
+                  </tr>
+
+                  <tr v-if="filteredReconciledDonations.length === 0">
+                    <td colspan="8" class="py-12 text-center text-slate-400 italic">
+                      No reconciled donations match the selected filter criteria.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -3667,6 +4679,441 @@ const getTypeBadge = (type) => {
         </div>
       </div>
 
+    </div>
+
+    <!-- Modal 0: Add Bank / Payment Account -->
+    <div v-if="showBankAccountModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showBankAccountModal = false">
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <span class="p-2 bg-sky-50 text-sky-600 rounded-xl text-lg">🏦</span>
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base">Add Bank / Payment Account</h3>
+              <p class="text-[11px] text-slate-500 font-medium">Create High Street Bank or Manual Account</p>
+            </div>
+          </div>
+          <button type="button" @click="showBankAccountModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer">✕</button>
+        </div>
+
+        <form @submit.prevent="submitBankAccount" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Institution / Provider Name *</label>
+            <input v-model="bankAccountForm.bank_name" required placeholder="e.g. Barclays, HSBC, Lloyds, NatWest" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Account Label / Title *</label>
+            <input v-model="bankAccountForm.account_name" required placeholder="e.g. Main Operating Account, Online Card Payouts" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Account Type *</label>
+              <select v-model="bankAccountForm.account_type" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white">
+                <option value="current">High Street Current Account</option>
+                <option value="savings">Savings Account</option>
+                <option value="credit_card">Credit Card Account</option>
+                <option value="cash">Petty Cash / Cash Register</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Currency *</label>
+              <input v-model="bankAccountForm.currency" required placeholder="GBP" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white uppercase" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Account Number</label>
+              <input v-model="bankAccountForm.account_number" placeholder="e.g. 12345678" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Sort Code</label>
+              <input v-model="bankAccountForm.sort_code" placeholder="e.g. 20-00-00" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Opening Balance (£)</label>
+            <input type="number" step="0.01" v-model="bankAccountForm.opening_balance" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+          </div>
+
+          <!-- Account Type Mismatch Warning Banner -->
+          <div v-if="showAccountTypeWarning && detectedMismatch" class="p-3.5 bg-amber-50 rounded-2xl border border-amber-300 space-y-2.5 animate-in fade-in duration-150">
+            <div class="flex items-start gap-2">
+              <span class="text-lg leading-none">⚠️</span>
+              <div>
+                <h4 class="font-extrabold text-amber-900 text-xs">Recommended Account Type Notice</h4>
+                <p class="text-[11px] text-amber-800 mt-0.5">
+                  You entered <strong>"{{ bankAccountForm.bank_name }}"</strong>, but selected <strong>"{{ bankAccountForm.account_type }}"</strong>.
+                </p>
+                <p class="text-[10px] text-amber-700 mt-1 font-medium">{{ detectedMismatch.reason }}</p>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center gap-2 pt-1 border-t border-amber-200/80">
+              <button
+                type="button"
+                @click="applySuggestedTypeAndSubmit"
+                class="w-full sm:w-auto px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer transition-all flex items-center justify-center gap-1.5"
+              >
+                <span>✨ Switch to {{ detectedMismatch.suggestedLabel }}</span>
+              </button>
+
+              <button
+                type="button"
+                @click="proceedWithCurrentTypeAnyway"
+                class="w-full sm:w-auto px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-[11px] rounded-xl cursor-pointer transition-all text-center"
+              >
+                Keep Selection &amp; Save
+              </button>
+            </div>
+          </div>
+
+          <div class="p-3 bg-sky-50 rounded-2xl border border-sky-200 text-sky-900 text-[11px]">
+            ℹ️ Saving will automatically create and link a dedicated nominal asset account on the Chart of Accounts (e.g. Code 1010, 1020, etc.).
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button type="button" @click="showBankAccountModal = false" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" :disabled="bankAccountForm.processing" class="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-md shadow-sky-600/20 cursor-pointer">
+              Save &amp; Link Account
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 0.5: Dedicated PayPal Setup & API Settings -->
+    <div v-if="showPayPalModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showPayPalModal = false">
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <span class="p-2 bg-blue-50 text-blue-600 rounded-xl text-lg">🟦</span>
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base">Connect PayPal Business API</h3>
+              <p class="text-[11px] text-slate-500 font-medium">Automated transaction sync for PayPal sales &amp; payouts</p>
+            </div>
+          </div>
+          <button type="button" @click="showPayPalModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer">✕</button>
+        </div>
+
+        <form @submit.prevent="submitPayPalAccount" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Lodge Account Label / Title *</label>
+            <input v-model="payPalForm.account_name" required placeholder="e.g. Lodge Operating PayPal Account" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">PayPal Client ID *</label>
+            <input v-model="payPalForm.paypal_client_id" required placeholder="e.g. A21AA... or Client ID from PayPal Developer Portal" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono text-slate-900 focus:bg-white" />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-700">PayPal Client Secret *</label>
+              <button type="button" @click="showPayPalSecret = !showPayPalSecret" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer">
+                {{ showPayPalSecret ? 'Hide' : 'Show Secret' }}
+              </button>
+            </div>
+            <input :type="showPayPalSecret ? 'text' : 'password'" v-model="payPalForm.paypal_client_secret" required placeholder="PayPal API Secret Key" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono text-slate-900 focus:bg-white" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Environment *</label>
+              <select v-model="payPalForm.paypal_environment" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white">
+                <option value="live">Live Production</option>
+                <option value="sandbox">Sandbox Testing</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Currency *</label>
+              <input v-model="payPalForm.currency" required placeholder="GBP" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white uppercase" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Opening Balance (£)</label>
+            <input type="number" step="0.01" v-model="payPalForm.opening_balance" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+          </div>
+
+          <div class="p-3 bg-blue-50/90 rounded-2xl border border-blue-200 text-blue-900 text-[11px] space-y-1">
+            <span class="font-bold block">💡 Where to get these credentials?</span>
+            <p>Log in to <a href="https://developer.paypal.com" target="_blank" class="underline font-bold">developer.paypal.com</a> with your Lodge's PayPal account, create an App under <strong>Apps &amp; Credentials</strong>, and copy your Client ID &amp; Secret.</p>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button type="button" @click="showPayPalModal = false" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" :disabled="payPalForm.processing" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 cursor-pointer">
+              Save &amp; Connect PayPal
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 0.55: Dedicated Stripe API Setup -->
+    <div v-if="showStripeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showStripeModal = false">
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <span class="p-2 bg-purple-50 text-purple-600 rounded-xl text-lg">💜</span>
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base">Connect Stripe API</h3>
+              <p class="text-[11px] text-slate-500 font-medium">Automated balance transactions &amp; payout feed sync</p>
+            </div>
+          </div>
+          <button type="button" @click="showStripeModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer">✕</button>
+        </div>
+
+        <form @submit.prevent="submitStripeAccount" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Lodge Account Label / Title *</label>
+            <input v-model="stripeForm.account_name" required placeholder="e.g. Lodge Stripe Account" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-700">Stripe Secret Key *</label>
+              <button type="button" @click="showStripeSecret = !showStripeSecret" class="text-[10px] font-bold text-purple-600 hover:text-purple-800 cursor-pointer">
+                {{ showStripeSecret ? 'Hide' : 'Show Key' }}
+              </button>
+            </div>
+            <input :type="showStripeSecret ? 'text' : 'password'" v-model="stripeForm.stripe_secret_key" required placeholder="sk_live_... or sk_test_..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono text-slate-900 focus:bg-white" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Currency *</label>
+              <input v-model="stripeForm.currency" required placeholder="GBP" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white uppercase" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Opening Balance (£)</label>
+              <input type="number" step="0.01" v-model="stripeForm.opening_balance" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+            </div>
+          </div>
+
+          <div class="p-3 bg-purple-50/90 rounded-2xl border border-purple-200 text-purple-900 text-[11px] space-y-1">
+            <span class="font-bold block">💡 Where to find your Stripe Secret Key?</span>
+            <p>Log in to <a href="https://dashboard.stripe.com/apikeys" target="_blank" class="underline font-bold">dashboard.stripe.com/apikeys</a>, click <strong>Reveal Secret Key</strong>, and paste it here.</p>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button type="button" @click="showStripeModal = false" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" :disabled="stripeForm.processing" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md shadow-purple-600/20 cursor-pointer">
+              Save &amp; Connect Stripe
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 0.58: Dedicated SumUp API Setup -->
+    <div v-if="showSumUpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showSumUpModal = false">
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <span class="p-2 bg-emerald-50 text-emerald-600 rounded-xl text-lg">💚</span>
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base">Connect SumUp Card Reader API</h3>
+              <p class="text-[11px] text-slate-500 font-medium">Automated card terminal sales &amp; payout feed sync</p>
+            </div>
+          </div>
+          <button type="button" @click="showSumUpModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer">✕</button>
+        </div>
+
+        <form @submit.prevent="submitSumUpAccount" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Lodge Account Label / Title *</label>
+            <input v-model="sumUpForm.account_name" required placeholder="e.g. Lodge SumUp Merchant Account" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-700">SumUp API Access Token / Key *</label>
+              <button type="button" @click="showSumUpKey = !showSumUpKey" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-800 cursor-pointer">
+                {{ showSumUpKey ? 'Hide' : 'Show Key' }}
+              </button>
+            </div>
+            <input :type="showSumUpKey ? 'text' : 'password'" v-model="sumUpForm.sumup_api_key" required placeholder="sup_sk_... or SumUp API Key" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono text-slate-900 focus:bg-white" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Currency *</label>
+              <input v-model="sumUpForm.currency" required placeholder="GBP" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white uppercase" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Opening Balance (£)</label>
+              <input type="number" step="0.01" v-model="sumUpForm.opening_balance" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+            </div>
+          </div>
+
+          <div class="p-3 bg-emerald-50/90 rounded-2xl border border-emerald-200 text-emerald-900 text-[11px] space-y-1">
+            <span class="font-bold block">💡 Where to find your SumUp API Key?</span>
+            <p>Log in to <a href="https://me.sumup.com/developers" target="_blank" class="underline font-bold">me.sumup.com/developers</a>, generate an API Key, and paste it here.</p>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button type="button" @click="showSumUpModal = false" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" :disabled="sumUpForm.processing" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 cursor-pointer">
+              Save &amp; Connect SumUp
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 0.59: Dedicated GoCardless API Setup -->
+    <div v-if="showGoCardlessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showGoCardlessModal = false">
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <span class="p-2 bg-amber-50 text-amber-600 rounded-xl text-lg">🟡</span>
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base">Connect GoCardless Direct Debit API</h3>
+              <p class="text-[11px] text-slate-500 font-medium">Automated UK Direct Debit mandate collection &amp; transaction feed</p>
+            </div>
+          </div>
+          <button type="button" @click="showGoCardlessModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer">✕</button>
+        </div>
+
+        <form @submit.prevent="submitGoCardlessAccount" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Account Label / Title *</label>
+            <input v-model="goCardlessForm.account_name" required placeholder="e.g. Lodge GoCardless Direct Debit Account" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Environment *</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                @click="goCardlessForm.gocardless_environment = 'sandbox'"
+                :class="['p-2.5 rounded-xl border text-center font-bold text-xs cursor-pointer transition-all', goCardlessForm.gocardless_environment === 'sandbox' ? 'bg-amber-50 border-amber-400 text-amber-900 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600']"
+              >
+                🧪 Sandbox (Testing)
+              </button>
+              <button
+                type="button"
+                @click="goCardlessForm.gocardless_environment = 'live'"
+                :class="['p-2.5 rounded-xl border text-center font-bold text-xs cursor-pointer transition-all', goCardlessForm.gocardless_environment === 'live' ? 'bg-emerald-50 border-emerald-400 text-emerald-900 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600']"
+              >
+                ⚡ Live Production
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-700">GoCardless Access Token *</label>
+              <button type="button" @click="showGoCardlessToken = !showGoCardlessToken" class="text-[10px] font-bold text-amber-600 hover:text-amber-800 cursor-pointer">
+                {{ showGoCardlessToken ? 'Hide' : 'Show Token' }}
+              </button>
+            </div>
+            <input :type="showGoCardlessToken ? 'text' : 'password'" v-model="goCardlessForm.gocardless_access_token" required placeholder="live_... or sandbox_..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono text-slate-900 focus:bg-white" />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-700">Webhook Secret (Optional)</label>
+              <button type="button" @click="showGoCardlessSecret = !showGoCardlessSecret" class="text-[10px] font-bold text-amber-600 hover:text-amber-800 cursor-pointer">
+                {{ showGoCardlessSecret ? 'Hide' : 'Show Secret' }}
+              </button>
+            </div>
+            <input :type="showGoCardlessSecret ? 'text' : 'password'" v-model="goCardlessForm.gocardless_webhook_secret" placeholder="GoCardless Webhook Secret Key" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-mono text-slate-900 focus:bg-white" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Currency *</label>
+              <input v-model="goCardlessForm.currency" required placeholder="GBP" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white uppercase" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Opening Balance (£)</label>
+              <input type="number" step="0.01" v-model="goCardlessForm.opening_balance" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+            </div>
+          </div>
+
+          <div class="p-3 bg-amber-50/90 rounded-2xl border border-amber-200 text-amber-900 text-[11px] space-y-1">
+            <span class="font-bold block">💡 Where to find your GoCardless Access Token?</span>
+            <p>Log in to your GoCardless Dashboard > <strong class="font-semibold">Developers</strong> > <strong class="font-semibold">Access Tokens</strong>, create an API token with read-write access, and paste it here.</p>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button type="button" @click="showGoCardlessModal = false" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" :disabled="goCardlessForm.processing" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md shadow-amber-600/20 cursor-pointer">
+              Save &amp; Connect GoCardless
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 0.6: Custom Date Range Gateway API Sync -->
+    <div v-if="showGatewaySyncModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showGatewaySyncModal = false">
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <span v-if="gatewaySyncType === 'stripe'" class="p-2 bg-purple-50 text-purple-600 rounded-xl text-lg">⚡</span>
+            <span v-else-if="gatewaySyncType === 'sumup'" class="p-2 bg-emerald-50 text-emerald-600 rounded-xl text-lg">⚡</span>
+            <span v-else class="p-2 bg-blue-50 text-blue-600 rounded-xl text-lg">⚡</span>
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base">
+                Sync {{ gatewaySyncType === 'stripe' ? 'Stripe' : (gatewaySyncType === 'sumup' ? 'SumUp' : 'PayPal') }} API Feed
+              </h3>
+              <p class="text-[11px] text-slate-500 font-medium">Select custom date range to pull settled transactions</p>
+            </div>
+          </div>
+          <button type="button" @click="showGatewaySyncModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer">✕</button>
+        </div>
+
+        <form @submit.prevent="submitGatewaySyncModal" class="space-y-4 text-xs">
+          <div class="p-3 bg-blue-50/90 rounded-2xl border border-blue-200 text-blue-900 text-[11px] space-y-1">
+            <span class="font-bold block">🛡️ Smart Duplicate Protection Active</span>
+            <p>Transactions already imported into your ledger will be automatically skipped. Overlapping date ranges are 100% safe.</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">From Date (Start) *</label>
+              <input type="date" v-model="gatewaySyncForm.start_date" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">To Date (End) *</label>
+              <input type="date" v-model="gatewaySyncForm.end_date" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-900 focus:bg-white" />
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button type="button" @click="showGatewaySyncModal = false" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              :disabled="gatewaySyncForm.processing"
+              :class="[
+                'px-5 py-2.5 rounded-xl font-bold text-xs shadow-md cursor-pointer flex items-center gap-1.5 text-white',
+                gatewaySyncType === 'stripe' ? 'bg-purple-600 hover:bg-purple-700 shadow-purple-600/20' : (gatewaySyncType === 'sumup' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20')
+              ]"
+            >
+              <span>⚡ Pull {{ gatewaySyncType === 'stripe' ? 'Stripe' : (gatewaySyncType === 'sumup' ? 'SumUp' : 'PayPal') }} Transactions</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- Modal 1: Add Account to Chart of Accounts -->
@@ -4374,6 +5821,130 @@ const getTypeBadge = (type) => {
         </div>
       </div>
     </div>
+
+    <!-- Modal 11: Statement vs System Balance Variance Explanation -->
+    <div
+      v-if="showDifferentBalancesModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4"
+      @click="showDifferentBalancesModal = false"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5"
+        @click.stop
+      >
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">⚖️</span>
+            <div>
+              <h3 class="text-base font-black text-slate-900">Why do your balances differ?</h3>
+              <p class="text-xs text-slate-500">Bank Statement Balance vs System Ledger Balance</p>
+            </div>
+          </div>
+          <button type="button" @click="showDifferentBalancesModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <p class="text-slate-600 leading-relaxed">
+            Your <strong>Statement Balance</strong> comes from imported bank feeds or uploaded statement CSV files, whereas your <strong>Balance in System</strong> reflects all reconciled ledger entries in your Chart of Accounts.
+          </p>
+
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 font-mono text-[11px]">
+            <div class="flex justify-between items-center text-slate-700">
+              <span>Statement Balance (Bank):</span>
+              <span class="font-bold text-slate-900">{{ activeBankAccount?.formatted_statement_balance || '£0.00' }}</span>
+            </div>
+            <div class="flex justify-between items-center text-amber-700">
+              <span>Unreconciled Statement Items ({{ filteredUnmatchedTx.length }}):</span>
+              <span class="font-bold">{{ number_format(filteredUnmatchedTx.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0)) }}</span>
+            </div>
+            <div class="border-t border-slate-200 pt-2 flex justify-between items-center text-sky-900 font-extrabold text-xs">
+              <span>System Ledger Balance (Code {{ activeBankAccount?.account_code || '1000' }}):</span>
+              <span>{{ activeBankAccount?.formatted_ledger_balance || '£0.00' }}</span>
+            </div>
+          </div>
+
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[11px] space-y-1">
+            <span class="font-bold block">💡 Common causes of balance variance:</span>
+            <ul class="list-disc list-inside space-y-0.5 text-amber-800">
+              <li>Statement lines imported from the bank that have not been reconciled yet.</li>
+              <li>Unpaid invoices or vendor bills with pending manual cash entries.</li>
+              <li>Duplicate or deleted statement entries awaiting adjustment.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            @click="showDifferentBalancesModal = false; navigateTo('reporting', 'reconciliation_summary')"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
+          >
+            Open Reconciliation Report
+          </button>
+          <button
+            type="button"
+            @click="showDifferentBalancesModal = false"
+            class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
+          >
+            Got it
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 12: Bank Reconciliation Explanation (What's this?) -->
+    <div
+      v-if="showWhatsThisModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4"
+      @click="showWhatsThisModal = false"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5"
+        @click.stop
+      >
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">ℹ️</span>
+            <div>
+              <h3 class="text-base font-black text-slate-900">Understanding Bank Balances</h3>
+              <p class="text-xs text-slate-500">Statement Balance vs Balance in System</p>
+            </div>
+          </div>
+          <button type="button" @click="showWhatsThisModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+
+        <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+          <div class="p-3 bg-sky-50 rounded-2xl border border-sky-200 space-y-1">
+            <span class="font-extrabold text-sky-900 block text-xs">🏦 Statement Balance</span>
+            <p class="text-sky-800 text-[11px]">
+              The real-world opening/closing balance of your bank account, imported automatically via API or uploaded statement files (CSV/OFX).
+            </p>
+          </div>
+
+          <div class="p-3 bg-indigo-50 rounded-2xl border border-indigo-200 space-y-1">
+            <span class="font-extrabold text-indigo-900 block text-xs">📖 Balance in System</span>
+            <p class="text-indigo-800 text-[11px]">
+              The double-entry ledger balance calculated from all approved invoices, bills, and matched bank entries recorded in your Chart of Accounts.
+            </p>
+          </div>
+
+          <p>
+            Bank reconciliation verifies that every penny entering or leaving your bank account is accounted for and assigned to the correct member subscription, invoice, or expense category.
+          </p>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end">
+          <button
+            type="button"
+            @click="showWhatsThisModal = false"
+            class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal 10: Attachment Pop-Out Viewer with Zoom & Delete -->
     <div
       v-if="previewModal.show"

@@ -212,7 +212,7 @@
                         class="flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all {{ request()->routeIs('admin.club_acc.charity.*') ? 'bg-slate-800 text-white font-bold shadow-sm' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}"
                     >
                         <span class="text-lg">🤝</span>
-                        <span>Charity &amp; Festival</span>
+                        <span>Charity</span>
                     </a>
 
                     <!-- 12. Club Settings -->
@@ -242,13 +242,6 @@
                 <!-- Quick Actions & User Profile -->
                 <div class="flex items-center gap-3">
                     @if($currentClub)
-                        <a href="{{ route('clubs.show', $clubSlug) }}" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            <span>Live Site</span>
-                        </a>
-
                         <a href="{{ route('member.dashboard', $clubSlug) }}" class="hidden sm:flex px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold rounded-xl transition-all items-center gap-1.5 shadow-sm">
                             <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />

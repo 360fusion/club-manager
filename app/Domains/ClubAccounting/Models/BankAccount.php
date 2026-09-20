@@ -28,6 +28,23 @@ class BankAccount extends Model
         'currency',
         'opening_balance',
         'is_active',
+        'paypal_client_id',
+        'paypal_client_secret',
+        'paypal_environment',
+        'paypal_merchant_id',
+        'paypal_connected_at',
+        'stripe_secret_key',
+        'stripe_publishable_key',
+        'stripe_connected_at',
+        'sumup_api_key',
+        'sumup_merchant_code',
+        'sumup_connected_at',
+        'gocardless_access_token',
+        'gocardless_environment',
+        'gocardless_webhook_secret',
+        'gocardless_connected_at',
+        'last_synced_at',
+        'sync_status',
     ];
 
     protected function casts(): array
@@ -35,6 +52,16 @@ class BankAccount extends Model
         return [
             'opening_balance' => 'decimal:2',
             'is_active' => 'boolean',
+            'paypal_client_secret' => 'encrypted',
+            'paypal_connected_at' => 'datetime',
+            'stripe_secret_key' => 'encrypted',
+            'stripe_connected_at' => 'datetime',
+            'sumup_api_key' => 'encrypted',
+            'sumup_connected_at' => 'datetime',
+            'gocardless_access_token' => 'encrypted',
+            'gocardless_webhook_secret' => 'encrypted',
+            'gocardless_connected_at' => 'datetime',
+            'last_synced_at' => 'datetime',
         ];
     }
 

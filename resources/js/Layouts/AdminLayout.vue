@@ -314,7 +314,7 @@ const currentActiveTab = computed(() => {
             ]"
           >
             <span class="text-lg">🤝</span>
-            <span>Charity &amp; Festival</span>
+            <span>Charity</span>
           </a>
 
           <!-- 11. Club Settings -->
