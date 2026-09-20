@@ -27,17 +27,17 @@ const stateGrandLodges = [
 
     // South
     { code: 'usglal', name: 'Grand Lodge of Alabama F&AM', shortName: 'GL Alabama', state: 'Alabama', stateCode: 'AL', region: 'South', founded: 1821, website: 'https://alagl.org', headquartersCity: 'Montgomery', lodgeCount: '250+' },
-    { code: 'usglar', name: 'Grand Lodge of Arkansas F&AM', shortName: 'GL Arkansas', state: 'Arkansas', stateCode: 'AR', region: 'South', founded: 1838, website: 'https://arkansasmason.org', headquartersCity: 'Little Rock', lodgeCount: '150+' },
+    { code: 'usglar', name: 'Grand Lodge of Arkansas F&AM', shortName: 'GL Arkansas', state: 'Arkansas', stateCode: 'AR', region: 'South', founded: 1838, website: null, headquartersCity: 'Little Rock', lodgeCount: '250+' },
     { code: 'usglde', name: 'Grand Lodge of Delaware AF&AM', shortName: 'GL Delaware', state: 'Delaware', stateCode: 'DE', region: 'South', founded: 1806, website: 'https://masonsindelaware.org', headquartersCity: 'Wilmington', lodgeCount: '20+' },
     { code: 'usgldc', name: 'Grand Lodge of the District of Columbia FAAM', shortName: 'GL District of Columbia', state: 'District of Columbia', stateCode: 'DC', region: 'South', founded: 1811, website: 'https://dcgrandlodge.org', headquartersCity: 'Washington, D.C.', lodgeCount: '30+' },
-    { code: 'usglfl', name: 'Grand Lodge of Florida F&AM', shortName: 'GL Florida', state: 'Florida', stateCode: 'FL', region: 'South', founded: 1830, website: 'https://glflamason.org', headquartersCity: 'Jacksonville', lodgeCount: '300+' },
+    { code: 'usglfl', name: 'Grand Lodge of Florida F&AM', shortName: 'GL Florida', state: 'Florida', stateCode: 'FL', region: 'South', founded: 1830, website: 'https://grandlodgefl.com', headquartersCity: 'Jacksonville', lodgeCount: '300+' },
     { code: 'usglga', name: 'Grand Lodge of Georgia F&AM', shortName: 'GL Georgia', state: 'Georgia', stateCode: 'GA', region: 'South', founded: 1786, website: 'https://glofga.org', headquartersCity: 'Macon', lodgeCount: '300+' },
-    { code: 'usglky', name: 'Grand Lodge of Kentucky F&AM', shortName: 'GL Kentucky', state: 'Kentucky', stateCode: 'KY', region: 'South', founded: 1800, website: 'https://grandlodgeofkentucky.org', headquartersCity: 'Louisville', lodgeCount: '350+' },
+    { code: 'usglky', name: 'Grand Lodge of Kentucky F&AM', shortName: 'GL Kentucky', state: 'Kentucky', stateCode: 'KY', region: 'South', founded: 1800, website: 'https://glky.org', headquartersCity: 'Louisville', lodgeCount: '350+' },
     { code: 'usglla', name: 'Grand Lodge of Louisiana F&AM', shortName: 'GL Louisiana', state: 'Louisiana', stateCode: 'LA', region: 'South', founded: 1812, website: 'https://la-mason.com', headquartersCity: 'Alexandria', lodgeCount: '180+' },
     { code: 'usglmd', name: 'Grand Lodge of Maryland AF&AM', shortName: 'GL Maryland', state: 'Maryland', stateCode: 'MD', region: 'South', founded: 1783, website: 'https://mdmasons.org', headquartersCity: 'Cockeysville', lodgeCount: '90+' },
     { code: 'usglms', name: 'Grand Lodge of Mississippi F&AM', shortName: 'GL Mississippi', state: 'Mississippi', stateCode: 'MS', region: 'South', founded: 1818, website: 'https://msgrandlodge.org', headquartersCity: 'Meridian', lodgeCount: '200+' },
-    { code: 'usglnc', name: 'Grand Lodge of North Carolina AF&AM', shortName: 'GL North Carolina', state: 'North Carolina', stateCode: 'NC', region: 'South', founded: 1787, website: 'https://grandlodge-nc.org', headquartersCity: 'Raleigh', lodgeCount: '300+' },
-    { code: 'usglok', name: 'Grand Lodge of Oklahoma AF&AM', shortName: 'GL Oklahoma', state: 'Oklahoma', stateCode: 'OK', region: 'South', founded: 1909, website: 'https://gloklahoma.org', headquartersCity: 'Guthrie', lodgeCount: '180+' },
+    { code: 'usglnc', name: 'Grand Lodge of North Carolina AF&AM', shortName: 'GL North Carolina', state: 'North Carolina', stateCode: 'NC', region: 'South', founded: 1787, website: 'https://ncfreemasons.org', headquartersCity: 'Raleigh', lodgeCount: '300+' },
+    { code: 'usglok', name: 'Grand Lodge of Oklahoma AF&AM', shortName: 'GL Oklahoma', state: 'Oklahoma', stateCode: 'OK', region: 'South', founded: 1909, website: 'https://gloklahoma.com', headquartersCity: 'Guthrie', lodgeCount: '180+' },
     { code: 'usglsc', name: 'Grand Lodge of South Carolina AFM', shortName: 'GL South Carolina', state: 'South Carolina', stateCode: 'SC', region: 'South', founded: 1787, website: 'https://scgrandlodgeafm.org', headquartersCity: 'Columbia', lodgeCount: '250+' },
     { code: 'usgltn', name: 'Grand Lodge of Tennessee F&AM', shortName: 'GL Tennessee', state: 'Tennessee', stateCode: 'TN', region: 'South', founded: 1813, website: 'https://grandlodge-tn.org', headquartersCity: 'Nashville', lodgeCount: '300+' },
     { code: 'usgltx', name: 'Grand Lodge of Texas AF&AM', shortName: 'GL Texas', state: 'Texas', stateCode: 'TX', region: 'South', founded: 1837, website: 'https://grandlodgeoftexas.org', headquartersCity: 'Waco', lodgeCount: '800+' },
@@ -50,25 +50,25 @@ const stateGrandLodges = [
     { code: 'usglia', name: 'Grand Lodge of Iowa AF&AM', shortName: 'GL Iowa', state: 'Iowa', stateCode: 'IA', region: 'Midwest', founded: 1844, website: 'https://gl-iowa.org', headquartersCity: 'Cedar Rapids', lodgeCount: '200+' },
     { code: 'usglks', name: 'Grand Lodge of Kansas AF&AM', shortName: 'GL Kansas', state: 'Kansas', stateCode: 'KS', region: 'Midwest', founded: 1856, website: 'https://kansasmason.org', headquartersCity: 'Topeka', lodgeCount: '200+' },
     { code: 'usglmi', name: 'Grand Lodge of Michigan F&AM', shortName: 'GL Michigan', state: 'Michigan', stateCode: 'MI', region: 'Midwest', founded: 1826, website: 'https://michiganmasons.org', headquartersCity: 'Grand Rapids', lodgeCount: '250+' },
-    { code: 'usglmn', name: 'Grand Lodge of Minnesota AF&AM', shortName: 'GL Minnesota', state: 'Minnesota', stateCode: 'MN', region: 'Midwest', founded: 1853, website: 'https://mn-masons.org', headquartersCity: 'Bloomington', lodgeCount: '130+' },
+    { code: 'usglmn', name: 'Grand Lodge of Minnesota AF&AM', shortName: 'GL Minnesota', state: 'Minnesota', stateCode: 'MN', region: 'Midwest', founded: 1853, website: 'https://mnfreemasons.org', headquartersCity: 'Bloomington', lodgeCount: '130+' },
     { code: 'usglmo', name: 'Grand Lodge of Missouri AF&AM', shortName: 'GL Missouri', state: 'Missouri', stateCode: 'MO', region: 'Midwest', founded: 1821, website: 'https://momason.org', headquartersCity: 'Columbia', lodgeCount: '300+' },
     { code: 'usglne', name: 'Grand Lodge of Nebraska AF&AM', shortName: 'GL Nebraska', state: 'Nebraska', stateCode: 'NE', region: 'Midwest', founded: 1857, website: 'https://glne.org', headquartersCity: 'Omaha', lodgeCount: '120+' },
-    { code: 'usglnd', name: 'Grand Lodge of North Dakota AF&AM', shortName: 'GL North Dakota', state: 'North Dakota', stateCode: 'ND', region: 'Midwest', founded: 1889, website: 'https://ndmasons.org', headquartersCity: 'Fargo', lodgeCount: '40+' },
+    { code: 'usglnd', name: 'Grand Lodge of North Dakota AF&AM', shortName: 'GL North Dakota', state: 'North Dakota', stateCode: 'ND', region: 'Midwest', founded: 1889, website: 'https://ndmasons.com', headquartersCity: 'Fargo', lodgeCount: '40+' },
     { code: 'usgloh', name: 'Grand Lodge of Ohio F&AM', shortName: 'GL Ohio', state: 'Ohio', stateCode: 'OH', region: 'Midwest', founded: 1808, website: 'https://freemason.com', headquartersCity: 'Worthington', lodgeCount: '400+' },
-    { code: 'usglsd', name: 'Grand Lodge of South Dakota AF&AM', shortName: 'GL South Dakota', state: 'South Dakota', stateCode: 'SD', region: 'Midwest', founded: 1875, website: 'https://grandlodgeofsouthdakota.org', headquartersCity: 'Sioux Falls', lodgeCount: '70+' },
-    { code: 'usglwi', name: 'Grand Lodge of Wisconsin F&AM', shortName: 'GL Wisconsin', state: 'Wisconsin', stateCode: 'WI', region: 'Midwest', founded: 1843, website: 'https://wisc-freemasonry.org', headquartersCity: 'Dousman', lodgeCount: '120+' },
+    { code: 'usglsd', name: 'Grand Lodge of South Dakota AF&AM', shortName: 'GL South Dakota', state: 'South Dakota', stateCode: 'SD', region: 'Midwest', founded: 1875, website: 'https://sdgrandlodge.org', headquartersCity: 'Sioux Falls', lodgeCount: '70+' },
+    { code: 'usglwi', name: 'Grand Lodge of Wisconsin F&AM', shortName: 'GL Wisconsin', state: 'Wisconsin', stateCode: 'WI', region: 'Midwest', founded: 1843, website: 'https://wimasons.org', headquartersCity: 'Dousman', lodgeCount: '120+' },
 
     // West
-    { code: 'usglak', name: 'Grand Lodge of Alaska F&AM', shortName: 'GL Alaska', state: 'Alaska', stateCode: 'AK', region: 'West', founded: 1981, website: 'https://alaska-mason.org', headquartersCity: 'Anchorage', lodgeCount: '15+' },
+    { code: 'usglak', name: 'Grand Lodge of Alaska F&AM', shortName: 'GL Alaska', state: 'Alaska', stateCode: 'AK', region: 'West', founded: 1981, website: 'http://alaska-mason.org', headquartersCity: 'Anchorage', lodgeCount: '15+' },
     { code: 'usglaz', name: 'Grand Lodge of Arizona F&AM', shortName: 'GL Arizona', state: 'Arizona', stateCode: 'AZ', region: 'West', founded: 1882, website: 'https://azmasons.org', headquartersCity: 'Phoenix', lodgeCount: '50+' },
     { code: 'usglca', name: 'Grand Lodge of California F&AM', shortName: 'GL California', state: 'California', stateCode: 'CA', region: 'West', founded: 1850, website: 'https://freemason.org', headquartersCity: 'San Francisco', lodgeCount: '300+' },
     { code: 'usglco', name: 'Grand Lodge of Colorado AF&AM', shortName: 'GL Colorado', state: 'Colorado', stateCode: 'CO', region: 'West', founded: 1861, website: 'https://coloradofreemasons.org', headquartersCity: 'Colorado Springs', lodgeCount: '120+' },
-    { code: 'usglhi', name: 'Grand Lodge of Hawaii F&AM', shortName: 'GL Hawaii', state: 'Hawaii', stateCode: 'HI', region: 'West', founded: 1989, website: 'https://hawaiifreemasons.org', headquartersCity: 'Honolulu', lodgeCount: '10+' },
-    { code: 'usglid', name: 'Grand Lodge of Idaho AF&AM', shortName: 'GL Idaho', state: 'Idaho', stateCode: 'ID', region: 'West', founded: 1867, website: 'https://idahoaf-am.org', headquartersCity: 'Boise', lodgeCount: '50+' },
+    { code: 'usglhi', name: 'Grand Lodge of Hawaii F&AM', shortName: 'GL Hawaii', state: 'Hawaii', stateCode: 'HI', region: 'West', founded: 1989, website: 'https://hawaiifreemason.org', headquartersCity: 'Honolulu', lodgeCount: '10+' },
+    { code: 'usglid', name: 'Grand Lodge of Idaho AF&AM', shortName: 'GL Idaho', state: 'Idaho', stateCode: 'ID', region: 'West', founded: 1867, website: 'https://idahomasons.org', headquartersCity: 'Boise', lodgeCount: '50+' },
     { code: 'usglmt', name: 'Grand Lodge of Montana AF&AM', shortName: 'GL Montana', state: 'Montana', stateCode: 'MT', region: 'West', founded: 1866, website: 'https://grandlodgemontana.org', headquartersCity: 'Helena', lodgeCount: '90+' },
     { code: 'usglnv', name: 'Grand Lodge of Nevada F&AM', shortName: 'GL Nevada', state: 'Nevada', stateCode: 'NV', region: 'West', founded: 1865, website: 'https://nvmasons.org', headquartersCity: 'Reno', lodgeCount: '35+' },
     { code: 'usglnm', name: 'Grand Lodge of New Mexico AF&AM', shortName: 'GL New Mexico', state: 'New Mexico', stateCode: 'NM', region: 'West', founded: 1877, website: 'https://nmmasons.org', headquartersCity: 'Albuquerque', lodgeCount: '50+' },
-    { code: 'usglor', name: 'Grand Lodge of Oregon AF&AM', shortName: 'GL Oregon', state: 'Oregon', stateCode: 'OR', region: 'West', founded: 1851, website: 'https://masonic-oregon.com', headquartersCity: 'Forest Grove', lodgeCount: '90+' },
+    { code: 'usglor', name: 'Grand Lodge of Oregon AF&AM', shortName: 'GL Oregon', state: 'Oregon', stateCode: 'OR', region: 'West', founded: 1851, website: 'https://oregonfreemasonry.com', headquartersCity: 'Forest Grove', lodgeCount: '90+' },
     { code: 'usglut', name: 'Grand Lodge of Utah F&AM', shortName: 'GL Utah', state: 'Utah', stateCode: 'UT', region: 'West', founded: 1872, website: 'https://utahgrandlodge.org', headquartersCity: 'Salt Lake City', lodgeCount: '20+' },
     { code: 'usglwa', name: 'Grand Lodge of Washington F&AM', shortName: 'GL Washington', state: 'Washington', stateCode: 'WA', region: 'West', founded: 1858, website: 'https://freemason-wa.org', headquartersCity: 'Des Moines, WA', lodgeCount: '180+' },
     { code: 'usglwy', name: 'Grand Lodge of Wyoming AF&AM', shortName: 'GL Wyoming', state: 'Wyoming', stateCode: 'WY', region: 'West', founded: 1874, website: 'https://wyomingmasons.com', headquartersCity: 'Casper', lodgeCount: '35+' },
@@ -294,12 +294,13 @@ function dbEntry(code) {
 
                                 <!-- Website -->
                                 <td class="py-3.5 px-3">
-                                    <a :href="gl.website" target="_blank" rel="noopener" class="text-indigo-400 hover:underline flex items-center gap-1 whitespace-nowrap">
+                                    <a v-if="gl.website" :href="gl.website" target="_blank" rel="noopener" class="text-indigo-400 hover:underline flex items-center gap-1 whitespace-nowrap">
                                         <span>Website</span>
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                         </svg>
                                     </a>
+                                    <span v-else class="text-slate-600 text-[11px]">None known</span>
                                 </td>
                             </tr>
 
