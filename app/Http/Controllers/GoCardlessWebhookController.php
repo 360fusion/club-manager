@@ -28,13 +28,20 @@ class GoCardlessWebhookController extends Controller
 
         $secret = $bankAccount->gocardless_webhook_secret;
 
-        if ($secret) {
-            $computedSignature = hash_hmac('sha256', $rawPayload, $secret);
-            if (! hash_equals($computedSignature, (string) $signature)) {
-                Log::warning("GoCardless Webhook signature mismatch for club {$clubId}");
+        // Fail closed. Without a configured secret the payload cannot be verified,
+        // and accepting it would let anyone forge mandate events for this club.
+        if (! $secret) {
+            Log::warning("GoCardless webhook rejected for club {$clubId}: no webhook secret configured.");
 
-                return response()->json(['error' => 'Invalid signature'], 498);
-            }
+            return response()->json(['error' => 'Webhook signature verification is not configured.'], 403);
+        }
+
+        $computedSignature = hash_hmac('sha256', $rawPayload, $secret);
+
+        if (! hash_equals($computedSignature, (string) $signature)) {
+            Log::warning("GoCardless webhook signature mismatch for club {$clubId}");
+
+            return response()->json(['error' => 'Invalid signature'], 498);
         }
 
         $events = $request->input('events', []);

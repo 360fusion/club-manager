@@ -102,6 +102,11 @@ Route::get('/clubs/{slug}/visitor-register', [VisitorRegistrationController::cla
 Route::post('/clubs/{slug}/visitor-register', [VisitorRegistrationController::class, 'store'])->name('clubs.visitor.store');
 
 // Protected Authenticated Routes
+// GoCardless posts here unauthenticated; the request is authenticated by its
+// HMAC signature instead. Must stay outside the auth group and exempt from CSRF.
+Route::post('/webhooks/gocardless/{clubId}', [GoCardlessWebhookController::class, 'handle'])
+    ->name('webhooks.gocardless');
+
 Route::middleware(['auth'])->group(function () {
     // Profile & Password Management Routes
     Route::get('/admin/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -259,7 +264,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/{id}/sumup/sync', [AccountingAdminController::class, 'syncSumUpTransactions'])->name('admin.accounting.bank_accounts.sumup.sync');
     Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/gocardless/connect', [AccountingAdminController::class, 'connectGoCardless'])->name('admin.accounting.bank_accounts.gocardless.connect');
     Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/{id}/gocardless/sync', [AccountingAdminController::class, 'syncGoCardlessTransactions'])->name('admin.accounting.bank_accounts.gocardless.sync');
-    Route::post('/webhooks/gocardless/{clubId}', [GoCardlessWebhookController::class, 'handle'])->name('webhooks.gocardless');
     Route::post('/clubs/{clubSlug}/admin/accounting/giftaid/reconcile-auto', [AccountingAdminController::class, 'autoReconcileGiftAid'])->name('admin.accounting.giftaid.reconcile_auto');
     Route::get('/clubs/{clubSlug}/admin/accounting/giftaid/export-schedule', [AccountingAdminController::class, 'exportGiftAidSchedule'])->name('admin.accounting.giftaid.export_schedule');
     Route::get('/clubs/{clubSlug}/admin/accounting/giftaid/reconciled-donations', [AccountingAdminController::class, 'filterReconciledDonations'])->name('admin.accounting.giftaid.reconciled_donations');
