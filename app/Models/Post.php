@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Casts\SanitizedHtml;
+use App\Casts\SanitizedHtmlBlocks;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +33,8 @@ class Post extends Model implements HasMedia
     protected function casts(): array
     {
         return [
-            'blocks' => 'array',
+            'content' => SanitizedHtml::class,
+            'blocks' => SanitizedHtmlBlocks::class,
             'attachments' => 'array',
             'published_at' => 'datetime',
             'expires_at' => 'datetime',

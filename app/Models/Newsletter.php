@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SanitizedHtml;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +27,7 @@ class Newsletter extends Model implements HasMedia
     protected function casts(): array
     {
         return [
+            'content' => SanitizedHtml::class,
             'attachments' => 'array',
             'target_roles' => 'array',
             'sent_at' => 'datetime',

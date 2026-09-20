@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SanitizedHtmlBlocks;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,7 +28,7 @@ class Page extends Model
     protected function casts(): array
     {
         return [
-            'blocks' => 'array',
+            'blocks' => SanitizedHtmlBlocks::class,
             'is_published' => 'boolean',
             'is_homepage' => 'boolean',
             'is_members_only' => 'boolean',
