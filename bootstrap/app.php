@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserCanAdministerClub;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             HandleInertiaRequests::class,
+            // Self-activates on routes with a {clubSlug} parameter, so new
+            // club routes are covered without having to remember this.
+            EnsureUserCanAdministerClub::class,
         ]);
 
         // Third-party webhooks cannot present a CSRF token; they are verified

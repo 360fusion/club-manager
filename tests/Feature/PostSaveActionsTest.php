@@ -14,6 +14,7 @@ class PostSaveActionsTest extends TestCase
     use RefreshDatabase;
 
     private Club $club;
+
     private User $user;
 
     protected function setUp(): void
@@ -34,6 +35,7 @@ class PostSaveActionsTest extends TestCase
         ]);
 
         $this->user = User::factory()->create();
+        $this->makeClubAdmin($this->user, $this->club);
     }
 
     public function test_save_action_redirects_to_edit_page(): void

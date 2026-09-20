@@ -19,7 +19,9 @@ class AccountingErpTest extends TestCase
     use RefreshDatabase;
 
     protected Club $club;
+
     protected User $adminUser;
+
     protected AccountingService $accountingService;
 
     protected function setUp(): void
@@ -40,7 +42,7 @@ class AccountingErpTest extends TestCase
         ]);
 
         $this->adminUser = User::factory()->create();
-        $this->club->users()->attach($this->adminUser->id, ['role' => 'admin', 'status' => 'approved']);
+        $this->makeClubAdmin($this->adminUser, $this->club);
 
         $this->accountingService = app(AccountingService::class);
     }
@@ -351,4 +353,3 @@ class AccountingErpTest extends TestCase
         $this->assertDatabaseMissing('accounting_bills', ['id' => $bill->id]);
     }
 }
-

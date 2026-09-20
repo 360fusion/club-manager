@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Club;
+use App\Models\ClubType;
 use App\Models\Meeting;
+use App\Models\MeetingRsvp;
 use App\Models\User;
 use App\Services\MeetingScheduleService;
 use App\Services\RsvpTokenService;
@@ -17,7 +19,7 @@ class MeetingAdminTest extends TestCase
 
     public function test_nth_weekday_calculation_algorithm()
     {
-        $service = new MeetingScheduleService();
+        $service = new MeetingScheduleService;
 
         // 3rd Tuesday of October 2026 -> Oct 1, 2026 is Thursday. 1st Tue is Oct 6. 2nd Tue is Oct 13. 3rd Tue is Oct 20.
         $date = $service->calculateNthWeekday(2026, 10, '3rd', 'Tuesday');
@@ -30,7 +32,7 @@ class MeetingAdminTest extends TestCase
 
     public function test_rsvp_token_generation_and_validation()
     {
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'masonic',
             'available_modules' => ['meetings'],
@@ -54,7 +56,7 @@ class MeetingAdminTest extends TestCase
             'rsvp_cutoff_at' => Carbon::now()->addDays(10),
         ]);
 
-        $tokenService = new RsvpTokenService();
+        $tokenService = new RsvpTokenService;
         $rawToken = $tokenService->createTokenForUser($meeting, $user, Carbon::now()->addDays(5));
 
         $this->assertNotEmpty($rawToken);
@@ -67,7 +69,7 @@ class MeetingAdminTest extends TestCase
 
     public function test_passwordless_rsvp_submission()
     {
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'masonic',
             'available_modules' => ['meetings'],
@@ -94,7 +96,7 @@ class MeetingAdminTest extends TestCase
             'rsvp_cutoff_at' => Carbon::now()->addDays(10),
         ]);
 
-        $tokenService = new RsvpTokenService();
+        $tokenService = new RsvpTokenService;
         $rawToken = $tokenService->createTokenForUser($meeting, $user, Carbon::now()->addDays(5));
 
         $response = $this->post(route('summons.rsvp.store', ['token' => $rawToken]), [
@@ -105,8 +107,8 @@ class MeetingAdminTest extends TestCase
                     'guest_name' => 'Bro. Mark Smith',
                     'home_club_lodge' => 'Apollo Lodge',
                     'attending_dining' => true,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -123,7 +125,7 @@ class MeetingAdminTest extends TestCase
 
     public function test_generate_season_titles_use_date_format_without_meeting_number()
     {
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'masonic',
             'available_modules' => ['meetings'],
@@ -137,7 +139,7 @@ class MeetingAdminTest extends TestCase
             'status' => 'active',
         ]);
 
-        $adminUser = User::factory()->create();
+        $adminUser = $this->makeClubAdmin(User::factory()->create(), $club);
         $this->actingAs($adminUser);
 
         $response = $this->post(route('admin.meetings.generate_season', ['clubSlug' => $club->slug]), [
@@ -157,7 +159,7 @@ class MeetingAdminTest extends TestCase
 
     public function test_admin_can_view_and_download_summons_pdf()
     {
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'masonic',
             'available_modules' => ['meetings'],
@@ -171,7 +173,7 @@ class MeetingAdminTest extends TestCase
             'status' => 'active',
         ]);
 
-        $adminUser = User::factory()->create();
+        $adminUser = $this->makeClubAdmin(User::factory()->create(), $club);
         $this->actingAs($adminUser);
 
         $meeting = Meeting::create([
@@ -193,7 +195,7 @@ class MeetingAdminTest extends TestCase
 
     public function test_admin_can_duplicate_meeting_summons_without_rsvp_stats()
     {
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'masonic',
             'available_modules' => ['meetings'],
@@ -207,7 +209,7 @@ class MeetingAdminTest extends TestCase
             'status' => 'active',
         ]);
 
-        $adminUser = User::factory()->create();
+        $adminUser = $this->makeClubAdmin(User::factory()->create(), $club);
         $this->actingAs($adminUser);
 
         $meeting = Meeting::create([
@@ -235,12 +237,12 @@ class MeetingAdminTest extends TestCase
         $this->assertEquals('draft', $duplicated->status);
         $this->assertEquals('Masonic Hall, Oxford', $duplicated->venue);
         $this->assertEquals(1, $duplicated->agendaItems->count());
-        $this->assertEquals(0, \App\Models\MeetingRsvp::where('meeting_id', $duplicated->id)->count());
+        $this->assertEquals(0, MeetingRsvp::where('meeting_id', $duplicated->id)->count());
     }
 
     public function test_admin_can_update_rsvp_payment_status()
     {
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'masonic',
             'available_modules' => ['meetings'],
@@ -287,7 +289,7 @@ class MeetingAdminTest extends TestCase
 
     public function test_provincial_rulers_and_officers_roster_settings_and_meeting_defaults()
     {
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'masonic',
             'available_modules' => ['meetings'],
@@ -335,7 +337,7 @@ class MeetingAdminTest extends TestCase
 
     public function test_meeting_can_save_custom_officers_roster(): void
     {
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'masonic-custom',
             'available_modules' => ['meetings'],
@@ -372,7 +374,7 @@ class MeetingAdminTest extends TestCase
         ]);
 
         $response->assertRedirect();
-        
+
         $meeting = Meeting::where('club_id', $club->id)->first();
         $this->assertNotNull($meeting);
         $this->assertEquals('CUSTOM OFFICERS 2026', $meeting->officers_year_label);

@@ -56,7 +56,7 @@ class BankStatementLineStatusTest extends TestCase
 
     public function test_deleting_a_statement_line_marks_it_ignored(): void
     {
-        $user = User::factory()->create();
+        $user = $this->makeClubAdmin(User::factory()->create(), $this->club);
 
         $response = $this->actingAs($user)->post(
             "/clubs/{$this->club->slug}/admin/accounting/statement-lines/delete",
@@ -73,7 +73,7 @@ class BankStatementLineStatusTest extends TestCase
 
     public function test_restoring_a_statement_line_marks_it_unmatched(): void
     {
-        $user = User::factory()->create();
+        $user = $this->makeClubAdmin(User::factory()->create(), $this->club);
 
         DB::table('club_acc_bank_transactions')
             ->where('id', $this->transactionId)

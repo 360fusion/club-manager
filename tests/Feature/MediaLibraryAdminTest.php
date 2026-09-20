@@ -15,6 +15,7 @@ class MediaLibraryAdminTest extends TestCase
     use RefreshDatabase;
 
     private Club $club;
+
     private User $user;
 
     protected function setUp(): void
@@ -37,6 +38,7 @@ class MediaLibraryAdminTest extends TestCase
         ]);
 
         $this->user = User::factory()->create();
+        $this->makeClubAdmin($this->user, $this->club);
     }
 
     public function test_admin_can_upload_file_to_media_library_folder(): void
@@ -432,4 +434,3 @@ class MediaLibraryAdminTest extends TestCase
         $this->assertDatabaseMissing('media', ['id' => $id2]);
     }
 }
-
