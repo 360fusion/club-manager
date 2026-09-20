@@ -8,6 +8,8 @@ use App\Models\Event;
 use App\Models\EventMenuItem;
 use App\Models\EventPromo;
 use App\Models\EventTicketTier;
+use App\Notifications\ClubNotification;
+use App\Services\ClubNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -243,6 +245,10 @@ class EventAdminController extends Controller
                 'rsvp_audience' => $rsvpAudience,
             ]
         );
+
+        if ($event->wasRecentlyCreated && $event->status === 'upcoming') {
+            app(ClubNotifier::class)->toMembers($club, ClubNotification::event($event, $club), $request->user());
+        }
 
         // Sync Ticket Tiers
         if (isset($validated['ticket_tiers'])) {

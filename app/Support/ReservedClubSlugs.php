@@ -12,12 +12,13 @@ class ReservedClubSlugs
      * @var list<string>
      */
     public const WORDS = [
-        'about', 'admin', 'api', 'assets', 'auth', 'blog', 'build', 'clubs', 'committee',
-        'contact', 'css', 'dashboard', 'directory', 'docs', 'favicon', 'fonts',
-        'forgot-password', 'help', 'home', 'images', 'index', 'js', 'livewire', 'login',
-        'logout', 'members', 'new', 'portal', 'pricing', 'privacy', 'register',
-        'reset-password', 'robots', 'sanctum', 'settings', 'site', 'storage', 'summons',
-        'superadmin', 'support', 'terms', 'two-factor', 'ui-kit', 'up', 'vendor', 'webhooks',
+        'about', 'account', 'admin', 'api', 'assets', 'auth', 'blog', 'build', 'calendar', 'clubs',
+        'committee', 'contact', 'css', 'dashboard', 'directory', 'docs', 'documents', 'dues', 'events',
+        'favicon', 'fonts', 'forgot-password', 'help', 'home', 'images', 'index', 'js', 'livewire',
+        'login', 'logout', 'meetings', 'members', 'new', 'news', 'notifications', 'portal', 'pricing',
+        'privacy', 'profile', 'register', 'reset-password', 'robots', 'sanctum', 'search', 'security',
+        'settings', 'site', 'storage', 'subscriptions', 'summons', 'superadmin', 'support', 'terms',
+        'two-factor', 'ui-kit', 'up', 'vendor', 'webhooks',
     ];
 
     public static function isReserved(string $slug): bool

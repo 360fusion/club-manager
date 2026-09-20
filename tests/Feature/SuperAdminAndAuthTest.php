@@ -68,7 +68,7 @@ class SuperAdminAndAuthTest extends TestCase
         $user = User::factory()->create(['email' => 'member@example.com', 'password' => 'secret-pass-123']);
 
         $this->post('/login', ['email' => 'member@example.com', 'password' => 'secret-pass-123'])
-            ->assertRedirect(route('members.home'));
+            ->assertRedirect(route('members.dashboard'));
 
         $this->assertAuthenticatedAs($user);
     }

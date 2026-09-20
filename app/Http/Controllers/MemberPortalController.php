@@ -155,36 +155,6 @@ class MemberPortalController extends Controller
     }
 
     /**
-     * Display member clubs listing inside member portal.
-     */
-    public function myClubs(Request $request, string $slug): Response
-    {
-        $user = Auth::user();
-        $club = Club::where('slug', $slug)->firstOrFail();
-
-        $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
-
-        $clubs = $user ? $user->clubs()->with('clubType')->get()->map(function ($c) {
-            return [
-                'id' => $c->id,
-                'name' => $c->name,
-                'slug' => $c->slug,
-                'type_name' => $c->clubType?->name ?? 'General',
-                'role' => $c->pivot->role ?? 'member',
-                'member_number' => $c->pivot->member_number ?? '',
-                'status' => $c->pivot->status ?? 'active',
-                'joined_at' => $c->pivot->created_at?->format('M d, Y') ?? 'Recent',
-            ];
-        }) : [];
-
-        return Inertia::render('Member/Clubs', [
-            'club' => $club,
-            'memberRole' => $memberPivot->role ?? 'member',
-            'clubs' => $clubs,
-        ]);
-    }
-
-    /**
      * Display member events & RSVPs page inside member portal.
      */
     public function events(Request $request, string $slug): Response

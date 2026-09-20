@@ -55,34 +55,6 @@ class MemberPortalTest extends TestCase
         );
     }
 
-    public function test_can_display_member_clubs_page(): void
-    {
-        $clubType = ClubType::create([
-            'name' => 'Rowing',
-            'code' => 'rowing',
-            'available_modules' => ['memberships', 'events'],
-            'default_settings' => [],
-        ]);
-
-        $club = Club::create([
-            'club_type_id' => $clubType->id,
-            'name' => 'The Lodge of Fraternity',
-            'slug' => 'lodge-of-fraternity',
-            'status' => 'active',
-        ]);
-
-        $user = User::factory()->create();
-        $club->users()->attach($user->id, ['role' => 'admin', 'status' => 'active']);
-
-        $response = $this->actingAs($user)->get(route('member.clubs', ['slug' => $club->slug]));
-
-        $response->assertStatus(200);
-        $response->assertInertia(fn ($page) => $page
-            ->component('Member/Clubs')
-            ->has('clubs')
-        );
-    }
-
     public function test_can_display_member_events_page(): void
     {
         $clubType = ClubType::create([

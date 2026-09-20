@@ -56,6 +56,16 @@ class HandleInertiaRequests extends Middleware
                     'status' => $c->pivot->status ?? 'active',
                 ]) : [],
             ],
+            // The bell in the header; named apart from the notifications page's own list.
+            'bell' => $user ? fn () => [
+                'unread' => $user->unreadNotifications()->count(),
+                'recent' => $user->notifications()->latest()->limit(6)->get()->map(fn ($n) => [
+                    'id' => $n->id,
+                    'read' => $n->read_at !== null,
+                    'at' => $n->created_at->toIso8601String(),
+                    ...$n->data,
+                ])->all(),
+            ] : null,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

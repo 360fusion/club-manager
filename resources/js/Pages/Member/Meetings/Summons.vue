@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import MemberLayout from '@/Layouts/MemberLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 const props = defineProps({
   club: { type: Object, required: true },
@@ -109,7 +109,7 @@ function formatDateTime(dateTimeVal) {
 </script>
 
 <template>
-  <MemberLayout :title="`Summons — ${meeting.title || formatDate(meeting.meeting_date)}`" :club="club" :member-role="memberRole" active-tab="dashboard">
+  <MembersLayout :title="`Summons — ${meeting.title || formatDate(meeting.meeting_date)}`" :club="club" :member-role="memberRole" active-tab="dashboard">
     
     <div class="max-w-4xl mx-auto space-y-6">      <!-- Sticky Top Action Bar -->
       <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
@@ -459,5 +459,5 @@ function formatDateTime(dateTimeVal) {
       </div>
 
     </div>
-  </MemberLayout>
+  </MembersLayout>
 </template>

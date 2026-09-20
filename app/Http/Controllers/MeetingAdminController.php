@@ -12,7 +12,9 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\RecurringRule;
 use App\Models\User;
+use App\Notifications\ClubNotification;
 use App\Services\AccountingService;
+use App\Services\ClubNotifier;
 use App\Services\MeetingScheduleService;
 use App\Services\RsvpTokenService;
 use Illuminate\Http\JsonResponse;
@@ -517,6 +519,7 @@ class MeetingAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+        $alreadyPublished = $meeting->status === 'published';
 
         $meeting->update([
             'status' => 'published',
@@ -528,6 +531,10 @@ class MeetingAdminController extends Controller
 
         foreach ($members as $member) {
             $tokenService->createTokenForUser($meeting, $member, $expiresAt);
+        }
+
+        if (! $alreadyPublished) {
+            app(ClubNotifier::class)->toMembers($club, ClubNotification::summons($meeting, $club), auth()->user());
         }
 
         return redirect()->back()->with('success', "Summons published! Passwordless RSVP tokens issued to {$members->count()} members.");

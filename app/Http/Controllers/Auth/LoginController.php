@@ -46,7 +46,7 @@ class LoginController extends Controller
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
 
-            return redirect()->intended(route('members.home'))->with('success', 'Logged in successfully!');
+            return redirect()->intended(route('members.dashboard'))->with('success', 'Logged in successfully!');
         }
 
         return back()->withErrors([

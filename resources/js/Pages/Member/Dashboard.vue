@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import MemberLayout from '@/Layouts/MemberLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 const props = defineProps({
   club: { type: Object, required: true },
@@ -99,7 +99,7 @@ const submitMeetingRsvp = () => {
 </script>
 
 <template>
-  <MemberLayout title="Member Portal" :club="club" :member-role="memberRole" active-tab="dashboard">
+  <MembersLayout title="Member Portal" :club="club" :member-role="memberRole" active-tab="dashboard">
     
     <!-- Pending Approval Banner -->
     <div v-if="isPending" class="p-6 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-200 rounded-2xl space-y-1">
@@ -465,5 +465,5 @@ const submitMeetingRsvp = () => {
       </div>
     </div>
 
-  </MemberLayout>
+  </MembersLayout>
 </template>

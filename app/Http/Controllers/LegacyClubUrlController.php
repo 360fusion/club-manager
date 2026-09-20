@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
  * Sends old `/clubs/{club}/...` URLs to their new top-level home, so emailed
  * links and bookmarks keep working.
  *
- * The member area used to live under `/portal`, which is now the club root:
- * `/clubs/x/portal` -> `/x`, `/clubs/x/portal/events` -> `/x/events`.
+ * The member area used to live under `/portal` and now lives under `/members`:
+ * `/clubs/x/portal` -> `/members/x`, `/clubs/x/portal/events` -> `/members/x/events`.
  */
 class LegacyClubUrlController extends Controller
 {
@@ -23,13 +23,15 @@ class LegacyClubUrlController extends Controller
 
         $path = trim((string) $path, '/');
 
+        $memberArea = $path === 'portal' || str_starts_with($path, 'portal/');
+
         if ($path === 'portal') {
             $path = '';
         } elseif (str_starts_with($path, 'portal/')) {
             $path = substr($path, strlen('portal/'));
         }
 
-        $target = '/'.$slug.($path !== '' ? '/'.$path : '');
+        $target = ($memberArea ? '/members' : '').'/'.$slug.($path !== '' ? '/'.$path : '');
 
         if ($request->getQueryString() !== null) {
             $target .= '?'.$request->getQueryString();

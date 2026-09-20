@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Enums\Visibility;
 use App\Models\Club;
 use App\Models\Post;
+use App\Notifications\ClubNotification;
+use App\Services\ClubNotifier;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -224,6 +226,8 @@ class PostAdminController extends Controller
         $publishedAt = ! empty($validated['published_at']) ? $validated['published_at'] : null;
         $expiresAt = ! empty($validated['expires_at']) ? $validated['expires_at'] : null;
 
+        $wasLive = ! empty($validated['id']) && Post::where('club_id', $club->id)->whereKey($validated['id'])->where('status', 'published')->exists();
+
         $post = Post::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
             [
@@ -241,6 +245,10 @@ class PostAdminController extends Controller
                 'expires_at' => $expiresAt,
             ]
         );
+
+        if ($post->status === 'published' && ! $wasLive && ($post->published_at === null || $post->published_at->lte(now()))) {
+            app(ClubNotifier::class)->toMembers($club, ClubNotification::news($post, $club), $user);
+        }
 
         $actionType = $validated['action_type'] ?? $request->input('action_type', null);
 

@@ -135,6 +135,6 @@ class TwoFactorAuthController extends Controller
         $request->session()->forget('login.id');
         Auth::login($user, $request->session()->get('login.remember', false));
 
-        return redirect()->intended(route('members.home'));
+        return redirect()->intended(route('members.dashboard'));
     }
 }

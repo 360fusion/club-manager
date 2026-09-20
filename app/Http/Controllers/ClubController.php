@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\ClubType;
+use App\Models\User;
+use App\Notifications\ClubNotification;
+use App\Services\ClubNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +21,7 @@ class ClubController extends Controller
     public function index(): Response|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('members.home');
+            return redirect()->route('members.dashboard');
         }
 
         $clubs = Club::with(['clubType', 'membershipPlans'])
@@ -247,6 +250,10 @@ class ClubController extends Controller
     {
         $club = Club::where('slug', $slug)->firstOrFail();
         $club->users()->updateExistingPivot($userId, ['status' => 'active']);
+
+        if ($member = User::find($userId)) {
+            app(ClubNotifier::class)->toUser($member, ClubNotification::membershipApproved($club));
+        }
 
         return redirect()->back()->with('success', 'Member approved successfully.');
     }

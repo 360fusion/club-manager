@@ -41,7 +41,7 @@ class MultiClubWorkspaceTest extends TestCase
         $club1->users()->attach($user->id, ['role' => 'admin', 'member_number' => 'OUBC-001', 'status' => 'active']);
         $club2->users()->attach($user->id, ['role' => 'member', 'member_number' => 'BATH-412', 'status' => 'active']);
 
-        $response = $this->actingAs($user)->get(route('members.home'));
+        $response = $this->actingAs($user)->get(route('members.dashboard'));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page

@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Head, useForm, router, Link } from '@inertiajs/vue3';
-import MemberLayout from '@/Layouts/MemberLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 const props = defineProps({
   club: { type: Object, required: true },
@@ -63,7 +63,7 @@ const submitProfile = () => {
 </script>
 
 <template>
-  <MemberLayout title="Profile & Security" :club="club" :member-role="memberRole" active-tab="profile">
+  <MembersLayout title="Profile & Security" :club="club" :member-role="memberRole" active-tab="profile">
     
     <div class="space-y-6 max-w-4xl">
       
@@ -272,5 +272,5 @@ const submitProfile = () => {
 
     </div>
 
-  </MemberLayout>
+  </MembersLayout>
 </template>

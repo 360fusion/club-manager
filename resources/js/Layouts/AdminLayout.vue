@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
+import NotificationBell from '@/Components/NotificationBell.vue';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 
 const showNavMediaModal = ref(false);
@@ -361,6 +362,8 @@ const currentActiveTab = computed(() => {
             <span>Switch to Member Portal</span>
           </Link>
 
+          <NotificationBell />
+
           <!-- Top-Right User Profile Avatar & Dropdown -->
           <div class="relative">
             <!-- Backdrop to close dropdown on click outside -->
@@ -405,7 +408,7 @@ const currentActiveTab = computed(() => {
                 </div>
 
                 <Link 
-                  :href="route('members.home')" 
+                  :href="route('members.dashboard')" 
                   @click="userMenuOpen = false"
                   class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                 >

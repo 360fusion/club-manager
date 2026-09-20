@@ -71,6 +71,17 @@ class Event extends Model
             && $this->rsvp_audience->includes($viewer, (int) $this->club_id);
     }
 
+    /**
+     * Whether a member can answer "going" in one tap. Events that take payment,
+     * dining choices or a ticket tier need the full form first.
+     */
+    public function allowsQuickReply(): bool
+    {
+        return ! $this->requires_payment
+            && ! $this->has_dining
+            && ! $this->ticketTiers()->exists();
+    }
+
     public function getFormattedLocationAttribute(): string
     {
         $parts = array_filter([

@@ -10,6 +10,8 @@ use App\Models\MeetingRsvp;
 use App\Models\Newsletter;
 use App\Models\Post;
 use App\Models\User;
+use App\Services\MemberInbox;
+use App\Support\MemberScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -27,19 +29,21 @@ class MemberHomeController extends Controller
 
     private const UP_NEXT_LIMIT = 6;
 
+    public function __construct(private readonly MemberInbox $inbox) {}
+
     public function __invoke(Request $request): Response
     {
         /** @var User $user */
         $user = $request->user();
 
-        $memberships = $user->clubs()->with('clubType')->get();
-        $clubs = $memberships->filter(fn (Club $club) => $club->pivot->status === 'active')->values();
-        $pending = $memberships->filter(fn (Club $club) => $club->pivot->status === 'pending')->values();
+        $scope = MemberScope::for($user);
+        $clubs = $scope->memberClubs;
+        $pending = $user->clubs()->with('clubType')->wherePivot('status', 'pending')->get();
 
-        return Inertia::render('Members/Home', [
+        return Inertia::render('Members/Dashboard', [
             'clubs' => $clubs->map(fn (Club $club) => $this->clubSummary($club))->all(),
             'pendingClubs' => $pending->map(fn (Club $club) => $this->clubSummary($club))->all(),
-            'attention' => $this->attention($user, $clubs),
+            'inbox' => $this->inbox->items($scope),
             'upNext' => $this->upNext($user, $clubs),
             'feed' => Inertia::defer(fn () => $this->feed($user, $clubs)),
         ]);
@@ -61,44 +65,6 @@ class MemberHomeController extends Controller
             'member_number' => $club->pivot->member_number ?? '',
             'is_staff' => $role !== 'member',
         ];
-    }
-
-    /**
-     * Published summonses the member has not answered yet and can still answer.
-     *
-     * @param  Collection<int, Club>  $clubs
-     * @return list<array<string, mixed>>
-     */
-    private function attention(User $user, Collection $clubs): array
-    {
-        if ($clubs->isEmpty()) {
-            return [];
-        }
-
-        $meetings = Meeting::whereIn('club_id', $clubs->pluck('id'))
-            ->where('status', 'published')
-            ->whereDate('meeting_date', '>=', today())
-            ->where(fn ($cutoff) => $cutoff->whereNull('rsvp_cutoff_at')->orWhere('rsvp_cutoff_at', '>', now()))
-            ->orderBy('meeting_date')
-            ->get();
-
-        $answered = MeetingRsvp::whereIn('meeting_id', $meetings->pluck('id'))
-            ->where('user_id', $user->id)
-            ->whereNotNull('responded_at')
-            ->pluck('meeting_id');
-
-        return $meetings
-            ->reject(fn (Meeting $meeting) => $answered->contains($meeting->id))
-            ->map(fn (Meeting $meeting) => [
-                'type' => 'meeting_rsvp',
-                'club_slug' => $clubs->firstWhere('id', $meeting->club_id)->slug,
-                'club_name' => $clubs->firstWhere('id', $meeting->club_id)->name,
-                'title' => $meeting->title,
-                'date' => $meeting->meeting_date?->toDateString(),
-                'cutoff' => $meeting->rsvp_cutoff_at?->toIso8601String(),
-            ])
-            ->values()
-            ->all();
     }
 
     /**

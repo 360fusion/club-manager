@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import MemberLayout from '@/Layouts/MemberLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 const props = defineProps({
   club: { type: Object, required: true },
@@ -12,7 +12,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <MemberLayout title="My Dues & Receipts" :club="club" :member-role="memberRole" active-tab="dues">
+  <MembersLayout title="My Dues & Receipts" :club="club" :member-role="memberRole" active-tab="dues">
     
     <div class="space-y-6">
       
@@ -121,5 +121,5 @@ const props = defineProps({
 
     </div>
 
-  </MemberLayout>
+  </MembersLayout>
 </template>

@@ -36,8 +36,8 @@ class ClubUrlStructureTest extends TestCase
 
     public function test_club_routes_live_at_the_top_level(): void
     {
-        $this->assertSame('/oxford-lodge', route('member.dashboard', ['slug' => 'oxford-lodge'], false));
-        $this->assertSame('/oxford-lodge/events', route('member.events', ['slug' => 'oxford-lodge'], false));
+        $this->assertSame('/members/oxford-lodge', route('member.dashboard', ['slug' => 'oxford-lodge'], false));
+        $this->assertSame('/members/oxford-lodge/events', route('member.events', ['slug' => 'oxford-lodge'], false));
         $this->assertSame('/oxford-lodge/admin/pages', route('admin.pages.index', ['clubSlug' => 'oxford-lodge'], false));
         $this->assertSame('/site/oxford-lodge', route('public.site', ['clubSlug' => 'oxford-lodge'], false));
     }
@@ -45,7 +45,7 @@ class ClubUrlStructureTest extends TestCase
     public function test_the_club_root_shows_members_the_member_area(): void
     {
         $this->actingAs($this->userWithRole('member'))
-            ->get('/oxford-lodge')
+            ->get('/members/oxford-lodge')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Member/Dashboard'));
     }
@@ -53,7 +53,7 @@ class ClubUrlStructureTest extends TestCase
     public function test_pending_members_still_reach_the_member_area(): void
     {
         $this->actingAs($this->userWithRole('member', 'pending'))
-            ->get('/oxford-lodge')
+            ->get('/members/oxford-lodge')
             ->assertOk()
             ->assertInertia(fn ($page) => $page->where('isPending', true));
     }
@@ -65,6 +65,16 @@ class ClubUrlStructureTest extends TestCase
         $this->actingAs(User::factory()->create())
             ->get('/oxford-lodge')
             ->assertRedirect('/site/oxford-lodge');
+    }
+
+    public function test_the_short_link_sends_members_to_their_member_area(): void
+    {
+        $this->actingAs($this->userWithRole('member'))->get('/oxford-lodge')->assertRedirect('/members/oxford-lodge');
+    }
+
+    public function test_non_members_are_sent_to_the_public_website_from_the_member_area(): void
+    {
+        $this->actingAs(User::factory()->create())->get('/members/oxford-lodge')->assertRedirect('/site/oxford-lodge');
     }
 
     public function test_unknown_clubs_are_a_404(): void
@@ -85,7 +95,7 @@ class ClubUrlStructureTest extends TestCase
         }
 
         $this->get('/login')->assertOk();
-        $this->actingAs(User::factory()->create())->get('/members')->assertOk();
+        $this->actingAs(User::factory()->create())->get('/members/dashboard')->assertOk();
     }
 
     public function test_a_club_cannot_be_saved_with_a_reserved_slug(): void
@@ -109,11 +119,11 @@ class ClubUrlStructureTest extends TestCase
         $this->get('/clubs/oxford-lodge')->assertStatus(301)->assertRedirect('/oxford-lodge');
     }
 
-    public function test_the_old_portal_paths_map_onto_the_club_root(): void
+    public function test_the_old_portal_paths_map_onto_the_members_area(): void
     {
-        $this->get('/clubs/oxford-lodge/portal')->assertStatus(301)->assertRedirect('/oxford-lodge');
-        $this->get('/clubs/oxford-lodge/portal/events')->assertStatus(301)->assertRedirect('/oxford-lodge/events');
-        $this->get('/clubs/oxford-lodge/portal/news/7')->assertStatus(301)->assertRedirect('/oxford-lodge/news/7');
+        $this->get('/clubs/oxford-lodge/portal')->assertStatus(301)->assertRedirect('/members/oxford-lodge');
+        $this->get('/clubs/oxford-lodge/portal/events')->assertStatus(301)->assertRedirect('/members/oxford-lodge/events');
+        $this->get('/clubs/oxford-lodge/portal/news/7')->assertStatus(301)->assertRedirect('/members/oxford-lodge/news/7');
     }
 
     public function test_old_urls_keep_their_query_string(): void

@@ -7,6 +7,8 @@ use App\Models\Club;
 use App\Models\ClubUpdate;
 use App\Models\Event;
 use App\Models\Post;
+use App\Notifications\ClubNotification;
+use App\Services\ClubNotifier;
 use App\Services\WeeklyUpdateDigestService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -155,6 +157,8 @@ class UpdateAdminController extends Controller
             $approvedAt = now();
         }
 
+        $previousStatus = ! empty($validated['id']) ? ClubUpdate::where('club_id', $club->id)->whereKey($validated['id'])->value('status') : null;
+
         $update = ClubUpdate::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
             [
@@ -169,6 +173,8 @@ class UpdateAdminController extends Controller
                 'approved_at' => $approvedAt,
             ]
         );
+
+        $this->notifyIfImportant($update, $club, $previousStatus);
 
         if ($validated['category'] === 'summons' && ! empty($attachments)) {
             foreach ($attachments as $att) {
@@ -203,7 +209,10 @@ class UpdateAdminController extends Controller
             $updateData['approved_at'] = now();
         }
 
+        $previousStatus = $update->status;
         $update->update($updateData);
+
+        $this->notifyIfImportant($update, $club, $previousStatus);
 
         return redirect()->back()->with('success', 'Item status updated to '.ucfirst($validated['status']).'.');
     }
@@ -240,5 +249,15 @@ class UpdateAdminController extends Controller
         $newsletter = $digestService->dispatchWeeklyDigest($club, $selectedIds);
 
         return redirect()->back()->with('success', "Weekly Digest dispatched to members! Newsletter #{$newsletter->id} generated.");
+    }
+
+    /**
+     * Important notices notify members once, when they first become approved or sent.
+     */
+    private function notifyIfImportant(ClubUpdate $update, Club $club, ?string $previousStatus): void
+    {
+        if ($update->is_important && in_array($update->status, ['approved', 'sent'], true) && ! in_array($previousStatus, ['approved', 'sent'], true)) {
+            app(ClubNotifier::class)->toMembers($club, ClubNotification::notice($update, $club), auth()->user());
+        }
     }
 }

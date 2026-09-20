@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useForm, router, Link } from '@inertiajs/vue3';
-import AdminLayout from '@/Layouts/AdminLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 const props = defineProps({
   user: Object,
@@ -39,7 +39,7 @@ const generateNewRecoveryCodes = () => {
 </script>
 
 <template>
-  <AdminLayout title="Security & 2FA" active-tab="profile">
+  <MembersLayout title="Security" active-tab="profile">
     
     <div class="max-w-4xl mx-auto space-y-6">
       
@@ -180,5 +180,5 @@ const generateNewRecoveryCodes = () => {
 
       </div>
     </div>
-  </AdminLayout>
+  </MembersLayout>
 </template>

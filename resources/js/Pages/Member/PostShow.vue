@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import MemberLayout from '@/Layouts/MemberLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 const props = defineProps({
   club: Object,
@@ -20,7 +20,7 @@ const getFileIcon = (mimeOrName) => {
 </script>
 
 <template>
-  <MemberLayout title="News Article" :club="club" :member-role="memberRole">
+  <MembersLayout title="News Article" :club="club" :member-role="memberRole">
     <Head :title="`${post.title} - ${club.name}`" />
 
     <div class="max-w-3xl mx-auto space-y-6">
@@ -190,5 +190,5 @@ const getFileIcon = (mimeOrName) => {
       </article>
 
     </div>
-  </MemberLayout>
+  </MembersLayout>
 </template>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useForm, router, Head, Link } from '@inertiajs/vue3';
-import AdminLayout from '@/Layouts/AdminLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 const props = defineProps({
   user: Object,
@@ -66,7 +66,7 @@ const updatePassword = () => {
 </script>
 
 <template>
-  <AdminLayout title="Settings" active-tab="profile">
+  <MembersLayout title="Profile" active-tab="profile">
     
     <div class="max-w-4xl mx-auto space-y-6">
       
@@ -238,5 +238,5 @@ const updatePassword = () => {
 
     </div>
 
-  </AdminLayout>
+  </MembersLayout>
 </template>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import MemberLayout from '@/Layouts/MemberLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 const props = defineProps({
   club: { type: Object, required: true },
@@ -119,7 +119,7 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
 </script>
 
 <template>
-  <MemberLayout title="My Events & RSVPs" :club="club" :member-role="memberRole" active-tab="events">
+  <MembersLayout title="My Events & RSVPs" :club="club" :member-role="memberRole" active-tab="events">
     
     <div class="space-y-6">
       
@@ -432,5 +432,5 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
       </div>
     </div>
 
-  </MemberLayout>
+  </MembersLayout>
 </template>

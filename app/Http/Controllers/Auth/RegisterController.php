@@ -52,6 +52,6 @@ class RegisterController extends Controller
                 ->with('success', 'Registration submitted! Your membership is pending admin approval.');
         }
 
-        return redirect()->route('members.home')->with('success', 'Account created successfully! Welcome to Club Manager.');
+        return redirect()->route('members.dashboard')->with('success', 'Account created successfully! Welcome to Club Manager.');
     }
 }

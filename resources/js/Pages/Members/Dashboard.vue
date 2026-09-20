@@ -1,16 +1,17 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Link, Deferred, usePage } from '@inertiajs/vue3';
-import PlatformLayout from '@/Layouts/PlatformLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Alert from '@/Components/Ui/Alert.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
+import QuickReply from '@/Components/QuickReply.vue';
 
 const props = defineProps({
     clubs: { type: Array, default: () => [] },
     pendingClubs: { type: Array, default: () => [] },
-    attention: { type: Array, default: () => [] },
+    inbox: { type: Array, default: () => [] },
     upNext: { type: Array, default: () => [] },
     feed: { type: Array, default: undefined },
 });
@@ -73,13 +74,15 @@ const dayParts = (iso) => {
     };
 };
 
-const shortDate = (value) => new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+const KIND_LABELS = { meeting_rsvp: 'Summons', dining_payment: 'Payment', dues: 'Dues', event_rsvp: 'Event', approvals: 'Admin' };
+const severityVariant = (severity) => (severity >= 3 ? 'danger' : severity === 2 ? 'warning' : 'info');
 
 const roleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);
+const chip = (active) => ['rounded-full border px-3 py-1 text-xs font-medium transition-colors', active ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300' : 'border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'];
 </script>
 
 <template>
-    <PlatformLayout title="Home">
+    <MembersLayout title="Dashboard" active-tab="dashboard">
         <div class="space-y-6">
             <div class="flex flex-wrap items-end justify-between gap-3">
                 <div>
@@ -89,20 +92,29 @@ const roleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);
                         <template v-else>You are not a member of any club yet.</template>
                     </p>
                 </div>
-                <Button variant="secondary" size="sm" :href="route('directory.index')">Find a club</Button>
             </div>
 
-            <Alert v-if="attention.length" variant="warning" :title="`Needs your attention (${attention.length})`">
-                <ul class="mt-2 space-y-2">
-                    <li v-for="item in attention" :key="`${item.club_slug}-${item.title}`" class="flex flex-wrap items-center justify-between gap-2">
-                        <span>
-                            Reply to <strong class="font-semibold">{{ item.title }}</strong> at {{ item.club_name }}<template v-if="item.date">, {{ shortDate(item.date) }}</template>
-                            <template v-if="item.cutoff"> (replies close {{ shortDate(item.cutoff) }})</template>
-                        </span>
-                        <Button size="sm" variant="secondary" :href="route('member.dashboard', { slug: item.club_slug })">Reply</Button>
+            <Card v-if="inbox.length" padding="none" aria-labelledby="inbox-heading">
+                <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+                    <h2 id="inbox-heading" class="text-sm font-semibold text-slate-900 dark:text-white">Needs your attention ({{ inbox.length }})</h2>
+                </div>
+                <ul>
+                    <li v-for="item in inbox" :key="`${item.kind}-${item.club.slug}-${item.title}`" class="space-y-2 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <Badge :variant="severityVariant(item.severity)">{{ KIND_LABELS[item.kind] ?? 'Action' }}</Badge>
+                            <span>{{ item.club.name }}</span>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ item.title }}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ item.detail }}</p>
+                            </div>
+                            <QuickReply v-if="item.reply" :item="{ ...item.reply, reply: null, simple: true }" />
+                            <Button v-else size="sm" variant="secondary" :href="item.url">Open</Button>
+                        </div>
                     </li>
                 </ul>
-            </Alert>
+            </Card>
 
             <Alert v-if="pendingClubs.length" variant="info" title="Waiting for approval">
                 Your membership of {{ pendingClubs.map((club) => club.name).join(', ') }} is waiting for a club admin to approve it.
@@ -120,27 +132,11 @@ const roleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);
                 <section aria-labelledby="feed-heading" class="min-w-0 space-y-3">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 id="feed-heading" class="mr-2 text-sm font-medium text-slate-500 dark:text-slate-400">From your clubs</h2>
-                        <button
-                            v-for="option in [{ slug: 'all', name: 'All clubs' }, ...clubs]"
-                            :key="option.slug"
-                            type="button"
-                            :class="['rounded-full border px-3 py-1 text-xs font-medium transition-colors', clubFilter === option.slug ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300' : 'border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800']"
-                            @click="clubFilter = option.slug"
-                        >
-                            {{ option.name }}
-                        </button>
+                        <button v-for="option in [{ slug: 'all', name: 'All clubs' }, ...clubs]" :key="option.slug" type="button" :class="chip(clubFilter === option.slug)" @click="clubFilter = option.slug">{{ option.name }}</button>
                     </div>
 
                     <div v-if="feedTypes.length > 1" class="flex flex-wrap gap-2">
-                        <button
-                            v-for="type in ['all', ...feedTypes]"
-                            :key="type"
-                            type="button"
-                            :class="['rounded-full border px-3 py-1 text-xs font-medium transition-colors', typeFilter === type ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300' : 'border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800']"
-                            @click="typeFilter = type"
-                        >
-                            {{ type === 'all' ? 'Everything' : TYPES[type]?.label }}
-                        </button>
+                        <button v-for="type in ['all', ...feedTypes]" :key="type" type="button" :class="chip(typeFilter === type)" @click="typeFilter = type">{{ type === 'all' ? 'Everything' : TYPES[type]?.label }}</button>
                     </div>
 
                     <Deferred data="feed">
@@ -148,11 +144,7 @@ const roleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);
                             <Card padding="none">
                                 <div v-for="n in 3" :key="n" class="flex animate-pulse gap-3 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
                                     <div class="h-8 w-8 shrink-0 rounded-lg bg-slate-200 dark:bg-slate-800" />
-                                    <div class="flex-1 space-y-2">
-                                        <div class="h-3 w-1/3 rounded bg-slate-200 dark:bg-slate-800" />
-                                        <div class="h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-800" />
-                                        <div class="h-3 w-full rounded bg-slate-200 dark:bg-slate-800" />
-                                    </div>
+                                    <div class="flex-1 space-y-2"><div class="h-3 w-1/3 rounded bg-slate-200 dark:bg-slate-800" /><div class="h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-800" /><div class="h-3 w-full rounded bg-slate-200 dark:bg-slate-800" /></div>
                                 </div>
                             </Card>
                         </template>
@@ -174,16 +166,17 @@ const roleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);
                         </Card>
 
                         <Card v-else>
-                            <p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                                {{ (feed ?? []).length ? 'Nothing matches those filters.' : 'Nothing new yet. News and events from your clubs will show up here.' }}
-                            </p>
+                            <p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">{{ (feed ?? []).length ? 'Nothing matches those filters.' : 'Nothing new yet. News and events from your clubs will show up here.' }}</p>
                         </Card>
                     </Deferred>
                 </section>
 
                 <aside class="min-w-0 space-y-6">
                     <section aria-labelledby="next-heading" class="space-y-2">
-                        <h2 id="next-heading" class="text-sm font-medium text-slate-500 dark:text-slate-400">Up next</h2>
+                        <div class="flex items-center justify-between">
+                            <h2 id="next-heading" class="text-sm font-medium text-slate-500 dark:text-slate-400">Up next</h2>
+                            <Link :href="route('members.calendar')" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Open calendar</Link>
+                        </div>
                         <Card v-if="upNext.length" padding="none">
                             <ul>
                                 <li v-for="item in upNext" :key="`${item.type}-${item.club_slug}-${item.title}-${item.at}`" class="flex gap-3 border-b border-slate-200 p-3 last:border-b-0 dark:border-slate-800">
@@ -210,14 +203,12 @@ const roleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="min-w-0">
                                             <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">{{ club.name }}</p>
-                                            <p class="truncate text-xs text-slate-500 dark:text-slate-400">
-                                                <template v-if="club.type_name">{{ club.type_name }}</template><template v-if="club.member_number"> · {{ club.member_number }}</template>
-                                            </p>
+                                            <p class="truncate text-xs text-slate-500 dark:text-slate-400"><template v-if="club.type_name">{{ club.type_name }}</template><template v-if="club.member_number"> · {{ club.member_number }}</template></p>
                                         </div>
                                         <Badge :variant="club.is_staff ? 'info' : 'neutral'">{{ roleLabel(club.role) }}</Badge>
                                     </div>
                                     <div class="flex flex-wrap gap-2">
-                                        <Button size="sm" variant="secondary" :href="route('member.dashboard', { slug: club.slug })">Member area</Button>
+                                        <Button size="sm" variant="secondary" :href="route('member.dashboard', { slug: club.slug })">Open</Button>
                                         <Button v-if="club.is_staff" size="sm" variant="secondary" :href="route('admin.analytics', { slug: club.slug })">Admin</Button>
                                         <Button size="sm" variant="ghost" :href="route('public.site', { clubSlug: club.slug })">Website</Button>
                                     </div>
@@ -228,5 +219,5 @@ const roleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);
                 </aside>
             </div>
         </div>
-    </PlatformLayout>
+    </MembersLayout>
 </template>

@@ -28,23 +28,28 @@ use App\Http\Controllers\CharityAdminController;
 use App\Http\Controllers\ClubController;
 use App\Http\Controllers\ClubDirectoryController;
 use App\Http\Controllers\ClubSettingsController;
+use App\Http\Controllers\ClubShortLinkController;
 use App\Http\Controllers\EventAdminController;
 use App\Http\Controllers\GoCardlessWebhookController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LegacyClubUrlController;
 use App\Http\Controllers\MediaAdminController;
 use App\Http\Controllers\MeetingAdminController;
+use App\Http\Controllers\MemberCalendarController;
 use App\Http\Controllers\MemberHomeController;
 use App\Http\Controllers\MemberImportExportController;
+use App\Http\Controllers\MemberListController;
 use App\Http\Controllers\MemberPortalController;
 use App\Http\Controllers\MemberSubscriptionsController;
 use App\Http\Controllers\NewsletterAdminController;
 use App\Http\Controllers\NewsletterTypeAdminController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficerRosterAdminController;
 use App\Http\Controllers\PageAdminController;
 use App\Http\Controllers\PasswordlessRsvpController;
 use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\PublicSiteController;
+use App\Http\Controllers\QuickRsvpController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UpdateAdminController;
 use App\Http\Controllers\UserAdminController;
@@ -114,9 +119,9 @@ Route::post('/webhooks/gocardless/{clubId}', [GoCardlessWebhookController::class
 
 Route::middleware(['auth'])->group(function () {
     // Profile & Password Management Routes
-    Route::get('/admin/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/admin/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::put('/admin/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::get('/members/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/members/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/members/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     // Multi-Tenant Admin & Workspace Routes
     Route::get('/admin/clubs', [ClubController::class, 'myClubs'])->name('admin.clubs.index');
@@ -228,10 +233,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/updates/dispatch-digest', [UpdateAdminController::class, 'triggerDigest'])->name('admin.updates.dispatch_digest');
 
     // National Directory & Member Subscriptions Hub Routes
-    Route::get('/directory', [ClubDirectoryController::class, 'index'])->name('directory.index');
-    Route::post('/directory/clubs/{clubSlug}/subscribe/{typeId}', [ClubDirectoryController::class, 'subscribe'])->name('directory.subscribe');
-    Route::get('/portal/subscriptions', [MemberSubscriptionsController::class, 'index'])->name('portal.subscriptions');
-    Route::post('/portal/subscriptions/{clubSlug}/{typeId}/toggle', [MemberSubscriptionsController::class, 'toggle'])->name('portal.subscriptions.toggle');
+    Route::get('/members/directory', [ClubDirectoryController::class, 'index'])->name('directory.index');
+    Route::post('/members/directory/{clubSlug}/subscribe/{typeId}', [ClubDirectoryController::class, 'subscribe'])->name('directory.subscribe');
+    Route::get('/members/subscriptions', [MemberSubscriptionsController::class, 'index'])->name('portal.subscriptions');
+    Route::post('/members/subscriptions/{clubSlug}/{typeId}/toggle', [MemberSubscriptionsController::class, 'toggle'])->name('portal.subscriptions.toggle');
 
     // Admin Subscriptions Plans Routes
     Route::get('/{clubSlug}/admin/subscriptions', function ($clubSlug) {
@@ -357,24 +362,40 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
     // 2FA Profile Settings Routes
-    Route::get('/admin/profile/two-factor', [TwoFactorAuthController::class, 'show'])->name('admin.profile.two-factor');
-    Route::post('/admin/profile/two-factor/enable', [TwoFactorAuthController::class, 'enable'])->name('admin.two-factor.enable');
-    Route::post('/admin/profile/two-factor/confirm', [TwoFactorAuthController::class, 'confirm'])->name('admin.two-factor.confirm');
-    Route::delete('/admin/profile/two-factor/disable', [TwoFactorAuthController::class, 'disable'])->name('admin.two-factor.disable');
-    Route::post('/admin/profile/two-factor/recovery-codes', [TwoFactorAuthController::class, 'generateRecoveryCodes'])->name('admin.two-factor.recovery-codes');
+    Route::get('/members/security', [TwoFactorAuthController::class, 'show'])->name('admin.profile.two-factor');
+    Route::post('/members/security/enable', [TwoFactorAuthController::class, 'enable'])->name('admin.two-factor.enable');
+    Route::post('/members/security/confirm', [TwoFactorAuthController::class, 'confirm'])->name('admin.two-factor.confirm');
+    Route::delete('/members/security/disable', [TwoFactorAuthController::class, 'disable'])->name('admin.two-factor.disable');
+    Route::post('/members/security/recovery-codes', [TwoFactorAuthController::class, 'generateRecoveryCodes'])->name('admin.two-factor.recovery-codes');
 
     // Member Portal & Self-Service Routes
-    Route::get('/members', MemberHomeController::class)->name('members.home');
-    Route::get('/{slug}/clubs', [MemberPortalController::class, 'myClubs'])->name('member.clubs');
-    Route::get('/{slug}/events', [MemberPortalController::class, 'events'])->name('member.events');
-    Route::get('/{slug}/news/{id}', [MemberPortalController::class, 'showPost'])->name('member.posts.show');
-    Route::get('/{slug}/dues', [MemberPortalController::class, 'dues'])->name('member.dues');
-    Route::get('/{slug}/profile', [MemberPortalController::class, 'profile'])->name('member.profile');
-    Route::post('/{slug}/profile', [MemberPortalController::class, 'updateProfile'])->name('member.profile.update');
-    Route::post('/{slug}/events/{id}/rsvp', [MemberPortalController::class, 'updateRsvp'])->name('member.rsvp');
-    Route::get('/{slug}/meetings/{id}/summons', [MemberPortalController::class, 'summons'])->name('member.meetings.summons');
-    Route::post('/{slug}/meetings/{id}/rsvp', [MemberPortalController::class, 'updateMeetingRsvp'])->name('member.meetings.rsvp');
-    Route::get('/{slug}/meetings/{id}/pdf', [MemberPortalController::class, 'downloadMeetingPdf'])->name('member.meetings.pdf');
+    // Members area: everything across all of a member's clubs first, then one club.
+    Route::get('/members/dashboard', MemberHomeController::class)->name('members.dashboard');
+    Route::get('/members/calendar', [MemberCalendarController::class, 'show'])->name('members.calendar');
+    Route::post('/members/calendar/link', [MemberCalendarController::class, 'regenerate'])->name('members.calendar.regenerate');
+    Route::get('/members/events', [MemberListController::class, 'events'])->name('members.events');
+    Route::get('/members/news', [MemberListController::class, 'news'])->name('members.news');
+    Route::get('/members/meetings', [MemberListController::class, 'meetings'])->name('members.meetings');
+    Route::get('/members/dues', [MemberListController::class, 'dues'])->name('members.dues');
+    Route::get('/members/notifications', [NotificationController::class, 'index'])->name('members.notifications');
+    Route::post('/members/notifications/read-all', [NotificationController::class, 'readAll'])->name('members.notifications.read_all');
+    Route::get('/members/notifications/{id}/open', [NotificationController::class, 'open'])->name('members.notifications.open');
+
+    Route::get('/members/{slug}', [MemberPortalController::class, 'show'])->name('member.dashboard');
+    Route::get('/members/{slug}/calendar', [MemberCalendarController::class, 'show'])->name('member.calendar');
+    Route::get('/members/{slug}/news', [MemberListController::class, 'news'])->name('member.news');
+    Route::get('/members/{slug}/meetings', [MemberListController::class, 'meetings'])->name('member.meetings');
+    Route::post('/members/{slug}/meetings/{id}/quick-rsvp', [QuickRsvpController::class, 'meeting'])->name('member.meetings.quick_rsvp');
+    Route::post('/members/{slug}/events/{id}/quick-rsvp', [QuickRsvpController::class, 'event'])->name('member.events.quick_rsvp');
+    Route::get('/members/{slug}/events', [MemberPortalController::class, 'events'])->name('member.events');
+    Route::get('/members/{slug}/news/{id}', [MemberPortalController::class, 'showPost'])->name('member.posts.show');
+    Route::get('/members/{slug}/dues', [MemberPortalController::class, 'dues'])->name('member.dues');
+    Route::get('/members/{slug}/profile', [MemberPortalController::class, 'profile'])->name('member.profile');
+    Route::post('/members/{slug}/profile', [MemberPortalController::class, 'updateProfile'])->name('member.profile.update');
+    Route::post('/members/{slug}/events/{id}/rsvp', [MemberPortalController::class, 'updateRsvp'])->name('member.rsvp');
+    Route::get('/members/{slug}/meetings/{id}/summons', [MemberPortalController::class, 'summons'])->name('member.meetings.summons');
+    Route::post('/members/{slug}/meetings/{id}/rsvp', [MemberPortalController::class, 'updateMeetingRsvp'])->name('member.meetings.rsvp');
+    Route::get('/members/{slug}/meetings/{id}/pdf', [MemberPortalController::class, 'downloadMeetingPdf'])->name('member.meetings.pdf');
 
     // Invite-Only Member Approval & Rejection Routes
     Route::post('/{slug}/members/{userId}/approve', [ClubController::class, 'approveMember'])->name('clubs.members.approve');
@@ -430,6 +451,26 @@ Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
 // Dev Utility Helper Route
 Route::get('/auth/make-me-superadmin', [SuperAdminController::class, 'makeMeSuperAdmin'])->middleware('auth')->name('auth.make_me_superadmin');
 
-// A club's member area. This is a single-segment route, so it has to stay last;
-// the {slug} constraint keeps reserved words (login, members, site...) out of it.
-Route::get('/{slug}', [MemberPortalController::class, 'show'])->name('member.dashboard');
+// Old member addresses, from before everything moved under /members.
+Route::redirect('/members', '/members/dashboard', 301);
+Route::redirect('/portal/subscriptions', '/members/subscriptions', 301);
+Route::redirect('/admin/profile', '/members/profile', 301);
+Route::redirect('/admin/profile/two-factor', '/members/security', 301);
+Route::get('/directory', fn (Request $request) => redirect('/members/directory'.($request->getQueryString() ? '?'.$request->getQueryString() : ''), 301));
+Route::redirect('/{slug}/events', '/members/{slug}/events', 301);
+Route::redirect('/{slug}/dues', '/members/{slug}/dues', 301);
+Route::redirect('/{slug}/profile', '/members/{slug}/profile', 301);
+Route::redirect('/{slug}/clubs', '/members/dashboard', 301);
+Route::redirect('/{slug}/news/{id}', '/members/{slug}/news/{id}', 301);
+Route::redirect('/{slug}/meetings/{id}/summons', '/members/{slug}/meetings/{id}/summons', 301);
+Route::redirect('/{slug}/meetings/{id}/pdf', '/members/{slug}/meetings/{id}/pdf', 301);
+
+// The personal calendar feed is authenticated by the secret token in its URL.
+Route::get('/calendar/{token}.ics', [MemberCalendarController::class, 'feed'])
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('members.calendar.feed');
+
+// A club's short link: members go to their member area, everyone else to the public site.
+// This is a single-segment route, so it has to stay last; the {slug} constraint keeps
+// reserved words (login, members, site...) out of it.
+Route::get('/{slug}', ClubShortLinkController::class)->name('clubs.short');
