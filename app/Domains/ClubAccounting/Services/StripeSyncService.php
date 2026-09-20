@@ -21,6 +21,7 @@ class StripeSyncService
 
             if ($response->failed()) {
                 $error = $response->json('error.message') ?? $response->body();
+
                 return ['success' => false, 'message' => "Stripe Error: {$error}"];
             }
 
@@ -36,7 +37,7 @@ class StripeSyncService
     public function syncTransactions(BankAccount $bankAccount, ?string $startDate = null, ?string $endDate = null): array
     {
         if (! $bankAccount->stripe_secret_key) {
-            throw new Exception("Stripe Secret Key is not configured for this account.");
+            throw new Exception('Stripe Secret Key is not configured for this account.');
         }
 
         $secretKey = trim($bankAccount->stripe_secret_key);
@@ -54,7 +55,7 @@ class StripeSyncService
         }
 
         if ($endDate) {
-            $params['created[lte]'] = strtotime($endDate . ' 23:59:59');
+            $params['created[lte]'] = strtotime($endDate.' 23:59:59');
         }
 
         $response = Http::withToken($secretKey)
@@ -75,7 +76,9 @@ class StripeSyncService
 
         foreach ($transactions as $tx) {
             $txId = $tx['id'] ?? null;
-            if (! $txId) continue;
+            if (! $txId) {
+                continue;
+            }
 
             // Check duplicate guard
             $exists = BankTransaction::where('club_id', $bankAccount->club_id)
@@ -85,15 +88,16 @@ class StripeSyncService
 
             if ($exists) {
                 $skippedCount++;
+
                 continue;
             }
 
             // Amounts in Stripe are in cents/pence (e.g. 1000 = £10.00)
-            $gross = ((float)($tx['amount'] ?? 0)) / 100;
-            $fee = ((float)($tx['fee'] ?? 0)) / 100;
-            $net = ((float)($tx['net'] ?? 0)) / 100;
+            $gross = ((float) ($tx['amount'] ?? 0)) / 100;
+            $fee = ((float) ($tx['fee'] ?? 0)) / 100;
+            $net = ((float) ($tx['net'] ?? 0)) / 100;
             $type = $tx['type'] ?? 'charge';
-            $description = $tx['description'] ?? ("Stripe " . ucfirst(str_replace('_', ' ', $type)));
+            $description = $tx['description'] ?? ('Stripe '.ucfirst(str_replace('_', ' ', $type)));
             $date = date('Y-m-d', $tx['created'] ?? time());
 
             $runningBalance += $net;

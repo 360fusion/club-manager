@@ -4,14 +4,18 @@ namespace Tests\Feature;
 
 use App\Domains\ClubAccounting\Enums\CollectionType;
 use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard;
 use App\Domains\ClubAccounting\Models\CharityCollection;
 use App\Domains\ClubAccounting\Models\CharityGrant;
-use App\Domains\ClubAccounting\Models\Member;
+use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Models\FestivalTarget;
-use App\Domains\ClubAccounting\Models\MemberFestivalGiving;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\ReliefChestExportService;
+use App\Models\AgendaItem;
 use App\Models\Club;
+use App\Models\ClubType;
+use App\Models\Meeting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -22,15 +26,18 @@ class CharityDomainTest extends TestCase
     use RefreshDatabase;
 
     protected Club $club;
+
     protected User $user;
+
     protected Member $counterMember;
+
     protected Member $witnessMember;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'lodge',
             'available_modules' => ['accounting', 'meetings', 'members', 'charity'],
@@ -52,7 +59,7 @@ class CharityDomainTest extends TestCase
             'last_name' => 'Doe',
             'email' => 'john.doe@example.com',
             'masonic_rank' => 'WBro',
-            'current_office' => \App\Domains\ClubAccounting\Enums\LodgeOffice::CharitySteward,
+            'current_office' => LodgeOffice::CharitySteward,
             'membership_status' => 'active',
             'joined_at' => now(),
         ]);
@@ -63,7 +70,7 @@ class CharityDomainTest extends TestCase
             'last_name' => 'Pendelton',
             'email' => 'arthur@example.com',
             'masonic_rank' => 'WBro',
-            'current_office' => \App\Domains\ClubAccounting\Enums\LodgeOffice::AssistantDC,
+            'current_office' => LodgeOffice::AssistantDC,
             'membership_status' => 'active',
             'joined_at' => now(),
         ]);
@@ -161,7 +168,7 @@ class CharityDomainTest extends TestCase
             'approval_status' => GrantApprovalStatus::LodgeVoted,
         ]);
 
-        $service = new ReliefChestExportService();
+        $service = new ReliefChestExportService;
         $csvContent = $service->generateReliefChestCsv($this->club->id);
 
         $this->assertStringContainsString('Relief Chest Ref,Provincial Ref,Date,Collection Type', $csvContent);
@@ -192,7 +199,7 @@ class CharityDomainTest extends TestCase
 
     public function test_can_propose_grant_with_proposer_seconder_and_committee_meeting(): void
     {
-        $meeting = \App\Domains\ClubAccounting\Models\ClubCommitteeMeeting::create([
+        $meeting = ClubCommitteeMeeting::create([
             'club_id' => $this->club->id,
             'title' => 'Lodge Committee Q3 Meeting',
             'meeting_date' => now()->addDays(5),
@@ -222,7 +229,7 @@ class CharityDomainTest extends TestCase
 
     public function test_proposing_grant_linked_to_meeting_creates_agenda_item(): void
     {
-        $meeting = \App\Models\Meeting::create([
+        $meeting = Meeting::create([
             'club_id' => $this->club->id,
             'meeting_number' => 412,
             'title' => 'Regular Autumn Meeting',
@@ -257,7 +264,7 @@ class CharityDomainTest extends TestCase
             'is_ballot' => true,
         ]);
 
-        $agendaItem = \App\Models\AgendaItem::where('meeting_id', $meeting->id)->first();
+        $agendaItem = AgendaItem::where('meeting_id', $meeting->id)->first();
         $this->assertStringContainsString('Charity Grant Proposition: £600.00 to Children Hospice UK', $agendaItem->title);
         $this->assertStringContainsString('Proposed by John Doe', $agendaItem->description);
         $this->assertStringContainsString('Seconded by Arthur Pendelton', $agendaItem->description);

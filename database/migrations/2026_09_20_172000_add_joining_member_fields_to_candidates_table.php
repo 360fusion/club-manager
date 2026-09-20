@@ -39,7 +39,7 @@ return new class extends Migration
                 $cols = array_filter(['candidate_type', 'grand_lodge_number', 'mother_lodge_info', 'clearance_certificate_path'], function ($col) {
                     return Schema::hasColumn('club_acc_candidates', $col);
                 });
-                if (!empty($cols)) {
+                if (! empty($cols)) {
                     $table->dropColumn($cols);
                 }
             });

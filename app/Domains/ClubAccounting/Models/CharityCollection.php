@@ -49,7 +49,7 @@ class CharityCollection extends Model
     public function totalAmount(): Attribute
     {
         return Attribute::make(
-            get: fn () => (float)$this->cash_amount + (float)$this->cheque_amount
+            get: fn () => (float) $this->cash_amount + (float) $this->cheque_amount
         );
     }
 
@@ -57,8 +57,11 @@ class CharityCollection extends Model
     {
         return Attribute::make(
             get: function () {
-                if (! $this->is_gift_aid_eligible) return 0.00;
-                $total = (float)$this->cash_amount + (float)$this->cheque_amount;
+                if (! $this->is_gift_aid_eligible) {
+                    return 0.00;
+                }
+                $total = (float) $this->cash_amount + (float) $this->cheque_amount;
+
                 return round($total * 0.25, 2);
             }
         );
@@ -75,8 +78,9 @@ class CharityCollection extends Model
                     return $this->donor_name;
                 }
                 if ($this->countedBy) {
-                    return $this->countedBy->full_name . ' (Steward / Recorder)';
+                    return $this->countedBy->full_name.' (Steward / Recorder)';
                 }
+
                 return 'Anonymous Donor / Meeting Collection';
             }
         );

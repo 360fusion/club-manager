@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
+use App\Models\Province;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -243,7 +245,7 @@ class ClubSettingsController extends Controller
             $club->settings['permission_matrix'] ?? []
         );
 
-        $domainMembers = \App\Domains\ClubAccounting\Models\Member::where('club_id', $club->id)
+        $domainMembers = Member::where('club_id', $club->id)
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
@@ -285,7 +287,7 @@ class ClubSettingsController extends Controller
             }
         }
 
-        $provinces = \App\Models\Province::orderBy('name')->get();
+        $provinces = Province::orderBy('name')->get();
 
         return Inertia::render('Admin/Settings/Show', [
             'club' => $club->load('province'),
@@ -444,7 +446,7 @@ class ClubSettingsController extends Controller
             $validated['postcode'] ?? null,
             $validated['country'] ?? null,
         ]);
-        if (!empty($addressParts)) {
+        if (! empty($addressParts)) {
             $validated['address'] = implode(', ', $addressParts);
         }
 

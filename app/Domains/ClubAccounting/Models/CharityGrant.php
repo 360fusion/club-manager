@@ -4,6 +4,7 @@ namespace App\Domains\ClubAccounting\Models;
 
 use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
 use App\Models\Club;
+use App\Models\Meeting;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -59,6 +60,6 @@ class CharityGrant extends Model
 
     public function meeting(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Meeting::class, 'meeting_id');
+        return $this->belongsTo(Meeting::class, 'meeting_id');
     }
 }

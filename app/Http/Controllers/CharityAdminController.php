@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Domains\ClubAccounting\Enums\CollectionType;
 use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
 use App\Domains\ClubAccounting\Models\CharityCollection;
 use App\Domains\ClubAccounting\Models\CharityGrant;
@@ -47,10 +46,10 @@ class CharityAdminController extends Controller
                 'id' => $col->id,
                 'created_at' => $col->created_at ? $col->created_at->format('d M Y') : date('d M Y'),
                 'collection_type' => $col->collection_type?->label() ?? 'Alms Plate',
-                'cash_amount' => (float)$col->cash_amount,
-                'cheque_amount' => (float)$col->cheque_amount,
-                'total_amount' => (float)$col->total_amount,
-                'formatted_total' => '£' . number_format((float)$col->total_amount, 2),
+                'cash_amount' => (float) $col->cash_amount,
+                'cheque_amount' => (float) $col->cheque_amount,
+                'total_amount' => (float) $col->total_amount,
+                'formatted_total' => '£'.number_format((float) $col->total_amount, 2),
                 'donor_name' => $col->donor_display_name,
                 'counted_by' => $col->countedBy?->full_name ?? 'Charity Steward',
                 'witnessed_by' => $col->witnessedBy?->full_name ?? 'Assistant DC',
@@ -58,8 +57,8 @@ class CharityAdminController extends Controller
                 'notes' => $col->notes,
             ]);
 
-        $totalCollectionsCash = (float)CharityCollection::where('club_id', $club->id)->sum('cash_amount');
-        $totalCollectionsCheque = (float)CharityCollection::where('club_id', $club->id)->sum('cheque_amount');
+        $totalCollectionsCash = (float) CharityCollection::where('club_id', $club->id)->sum('cash_amount');
+        $totalCollectionsCheque = (float) CharityCollection::where('club_id', $club->id)->sum('cheque_amount');
         $totalCollectionsAmount = $totalCollectionsCash + $totalCollectionsCheque;
 
         $grants = CharityGrant::where('club_id', $club->id)
@@ -70,8 +69,8 @@ class CharityAdminController extends Controller
                 'id' => $g->id,
                 'recipient_name' => $g->recipient_name,
                 'purpose' => $g->purpose,
-                'amount' => (float)$g->amount,
-                'formatted_amount' => '£' . number_format((float)$g->amount, 2),
+                'amount' => (float) $g->amount,
+                'formatted_amount' => '£'.number_format((float) $g->amount, 2),
                 'relief_chest_number' => $g->relief_chest_number,
                 'approval_status' => $g->approval_status->value,
                 'status_label' => $g->approval_status->label(),
@@ -88,16 +87,16 @@ class CharityAdminController extends Controller
             ->get()
             ->map(fn ($m) => [
                 'id' => $m->id,
-                'label' => ($m->title ? "Meeting #{$m->meeting_number} — {$m->title}" : "Meeting #{$m->meeting_number}") . ($m->meeting_date ? " (" . $m->meeting_date->format('d M Y') . ")" : ''),
+                'label' => ($m->title ? "Meeting #{$m->meeting_number} — {$m->title}" : "Meeting #{$m->meeting_number}").($m->meeting_date ? ' ('.$m->meeting_date->format('d M Y').')' : ''),
             ]);
 
-        $totalGrantsDisbursed = (float)CharityGrant::where('club_id', $club->id)
+        $totalGrantsDisbursed = (float) CharityGrant::where('club_id', $club->id)
             ->where('approval_status', GrantApprovalStatus::Disbursed->value)
             ->sum('amount');
 
         $activeMembers = Member::where('club_id', $club->id)->active()->orderBy('last_name')->get(['id', 'first_name', 'last_name', 'masonic_rank']);
         $memberGivingRecords = MemberFestivalGiving::whereIn('member_id', $activeMembers->pluck('id'))->get()->keyBy('member_id');
-        $totalMemberDonations = (float)$memberGivingRecords->sum('total_donated_to_date');
+        $totalMemberDonations = (float) $memberGivingRecords->sum('total_donated_to_date');
 
         $totalRaisedForFestival = $totalCollectionsAmount + $totalMemberDonations;
         $targetPercentage = $target->getPercentage($totalRaisedForFestival);
@@ -112,25 +111,25 @@ class CharityAdminController extends Controller
             'target' => [
                 'festival_name' => $target->festival_name,
                 'relief_chest_ref' => $target->relief_chest_ref,
-                'target_amount' => (float)$target->target_amount,
-                'bronze_tier' => (float)$target->bronze_tier,
-                'silver_tier' => (float)$target->silver_tier,
-                'gold_tier' => (float)$target->gold_tier,
-                'platinum_tier' => (float)$target->platinum_tier,
+                'target_amount' => (float) $target->target_amount,
+                'bronze_tier' => (float) $target->bronze_tier,
+                'silver_tier' => (float) $target->silver_tier,
+                'gold_tier' => (float) $target->gold_tier,
+                'platinum_tier' => (float) $target->platinum_tier,
             ],
             'totalRaisedForFestival' => $totalRaisedForFestival,
-            'formattedTotalRaised' => '£' . number_format($totalRaisedForFestival, 2),
+            'formattedTotalRaised' => '£'.number_format($totalRaisedForFestival, 2),
             'targetPercentage' => $targetPercentage,
             'currentHonorTier' => $currentHonorTier,
             'giftAidSummary' => $giftAidSummary,
             'reconciledDonations' => $reconciledDonations,
             'collections' => $collections,
             'totalCollectionsAmount' => $totalCollectionsAmount,
-            'formattedTotalCollections' => '£' . number_format($totalCollectionsAmount, 2),
+            'formattedTotalCollections' => '£'.number_format($totalCollectionsAmount, 2),
             'grants' => $grants,
             'upcomingMeetings' => $upcomingMeetings,
             'totalGrantsDisbursed' => $totalGrantsDisbursed,
-            'formattedTotalGrants' => '£' . number_format($totalGrantsDisbursed, 2),
+            'formattedTotalGrants' => '£'.number_format($totalGrantsDisbursed, 2),
             'activeMembers' => $activeMembers->map(fn ($m) => ['id' => $m->id, 'name' => $m->full_name, 'rank' => $m->masonic_rank]),
             'jewelHoldersCount' => $memberGivingRecords->where('qualifies_for_jewel', true)->count(),
         ]);
@@ -170,13 +169,13 @@ class CharityAdminController extends Controller
             ]);
         }
 
-        $totalCollectionsCash = (float)CharityCollection::where('club_id', $club->id)->sum('cash_amount');
-        $totalCollectionsCheque = (float)CharityCollection::where('club_id', $club->id)->sum('cheque_amount');
+        $totalCollectionsCash = (float) CharityCollection::where('club_id', $club->id)->sum('cash_amount');
+        $totalCollectionsCheque = (float) CharityCollection::where('club_id', $club->id)->sum('cheque_amount');
         $totalCollectionsAmount = $totalCollectionsCash + $totalCollectionsCheque;
 
         $activeMembers = Member::where('club_id', $club->id)->active()->orderBy('last_name')->get();
         $memberGivingRecords = MemberFestivalGiving::whereIn('member_id', $activeMembers->pluck('id'))->get()->keyBy('member_id');
-        $totalMemberDonations = (float)$memberGivingRecords->sum('total_donated_to_date');
+        $totalMemberDonations = (float) $memberGivingRecords->sum('total_donated_to_date');
 
         $totalRaisedForFestival = $totalCollectionsAmount + $totalMemberDonations;
         $targetPercentage = $target->getPercentage($totalRaisedForFestival);
@@ -187,27 +186,28 @@ class CharityAdminController extends Controller
             'target' => [
                 'festival_name' => $target->festival_name,
                 'relief_chest_ref' => $target->relief_chest_ref,
-                'target_amount' => (float)$target->target_amount,
-                'bronze_tier' => (float)$target->bronze_tier,
-                'silver_tier' => (float)$target->silver_tier,
-                'gold_tier' => (float)$target->gold_tier,
-                'platinum_tier' => (float)$target->platinum_tier,
+                'target_amount' => (float) $target->target_amount,
+                'bronze_tier' => (float) $target->bronze_tier,
+                'silver_tier' => (float) $target->silver_tier,
+                'gold_tier' => (float) $target->gold_tier,
+                'platinum_tier' => (float) $target->platinum_tier,
             ],
             'totalRaisedForFestival' => $totalRaisedForFestival,
-            'formattedTotalRaised' => '£' . number_format($totalRaisedForFestival, 2),
+            'formattedTotalRaised' => '£'.number_format($totalRaisedForFestival, 2),
             'targetPercentage' => $targetPercentage,
             'currentHonorTier' => $currentHonorTier,
             'activeMembers' => $activeMembers->map(function ($m) use ($memberGivingRecords) {
                 $giving = $memberGivingRecords[$m->id] ?? null;
+
                 return [
                     'id' => $m->id,
                     'name' => $m->full_name,
                     'rank' => $m->formatted_rank_name,
-                    'regular_giving' => $giving ? (float)$giving->regular_giving_amount : 0.0,
-                    'total_donated' => $giving ? (float)$giving->total_donated_to_date : 0.0,
-                    'formatted_donated' => '£' . number_format($giving ? (float)$giving->total_donated_to_date : 0.0, 2),
-                    'qualifies_for_jewel' => $giving ? (bool)$giving->qualifies_for_jewel : false,
-                    'qualifies_for_bar' => $giving ? (bool)$giving->qualifies_for_bar : false,
+                    'regular_giving' => $giving ? (float) $giving->regular_giving_amount : 0.0,
+                    'total_donated' => $giving ? (float) $giving->total_donated_to_date : 0.0,
+                    'formatted_donated' => '£'.number_format($giving ? (float) $giving->total_donated_to_date : 0.0, 2),
+                    'qualifies_for_jewel' => $giving ? (bool) $giving->qualifies_for_jewel : false,
+                    'qualifies_for_bar' => $giving ? (bool) $giving->qualifies_for_bar : false,
                 ];
             }),
         ]);
@@ -243,7 +243,7 @@ class CharityAdminController extends Controller
             'notes' => $validated['notes'],
         ]);
 
-        return redirect()->back()->with('success', "Dual-custody meeting collection of £" . number_format($collection->total_amount, 2) . " recorded.");
+        return redirect()->back()->with('success', 'Dual-custody meeting collection of £'.number_format($collection->total_amount, 2).' recorded.');
     }
 
     public function storeGrant(Request $request, string $clubSlug): RedirectResponse
@@ -272,14 +272,14 @@ class CharityAdminController extends Controller
             'meeting_id' => $validated['meeting_id'] ?? null,
         ]);
 
-        if (!empty($validated['meeting_id'])) {
+        if (! empty($validated['meeting_id'])) {
             $meeting = Meeting::where('club_id', $club->id)->find($validated['meeting_id']);
             if ($meeting) {
                 $nextNum = ($meeting->agendaItems()->max('item_number') ?? 0) + 1;
-                $proposer = !empty($validated['proposer_member_id']) ? Member::find($validated['proposer_member_id'])?->full_name : null;
-                $seconder = !empty($validated['seconder_member_id']) ? Member::find($validated['seconder_member_id'])?->full_name : null;
+                $proposer = ! empty($validated['proposer_member_id']) ? Member::find($validated['proposer_member_id'])?->full_name : null;
+                $seconder = ! empty($validated['seconder_member_id']) ? Member::find($validated['seconder_member_id'])?->full_name : null;
 
-                $desc = "To consider and, if approved, pass a resolution proposing a Charity Grant of £" . number_format((float)$validated['amount'], 2) . " from the Relief Chest to " . $validated['recipient_name'] . " (" . $validated['purpose'] . ").";
+                $desc = 'To consider and, if approved, pass a resolution proposing a Charity Grant of £'.number_format((float) $validated['amount'], 2).' from the Relief Chest to '.$validated['recipient_name'].' ('.$validated['purpose'].').';
                 if ($proposer) {
                     $desc .= " Proposed by {$proposer}.";
                 }
@@ -290,14 +290,14 @@ class CharityAdminController extends Controller
                 AgendaItem::create([
                     'meeting_id' => $meeting->id,
                     'item_number' => $nextNum,
-                    'title' => "Charity Grant Proposition: £" . number_format((float)$validated['amount'], 2) . " to " . $validated['recipient_name'],
+                    'title' => 'Charity Grant Proposition: £'.number_format((float) $validated['amount'], 2).' to '.$validated['recipient_name'],
                     'description' => $desc,
                     'is_ballot' => true,
                 ]);
             }
         }
 
-        return redirect()->back()->with('success', "Charity grant proposal for {$validated['recipient_name']} recorded" . (!empty($validated['meeting_id']) ? " and added to Meeting agenda." : "."));
+        return redirect()->back()->with('success', "Charity grant proposal for {$validated['recipient_name']} recorded".(! empty($validated['meeting_id']) ? ' and added to Meeting agenda.' : '.'));
     }
 
     public function updateGrantStatus(Request $request, string $clubSlug, int $grantId): RedirectResponse
@@ -335,7 +335,7 @@ class CharityAdminController extends Controller
             $validated
         );
 
-        return redirect()->back()->with('success', "Provincial Festival Target milestones saved.");
+        return redirect()->back()->with('success', 'Provincial Festival Target milestones saved.');
     }
 
     public function updateMemberGiving(Request $request, string $clubSlug, int $memberId): RedirectResponse
@@ -347,20 +347,20 @@ class CharityAdminController extends Controller
             'qualifies_for_bar' => 'boolean',
         ]);
 
-        $donated = (float)$validated['total_donated_to_date'];
+        $donated = (float) $validated['total_donated_to_date'];
         $autoJewel = ($validated['qualifies_for_jewel'] ?? false) || $donated >= 250.00;
         $autoBar = ($validated['qualifies_for_bar'] ?? false) || $donated >= 500.00;
 
         MemberFestivalGiving::updateOrCreate(
             ['member_id' => $memberId],
             [
-                'regular_giving_amount' => (float)$validated['regular_giving_amount'],
+                'regular_giving_amount' => (float) $validated['regular_giving_amount'],
                 'total_donated_to_date' => $donated,
                 'qualifies_for_jewel' => $autoJewel,
                 'qualifies_for_bar' => $autoBar,
             ]
         );
 
-        return redirect()->back()->with('success', "Member festival giving updated.");
+        return redirect()->back()->with('success', 'Member festival giving updated.');
     }
 }

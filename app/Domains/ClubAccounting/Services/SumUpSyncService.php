@@ -21,6 +21,7 @@ class SumUpSyncService
 
             if ($response->failed()) {
                 $error = $response->json('message') ?? $response->body();
+
                 return ['success' => false, 'message' => "SumUp Connection Failed: {$error}"];
             }
 
@@ -43,7 +44,7 @@ class SumUpSyncService
     public function syncTransactions(BankAccount $bankAccount, ?string $startDate = null, ?string $endDate = null): array
     {
         if (! $bankAccount->sumup_api_key) {
-            throw new Exception("SumUp API Key is not configured for this account.");
+            throw new Exception('SumUp API Key is not configured for this account.');
         }
 
         $apiKey = trim($bankAccount->sumup_api_key);
@@ -73,7 +74,9 @@ class SumUpSyncService
 
         foreach ($transactions as $tx) {
             $txId = $tx['transaction_code'] ?? $tx['id'] ?? null;
-            if (! $txId) continue;
+            if (! $txId) {
+                continue;
+            }
 
             // Check duplicate guard
             $exists = BankTransaction::where('club_id', $bankAccount->club_id)
@@ -83,14 +86,15 @@ class SumUpSyncService
 
             if ($exists) {
                 $skippedCount++;
+
                 continue;
             }
 
-            $gross = (float)($tx['amount'] ?? 0);
-            $fee = (float)($tx['fee_amount'] ?? 0);
+            $gross = (float) ($tx['amount'] ?? 0);
+            $fee = (float) ($tx['fee_amount'] ?? 0);
             $net = $gross - abs($fee);
             $date = date('Y-m-d', strtotime($tx['timestamp'] ?? $tx['date'] ?? now()));
-            $desc = "SumUp Card Reader Payment — " . ($tx['transaction_code'] ?? 'POS');
+            $desc = 'SumUp Card Reader Payment — '.($tx['transaction_code'] ?? 'POS');
 
             $runningBalance += $net;
 

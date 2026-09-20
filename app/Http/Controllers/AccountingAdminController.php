@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
 use App\Domains\ClubAccounting\Services\BankStatementParserService;
+use App\Domains\ClubAccounting\Services\GoCardlessSyncService;
+use App\Domains\ClubAccounting\Services\PayPalSyncService;
+use App\Domains\ClubAccounting\Services\ReliefChestReconciliationService;
+use App\Domains\ClubAccounting\Services\StripeSyncService;
+use App\Domains\ClubAccounting\Services\SumUpSyncService;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\AccountingContact;
 use App\Models\Accounting\Bill;
@@ -15,6 +21,7 @@ use App\Models\Club;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Services\AccountingService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,7 +50,7 @@ class AccountingAdminController extends Controller
                 'currency' => $acc->currency,
                 'is_active' => $acc->is_active,
                 'balance' => $acc->balance,
-                'formatted_balance' => '£' . number_format($acc->balance, 2),
+                'formatted_balance' => '£'.number_format($acc->balance, 2),
             ]);
 
         $journalEntries = JournalEntry::where('club_id', $club->id)
@@ -60,7 +67,7 @@ class AccountingAdminController extends Controller
                 'source_type' => $entry->source_type,
                 'status' => $entry->status,
                 'total_debit' => $entry->total_debit,
-                'formatted_total' => '£' . number_format($entry->total_debit, 2),
+                'formatted_total' => '£'.number_format($entry->total_debit, 2),
                 'created_by' => $entry->createdBy ? $entry->createdBy->name : 'System',
                 'items' => $entry->items->map(fn ($item) => [
                     'id' => $item->id,
@@ -82,7 +89,7 @@ class AccountingAdminController extends Controller
                 'invoice_number' => $inv->invoice_number,
                 'title' => $inv->title,
                 'amount' => $inv->amount,
-                'formatted_amount' => '£' . number_format($inv->amount, 2),
+                'formatted_amount' => '£'.number_format($inv->amount, 2),
                 'status' => $inv->status,
                 'recipient_name' => $inv->user ? $inv->user->name : 'Member',
                 'created_at' => $inv->created_at->format('d M Y'),
@@ -92,7 +99,7 @@ class AccountingAdminController extends Controller
                     'file_name' => $inv->media->file_name,
                     'url' => $inv->media->getUrl(),
                     'mime_type' => $inv->media->mime_type,
-                    'size' => $inv->media->human_readable_size ?? (round($inv->media->size / 1024, 1) . ' KB'),
+                    'size' => $inv->media->human_readable_size ?? (round($inv->media->size / 1024, 1).' KB'),
                     'is_image' => str_starts_with($inv->media->mime_type ?? '', 'image/'),
                 ] : null,
             ]);
@@ -108,7 +115,7 @@ class AccountingAdminController extends Controller
                 'vendor_name' => $b->vendor_name,
                 'category' => $b->category,
                 'amount' => $b->amount,
-                'formatted_amount' => '£' . number_format($b->amount, 2),
+                'formatted_amount' => '£'.number_format($b->amount, 2),
                 'due_date' => $b->due_date->format('d M Y'),
                 'status' => $b->status,
                 'notes' => $b->notes,
@@ -118,7 +125,7 @@ class AccountingAdminController extends Controller
                     'file_name' => $b->media->file_name,
                     'url' => $b->media->getUrl(),
                     'mime_type' => $b->media->mime_type,
-                    'size' => $b->media->human_readable_size ?? (round($b->media->size / 1024, 1) . ' KB'),
+                    'size' => $b->media->human_readable_size ?? (round($b->media->size / 1024, 1).' KB'),
                     'is_image' => str_starts_with($b->media->mime_type ?? '', 'image/'),
                 ] : null,
             ]);
@@ -204,7 +211,7 @@ class AccountingAdminController extends Controller
         $clubSettings = array_merge([
             'company_name' => $club->name,
             'tax_registration_number' => 'GB 987 6543 21',
-            'contact_email' => 'admin@' . $club->slug . '.org',
+            'contact_email' => 'admin@'.$club->slug.'.org',
             'phone' => '+44 20 7946 0912',
             'address_line_1' => '100 Boathouse Way',
             'address_line_2' => '',
@@ -227,21 +234,22 @@ class AccountingAdminController extends Controller
 
         $unmatchedTransactions = $unmatchedTxModels->map(function ($tx) use ($matcher) {
             $suggestions = $matcher->suggestMatches($tx);
+
             return [
                 'id' => $tx->id,
                 'bank_account_id' => $tx->bank_account_id,
                 'transaction_date' => $tx->transaction_date->format('d M Y'),
                 'raw_description' => $tx->raw_description,
                 'reference' => $tx->reference,
-                'amount' => (float)$tx->amount,
-                'formatted_amount' => '£' . number_format((float)$tx->amount, 2),
-                'status' => $tx->status->value ?? (string)$tx->status,
+                'amount' => (float) $tx->amount,
+                'formatted_amount' => '£'.number_format((float) $tx->amount, 2),
+                'status' => $tx->status->value ?? (string) $tx->status,
                 'suggested_matches' => array_map(function ($m) {
                     return [
                         'match_type' => $m['match_type'],
                         'target_id' => $m['target_id'],
                         'target_title' => $m['target_title'],
-                        'target_amount' => (float)$m['target_amount'],
+                        'target_amount' => (float) $m['target_amount'],
                         'confidence_score' => $m['confidence_score'],
                         'confidence_level' => $m['confidence_level'],
                         'match_reason' => $m['match_reason'],
@@ -261,9 +269,9 @@ class AccountingAdminController extends Controller
                 'transaction_date' => $tx->transaction_date->format('d M Y'),
                 'raw_description' => $tx->raw_description,
                 'reference' => $tx->reference,
-                'amount' => (float)$tx->amount,
-                'formatted_amount' => '£' . number_format((float)$tx->amount, 2),
-                'status' => $tx->status->value ?? (string)$tx->status,
+                'amount' => (float) $tx->amount,
+                'formatted_amount' => '£'.number_format((float) $tx->amount, 2),
+                'status' => $tx->status->value ?? (string) $tx->status,
                 'updated_at' => $tx->updated_at->format('d M Y H:i'),
             ]);
 
@@ -277,8 +285,8 @@ class AccountingAdminController extends Controller
                 'account_number' => $imp->account_number,
                 'sort_code' => $imp->sort_code,
                 'total_lines' => $imp->total_lines,
-                'total_amount' => (float)$imp->total_amount,
-                'formatted_total' => '£' . number_format((float)$imp->total_amount, 2),
+                'total_amount' => (float) $imp->total_amount,
+                'formatted_total' => '£'.number_format((float) $imp->total_amount, 2),
                 'created_at' => $imp->created_at->format('d M Y H:i'),
             ]);
 
@@ -290,8 +298,8 @@ class AccountingAdminController extends Controller
                 'id' => $sub->id,
                 'invoice_reference' => $sub->invoice_reference,
                 'member_name' => $sub->member ? $sub->member->full_name : 'Unknown Member',
-                'amount_due' => (float)$sub->balance_due,
-                'formatted_amount' => '£' . number_format((float)$sub->balance_due, 2),
+                'amount_due' => (float) $sub->balance_due,
+                'formatted_amount' => '£'.number_format((float) $sub->balance_due, 2),
             ]);
 
         $allStatementLines = BankTransaction::where('club_id', $club->id)
@@ -304,11 +312,11 @@ class AccountingAdminController extends Controller
                 'type' => $tx->amount < 0 ? 'Debit' : 'Credit',
                 'raw_description' => $tx->raw_description,
                 'reference' => $tx->reference ?: ($tx->amount < 0 ? 'DEBIT' : 'CREDIT'),
-                'amount' => (float)$tx->amount,
-                'spent' => $tx->amount < 0 ? '£' . number_format(abs((float)$tx->amount), 2) : '',
-                'received' => $tx->amount > 0 ? '£' . number_format((float)$tx->amount, 2) : '',
+                'amount' => (float) $tx->amount,
+                'spent' => $tx->amount < 0 ? '£'.number_format(abs((float) $tx->amount), 2) : '',
+                'received' => $tx->amount > 0 ? '£'.number_format((float) $tx->amount, 2) : '',
                 'source' => 'Bank Feed',
-                'status' => match (strtolower($tx->status->value ?? (string)$tx->status)) {
+                'status' => match (strtolower($tx->status->value ?? (string) $tx->status)) {
                     'matched', 'reconciled' => 'Reconciled',
                     'ignored' => 'Deleted',
                     default => 'Unreconciled',
@@ -320,33 +328,33 @@ class AccountingAdminController extends Controller
             ->orderByDesc('updated_at')
             ->get()
             ->map(fn ($tx) => [
-                'id' => 'tx_' . $tx->id,
+                'id' => 'tx_'.$tx->id,
                 'bank_account_id' => $tx->bank_account_id,
                 'transaction_date' => $tx->transaction_date->format('d M Y'),
                 'type' => $tx->amount < 0 ? 'Spend Money' : 'Receive Money',
                 'description' => $tx->raw_description,
                 'reference' => $tx->reference ?: 'SYSTEM-REF',
-                'amount' => (float)$tx->amount,
-                'spent' => $tx->amount < 0 ? '£' . number_format(abs((float)$tx->amount), 2) : '',
-                'received' => $tx->amount > 0 ? '£' . number_format((float)$tx->amount, 2) : '',
+                'amount' => (float) $tx->amount,
+                'spent' => $tx->amount < 0 ? '£'.number_format(abs((float) $tx->amount), 2) : '',
+                'received' => $tx->amount > 0 ? '£'.number_format((float) $tx->amount, 2) : '',
                 'status' => 'Reconciled',
             ])
             ->concat(
                 $unpaidSubscriptions->map(fn ($sub) => [
-                    'id' => 'sub_' . $sub['id'],
+                    'id' => 'sub_'.$sub['id'],
                     'bank_account_id' => null,
                     'transaction_date' => date('d M Y'),
                     'type' => 'Invoice Payment',
-                    'description' => 'Dues: ' . $sub['member_name'],
+                    'description' => 'Dues: '.$sub['member_name'],
                     'reference' => $sub['invoice_reference'],
-                    'amount' => (float)$sub['amount_due'],
+                    'amount' => (float) $sub['amount_due'],
                     'spent' => '',
-                    'received' => '£' . number_format((float)$sub['amount_due'], 2),
+                    'received' => '£'.number_format((float) $sub['amount_due'], 2),
                     'status' => 'Unreconciled',
                 ])
             )->values();
 
-        $giftAidService = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+        $giftAidService = app(ReliefChestReconciliationService::class);
         $giftAidSummary = $giftAidService->getGiftAidSummary($club);
         $reconciledDonationsData = $giftAidService->getReconciledDonations($club);
 
@@ -362,7 +370,7 @@ class AccountingAdminController extends Controller
         ];
 
         // Bank Accounts Assembly
-        $bankAccountsQuery = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)
+        $bankAccountsQuery = BankAccount::where('club_id', $club->id)
             ->with(['account', 'transactions'])
             ->orderBy('is_active', 'desc')
             ->orderBy('id', 'asc')
@@ -370,7 +378,7 @@ class AccountingAdminController extends Controller
 
         if ($bankAccountsQuery->isEmpty()) {
             $ledgerAcc = Account::where('club_id', $club->id)->where('code', '1000')->first();
-            \App\Domains\ClubAccounting\Models\BankAccount::create([
+            BankAccount::create([
                 'club_id' => $club->id,
                 'account_id' => $ledgerAcc?->id,
                 'bank_name' => 'High Street Bank',
@@ -383,7 +391,7 @@ class AccountingAdminController extends Controller
                 'is_active' => true,
             ]);
 
-            $bankAccountsQuery = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)
+            $bankAccountsQuery = BankAccount::where('club_id', $club->id)
                 ->with(['account', 'transactions'])
                 ->get();
         }
@@ -397,11 +405,11 @@ class AccountingAdminController extends Controller
             'account_number' => $b->account_number,
             'sort_code' => $b->sort_code,
             'currency' => $b->currency,
-            'opening_balance' => (float)$b->opening_balance,
+            'opening_balance' => (float) $b->opening_balance,
             'statement_balance' => $b->statement_balance,
-            'formatted_statement_balance' => '£' . number_format($b->statement_balance, 2),
+            'formatted_statement_balance' => '£'.number_format($b->statement_balance, 2),
             'ledger_balance' => $b->ledger_balance,
-            'formatted_ledger_balance' => '£' . number_format($b->ledger_balance, 2),
+            'formatted_ledger_balance' => '£'.number_format($b->ledger_balance, 2),
             'unreconciled_count' => $b->unreconciled_count,
             'is_active' => $b->is_active,
             'account_code' => $b->account?->code ?? '1000',
@@ -471,13 +479,13 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $ids = (array) $request->input('transaction_ids', []);
 
-        if (!empty($ids)) {
+        if (! empty($ids)) {
             BankTransaction::where('club_id', $club->id)
                 ->whereIn('id', $ids)
                 ->update(['status' => BankTransactionStatus::Ignored->value]);
         }
 
-        return redirect()->back()->with('success', count($ids) . ' statement line(s) deleted.');
+        return redirect()->back()->with('success', count($ids).' statement line(s) deleted.');
     }
 
     public function restoreBankStatementLines(Request $request, string $clubSlug): RedirectResponse
@@ -485,13 +493,13 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $ids = (array) $request->input('transaction_ids', []);
 
-        if (!empty($ids)) {
+        if (! empty($ids)) {
             BankTransaction::where('club_id', $club->id)
                 ->whereIn('id', $ids)
                 ->update(['status' => BankTransactionStatus::Unmatched->value]);
         }
 
-        return redirect()->back()->with('success', count($ids) . ' statement line(s) restored.');
+        return redirect()->back()->with('success', count($ids).' statement line(s) restored.');
     }
 
     public function removeAndRedoAccountTransactions(Request $request, string $clubSlug): RedirectResponse
@@ -502,19 +510,19 @@ class AccountingAdminController extends Controller
         $txIds = [];
         foreach ($rawIds as $id) {
             if (is_numeric($id)) {
-                $txIds[] = (int)$id;
+                $txIds[] = (int) $id;
             } elseif (is_string($id) && str_starts_with($id, 'tx_')) {
-                $txIds[] = (int)str_replace('tx_', '', $id);
+                $txIds[] = (int) str_replace('tx_', '', $id);
             }
         }
 
-        if (!empty($txIds)) {
+        if (! empty($txIds)) {
             BankTransaction::where('club_id', $club->id)
                 ->whereIn('id', $txIds)
                 ->update(['status' => BankTransactionStatus::Unmatched->value]);
         }
 
-        return redirect()->back()->with('success', count($txIds) . ' transaction(s) un-reconciled and returned to the Reconcile queue.');
+        return redirect()->back()->with('success', count($txIds).' transaction(s) un-reconciled and returned to the Reconcile queue.');
     }
 
     public function importBankStatement(Request $request, string $clubSlug): RedirectResponse
@@ -538,7 +546,7 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:30', 'unique:accounting_accounts,code,NULL,id,club_id,' . $club->id],
+            'code' => ['required', 'string', 'max:30', 'unique:accounting_accounts,code,NULL,id,club_id,'.$club->id],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:asset,liability,equity,revenue,expense'],
             'opening_balance' => ['nullable', 'numeric'],
@@ -554,7 +562,7 @@ class AccountingAdminController extends Controller
             'is_active' => true,
         ]);
 
-        if (!empty($validated['opening_balance']) && (float) $validated['opening_balance'] != 0) {
+        if (! empty($validated['opening_balance']) && (float) $validated['opening_balance'] != 0) {
             $this->accountingService->setOpeningBalance($club, $account, (float) $validated['opening_balance'], $validated['as_of_date'] ?? null);
         }
 
@@ -586,7 +594,7 @@ class AccountingAdminController extends Controller
             ->orderBy('code')
             ->get()
             ->map(fn ($a) => [
-                'id'   => $a->id,
+                'id' => $a->id,
                 'code' => $a->code,
                 'name' => $a->name,
                 'type' => $a->type,
@@ -594,7 +602,7 @@ class AccountingAdminController extends Controller
 
         return Inertia::render('Admin/Accounting/JournalCreate', [
             'club' => [
-                'id'   => $club->id,
+                'id' => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
@@ -633,14 +641,14 @@ class AccountingAdminController extends Controller
             ->orderBy('users.name')
             ->get()
             ->map(fn ($u) => [
-                'id'    => $u->id,
-                'name'  => $u->name,
+                'id' => $u->id,
+                'name' => $u->name,
                 'email' => $u->email,
             ]);
 
         return Inertia::render('Admin/Accounting/InvoiceCreate', [
-            'club'    => [
-                'id'   => $club->id,
+            'club' => [
+                'id' => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
@@ -662,11 +670,11 @@ class AccountingAdminController extends Controller
         ]);
 
         $status = $isDraft ? 'draft' : 'unpaid';
-        $title = !empty($validated['title']) ? $validated['title'] : 'Draft Invoice';
-        $amount = isset($validated['amount']) ? (float)$validated['amount'] : 0.00;
+        $title = ! empty($validated['title']) ? $validated['title'] : 'Draft Invoice';
+        $amount = isset($validated['amount']) ? (float) $validated['amount'] : 0.00;
 
         $invCount = Invoice::where('club_id', $club->id)->count() + 1;
-        $invNum = 'INV-' . date('Y') . '-' . str_pad((string) $invCount, 4, '0', STR_PAD_LEFT);
+        $invNum = 'INV-'.date('Y').'-'.str_pad((string) $invCount, 4, '0', STR_PAD_LEFT);
 
         $mediaId = null;
         if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
@@ -749,7 +757,7 @@ class AccountingAdminController extends Controller
 
         return Inertia::render('Admin/Accounting/BillCreate', [
             'club' => [
-                'id'   => $club->id,
+                'id' => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
@@ -775,7 +783,7 @@ class AccountingAdminController extends Controller
 
         $this->accountingService->createVendorBill($club, $validated, $attachmentFile);
 
-        $msg = !empty($validated['is_draft'])
+        $msg = ! empty($validated['is_draft'])
             ? 'Vendor bill saved as draft.'
             : 'Vendor bill recorded and posted to Accounts Payable.';
 
@@ -860,7 +868,7 @@ class AccountingAdminController extends Controller
             $bill->media->forceDelete();
         }
 
-        \App\Models\Accounting\JournalEntry::where('club_id', $club->id)
+        JournalEntry::where('club_id', $club->id)
             ->where('source_type', 'VendorBill')
             ->where('source_id', $bill->id)
             ->delete();
@@ -876,10 +884,10 @@ class AccountingAdminController extends Controller
         $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
         $validated = $request->validate([
-            'user_id'    => ['required', 'exists:users,id'],
-            'title'      => ['required', 'string', 'max:255'],
-            'amount'     => ['required', 'numeric', 'min:0'],
-            'status'     => ['required', 'string', 'in:draft,unpaid,paid'],
+            'user_id' => ['required', 'exists:users,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'status' => ['required', 'string', 'in:draft,unpaid,paid'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
         ]);
 
@@ -938,7 +946,7 @@ class AccountingAdminController extends Controller
             $invoice->media->forceDelete();
         }
 
-        \App\Models\Accounting\JournalEntry::where('club_id', $club->id)
+        JournalEntry::where('club_id', $club->id)
             ->where('source_type', 'Invoice')
             ->where('source_id', $invoice->id)
             ->delete();
@@ -955,12 +963,12 @@ class AccountingAdminController extends Controller
 
         $validated = $request->validate([
             'vendor_name' => ['required', 'string', 'max:255'],
-            'category'    => ['required', 'string', 'max:255'],
-            'amount'      => ['required', 'numeric', 'min:0'],
-            'due_date'    => ['required', 'date'],
-            'notes'       => ['nullable', 'string', 'max:500'],
-            'status'      => ['required', 'string', 'in:draft,unpaid,paid'],
-            'attachment'  => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
+            'category' => ['required', 'string', 'max:255'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'due_date' => ['required', 'date'],
+            'notes' => ['nullable', 'string', 'max:500'],
+            'status' => ['required', 'string', 'in:draft,unpaid,paid'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
         ]);
 
         if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
@@ -981,12 +989,12 @@ class AccountingAdminController extends Controller
         $wasDraft = $bill->status === 'draft';
         $bill->update([
             'vendor_name' => $validated['vendor_name'],
-            'category'    => $validated['category'],
-            'amount'      => $validated['amount'],
-            'due_date'    => $validated['due_date'],
-            'notes'       => $validated['notes'] ?? null,
-            'status'      => $validated['status'],
-            'media_id'    => $validated['media_id'] ?? $bill->media_id,
+            'category' => $validated['category'],
+            'amount' => $validated['amount'],
+            'due_date' => $validated['due_date'],
+            'notes' => $validated['notes'] ?? null,
+            'status' => $validated['status'],
+            'media_id' => $validated['media_id'] ?? $bill->media_id,
         ]);
 
         if ($wasDraft && $bill->status === 'unpaid') {
@@ -1019,14 +1027,14 @@ class AccountingAdminController extends Controller
             ->orderBy('users.name')
             ->get()
             ->map(fn ($u) => [
-                'id'    => $u->id,
-                'name'  => $u->name,
+                'id' => $u->id,
+                'name' => $u->name,
                 'email' => $u->email,
             ]);
 
         return Inertia::render('Admin/Accounting/InvoiceEdit', [
             'club' => [
-                'id'   => $club->id,
+                'id' => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
@@ -1051,7 +1059,7 @@ class AccountingAdminController extends Controller
 
         return Inertia::render('Admin/Accounting/BillEdit', [
             'club' => [
-                'id'   => $club->id,
+                'id' => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
@@ -1082,7 +1090,7 @@ class AccountingAdminController extends Controller
             ->orderBy('code')
             ->get()
             ->map(fn ($a) => [
-                'id'   => $a->id,
+                'id' => $a->id,
                 'code' => $a->code,
                 'name' => $a->name,
                 'type' => $a->type,
@@ -1090,7 +1098,7 @@ class AccountingAdminController extends Controller
 
         return Inertia::render('Admin/Accounting/JournalEdit', [
             'club' => [
-                'id'   => $club->id,
+                'id' => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
@@ -1198,9 +1206,9 @@ class AccountingAdminController extends Controller
 
         // Auto-split the user's name into parts if not already set
         $nameParts = explode(' ', trim($user->name), 3);
-        $defaultFirst  = $nameParts[0] ?? '';
+        $defaultFirst = $nameParts[0] ?? '';
         $defaultMiddle = count($nameParts) === 3 ? $nameParts[1] : null;
-        $defaultLast   = count($nameParts) >= 2 ? end($nameParts) : null;
+        $defaultLast = count($nameParts) >= 2 ? end($nameParts) : null;
 
         $contact = AccountingContact::firstOrCreate(
             [
@@ -1208,18 +1216,18 @@ class AccountingAdminController extends Controller
                 'user_id' => $user->id,
             ],
             [
-                'type'           => 'person',
-                'name'           => $user->name,
-                'first_name'     => $defaultFirst,
-                'middle_names'   => $defaultMiddle,
-                'last_name'      => $defaultLast,
+                'type' => 'person',
+                'name' => $user->name,
+                'first_name' => $defaultFirst,
+                'middle_names' => $defaultMiddle,
+                'last_name' => $defaultLast,
                 'preferred_name' => null,
                 'contact_person' => $user->name,
-                'email'          => $user->email,
-                'phone'          => $user->phone ?? null,
-                'role'           => 'Club Member',
-                'is_active'      => true,
-                'is_member'      => true,
+                'email' => $user->email,
+                'phone' => $user->phone ?? null,
+                'role' => 'Club Member',
+                'is_active' => true,
+                'is_member' => true,
             ]
         );
 
@@ -1229,22 +1237,22 @@ class AccountingAdminController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $amountOwed    = $userInvoices->where('status', 'unpaid')->sum('amount');
-        $totalPaid     = $userInvoices->where('status', 'paid')->sum('amount');
+        $amountOwed = $userInvoices->where('status', 'unpaid')->sum('amount');
+        $totalPaid = $userInvoices->where('status', 'paid')->sum('amount');
         $creditBalance = $userInvoices->where('status', 'refunded')->sum('amount');
-        $invoiceCount  = $userInvoices->count();
+        $invoiceCount = $userInvoices->count();
 
         $lastPaidInvoice = $userInvoices->where('status', 'paid')->first();
         $lastPaymentDate = $lastPaidInvoice?->paid_at?->format('d M Y')
             ?? $lastPaidInvoice?->created_at?->format('d M Y');
-        $lastPaymentAmount = $lastPaidInvoice ? '£' . number_format($lastPaidInvoice->amount, 2) : null;
+        $lastPaymentAmount = $lastPaidInvoice ? '£'.number_format($lastPaidInvoice->amount, 2) : null;
 
         $unpaidInvoices = $userInvoices->where('status', 'unpaid')->map(fn ($inv) => [
-            'id'               => $inv->id,
-            'invoice_number'   => $inv->invoice_number,
-            'title'            => $inv->title,
-            'amount'           => '£' . number_format($inv->amount, 2),
-            'created_at'       => $inv->created_at->format('d M Y'),
+            'id' => $inv->id,
+            'invoice_number' => $inv->invoice_number,
+            'title' => $inv->title,
+            'amount' => '£'.number_format($inv->amount, 2),
+            'created_at' => $inv->created_at->format('d M Y'),
         ])->values();
 
         // Active membership plan
@@ -1254,7 +1262,7 @@ class AccountingAdminController extends Controller
             ->where('memberships.user_id', $user->id)
             ->where('memberships.status', 'active')
             ->select('membership_plans.name', 'membership_plans.price', 'membership_plans.billing_period',
-                     'memberships.starts_at', 'memberships.ends_at', 'memberships.status')
+                'memberships.starts_at', 'memberships.ends_at', 'memberships.status')
             ->orderByDesc('memberships.starts_at')
             ->first();
 
@@ -1265,54 +1273,54 @@ class AccountingAdminController extends Controller
             ->value('created_at');
 
         $memberSummary = [
-            'amount_owed'          => $amountOwed,
-            'amount_owed_formatted'=> '£' . number_format($amountOwed, 2),
-            'credit_balance'       => $creditBalance,
-            'credit_balance_formatted' => '£' . number_format($creditBalance, 2),
-            'total_paid'           => $totalPaid,
-            'total_paid_formatted' => '£' . number_format($totalPaid, 2),
-            'invoice_count'        => $invoiceCount,
-            'last_payment_date'    => $lastPaymentDate,
-            'last_payment_amount'  => $lastPaymentAmount,
-            'unpaid_invoices'      => $unpaidInvoices,
-            'membership_plan'      => $membership ? $membership->name : null,
-            'membership_price'     => $membership ? '£' . number_format($membership->price, 2) : null,
-            'membership_period'    => $membership ? $membership->billing_period : null,
-            'membership_renews'    => ($membership && $membership->ends_at)
-                ? \Carbon\Carbon::parse($membership->ends_at)->format('d M Y') : null,
-            'membership_status'    => $membership ? $membership->status : 'no_plan',
-            'member_since'         => $memberSince
-                ? \Carbon\Carbon::parse($memberSince)->format('d M Y') : null,
+            'amount_owed' => $amountOwed,
+            'amount_owed_formatted' => '£'.number_format($amountOwed, 2),
+            'credit_balance' => $creditBalance,
+            'credit_balance_formatted' => '£'.number_format($creditBalance, 2),
+            'total_paid' => $totalPaid,
+            'total_paid_formatted' => '£'.number_format($totalPaid, 2),
+            'invoice_count' => $invoiceCount,
+            'last_payment_date' => $lastPaymentDate,
+            'last_payment_amount' => $lastPaymentAmount,
+            'unpaid_invoices' => $unpaidInvoices,
+            'membership_plan' => $membership ? $membership->name : null,
+            'membership_price' => $membership ? '£'.number_format($membership->price, 2) : null,
+            'membership_period' => $membership ? $membership->billing_period : null,
+            'membership_renews' => ($membership && $membership->ends_at)
+                ? Carbon::parse($membership->ends_at)->format('d M Y') : null,
+            'membership_status' => $membership ? $membership->status : 'no_plan',
+            'member_since' => $memberSince
+                ? Carbon::parse($memberSince)->format('d M Y') : null,
         ];
         // ─────────────────────────────────────────────────────────────────
 
         return Inertia::render('Admin/Accounting/ContactForm', [
             'club' => [
-                'id'   => $club->id,
+                'id' => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
             'contact' => [
-                'id'             => $contact->id,
-                'type'           => $contact->type,
-                'name'           => $contact->name,
-                'first_name'     => $contact->first_name,
-                'middle_names'   => $contact->middle_names,
-                'last_name'      => $contact->last_name,
+                'id' => $contact->id,
+                'type' => $contact->type,
+                'name' => $contact->name,
+                'first_name' => $contact->first_name,
+                'middle_names' => $contact->middle_names,
+                'last_name' => $contact->last_name,
                 'preferred_name' => $contact->preferred_name,
                 'contact_person' => $contact->contact_person,
-                'email'          => $contact->email,
-                'phone'          => $contact->phone,
-                'role'           => $contact->role,
-                'tax_id'         => $contact->tax_id,
+                'email' => $contact->email,
+                'phone' => $contact->phone,
+                'role' => $contact->role,
+                'tax_id' => $contact->tax_id,
                 'address_line_1' => $contact->address_line_1,
                 'address_line_2' => $contact->address_line_2,
-                'city'           => $contact->city,
-                'postcode'       => $contact->postcode,
-                'country'        => $contact->country,
-                'notes'          => $contact->notes,
-                'is_active'      => $contact->is_active,
-                'is_member'      => true,
+                'city' => $contact->city,
+                'postcode' => $contact->postcode,
+                'country' => $contact->country,
+                'notes' => $contact->notes,
+                'is_active' => $contact->is_active,
+                'is_member' => true,
             ],
             'member_summary' => $memberSummary,
         ]);
@@ -1325,31 +1333,31 @@ class AccountingAdminController extends Controller
 
         return Inertia::render('Admin/Accounting/ContactForm', [
             'club' => [
-                'id'   => $club->id,
+                'id' => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
             'contact' => [
-                'id'             => $contact->id,
-                'type'           => $contact->type,
-                'name'           => $contact->name,
-                'first_name'     => $contact->first_name,
-                'middle_names'   => $contact->middle_names,
-                'last_name'      => $contact->last_name,
+                'id' => $contact->id,
+                'type' => $contact->type,
+                'name' => $contact->name,
+                'first_name' => $contact->first_name,
+                'middle_names' => $contact->middle_names,
+                'last_name' => $contact->last_name,
                 'preferred_name' => $contact->preferred_name,
                 'contact_person' => $contact->contact_person,
-                'email'          => $contact->email,
-                'phone'          => $contact->phone,
-                'role'           => $contact->role,
-                'tax_id'         => $contact->tax_id,
+                'email' => $contact->email,
+                'phone' => $contact->phone,
+                'role' => $contact->role,
+                'tax_id' => $contact->tax_id,
                 'address_line_1' => $contact->address_line_1,
                 'address_line_2' => $contact->address_line_2,
-                'city'           => $contact->city,
-                'postcode'       => $contact->postcode,
-                'country'        => $contact->country,
-                'notes'          => $contact->notes,
-                'is_active'      => $contact->is_active,
-                'is_member'      => $contact->is_member ?? false,
+                'city' => $contact->city,
+                'postcode' => $contact->postcode,
+                'country' => $contact->country,
+                'notes' => $contact->notes,
+                'is_active' => $contact->is_active,
+                'is_member' => $contact->is_member ?? false,
             ],
         ]);
     }
@@ -1359,30 +1367,30 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
         $validated = $request->validate([
-            'name'           => ['nullable', 'required_without:first_name', 'string', 'max:255'],
-            'first_name'     => ['nullable', 'required_without:name', 'string', 'max:100'],
-            'middle_names'   => ['nullable', 'string', 'max:150'],
-            'last_name'      => ['nullable', 'string', 'max:100'],
+            'name' => ['nullable', 'required_without:first_name', 'string', 'max:255'],
+            'first_name' => ['nullable', 'required_without:name', 'string', 'max:100'],
+            'middle_names' => ['nullable', 'string', 'max:150'],
+            'last_name' => ['nullable', 'string', 'max:100'],
             'preferred_name' => ['nullable', 'string', 'max:100'],
-            'type'           => ['nullable', 'string', 'in:person,business'],
+            'type' => ['nullable', 'string', 'in:person,business'],
             'contact_person' => ['nullable', 'string', 'max:255'],
-            'email'          => ['nullable', 'email', 'max:255'],
-            'phone'          => ['nullable', 'string', 'max:50'],
-            'role'           => ['required', 'string', 'max:100'],
-            'tax_id'         => ['nullable', 'string', 'max:50'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'role' => ['required', 'string', 'max:100'],
+            'tax_id' => ['nullable', 'string', 'max:50'],
             'address_line_1' => ['nullable', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city'           => ['nullable', 'string', 'max:100'],
-            'postcode'       => ['nullable', 'string', 'max:20'],
-            'country'        => ['nullable', 'string', 'max:100'],
-            'notes'          => ['nullable', 'string', 'max:1000'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'postcode' => ['nullable', 'string', 'max:20'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $firstName = $validated['first_name'] ?? null;
         $lastName = $validated['last_name'] ?? null;
         $middleNames = $validated['middle_names'] ?? null;
 
-        if (!empty($firstName)) {
+        if (! empty($firstName)) {
             $fullName = trim(implode(' ', array_filter([
                 $firstName,
                 $middleNames,
@@ -1396,26 +1404,26 @@ class AccountingAdminController extends Controller
         }
 
         AccountingContact::create([
-            'club_id'        => $club->id,
-            'type'           => $validated['type'] ?? 'person',
-            'name'           => $fullName,
-            'first_name'     => $firstName,
-            'middle_names'   => $middleNames,
-            'last_name'      => $lastName,
+            'club_id' => $club->id,
+            'type' => $validated['type'] ?? 'person',
+            'name' => $fullName,
+            'first_name' => $firstName,
+            'middle_names' => $middleNames,
+            'last_name' => $lastName,
             'preferred_name' => $validated['preferred_name'] ?? null,
             'contact_person' => $validated['contact_person'] ?? null,
-            'email'          => $validated['email'] ?? null,
-            'phone'          => $validated['phone'] ?? null,
-            'role'           => $validated['role'],
-            'tax_id'         => $validated['tax_id'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'role' => $validated['role'],
+            'tax_id' => $validated['tax_id'] ?? null,
             'address_line_1' => $validated['address_line_1'] ?? null,
             'address_line_2' => $validated['address_line_2'] ?? null,
-            'city'           => $validated['city'] ?? null,
-            'postcode'       => $validated['postcode'] ?? null,
-            'country'        => $validated['country'] ?? 'United Kingdom',
-            'notes'          => $validated['notes'] ?? null,
-            'is_active'      => true,
-            'is_member'      => false,
+            'city' => $validated['city'] ?? null,
+            'postcode' => $validated['postcode'] ?? null,
+            'country' => $validated['country'] ?? 'United Kingdom',
+            'notes' => $validated['notes'] ?? null,
+            'is_active' => true,
+            'is_member' => false,
         ]);
 
         return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, 'tab' => 'contacts'])->with('success', 'New contact added to directory.');
@@ -1427,30 +1435,30 @@ class AccountingAdminController extends Controller
         $contact = AccountingContact::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
         $validated = $request->validate([
-            'name'           => ['nullable', 'required_without:first_name', 'string', 'max:255'],
-            'first_name'     => ['nullable', 'required_without:name', 'string', 'max:100'],
-            'middle_names'   => ['nullable', 'string', 'max:150'],
-            'last_name'      => ['nullable', 'string', 'max:100'],
+            'name' => ['nullable', 'required_without:first_name', 'string', 'max:255'],
+            'first_name' => ['nullable', 'required_without:name', 'string', 'max:100'],
+            'middle_names' => ['nullable', 'string', 'max:150'],
+            'last_name' => ['nullable', 'string', 'max:100'],
             'preferred_name' => ['nullable', 'string', 'max:100'],
-            'type'           => ['nullable', 'string', 'in:person,business'],
+            'type' => ['nullable', 'string', 'in:person,business'],
             'contact_person' => ['nullable', 'string', 'max:255'],
-            'email'          => ['nullable', 'email', 'max:255'],
-            'phone'          => ['nullable', 'string', 'max:50'],
-            'role'           => ['required', 'string', 'max:100'],
-            'tax_id'         => ['nullable', 'string', 'max:50'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'role' => ['required', 'string', 'max:100'],
+            'tax_id' => ['nullable', 'string', 'max:50'],
             'address_line_1' => ['nullable', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city'           => ['nullable', 'string', 'max:100'],
-            'postcode'       => ['nullable', 'string', 'max:20'],
-            'country'        => ['nullable', 'string', 'max:100'],
-            'notes'          => ['nullable', 'string', 'max:1000'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'postcode' => ['nullable', 'string', 'max:20'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $firstName = $validated['first_name'] ?? null;
         $lastName = $validated['last_name'] ?? null;
         $middleNames = $validated['middle_names'] ?? null;
 
-        if (!empty($firstName)) {
+        if (! empty($firstName)) {
             $fullName = trim(implode(' ', array_filter([
                 $firstName,
                 $middleNames,
@@ -1464,21 +1472,21 @@ class AccountingAdminController extends Controller
         }
 
         $updateData = [
-            'name'           => $fullName,
-            'first_name'     => $firstName,
-            'middle_names'   => $middleNames,
-            'last_name'      => $lastName,
+            'name' => $fullName,
+            'first_name' => $firstName,
+            'middle_names' => $middleNames,
+            'last_name' => $lastName,
             'preferred_name' => $validated['preferred_name'] ?? $contact->preferred_name,
-            'email'          => $validated['email'] ?? null,
-            'phone'          => $validated['phone'] ?? null,
-            'role'           => $contact->is_member ? 'Club Member' : $validated['role'],
-            'tax_id'         => $validated['tax_id'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'role' => $contact->is_member ? 'Club Member' : $validated['role'],
+            'tax_id' => $validated['tax_id'] ?? null,
             'address_line_1' => $validated['address_line_1'] ?? null,
             'address_line_2' => $validated['address_line_2'] ?? null,
-            'city'           => $validated['city'] ?? null,
-            'postcode'       => $validated['postcode'] ?? null,
-            'country'        => $validated['country'] ?? 'United Kingdom',
-            'notes'          => $validated['notes'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'postcode' => $validated['postcode'] ?? null,
+            'country' => $validated['country'] ?? 'United Kingdom',
+            'notes' => $validated['notes'] ?? null,
         ];
 
         if (isset($validated['type'])) {
@@ -1523,20 +1531,20 @@ class AccountingAdminController extends Controller
             ->toArray();
 
         $codeNum = 1010;
-        while (in_array((string)$codeNum, $existingCodes)) {
+        while (in_array((string) $codeNum, $existingCodes)) {
             $codeNum += 10;
         }
 
         $ledgerAcc = Account::create([
             'club_id' => $club->id,
-            'code' => (string)$codeNum,
+            'code' => (string) $codeNum,
             'name' => "{$validated['bank_name']} — {$validated['account_name']}",
             'type' => 'asset',
             'currency' => strtoupper($validated['currency']),
             'is_active' => true,
         ]);
 
-        \App\Domains\ClubAccounting\Models\BankAccount::create([
+        BankAccount::create([
             'club_id' => $club->id,
             'account_id' => $ledgerAcc->id,
             'bank_name' => $validated['bank_name'],
@@ -1555,8 +1563,8 @@ class AccountingAdminController extends Controller
     public function toggleBankAccount(Request $request, string $clubSlug, int $id): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $acc = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
-        $acc->update(['is_active' => !$acc->is_active]);
+        $acc = BankAccount::where('club_id', $club->id)->findOrFail($id);
+        $acc->update(['is_active' => ! $acc->is_active]);
 
         return redirect()->back()->with('success', 'Bank account status updated.');
     }
@@ -1573,7 +1581,7 @@ class AccountingAdminController extends Controller
             'opening_balance' => 'required|numeric',
         ]);
 
-        $syncService = new \App\Domains\ClubAccounting\Services\PayPalSyncService();
+        $syncService = new PayPalSyncService;
         $testResult = $syncService->testConnection(
             $validated['paypal_client_id'],
             $validated['paypal_client_secret'],
@@ -1591,20 +1599,20 @@ class AccountingAdminController extends Controller
             ->toArray();
 
         $codeNum = 1010;
-        while (in_array((string)$codeNum, $existingCodes)) {
+        while (in_array((string) $codeNum, $existingCodes)) {
             $codeNum += 10;
         }
 
         $ledgerAcc = Account::create([
             'club_id' => $club->id,
-            'code' => (string)$codeNum,
+            'code' => (string) $codeNum,
             'name' => "PayPal — {$validated['account_name']}",
             'type' => 'asset',
             'currency' => strtoupper($validated['currency']),
             'is_active' => true,
         ]);
 
-        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::create([
+        $bankAccount = BankAccount::create([
             'club_id' => $club->id,
             'account_id' => $ledgerAcc->id,
             'bank_name' => 'PayPal',
@@ -1626,13 +1634,13 @@ class AccountingAdminController extends Controller
     public function testPayPalConnection(Request $request, string $clubSlug, int $id)
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+        $bankAccount = BankAccount::where('club_id', $club->id)->findOrFail($id);
 
         if (! $bankAccount->paypal_client_id || ! $bankAccount->paypal_client_secret) {
             return response()->json(['success' => false, 'message' => 'PayPal credentials missing.'], 422);
         }
 
-        $syncService = new \App\Domains\ClubAccounting\Services\PayPalSyncService();
+        $syncService = new PayPalSyncService;
         $res = $syncService->testConnection(
             $bankAccount->paypal_client_id,
             $bankAccount->paypal_client_secret,
@@ -1645,7 +1653,7 @@ class AccountingAdminController extends Controller
     public function syncPayPalTransactions(Request $request, string $clubSlug, int $id): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+        $bankAccount = BankAccount::where('club_id', $club->id)->findOrFail($id);
 
         $validated = $request->validate([
             'start_date' => 'nullable|date',
@@ -1653,7 +1661,7 @@ class AccountingAdminController extends Controller
         ]);
 
         try {
-            $syncService = new \App\Domains\ClubAccounting\Services\PayPalSyncService();
+            $syncService = new PayPalSyncService;
             $result = $syncService->syncTransactions(
                 $bankAccount,
                 $validated['start_date'] ?? null,
@@ -1680,7 +1688,7 @@ class AccountingAdminController extends Controller
             'opening_balance' => 'required|numeric',
         ]);
 
-        $syncService = new \App\Domains\ClubAccounting\Services\StripeSyncService();
+        $syncService = new StripeSyncService;
         $testResult = $syncService->testConnection($validated['stripe_secret_key']);
 
         if (! $testResult['success']) {
@@ -1694,20 +1702,20 @@ class AccountingAdminController extends Controller
             ->toArray();
 
         $codeNum = 1010;
-        while (in_array((string)$codeNum, $existingCodes)) {
+        while (in_array((string) $codeNum, $existingCodes)) {
             $codeNum += 10;
         }
 
         $ledgerAcc = Account::create([
             'club_id' => $club->id,
-            'code' => (string)$codeNum,
+            'code' => (string) $codeNum,
             'name' => "Stripe — {$validated['account_name']}",
             'type' => 'asset',
             'currency' => strtoupper($validated['currency']),
             'is_active' => true,
         ]);
 
-        \App\Domains\ClubAccounting\Models\BankAccount::create([
+        BankAccount::create([
             'club_id' => $club->id,
             'account_id' => $ledgerAcc->id,
             'bank_name' => 'Stripe',
@@ -1727,7 +1735,7 @@ class AccountingAdminController extends Controller
     public function syncStripeTransactions(Request $request, string $clubSlug, int $id): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+        $bankAccount = BankAccount::where('club_id', $club->id)->findOrFail($id);
 
         $validated = $request->validate([
             'start_date' => 'nullable|date',
@@ -1735,7 +1743,7 @@ class AccountingAdminController extends Controller
         ]);
 
         try {
-            $syncService = new \App\Domains\ClubAccounting\Services\StripeSyncService();
+            $syncService = new StripeSyncService;
             $result = $syncService->syncTransactions(
                 $bankAccount,
                 $validated['start_date'] ?? null,
@@ -1762,7 +1770,7 @@ class AccountingAdminController extends Controller
             'opening_balance' => 'required|numeric',
         ]);
 
-        $syncService = new \App\Domains\ClubAccounting\Services\SumUpSyncService();
+        $syncService = new SumUpSyncService;
         $testResult = $syncService->testConnection($validated['sumup_api_key']);
 
         if (! $testResult['success']) {
@@ -1776,20 +1784,20 @@ class AccountingAdminController extends Controller
             ->toArray();
 
         $codeNum = 1010;
-        while (in_array((string)$codeNum, $existingCodes)) {
+        while (in_array((string) $codeNum, $existingCodes)) {
             $codeNum += 10;
         }
 
         $ledgerAcc = Account::create([
             'club_id' => $club->id,
-            'code' => (string)$codeNum,
+            'code' => (string) $codeNum,
             'name' => "SumUp — {$validated['account_name']}",
             'type' => 'asset',
             'currency' => strtoupper($validated['currency']),
             'is_active' => true,
         ]);
 
-        \App\Domains\ClubAccounting\Models\BankAccount::create([
+        BankAccount::create([
             'club_id' => $club->id,
             'account_id' => $ledgerAcc->id,
             'bank_name' => 'SumUp',
@@ -1810,7 +1818,7 @@ class AccountingAdminController extends Controller
     public function syncSumUpTransactions(Request $request, string $clubSlug, int $id): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+        $bankAccount = BankAccount::where('club_id', $club->id)->findOrFail($id);
 
         $validated = $request->validate([
             'start_date' => 'nullable|date',
@@ -1818,7 +1826,7 @@ class AccountingAdminController extends Controller
         ]);
 
         try {
-            $syncService = new \App\Domains\ClubAccounting\Services\SumUpSyncService();
+            $syncService = new SumUpSyncService;
             $result = $syncService->syncTransactions(
                 $bankAccount,
                 $validated['start_date'] ?? null,
@@ -1847,7 +1855,7 @@ class AccountingAdminController extends Controller
             'opening_balance' => 'required|numeric',
         ]);
 
-        $syncService = new \App\Domains\ClubAccounting\Services\GoCardlessSyncService();
+        $syncService = new GoCardlessSyncService;
         $testResult = $syncService->testConnection($validated['gocardless_access_token'], $validated['gocardless_environment']);
 
         if (! $testResult['success']) {
@@ -1861,20 +1869,20 @@ class AccountingAdminController extends Controller
             ->toArray();
 
         $codeNum = 1010;
-        while (in_array((string)$codeNum, $existingCodes)) {
+        while (in_array((string) $codeNum, $existingCodes)) {
             $codeNum += 10;
         }
 
         $ledgerAcc = Account::create([
             'club_id' => $club->id,
-            'code' => (string)$codeNum,
+            'code' => (string) $codeNum,
             'name' => "GoCardless — {$validated['account_name']}",
             'type' => 'asset',
             'currency' => strtoupper($validated['currency']),
             'is_active' => true,
         ]);
 
-        \App\Domains\ClubAccounting\Models\BankAccount::create([
+        BankAccount::create([
             'club_id' => $club->id,
             'account_id' => $ledgerAcc->id,
             'bank_name' => 'GoCardless',
@@ -1896,7 +1904,7 @@ class AccountingAdminController extends Controller
     public function syncGoCardlessTransactions(Request $request, string $clubSlug, int $id): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $bankAccount = \App\Domains\ClubAccounting\Models\BankAccount::where('club_id', $club->id)->findOrFail($id);
+        $bankAccount = BankAccount::where('club_id', $club->id)->findOrFail($id);
 
         $validated = $request->validate([
             'start_date' => 'nullable|date',
@@ -1904,7 +1912,7 @@ class AccountingAdminController extends Controller
         ]);
 
         try {
-            $syncService = new \App\Domains\ClubAccounting\Services\GoCardlessSyncService();
+            $syncService = new GoCardlessSyncService;
             $result = $syncService->syncTransactions(
                 $bankAccount,
                 $validated['start_date'] ?? null,
@@ -1924,7 +1932,7 @@ class AccountingAdminController extends Controller
     public function autoReconcileGiftAid(Request $request, string $clubSlug): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $service = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+        $service = app(ReliefChestReconciliationService::class);
 
         $result = $service->autoReconcileGiftAidAndReliefChest($club);
 
@@ -1932,16 +1940,16 @@ class AccountingAdminController extends Controller
             return redirect()->back()->with('success', "Automated Gift Aid & Relief Chest Match: Reconciled {$result['reconciled_count']} deposit line(s) totaling {$result['formatted_total_amount']}.");
         }
 
-        return redirect()->back()->with('info', "No unmatched HMRC Gift Aid or Relief Chest deposits found to reconcile.");
+        return redirect()->back()->with('info', 'No unmatched HMRC Gift Aid or Relief Chest deposits found to reconcile.');
     }
 
     public function exportGiftAidSchedule(Request $request, string $clubSlug)
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $service = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+        $service = app(ReliefChestReconciliationService::class);
 
         $csv = $service->generateHmrcGiftAidScheduleCsv($club);
-        $filename = 'Gift_Aid_Claim_Schedule_' . $club->slug . '_' . date('Y-m-d') . '.csv';
+        $filename = 'Gift_Aid_Claim_Schedule_'.$club->slug.'_'.date('Y-m-d').'.csv';
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
@@ -1952,7 +1960,7 @@ class AccountingAdminController extends Controller
     public function filterReconciledDonations(Request $request, string $clubSlug)
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $service = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+        $service = app(ReliefChestReconciliationService::class);
 
         $data = $service->getReconciledDonations($club, $request->all());
 
@@ -1962,7 +1970,7 @@ class AccountingAdminController extends Controller
     public function giftAidTransactionsPage(Request $request, string $clubSlug): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $service = app(\App\Domains\ClubAccounting\Services\ReliefChestReconciliationService::class);
+        $service = app(ReliefChestReconciliationService::class);
 
         $giftAidSummary = $service->getGiftAidSummary($club);
         $reconciledDonations = $service->getReconciledDonations($club, $request->all());

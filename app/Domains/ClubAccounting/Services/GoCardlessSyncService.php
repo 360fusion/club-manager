@@ -30,10 +30,11 @@ class GoCardlessSyncService
             $response = Http::withHeaders([
                 'GoCardless-Version' => '2015-07-06',
             ])->withToken(trim($accessToken))
-              ->get("{$baseUrl}/creditors");
+                ->get("{$baseUrl}/creditors");
 
             if ($response->failed()) {
                 $error = $response->json('error.message') ?? $response->body();
+
                 return ['success' => false, 'message' => "GoCardless Error: {$error}"];
             }
 
@@ -55,7 +56,7 @@ class GoCardlessSyncService
     public function syncTransactions(BankAccount $bankAccount, ?string $startDate = null, ?string $endDate = null): array
     {
         if (! $bankAccount->gocardless_access_token) {
-            throw new Exception("GoCardless Access Token is not configured for this account.");
+            throw new Exception('GoCardless Access Token is not configured for this account.');
         }
 
         $accessToken = trim($bankAccount->gocardless_access_token);
@@ -75,13 +76,13 @@ class GoCardlessSyncService
         }
 
         if ($endDate) {
-            $params['created_at[lte]'] = date('Y-m-d\TH:i:s\Z', strtotime($endDate . ' 23:59:59'));
+            $params['created_at[lte]'] = date('Y-m-d\TH:i:s\Z', strtotime($endDate.' 23:59:59'));
         }
 
         $response = Http::withHeaders([
             'GoCardless-Version' => '2015-07-06',
         ])->withToken($accessToken)
-          ->get("{$baseUrl}/payments", $params);
+            ->get("{$baseUrl}/payments", $params);
 
         if ($response->failed()) {
             $bankAccount->update(['sync_status' => 'error']);
@@ -97,7 +98,9 @@ class GoCardlessSyncService
 
         foreach ($payments as $payment) {
             $paymentId = $payment['id'] ?? null;
-            if (! $paymentId) continue;
+            if (! $paymentId) {
+                continue;
+            }
 
             // Check duplicate guard
             $exists = BankTransaction::where('club_id', $bankAccount->club_id)
@@ -107,11 +110,12 @@ class GoCardlessSyncService
 
             if ($exists) {
                 $skippedCount++;
+
                 continue;
             }
 
             // GoCardless amounts are in pence (e.g. 1500 = £15.00)
-            $amountInPence = (int)($payment['amount'] ?? 0);
+            $amountInPence = (int) ($payment['amount'] ?? 0);
             $amount = $amountInPence / 100.0;
             $status = $payment['status'] ?? 'confirmed';
             $description = $payment['description'] ?? "GoCardless Direct Debit ({$status})";
@@ -148,4 +152,3 @@ class GoCardlessSyncService
         ];
     }
 }
-

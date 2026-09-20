@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Enums\CollectionType;
 use App\Domains\ClubAccounting\Models\BankAccount;
+use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\CharityCollection;
 use App\Domains\ClubAccounting\Models\FestivalTarget;
 use App\Domains\ClubAccounting\Services\ReliefChestReconciliationService;
 use App\Models\Accounting\Account;
 use App\Models\Club;
+use App\Models\ClubType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -20,14 +22,16 @@ class GiftAidReliefChestReconciliationTest extends TestCase
     use RefreshDatabase;
 
     protected Club $club;
+
     protected User $user;
+
     protected BankAccount $bankAccount;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $clubType = \App\Models\ClubType::create([
+        $clubType = ClubType::create([
             'name' => 'Masonic Lodge',
             'code' => 'lodge',
             'available_modules' => ['accounting', 'meetings', 'members', 'charity'],
@@ -86,7 +90,7 @@ class GiftAidReliefChestReconciliationTest extends TestCase
             'gift_aid_status' => 'pending',
         ]);
 
-        $service = new ReliefChestReconciliationService();
+        $service = new ReliefChestReconciliationService;
         $summary = $service->getGiftAidSummary($this->club);
 
         $this->assertEquals('E1418', $summary['relief_chest_ref']);
@@ -106,7 +110,7 @@ class GiftAidReliefChestReconciliationTest extends TestCase
             'gift_aid_status' => 'pending',
         ]);
 
-        $bankImport = \App\Domains\ClubAccounting\Models\BankImport::create([
+        $bankImport = BankImport::create([
             'club_id' => $this->club->id,
             'bank_account_id' => $this->bankAccount->id,
             'filename' => 'statement.csv',
@@ -124,12 +128,12 @@ class GiftAidReliefChestReconciliationTest extends TestCase
             'description' => 'HMRC GIFT AID REPAYMENT',
             'raw_description' => 'HMRC GIFT AID REPAYMENT REF GA-100',
             'amount' => 100.00,
-            'transaction_hash' => md5('HMRC GIFT AID REPAYMENT REF GA-100' . time()),
+            'transaction_hash' => md5('HMRC GIFT AID REPAYMENT REF GA-100'.time()),
             'status' => BankTransactionStatus::Unmatched->value,
             'balance_after' => 1100.00,
         ]);
 
-        $service = new ReliefChestReconciliationService();
+        $service = new ReliefChestReconciliationService;
         $result = $service->autoReconcileGiftAidAndReliefChest($this->club);
 
         $this->assertTrue($result['success']);
@@ -157,7 +161,7 @@ class GiftAidReliefChestReconciliationTest extends TestCase
             'gift_aid_status' => 'pending',
         ]);
 
-        $service = new ReliefChestReconciliationService();
+        $service = new ReliefChestReconciliationService;
         $csv = $service->generateHmrcGiftAidScheduleCsv($this->club);
 
         $this->assertStringContainsString('Relief Chest Ref,Collection Date,Collection Type', $csv);

@@ -13,12 +13,13 @@ use GoCardlessPro\Environment;
 class GoCardlessService
 {
     protected BankAccount $bankAccount;
+
     protected Client $client;
 
     public function __construct(BankAccount $bankAccount)
     {
         if (! $bankAccount->gocardless_access_token) {
-            throw new Exception("GoCardless Access Token is not configured for this bank account.");
+            throw new Exception('GoCardless Access Token is not configured for this bank account.');
         }
         $this->bankAccount = $bankAccount;
 
@@ -87,7 +88,7 @@ class GoCardlessService
             $customerId = $completedFlow->links->customer ?? null;
 
             if (! $mandateId) {
-                throw new Exception("No mandate ID returned from GoCardless redirect flow.");
+                throw new Exception('No mandate ID returned from GoCardless redirect flow.');
             }
 
             $mandateDetails = $this->getMandateDetails($mandateId);
@@ -158,6 +159,7 @@ class GoCardlessService
 
         try {
             $payment = $this->client->payments()->create(['params' => $params]);
+
             return [
                 'id' => $payment->id,
                 'amount' => $payment->amount,
@@ -177,6 +179,7 @@ class GoCardlessService
         try {
             $this->client->mandates()->cancel($mandate->gocardless_mandate_id);
             $mandate->update(['status' => 'cancelled']);
+
             return true;
         } catch (Exception) {
             return false;

@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Club;
+use App\Models\DefaultEmailTemplate;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -26,7 +27,7 @@ class MemberInvitationMail extends Mailable
     {
         $fromName = $this->club->settings['email_from_name'] ?? $this->club->name;
         $replyTo = $this->club->settings['email_reply_to'] ?? null;
-        $template = \App\Models\DefaultEmailTemplate::where('template_key', 'account_invitation')->first();
+        $template = DefaultEmailTemplate::where('template_key', 'account_invitation')->first();
 
         if ($template) {
             $replacements = [
@@ -57,7 +58,7 @@ class MemberInvitationMail extends Mailable
 
     public function content(): Content
     {
-        $template = \App\Models\DefaultEmailTemplate::where('template_key', 'account_invitation')->first();
+        $template = DefaultEmailTemplate::where('template_key', 'account_invitation')->first();
 
         if ($template) {
             $replacements = [

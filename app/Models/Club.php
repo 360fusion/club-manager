@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Cashier\Billable as StripeBillable;
 use Laravel\Paddle\Billable as PaddleBillable;
-
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -103,12 +102,12 @@ class Club extends Model implements HasMedia
         }
 
         if (empty($settings['seo_title_suffix'])) {
-            $settings['seo_title_suffix'] = ' - ' . $this->name;
+            $settings['seo_title_suffix'] = ' - '.$this->name;
             $settingsUpdated = true;
         }
 
         if (empty($settings['footer_copyright'])) {
-            $settings['footer_copyright'] = '© ' . date('Y') . ' ' . $this->name . '. All rights reserved.';
+            $settings['footer_copyright'] = '© '.date('Y').' '.$this->name.'. All rights reserved.';
             $settingsUpdated = true;
         }
 
@@ -128,10 +127,10 @@ class Club extends Model implements HasMedia
                 'blocks' => [
                     [
                         'type' => 'hero',
-                        'title' => 'Welcome to ' . $this->name,
+                        'title' => 'Welcome to '.$this->name,
                         'subtitle' => 'Official Website & Portal',
                         'cta_text' => 'Join Us',
-                        'cta_link' => '/site/' . $this->slug . '/join-us',
+                        'cta_link' => '/site/'.$this->slug.'/join-us',
                     ],
                     [
                         'type' => 'news_feed',
@@ -153,13 +152,13 @@ class Club extends Model implements HasMedia
                 'blocks' => [
                     [
                         'type' => 'hero',
-                        'title' => 'About ' . $this->name,
+                        'title' => 'About '.$this->name,
                         'subtitle' => 'History, Values & Community',
                     ],
                     [
                         'type' => 'rich_text',
                         'heading' => 'Our History & Mission',
-                        'content' => '<p>Welcome to ' . e($this->name) . '. Our organization is dedicated to fostering community, excellence, and fellowship.</p>',
+                        'content' => '<p>Welcome to '.e($this->name).'. Our organization is dedicated to fostering community, excellence, and fellowship.</p>',
                     ],
                 ],
             ],
@@ -173,7 +172,7 @@ class Club extends Model implements HasMedia
                 'blocks' => [
                     [
                         'type' => 'hero',
-                        'title' => 'Join ' . $this->name,
+                        'title' => 'Join '.$this->name,
                         'subtitle' => 'Become a Member Today',
                     ],
                     [
@@ -223,7 +222,7 @@ class Club extends Model implements HasMedia
                         'type' => 'contact_details',
                         'eyebrow' => 'CONTACT',
                         'title' => 'Get in Touch',
-                        'description' => 'Whether you\'re interested in joining ' . $this->name . ', a visiting member, or simply want to learn more, we\'d be delighted to hear from you.',
+                        'description' => 'Whether you\'re interested in joining '.$this->name.', a visiting member, or simply want to learn more, we\'d be delighted to hear from you.',
                     ],
                     [
                         'type' => 'contact_form',

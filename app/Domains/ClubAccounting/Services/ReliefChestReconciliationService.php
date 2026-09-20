@@ -7,9 +7,11 @@ use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\CharityCollection;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\FestivalTarget;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
+use App\Services\AccountingService;
 use Carbon\Carbon;
 
 class ReliefChestReconciliationService
@@ -28,10 +30,10 @@ class ReliefChestReconciliationService
         $pendingClaimCount = 0;
 
         foreach ($collections as $col) {
-            $amount = (float)$col->total_amount;
+            $amount = (float) $col->total_amount;
             if ($col->is_gift_aid_eligible) {
                 $totalEligibleDonations += $amount;
-                $giftAidTax = $col->gift_aid_amount > 0 ? (float)$col->gift_aid_amount : round($amount * 0.25, 2);
+                $giftAidTax = $col->gift_aid_amount > 0 ? (float) $col->gift_aid_amount : round($amount * 0.25, 2);
 
                 if ($col->gift_aid_status === 'reconciled') {
                     $totalGiftAidReclaimed += $giftAidTax;
@@ -47,22 +49,22 @@ class ReliefChestReconciliationService
             ->where('approval_status', 'disbursed')
             ->sum('amount');
 
-        $netChestBalance = ($totalEligibleDonations + $totalGiftAidReclaimed) - (float)$grantsTotal;
+        $netChestBalance = ($totalEligibleDonations + $totalGiftAidReclaimed) - (float) $grantsTotal;
 
         return [
             'relief_chest_ref' => $festivalTarget?->relief_chest_ref ?: 'E1418',
             'festival_name' => $festivalTarget?->festival_name ?: 'Provincial Charity Festival',
             'total_eligible_donations' => $totalEligibleDonations,
-            'formatted_total_eligible' => '£' . number_format($totalEligibleDonations, 2),
+            'formatted_total_eligible' => '£'.number_format($totalEligibleDonations, 2),
             'total_gift_aid_reclaimed' => $totalGiftAidReclaimed,
-            'formatted_gift_aid_reclaimed' => '£' . number_format($totalGiftAidReclaimed, 2),
+            'formatted_gift_aid_reclaimed' => '£'.number_format($totalGiftAidReclaimed, 2),
             'pending_gift_aid_claim' => $pendingGiftAidAmount,
-            'formatted_pending_gift_aid' => '£' . number_format($pendingGiftAidAmount, 2),
+            'formatted_pending_gift_aid' => '£'.number_format($pendingGiftAidAmount, 2),
             'pending_claim_count' => $pendingClaimCount,
-            'grants_disbursed_total' => (float)$grantsTotal,
-            'formatted_grants_disbursed' => '£' . number_format((float)$grantsTotal, 2),
+            'grants_disbursed_total' => (float) $grantsTotal,
+            'formatted_grants_disbursed' => '£'.number_format((float) $grantsTotal, 2),
             'net_relief_chest_balance' => $netChestBalance,
-            'formatted_net_relief_chest_balance' => '£' . number_format($netChestBalance, 2),
+            'formatted_net_relief_chest_balance' => '£'.number_format($netChestBalance, 2),
         ];
     }
 
@@ -72,7 +74,7 @@ class ReliefChestReconciliationService
     public function autoReconcileGiftAidAndReliefChest(Club|int $club): array
     {
         $clubObj = $club instanceof Club ? $club : Club::findOrFail($club);
-        $accountingService = app(\App\Services\AccountingService::class);
+        $accountingService = app(AccountingService::class);
         $accountingService->seedDefaultAccounts($clubObj);
 
         $bankAcc = Account::where('club_id', $clubObj->id)->where('code', '1000')->first();
@@ -94,10 +96,12 @@ class ReliefChestReconciliationService
         $totalAmountReconciled = 0.0;
 
         foreach ($unmatchedTransactions as $tx) {
-            $desc = strtolower($tx->raw_description . ' ' . ($tx->reference ?? ''));
-            $amount = (float)$tx->amount;
+            $desc = strtolower($tx->raw_description.' '.($tx->reference ?? ''));
+            $amount = (float) $tx->amount;
 
-            if ($amount <= 0) continue; // Only incoming credits for Gift Aid / Relief Chest deposits
+            if ($amount <= 0) {
+                continue;
+            } // Only incoming credits for Gift Aid / Relief Chest deposits
 
             $isGiftAid = preg_match('/(gift\s*aid|hmrc\s*reclaim|hmrc\s*tax|giftaid)/i', $desc);
             $isReliefChest = preg_match('/(relief\s*chest|mcf|tlc\s*chest|provincial\s*relief)/i', $desc);
@@ -116,7 +120,7 @@ class ReliefChestReconciliationService
                 if ($bankAcc && $targetAcc && ! $alreadyPosted) {
                     $accountingService->postJournalEntry($clubObj, [
                         'entry_date' => $txDate,
-                        'reference_number' => 'GA-RECON-' . $tx->id,
+                        'reference_number' => 'GA-RECON-'.$tx->id,
                         'description' => "Automated Gift Aid / Relief Chest Match: {$memo}",
                         'source_type' => 'bank_transaction',
                         'source_id' => $tx->id,
@@ -130,7 +134,7 @@ class ReliefChestReconciliationService
                 // Update bank transaction to Matched
                 $tx->update([
                     'status' => BankTransactionStatus::Matched,
-                    'reference' => ($tx->reference ? $tx->reference . ' ' : '') . '[Gift Aid / Relief Chest Reconciled]',
+                    'reference' => ($tx->reference ? $tx->reference.' ' : '').'[Gift Aid / Relief Chest Reconciled]',
                 ]);
 
                 // Update matching pending charity collection status to reconciled if applicable
@@ -153,7 +157,7 @@ class ReliefChestReconciliationService
             'success' => true,
             'reconciled_count' => $reconciledCount,
             'total_amount' => $totalAmountReconciled,
-            'formatted_total_amount' => '£' . number_format($totalAmountReconciled, 2),
+            'formatted_total_amount' => '£'.number_format($totalAmountReconciled, 2),
         ];
     }
 
@@ -176,7 +180,7 @@ class ReliefChestReconciliationService
         foreach ($collections as $col) {
             $date = $col->created_at ? $col->created_at->format('Y-m-d') : Carbon::now()->format('Y-m-d');
             $type = $col->collection_type?->label() ?? 'Alms Plate';
-            $donation = number_format((float)$col->total_amount, 2, '.', '');
+            $donation = number_format((float) $col->total_amount, 2, '.', '');
             $giftAid = number_format($col->calculated_gift_aid, 2, '.', '');
             $status = ucfirst($col->gift_aid_status ?? 'pending');
             $counter = $col->countedBy?->full_name ?? 'Charity Steward';
@@ -207,18 +211,18 @@ class ReliefChestReconciliationService
 
         // Person / Donor Filtering
         if (! empty($filters['person_id'])) {
-            $personId = (int)$filters['person_id'];
+            $personId = (int) $filters['person_id'];
             $query->where(function ($q) use ($personId) {
                 $q->where('donor_member_id', $personId)
-                  ->orWhere('counted_by_member_id', $personId)
-                  ->orWhere('witnessed_by_member_id', $personId);
+                    ->orWhere('counted_by_member_id', $personId)
+                    ->orWhere('witnessed_by_member_id', $personId);
             });
         } elseif (! empty($filters['person_search'])) {
             $pSearch = strtolower($filters['person_search']);
             $query->where(function ($q) use ($pSearch) {
                 $q->where('donor_name', 'like', "%{$pSearch}%")
-                  ->orWhereHas('donor', fn ($dq) => $dq->where('first_name', 'like', "%{$pSearch}%")->orWhere('last_name', 'like', "%{$pSearch}%"))
-                  ->orWhereHas('countedBy', fn ($cq) => $cq->where('first_name', 'like', "%{$pSearch}%")->orWhere('last_name', 'like', "%{$pSearch}%"));
+                    ->orWhereHas('donor', fn ($dq) => $dq->where('first_name', 'like', "%{$pSearch}%")->orWhere('last_name', 'like', "%{$pSearch}%"))
+                    ->orWhereHas('countedBy', fn ($cq) => $cq->where('first_name', 'like', "%{$pSearch}%")->orWhere('last_name', 'like', "%{$pSearch}%"));
             });
         }
 
@@ -238,9 +242,9 @@ class ReliefChestReconciliationService
             $search = strtolower($filters['search']);
             $query->where(function ($q) use ($search) {
                 $q->where('notes', 'like', "%{$search}%")
-                  ->orWhere('collection_type', 'like', "%{$search}%")
-                  ->orWhere('donor_name', 'like', "%{$search}%")
-                  ->orWhereHas('bankTransaction', fn ($bq) => $bq->where('raw_description', 'like', "%{$search}%")->orWhere('reference', 'like', "%{$search}%"));
+                    ->orWhere('collection_type', 'like', "%{$search}%")
+                    ->orWhere('donor_name', 'like', "%{$search}%")
+                    ->orWhereHas('bankTransaction', fn ($bq) => $bq->where('raw_description', 'like', "%{$search}%")->orWhere('reference', 'like', "%{$search}%"));
             });
         }
 
@@ -251,8 +255,8 @@ class ReliefChestReconciliationService
         $reconciledCount = 0;
 
         $mappedCollections = $collections->map(function ($col) use (&$totalDonationsSum, &$totalGiftAidSum, &$reconciledCount) {
-            $totalAmount = (float)$col->total_amount;
-            $giftAid = $col->is_gift_aid_eligible ? ($col->gift_aid_amount > 0 ? (float)$col->gift_aid_amount : round($totalAmount * 0.25, 2)) : 0.0;
+            $totalAmount = (float) $col->total_amount;
+            $giftAid = $col->is_gift_aid_eligible ? ($col->gift_aid_amount > 0 ? (float) $col->gift_aid_amount : round($totalAmount * 0.25, 2)) : 0.0;
 
             $totalDonationsSum += $totalAmount;
             $totalGiftAidSum += $giftAid;
@@ -267,13 +271,13 @@ class ReliefChestReconciliationService
                 'collection_type' => $col->collection_type?->label() ?? 'Alms Plate / Donation',
                 'donor_name' => $col->donor_display_name,
                 'donor_id' => $col->donor_member_id,
-                'cash_amount' => (float)$col->cash_amount,
-                'cheque_amount' => (float)$col->cheque_amount,
+                'cash_amount' => (float) $col->cash_amount,
+                'cheque_amount' => (float) $col->cheque_amount,
                 'total_amount' => $totalAmount,
-                'formatted_total' => '£' . number_format($totalAmount, 2),
-                'is_gift_aid_eligible' => (bool)$col->is_gift_aid_eligible,
+                'formatted_total' => '£'.number_format($totalAmount, 2),
+                'is_gift_aid_eligible' => (bool) $col->is_gift_aid_eligible,
                 'gift_aid_amount' => $giftAid,
-                'formatted_gift_aid' => '£' . number_format($giftAid, 2),
+                'formatted_gift_aid' => '£'.number_format($giftAid, 2),
                 'gift_aid_status' => $col->gift_aid_status ?: 'pending',
                 'gift_aid_reconciled_at' => $col->gift_aid_reconciled_at ? $col->gift_aid_reconciled_at->format('d M Y H:i') : null,
                 'bank_transaction' => $col->bankTransaction ? [
@@ -281,8 +285,8 @@ class ReliefChestReconciliationService
                     'transaction_date' => $col->bankTransaction->transaction_date ? $col->bankTransaction->transaction_date->format('d M Y') : null,
                     'raw_description' => $col->bankTransaction->raw_description,
                     'reference' => $col->bankTransaction->reference,
-                    'amount' => (float)$col->bankTransaction->amount,
-                    'formatted_amount' => '£' . number_format((float)$col->bankTransaction->amount, 2),
+                    'amount' => (float) $col->bankTransaction->amount,
+                    'formatted_amount' => '£'.number_format((float) $col->bankTransaction->amount, 2),
                 ] : null,
                 'counted_by' => $col->countedBy?->full_name ?? 'Charity Steward',
                 'witnessed_by' => $col->witnessedBy?->full_name ?? 'Assistant DC',
@@ -291,7 +295,7 @@ class ReliefChestReconciliationService
         });
 
         // Load members for filtering dropdown
-        $members = \App\Domains\ClubAccounting\Models\Member::where('club_id', $clubObj->id)
+        $members = Member::where('club_id', $clubObj->id)
             ->orderBy('first_name')
             ->get()
             ->map(fn ($m) => ['id' => $m->id, 'name' => $m->full_name]);
@@ -300,9 +304,9 @@ class ReliefChestReconciliationService
             'collections' => $mappedCollections,
             'totals' => [
                 'total_donations' => $totalDonationsSum,
-                'formatted_total_donations' => '£' . number_format($totalDonationsSum, 2),
+                'formatted_total_donations' => '£'.number_format($totalDonationsSum, 2),
                 'total_gift_aid' => $totalGiftAidSum,
-                'formatted_total_gift_aid' => '£' . number_format($totalGiftAidSum, 2),
+                'formatted_total_gift_aid' => '£'.number_format($totalGiftAidSum, 2),
                 'reconciled_count' => $reconciledCount,
                 'total_count' => $collections->count(),
             ],

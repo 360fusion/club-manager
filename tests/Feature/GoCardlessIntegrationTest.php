@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\DirectDebitMandate;
 use App\Domains\ClubAccounting\Services\GoCardlessSyncService;
 use App\Models\Club;
+use App\Models\ClubType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -17,14 +17,14 @@ class GoCardlessIntegrationTest extends TestCase
 
     protected function createTestClub(): Club
     {
-        $clubType = \App\Models\ClubType::firstOrCreate(
+        $clubType = ClubType::firstOrCreate(
             ['code' => 'lodge'],
             ['name' => 'Masonic Lodge', 'available_modules' => ['accounting']]
         );
 
         return Club::create([
             'name' => 'Lodge of Fraternity',
-            'slug' => 'lodge-of-fraternity-' . uniqid(),
+            'slug' => 'lodge-of-fraternity-'.uniqid(),
             'club_type_id' => $clubType->id,
             'is_active' => true,
         ]);
@@ -76,7 +76,7 @@ class GoCardlessIntegrationTest extends TestCase
             ], 200),
         ]);
 
-        $syncService = new GoCardlessSyncService();
+        $syncService = new GoCardlessSyncService;
         $result = $syncService->testConnection('sandbox_token_123', 'sandbox');
 
         $this::assertTrue($result['success']);

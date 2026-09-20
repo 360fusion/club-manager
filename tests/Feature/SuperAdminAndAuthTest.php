@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\ClubType;
+use App\Models\DefaultEmailTemplate;
 use App\Models\User;
+use Database\Seeders\ClubTypeSeeder;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -89,9 +92,9 @@ class SuperAdminAndAuthTest extends TestCase
     public function test_superadmin_can_update_email_templates_and_password_reset_uses_template(): void
     {
         $superadmin = User::factory()->create(['is_super_admin' => true]);
-        (new \Database\Seeders\ClubTypeSeeder())->run();
+        (new ClubTypeSeeder)->run();
 
-        $template = \App\Models\DefaultEmailTemplate::where('template_key', 'password_reset')->firstOrFail();
+        $template = DefaultEmailTemplate::where('template_key', 'password_reset')->firstOrFail();
 
         $response = $this->actingAs($superadmin)->put("/superadmin/email-templates/{$template->id}", [
             'subject' => 'CUSTOM: Reset Password for {{member_name}}',
@@ -104,7 +107,7 @@ class SuperAdminAndAuthTest extends TestCase
 
         // Test password reset notification built with updated template
         $user = User::factory()->create(['name' => 'John Doe', 'email' => 'johndoe@example.com']);
-        $notification = new \Illuminate\Auth\Notifications\ResetPassword('token123');
+        $notification = new ResetPassword('token123');
         $mail = $notification->toMail($user);
 
         $this->assertEquals('CUSTOM: Reset Password for John Doe', $mail->subject);

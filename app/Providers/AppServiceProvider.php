@@ -2,9 +2,24 @@
 
 namespace App\Providers;
 
+use App\Domains\ClubAccounting\Livewire\Banking\BankAccountsIndex;
+use App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex;
+use App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace;
+use App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline;
+use App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard;
+use App\Domains\ClubAccounting\Livewire\Charity\CharityFestival;
+use App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal;
+use App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal;
+use App\Domains\ClubAccounting\Livewire\Members\MemberIndex;
+use App\Domains\ClubAccounting\Livewire\Members\MemberProfile;
+use App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex;
 use App\Models\Club;
+use App\Models\DefaultEmailTemplate;
 use App\Models\PaddleSubscription;
 use App\Models\PaddleSubscriptionItem;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Paddle\Cashier;
 use Laravel\Pennant\Feature;
@@ -28,47 +43,47 @@ class AppServiceProvider extends ServiceProvider
         if (class_exists(Livewire::class)) {
             Livewire::component(
                 'committee.agenda-pack-preview-modal',
-                \App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal::class
+                AgendaPackPreviewModal::class
             );
             Livewire::component(
                 'committee.create-committee-meeting-modal',
-                \App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal::class
+                CreateCommitteeMeetingModal::class
             );
             Livewire::component(
                 'members.member-index',
-                \App\Domains\ClubAccounting\Livewire\Members\MemberIndex::class
+                MemberIndex::class
             );
             Livewire::component(
                 'members.member-profile',
-                \App\Domains\ClubAccounting\Livewire\Members\MemberProfile::class
+                MemberProfile::class
             );
             Livewire::component(
                 'candidates.candidate-pipeline',
-                \App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline::class
+                CandidatePipeline::class
             );
             Livewire::component(
                 'subscriptions.subscription-index',
-                \App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex::class
+                SubscriptionIndex::class
             );
             Livewire::component(
                 'banking.bank-accounts-index',
-                \App\Domains\ClubAccounting\Livewire\Banking\BankAccountsIndex::class
+                BankAccountsIndex::class
             );
             Livewire::component(
                 'banking.bank-import-index',
-                \App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex::class
+                BankImportIndex::class
             );
             Livewire::component(
                 'banking.bank-reconciliation-workspace',
-                \App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace::class
+                BankReconciliationWorkspace::class
             );
             Livewire::component(
                 'charity.charity-dashboard',
-                \App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard::class
+                CharityDashboard::class
             );
             Livewire::component(
                 'charity.charity-festival',
-                \App\Domains\ClubAccounting\Livewire\Charity\CharityFestival::class
+                CharityFestival::class
             );
         }
 
@@ -103,8 +118,8 @@ class AppServiceProvider extends ServiceProvider
             });
         }
 
-        \Illuminate\Auth\Notifications\ResetPassword::toMailUsing(function (object $notifiable, string $token) {
-            $template = \App\Models\DefaultEmailTemplate::where('template_key', 'password_reset')->first();
+        ResetPassword::toMailUsing(function (object $notifiable, string $token) {
+            $template = DefaultEmailTemplate::where('template_key', 'password_reset')->first();
 
             $resetUrl = url(route('password.reset', [
                 'token' => $token,
@@ -128,9 +143,9 @@ class AppServiceProvider extends ServiceProvider
             $subject = str_replace(array_keys($replacements), array_values($replacements), $subject);
             $bodyHtml = str_replace(array_keys($replacements), array_values($replacements), $bodyHtml);
 
-            return (new \Illuminate\Notifications\Messages\MailMessage)
+            return (new MailMessage)
                 ->subject($subject)
-                ->line(new \Illuminate\Support\HtmlString($bodyHtml));
+                ->line(new HtmlString($bodyHtml));
         });
     }
 }

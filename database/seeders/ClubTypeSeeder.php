@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\ClubType;
 use App\Models\DefaultEmailTemplate;
 use App\Models\DefaultOfficerRole;
-use App\Models\DefaultRank;
 use Illuminate\Database\Seeder;
 
 class ClubTypeSeeder extends Seeder

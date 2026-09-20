@@ -7,7 +7,6 @@ use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use Exception;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class PayPalSyncService
 {
@@ -49,10 +48,10 @@ class PayPalSyncService
     {
         try {
             $authData = $this->authenticate($clientId, $clientSecret, $environment);
-            
+
             return [
                 'success' => true,
-                'message' => 'Successfully connected to PayPal API (' . strtoupper($environment) . ')',
+                'message' => 'Successfully connected to PayPal API ('.strtoupper($environment).')',
                 'expires_in' => $authData['expires_in'] ?? null,
             ];
         } catch (Exception $e) {
@@ -69,7 +68,7 @@ class PayPalSyncService
     public function syncTransactions(BankAccount $bankAccount, ?string $startDate = null, ?string $endDate = null): array
     {
         if (! $bankAccount->paypal_client_id || ! $bankAccount->paypal_client_secret) {
-            throw new Exception("PayPal API credentials are not configured for this account.");
+            throw new Exception('PayPal API credentials are not configured for this account.');
         }
 
         $environment = $bankAccount->paypal_environment ?? 'live';
@@ -87,7 +86,7 @@ class PayPalSyncService
             $start = date('Y-m-d\TH:i:s\Z', strtotime('-30 days'));
         }
 
-        $end = $endDate ? date('Y-m-d\TH:i:s\Z', strtotime($endDate . ' 23:59:59')) : date('Y-m-d\TH:i:s\Z');
+        $end = $endDate ? date('Y-m-d\TH:i:s\Z', strtotime($endDate.' 23:59:59')) : date('Y-m-d\TH:i:s\Z');
 
         $response = Http::withToken($accessToken)
             ->get("{$baseUrl}/v1/reporting/transactions", [
@@ -115,7 +114,9 @@ class PayPalSyncService
             $payer = $tx['payer_info'] ?? [];
 
             $txId = $info['transaction_id'] ?? null;
-            if (! $txId) continue;
+            if (! $txId) {
+                continue;
+            }
 
             // Check if already synced (Duplicate Guard)
             $exists = BankTransaction::where('club_id', $bankAccount->club_id)
@@ -125,11 +126,12 @@ class PayPalSyncService
 
             if ($exists) {
                 $skippedCount++;
+
                 continue;
             }
 
-            $gross = (float)($info['transaction_amount']['value'] ?? 0);
-            $fee = (float)($info['fee_amount']['value'] ?? 0);
+            $gross = (float) ($info['transaction_amount']['value'] ?? 0);
+            $fee = (float) ($info['fee_amount']['value'] ?? 0);
             $net = $gross - abs($fee);
 
             $payerName = $payer['payer_name']['alternate_full_name'] ?? $payer['email_address'] ?? 'PayPal Customer';

@@ -6,10 +6,12 @@ use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\DefaultEmailTemplate;
-use App\Models\DefaultOfficerRole;
-use App\Models\DefaultRank;
+use App\Models\District;
+use App\Models\GrandLodge;
 use App\Models\Meeting;
+use App\Models\Province;
 use App\Models\User;
+use Database\Seeders\ClubTypeSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -59,7 +61,7 @@ class SuperAdminController extends Controller
                 'totalClubsCount' => $totalClubsCount,
                 'totalUsersCount' => $totalUsersCount,
                 'totalMeetingsCount' => $totalMeetingsCount,
-                'totalGrantsDisbursed' => '£' . number_format($totalGrantsDisbursed, 2),
+                'totalGrantsDisbursed' => '£'.number_format($totalGrantsDisbursed, 2),
             ],
             'clubsByType' => $clubsByType,
             'clubs' => $clubs,
@@ -176,7 +178,7 @@ class SuperAdminController extends Controller
         $templates = DefaultEmailTemplate::all();
 
         if ($templates->isEmpty()) {
-            (new \Database\Seeders\ClubTypeSeeder())->run();
+            (new ClubTypeSeeder)->run();
             $templates = DefaultEmailTemplate::all();
         }
 
@@ -207,7 +209,7 @@ class SuperAdminController extends Controller
      */
     public function grandLodgesIndex(): Response
     {
-        $grandLodges = \App\Models\GrandLodge::withCount(['provinces', 'clubs'])->get();
+        $grandLodges = GrandLodge::withCount(['provinces', 'clubs'])->get();
 
         return Inertia::render('SuperAdmin/GrandLodges/Index', [
             'grandLodges' => $grandLodges,
@@ -228,7 +230,7 @@ class SuperAdminController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $grandLodge = \App\Models\GrandLodge::create($validated);
+        $grandLodge = GrandLodge::create($validated);
 
         return redirect()->back()->with('success', "Grand Lodge '{$grandLodge->name}' created successfully.");
     }
@@ -238,7 +240,7 @@ class SuperAdminController extends Controller
      */
     public function updateGrandLodge(Request $request, int $id): RedirectResponse
     {
-        $grandLodge = \App\Models\GrandLodge::findOrFail($id);
+        $grandLodge = GrandLodge::findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'required|string|max:150',
@@ -258,7 +260,7 @@ class SuperAdminController extends Controller
      */
     public function destroyGrandLodge(int $id): RedirectResponse
     {
-        $grandLodge = \App\Models\GrandLodge::findOrFail($id);
+        $grandLodge = GrandLodge::findOrFail($id);
         $name = $grandLodge->name;
         $grandLodge->delete();
 
@@ -270,8 +272,8 @@ class SuperAdminController extends Controller
      */
     public function provincesIndex(): Response
     {
-        $provinces = \App\Models\Province::with(['grandLodge'])->withCount('clubs')->orderBy('name')->get();
-        $grandLodges = \App\Models\GrandLodge::all();
+        $provinces = Province::with(['grandLodge'])->withCount('clubs')->orderBy('name')->get();
+        $grandLodges = GrandLodge::all();
 
         return Inertia::render('SuperAdmin/Provinces/Index', [
             'provinces' => $provinces,
@@ -284,12 +286,12 @@ class SuperAdminController extends Controller
      */
     public function showProvince(int $id): Response
     {
-        $province = \App\Models\Province::with(['grandLodge', 'clubs.clubType'])
+        $province = Province::with(['grandLodge', 'clubs.clubType'])
             ->withCount('clubs')
             ->findOrFail($id);
 
-        $allProvinces = \App\Models\Province::select('id', 'name', 'code', 'country')->orderBy('name')->get();
-        $grandLodges = \App\Models\GrandLodge::all();
+        $allProvinces = Province::select('id', 'name', 'code', 'country')->orderBy('name')->get();
+        $grandLodges = GrandLodge::all();
 
         return Inertia::render('SuperAdmin/Provinces/Show', [
             'province' => $province,
@@ -303,8 +305,8 @@ class SuperAdminController extends Controller
      */
     public function editProvince(int $id): Response
     {
-        $province = \App\Models\Province::with(['grandLodge'])->findOrFail($id);
-        $grandLodges = \App\Models\GrandLodge::all();
+        $province = Province::with(['grandLodge'])->findOrFail($id);
+        $grandLodges = GrandLodge::all();
 
         return Inertia::render('SuperAdmin/Provinces/Edit', [
             'province' => $province,
@@ -338,7 +340,7 @@ class SuperAdminController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $province = \App\Models\Province::create($validated);
+        $province = Province::create($validated);
 
         return redirect()->route('superadmin.provinces.show', $province->id)->with('success', "Province '{$province->name}' created successfully.");
     }
@@ -348,7 +350,7 @@ class SuperAdminController extends Controller
      */
     public function updateProvince(Request $request, int $id): RedirectResponse
     {
-        $province = \App\Models\Province::findOrFail($id);
+        $province = Province::findOrFail($id);
 
         $validated = $request->validate([
             'grand_lodge_id' => 'nullable|exists:grand_lodges,id',
@@ -380,7 +382,7 @@ class SuperAdminController extends Controller
      */
     public function destroyProvince(int $id): RedirectResponse
     {
-        $province = \App\Models\Province::findOrFail($id);
+        $province = Province::findOrFail($id);
         $name = $province->name;
         $province->delete();
 
@@ -395,6 +397,7 @@ class SuperAdminController extends Controller
         $user = $request->user();
         if ($user) {
             $user->update(['is_super_admin' => true]);
+
             return redirect()->route('superadmin.dashboard')->with('success', 'You are now a Superadmin!');
         }
 
@@ -408,8 +411,8 @@ class SuperAdminController extends Controller
      */
     public function districtsIndex(): Response
     {
-        $districts = \App\Models\District::with(['grandLodge'])->orderBy('type')->orderBy('name')->get();
-        $grandLodges = \App\Models\GrandLodge::all();
+        $districts = District::with(['grandLodge'])->orderBy('type')->orderBy('name')->get();
+        $grandLodges = GrandLodge::all();
 
         return Inertia::render('SuperAdmin/Districts/Index', [
             'districts' => $districts,
@@ -422,8 +425,8 @@ class SuperAdminController extends Controller
      */
     public function showDistrict(int $id): Response
     {
-        $district = \App\Models\District::with(['grandLodge'])->findOrFail($id);
-        $grandLodges = \App\Models\GrandLodge::all();
+        $district = District::with(['grandLodge'])->findOrFail($id);
+        $grandLodges = GrandLodge::all();
 
         return Inertia::render('SuperAdmin/Districts/Show', [
             'district' => $district,
@@ -436,8 +439,8 @@ class SuperAdminController extends Controller
      */
     public function editDistrict(int $id): Response
     {
-        $district = \App\Models\District::with(['grandLodge'])->findOrFail($id);
-        $grandLodges = \App\Models\GrandLodge::all();
+        $district = District::with(['grandLodge'])->findOrFail($id);
+        $grandLodges = GrandLodge::all();
 
         return Inertia::render('SuperAdmin/Districts/Edit', [
             'district' => $district,
@@ -472,7 +475,7 @@ class SuperAdminController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $district = \App\Models\District::create($validated);
+        $district = District::create($validated);
 
         return redirect()->route('superadmin.districts.show', $district->id)->with('success', "'{$district->name}' created successfully.");
     }
@@ -482,7 +485,7 @@ class SuperAdminController extends Controller
      */
     public function updateDistrict(Request $request, int $id): RedirectResponse
     {
-        $district = \App\Models\District::findOrFail($id);
+        $district = District::findOrFail($id);
 
         $validated = $request->validate([
             'grand_lodge_id' => 'nullable|exists:grand_lodges,id',
@@ -515,7 +518,7 @@ class SuperAdminController extends Controller
      */
     public function destroyDistrict(int $id): RedirectResponse
     {
-        $district = \App\Models\District::findOrFail($id);
+        $district = District::findOrFail($id);
         $name = $district->name;
         $district->delete();
 
@@ -525,9 +528,9 @@ class SuperAdminController extends Controller
     /**
      * Australian Grand Lodges reference page.
      */
-    public function australianGrandLodges(): \Inertia\Response
+    public function australianGrandLodges(): Response
     {
-        $australianGrandLodges = \App\Models\GrandLodge::where('country', 'Australia')
+        $australianGrandLodges = GrandLodge::where('country', 'Australia')
             ->orderBy('name')
             ->get();
 

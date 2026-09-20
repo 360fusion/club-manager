@@ -101,17 +101,18 @@ class BankAccount extends Model
             ->first();
 
         if ($lastTx) {
-            return (float)$lastTx->balance_after;
+            return (float) $lastTx->balance_after;
         }
 
-        $sumTx = (float)$this->transactions()->sum('amount');
-        return (float)$this->opening_balance + $sumTx;
+        $sumTx = (float) $this->transactions()->sum('amount');
+
+        return (float) $this->opening_balance + $sumTx;
     }
 
     public function getLedgerBalanceAttribute(): float
     {
         if ($this->account) {
-            return (float)$this->account->balance;
+            return (float) $this->account->balance;
         }
 
         return $this->statement_balance;

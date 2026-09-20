@@ -32,6 +32,7 @@ class GoCardlessWebhookController extends Controller
             $computedSignature = hash_hmac('sha256', $rawPayload, $secret);
             if (! hash_equals($computedSignature, (string) $signature)) {
                 Log::warning("GoCardless Webhook signature mismatch for club {$clubId}");
+
                 return response()->json(['error' => 'Invalid signature'], 498);
             }
         }
