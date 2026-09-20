@@ -92,9 +92,48 @@ class ClubAdminAuthorizationTest extends TestCase
         $this->get($this->adminUrl($this->alpha))->assertRedirect('/login');
     }
 
-    public function test_treasurer_may_reach_the_admin_area(): void
+    public function test_treasurer_may_reach_billing_but_not_settings(): void
     {
         $user = $this->makeClubAdmin(User::factory()->create(), $this->alpha, 'treasurer');
+
+        // manage_billing includes treasurer; manage_settings does not.
+        $this->actingAs($user)->get("/clubs/{$this->alpha->slug}/admin/accounting")->assertSuccessful();
+        $this->actingAs($user)->get($this->adminUrl($this->alpha))->assertForbidden();
+    }
+
+    public function test_coach_cannot_reach_accounting(): void
+    {
+        $user = $this->makeClubAdmin(User::factory()->create(), $this->alpha, 'coach');
+
+        $this->actingAs($user)->get("/clubs/{$this->alpha->slug}/admin/accounting")->assertForbidden();
+    }
+
+    public function test_club_can_widen_a_capability_through_its_permission_matrix(): void
+    {
+        $user = $this->makeClubAdmin(User::factory()->create(), $this->alpha, 'coach');
+
+        $this->alpha->update([
+            'settings' => array_merge($this->alpha->settings ?? [], [
+                'permission_matrix' => [
+                    'manage_billing' => ['roles' => ['owner', 'admin', 'treasurer', 'coach']],
+                ],
+            ]),
+        ]);
+
+        $this->actingAs($user)->get("/clubs/{$this->alpha->slug}/admin/accounting")->assertSuccessful();
+    }
+
+    public function test_owner_is_never_locked_out_by_a_narrowed_matrix(): void
+    {
+        $user = $this->makeClubAdmin(User::factory()->create(), $this->alpha, 'owner');
+
+        $this->alpha->update([
+            'settings' => array_merge($this->alpha->settings ?? [], [
+                'permission_matrix' => [
+                    'manage_settings' => ['roles' => []],
+                ],
+            ]),
+        ]);
 
         $this->actingAs($user)->get($this->adminUrl($this->alpha))->assertSuccessful();
     }

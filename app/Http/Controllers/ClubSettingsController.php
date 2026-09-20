@@ -17,58 +17,7 @@ class ClubSettingsController extends Controller
      */
     public static function defaultPermissionMatrix(): array
     {
-        return [
-            'view_dashboard' => [
-                'label' => 'Dashboard',
-                'description' => 'Access analytics dashboard, revenue reports, and attendance statistics',
-                'roles' => ['owner', 'admin', 'treasurer'],
-            ],
-            'manage_meetings' => [
-                'label' => 'Meetings & Summonses',
-                'description' => 'Create, edit, generate recurring rules, and publish summonses for lodge/club meetings',
-                'roles' => ['owner', 'admin', 'secretary'],
-            ],
-            'manage_events' => [
-                'label' => 'Events',
-                'description' => 'Create, edit, and publish social events, ticketing tiers, and dining options',
-                'roles' => ['owner', 'admin', 'coach'],
-            ],
-            'manage_subscriptions' => [
-                'label' => 'Subscriptions',
-                'description' => 'Configure membership dues tiers, pricing, and recurring subscription plans',
-                'roles' => ['owner', 'admin', 'treasurer'],
-            ],
-            'manage_members' => [
-                'label' => 'Members',
-                'description' => 'View member roster, approve new join applications, and manage member roles',
-                'roles' => ['owner', 'admin'],
-            ],
-            'manage_billing' => [
-                'label' => 'Billing',
-                'description' => 'Access payment history, issue receipts, and manage club platform billing',
-                'roles' => ['owner', 'admin', 'treasurer'],
-            ],
-            'manage_communications' => [
-                'label' => 'Communications',
-                'description' => 'Create and publish community announcements, posts, and news updates',
-                'roles' => ['owner', 'admin', 'coach'],
-            ],
-            'send_newsletters' => [
-                'label' => 'Newsletters',
-                'description' => 'Draft, preview, and dispatch bulk email newsletters to members',
-                'roles' => ['owner', 'admin', 'coach'],
-            ],
-            'edit_website' => [
-                'label' => 'Website Builder',
-                'description' => 'Build CMS pages, customize navigation, and update site content',
-                'roles' => ['owner', 'admin'],
-            ],
-            'manage_settings' => [
-                'label' => 'Club Settings',
-                'description' => 'Configure organization profile, branding, custom domain, and permission matrix',
-                'roles' => ['owner', 'admin'],
-            ],
-        ];
+        return config('club_permissions.capabilities', []);
     }
 
     /**

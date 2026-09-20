@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Club;
+use App\Support\ClubPermissions;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -61,11 +62,26 @@ class EnsureUserCanAdministerClub
 
         abort_if($membership->pivot->status !== 'active', 403, 'Your membership of this club is not active.');
 
+        $role = $membership->pivot->role;
+
         abort_if(
-            $membership->pivot->role === self::MEMBER_ONLY_ROLE,
+            $role === self::MEMBER_ONLY_ROLE,
             403,
             'You do not have administrative access to this club.',
         );
+
+        // Mapped areas are further restricted by the club's permission matrix.
+        // Unmapped areas fall back to "any staff role", which is what the
+        // membership check above already established.
+        $capability = ClubPermissions::capabilityForPath($request->path());
+
+        if ($capability !== null) {
+            abort_unless(
+                ClubPermissions::allows($club, $role, $capability),
+                403,
+                'Your role does not have access to this area of the club.',
+            );
+        }
 
         return $next($request);
     }
