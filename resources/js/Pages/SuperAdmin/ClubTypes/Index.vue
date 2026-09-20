@@ -97,14 +97,14 @@ function removeRulerField(index) {
 
         <div class="space-y-6">
             <!-- Header section -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-5">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5">
                 <div>
-                    <h1 class="text-2xl font-bold text-white tracking-tight">Masonic Orders & Club Types</h1>
-                    <p class="text-sm text-slate-400 mt-1">Configure preset ladders, dynamic terminology, and Provincial Rulers for each Masonic Order.</p>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Masonic Orders & Club Types</h1>
+                    <p class="text-sm text-slate-500 mt-1">Configure preset ladders, dynamic terminology, and Provincial Rulers for each Masonic Order.</p>
                 </div>
                 <button
                     @click="showCreateModal = true"
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-sm shadow-sm transition inline-flex items-center gap-2"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-sm shadow-sm transition inline-flex items-center gap-2"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -116,8 +116,8 @@ function removeRulerField(index) {
             <!-- Main grid -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <!-- Left panel: List of Orders -->
-                <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl">
-                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-2">Configured Orders ({{ clubTypes.length }})</h2>
+                <div class="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-4 shadow-xl">
+                    <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">Configured Orders ({{ clubTypes.length }})</h2>
                     <div class="space-y-2">
                         <div
                             v-for="ct in clubTypes"
@@ -126,15 +126,15 @@ function removeRulerField(index) {
                             :class="[
                                 'p-3.5 rounded-lg border cursor-pointer transition-all duration-150',
                                 selectedType && selectedType.id === ct.id
-                                    ? 'bg-indigo-950/60 border-indigo-500/50 text-white shadow-md'
-                                    : 'bg-slate-950/50 border-slate-800/80 text-slate-300 hover:border-slate-700 hover:text-white'
+                                    ? 'bg-blue-50 border-blue-400 text-slate-900 shadow-md'
+                                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-400 hover:text-slate-900'
                             ]"
                         >
                             <div class="flex items-center justify-between">
                                 <span class="font-semibold text-sm">{{ ct.name }}</span>
-                                <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/60">{{ ct.code }}</span>
+                                <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300">{{ ct.code }}</span>
                             </div>
-                            <div class="flex items-center gap-3 mt-2 text-xs text-slate-400">
+                            <div class="flex items-center gap-3 mt-2 text-xs text-slate-500">
                                 <span>{{ ct.default_officer_roles?.length || 0 }} Officer Roles</span>
                                 <span>•</span>
                                 <span>{{ ct.default_ranks?.length || 0 }} Ranks</span>
@@ -144,19 +144,19 @@ function removeRulerField(index) {
                 </div>
 
                 <!-- Right panel: Selected Order Details & Editor -->
-                <div v-if="selectedType" class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl space-y-6">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div v-if="selectedType" class="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-6 shadow-xl space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
                         <div>
                             <div class="flex items-center gap-3">
-                                <h2 class="text-xl font-bold text-white">{{ selectedType.name }}</h2>
-                                <span class="text-xs font-mono text-indigo-400 bg-indigo-950/80 border border-indigo-800/50 px-2.5 py-0.5 rounded-full">{{ selectedType.code }}</span>
+                                <h2 class="text-xl font-bold text-slate-900">{{ selectedType.name }}</h2>
+                                <span class="text-xs font-mono text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">{{ selectedType.code }}</span>
                             </div>
-                            <p class="text-xs text-slate-400 mt-1">Configure default terminology, executive positions, and module access.</p>
+                            <p class="text-xs text-slate-500 mt-1">Configure default terminology, executive positions, and module access.</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <Link
                                 :href="route('superadmin.club_types.show', selectedType.id)"
-                                class="px-3.5 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 font-bold text-xs rounded-lg border border-indigo-500/30 transition flex items-center gap-1"
+                                class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-lg border border-blue-300 transition flex items-center gap-1"
                             >
                                 <span>View Order Page</span>
                                 <span>↗</span>
@@ -164,21 +164,21 @@ function removeRulerField(index) {
                             <button
                                 v-if="!isEditing"
                                 @click="isEditing = true"
-                                class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs rounded-lg border border-slate-700 transition"
+                                class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium text-xs rounded-lg border border-slate-300 transition"
                             >
                                 Edit Preset
                             </button>
                             <template v-else>
                                 <button
                                     @click="isEditing = false"
-                                    class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs rounded-lg border border-slate-700 transition"
+                                    class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-lg border border-slate-300 transition"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     @click="updateClubType"
                                     :disabled="editForm.processing"
-                                    class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-lg transition"
+                                    class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs rounded-lg transition"
                                 >
                                     {{ editForm.processing ? 'Saving...' : 'Save Changes' }}
                                 </button>
@@ -189,27 +189,27 @@ function removeRulerField(index) {
                     <!-- Display Mode vs Edit Mode -->
                     <div class="space-y-6">
                         <!-- Description & Official Website Section -->
-                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-4 space-y-4">
-                            <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Order Information & Official Links</h3>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4">
+                            <h3 class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Order Information & Official Links</h3>
                             <div class="space-y-3 text-sm">
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1">Order Description</label>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Order Description</label>
                                     <textarea
                                         v-if="isEditing"
                                         v-model="editForm.description"
                                         rows="3"
-                                        class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-indigo-500"
+                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500"
                                         placeholder="Enter background context, degree progression, and eligibility requirements..."
                                     ></textarea>
-                                    <p v-else class="text-xs text-slate-300 leading-relaxed">{{ selectedType.description || 'No description added yet.' }}</p>
+                                    <p v-else class="text-xs text-slate-700 leading-relaxed">{{ selectedType.description || 'No description added yet.' }}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1">Official Website URL</label>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Official Website URL</label>
                                     <input
                                         v-if="isEditing"
                                         v-model="editForm.website_url"
                                         type="url"
-                                        class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-indigo-500"
+                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500"
                                         placeholder="e.g. https://markmasonshall.org"
                                     />
                                     <div v-else class="flex items-center gap-2">
@@ -218,7 +218,7 @@ function removeRulerField(index) {
                                             :href="selectedType.website_url"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            class="text-xs text-indigo-400 hover:text-indigo-300 font-mono underline flex items-center gap-1"
+                                            class="text-xs text-blue-600 hover:text-blue-700 font-mono underline flex items-center gap-1"
                                         >
                                             <span>{{ selectedType.website_url }}</span>
                                             <span>↗</span>
@@ -230,75 +230,75 @@ function removeRulerField(index) {
                         </div>
 
                         <!-- Terminology Section -->
-                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-4 space-y-4">
-                            <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Dynamic Terminology Mappings</h3>
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4">
+                            <h3 class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Dynamic Terminology Mappings</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1">Entity Term (e.g. Lodge / Chapter / Conclave)</label>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Entity Term (e.g. Lodge / Chapter / Conclave)</label>
                                     <input
                                         v-if="isEditing"
                                         v-model="editForm.terminology.club"
                                         type="text"
-                                        class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     />
-                                    <span v-else class="font-medium text-slate-200">{{ selectedType.terminology?.club || 'Lodge' }}</span>
+                                    <span v-else class="font-medium text-slate-800">{{ selectedType.terminology?.club || 'Lodge' }}</span>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1">Presiding Officer Term (e.g. Worshipful Master / M.E.Z.)</label>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Presiding Officer Term (e.g. Worshipful Master / M.E.Z.)</label>
                                     <input
                                         v-if="isEditing"
                                         v-model="editForm.terminology.master"
                                         type="text"
-                                        class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     />
-                                    <span v-else class="font-medium text-slate-200">{{ selectedType.terminology?.master || 'Worshipful Master' }}</span>
+                                    <span v-else class="font-medium text-slate-800">{{ selectedType.terminology?.master || 'Worshipful Master' }}</span>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1">Summons / Circular Document Term</label>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Summons / Circular Document Term</label>
                                     <input
                                         v-if="isEditing"
                                         v-model="editForm.terminology.summons"
                                         type="text"
-                                        class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     />
-                                    <span v-else class="font-medium text-slate-200">{{ selectedType.terminology?.summons || 'Summons' }}</span>
+                                    <span v-else class="font-medium text-slate-800">{{ selectedType.terminology?.summons || 'Summons' }}</span>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-400 mb-1">Members Collective Term (e.g. Brethren / Companions / Knights)</label>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Members Collective Term (e.g. Brethren / Companions / Knights)</label>
                                     <input
                                         v-if="isEditing"
                                         v-model="editForm.terminology.members"
                                         type="text"
-                                        class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     />
-                                    <span v-else class="font-medium text-slate-200">{{ selectedType.terminology?.members || 'Brethren' }}</span>
+                                    <span v-else class="font-medium text-slate-800">{{ selectedType.terminology?.members || 'Brethren' }}</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Provincial Rulers Schema -->
-                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-4 space-y-3">
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
                             <div class="flex items-center justify-between">
-                                <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Provincial Executive & Rulers Schema</h3>
+                                <h3 class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Provincial Executive & Rulers Schema</h3>
                                 <button
                                     v-if="isEditing"
                                     @click="addRulerField"
                                     type="button"
-                                    class="text-xs font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                                    class="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
                                 >
                                     + Add Field
                                 </button>
                             </div>
-                            <p class="text-xs text-slate-400">Specifies executive ruler titles rendered on the Province Settings page for clubs of this type.</p>
+                            <p class="text-xs text-slate-500">Specifies executive ruler titles rendered on the Province Settings page for clubs of this type.</p>
 
                             <div v-if="isEditing" class="space-y-2">
                                 <div v-for="(ruler, idx) in editForm.rulers_schema" :key="idx" class="flex items-center gap-2">
                                     <input
                                         v-model="editForm.rulers_schema[idx]"
                                         type="text"
-                                        class="flex-1 bg-slate-900 border border-slate-700 text-white text-xs rounded-md px-3 py-1.5 focus:ring-1 focus:ring-indigo-500"
+                                        class="flex-1 bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-1.5 focus:ring-1 focus:ring-blue-500"
                                     />
-                                    <button @click="removeRulerField(idx)" type="button" class="text-red-400 hover:text-red-300 p-1">
+                                    <button @click="removeRulerField(idx)" type="button" class="text-red-700 hover:text-red-800 p-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
@@ -309,7 +309,7 @@ function removeRulerField(index) {
                                 <span
                                     v-for="(ruler, idx) in selectedType.rulers_schema || []"
                                     :key="idx"
-                                    class="text-xs font-medium px-3 py-1 bg-slate-800 text-slate-300 rounded-full border border-slate-700/60"
+                                    class="text-xs font-medium px-3 py-1 bg-slate-100 text-slate-700 rounded-full border border-slate-300"
                                 >
                                     {{ ruler }}
                                 </span>
@@ -318,16 +318,16 @@ function removeRulerField(index) {
                         </div>
 
                         <!-- Default Officer Ladder -->
-                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-4 space-y-3">
-                            <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Default Officer Progression Ladder</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300">
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                            <h3 class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Default Officer Progression Ladder</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
                                 <div
                                     v-for="role in selectedType.default_officer_roles || []"
                                     :key="role.id"
-                                    class="p-2 bg-slate-900 border border-slate-800 rounded flex items-center justify-between"
+                                    class="p-2 bg-white border border-slate-200 rounded flex items-center justify-between"
                                 >
                                     <span class="font-medium">{{ role.title }} ({{ role.short_code }})</span>
-                                    <span v-if="role.is_executive" class="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded font-mono">Key Officer</span>
+                                    <span v-if="role.is_executive" class="text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded font-mono">Key Officer</span>
                                 </div>
                                 <span v-if="!selectedType.default_officer_roles?.length" class="text-xs text-slate-500 italic col-span-2">No pre-configured officer roles set.</span>
                             </div>
@@ -338,55 +338,55 @@ function removeRulerField(index) {
         </div>
 
         <!-- Create Club Type Modal -->
-        <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 w-full max-w-lg shadow-2xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h3 class="text-lg font-bold text-white">Create Masonic Order Preset</h3>
-                    <button @click="showCreateModal = false" class="text-slate-400 hover:text-white">✕</button>
+        <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <div class="bg-white border border-slate-200 rounded-xl p-6 w-full max-w-lg shadow-2xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                    <h3 class="text-lg font-bold text-slate-900">Create Masonic Order Preset</h3>
+                    <button @click="showCreateModal = false" class="text-slate-500 hover:text-slate-900">✕</button>
                 </div>
 
                 <form @submit.prevent="submitCreate" class="space-y-4 text-xs">
                     <div>
-                        <label class="block font-medium text-slate-300 mb-1">Order Name</label>
+                        <label class="block font-medium text-slate-700 mb-1">Order Name</label>
                         <input
                             v-model="createForm.name"
                             type="text"
                             placeholder="e.g. Knights Templar Preceptory"
-                            class="w-full bg-slate-950 border border-slate-700 text-white rounded-md px-3 py-2 focus:ring-indigo-500"
+                            class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-md px-3 py-2 focus:ring-blue-500"
                             required
                         />
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-300 mb-1">System Code Key</label>
+                        <label class="block font-medium text-slate-700 mb-1">System Code Key</label>
                         <input
                             v-model="createForm.code"
                             type="text"
                             placeholder="e.g. kt_preceptory"
-                            class="w-full bg-slate-950 border border-slate-700 text-white rounded-md px-3 py-2 font-mono focus:ring-indigo-500"
+                            class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-md px-3 py-2 font-mono focus:ring-blue-500"
                             required
                         />
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-300 mb-1">Presiding Officer Term</label>
+                        <label class="block font-medium text-slate-700 mb-1">Presiding Officer Term</label>
                         <input
                             v-model="createForm.terminology.master"
                             type="text"
                             placeholder="e.g. Eminent Preceptor"
-                            class="w-full bg-slate-950 border border-slate-700 text-white rounded-md px-3 py-2"
+                            class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-md px-3 py-2"
                         />
                     </div>
-                    <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                    <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
                         <button
                             type="button"
                             @click="showCreateModal = false"
-                            class="px-4 py-2 bg-slate-800 text-slate-300 rounded-md hover:bg-slate-700"
+                            class="px-4 py-2 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             :disabled="createForm.processing"
-                            class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-500"
+                            class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-500"
                         >
                             Create Order
                         </button>

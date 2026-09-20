@@ -47,18 +47,18 @@ function insertPlaceholder(variable) {
 
         <div class="space-y-6">
             <!-- Header section -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-5">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5">
                 <div>
-                    <h1 class="text-2xl font-bold text-white tracking-tight">Default Email Templates</h1>
-                    <p class="text-sm text-slate-400 mt-1">Manage global email default circulars and automated notification templates across all lodges & chapters.</p>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Default Email Templates</h1>
+                    <p class="text-sm text-slate-500 mt-1">Manage global email default circulars and automated notification templates across all lodges & chapters.</p>
                 </div>
             </div>
 
             <!-- Main grid -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <!-- Left panel: Template List -->
-                <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl">
-                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-2">System Templates ({{ templates.length }})</h2>
+                <div class="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-4 shadow-xl">
+                    <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">System Templates ({{ templates.length }})</h2>
                     <div class="space-y-2">
                         <div
                             v-for="tmpl in templates"
@@ -67,27 +67,27 @@ function insertPlaceholder(variable) {
                             :class="[
                                 'p-3.5 rounded-lg border cursor-pointer transition-all duration-150',
                                 selectedTemplate && selectedTemplate.id === tmpl.id
-                                    ? 'bg-indigo-950/60 border-indigo-500/50 text-white shadow-md'
-                                    : 'bg-slate-950/50 border-slate-800/80 text-slate-300 hover:border-slate-700 hover:text-white'
+                                    ? 'bg-blue-50 border-blue-400 text-slate-900 shadow-md'
+                                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-400 hover:text-slate-900'
                             ]"
                         >
                             <div class="font-semibold text-sm">{{ tmpl.name }}</div>
-                            <div class="text-xs font-mono text-indigo-400/80 mt-1">{{ tmpl.template_key }}</div>
+                            <div class="text-xs font-mono text-blue-600/80 mt-1">{{ tmpl.template_key }}</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Right panel: Selected Template Editor -->
-                <div v-if="selectedTemplate" class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl space-y-6">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div v-if="selectedTemplate" class="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-6 shadow-xl space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
                         <div>
-                            <h2 class="text-xl font-bold text-white">{{ selectedTemplate.name }}</h2>
-                            <span class="text-xs font-mono text-slate-400">{{ selectedTemplate.template_key }}</span>
+                            <h2 class="text-xl font-bold text-slate-900">{{ selectedTemplate.name }}</h2>
+                            <span class="text-xs font-mono text-slate-500">{{ selectedTemplate.template_key }}</span>
                         </div>
                         <button
                             @click="updateTemplate"
                             :disabled="editForm.processing"
-                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-lg transition inline-flex items-center gap-2"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs rounded-lg transition inline-flex items-center gap-2"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -100,25 +100,25 @@ function insertPlaceholder(variable) {
                     <div class="space-y-4 text-xs">
                         <!-- Subject Line -->
                         <div>
-                            <label class="block font-semibold text-slate-300 mb-1.5">Default Email Subject Line</label>
+                            <label class="block font-semibold text-slate-700 mb-1.5">Default Email Subject Line</label>
                             <input
                                 v-model="editForm.subject"
                                 type="text"
-                                class="w-full bg-slate-950 border border-slate-700 text-white text-sm rounded-lg px-3.5 py-2.5 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium"
+                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 text-sm rounded-lg px-3.5 py-2.5 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium"
                                 required
                             />
                         </div>
 
                         <!-- Dynamic Placeholder Chips -->
                         <div>
-                            <label class="block font-semibold text-slate-300 mb-1.5">Available Dynamic Placeholders (Click to insert into body)</label>
-                            <div class="flex flex-wrap gap-2 p-3 bg-slate-950/60 border border-slate-800 rounded-lg">
+                            <label class="block font-semibold text-slate-700 mb-1.5">Available Dynamic Placeholders (Click to insert into body)</label>
+                            <div class="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                                 <button
                                     v-for="ph in selectedTemplate.available_placeholders || []"
                                     :key="ph"
                                     @click="insertPlaceholder(ph)"
                                     type="button"
-                                    class="px-2.5 py-1 bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/60 text-indigo-300 font-mono text-[11px] rounded-md transition"
+                                    class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-mono text-[11px] rounded-md transition"
                                 >
                                     &#123;&#123; {{ ph }} &#125;&#125;
                                 </button>
@@ -128,11 +128,11 @@ function insertPlaceholder(variable) {
 
                         <!-- HTML Body Content -->
                         <div>
-                            <label class="block font-semibold text-slate-300 mb-1.5">Email Body (HTML Supported)</label>
+                            <label class="block font-semibold text-slate-700 mb-1.5">Email Body (HTML Supported)</label>
                             <textarea
                                 v-model="editForm.body_html"
                                 rows="12"
-                                class="w-full bg-slate-950 border border-slate-700 text-white font-mono text-xs rounded-lg p-3.5 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 leading-relaxed"
+                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 font-mono text-xs rounded-lg p-3.5 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 leading-relaxed"
                                 required
                             ></textarea>
                         </div>
