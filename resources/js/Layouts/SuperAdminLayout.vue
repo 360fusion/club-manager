@@ -123,6 +123,10 @@ const user = page.props.auth?.user;
             <span>Default Email Templates</span>
           </Link>
         </nav>
+
+        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+          <ThemeToggle />
+        </div>
       </div>
 
       <!-- User Profile Footer -->
@@ -153,9 +157,6 @@ const user = page.props.auth?.user;
 
     <!-- Main Content Area -->
     <main class="flex-1 min-w-0 p-6 md:p-10 space-y-8 overflow-y-auto">
-      <div class="flex justify-end -mb-4">
-        <ThemeToggle />
-      </div>
       <slot />
     </main>
   </div>
