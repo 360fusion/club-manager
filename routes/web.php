@@ -280,10 +280,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clubs/{clubSlug}/admin/members/{memberId}', \App\Domains\ClubAccounting\Livewire\Members\MemberProfile::class)->name('admin.club_acc.members.show');
     Route::get('/clubs/{clubSlug}/admin/candidates', \App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline::class)->name('admin.club_acc.candidates.index');
     Route::get('/clubs/{clubSlug}/admin/dues-subscriptions', \App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex::class)->name('admin.club_acc.subscriptions.index');
+    Route::get('/clubs/{clubSlug}/admin/bank-accounts', \App\Domains\ClubAccounting\Livewire\Banking\BankAccountsIndex::class)->name('admin.club_acc.bank_accounts.index');
     Route::get('/clubs/{clubSlug}/admin/bank-imports', \App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex::class)->name('admin.club_acc.bank_imports.index');
     Route::get('/clubs/{clubSlug}/admin/bank-reconciliation', function ($clubSlug) {
         return redirect()->route('admin.accounting.index', ['clubSlug' => $clubSlug, 'tab' => 'reconciliation']);
     })->name('admin.club_acc.bank_reconciliation.index');
+    Route::get('/clubs/{clubSlug}/admin/reconciliation-workspace', \App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace::class)->name('banking.bank-reconciliation-workspace');
     Route::get('/clubs/{clubSlug}/admin/charity', \App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard::class)->name('admin.club_acc.charity.index');
 
     Route::post('/clubs/{clubSlug}/admin/billing/business-account', [BillingController::class, 'updateBusinessAccount'])->name('billing.business.update');

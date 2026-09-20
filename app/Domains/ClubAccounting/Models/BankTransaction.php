@@ -19,6 +19,7 @@ class BankTransaction extends Model
 
     protected $fillable = [
         'club_id',
+        'bank_account_id',
         'bank_import_id',
         'transaction_date',
         'raw_description',
@@ -56,6 +57,11 @@ class BankTransaction extends Model
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(BankAccount::class, 'bank_account_id');
     }
 
     public function import(): BelongsTo

@@ -17,6 +17,7 @@ class BankImport extends Model
 
     protected $fillable = [
         'club_id',
+        'bank_account_id',
         'filename',
         'account_number',
         'sort_code',
@@ -36,6 +37,11 @@ class BankImport extends Model
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(BankAccount::class, 'bank_account_id');
     }
 
     public function importedBy(): BelongsTo
