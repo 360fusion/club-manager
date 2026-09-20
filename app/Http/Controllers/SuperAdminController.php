@@ -11,9 +11,11 @@ use App\Models\GrandLodge;
 use App\Models\Meeting;
 use App\Models\Province;
 use App\Models\User;
+use App\Support\OrderColours;
 use Database\Seeders\ClubTypeSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -121,6 +123,7 @@ class SuperAdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'code' => 'required|string|max:50|unique:club_types,code',
+            'colour' => ['nullable', Rule::in(OrderColours::KEYS)],
             'description' => 'nullable|string',
             'website_url' => 'nullable|url|max:255',
             'available_modules' => 'nullable|array',
@@ -131,6 +134,7 @@ class SuperAdminController extends Controller
         $ct = ClubType::create([
             'name' => $validated['name'],
             'code' => $validated['code'],
+            'colour' => $validated['colour'] ?? OrderColours::for($validated['code']),
             'description' => $validated['description'] ?? null,
             'website_url' => $validated['website_url'] ?? null,
             'available_modules' => $validated['available_modules'] ?? ['accounting', 'meetings', 'members', 'charity'],
@@ -151,6 +155,7 @@ class SuperAdminController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:100',
+            'colour' => ['nullable', Rule::in(OrderColours::KEYS)],
             'description' => 'nullable|string',
             'website_url' => 'nullable|url|max:255',
             'available_modules' => 'nullable|array',
@@ -160,6 +165,7 @@ class SuperAdminController extends Controller
 
         $clubType->update([
             'name' => $validated['name'],
+            'colour' => $validated['colour'] ?? $clubType->colour,
             'description' => array_key_exists('description', $validated) ? $validated['description'] : $clubType->description,
             'website_url' => array_key_exists('website_url', $validated) ? $validated['website_url'] : $clubType->website_url,
             'available_modules' => $validated['available_modules'] ?? $clubType->available_modules,

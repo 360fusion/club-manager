@@ -13,6 +13,7 @@ class ClubType extends Model
     protected $fillable = [
         'name',
         'code',
+        'colour',
         'description',
         'website_url',
         'available_modules',

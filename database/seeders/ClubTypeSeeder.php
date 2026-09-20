@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\ClubType;
 use App\Models\DefaultEmailTemplate;
 use App\Models\DefaultOfficerRole;
+use App\Support\OrderColours;
 use Illuminate\Database\Seeder;
 
 class ClubTypeSeeder extends Seeder
@@ -20,6 +21,10 @@ class ClubTypeSeeder extends Seeder
                 ['code' => $typeData['code']],
                 $typeData
             );
+
+            if ($clubType->wasRecentlyCreated) {
+                $clubType->update(['colour' => OrderColours::for($clubType->code)]);
+            }
 
             foreach ($rolesData as $r) {
                 DefaultOfficerRole::updateOrCreate(

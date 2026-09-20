@@ -3,7 +3,9 @@ import { Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Card from '@/Components/Ui/Card.vue';
+import ClubChip from '@/Components/Ui/ClubChip.vue';
 import ClubChips from '@/Components/ClubChips.vue';
+import DateTile from '@/Components/Ui/DateTile.vue';
 import QuickReply from '@/Components/QuickReply.vue';
 
 defineProps({
@@ -23,10 +25,12 @@ const when = (iso) => new Date(iso).toLocaleString('en-GB', { weekday: 'short', 
 
             <Card v-if="events.length" padding="none">
                 <ul>
-                    <li v-for="event in events" :key="event.key" class="space-y-2 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
+                    <li v-for="event in events" :key="event.key" class="flex gap-4 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
+                        <DateTile :date="event.start" :colour="event.club.colour" size="sm" />
+                        <div class="min-w-0 flex-1 space-y-2">
                         <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                             <Badge v-if="event.clash" variant="warning">Clashes with another item</Badge>
-                            <span>{{ event.club.name }}</span>
+                            <ClubChip :name="event.club.name" :colour="event.club.colour" />
                             <span aria-hidden="true">·</span>
                             <span>{{ when(event.start) }}</span>
                         </div>
@@ -36,6 +40,7 @@ const when = (iso) => new Date(iso).toLocaleString('en-GB', { weekday: 'short', 
                                 <p v-if="event.where" class="text-xs text-slate-500 dark:text-slate-400">{{ event.where }}</p>
                             </div>
                             <QuickReply :item="{ type: 'event', id: event.id, slug: event.club.slug, reply: event.reply, closed: event.closed, simple: event.simple }" />
+                        </div>
                         </div>
                     </li>
                 </ul>

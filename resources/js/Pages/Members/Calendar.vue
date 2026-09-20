@@ -8,6 +8,7 @@ import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
 import ClubChips from '@/Components/ClubChips.vue';
 import QuickReply from '@/Components/QuickReply.vue';
+import { orderColour } from '@/Utils/orderColour';
 
 const props = defineProps({
     month: String,
@@ -24,14 +25,7 @@ const urlScoped = computed(() => Boolean(route().params.slug));
 const routeName = computed(() => (urlScoped.value ? 'member.calendar' : 'members.calendar'));
 const routeParams = computed(() => (urlScoped.value ? { slug: props.scopeClub.slug } : {}));
 
-const COLOURS = [
-    'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200',
-    'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200',
-    'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200',
-    'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-200',
-    'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100',
-];
-const colourFor = (slug) => COLOURS[Math.max(0, props.clubOptions.findIndex((club) => club.slug === slug)) % COLOURS.length];
+const colourFor = (colour) => orderColour(colour).soft;
 
 const dateKey = (date) => new Date(date).toLocaleDateString('en-CA');
 
@@ -118,7 +112,7 @@ const webcal = computed(() => props.feedUrl.replace(/^https?:/, 'webcal:'));
                         @click="selected = selected === day.key ? null : day.key"
                     >
                         <span :class="['inline-flex h-6 w-6 items-center justify-center rounded-full text-xs', day.key === today ? 'bg-blue-600 font-bold text-white' : '']">{{ day.day }}</span>
-                        <span v-for="item in (byDay[day.key] ?? []).slice(0, 3)" :key="item.key" :class="['block truncate rounded px-1 py-0.5 text-[10px] font-medium leading-tight sm:text-[11px]', colourFor(item.club.slug), item.clash ? 'ring-1 ring-amber-500' : '']">{{ item.title }}</span>
+                        <span v-for="item in (byDay[day.key] ?? []).slice(0, 3)" :key="item.key" :class="['block truncate rounded px-1 py-0.5 text-[10px] font-medium leading-tight sm:text-[11px]', colourFor(item.club.colour), item.clash ? 'ring-1 ring-amber-500' : '']">{{ item.title }}</span>
                         <span v-if="(byDay[day.key] ?? []).length > 3" class="block text-[10px] text-slate-500">+{{ byDay[day.key].length - 3 }} more</span>
                     </button>
                 </div>

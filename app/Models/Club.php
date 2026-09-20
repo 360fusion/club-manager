@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\OrderColours;
 use App\Support\ReservedClubSlugs;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -77,6 +78,14 @@ class Club extends Model implements HasMedia
         return [
             'settings' => 'array',
         ];
+    }
+
+    /**
+     * The colour of this club's order, for date tiles, calendar entries and chips.
+     */
+    public function colourKey(): string
+    {
+        return $this->clubType?->colour ?? OrderColours::DEFAULT;
     }
 
     protected static function booted(): void

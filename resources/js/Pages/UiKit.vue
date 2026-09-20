@@ -8,6 +8,9 @@ import Card from '@/Components/Ui/Card.vue';
 import Input from '@/Components/Ui/Input.vue';
 import Select from '@/Components/Ui/Select.vue';
 import StatCard from '@/Components/Ui/StatCard.vue';
+import ClubChip from '@/Components/Ui/ClubChip.vue';
+import DateTile from '@/Components/Ui/DateTile.vue';
+import { ORDER_COLOURS } from '@/Utils/orderColour';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 
 const text = ref('');
@@ -22,6 +25,24 @@ const roles = [
 const buttonVariants = ['primary', 'secondary', 'ghost', 'danger'];
 const badgeVariants = ['neutral', 'info', 'success', 'warning', 'danger'];
 const alertVariants = ['info', 'success', 'warning', 'danger'];
+
+// The default colour for each order; super admins can change these per order.
+const orders = [
+    { name: 'Craft Lodge', colour: 'sky' },
+    { name: 'Royal Arch Chapter', colour: 'red' },
+    { name: 'Mark Master Masons Lodge', colour: 'orange' },
+    { name: 'Royal Ark Mariner Lodge', colour: 'teal' },
+    { name: 'Rose Croix Chapter (18°)', colour: 'pink' },
+    { name: 'Knights Templar Preceptory', colour: 'slate' },
+    { name: 'Order of the Secret Monitor', colour: 'amber' },
+    { name: 'Red Cross of Constantine Conclave', colour: 'purple' },
+    { name: 'Allied Masonic Degrees Council', colour: 'emerald' },
+    { name: 'Royal & Select Masters Council', colour: 'indigo' },
+    { name: 'KTP Tabernacle', colour: 'stone' },
+    { name: 'SRIA College', colour: 'violet' },
+    { name: 'Royal Order of Scotland', colour: 'cyan' },
+    { name: 'Order of the Scarlet Cord', colour: 'lime' },
+];
 </script>
 
 <template>
@@ -76,6 +97,27 @@ const alertVariants = ['info', 'success', 'warning', 'danger'];
                 <Card>
                     <div class="flex flex-wrap items-center gap-2">
                         <Badge v-for="v in badgeVariants" :key="v" :variant="v">{{ v }}</Badge>
+                    </div>
+                </Card>
+            </section>
+
+            <section class="space-y-3">
+                <h2 class="text-sm font-medium text-slate-500 dark:text-slate-400">Order colours</h2>
+                <Card>
+                    <div class="space-y-5">
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Each order has a colour, set by super admins. Date tiles and chips use it for every club in that order, so news, events and the calendar read at a glance.</p>
+
+                        <div class="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+                            <div v-for="order in orders" :key="order.name" class="flex items-center justify-between gap-3 text-sm">
+                                <ClubChip :name="order.name" :colour="order.colour" />
+                                <span class="shrink-0 text-xs text-slate-500 dark:text-slate-400">{{ ORDER_COLOURS.find((c) => c.key === order.colour)?.label }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-4 border-t border-slate-200 pt-4 dark:border-slate-800">
+                            <DateTile v-for="order in orders.slice(0, 6)" :key="order.name" date="2026-11-05T19:00:00" :colour="order.colour" />
+                            <DateTile v-for="order in orders.slice(0, 4)" :key="`sm-${order.name}`" date="2026-11-05T19:00:00" :colour="order.colour" size="sm" />
+                        </div>
                     </div>
                 </Card>
             </section>

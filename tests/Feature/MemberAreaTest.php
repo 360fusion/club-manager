@@ -128,6 +128,24 @@ class MemberAreaTest extends TestCase
         $this->get('/members/events')->assertInertia(fn (Assert $page) => $page->has('events', 1)->where('events.0.title', 'Oxford dinner'));
     }
 
+    public function test_news_items_carry_the_extra_detail_the_page_shows(): void
+    {
+        $post = $this->newsPost($this->oxford, 'Detailed news', Visibility::Public);
+        $post->update(['content' => str_repeat('word ', 450), 'attachments' => [['name' => 'a.pdf', 'url' => '/x'], ['name' => 'b.pdf', 'url' => '/y']]]);
+        $old = $this->newsPost($this->oxford, 'Old news');
+        $old->forceFill(['published_at' => now()->subDays(30)])->save();
+
+        $this->actingAs($this->member)->get('/members/news')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('posts.data.0.title', 'Detailed news')
+                ->where('posts.data.0.author', 'Alex Morgan')
+                ->where('posts.data.0.is_new', true)
+                ->where('posts.data.0.reading_minutes', 3)
+                ->where('posts.data.0.attachments', 2)
+                ->where('posts.data.0.visibility.value', 'public')
+                ->where('posts.data.1.is_new', false));
+    }
+
     public function test_the_lists_can_be_narrowed_to_one_club_by_url_or_filter(): void
     {
         $this->join($this->bath, $this->member);

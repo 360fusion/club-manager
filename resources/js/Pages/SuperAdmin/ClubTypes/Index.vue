@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
+import OrderColourPicker from '@/Components/OrderColourPicker.vue';
+import { orderColour, ORDER_COLOURS } from '@/Utils/orderColour';
 
 const props = defineProps({
     clubTypes: {
@@ -16,6 +18,7 @@ const showCreateModal = ref(false);
 
 const editForm = useForm({
     name: '',
+    colour: 'slate',
     description: '',
     website_url: '',
     available_modules: [],
@@ -31,6 +34,7 @@ const editForm = useForm({
 const createForm = useForm({
     name: '',
     code: '',
+    colour: 'slate',
     description: '',
     website_url: '',
     available_modules: ['accounting', 'meetings', 'members', 'charity'],
@@ -47,6 +51,7 @@ function selectClubType(ct) {
     selectedType.value = ct;
     isEditing.value = false;
     editForm.name = ct.name;
+    editForm.colour = ct.colour || 'slate';
     editForm.description = ct.description || '';
     editForm.website_url = ct.website_url || '';
     editForm.available_modules = [...(ct.available_modules || [])];
@@ -66,7 +71,7 @@ if (selectedType.value) {
 
 function updateClubType() {
     if (!selectedType.value) return;
-    editForm.put(route('superadmin.club-types.update', selectedType.value.id), {
+    editForm.put(route('superadmin.club_types.update', selectedType.value.id), {
         onSuccess: () => {
             isEditing.value = false;
         },
@@ -74,7 +79,7 @@ function updateClubType() {
 }
 
 function submitCreate() {
-    createForm.post(route('superadmin.club-types.store'), {
+    createForm.post(route('superadmin.club_types.store'), {
         onSuccess: () => {
             showCreateModal.value = false;
             createForm.reset();
@@ -131,7 +136,7 @@ function removeRulerField(index) {
                             ]"
                         >
                             <div class="flex items-center justify-between">
-                                <span class="font-semibold text-sm">{{ ct.name }}</span>
+                                <span class="flex items-center gap-2 text-sm font-semibold"><span :class="['h-2.5 w-2.5 shrink-0 rounded-full', orderColour(ct.colour).dot]" aria-hidden="true" />{{ ct.name }}</span>
                                 <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">{{ ct.code }}</span>
                             </div>
                             <div class="flex items-center gap-3 mt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -148,6 +153,7 @@ function removeRulerField(index) {
                     <div class="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
                         <div>
                             <div class="flex items-center gap-3">
+                                <span :class="['h-4 w-4 shrink-0 rounded-full', orderColour(selectedType.colour).dot]" :title="ORDER_COLOURS.find((c) => c.key === selectedType.colour)?.label" aria-hidden="true" />
                                 <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ selectedType.name }}</h2>
                                 <span class="text-xs font-mono text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full dark:text-blue-400 dark:bg-blue-950/60 dark:border-blue-800/60">{{ selectedType.code }}</span>
                             </div>
@@ -192,6 +198,15 @@ function removeRulerField(index) {
                         <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4 dark:bg-slate-900/60 dark:border-slate-800">
                             <h3 class="text-xs font-semibold text-blue-600 uppercase tracking-wider dark:text-blue-400">Order Information & Official Links</h3>
                             <div class="space-y-3 text-sm">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Order Colour</label>
+                                    <OrderColourPicker v-if="isEditing" v-model="editForm.colour" />
+                                    <div v-else class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
+                                        <span :class="['h-4 w-4 rounded-full', orderColour(selectedType.colour).dot]" aria-hidden="true" />
+                                        {{ ORDER_COLOURS.find((c) => c.key === selectedType.colour)?.label ?? 'Black' }}
+                                        <span class="text-slate-500 dark:text-slate-400">· used for date tiles, calendars and chips for every club in this order</span>
+                                    </div>
+                                </div>
                                 <div>
                                     <label class="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Order Description</label>
                                     <textarea
@@ -365,6 +380,10 @@ function removeRulerField(index) {
                             class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-md px-3 py-2 font-mono focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                             required
                         />
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1 dark:text-slate-300">Order Colour</label>
+                        <OrderColourPicker v-model="createForm.colour" />
                     </div>
                     <div>
                         <label class="block font-medium text-slate-700 mb-1 dark:text-slate-300">Presiding Officer Term</label>

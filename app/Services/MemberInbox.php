@@ -159,7 +159,7 @@ class MemberInbox
             'severity' => $severity,
             'title' => $title,
             'detail' => $detail,
-            'club' => ['name' => $club->name, 'slug' => $club->slug],
+            'club' => ['name' => $club->name, 'slug' => $club->slug, 'colour' => $club->colourKey()],
             'due' => $due?->toIso8601String(),
             'reply' => $reply,
             'url' => $url ?? route('member.dashboard', ['slug' => $club->slug], false),

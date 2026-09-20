@@ -4,7 +4,9 @@ import { Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Card from '@/Components/Ui/Card.vue';
+import ClubChip from '@/Components/Ui/ClubChip.vue';
 import ClubChips from '@/Components/ClubChips.vue';
+import DateTile from '@/Components/Ui/DateTile.vue';
 import QuickReply from '@/Components/QuickReply.vue';
 
 const props = defineProps({
@@ -29,10 +31,12 @@ const REPLIES = { attending_dining: 'Going, dining', attending_meeting_only: 'Go
 
             <Card v-if="meetings.length" padding="none">
                 <ul>
-                    <li v-for="meeting in meetings" :key="meeting.key" class="space-y-2 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
+                    <li v-for="meeting in meetings" :key="meeting.key" class="flex gap-4 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
+                        <DateTile :date="meeting.start" :colour="meeting.club.colour" size="sm" />
+                        <div class="min-w-0 flex-1 space-y-2">
                         <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                             <Badge v-if="meeting.clash" variant="warning">Clashes with another item</Badge>
-                            <span>{{ meeting.club.name }}</span>
+                            <ClubChip :name="meeting.club.name" :colour="meeting.club.colour" />
                             <span aria-hidden="true">·</span>
                             <span>{{ when(meeting.start) }}</span>
                         </div>
@@ -42,6 +46,7 @@ const REPLIES = { attending_dining: 'Going, dining', attending_meeting_only: 'Go
                                 <p v-if="meeting.where" class="text-xs text-slate-500 dark:text-slate-400">{{ meeting.where }}</p>
                             </div>
                             <QuickReply :item="{ type: 'meeting', id: meeting.id, slug: meeting.club.slug, reply: meeting.reply, closed: meeting.closed, simple: true }" />
+                        </div>
                         </div>
                     </li>
                 </ul>

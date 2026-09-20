@@ -6,7 +6,10 @@ import Alert from '@/Components/Ui/Alert.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
+import ClubChip from '@/Components/Ui/ClubChip.vue';
+import DateTile from '@/Components/Ui/DateTile.vue';
 import QuickReply from '@/Components/QuickReply.vue';
+import { orderColour } from '@/Utils/orderColour';
 
 const props = defineProps({
     clubs: { type: Array, default: () => [] },
@@ -102,7 +105,7 @@ const chip = (active) => ['rounded-full border px-3 py-1 text-xs font-medium tra
                     <li v-for="item in inbox" :key="`${item.kind}-${item.club.slug}-${item.title}`" class="space-y-2 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
                         <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                             <Badge :variant="severityVariant(item.severity)">{{ KIND_LABELS[item.kind] ?? 'Action' }}</Badge>
-                            <span>{{ item.club.name }}</span>
+                            <ClubChip :name="item.club.name" :colour="item.club.colour" />
                         </div>
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div class="min-w-0">
@@ -155,7 +158,7 @@ const chip = (active) => ['rounded-full border px-3 py-1 text-xs font-medium tra
                                     <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                                         <Badge v-if="item.important" variant="danger">Important</Badge>
                                         <Badge :variant="TYPES[item.type]?.variant ?? 'neutral'">{{ TYPES[item.type]?.label ?? item.type }}</Badge>
-                                        <span>{{ item.club.name }}</span>
+                                        <ClubChip :name="item.club.name" :colour="item.club.colour" />
                                         <span aria-hidden="true">·</span>
                                         <time :datetime="item.at">{{ ago(item.at) }}</time>
                                     </div>
@@ -180,10 +183,7 @@ const chip = (active) => ['rounded-full border px-3 py-1 text-xs font-medium tra
                         <Card v-if="upNext.length" padding="none">
                             <ul>
                                 <li v-for="item in upNext" :key="`${item.type}-${item.club_slug}-${item.title}-${item.at}`" class="flex gap-3 border-b border-slate-200 p-3 last:border-b-0 dark:border-slate-800">
-                                    <div class="w-10 shrink-0 text-center leading-tight">
-                                        <div class="text-[11px] uppercase text-slate-500 dark:text-slate-400">{{ dayParts(item.at).month }}</div>
-                                        <div class="text-lg font-semibold text-slate-900 dark:text-white">{{ dayParts(item.at).day }}</div>
-                                    </div>
+                                    <DateTile :date="item.at" :colour="item.club_colour" size="sm" />
                                     <div class="min-w-0 flex-1">
                                         <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">{{ item.title }}</p>
                                         <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ item.club_name }} · {{ dayParts(item.at).time }}<template v-if="item.where"> · {{ item.where }}</template></p>
@@ -202,7 +202,7 @@ const chip = (active) => ['rounded-full border px-3 py-1 text-xs font-medium tra
                                 <li v-for="club in clubs" :key="club.id" class="space-y-2 border-b border-slate-200 p-3 last:border-b-0 dark:border-slate-800">
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="min-w-0">
-                                            <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">{{ club.name }}</p>
+                                            <p class="flex items-center gap-2 truncate text-sm font-semibold text-slate-900 dark:text-white"><span :class="['h-2 w-2 shrink-0 rounded-full', orderColour(club.colour).dot]" aria-hidden="true" />{{ club.name }}</p>
                                             <p class="truncate text-xs text-slate-500 dark:text-slate-400"><template v-if="club.type_name">{{ club.type_name }}</template><template v-if="club.member_number"> · {{ club.member_number }}</template></p>
                                         </div>
                                         <Badge :variant="club.is_staff ? 'info' : 'neutral'">{{ roleLabel(club.role) }}</Badge>

@@ -60,6 +60,7 @@ class MemberHomeController extends Controller
             'id' => $club->id,
             'name' => $club->name,
             'slug' => $club->slug,
+            'colour' => $club->colourKey(),
             'type_name' => $club->clubType?->name,
             'role' => $role,
             'member_number' => $club->pivot->member_number ?? '',
@@ -109,6 +110,7 @@ class MemberHomeController extends Controller
             'type' => 'meeting',
             'club_slug' => $clubs->firstWhere('id', $meeting->club_id)->slug,
             'club_name' => $clubs->firstWhere('id', $meeting->club_id)->name,
+            'club_colour' => $clubs->firstWhere('id', $meeting->club_id)->colourKey(),
             'title' => $meeting->title,
             'at' => ($meeting->starts_at ? $meeting->meeting_date?->copy()->setTimeFromTimeString((string) $meeting->starts_at) : $meeting->meeting_date)?->toIso8601String(),
             'where' => $meeting->venue,
@@ -117,6 +119,7 @@ class MemberHomeController extends Controller
             'type' => 'event',
             'club_slug' => $clubs->firstWhere('id', $event->club_id)->slug,
             'club_name' => $clubs->firstWhere('id', $event->club_id)->name,
+            'club_colour' => $clubs->firstWhere('id', $event->club_id)->colourKey(),
             'title' => $event->title,
             'at' => $event->starts_at?->toIso8601String(),
             'where' => $event->location,
@@ -141,7 +144,7 @@ class MemberHomeController extends Controller
         }
 
         $clubIds = $clubs->pluck('id');
-        $club = fn (int $id): array => ['name' => $clubs->firstWhere('id', $id)->name, 'slug' => $clubs->firstWhere('id', $id)->slug];
+        $club = fn (int $id): array => ['name' => $clubs->firstWhere('id', $id)->name, 'slug' => $clubs->firstWhere('id', $id)->slug, 'colour' => $clubs->firstWhere('id', $id)->colourKey()];
         $roles = $clubs->mapWithKeys(fn (Club $c) => [$c->id => $c->pivot->role ?? 'member']);
 
         $posts = Post::whereIn('club_id', $clubIds)->published()->visibleTo($user)

@@ -41,8 +41,8 @@ class MemberCalendarController extends Controller
             'gridStart' => $from->toDateString(),
             'gridEnd' => $to->toDateString(),
             'items' => $items->values()->all(),
-            'scopeClub' => $scope->club ? ['name' => $scope->club->name, 'slug' => $scope->club->slug] : null,
-            'clubOptions' => $scope->memberClubs->map(fn ($club) => ['name' => $club->name, 'slug' => $club->slug])->values()->all(),
+            'scopeClub' => $scope->club ? ['name' => $scope->club->name, 'slug' => $scope->club->slug, 'colour' => $scope->club->colourKey()] : null,
+            'clubOptions' => $scope->memberClubs->map(fn ($club) => ['name' => $club->name, 'slug' => $club->slug, 'colour' => $club->colourKey()])->values()->all(),
             'feedUrl' => route('members.calendar.feed', ['token' => $token]),
         ]);
     }

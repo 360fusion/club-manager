@@ -47,10 +47,11 @@ class HandleInertiaRequests extends Middleware
                     'is_super_admin' => (bool) $user->is_super_admin,
                     'avatar_url' => $user->avatar_url ? (str_starts_with($user->avatar_url, 'http') ? $user->avatar_url : asset('storage/'.$user->avatar_url)) : null,
                 ] : null,
-                'clubs' => $user ? $user->clubs->map(fn ($c) => [
+                'clubs' => $user ? $user->clubs()->with('clubType')->get()->map(fn ($c) => [
                     'id' => $c->id,
                     'name' => $c->name,
                     'slug' => $c->slug,
+                    'colour' => $c->colourKey(),
                     'role' => $c->pivot->role ?? 'member',
                     'member_number' => $c->pivot->member_number ?? '',
                     'status' => $c->pivot->status ?? 'active',

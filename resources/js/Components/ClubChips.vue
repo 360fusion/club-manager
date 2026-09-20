@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
+import { orderColour } from '@/Utils/orderColour';
 
 const props = defineProps({
     // [{ name, slug }]
@@ -17,6 +18,6 @@ const chip = (active) => ['rounded-full border px-3 py-1 text-xs font-medium tra
 <template>
     <div v-if="!fixedByUrl && options.length > 1" class="flex flex-wrap gap-2" role="group" aria-label="Filter by club">
         <Link :href="route(routeName)" :class="chip(!current)" preserve-scroll>All clubs</Link>
-        <Link v-for="club in options" :key="club.slug" :href="route(routeName)" :data="{ club: club.slug }" :class="chip(current === club.slug)" preserve-scroll>{{ club.name }}</Link>
+        <Link v-for="club in options" :key="club.slug" :href="route(routeName)" :data="{ club: club.slug }" :class="[chip(current === club.slug), 'inline-flex items-center gap-1.5']" preserve-scroll><span :class="['h-1.5 w-1.5 rounded-full', orderColour(club.colour).dot]" aria-hidden="true" />{{ club.name }}</Link>
     </div>
 </template>

@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
+import { orderColour } from '@/Utils/orderColour';
 
 const props = defineProps({
   clubType: {
@@ -41,7 +42,7 @@ function handleSwitchOrder(event) {
             <span>/</span>
             <Link :href="route('superadmin.club_types.index')" class="hover:text-slate-900 transition dark:hover:text-white">Masonic Orders</Link>
             <span>/</span>
-            <span class="text-blue-700 font-bold dark:text-blue-300">{{ clubType.name }}</span>
+            <span class="inline-flex items-center gap-2 text-blue-700 font-bold dark:text-blue-300"><span :class="['h-3 w-3 rounded-full', orderColour(clubType.colour).dot]" aria-hidden="true" />{{ clubType.name }}</span>
           </div>
 
           <!-- Quick Order Switcher Select -->

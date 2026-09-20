@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import { orderColour } from '@/Utils/orderColour';
 
 const props = defineProps({
     // The club the page is limited to, or null for all clubs.
@@ -53,7 +54,7 @@ const buttonClasses = computed(() => (props.tone === 'onDark'
             </li>
             <li v-for="option in clubs" :key="option.id">
                 <Link :href="target(option.slug)" role="option" :aria-selected="option.slug === slug" :class="['flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800', option.slug === slug ? 'bg-slate-100 dark:bg-slate-800' : '']" @click="open = false">
-                    <span class="truncate">{{ option.name }}</span>
+                    <span class="flex min-w-0 items-center gap-2"><span :class="['h-2 w-2 shrink-0 rounded-full', orderColour(option.colour).dot]" aria-hidden="true" /><span class="truncate">{{ option.name }}</span></span>
                     <span class="shrink-0 text-[11px] capitalize text-slate-500 dark:text-slate-400">{{ option.role }}</span>
                 </Link>
             </li>
