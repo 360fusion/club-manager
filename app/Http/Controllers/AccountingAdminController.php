@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankTransaction;
