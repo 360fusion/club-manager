@@ -16,7 +16,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Paddle\Billable as PaddleBillable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'avatar_url', 'password', 'is_super_admin'])]
+// 'is_super_admin' is deliberately NOT fillable: it must never be settable from
+// request input. Grant it explicitly via forceFill or the superadmin:grant command.
+#[Fillable(['name', 'email', 'avatar_url', 'password'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable
 {

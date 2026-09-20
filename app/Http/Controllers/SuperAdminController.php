@@ -394,9 +394,14 @@ class SuperAdminController extends Controller
      */
     public function makeMeSuperAdmin(Request $request): RedirectResponse
     {
+        // Local-only bootstrap helper. Exposing this anywhere else lets any
+        // authenticated user grant themselves full platform access.
+        // Use `php artisan superadmin:grant {email}` on deployed environments.
+        abort_unless(app()->isLocal(), 404);
+
         $user = $request->user();
         if ($user) {
-            $user->update(['is_super_admin' => true]);
+            $user->forceFill(['is_super_admin' => true])->save();
 
             return redirect()->route('superadmin.dashboard')->with('success', 'You are now a Superadmin!');
         }

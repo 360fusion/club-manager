@@ -62,8 +62,10 @@ class SuperAdminAndAuthTest extends TestCase
         $emailTemplatesPage->assertStatus(200);
     }
 
-    public function test_make_me_superadmin_promotes_user(): void
+    public function test_make_me_superadmin_promotes_user_in_local_development(): void
     {
+        $this->app['env'] = 'local';
+
         $user = User::factory()->create(['is_super_admin' => false]);
 
         $response = $this->actingAs($user)->get('/auth/make-me-superadmin');
