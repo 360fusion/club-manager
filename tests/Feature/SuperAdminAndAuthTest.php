@@ -8,6 +8,7 @@ use App\Models\User;
 use Database\Seeders\ClubTypeSeeder;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class SuperAdminAndAuthTest extends TestCase
@@ -60,6 +61,39 @@ class SuperAdminAndAuthTest extends TestCase
 
         $emailTemplatesPage = $this->actingAs($superadmin)->get('/superadmin/email-templates');
         $emailTemplatesPage->assertStatus(200);
+    }
+
+    public function test_logging_in_lands_on_the_members_home(): void
+    {
+        $user = User::factory()->create(['email' => 'member@example.com', 'password' => 'secret-pass-123']);
+
+        $this->post('/login', ['email' => 'member@example.com', 'password' => 'secret-pass-123'])
+            ->assertRedirect(route('members.home'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_logging_in_after_being_bounced_returns_to_the_requested_page(): void
+    {
+        User::factory()->create(['email' => 'member@example.com', 'password' => 'secret-pass-123']);
+
+        $this->get(route('profile.edit'))->assertRedirect('/login');
+
+        $this->post('/login', ['email' => 'member@example.com', 'password' => 'secret-pass-123'])
+            ->assertRedirect(route('profile.edit'));
+    }
+
+    public function test_login_page_shares_demo_credentials_only_in_local_development(): void
+    {
+        $this->app['env'] = 'local';
+        $this->get('/login')->assertInertia(fn (Assert $page) => $page
+            ->component('Auth/Login')
+            ->where('demoCredentials.email', 'admin@example.com'));
+
+        $this->app['env'] = 'production';
+        $this->get('/login')->assertInertia(fn (Assert $page) => $page
+            ->component('Auth/Login')
+            ->where('demoCredentials', null));
     }
 
     public function test_make_me_superadmin_promotes_user_in_local_development(): void

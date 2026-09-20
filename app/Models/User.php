@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Laravel\Cashier\Billable as StripeBillable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Paddle\Billable as PaddleBillable;
@@ -78,6 +79,16 @@ class User extends Authenticatable
         return $this->belongsToMany(Club::class)
             ->withPivot(['role', 'rank', 'committee_role', 'home_club_name', 'home_club_number', 'member_number', 'status', 'phone', 'emergency_contact', 'dietary_notes', 'invitation_token', 'invited_at', 'invitation_accepted_at'])
             ->withTimestamps();
+    }
+
+    /**
+     * IDs of the clubs this user is an active member of.
+     *
+     * @return Collection<int, int>
+     */
+    public function activeClubIds(): Collection
+    {
+        return $this->clubs()->wherePivot('status', 'active')->pluck('clubs.id');
     }
 
     public function memberships(): HasMany

@@ -7,6 +7,7 @@ use App\Models\Club;
 use App\Models\Page;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,10 +20,12 @@ class PublicSiteController extends Controller
     public function showPage(string $clubSlug, ?string $pageSlug = null): Response
     {
         $club = Club::where('slug', $clubSlug)
-            ->with(['clubType', 'membershipPlans', 'posts.author', 'events', 'donations.contributions'])
+            ->with(['clubType', 'membershipPlans', 'donations.contributions'])
             ->firstOrFail();
 
         $club->ensureDefaultPages();
+
+        $viewer = Auth::user();
 
         // Determine target page (Homepage or specific page slug)
         $query = Page::where('club_id', $club->id)->where('is_published', true);
@@ -67,7 +70,7 @@ class PublicSiteController extends Controller
                 'is_members_only' => $page->is_members_only,
             ],
             'navigation' => $navigationPages,
-            'latestPosts' => $club->posts()->published()->take(24)->get()->map(fn ($p) => [
+            'latestPosts' => $club->posts()->with('author')->published()->visibleTo($viewer)->take(24)->get()->map(fn ($p) => [
                 'id' => $p->id,
                 'title' => $p->title,
                 'slug' => $p->slug,
@@ -77,7 +80,7 @@ class PublicSiteController extends Controller
                 'author_name' => $p->author?->name ?? 'Club Admin',
                 'published_at' => ($p->published_at ?? $p->created_at)?->format('M d, Y'),
             ]),
-            'upcomingEvents' => $club->events->take(3)->values()->map(fn ($e) => [
+            'upcomingEvents' => $club->events()->visibleTo($viewer)->get()->take(3)->values()->map(fn ($e) => [
                 'id' => $e->id,
                 'title' => $e->title,
                 'slug' => $e->slug,

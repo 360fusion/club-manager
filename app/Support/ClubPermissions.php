@@ -48,7 +48,7 @@ class ClubPermissions
     {
         $path = trim($path, '/');
 
-        if (! preg_match('#^clubs/[^/]+/admin(?:/([^/?]+))?#', $path, $matches)) {
+        if (! preg_match('#^[^/]+/admin(?:/([^/?]+))?#', $path, $matches)) {
             return null;
         }
 

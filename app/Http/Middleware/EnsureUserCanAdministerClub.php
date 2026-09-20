@@ -32,7 +32,8 @@ class EnsureUserCanAdministerClub
             return $next($request);
         }
 
-        $clubSlug = $request->route('clubSlug');
+        // Admin routes name the club either {clubSlug} or {slug}; both must be gated.
+        $clubSlug = $request->route('clubSlug') ?? $request->route('slug');
 
         if (! is_string($clubSlug) || $clubSlug === '') {
             return $next($request);
@@ -88,6 +89,6 @@ class EnsureUserCanAdministerClub
 
     private function isClubAdminRoute(Request $request): bool
     {
-        return $request->is('clubs/*/admin', 'clubs/*/admin/*');
+        return (bool) preg_match('#^\{(?:clubSlug|slug)\}/admin(?:/|$)#', $request->route()?->uri() ?? '');
     }
 }

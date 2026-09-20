@@ -17,8 +17,10 @@ use App\Models\Club;
 use App\Models\DefaultEmailTemplate;
 use App\Models\PaddleSubscription;
 use App\Models\PaddleSubscriptionItem;
+use App\Support\ReservedClubSlugs;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Paddle\Cashier;
@@ -40,6 +42,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Club slugs sit at the top level of the URL space, so they may not
+        // shadow fixed paths such as /login or /members.
+        Route::pattern('slug', ReservedClubSlugs::routeRegex());
+        Route::pattern('clubSlug', ReservedClubSlugs::routeRegex());
+
         if (class_exists(Livewire::class)) {
             Livewire::component(
                 'committee.agenda-pack-preview-modal',

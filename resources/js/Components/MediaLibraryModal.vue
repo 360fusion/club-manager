@@ -29,18 +29,18 @@ const availableMonths = ref([]);
 const trashCount = ref(0);
 
 const folders = computed(() => [
-  { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100', text: 'text-slate-700' },
-  { id: 'summons', label: 'Summonses', icon: '📜', bg: 'bg-indigo-50', text: 'text-indigo-700' },
-  { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
-  { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50', text: 'text-blue-700' },
-  { id: 'events', label: 'Events', icon: '🎟️', bg: 'bg-amber-50', text: 'text-amber-700' },
-  { id: 'updates', label: 'Updates', icon: '📜', bg: 'bg-purple-50', text: 'text-purple-700' },
-  { id: 'newsletters', label: 'Newsletters', icon: '✉️', bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  { id: 'pages', label: 'CMS Pages', icon: '📄', bg: 'bg-teal-50', text: 'text-teal-700' },
-  { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-sky-50', text: 'text-sky-700' },
-  { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
-  { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50', text: 'text-amber-700' },
-  { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50', text: 'text-rose-700' },
+  { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-200' },
+  { id: 'summons', label: 'Summonses', icon: '📜', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'events', label: 'Events', icon: '🎟️', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
+  { id: 'updates', label: 'Updates', icon: '📜', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'newsletters', label: 'Newsletters', icon: '✉️', bg: 'bg-emerald-50 dark:bg-emerald-950/40', text: 'text-emerald-700 dark:text-emerald-300' },
+  { id: 'pages', label: 'CMS Pages', icon: '📄', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
+  { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50 dark:bg-rose-950/40', text: 'text-rose-700 dark:text-rose-300' },
 ]);
 
 const fetchMedia = async () => {
@@ -55,7 +55,7 @@ const fetchMedia = async () => {
     if (filterDate.value !== 'all') params.append('date', filterDate.value);
     if (sortBy.value !== 'newest') params.append('sort', sortBy.value);
 
-    const res = await fetch(`/clubs/${props.clubSlug}/admin/media?${params.toString()}`);
+    const res = await fetch(`/${props.clubSlug}/admin/media?${params.toString()}`);
     if (res.ok) {
       const data = await res.json();
       mediaItems.value = data.media || [];
@@ -171,7 +171,7 @@ const uploadFiles = async (filesList) => {
 
     try {
       const token = getCsrfToken();
-      const res = await fetch(`/clubs/${props.clubSlug}/admin/media`, {
+      const res = await fetch(`/${props.clubSlug}/admin/media`, {
         method: 'POST',
         headers: {
           'X-CSRF-TOKEN': token,
@@ -229,7 +229,7 @@ const selectItem = (item) => {
 const restoreItem = async (item, e) => {
   e.stopPropagation();
   try {
-    const res = await fetch(`/clubs/${props.clubSlug}/admin/media/${item.id}/restore`, {
+    const res = await fetch(`/${props.clubSlug}/admin/media/${item.id}/restore`, {
       method: 'POST',
       headers: {
         'X-CSRF-TOKEN': getCsrfToken(),
@@ -251,7 +251,7 @@ const forceDeleteItem = async (item, e) => {
   if (!confirm(`Are you sure you want to PERMANENTLY delete "${item.file_name}"?`)) return;
 
   try {
-    const res = await fetch(`/clubs/${props.clubSlug}/admin/media/${item.id}/force`, {
+    const res = await fetch(`/${props.clubSlug}/admin/media/${item.id}/force`, {
       method: 'DELETE',
       headers: {
         'X-CSRF-TOKEN': getCsrfToken(),
@@ -273,7 +273,7 @@ const deleteItem = async (item, e) => {
   if (!confirm(`Move "${item.file_name}" to Trash bin?`)) return;
 
   try {
-    const res = await fetch(`/clubs/${props.clubSlug}/admin/media/${item.id}`, {
+    const res = await fetch(`/${props.clubSlug}/admin/media/${item.id}`, {
       method: 'DELETE',
       headers: {
         'X-CSRF-TOKEN': getCsrfToken(),
@@ -308,15 +308,15 @@ const isImage = (mimeOrUrl) => {
 
 <template>
   <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 flex flex-col">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col">
       
       <!-- Modal Header -->
-      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/50/80">
         <div class="flex items-center gap-2.5">
           <span class="text-xl">📁</span>
           <div>
-            <h3 class="text-base font-extrabold text-slate-900">File Manager</h3>
-            <p class="text-xs text-slate-500">Centralized file repository for logos, news, newsletters, galleries, and documents.</p>
+            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">File Manager</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Centralized file repository for logos, news, newsletters, galleries, and documents.</p>
           </div>
         </div>
 
@@ -326,7 +326,7 @@ const isImage = (mimeOrUrl) => {
             type="button"
             @click="triggerUpload"
             :disabled="isUploading"
-            class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
           >
             <span v-if="isUploading" class="animate-spin">⏳</span>
             <span v-else>📤</span>
@@ -344,7 +344,7 @@ const isImage = (mimeOrUrl) => {
           <button
             type="button"
             @click="emit('close')"
-            class="p-2 text-slate-400 hover:text-slate-700 font-bold rounded-xl transition-colors cursor-pointer text-sm"
+            class="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold rounded-xl transition-colors cursor-pointer text-sm"
           >
             ✕
           </button>
@@ -355,7 +355,7 @@ const isImage = (mimeOrUrl) => {
       <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
         
         <!-- Folder Navigation Sidebar -->
-        <div class="w-full md:w-64 bg-slate-50 border-r border-slate-200 p-4 space-y-1 overflow-y-auto shrink-0">
+        <div class="w-full md:w-64 bg-slate-50 dark:bg-slate-800/50 border-r border-slate-200 dark:border-slate-800 p-4 space-y-1 overflow-y-auto shrink-0">
           <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
             Media Folders
           </div>
@@ -368,8 +368,8 @@ const isImage = (mimeOrUrl) => {
             :class="[
               'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer',
               activeFolder === folder.id
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'text-slate-700 hover:bg-slate-200/60'
+                ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-sm'
+                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
             ]"
           >
             <span class="flex items-center gap-2">
@@ -380,7 +380,7 @@ const isImage = (mimeOrUrl) => {
               v-if="folder.id === 'trash' && trashCount > 0"
               :class="[
                 'px-2 py-0.5 rounded-full text-[10px] font-black',
-                activeFolder === 'trash' ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700'
+                activeFolder === 'trash' ? 'bg-rose-500 text-white' : 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
               ]"
             >
               {{ trashCount }}
@@ -389,10 +389,10 @@ const isImage = (mimeOrUrl) => {
         </div>
 
         <!-- Main Media Grid Area -->
-        <div class="flex-1 flex flex-col p-6 space-y-4 overflow-hidden bg-white">
+        <div class="flex-1 flex flex-col p-6 space-y-4 overflow-hidden bg-white dark:bg-slate-900">
           
           <!-- Top Search & Inline Filter Controls Bar -->
-          <div class="space-y-3 pb-3 border-b border-slate-100">
+          <div class="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-800">
             <div class="flex items-center justify-between gap-3">
               <!-- Search Box -->
               <div class="relative flex-1">
@@ -400,21 +400,21 @@ const isImage = (mimeOrUrl) => {
                   v-model="searchQuery"
                   type="text"
                   placeholder="Search files by name..."
-                  class="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500"
+                  class="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
                 <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
                 <button
                   v-if="searchQuery"
                   type="button"
                   @click="searchQuery = ''"
-                  class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 text-xs font-bold"
+                  class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-bold"
                 >
                   ✕
                 </button>
               </div>
 
               <!-- Counter -->
-              <div class="text-xs font-bold text-slate-500 shrink-0">
+              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
                 Showing {{ mediaItems.length }} {{ mediaItems.length === 1 ? 'file' : 'files' }}
               </div>
             </div>
@@ -423,9 +423,9 @@ const isImage = (mimeOrUrl) => {
             <div class="flex flex-wrap items-center gap-2 pt-1">
               
               <!-- 1. Category / Type Filter -->
-              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
                 <span class="text-slate-400">Type:</span>
-                <select v-model="filterType" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                <select v-model="filterType" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="all">All Types</option>
                   <option value="image">🖼️ Images Only</option>
                   <option value="document">📄 Documents Only</option>
@@ -433,9 +433,9 @@ const isImage = (mimeOrUrl) => {
               </div>
 
               <!-- 2. Dynamic Extension Filter (Only available extensions listed) -->
-              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
                 <span class="text-slate-400">Extension:</span>
-                <select v-model="filterExtension" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                <select v-model="filterExtension" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="all">All Extensions</option>
                   <option v-for="ext in availableExtensions" :key="ext" :value="ext">
                     .{{ ext.toUpperCase() }}
@@ -444,9 +444,9 @@ const isImage = (mimeOrUrl) => {
               </div>
 
               <!-- 3. Dynamic Date Added Filter (Year / Month) -->
-              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
                 <span class="text-slate-400">Date:</span>
-                <select v-model="filterDate" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                <select v-model="filterDate" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="all">All Dates</option>
                   <option v-for="m in availableMonths" :key="m.value" :value="m.value">
                     📅 {{ m.label }}
@@ -455,9 +455,9 @@ const isImage = (mimeOrUrl) => {
               </div>
 
               <!-- 4. Sort Order -->
-              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
                 <span class="text-slate-400">Sort:</span>
-                <select v-model="sortBy" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                <select v-model="sortBy" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
                   <option value="name_asc">Name (A to Z)</option>
@@ -472,7 +472,7 @@ const isImage = (mimeOrUrl) => {
                 v-if="searchQuery || filterType !== 'all' || filterExtension !== 'all' || filterDate !== 'all' || sortBy !== 'newest'"
                 type="button"
                 @click="resetFilters"
-                class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold rounded-xl border border-rose-200 transition-all cursor-pointer flex items-center gap-1"
+                class="px-2 py-1 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer flex items-center gap-1"
                 title="Reset all search and filter settings"
               >
                 <span>✕ Reset</span>
@@ -487,9 +487,9 @@ const isImage = (mimeOrUrl) => {
               <span class="animate-spin text-lg mr-2">🔄</span> Loading Media Library...
             </div>
 
-            <div v-else-if="!mediaItems.length" class="text-center py-16 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+            <div v-else-if="!mediaItems.length" class="text-center py-16 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50/50">
               <span class="text-3xl block mb-2">📁</span>
-              <span class="text-xs font-bold text-slate-700 block">No media files in this folder</span>
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">No media files in this folder</span>
               <span class="text-[11px] text-slate-400">Click "Upload New File" above to add files to the media library.</span>
             </div>
 
@@ -498,10 +498,10 @@ const isImage = (mimeOrUrl) => {
                 v-for="item in mediaItems"
                 :key="item.id"
                 @click="selectItem(item)"
-                class="group relative bg-slate-50 hover:bg-sky-50/60 rounded-2xl border border-slate-200/90 hover:border-sky-300 p-2.5 transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col justify-between overflow-hidden"
+                class="group relative bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/60 dark:hover:bg-blue-950/60 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 hover:border-blue-300 dark:hover:border-blue-700/60 p-2.5 transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col justify-between overflow-hidden"
               >
                 <!-- Thumbnail Preview -->
-                <div class="h-28 w-full rounded-xl overflow-hidden bg-white border border-slate-200/80 flex items-center justify-center relative mb-2">
+                <div class="h-28 w-full rounded-xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-center relative mb-2">
                   <img
                     v-if="isImage(item.mime_type || item.file_name)"
                     :src="item.original_url"
@@ -518,7 +518,7 @@ const isImage = (mimeOrUrl) => {
                     <span class="px-2 py-0.5 rounded-md bg-slate-900/75 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider">
                       {{ item.collection_name }}
                     </span>
-                    <span v-if="item.is_variant" class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
+                    <span v-if="item.is_variant" class="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
                       ✂️ Variant
                     </span>
                     <span v-if="item.is_trashed" class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
@@ -529,21 +529,21 @@ const isImage = (mimeOrUrl) => {
 
                 <!-- File Info -->
                 <div class="space-y-1">
-                  <span class="block font-bold text-slate-900 group-hover:text-sky-700 text-xs truncate" :title="item.file_name">
+                  <span class="block font-bold text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 text-xs truncate" :title="item.file_name">
                     {{ item.file_name }}
                   </span>
-                  <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                  <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                     <span>{{ item.human_size }}</span>
                     <span>{{ item.created_at }}</span>
                   </div>
                 </div>
 
                 <!-- Action Button Overlay -->
-                <div class="pt-2 flex items-center justify-between border-t border-slate-200/60 mt-2">
-                  <span v-if="activeFolder !== 'trash' && !item.is_trashed" class="text-[11px] font-bold text-sky-600 group-hover:underline flex items-center gap-1">
+                <div class="pt-2 flex items-center justify-between border-t border-slate-200/60 dark:border-slate-800/60 mt-2">
+                  <span v-if="activeFolder !== 'trash' && !item.is_trashed" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:underline flex items-center gap-1">
                     <span>✓</span> Select File
                   </span>
-                  <span v-else class="text-[11px] font-bold text-rose-600">
+                  <span v-else class="text-[11px] font-bold text-rose-600 dark:text-rose-400">
                     Trashed File
                   </span>
 
@@ -552,7 +552,7 @@ const isImage = (mimeOrUrl) => {
                       <button
                         type="button"
                         @click="restoreItem(item, $event)"
-                        class="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-md border border-emerald-200 transition-colors cursor-pointer"
+                        class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-md border border-emerald-200 dark:border-emerald-800/60 transition-colors cursor-pointer"
                         title="Restore File"
                       >
                         ↻ Restore
@@ -560,7 +560,7 @@ const isImage = (mimeOrUrl) => {
                       <button
                         type="button"
                         @click="forceDeleteItem(item, $event)"
-                        class="text-slate-400 hover:text-rose-600 p-1 text-xs cursor-pointer"
+                        class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 text-xs cursor-pointer"
                         title="Delete Permanently"
                       >
                         🔥
@@ -570,7 +570,7 @@ const isImage = (mimeOrUrl) => {
                       <button
                         type="button"
                         @click="deleteItem(item, $event)"
-                        class="text-slate-400 hover:text-rose-600 p-1 text-xs cursor-pointer"
+                        class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 text-xs cursor-pointer"
                         title="Move to Trash"
                       >
                         🗑️

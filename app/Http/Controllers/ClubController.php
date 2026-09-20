@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\ClubType;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,10 +15,18 @@ class ClubController extends Controller
     /**
      * Display a listing of all registered clubs and their configurations.
      */
-    public function index(): Response
+    public function index(): Response|RedirectResponse
     {
+        if (Auth::check()) {
+            return redirect()->route('members.home');
+        }
+
         $clubs = Club::with(['clubType', 'membershipPlans'])
-            ->withCount(['users', 'events', 'posts'])
+            ->withCount([
+                'users',
+                'events' => fn ($events) => $events->visibleTo(null),
+                'posts' => fn ($posts) => $posts->visibleTo(null),
+            ])
             ->get()
             ->map(function ($club) {
                 return [
@@ -103,8 +113,11 @@ class ClubController extends Controller
     public function show(string $slug): Response
     {
         $club = Club::where('slug', $slug)
-            ->with(['clubType', 'membershipPlans', 'users', 'posts.author', 'newsletters', 'events'])
+            ->with(['clubType', 'membershipPlans', 'users', 'newsletters'])
             ->firstOrFail();
+
+        $viewer = Auth::user();
+        $visibleEvents = $club->events()->visibleTo($viewer)->get();
 
         $enabledModules = $club->settings['enabled_modules'] ?? $club->clubType->available_modules;
 
@@ -137,7 +150,7 @@ class ClubController extends Controller
                     'price' => number_format($p->price, 2),
                     'billing_period' => $p->billing_period,
                 ]),
-                'posts' => $club->posts()->published()->get()->map(fn ($post) => [
+                'posts' => $club->posts()->with('author')->published()->visibleTo($viewer)->get()->map(fn ($post) => [
                     'id' => $post->id,
                     'title' => $post->title,
                     'slug' => $post->slug,
@@ -153,7 +166,7 @@ class ClubController extends Controller
                     'target_roles' => $n->target_roles,
                     'sent_at' => $n->sent_at?->format('M d, Y H:i'),
                 ]),
-                'events' => $club->events->map(fn ($event) => [
+                'events' => $visibleEvents->map(fn ($event) => [
                     'id' => $event->id,
                     'title' => $event->title,
                     'slug' => $event->slug,

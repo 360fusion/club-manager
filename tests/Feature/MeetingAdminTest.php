@@ -310,7 +310,7 @@ class MeetingAdminTest extends TestCase
         $this->actingAs($adminUser);
 
         // Update settings with Provincial Rulers & Officers Roster
-        $response = $this->put("/clubs/{$club->slug}/admin/settings", [
+        $response = $this->put("/{$club->slug}/admin/settings", [
             'provincial_name' => 'Provincial Grand Lodge of Durham',
             'provincial_grand_master' => 'R WBro John David Watts',
             'deputy_provincial_grand_master' => 'WBro Andrew Peter Faul Foster PSGD',
@@ -331,7 +331,7 @@ class MeetingAdminTest extends TestCase
         $this->assertCount(2, $club->settings['officers_roster']);
 
         // Check meeting create form receives settings
-        $createResponse = $this->get("/clubs/{$club->slug}/admin/meetings/create");
+        $createResponse = $this->get("/{$club->slug}/admin/meetings/create");
         $createResponse->assertOk();
     }
 
@@ -357,7 +357,7 @@ class MeetingAdminTest extends TestCase
 
         $this->actingAs($adminUser);
 
-        $response = $this->post("/clubs/{$club->slug}/admin/meetings", [
+        $response = $this->post("/{$club->slug}/admin/meetings", [
             'title' => 'Custom Officers Meeting',
             'meeting_date' => '2026-10-15',
             'starts_at' => '19:00',

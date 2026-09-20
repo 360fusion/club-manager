@@ -1,13 +1,15 @@
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useForm, Head, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
+import Select from '@/Components/Ui/Select.vue';
 
 const props = defineProps({
   club: Object,
   post: Object,
+  visibilityOptions: { type: Array, default: () => [] },
 });
 
 const existingAttachments = ref([...(props.post.attachments || [])]);
@@ -78,6 +80,7 @@ const form = useForm({
   cover_image_url: props.post.cover_image_url || '',
   cover_image: null,
   status: isPublished.value ? 'published' : 'draft',
+  visibility: props.post.visibility || 'club',
   published_at: props.post.published_at || '',
   expires_at: props.post.expires_at || '',
   action_type: 'save',
@@ -89,6 +92,8 @@ const form = useForm({
 watch(isPublished, (val) => {
   form.status = val ? 'published' : 'draft';
 });
+
+const visibilityHint = computed(() => props.visibilityOptions.find((o) => o.value === form.visibility)?.description ?? '');
 
 // Auto-generate slug from title
 watch(() => form.title, (newTitle) => {
@@ -149,11 +154,11 @@ const removeExistingAttachment = (index) => {
 
 // Block Element Builder Functions
 const blockTypes = [
-  { type: 'text', icon: '📝', label: 'Text Block', desc: 'Rich text paragraph or formatted text', color: 'text-blue-600', bg: 'bg-blue-50' },
-  { type: 'image', icon: '🖼️', label: 'Single Image', desc: 'Image upload with size & position controls', color: 'text-sky-600', bg: 'bg-sky-50' },
-  { type: 'images', icon: '🖼️', label: 'Image Gallery', desc: 'Multi-image grid layout', color: 'text-purple-600', bg: 'bg-purple-50' },
-  { type: 'notice', icon: '📢', label: 'Callout Box', desc: 'Highlighted notice or announcement box', color: 'text-amber-600', bg: 'bg-amber-50' },
-  { type: 'button', icon: '🔗', label: 'Button Link', desc: 'Call to action button link', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { type: 'text', icon: '📝', label: 'Text Block', desc: 'Rich text paragraph or formatted text', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+  { type: 'image', icon: '🖼️', label: 'Single Image', desc: 'Image upload with size & position controls', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+  { type: 'images', icon: '🖼️', label: 'Image Gallery', desc: 'Multi-image grid layout', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+  { type: 'notice', icon: '📢', label: 'Callout Box', desc: 'Highlighted notice or announcement box', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+  { type: 'button', icon: '🔗', label: 'Button Link', desc: 'Call to action button link', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
 ];
 
 const activeInsertIndex = ref(null);
@@ -366,16 +371,16 @@ const submitWithAction = (actionType) => {
     <div class="max-w-4xl mx-auto space-y-6">
       
       <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">{{ post.id ? 'Edit News Post' : 'Create News Article' }}</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Build structured page elements, images, positioning, and downloadable files.</p>
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ post.id ? 'Edit News Post' : 'Create News Article' }}</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Build structured page elements, images, positioning, and downloadable files.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <button
             type="button"
             @click="showPreviewModal = true"
-            class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+            class="px-4 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-blue-200 dark:border-blue-800/60 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
           >
             👁️ Preview Article
           </button>
@@ -383,61 +388,61 @@ const submitWithAction = (actionType) => {
             v-if="post.id"
             :href="route('member.posts.show', { slug: club.slug, id: post.id })"
             target="_blank"
-            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all flex items-center gap-1"
+            class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all flex items-center gap-1"
             title="Open live post in member portal"
           >
             ↗️ Live Link
           </a>
-          <Link :href="route('admin.posts.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all">
+          <Link :href="route('admin.posts.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all">
             &larr; Back to Posts
           </Link>
         </div>
       </div>
 
       <!-- Form -->
-      <form @submit.prevent="submit" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-6">
+      <form @submit.prevent="submit" class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
         
         <!-- Header Metadata Section -->
         <div class="space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Article Title *</label>
-              <input v-model="form.title" type="text" required placeholder="Summer Regatta Results & Trophy Ceremony" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-sky-500" />
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Article Title *</label>
+              <input v-model="form.title" type="text" required placeholder="Summer Regatta Results & Trophy Ceremony" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">URL Slug *</label>
-              <input v-model="form.slug" type="text" required placeholder="summer-regatta-results" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-sky-500" />
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">URL Slug *</label>
+              <input v-model="form.slug" type="text" required placeholder="summer-regatta-results" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Post Date & Time *</label>
-              <input v-model="form.published_at" type="datetime-local" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-sky-500" />
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Post Date & Time *</label>
+              <input v-model="form.published_at" type="datetime-local" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
             </div>
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Teaser Excerpt</label>
-            <input v-model="form.excerpt" type="text" placeholder="Short summary for member portal dashboard and newsletters..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-sky-500" />
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Teaser Excerpt</label>
+            <input v-model="form.excerpt" type="text" placeholder="Short summary for member portal dashboard and newsletters..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
           </div>
 
           <!-- Cover Image Upload & URL -->
-          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
             <div class="flex items-center justify-between">
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">🖼️ Article Banner / Cover Image</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">🖼️ Article Banner / Cover Image</label>
               <div class="flex items-center gap-2">
                 <button
                   v-if="coverImagePreview || form.cover_image_url"
                   type="button"
                   @click="removeCoverImage"
-                  class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition-all flex items-center gap-1 cursor-pointer"
+                  class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all flex items-center gap-1 cursor-pointer"
                 >
                   🗑️ Remove Image
                 </button>
                 <button
                   type="button"
                   @click="openMediaLibrary('cover', null, 'news')"
-                  class="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all flex items-center gap-1 cursor-pointer"
+                  class="px-3 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all flex items-center gap-1 cursor-pointer"
                 >
                   📁 Choose from Media Library
                 </button>
@@ -446,17 +451,17 @@ const submitWithAction = (actionType) => {
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Image URL</label>
-                <input v-model="form.cover_image_url" type="text" placeholder="https://..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono" />
+                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Image URL</label>
+                <input v-model="form.cover_image_url" type="text" placeholder="https://..." class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono" />
               </div>
 
               <div>
-                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Or Upload Image File</label>
-                <input type="file" accept="image/*" @change="onCoverImageFileSelect" class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer" />
+                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Or Upload Image File</label>
+                <input type="file" accept="image/*" @change="onCoverImageFileSelect" class="w-full text-xs text-slate-600 dark:text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 dark:file:bg-blue-950/40 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40 cursor-pointer" />
               </div>
             </div>
 
-            <div v-if="coverImagePreview || form.cover_image_url" class="relative max-w-sm rounded-xl overflow-hidden border border-slate-200 mt-2 group">
+            <div v-if="coverImagePreview || form.cover_image_url" class="relative max-w-sm rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 mt-2 group">
               <img :src="coverImagePreview || form.cover_image_url" class="w-full h-36 object-cover" />
               <button
                 type="button"
@@ -471,30 +476,30 @@ const submitWithAction = (actionType) => {
         </div>
 
         <!-- Modular Page Element Builder -->
-        <div class="space-y-4 pt-4 border-t border-slate-200">
+        <div class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
           <div class="space-y-3">
             <div>
-              <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span>🧩</span> Page Elements & Content Builder
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5">Construct article pages with reorderable text blocks, single images, multi-image galleries, and notice callouts.</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Construct article pages with reorderable text blocks, single images, multi-image galleries, and notice callouts.</p>
             </div>
 
             <!-- Add Element Toolbar Buttons (Listed Under Text) -->
             <div class="flex flex-wrap items-center gap-2 pt-1">
-              <button type="button" @click="addBlock('text')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer">
+              <button type="button" @click="addBlock('text')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
                 + Text Block
               </button>
-              <button type="button" @click="addBlock('image')" class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all cursor-pointer">
+              <button type="button" @click="addBlock('image')" class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer">
                 + Image
               </button>
-              <button type="button" @click="addBlock('images')" class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-xl border border-purple-200 transition-all cursor-pointer">
+              <button type="button" @click="addBlock('images')" class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer">
                 + Image Gallery
               </button>
-              <button type="button" @click="addBlock('notice')" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-xl border border-amber-200 transition-all cursor-pointer">
+              <button type="button" @click="addBlock('notice')" class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800/60 transition-all cursor-pointer">
                 + Callout Box
               </button>
-              <button type="button" @click="addBlock('button')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all cursor-pointer">
+              <button type="button" @click="addBlock('button')" class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer">
                 + Button Link
               </button>
             </div>
@@ -507,26 +512,26 @@ const submitWithAction = (actionType) => {
               <!-- Insert Divider Above First Block (Index 0) -->
               <div v-if="bIdx === 0" class="relative py-1 flex items-center justify-center insert-menu-container">
                 <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                  <div class="w-full border-t border-dashed border-slate-200 hover:border-slate-300 transition-colors"></div>
+                  <div class="w-full border-t border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"></div>
                 </div>
                 <div class="relative flex justify-center">
                   <button
                     type="button"
                     @click.stop="toggleInsertMenu(0)"
-                    class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-sky-300 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
+                    class="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
                   >
-                    <span class="w-4 h-4 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-black">+</span>
+                    <span class="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center text-xs font-black">+</span>
                     <span>Insert block at top</span>
                   </button>
 
                   <!-- Insert Menu Dropdown Popover -->
                   <div
                     v-if="activeInsertIndex === 0"
-                    class="absolute top-full mt-2 z-30 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100"
+                    class="absolute top-full mt-2 z-30 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100"
                   >
-                    <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 flex items-center justify-between">
+                    <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                       <span>Insert Element Here</span>
-                      <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer">✕</button>
+                      <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs cursor-pointer">✕</button>
                     </div>
 
                     <button
@@ -534,13 +539,13 @@ const submitWithAction = (actionType) => {
                       :key="item.type"
                       type="button"
                       @click="addBlock(item.type, 0)"
-                      class="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-all cursor-pointer group"
+                      class="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer group"
                     >
                       <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black transition-transform group-hover:scale-110" :class="[item.bg, item.color]">
                         {{ item.icon }}
                       </span>
                       <div>
-                        <span class="block font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{{ item.label }}</span>
+                        <span class="block font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ item.label }}</span>
                         <span class="text-[10px] text-slate-400 font-normal leading-tight block">{{ item.desc }}</span>
                       </div>
                     </button>
@@ -549,28 +554,28 @@ const submitWithAction = (actionType) => {
               </div>
 
               <!-- Block Item Card -->
-              <div class="bg-slate-50 rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all">
+              <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 shadow-sm overflow-hidden transition-all">
                 <!-- Block Header & Controls -->
-                <div class="flex items-center justify-between px-4 py-2.5 bg-slate-100/90 border-b border-slate-200 text-xs font-bold text-slate-700">
+                <div class="flex items-center justify-between px-4 py-2.5 bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200">
                   <div class="flex items-center gap-2">
-                    <span class="w-5 h-5 rounded bg-white text-slate-600 flex items-center justify-center text-[11px] font-black border border-slate-200">
+                    <span class="w-5 h-5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[11px] font-black border border-slate-200 dark:border-slate-800">
                       {{ bIdx + 1 }}
                     </span>
 
                     <!-- Type Badge -->
-                    <span v-if="block.type === 'text'" class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px] uppercase font-bold">
+                    <span v-if="block.type === 'text'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                       📝 Text Block
                     </span>
-                    <span v-else-if="block.type === 'image'" class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 text-[10px] uppercase font-bold">
+                    <span v-else-if="block.type === 'image'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                       🖼️ Single Image
                     </span>
-                    <span v-else-if="block.type === 'images'" class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[10px] uppercase font-bold">
+                    <span v-else-if="block.type === 'images'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                       🖼️ Image Gallery ({{ block.columns }} Cols)
                     </span>
-                    <span v-else-if="block.type === 'notice'" class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold">
+                    <span v-else-if="block.type === 'notice'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
                       📢 Callout Box
                     </span>
-                    <span v-else-if="block.type === 'button'" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] uppercase font-bold">
+                    <span v-else-if="block.type === 'button'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                       🔗 Button Link
                     </span>
                   </div>
@@ -581,7 +586,7 @@ const submitWithAction = (actionType) => {
                       type="button"
                       @click="moveBlockUp(bIdx)"
                       :disabled="bIdx === 0"
-                      class="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 cursor-pointer"
+                      class="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                       title="Move Up"
                     >
                       ▲
@@ -590,7 +595,7 @@ const submitWithAction = (actionType) => {
                       type="button"
                       @click="moveBlockDown(bIdx)"
                       :disabled="bIdx === blocks.length - 1"
-                      class="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 cursor-pointer"
+                      class="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                       title="Move Down"
                     >
                       ▼
@@ -598,7 +603,7 @@ const submitWithAction = (actionType) => {
                     <button
                       type="button"
                       @click="duplicateBlock(bIdx)"
-                      class="p-1 text-slate-500 hover:text-indigo-600 cursor-pointer"
+                      class="p-1 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
                       title="Duplicate Element"
                     >
                       📋
@@ -606,7 +611,7 @@ const submitWithAction = (actionType) => {
                     <button
                       type="button"
                       @click="removeBlock(bIdx)"
-                      class="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                      class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
                       title="Delete Element"
                     >
                       🗑️
@@ -627,49 +632,49 @@ const submitWithAction = (actionType) => {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div class="col-span-1 md:col-span-1">
                         <div class="flex items-center justify-between mb-1">
-                          <label class="block font-bold text-slate-700">Image URL</label>
+                          <label class="block font-bold text-slate-700 dark:text-slate-200">Image URL</label>
                           <div class="flex items-center gap-1.5">
                             <button
                               v-if="block.url"
                               type="button"
                               @click="removeBlockImage(block)"
-                              class="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold rounded-lg border border-rose-200 transition-all cursor-pointer"
+                              class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-lg border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer"
                             >
                               🗑️ Clear
                             </button>
                             <button
                               type="button"
                               @click="openMediaLibrary('block_image', block, 'images')"
-                              class="px-2 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-bold rounded-lg border border-sky-200 transition-all cursor-pointer"
+                              class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer"
                             >
                               📁 Media Library
                             </button>
                           </div>
                         </div>
-                        <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+                        <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
                       </div>
 
                       <div class="col-span-1 md:col-span-1">
-                        <label class="block font-bold text-slate-700 mb-1">Or Upload Image File</label>
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Or Upload Image File</label>
                         <input
                           type="file"
                           accept="image/*"
                           @change="onBlockImageFileSelect($event, block)"
-                          class="w-full text-[11px] text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer"
+                          class="w-full text-[11px] text-slate-600 dark:text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-blue-50 dark:file:bg-blue-950/40 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40 cursor-pointer"
                         />
                       </div>
 
                       <div class="col-span-1 md:col-span-1">
-                        <label class="block font-bold text-slate-700 mb-1">Caption / Alt Text</label>
-                        <input v-model="block.caption" type="text" placeholder="e.g., Annual Festive Board at The Lodge of Fraternity" class="w-full p-2 bg-white border border-slate-300 rounded-xl" />
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Caption / Alt Text</label>
+                        <input v-model="block.caption" type="text" placeholder="e.g., Annual Festive Board at The Lodge of Fraternity" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl" />
                       </div>
                     </div>
 
                     <!-- Positioning & Sizing Controls -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white rounded-xl border border-slate-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                       <div>
-                        <label class="block font-bold text-slate-700 mb-1">Image Positioning</label>
-                        <select v-model="block.position" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Image Positioning</label>
+                        <select v-model="block.position" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                           <option value="left">Left Aligned</option>
                           <option value="center">Centered</option>
                           <option value="right">Right Aligned</option>
@@ -678,8 +683,8 @@ const submitWithAction = (actionType) => {
                       </div>
 
                       <div>
-                        <label class="block font-bold text-slate-700 mb-1">Image Sizing</label>
-                        <select v-model="block.size" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Image Sizing</label>
+                        <select v-model="block.size" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                           <option value="small">Small (25% Width)</option>
                           <option value="medium">Medium (50% Width)</option>
                           <option value="large">Large (75% Width)</option>
@@ -693,11 +698,11 @@ const submitWithAction = (actionType) => {
                       <span class="text-[10px] font-bold text-slate-400 block mb-1">Preview Layout:</span>
                       <div :class="['flex', block.position === 'left' ? 'justify-start' : block.position === 'right' ? 'justify-end' : block.position === 'center' ? 'justify-center' : 'w-full']">
                         <div :class="[
-                          'rounded-xl overflow-hidden border border-slate-200 bg-white p-1',
+                          'rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1',
                           block.size === 'small' ? 'w-1/4' : block.size === 'medium' ? 'w-1/2' : block.size === 'large' ? 'w-3/4' : 'w-full'
                         ]">
                           <img :src="block.url" class="w-full h-auto max-h-64 object-cover rounded-lg" />
-                          <p v-if="block.caption" class="text-[11px] text-center text-slate-500 italic mt-1">{{ block.caption }}</p>
+                          <p v-if="block.caption" class="text-[11px] text-center text-slate-500 dark:text-slate-400 italic mt-1">{{ block.caption }}</p>
                         </div>
                       </div>
                     </div>
@@ -707,8 +712,8 @@ const submitWithAction = (actionType) => {
                   <div v-else-if="block.type === 'images'" class="space-y-3 text-xs">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
-                        <label class="font-bold text-slate-700">Grid Layout Columns:</label>
-                        <select v-model.number="block.columns" class="p-1.5 bg-white border border-slate-300 rounded-lg font-bold">
+                        <label class="font-bold text-slate-700 dark:text-slate-200">Grid Layout Columns:</label>
+                        <select v-model.number="block.columns" class="p-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-bold">
                           <option :value="2">2 Columns</option>
                           <option :value="3">3 Columns</option>
                           <option :value="4">4 Columns</option>
@@ -718,7 +723,7 @@ const submitWithAction = (actionType) => {
                       <button
                         type="button"
                         @click="addGalleryImage(block)"
-                        class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-lg border border-purple-200 transition-all cursor-pointer"
+                        class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer"
                       >
                         + Add Image to Gallery
                       </button>
@@ -728,22 +733,22 @@ const submitWithAction = (actionType) => {
                       <div
                         v-for="(gItem, gIdx) in block.items"
                         :key="gIdx"
-                        class="p-3 bg-white rounded-xl border border-slate-200 space-y-2 relative"
+                        class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 relative"
                       >
                         <div class="flex items-center justify-between">
-                          <span class="font-bold text-slate-600 text-[11px]">Image {{ gIdx + 1 }}</span>
+                          <span class="font-bold text-slate-600 dark:text-slate-300 text-[11px]">Image {{ gIdx + 1 }}</span>
                           <div class="flex items-center gap-1">
                             <button
                               type="button"
                               @click="openMediaLibrary('gallery_image', gItem, 'galleries')"
-                              class="px-2 py-0.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-[10px] font-bold rounded-md border border-purple-200 transition-all cursor-pointer"
+                              class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-md border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer"
                             >
                               📁 Media Library
                             </button>
                             <button
                               type="button"
                               @click="removeGalleryImage(block, gIdx)"
-                              class="text-slate-400 hover:text-rose-600 font-bold p-0.5 cursor-pointer"
+                              class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold p-0.5 cursor-pointer"
                             >
                               ✕
                             </button>
@@ -751,18 +756,18 @@ const submitWithAction = (actionType) => {
                         </div>
 
                         <div class="space-y-1">
-                          <input v-model="gItem.url" type="text" placeholder="https://example.com/gallery-photo.jpg" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-[11px]" />
+                          <input v-model="gItem.url" type="text" placeholder="https://example.com/gallery-photo.jpg" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg font-mono text-[11px]" />
                           <input
                             type="file"
                             accept="image/*"
                             @change="onGalleryImageFileSelect($event, gItem)"
-                            class="w-full text-[10px] text-slate-600 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer"
+                            class="w-full text-[10px] text-slate-600 dark:text-slate-300 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-blue-50 dark:file:bg-blue-950/40 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40 cursor-pointer"
                           />
                         </div>
 
-                        <input v-model="gItem.caption" type="text" placeholder="Caption (optional)" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-[11px]" />
+                        <input v-model="gItem.caption" type="text" placeholder="Caption (optional)" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-[11px]" />
 
-                        <img v-if="gItem.url" :src="gItem.url" class="w-full h-24 object-cover rounded-lg border border-slate-200" />
+                        <img v-if="gItem.url" :src="gItem.url" class="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-800" />
                       </div>
                     </div>
                   </div>
@@ -771,8 +776,8 @@ const submitWithAction = (actionType) => {
                   <div v-else-if="block.type === 'notice'" class="space-y-3 text-xs">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label class="block font-bold text-slate-700 mb-1">Callout Style</label>
-                        <select v-model="block.style" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Callout Style</label>
+                        <select v-model="block.style" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold">
                           <option value="info">💡 Info / Announcement (Blue)</option>
                           <option value="warning">⚠️ Warning / Reminder (Amber)</option>
                           <option value="important">🚨 Important / Bylaws (Purple)</option>
@@ -781,32 +786,32 @@ const submitWithAction = (actionType) => {
                       </div>
 
                       <div>
-                        <label class="block font-bold text-slate-700 mb-1">Callout Title</label>
-                        <input v-model="block.title" type="text" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold" />
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Callout Title</label>
+                        <input v-model="block.title" type="text" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
                       </div>
                     </div>
 
                     <div>
-                      <label class="block font-bold text-slate-700 mb-1">Callout Text Body</label>
-                      <textarea v-model="block.text" rows="2" placeholder="Write notice callout text here..." class="w-full p-2 bg-white border border-slate-300 rounded-xl"></textarea>
+                      <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Callout Text Body</label>
+                      <textarea v-model="block.text" rows="2" placeholder="Write notice callout text here..." class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl"></textarea>
                     </div>
                   </div>
 
                   <!-- 5. Button Link Block -->
                   <div v-else-if="block.type === 'button'" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div>
-                      <label class="block font-bold text-slate-700 mb-1">Button Label *</label>
-                      <input v-model="block.label" type="text" placeholder="Read Full Story →" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-bold" />
+                      <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Label *</label>
+                      <input v-model="block.label" type="text" placeholder="Read Full Story →" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
                     </div>
 
                     <div>
-                      <label class="block font-bold text-slate-700 mb-1">Target URL *</label>
-                      <input v-model="block.url" type="text" placeholder="https://..." class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+                      <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Target URL *</label>
+                      <input v-model="block.url" type="text" placeholder="https://..." class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
                     </div>
 
                     <div>
-                      <label class="block font-bold text-slate-700 mb-1">Alignment</label>
-                      <select v-model="block.align" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-semibold">
+                      <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Alignment</label>
+                      <select v-model="block.align" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                         <option value="left">Left Aligned</option>
                         <option value="center">Center Aligned</option>
                         <option value="right">Right Aligned</option>
@@ -820,26 +825,26 @@ const submitWithAction = (actionType) => {
               <!-- Insert Divider Between / After Blocks (Index bIdx + 1) -->
               <div class="relative py-1 flex items-center justify-center insert-menu-container">
                 <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                  <div class="w-full border-t border-dashed border-slate-200 hover:border-slate-300 transition-colors"></div>
+                  <div class="w-full border-t border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"></div>
                 </div>
                 <div class="relative flex justify-center">
                   <button
                     type="button"
                     @click.stop="toggleInsertMenu(bIdx + 1)"
-                    class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-sky-300 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
+                    class="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
                   >
-                    <span class="w-4 h-4 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-black">+</span>
+                    <span class="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center text-xs font-black">+</span>
                     <span>Add block here</span>
                   </button>
 
                   <!-- Insert Menu Dropdown Popover -->
                   <div
                     v-if="activeInsertIndex === bIdx + 1"
-                    class="absolute top-full mt-2 z-30 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100"
+                    class="absolute top-full mt-2 z-30 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100"
                   >
-                    <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 flex items-center justify-between">
+                    <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                       <span>Insert Element Here</span>
-                      <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer">✕</button>
+                      <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs cursor-pointer">✕</button>
                     </div>
 
                     <button
@@ -847,13 +852,13 @@ const submitWithAction = (actionType) => {
                       :key="item.type"
                       type="button"
                       @click="addBlock(item.type, bIdx + 1)"
-                      class="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-all cursor-pointer group"
+                      class="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-all cursor-pointer group"
                     >
                       <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black transition-transform group-hover:scale-110" :class="[item.bg, item.color]">
                         {{ item.icon }}
                       </span>
                       <div>
-                        <span class="block font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{{ item.label }}</span>
+                        <span class="block font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ item.label }}</span>
                         <span class="text-[10px] text-slate-400 font-normal leading-tight block">{{ item.desc }}</span>
                       </div>
                     </button>
@@ -866,24 +871,24 @@ const submitWithAction = (actionType) => {
         </div>
 
         <!-- Downloadable Attachments Section -->
-        <div class="space-y-3 pt-4 border-t border-slate-200">
+        <div class="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-800">
           <div class="flex items-center justify-between">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">📎 Downloadable Files & Documents</label>
-              <p class="text-[11px] text-slate-500">Attach PDFs, agendas, meeting minutes, spreadsheets, or documents for members.</p>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">📎 Downloadable Files & Documents</label>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">Attach PDFs, agendas, meeting minutes, spreadsheets, or documents for members.</p>
             </div>
             <div class="flex items-center gap-2">
               <button
                 type="button"
                 @click="openMediaLibrary('attachment', null, 'documents')"
-                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all flex items-center gap-1 cursor-pointer"
+                class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all flex items-center gap-1 cursor-pointer"
               >
                 📁 Choose from Media Library
               </button>
               <button
                 type="button"
                 @click="triggerFileInput"
-                class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all flex items-center gap-1 cursor-pointer"
+                class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all flex items-center gap-1 cursor-pointer"
               >
                 + Attach Files
               </button>
@@ -905,21 +910,21 @@ const submitWithAction = (actionType) => {
             <div
               v-for="(att, idx) in existingAttachments"
               :key="'existing-' + idx"
-              class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs"
+              class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/80 text-xs"
             >
               <div class="flex items-center gap-2.5 overflow-hidden">
                 <span class="text-lg">{{ getFileIcon(att.mime_type || att.name) }}</span>
                 <div class="truncate">
-                  <a :href="att.url" target="_blank" class="font-bold text-slate-900 hover:text-sky-600 truncate block">
+                  <a :href="att.url" target="_blank" class="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 truncate block">
                     {{ att.name }}
                   </a>
-                  <span class="text-[10px] text-slate-500">{{ att.size || 'Saved File' }}</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400">{{ att.size || 'Saved File' }}</span>
                 </div>
               </div>
               <button
                 type="button"
                 @click="removeExistingAttachment(idx)"
-                class="text-slate-400 hover:text-rose-600 font-bold p-1 rounded transition-colors cursor-pointer"
+                class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold p-1 rounded transition-colors cursor-pointer"
                 title="Remove attachment"
               >
                 ✕
@@ -930,19 +935,19 @@ const submitWithAction = (actionType) => {
             <div
               v-for="(file, idx) in newFiles"
               :key="'new-' + idx"
-              class="flex items-center justify-between bg-sky-50/50 p-3 rounded-xl border border-sky-200/80 text-xs"
+              class="flex items-center justify-between bg-blue-50/50 dark:bg-blue-950/50 p-3 rounded-xl border border-blue-200/80 dark:border-blue-800/80 text-xs"
             >
               <div class="flex items-center gap-2.5 overflow-hidden">
                 <span class="text-lg">{{ getFileIcon(file.name) }}</span>
                 <div class="truncate">
-                  <span class="font-bold text-sky-900 truncate block">{{ file.name }}</span>
-                  <span class="text-[10px] text-sky-600 font-semibold">{{ formatBytes(file.size) }} (Pending upload)</span>
+                  <span class="font-bold text-blue-900 dark:text-blue-200 truncate block">{{ file.name }}</span>
+                  <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">{{ formatBytes(file.size) }} (Pending upload)</span>
                 </div>
               </div>
               <button
                 type="button"
                 @click="removeNewFile(idx)"
-                class="text-sky-400 hover:text-rose-600 font-bold p-1 rounded transition-colors cursor-pointer"
+                class="text-blue-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold p-1 rounded transition-colors cursor-pointer"
                 title="Remove file"
               >
                 ✕
@@ -951,24 +956,24 @@ const submitWithAction = (actionType) => {
 
           </div>
 
-          <div v-else @click="triggerFileInput" class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-sky-300 transition-colors cursor-pointer bg-slate-50/50">
+          <div v-else @click="triggerFileInput" class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center hover:border-blue-300 dark:hover:border-blue-700/60 transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-800/50/50">
             <span class="text-2xl block mb-1">📁</span>
-            <span class="text-xs font-bold text-slate-700 block">Click to upload downloadable files</span>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Click to upload downloadable files</span>
             <span class="text-[11px] text-slate-400">PDFs, Word Documents, Excel sheets, Images, or Zip files (up to 10MB per file)</span>
           </div>
         </div>
 
         <!-- Publish Settings Section -->
-        <div class="pt-4 border-t border-slate-200">
+        <div class="pt-4 border-t border-slate-200 dark:border-slate-800">
           <!-- Accordion Header -->
           <button
             type="button"
             @click="showPublishSettings = !showPublishSettings"
-            class="w-full flex items-center justify-between text-left text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer py-1"
+            class="w-full flex items-center justify-between text-left text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors cursor-pointer py-1"
           >
             <span class="flex items-center gap-1.5">
               <span class="text-[10px] transform transition-transform duration-200" :class="{ 'rotate-180': !showPublishSettings }">▼</span>
-              <span class="text-xs font-medium text-slate-700">Publish settings</span>
+              <span class="text-xs font-medium text-slate-700 dark:text-slate-200">Publish settings</span>
             </span>
           </button>
 
@@ -976,47 +981,56 @@ const submitWithAction = (actionType) => {
           <div v-show="showPublishSettings" class="mt-4 space-y-4 text-xs">
             <!-- Publish Item Checkbox -->
             <div class="space-y-0.5">
-              <label class="inline-flex items-center gap-2 font-bold text-slate-800 cursor-pointer">
+              <label class="inline-flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100 cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="isPublished"
-                  class="rounded border-slate-300 text-sky-600 focus:ring-sky-500 w-4 h-4 cursor-pointer"
+                  class="rounded border-slate-300 dark:border-slate-700 text-blue-600 dark:text-blue-400 focus:ring-blue-500 w-4 h-4 cursor-pointer"
                 />
                 <span>Publish item</span>
               </label>
-              <p class="text-[11px] text-slate-500 pl-6">
-                Make the news item publicly visible on the website.
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 pl-6">
+                Make the news item live. Choose who can see it below.
               </p>
             </div>
+
+            <!-- Audience -->
+            <Select
+              v-model="form.visibility"
+              label="Who can see this"
+              :options="visibilityOptions"
+              :hint="visibilityHint"
+              :error="form.errors.visibility"
+            />
 
             <!-- Date Range Controls Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
               <!-- Show From -->
               <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Show from</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Show from</label>
                 <div class="relative">
                   <input
                     v-model="form.published_at"
                     type="datetime-local"
-                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
+                    class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
                   />
                 </div>
-                <p class="text-[11px] text-slate-500 mt-1 leading-normal">
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-normal">
                   If you want to prevent the news item from showing on the website before a certain date/time, you can specify it here.
                 </p>
               </div>
 
               <!-- Show Until -->
               <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Show until</label>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Show until</label>
                 <div class="relative">
                   <input
                     v-model="form.expires_at"
                     type="datetime-local"
-                    class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
+                    class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
                   />
                 </div>
-                <p class="text-[11px] text-slate-500 mt-1 leading-normal">
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-normal">
                   If you want to prevent the news item from showing on the website after a certain date/time, you can specify it here.
                 </p>
               </div>
@@ -1025,12 +1039,12 @@ const submitWithAction = (actionType) => {
         </div>
 
         <!-- Action Buttons Bar (Matching User's Screenshot) -->
-        <div class="bg-slate-100/90 -mx-6 -mb-6 p-4 rounded-b-2xl border-t border-slate-200/90 flex flex-wrap items-center gap-2 md:gap-2.5">
+        <div class="bg-slate-100/90 dark:bg-slate-800/90 -mx-6 -mb-6 p-4 rounded-b-2xl border-t border-slate-200/90 dark:border-slate-800/90 flex flex-wrap items-center gap-2 md:gap-2.5">
           <button
             type="button"
             @click="submitWithAction('save')"
             :disabled="form.processing"
-            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            class="px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-100 text-xs font-semibold rounded-lg border border-slate-300 dark:border-slate-700 shadow-sm transition-all cursor-pointer disabled:opacity-50"
           >
             Save
           </button>
@@ -1038,7 +1052,7 @@ const submitWithAction = (actionType) => {
             type="button"
             @click="submitWithAction('save_and_close')"
             :disabled="form.processing"
-            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            class="px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-100 text-xs font-semibold rounded-lg border border-slate-300 dark:border-slate-700 shadow-sm transition-all cursor-pointer disabled:opacity-50"
           >
             Save and close
           </button>
@@ -1046,7 +1060,7 @@ const submitWithAction = (actionType) => {
             type="button"
             @click="submitWithAction('save_and_new')"
             :disabled="form.processing"
-            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            class="px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-100 text-xs font-semibold rounded-lg border border-slate-300 dark:border-slate-700 shadow-sm transition-all cursor-pointer disabled:opacity-50"
           >
             Save and new
           </button>
@@ -1054,7 +1068,7 @@ const submitWithAction = (actionType) => {
             type="button"
             @click="submitWithAction('save_and_duplicate')"
             :disabled="form.processing"
-            class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            class="px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-100 text-xs font-semibold rounded-lg border border-slate-300 dark:border-slate-700 shadow-sm transition-all cursor-pointer disabled:opacity-50"
           >
             Save and duplicate
           </button>
@@ -1066,48 +1080,48 @@ const submitWithAction = (actionType) => {
 
     <!-- Live Preview Modal -->
     <div v-if="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div class="bg-slate-100 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 space-y-4 p-6 relative">
+      <div class="bg-slate-100 dark:bg-slate-800 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 p-6 relative">
         <!-- Modal Header -->
-        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
           <div class="flex items-center gap-2">
             <span class="text-lg">👁️</span>
             <div>
-              <h3 class="text-sm font-bold text-slate-900">Member Portal Article Preview</h3>
-              <p class="text-[11px] text-slate-500">Live preview of how this post will render in the member portal.</p>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Member Portal Article Preview</h3>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">Live preview of how this post will render in the member portal.</p>
             </div>
           </div>
           <button
             type="button"
             @click="showPreviewModal = false"
-            class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors cursor-pointer text-xs"
+            class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 font-bold rounded-xl transition-colors cursor-pointer text-xs"
           >
             ✕ Close Preview
           </button>
         </div>
 
         <!-- Preview Article Card -->
-        <article class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 space-y-6 text-left">
+        <article class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6 text-left">
           <!-- Header -->
           <div class="space-y-3">
-            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500">
-              <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-100 uppercase tracking-wider text-[10px]">
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <span class="px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold border border-blue-100 dark:border-blue-900/40 uppercase tracking-wider text-[10px]">
                 📰 News Bulletin
               </span>
               <span>•</span>
               <span>{{ form.published_at ? 'Scheduled: ' + form.published_at : 'Publishing Immediately' }}</span>
             </div>
 
-            <h1 class="text-2xl md:text-3xl font-black text-slate-900 leading-tight">
+            <h1 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-tight">
               {{ form.title || 'Untitled News Article' }}
             </h1>
 
-            <p v-if="form.excerpt" class="text-sm font-medium text-slate-600 italic border-l-4 border-indigo-500 pl-3 py-1 bg-slate-50 rounded-r-xl">
+            <p v-if="form.excerpt" class="text-sm font-medium text-slate-600 dark:text-slate-300 italic border-l-4 border-blue-500 pl-3 py-1 bg-slate-50 dark:bg-slate-800/50 rounded-r-xl">
               {{ form.excerpt }}
             </p>
           </div>
 
           <!-- Cover Image -->
-          <div v-if="coverImagePreview || form.cover_image_url" class="rounded-xl overflow-hidden border border-slate-200">
+          <div v-if="coverImagePreview || form.cover_image_url" class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
             <img :src="coverImagePreview || form.cover_image_url" :alt="form.title" class="w-full max-h-96 object-cover" />
           </div>
 
@@ -1118,7 +1132,7 @@ const submitWithAction = (actionType) => {
               <!-- 1. Text Block -->
               <div
                 v-if="block.type === 'text'"
-                class="prose prose-slate max-w-none text-sm leading-relaxed text-slate-800 space-y-3"
+                class="prose prose-slate max-w-none text-sm leading-relaxed text-slate-800 dark:text-slate-100 space-y-3"
                 v-html="block.content || '<p class=\'text-slate-400 italic\'>[Empty text block]</p>'"
               ></div>
 
@@ -1131,11 +1145,11 @@ const submitWithAction = (actionType) => {
                 ]"
               >
                 <figure :class="[
-                  'rounded-xl overflow-hidden border border-slate-200 bg-white p-1 shadow-sm',
+                  'rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-sm',
                   block.size === 'small' ? 'w-full sm:w-1/4' : block.size === 'medium' ? 'w-full sm:w-1/2' : block.size === 'large' ? 'w-full sm:w-3/4' : 'w-full'
                 ]">
                   <img :src="block.url" :alt="block.caption || form.title" class="w-full h-auto max-h-[500px] object-cover rounded-lg" />
-                  <figcaption v-if="block.caption" class="text-xs text-center text-slate-500 italic mt-2 p-1">
+                  <figcaption v-if="block.caption" class="text-xs text-center text-slate-500 dark:text-slate-400 italic mt-2 p-1">
                     {{ block.caption }}
                   </figcaption>
                 </figure>
@@ -1150,10 +1164,10 @@ const submitWithAction = (actionType) => {
                   <figure
                     v-for="(gItem, gIdx) in block.items"
                     :key="gIdx"
-                    class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-1 shadow-sm"
+                    class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-1 shadow-sm"
                   >
                     <img v-if="gItem.url" :src="gItem.url" :alt="gItem.caption || ''" class="w-full h-40 object-cover rounded-lg" />
-                    <figcaption v-if="gItem.caption" class="text-[11px] text-center text-slate-600 font-medium italic mt-1.5 p-1">
+                    <figcaption v-if="gItem.caption" class="text-[11px] text-center text-slate-600 dark:text-slate-300 font-medium italic mt-1.5 p-1">
                       {{ gItem.caption }}
                     </figcaption>
                   </figure>
@@ -1165,10 +1179,10 @@ const submitWithAction = (actionType) => {
                 v-else-if="block.type === 'notice'"
                 :class="[
                   'p-4 rounded-xl border text-xs space-y-1 my-4',
-                  block.style === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-900' :
-                  block.style === 'important' ? 'bg-purple-50 border-purple-200 text-purple-900' :
-                  block.style === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' :
-                  'bg-blue-50 border-blue-200 text-blue-900'
+                  block.style === 'warning' ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200' :
+                  block.style === 'important' ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/60 text-blue-900 dark:text-blue-200' :
+                  block.style === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200' :
+                  'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/60 text-blue-900 dark:text-blue-200'
                 ]"
               >
                 <h4 class="font-bold text-sm flex items-center gap-1.5">
@@ -1189,7 +1203,7 @@ const submitWithAction = (actionType) => {
                 <a
                   :href="block.url"
                   target="_blank"
-                  class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-1"
+                  class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-1"
                 >
                   {{ block.label }}
                 </a>
@@ -1199,8 +1213,8 @@ const submitWithAction = (actionType) => {
           </div>
 
           <!-- Downloadable Attachments -->
-          <div v-if="existingAttachments.length || newFiles.length" class="pt-6 border-t border-slate-100 space-y-3">
-            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+          <div v-if="existingAttachments.length || newFiles.length" class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
               <span>📎</span> Downloadable Files & Documents ({{ existingAttachments.length + newFiles.length }})
             </h4>
 
@@ -1208,13 +1222,13 @@ const submitWithAction = (actionType) => {
               <div
                 v-for="(att, aIdx) in existingAttachments"
                 :key="'ex-' + aIdx"
-                class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs"
+                class="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 text-xs"
               >
                 <div class="flex items-center gap-3 overflow-hidden">
                   <span class="text-xl">{{ getFileIcon(att.mime_type || att.name) }}</span>
                   <div class="truncate">
-                    <span class="font-bold text-slate-900 truncate block">{{ att.name }}</span>
-                    <span class="text-[10px] text-slate-500 font-semibold">{{ att.size || 'Download File' }}</span>
+                    <span class="font-bold text-slate-900 dark:text-white truncate block">{{ att.name }}</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">{{ att.size || 'Download File' }}</span>
                   </div>
                 </div>
               </div>
@@ -1222,13 +1236,13 @@ const submitWithAction = (actionType) => {
               <div
                 v-for="(file, fIdx) in newFiles"
                 :key="'nf-' + fIdx"
-                class="flex items-center justify-between p-3.5 bg-sky-50 rounded-xl border border-sky-200 text-xs"
+                class="flex items-center justify-between p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800/60 text-xs"
               >
                 <div class="flex items-center gap-3 overflow-hidden">
                   <span class="text-xl">{{ getFileIcon(file.name) }}</span>
                   <div class="truncate">
-                    <span class="font-bold text-sky-900 truncate block">{{ file.name }}</span>
-                    <span class="text-[10px] text-sky-600 font-semibold">{{ formatBytes(file.size) }} (Pending upload)</span>
+                    <span class="font-bold text-blue-900 dark:text-blue-200 truncate block">{{ file.name }}</span>
+                    <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">{{ formatBytes(file.size) }} (Pending upload)</span>
                   </div>
                 </div>
               </div>

@@ -41,7 +41,7 @@ class MultiClubWorkspaceTest extends TestCase
         $club1->users()->attach($user->id, ['role' => 'admin', 'member_number' => 'OUBC-001', 'status' => 'active']);
         $club2->users()->attach($user->id, ['role' => 'member', 'member_number' => 'BATH-412', 'status' => 'active']);
 
-        $response = $this->actingAs($user)->get('/');
+        $response = $this->actingAs($user)->get(route('members.home'));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -91,7 +91,7 @@ class MultiClubWorkspaceTest extends TestCase
     public function test_legacy_oxford_boating_urls_redirect_to_lodge_of_fraternity(): void
     {
         $response = $this->get('/clubs/oxford-boating/admin/media-manager');
-        $response->assertRedirect('/clubs/lodge-of-fraternity/admin/media-manager');
+        $response->assertRedirect('/lodge-of-fraternity/admin/media-manager');
 
         $responseSite = $this->get('/site/oxford-boating');
         $responseSite->assertRedirect('/site/lodge-of-fraternity');

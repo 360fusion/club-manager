@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Visibility;
 use App\Models\Club;
 use App\Models\Post;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -69,6 +71,7 @@ class PostAdminController extends Controller
             : new Post([
                 'club_id' => $club->id,
                 'status' => 'published',
+                'visibility' => Visibility::Club,
                 'published_at' => Carbon::now(),
                 'expires_at' => null,
             ]);
@@ -81,6 +84,7 @@ class PostAdminController extends Controller
         return Inertia::render('Admin/Posts/Form', [
             'club' => $club,
             'post' => $postArray,
+            'visibilityOptions' => Visibility::options(),
         ]);
     }
 
@@ -99,6 +103,7 @@ class PostAdminController extends Controller
             'excerpt' => 'nullable|string|max:500',
             'content' => 'nullable|string',
             'status' => 'required|in:draft,published',
+            'visibility' => ['nullable', Rule::enum(Visibility::class)],
             'published_at' => 'nullable|date',
             'expires_at' => 'nullable|date',
             'cover_image_url' => 'nullable|string|max:1000',
@@ -231,6 +236,7 @@ class PostAdminController extends Controller
                 'attachments' => $attachments,
                 'cover_image_url' => $coverImageUrl,
                 'status' => $validated['status'],
+                ...(isset($validated['visibility']) ? ['visibility' => $validated['visibility']] : []),
                 'published_at' => $publishedAt,
                 'expires_at' => $expiresAt,
             ]

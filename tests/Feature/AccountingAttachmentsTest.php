@@ -56,7 +56,7 @@ class AccountingAttachmentsTest extends TestCase
         $receiptFile = UploadedFile::fake()->image('fuel-receipt.jpg', 600, 800);
 
         $response = $this->actingAs($this->user)
-            ->post("/clubs/{$this->club->slug}/admin/accounting/bills", [
+            ->post("/{$this->club->slug}/admin/accounting/bills", [
                 'vendor_name' => 'Oxford Marine Fuel Ltd',
                 'category' => 'Boating Equipment & Supplies',
                 'amount' => 185.50,
@@ -88,14 +88,14 @@ class AccountingAttachmentsTest extends TestCase
         $pdfFile = UploadedFile::fake()->create('membership-schedule.pdf', 150, 'application/pdf');
 
         $response = $this->actingAs($this->user)
-            ->post("/clubs/{$this->club->slug}/admin/accounting/invoices", [
+            ->post("/{$this->club->slug}/admin/accounting/invoices", [
                 'user_id' => $member->id,
                 'title' => 'Annual Membership Dues 2026',
                 'amount' => 120.00,
                 'attachment' => $pdfFile,
             ]);
 
-        $response->assertRedirect("/clubs/{$this->club->slug}/admin/accounting/sales");
+        $response->assertRedirect("/{$this->club->slug}/admin/accounting/sales");
 
         $invoice = Invoice::where('club_id', $this->club->id)->first();
         $this->assertNotNull($invoice);
@@ -114,7 +114,7 @@ class AccountingAttachmentsTest extends TestCase
         $receiptFile = UploadedFile::fake()->create('receipt.pdf', 100, 'application/pdf');
 
         $this->actingAs($this->user)
-            ->post("/clubs/{$this->club->slug}/admin/accounting/bills", [
+            ->post("/{$this->club->slug}/admin/accounting/bills", [
                 'vendor_name' => 'Riverside Rigging',
                 'category' => 'Repairs',
                 'amount' => 75.00,
@@ -127,7 +127,7 @@ class AccountingAttachmentsTest extends TestCase
 
         // Attempt soft delete via File Manager
         $deleteRes = $this->actingAs($this->user)
-            ->deleteJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}");
+            ->deleteJson("/{$this->club->slug}/admin/media/{$mediaId}");
 
         $deleteRes->assertStatus(422)
             ->assertJsonPath('success', false);
@@ -139,7 +139,7 @@ class AccountingAttachmentsTest extends TestCase
 
         // Attempt permanent force delete via File Manager
         $forceRes = $this->actingAs($this->user)
-            ->deleteJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}/force");
+            ->deleteJson("/{$this->club->slug}/admin/media/{$mediaId}/force");
 
         $forceRes->assertStatus(422)
             ->assertJsonPath('success', false);
@@ -154,7 +154,7 @@ class AccountingAttachmentsTest extends TestCase
         $receiptFile = UploadedFile::fake()->image('bill-receipt.png', 400, 400);
 
         $this->actingAs($this->user)
-            ->post("/clubs/{$this->club->slug}/admin/accounting/bills", [
+            ->post("/{$this->club->slug}/admin/accounting/bills", [
                 'vendor_name' => 'Boat Repair Yard',
                 'category' => 'Repairs',
                 'amount' => 300.00,
@@ -166,7 +166,7 @@ class AccountingAttachmentsTest extends TestCase
 
         // Create a regular non-accounting file
         $regularUpload = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => UploadedFile::fake()->image('regular-photo.jpg'),
                 'folder' => 'images',
             ]);
@@ -174,7 +174,7 @@ class AccountingAttachmentsTest extends TestCase
 
         // Bulk delete both
         $bulkRes = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media/bulk-delete", [
+            ->postJson("/{$this->club->slug}/admin/media/bulk-delete", [
                 'ids' => [$protectedMediaId, $regularMediaId],
             ]);
 
@@ -192,7 +192,7 @@ class AccountingAttachmentsTest extends TestCase
         $receiptFile = UploadedFile::fake()->image('receipt-to-delete.jpg');
 
         $this->actingAs($this->user)
-            ->post("/clubs/{$this->club->slug}/admin/accounting/bills", [
+            ->post("/{$this->club->slug}/admin/accounting/bills", [
                 'vendor_name' => 'Hardware Store',
                 'category' => 'Maintenance',
                 'amount' => 45.00,
@@ -206,7 +206,7 @@ class AccountingAttachmentsTest extends TestCase
 
         // Delete attachment from Accounting endpoint
         $delRes = $this->actingAs($this->user)
-            ->delete("/clubs/{$this->club->slug}/admin/accounting/bills/{$bill->id}/attachment");
+            ->delete("/{$this->club->slug}/admin/accounting/bills/{$bill->id}/attachment");
 
         $delRes->assertRedirect();
 
@@ -220,7 +220,7 @@ class AccountingAttachmentsTest extends TestCase
         $receiptFile = UploadedFile::fake()->image('paint-receipt.png');
 
         $this->actingAs($this->user)
-            ->post("/clubs/{$this->club->slug}/admin/accounting/bills", [
+            ->post("/{$this->club->slug}/admin/accounting/bills", [
                 'vendor_name' => 'Marine Paints Co',
                 'category' => 'Maintenance',
                 'amount' => 110.00,
@@ -233,7 +233,7 @@ class AccountingAttachmentsTest extends TestCase
 
         // Delete bill from Accounting endpoint
         $delRes = $this->actingAs($this->user)
-            ->delete("/clubs/{$this->club->slug}/admin/accounting/bills/{$bill->id}");
+            ->delete("/{$this->club->slug}/admin/accounting/bills/{$bill->id}");
 
         $delRes->assertRedirect();
 
@@ -246,7 +246,7 @@ class AccountingAttachmentsTest extends TestCase
         $receiptFile = UploadedFile::fake()->image('rigging-bill.png');
 
         $this->actingAs($this->user)
-            ->post("/clubs/{$this->club->slug}/admin/accounting/bills", [
+            ->post("/{$this->club->slug}/admin/accounting/bills", [
                 'vendor_name' => 'Oxford Rigging Services',
                 'category' => 'Equipment',
                 'amount' => 520.00,
@@ -258,7 +258,7 @@ class AccountingAttachmentsTest extends TestCase
         $mediaId = $bill->media_id;
 
         $usageRes = $this->actingAs($this->user)
-            ->getJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}/usage");
+            ->getJson("/{$this->club->slug}/admin/media/{$mediaId}/usage");
 
         $usageRes->assertOk()
             ->assertJsonPath('usage_count', 1)

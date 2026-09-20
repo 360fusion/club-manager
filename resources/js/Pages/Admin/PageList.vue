@@ -108,7 +108,7 @@ const THEMES = [
         badge: 'White Canvas / Navy',
         isLight: true,
         description: 'Pristine pure white background with Oxford Navy typography, crisp card borders, and subtle sky blue accents.',
-        previewBg: 'bg-gradient-to-br from-white via-slate-50 to-slate-100 border border-slate-200 shadow-inner',
+        previewBg: 'bg-gradient-to-br from-white via-slate-50 to-slate-100 border border-slate-200 dark:border-slate-800 shadow-inner',
         palette: ['#ffffff', '#0f172a', '#0284c7', '#38bdf8'],
         features: ['100% White background', 'Oxford Navy typography', 'Crisp card borders', 'Clean corporate header'],
     },
@@ -118,7 +118,7 @@ const THEMES = [
         badge: 'Executive Light',
         isLight: true,
         description: 'Off-white light background with elevated white cards, deep slate headings, and royal indigo highlights.',
-        previewBg: 'bg-gradient-to-br from-slate-100 via-indigo-50/50 to-slate-200 border border-slate-200 shadow-inner',
+        previewBg: 'bg-gradient-to-br from-slate-100 via-blue-50/50 dark:via-blue-950/50 to-slate-200 border border-slate-200 dark:border-slate-800 shadow-inner',
         palette: ['#f8fafc', '#1e1b4b', '#4f46e5', '#6366f1'],
         features: ['Soft off-white background', 'Indigo accent bar', 'Elevated white cards', 'Modern floating header'],
     },
@@ -128,7 +128,7 @@ const THEMES = [
         badge: 'White & Royal Gold',
         isLight: true,
         description: 'Traditional fraternal lodge layout set on a pure white background with gold foil borders and dark navy serif typography.',
-        previewBg: 'bg-gradient-to-br from-white via-amber-50/30 to-slate-100 border border-amber-300 shadow-inner',
+        previewBg: 'bg-gradient-to-br from-white via-amber-50/30 dark:via-amber-950/30 to-slate-100 border border-amber-300 dark:border-amber-700/60 shadow-inner',
         palette: ['#ffffff', '#0c1938', '#d97706', '#fbbf24'],
         features: ['Pure white background', 'Gold foil card borders', 'Dark navy serif typography', 'Regal gold badges'],
     },
@@ -138,7 +138,7 @@ const THEMES = [
         badge: 'Clean & Flat Light',
         isLight: true,
         description: 'Bright, airy, contemporary design with generous whitespace, crisp emerald green accents, high-contrast typography, and flat white cards.',
-        previewBg: 'bg-gradient-to-br from-white via-emerald-50/30 to-slate-100 border border-emerald-200 shadow-inner',
+        previewBg: 'bg-gradient-to-br from-white via-emerald-50/30 dark:via-emerald-950/30 to-slate-100 border border-emerald-200 dark:border-emerald-800/60 shadow-inner',
         palette: ['#ffffff', '#059669', '#10b981', '#1e293b'],
         features: ['Airy whitespace layout', 'Emerald green highlights', 'Flat modern borders', 'High-contrast typography'],
     },
@@ -148,7 +148,7 @@ const THEMES = [
         badge: 'Warm Light',
         isLight: true,
         description: 'Soft warm ivory background with rich bronze accents, rounded white cards, and inviting warm tones.',
-        previewBg: 'bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-amber-100/50 border border-amber-200 shadow-inner',
+        previewBg: 'bg-gradient-to-br from-amber-50/50 dark:from-amber-950/50 via-orange-50/30 dark:via-orange-950/30 to-amber-100/50 dark:to-amber-900/50 border border-amber-200 dark:border-amber-800/60 shadow-inner',
         palette: ['#fffbe6', '#78350f', '#b45309', '#f59e0b'],
         features: ['Warm ivory backdrop', 'Bronze & Amber accents', 'Rounded white cards', 'Inviting layout'],
     },
@@ -158,7 +158,7 @@ const THEMES = [
         badge: 'Classic Dark',
         isLight: false,
         description: 'Clean, timeless corporate and club layout featuring crisp white cards on dark slate, rich navy accents, gold highlights, and subtle shadows.',
-        previewBg: 'bg-gradient-to-br from-slate-900 via-sky-900 to-indigo-950 shadow-inner',
+        previewBg: 'bg-gradient-to-br from-slate-900 via-blue-900 to-blue-950 shadow-inner',
         palette: ['#0f172a', '#0284c7', '#d97706', '#f8fafc'],
         features: ['Navy & Amber accents', 'Classic serif headings', 'Subtle card elevations', 'Centered footer navigation'],
     },
@@ -178,7 +178,7 @@ const THEMES = [
         badge: 'Regal Dark',
         isLight: false,
         description: 'Traditional Masonic & fraternal lodge aesthetic featuring deep royal navy, rich gold foil borders, crest embellishments, and classic serif typography.',
-        previewBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-indigo-950 shadow-inner',
+        previewBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-blue-950 shadow-inner',
         palette: ['#0c1938', '#f59e0b', '#d97706', '#1e1b4b'],
         features: ['Royal Navy & Gold palette', 'Lodge crest detailing', 'Regal badge styling', 'Ornate section dividers'],
     },
@@ -188,7 +188,7 @@ const THEMES = [
         badge: 'High Impact Banners',
         isLight: false,
         description: 'Dynamic, high-energy theme with bold gradient hero banners, warm coral and amber tones, rounded cards, and prominent action buttons.',
-        previewBg: 'bg-gradient-to-br from-amber-900 via-rose-950 to-purple-950 shadow-inner',
+        previewBg: 'bg-gradient-to-br from-amber-900 via-rose-950 to-blue-950 shadow-inner',
         palette: ['#f43f5e', '#fb923c', '#4c1d95', '#fff1f2'],
         features: ['Sunset gradient headers', 'Warm coral & amber tones', 'Rounded card borders', 'Prominent action CTAs'],
     },
@@ -215,92 +215,92 @@ const previewThemeClasses = computed(() => {
     const key = effectivePreviewThemeKey.value;
     if (key === 'light_navy') {
         return {
-            container: 'bg-white text-slate-900 border-slate-200 shadow-xl',
-            nav: 'bg-white/95 border-slate-200 text-slate-900 shadow-sm',
-            navActive: 'bg-slate-900 text-white font-bold',
-            navInactive: 'text-slate-600',
-            heroBg: 'bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white border-slate-800',
-            heroPill: 'bg-sky-500/20 border-sky-400/30 text-sky-300',
-            heroCta: 'bg-sky-500 text-white font-bold',
-            cardBg: 'bg-white border border-slate-200 text-slate-900 shadow-sm',
-            headingText: 'text-slate-900',
-            bodyText: 'text-slate-700',
-            accentText: 'text-sky-600',
+            container: 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 shadow-xl',
+            nav: 'bg-white/95 dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
+            navActive: 'bg-slate-900 dark:bg-slate-700 text-white font-bold',
+            navInactive: 'text-slate-600 dark:text-slate-300',
+            heroBg: 'bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-white border-slate-800',
+            heroPill: 'bg-blue-500/20 border-blue-400/30 text-blue-300',
+            heroCta: 'bg-blue-500 text-white font-bold',
+            cardBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
+            headingText: 'text-slate-900 dark:text-white',
+            bodyText: 'text-slate-700 dark:text-slate-200',
+            accentText: 'text-blue-600 dark:text-blue-400',
         };
     }
     if (key === 'executive_light') {
         return {
-            container: 'bg-slate-50 text-slate-900 border-slate-200 shadow-xl',
-            nav: 'bg-white/90 border-slate-200 text-slate-900 shadow-sm',
-            navActive: 'bg-indigo-50 text-indigo-700 border-indigo-200 font-bold',
-            navInactive: 'text-slate-600',
-            heroBg: 'bg-white border border-slate-200/90 text-slate-900 shadow-md',
-            heroPill: 'bg-indigo-50 border-indigo-200 text-indigo-700',
-            heroCta: 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-bold',
-            cardBg: 'bg-white border border-slate-200 text-slate-900 shadow-sm',
-            headingText: 'text-slate-900',
-            bodyText: 'text-slate-700',
-            accentText: 'text-indigo-600',
+            container: 'bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 shadow-xl',
+            nav: 'bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
+            navActive: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60 font-bold',
+            navInactive: 'text-slate-600 dark:text-slate-300',
+            heroBg: 'bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 text-slate-900 dark:text-white shadow-md',
+            heroPill: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/60 text-blue-700 dark:text-blue-300',
+            heroCta: 'bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold',
+            cardBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
+            headingText: 'text-slate-900 dark:text-white',
+            bodyText: 'text-slate-700 dark:text-slate-200',
+            accentText: 'text-blue-600 dark:text-blue-400',
         };
     }
     if (key === 'masonic_light') {
         return {
-            container: 'bg-white text-slate-900 font-serif border-amber-300 shadow-xl',
-            nav: 'bg-white/95 border-amber-500/40 text-slate-900 shadow-sm',
-            navActive: 'bg-amber-50 text-amber-900 border-amber-300 font-sans font-bold',
-            navInactive: 'text-slate-700 font-sans',
-            heroBg: 'bg-gradient-to-br from-blue-950 via-indigo-950 to-slate-950 text-white border-amber-500/40 shadow-xl',
+            container: 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-serif border-amber-300 dark:border-amber-700/60 shadow-xl',
+            nav: 'bg-white/95 dark:bg-slate-900/95 border-amber-500/40 text-slate-900 dark:text-white shadow-sm',
+            navActive: 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 font-sans font-bold',
+            navInactive: 'text-slate-700 dark:text-slate-200 font-sans',
+            heroBg: 'bg-gradient-to-br from-blue-950 via-blue-950 to-slate-950 text-white border-amber-500/40 shadow-xl',
             heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300 font-sans',
-            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-sans font-black',
-            cardBg: 'bg-white border border-amber-500/30 text-slate-900 shadow-sm',
-            headingText: 'text-slate-900',
-            bodyText: 'text-slate-700',
-            accentText: 'text-amber-700',
+            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 dark:text-white font-sans font-black',
+            cardBg: 'bg-white dark:bg-slate-900 border border-amber-500/30 text-slate-900 dark:text-white shadow-sm',
+            headingText: 'text-slate-900 dark:text-white',
+            bodyText: 'text-slate-700 dark:text-slate-200',
+            accentText: 'text-amber-700 dark:text-amber-300',
         };
     }
     if (key === 'minimal') {
         return {
-            container: 'bg-white text-slate-900 border-emerald-200 shadow-xl',
-            nav: 'bg-white/95 border-slate-200 text-slate-900 shadow-sm',
-            navActive: 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold',
-            navInactive: 'text-slate-600',
-            heroBg: 'bg-slate-50 border border-slate-200 text-slate-900 shadow-sm',
-            heroPill: 'bg-emerald-50 border border-emerald-200 text-emerald-700',
+            container: 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-emerald-200 dark:border-emerald-800/60 shadow-xl',
+            nav: 'bg-white/95 dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
+            navActive: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 font-bold',
+            navInactive: 'text-slate-600 dark:text-slate-300',
+            heroBg: 'bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
+            heroPill: 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300',
             heroCta: 'bg-emerald-600 text-white font-bold',
-            cardBg: 'bg-white border border-slate-200 text-slate-900 shadow-sm',
-            headingText: 'text-slate-900',
-            bodyText: 'text-slate-700',
-            accentText: 'text-emerald-600',
+            cardBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
+            headingText: 'text-slate-900 dark:text-white',
+            bodyText: 'text-slate-700 dark:text-slate-200',
+            accentText: 'text-emerald-600 dark:text-emerald-400',
         };
     }
     if (key === 'warm_light') {
         return {
-            container: 'bg-amber-50/30 text-slate-900 border-amber-200 shadow-xl',
-            nav: 'bg-white/95 border-amber-200/60 text-slate-900 shadow-sm',
-            navActive: 'bg-amber-100/70 text-amber-900 border-amber-300 font-bold',
-            navInactive: 'text-slate-600',
+            container: 'bg-amber-50/30 dark:bg-amber-950/30 text-slate-900 dark:text-white border-amber-200 dark:border-amber-800/60 shadow-xl',
+            nav: 'bg-white/95 dark:bg-slate-900/95 border-amber-200/60 dark:border-amber-800/60 text-slate-900 dark:text-white shadow-sm',
+            navActive: 'bg-amber-100/70 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 font-bold',
+            navInactive: 'text-slate-600 dark:text-slate-300',
             heroBg: 'bg-gradient-to-br from-amber-900 via-amber-950 to-orange-950 text-amber-50 border border-amber-700/50 shadow-xl',
             heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300',
-            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-amber-950 font-bold',
-            cardBg: 'bg-white border border-amber-200 text-slate-900 shadow-sm',
-            headingText: 'text-slate-900',
-            bodyText: 'text-slate-700',
-            accentText: 'text-amber-700',
+            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-amber-950 dark:text-amber-100 font-bold',
+            cardBg: 'bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60 text-slate-900 dark:text-white shadow-sm',
+            headingText: 'text-slate-900 dark:text-white',
+            bodyText: 'text-slate-700 dark:text-slate-200',
+            accentText: 'text-amber-700 dark:text-amber-300',
         };
     }
     if (key === 'obsidian') {
         return {
             container: 'bg-slate-950 text-slate-100 border-slate-800 shadow-2xl',
             nav: 'bg-slate-900/80 border-slate-800 text-white shadow-inner',
-            navActive: 'bg-sky-500/20 text-sky-300 font-bold border-sky-500/30',
+            navActive: 'bg-blue-500/20 text-blue-300 font-bold border-blue-500/30',
             navInactive: 'text-slate-400',
             heroBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 text-white',
-            heroPill: 'bg-sky-500/10 border-sky-500/20 text-sky-400',
-            heroCta: 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold',
-            cardBg: 'bg-slate-900 border border-slate-800 text-slate-100 shadow-md',
+            heroPill: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+            heroCta: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold',
+            cardBg: 'bg-slate-900 dark:bg-slate-700 border border-slate-800 text-slate-100 shadow-md',
             headingText: 'text-white',
             bodyText: 'text-slate-300',
-            accentText: 'text-sky-400',
+            accentText: 'text-blue-400',
         };
     }
     if (key === 'masonic') {
@@ -309,9 +309,9 @@ const previewThemeClasses = computed(() => {
             nav: 'bg-blue-950/90 border-amber-500/40 text-amber-100 shadow-md',
             navActive: 'bg-amber-500/20 text-amber-300 font-sans font-bold border-amber-500/40',
             navInactive: 'text-slate-300 font-sans',
-            heroBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-indigo-950 border border-amber-500/40 text-white',
+            heroBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-blue-950 border border-amber-500/40 text-white',
             heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300 font-sans',
-            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-sans font-black',
+            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 dark:text-white font-sans font-black',
             cardBg: 'bg-blue-950/50 border border-amber-500/30 text-amber-50 shadow-md',
             headingText: 'text-amber-100',
             bodyText: 'text-slate-300',
@@ -324,7 +324,7 @@ const previewThemeClasses = computed(() => {
             nav: 'bg-slate-900/90 border-rose-900/40 text-white shadow-md',
             navActive: 'bg-rose-500/20 text-rose-300 font-bold border-rose-500/40',
             navInactive: 'text-slate-400',
-            heroBg: 'bg-gradient-to-br from-amber-900 via-rose-950 to-purple-950 border border-rose-800/50 text-white',
+            heroBg: 'bg-gradient-to-br from-amber-900 via-rose-950 to-blue-950 border border-rose-800/50 text-white',
             heroPill: 'bg-rose-500/20 border-rose-400/30 text-rose-300',
             heroCta: 'bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold',
             cardBg: 'bg-slate-900/90 border border-rose-900/30 text-slate-100 shadow-md',
@@ -337,15 +337,15 @@ const previewThemeClasses = computed(() => {
     return {
         container: 'bg-slate-950 text-slate-100 border-slate-800 shadow-2xl',
         nav: 'bg-slate-900/80 border-slate-800 text-white shadow-inner',
-        navActive: 'bg-sky-500/20 text-sky-300 font-bold border-sky-500/30',
+        navActive: 'bg-blue-500/20 text-blue-300 font-bold border-blue-500/30',
         navInactive: 'text-slate-400',
-        heroBg: 'bg-gradient-to-r from-slate-900 via-sky-950/40 to-slate-900 border border-slate-800 text-white',
-        heroPill: 'bg-sky-500/10 border-sky-500/20 text-sky-400',
-        heroCta: 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold',
-        cardBg: 'bg-slate-900 border border-slate-800 text-slate-100 shadow-md',
+        heroBg: 'bg-gradient-to-r from-slate-900 via-blue-950/40 to-slate-900 border border-slate-800 text-white',
+        heroPill: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+        heroCta: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold',
+        cardBg: 'bg-slate-900 dark:bg-slate-700 border border-slate-800 text-slate-100 shadow-md',
         headingText: 'text-white',
         bodyText: 'text-slate-300',
-        accentText: 'text-sky-400',
+        accentText: 'text-blue-400',
     };
 });
 
@@ -535,46 +535,46 @@ const startCreateNewPage = () => {
 
 // Block Element Types Palette
 const blockTypes = [
-    { type: 'text', icon: '📝', label: 'Text Block', desc: 'Rich text paragraph or formatted text', color: 'text-blue-600', bg: 'bg-blue-50' },
-    { type: 'image', icon: '🖼️', label: 'Single Image', desc: 'Image with positioning & size controls', color: 'text-sky-600', bg: 'bg-sky-50' },
-    { type: 'images', icon: '🖼️', label: 'Image Gallery', desc: 'Multi-image grid layout', color: 'text-purple-600', bg: 'bg-purple-50' },
-    { type: 'notice', icon: '📢', label: 'Callout Box', desc: 'Highlighted notice or announcement box', color: 'text-amber-600', bg: 'bg-amber-50' },
-    { type: 'button', icon: '🔗', label: 'Button Link', desc: 'Call to action button link', color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { type: 'hero', icon: '🚀', label: 'Hero Banner', desc: 'Large title & subtitle header banner', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { type: 'news_feed', icon: '📰', label: 'News Items', desc: 'Pulls published articles automatically', color: 'text-sky-600', bg: 'bg-sky-50' },
-    { type: 'events_calendar', icon: '📅', label: 'Events & Summons', desc: 'Displays upcoming events & dinners', color: 'text-purple-600', bg: 'bg-purple-50' },
-    { type: 'pricing_cards', icon: '💳', label: 'Membership Dues', desc: 'Shows active membership plans', color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { type: 'donation_campaign', icon: '💰', label: 'Dynamic Donation', desc: 'Fundraising campaign progress bar', color: 'text-rose-600', bg: 'bg-rose-50' },
-    { type: 'contact_details', icon: '📇', label: 'Contact Details & Cards', desc: 'Email, meeting times & location cards', color: 'text-amber-600', bg: 'bg-amber-50' },
-    { type: 'contact_form', icon: '📝', label: 'Interactive Contact Form', desc: 'Form with email notification & options', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { type: 'text', icon: '📝', label: 'Text Block', desc: 'Rich text paragraph or formatted text', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+    { type: 'image', icon: '🖼️', label: 'Single Image', desc: 'Image with positioning & size controls', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+    { type: 'images', icon: '🖼️', label: 'Image Gallery', desc: 'Multi-image grid layout', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+    { type: 'notice', icon: '📢', label: 'Callout Box', desc: 'Highlighted notice or announcement box', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+    { type: 'button', icon: '🔗', label: 'Button Link', desc: 'Call to action button link', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+    { type: 'hero', icon: '🚀', label: 'Hero Banner', desc: 'Large title & subtitle header banner', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+    { type: 'news_feed', icon: '📰', label: 'News Items', desc: 'Pulls published articles automatically', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+    { type: 'events_calendar', icon: '📅', label: 'Events & Summons', desc: 'Displays upcoming events & dinners', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+    { type: 'pricing_cards', icon: '💳', label: 'Membership Dues', desc: 'Shows active membership plans', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+    { type: 'donation_campaign', icon: '💰', label: 'Dynamic Donation', desc: 'Fundraising campaign progress bar', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40' },
+    { type: 'contact_details', icon: '📇', label: 'Contact Details & Cards', desc: 'Email, meeting times & location cards', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+    { type: 'contact_form', icon: '📝', label: 'Interactive Contact Form', desc: 'Form with email notification & options', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
 ];
 
 const blockColumns = computed(() => [
     {
         title: 'Content & Media (Left Column)',
         items: [
-            { type: 'text', icon: '📝', label: 'Text Block', desc: 'Rich text paragraph or formatted text', color: 'text-blue-600', bg: 'bg-blue-50' },
-            { type: 'image', icon: '🖼️', label: 'Single Image', desc: 'Image with positioning & size controls', color: 'text-sky-600', bg: 'bg-sky-50' },
-            { type: 'images', icon: '🖼️', label: 'Image Gallery', desc: 'Multi-image grid layout', color: 'text-purple-600', bg: 'bg-purple-50' },
-            { type: 'button', icon: '🔗', label: 'Button Link', desc: 'Call to action button link', color: 'text-indigo-600', bg: 'bg-indigo-50' },
-            { type: 'notice', icon: '📢', label: 'Callout Box', desc: 'Highlighted notice or announcement box', color: 'text-amber-600', bg: 'bg-amber-50' },
+            { type: 'text', icon: '📝', label: 'Text Block', desc: 'Rich text paragraph or formatted text', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+            { type: 'image', icon: '🖼️', label: 'Single Image', desc: 'Image with positioning & size controls', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+            { type: 'images', icon: '🖼️', label: 'Image Gallery', desc: 'Multi-image grid layout', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+            { type: 'button', icon: '🔗', label: 'Button Link', desc: 'Call to action button link', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+            { type: 'notice', icon: '📢', label: 'Callout Box', desc: 'Highlighted notice or announcement box', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
         ],
     },
     {
         title: 'Banners & Dynamic Feeds',
         items: [
-            { type: 'hero', icon: '🚀', label: 'Hero Banner', desc: 'Large title & subtitle header banner', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { type: 'news_feed', icon: '📰', label: 'News Items', desc: 'Pulls published articles automatically', color: 'text-sky-600', bg: 'bg-sky-50' },
-            { type: 'events_calendar', icon: '📅', label: 'Events & Summons', desc: 'Displays upcoming events & dinners', color: 'text-purple-600', bg: 'bg-purple-50' },
-            { type: 'pricing_cards', icon: '💳', label: 'Membership Dues', desc: 'Shows active membership plans', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+            { type: 'hero', icon: '🚀', label: 'Hero Banner', desc: 'Large title & subtitle header banner', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+            { type: 'news_feed', icon: '📰', label: 'News Items', desc: 'Pulls published articles automatically', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+            { type: 'events_calendar', icon: '📅', label: 'Events & Summons', desc: 'Displays upcoming events & dinners', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+            { type: 'pricing_cards', icon: '💳', label: 'Membership Dues', desc: 'Shows active membership plans', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
         ],
     },
     {
         title: 'Contact & Forms',
         items: [
-            { type: 'donation_campaign', icon: '💰', label: 'Dynamic Donation', desc: 'Fundraising campaign progress bar', color: 'text-rose-600', bg: 'bg-rose-50' },
-            { type: 'contact_details', icon: '📇', label: 'Contact Details & Cards', desc: 'Email, meeting times & location cards', color: 'text-amber-600', bg: 'bg-amber-50' },
-            { type: 'contact_form', icon: '📝', label: 'Interactive Contact Form', desc: 'Form with email notification & options', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+            { type: 'donation_campaign', icon: '💰', label: 'Dynamic Donation', desc: 'Fundraising campaign progress bar', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40' },
+            { type: 'contact_details', icon: '📇', label: 'Contact Details & Cards', desc: 'Email, meeting times & location cards', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+            { type: 'contact_form', icon: '📝', label: 'Interactive Contact Form', desc: 'Form with email notification & options', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
         ],
     },
 ]);
@@ -741,7 +741,7 @@ const removeGalleryImage = (block, idx) => {
 
 const submitForm = (onSuccessCallback = null) => {
     isBypassingDirtyGuard.value = true;
-    form.post(`/clubs/${props.club.slug}/admin/pages`, {
+    form.post(`/${props.club.slug}/admin/pages`, {
         preserveScroll: true,
         onSuccess: () => {
             isSavedSuccess.value = true;
@@ -819,7 +819,7 @@ onUnmounted(() => {
 
 const togglePublishPage = (p) => {
     if (p.is_homepage || p.slug === 'home') return;
-    router.post(`/clubs/${props.club.slug}/admin/pages/${p.id}/toggle-publish`, {}, { preserveScroll: true });
+    router.post(`/${props.club.slug}/admin/pages/${p.id}/toggle-publish`, {}, { preserveScroll: true });
 };
 
 const movePageUp = (index) => {
@@ -830,7 +830,7 @@ const movePageUp = (index) => {
     newPages[index - 1] = temp;
 
     const orderIds = newPages.map(p => p.id);
-    router.post(`/clubs/${props.club.slug}/admin/pages/reorder`, { order: orderIds }, { preserveScroll: true });
+    router.post(`/${props.club.slug}/admin/pages/reorder`, { order: orderIds }, { preserveScroll: true });
 };
 
 const movePageDown = (index) => {
@@ -841,7 +841,7 @@ const movePageDown = (index) => {
     newPages[index + 1] = temp;
 
     const orderIds = newPages.map(p => p.id);
-    router.post(`/clubs/${props.club.slug}/admin/pages/reorder`, { order: orderIds }, { preserveScroll: true });
+    router.post(`/${props.club.slug}/admin/pages/reorder`, { order: orderIds }, { preserveScroll: true });
 };
 
 const triggerDeleteModal = (page) => {
@@ -854,7 +854,7 @@ const confirmDeleteActivePage = () => {
     const targetId = pageToDelete.value ? pageToDelete.value.id : form.id;
     if (!targetId) return;
 
-    router.delete(`/clubs/${props.club.slug}/admin/pages/${targetId}`, {
+    router.delete(`/${props.club.slug}/admin/pages/${targetId}`, {
         onSuccess: () => {
             showDeleteConfirmModal.value = false;
             pageToDelete.value = null;
@@ -913,19 +913,19 @@ const getFilteredPosts = (block) => {
         <div class="space-y-6 max-w-7xl mx-auto">
             
             <!-- Top Action Bar & Header Card -->
-            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-3">
-                        <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Website Builder & Navigation</h1>
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Website Builder & Navigation</h1>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
                             {{ club.slug }}
                         </span>
                     </div>
-                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Manage public site pages, customize layout blocks, preview rendered pages, and arrange navigation links.</p>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Manage public site pages, customize layout blocks, preview rendered pages, and arrange navigation links.</p>
                 </div>
 
                 <div class="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
-                    <a :href="`/site/${club.slug}`" target="_blank" class="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 transition-all flex items-center gap-2">
+                    <a :href="`/site/${club.slug}`" target="_blank" class="py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-2">
                         <span>🌐 View Live Site</span>
                     </a>
                 </div>
@@ -938,9 +938,9 @@ const getFilteredPosts = (block) => {
                 <div class="lg:col-span-1 space-y-4">
                     
                     <!-- Mobile Page Selector Dropdown -->
-                    <div class="lg:hidden bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
-                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Website Navigation Page</label>
-                        <select :value="activeNavSelection" @change="e => requestNavigation(e.target.value)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                    <div class="lg:hidden bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-2">
+                        <label class="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Website Navigation Page</label>
+                        <select :value="activeNavSelection" @change="e => requestNavigation(e.target.value)" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                             <optgroup label="Public Website Pages">
                                 <option v-for="p in pages" :key="p.id" :value="String(p.id)">
                                     {{ getPageIcon(p) }} {{ p.title }} {{ p.is_homepage ? '(Homepage)' : '' }}
@@ -956,13 +956,13 @@ const getFilteredPosts = (block) => {
                     </div>
 
                     <!-- Desktop Vertical Sidebar Navigation Card -->
-                    <div class="hidden lg:block bg-white p-3.5 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 sticky top-6">
+                    <div class="hidden lg:block bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-5 sticky top-6">
                         
                         <!-- Navigation Pages Group -->
                         <div>
                             <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
                                 <span>Navigation Pages</span>
-                                <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold">{{ pages.length }} Pages</span>
+                                <span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded text-[9px] font-bold">{{ pages.length }} Pages</span>
                             </div>
 
                             <div class="space-y-1 text-xs font-bold">
@@ -972,7 +972,7 @@ const getFilteredPosts = (block) => {
                                     @click="selectPage(p.id)"
                                     :class="[
                                         'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left group font-bold',
-                                        activeNavSelection === String(p.id) ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                                        activeNavSelection === String(p.id) ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
                                     <span class="text-base leading-none">{{ getPageIcon(p) }}</span>
@@ -986,8 +986,8 @@ const getFilteredPosts = (block) => {
                                 :class="[
                                     'w-full mt-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-sm',
                                     activeNavSelection === 'new'
-                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-2 ring-indigo-400/50'
-                                        : 'bg-slate-900 hover:bg-slate-800 text-white hover:shadow-md hover:scale-[1.01]'
+                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-2 ring-blue-400/50'
+                                        : 'bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white hover:shadow-md hover:scale-[1.01]'
                                 ]"
                             >
                                 <span class="text-sm leading-none">➕</span>
@@ -996,14 +996,14 @@ const getFilteredPosts = (block) => {
                         </div>
 
                         <!-- Management & Tools Group -->
-                        <div class="border-t border-slate-100 pt-4 space-y-1">
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-1">
                             <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Management</div>
                             <div class="space-y-1 text-xs font-bold">
                                 <button
                                     @click="requestNavigation('settings')"
                                     :class="[
                                         'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
-                                        activeNavSelection === 'settings' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                        activeNavSelection === 'settings' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
                                     <span>⚙️</span> Website & SEO Settings
@@ -1013,7 +1013,7 @@ const getFilteredPosts = (block) => {
                                     @click="requestNavigation('themes')"
                                     :class="[
                                         'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
-                                        activeNavSelection === 'themes' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                        activeNavSelection === 'themes' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
                                     <span>🎨</span> Website Themes
@@ -1023,7 +1023,7 @@ const getFilteredPosts = (block) => {
                                     @click="requestNavigation('overview')"
                                     :class="[
                                         'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
-                                        activeNavSelection === 'overview' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                        activeNavSelection === 'overview' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
                                     <span>📋</span> Manage Pages
@@ -1041,22 +1041,22 @@ const getFilteredPosts = (block) => {
                     <div v-if="activeNavSelection !== 'overview' && activeNavSelection !== 'settings' && activeNavSelection !== 'themes'" class="space-y-6">
 
                         <!-- View Mode Selector Header Card -->
-                        <div class="bg-white px-6 py-4 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between gap-4 flex-wrap">
+                        <div class="bg-white dark:bg-slate-900 px-6 py-4 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center justify-between gap-4 flex-wrap">
                             <div>
-                                <h2 class="text-base font-bold text-slate-900">
+                                <h2 class="text-base font-bold text-slate-900 dark:text-white">
                                     {{ form.id ? form.title : 'New Page' }}
                                 </h2>
                                 <span class="text-xs text-slate-400 font-mono">/site/{{ club.slug }}/{{ form.slug }}</span>
                             </div>
 
                             <!-- Segmented Pill Control: Edit vs Live Preview -->
-                            <div class="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner">
+                            <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
                                 <button
                                     type="button"
                                     @click="pageViewMode = 'edit'"
                                     :class="[
                                         'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
-                                        pageViewMode === 'edit' ? 'bg-white text-indigo-700 shadow-md shadow-slate-200' : 'text-slate-600 hover:text-slate-900'
+                                        pageViewMode === 'edit' ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-md shadow-slate-200' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
                                     <span>✏️ Edit Builder</span>
@@ -1067,7 +1067,7 @@ const getFilteredPosts = (block) => {
                                     @click="pageViewMode = 'preview'"
                                     :class="[
                                         'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
-                                        pageViewMode === 'preview' ? 'bg-amber-400 text-amber-950 shadow-md shadow-amber-500/20' : 'text-slate-600 hover:text-slate-900'
+                                        pageViewMode === 'preview' ? 'bg-amber-400 text-amber-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
                                     <span>👁️ Live Preview</span>
@@ -1079,11 +1079,11 @@ const getFilteredPosts = (block) => {
                         <div v-if="pageViewMode === 'edit'" class="space-y-6">
                             
                             <!-- Page Particulars Card -->
-                            <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
-                                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <div class="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-6">
+                                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                                     <div>
-                                        <h3 class="text-base font-bold text-slate-900">Page Particulars & Navigation Settings</h3>
-                                        <p class="text-xs text-slate-500 mt-0.5">Configure page title, permalink URL slug, and navigation visibility.</p>
+                                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Page Particulars & Navigation Settings</h3>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Configure page title, permalink URL slug, and navigation visibility.</p>
                                     </div>
 
                                     <div class="flex items-center gap-2.5">
@@ -1092,9 +1092,9 @@ const getFilteredPosts = (block) => {
                                             :disabled="form.processing"
                                             :class="[
                                                 'px-4 py-2 font-bold text-xs rounded-xl shadow-md transition-all duration-300 flex items-center gap-2 cursor-pointer',
-                                                form.processing ? 'bg-indigo-500 text-white cursor-wait opacity-80' :
+                                                form.processing ? 'bg-blue-500 text-white cursor-wait opacity-80' :
                                                 isSavedSuccess ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 scale-105 ring-2 ring-emerald-400/50' :
-                                                'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                                                'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
                                             ]"
                                         >
                                             <svg v-if="form.processing" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -1110,7 +1110,7 @@ const getFilteredPosts = (block) => {
                                             <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved!' : 'Save Page') }}</span>
                                         </button>
 
-                                        <a v-if="form.id && form.slug" :href="form.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${form.slug}`" target="_blank" class="py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 transition-colors flex items-center gap-1.5">
+                                        <a v-if="form.id && form.slug" :href="form.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${form.slug}`" target="_blank" class="py-2 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold text-xs border border-blue-200 dark:border-blue-800/60 transition-colors flex items-center gap-1.5">
                                             <span>🔗 Preview Link</span>
                                         </a>
                                     </div>
@@ -1118,30 +1118,30 @@ const getFilteredPosts = (block) => {
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                                     <div>
-                                        <label class="block font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-1.5">Page Title</label>
-                                        <input v-model="form.title" type="text" class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl p-3 text-slate-900 font-semibold outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="e.g. About Our Club" />
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page Title</label>
+                                        <input v-model="form.title" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="e.g. About Our Club" />
                                     </div>
 
                                     <div>
                                         <div class="flex items-center gap-2 mb-1.5">
-                                            <label class="block font-bold text-slate-700 uppercase tracking-wider text-[11px]">URL Slug (Permalink)</label>
+                                            <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px]">URL Slug (Permalink)</label>
                                             <span class="text-slate-300">|</span>
                                             <span class="text-slate-400 font-mono text-[11px]">/site/{{ club.slug }}/</span>
                                         </div>
                                         <div>
-                                            <input v-model="form.slug" type="text" class="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 rounded-xl p-3 text-slate-900 font-mono font-bold outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="about" />
+                                            <input v-model="form.slug" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-mono font-bold outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="about" />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="flex flex-wrap items-center gap-6 pt-2 border-t border-slate-100">
-                                    <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 select-none">
-                                        <input type="checkbox" v-model="form.is_published" :disabled="form.is_homepage || form.slug === 'home'" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-emerald-600 cursor-pointer disabled:opacity-50" />
+                                <div class="flex flex-wrap items-center gap-6 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
+                                        <input type="checkbox" v-model="form.is_published" :disabled="form.is_homepage || form.slug === 'home'" class="w-4 h-4 rounded text-emerald-600 dark:text-emerald-400 focus:ring-emerald-500 accent-emerald-600 cursor-pointer disabled:opacity-50" />
                                         <span>Published & Active</span>
                                     </label>
 
-                                    <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 select-none">
-                                        <input type="checkbox" v-model="form.show_in_navigation" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 accent-indigo-600 cursor-pointer" />
+                                    <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
+                                        <input type="checkbox" v-model="form.show_in_navigation" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 accent-blue-600 cursor-pointer" />
                                         <span>Show in Top Header Menu</span>
                                     </label>
                                 </div>
@@ -1154,15 +1154,15 @@ const getFilteredPosts = (block) => {
                                     <!-- Insert Divider Above First Block (Index 0) -->
                                     <div v-if="bIdx === 0" class="relative py-1 flex items-center justify-center insert-menu-container">
                                         <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                                            <div class="w-full border-t border-dashed border-slate-200 hover:border-slate-300 transition-colors"></div>
+                                            <div class="w-full border-t border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"></div>
                                         </div>
                                         <div class="relative flex justify-center">
                                             <button
                                                 type="button"
                                                 @click.stop="toggleInsertMenu(0, $event)"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-sky-300 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
                                             >
-                                                <span class="w-4 h-4 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-black">+</span>
+                                                <span class="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center text-xs font-black">+</span>
                                                 <span>Insert block at top</span>
                                             </button>
 
@@ -1170,18 +1170,18 @@ const getFilteredPosts = (block) => {
                                             <div
                                                 v-if="activeInsertIndex === 0"
                                                 :class="[
-                                                    'absolute z-40 w-[680px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 -translate-x-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
+                                                    'absolute z-40 w-[680px] max-w-[90vw] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 -translate-x-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
                                                     insertMenuPlacement === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
                                                 ]"
                                             >
-                                                <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                                                <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
                                                     <span>Insert Element Here</span>
-                                                    <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer p-1">✕</button>
+                                                    <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs cursor-pointer p-1">✕</button>
                                                 </div>
 
                                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                                                     <div v-for="(col, cIdx) in blockColumns" :key="cIdx" class="space-y-1.5">
-                                                        <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                                                        <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
                                                             {{ col.title }}
                                                         </div>
                                                         <div class="space-y-1">
@@ -1190,13 +1190,13 @@ const getFilteredPosts = (block) => {
                                                                 :key="item.type"
                                                                 type="button"
                                                                 @click="addBlock(item.type, 0)"
-                                                                class="w-full flex items-start gap-2.5 p-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 border border-slate-100 hover:border-sky-200 rounded-xl transition-all cursor-pointer group"
+                                                                class="w-full flex items-start gap-2.5 p-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800/60 rounded-xl transition-all cursor-pointer group"
                                                             >
                                                                 <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shrink-0 transition-transform group-hover:scale-110" :class="[item.bg, item.color]">
                                                                     {{ item.icon }}
                                                                 </span>
                                                                 <div class="min-w-0">
-                                                                    <span class="block font-bold text-slate-900 group-hover:text-sky-600 transition-colors truncate">{{ item.label }}</span>
+                                                                    <span class="block font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">{{ item.label }}</span>
                                                                     <span class="text-[10px] text-slate-400 font-normal leading-tight block line-clamp-2">{{ item.desc }}</span>
                                                                 </div>
                                                             </button>
@@ -1208,50 +1208,50 @@ const getFilteredPosts = (block) => {
                                     </div>
 
                                     <!-- Block Item Card Container -->
-                                    <div class="bg-white rounded-2xl border border-slate-200 shadow-md shadow-slate-200/60 overflow-hidden transition-all hover:shadow-lg">
+                                    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md shadow-slate-200/60 overflow-hidden transition-all hover:shadow-lg">
                                         
                                         <!-- Block Header & Controls -->
-                                        <div class="flex items-center justify-between px-4 py-2.5 bg-slate-200/80 border-b border-slate-300/80 text-xs font-bold text-slate-800">
+                                        <div class="flex items-center justify-between px-4 py-2.5 bg-slate-200/80 dark:bg-slate-700/80 border-b border-slate-300/80 dark:border-slate-700/80 text-xs font-bold text-slate-800 dark:text-slate-100">
                                             <div class="flex items-center gap-2">
-                                                <span class="w-5 h-5 rounded bg-white text-slate-600 flex items-center justify-center text-[11px] font-black border border-slate-200">
+                                                <span class="w-5 h-5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[11px] font-black border border-slate-200 dark:border-slate-800">
                                                     {{ bIdx + 1 }}
                                                 </span>
 
                                                 <!-- Type Badges -->
-                                                <span v-if="block.type === 'text' || block.type === 'rich_text'" class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px] uppercase font-bold">
+                                                <span v-if="block.type === 'text' || block.type === 'rich_text'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                                                     📝 Text Block
                                                 </span>
-                                                <span v-else-if="block.type === 'image'" class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'image'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                                                     🖼️ Single Image
                                                 </span>
-                                                <span v-else-if="block.type === 'images'" class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'images'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                                                     🖼️ Image Gallery ({{ block.columns || 3 }} Cols)
                                                 </span>
-                                                <span v-else-if="block.type === 'notice'" class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'notice'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
                                                     📢 Callout Box
                                                 </span>
-                                                <span v-else-if="block.type === 'button'" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'button'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                                                     🔗 Button Link
                                                 </span>
-                                                <span v-else-if="block.type === 'hero'" class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'hero'" class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[10px] uppercase font-bold">
                                                     🚀 Hero Banner
                                                 </span>
-                                                <span v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                                                     📰 News List ({{ String(block.columns) === 'masonry' ? 'Masonry' : (block.columns || 3) + ' Cols' }})
                                                 </span>
-                                                <span v-else-if="block.type === 'events_calendar'" class="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'events_calendar'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                                                     📅 Dynamic Events & Summons
                                                 </span>
-                                                <span v-else-if="block.type === 'pricing_cards'" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'pricing_cards'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                                                     💳 Membership Dues
                                                 </span>
-                                                <span v-else-if="block.type === 'donation_campaign'" class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'donation_campaign'" class="px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-[10px] uppercase font-bold">
                                                     💰 Dynamic Donation
                                                 </span>
-                                                <span v-else-if="block.type === 'contact_details'" class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'contact_details'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
                                                     📇 Contact Cards
                                                 </span>
-                                                <span v-else-if="block.type === 'contact_form'" class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] uppercase font-bold">
+                                                <span v-else-if="block.type === 'contact_form'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                                                     📝 Contact Form
                                                 </span>
                                             </div>
@@ -1262,7 +1262,7 @@ const getFilteredPosts = (block) => {
                                                     type="button"
                                                     @click="moveBlockUp(bIdx)"
                                                     :disabled="bIdx === 0"
-                                                    class="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 cursor-pointer"
+                                                    class="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                                                     title="Move Up"
                                                 >
                                                     ▲
@@ -1271,7 +1271,7 @@ const getFilteredPosts = (block) => {
                                                     type="button"
                                                     @click="moveBlockDown(bIdx)"
                                                     :disabled="bIdx === form.blocks.length - 1"
-                                                    class="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 cursor-pointer"
+                                                    class="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                                                     title="Move Down"
                                                 >
                                                     ▼
@@ -1279,7 +1279,7 @@ const getFilteredPosts = (block) => {
                                                 <button
                                                     type="button"
                                                     @click="duplicateBlock(bIdx)"
-                                                    class="p-1 text-slate-500 hover:text-indigo-600 cursor-pointer"
+                                                    class="p-1 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
                                                     title="Duplicate Element"
                                                 >
                                                     📋
@@ -1287,7 +1287,7 @@ const getFilteredPosts = (block) => {
                                                 <button
                                                     type="button"
                                                     @click="removeBlock(bIdx)"
-                                                    class="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                                                    class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
                                                     title="Delete Element"
                                                 >
                                                     🗑️
@@ -1301,11 +1301,11 @@ const getFilteredPosts = (block) => {
                                             <!-- 1. Text / Rich Text Block -->
                                             <div v-if="block.type === 'text' || block.type === 'rich_text'" class="space-y-3">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 text-xs mb-1">Section Heading (Optional)</label>
-                                                    <input v-model="block.heading" type="text" placeholder="e.g. Our History & Mission" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold" />
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Section Heading (Optional)</label>
+                                                    <input v-model="block.heading" type="text" placeholder="e.g. Our History & Mission" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold" />
                                                 </div>
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 text-xs mb-1">Body Text Content</label>
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Body Text Content</label>
                                                     <RichTextEditor v-model="block.content" placeholder="Write formatted text content here..." />
                                                 </div>
                                             </div>
@@ -1315,38 +1315,38 @@ const getFilteredPosts = (block) => {
                                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                     <div>
                                                         <div class="flex items-center justify-between mb-1">
-                                                            <label class="block font-bold text-slate-700">Image URL</label>
+                                                            <label class="block font-bold text-slate-700 dark:text-slate-200">Image URL</label>
                                                             <div class="flex items-center gap-1.5">
                                                                 <button
                                                                     v-if="block.url"
                                                                     type="button"
                                                                     @click="removeBlockImage(block)"
-                                                                    class="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold rounded-lg border border-rose-200 cursor-pointer"
+                                                                    class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-lg border border-rose-200 dark:border-rose-800/60 cursor-pointer"
                                                                 >
                                                                     🗑️ Clear
                                                                 </button>
                                                                 <button
                                                                     type="button"
                                                                     @click="openMediaLibrary('block_image', block, 'pages')"
-                                                                    class="px-2 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-bold rounded-lg border border-sky-200 cursor-pointer"
+                                                                    class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 cursor-pointer"
                                                                 >
                                                                     📁 Media Library
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                        <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+                                                        <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Caption / Alt Text</label>
-                                                        <input v-model="block.caption" type="text" placeholder="e.g. Annual Dinner at the Lodge" class="w-full p-2 bg-white border border-slate-300 rounded-xl" />
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Caption / Alt Text</label>
+                                                        <input v-model="block.caption" type="text" placeholder="e.g. Annual Dinner at the Lodge" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl" />
                                                     </div>
                                                 </div>
 
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white rounded-xl border border-slate-200">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Image Positioning</label>
-                                                        <select v-model="block.position" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold">
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Image Positioning</label>
+                                                        <select v-model="block.position" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                                                             <option value="left">Left Aligned</option>
                                                             <option value="center">Centered</option>
                                                             <option value="right">Right Aligned</option>
@@ -1355,8 +1355,8 @@ const getFilteredPosts = (block) => {
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Image Sizing</label>
-                                                        <select v-model="block.size" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold">
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Image Sizing</label>
+                                                        <select v-model="block.size" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                                                             <option value="small">Small (25% Width)</option>
                                                             <option value="medium">Medium (50% Width)</option>
                                                             <option value="large">Large (75% Width)</option>
@@ -1369,11 +1369,11 @@ const getFilteredPosts = (block) => {
                                                     <span class="text-[10px] font-bold text-slate-400 block mb-1">Preview Thumbnail:</span>
                                                     <div :class="['flex', block.position === 'left' ? 'justify-start' : block.position === 'right' ? 'justify-end' : block.position === 'center' ? 'justify-center' : 'w-full']">
                                                         <div :class="[
-                                                            'rounded-xl overflow-hidden border border-slate-200 bg-white p-1',
+                                                            'rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1',
                                                             block.size === 'small' ? 'w-1/4' : block.size === 'medium' ? 'w-1/2' : block.size === 'large' ? 'w-3/4' : 'w-full'
                                                         ]">
                                                             <img :src="block.url" class="w-full h-auto max-h-48 object-cover rounded-lg" />
-                                                            <p v-if="block.caption" class="text-[11px] text-center text-slate-500 italic mt-1">{{ block.caption }}</p>
+                                                            <p v-if="block.caption" class="text-[11px] text-center text-slate-500 dark:text-slate-400 italic mt-1">{{ block.caption }}</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1381,10 +1381,10 @@ const getFilteredPosts = (block) => {
 
                                             <!-- 3. Image Gallery Block -->
                                             <div v-else-if="block.type === 'images'" class="space-y-3 text-xs">
-                                                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200">
+                                                <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                                                     <div class="flex items-center gap-2">
-                                                        <label class="font-bold text-slate-700">Grid Columns Layout:</label>
-                                                        <select v-model="block.columns" class="p-1.5 bg-slate-50 border border-slate-300 rounded-lg font-bold">
+                                                        <label class="font-bold text-slate-700 dark:text-slate-200">Grid Columns Layout:</label>
+                                                        <select v-model="block.columns" class="p-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg font-bold">
                                                             <option :value="2">2 Columns</option>
                                                             <option :value="3">3 Columns</option>
                                                             <option :value="4">4 Columns</option>
@@ -1394,38 +1394,38 @@ const getFilteredPosts = (block) => {
                                                     <button
                                                         type="button"
                                                         @click="addGalleryImage(block)"
-                                                        class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-xl border border-purple-200 transition-all cursor-pointer flex items-center gap-1"
+                                                        class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer flex items-center gap-1"
                                                     >
                                                         ➕ Add Image Item
                                                     </button>
                                                 </div>
 
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                    <div v-for="(gItem, gIdx) in block.items" :key="gItem.id || gIdx" class="p-3 bg-white rounded-xl border border-slate-200 space-y-2 relative">
+                                                    <div v-for="(gItem, gIdx) in block.items" :key="gItem.id || gIdx" class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 relative">
                                                         <div class="flex items-center justify-between">
-                                                            <span class="font-bold text-slate-600 text-[11px]">Image #{{ gIdx + 1 }}</span>
+                                                            <span class="font-bold text-slate-600 dark:text-slate-300 text-[11px]">Image #{{ gIdx + 1 }}</span>
                                                             <div class="flex items-center gap-1">
                                                                 <button
                                                                     type="button"
                                                                     @click="openMediaLibrary('gallery_image', gItem, 'pages')"
-                                                                    class="px-2 py-0.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-[10px] font-bold rounded-lg border border-purple-200 cursor-pointer"
+                                                                    class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 cursor-pointer"
                                                                 >
                                                                     📁 Media Library
                                                                 </button>
                                                                 <button
                                                                     type="button"
                                                                     @click="removeGalleryImage(block, gIdx)"
-                                                                    class="text-rose-500 hover:text-rose-700 font-bold px-1 text-xs cursor-pointer"
+                                                                    class="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 font-bold px-1 text-xs cursor-pointer"
                                                                 >
                                                                     ✕
                                                                 </button>
                                                             </div>
                                                         </div>
 
-                                                        <input v-model="gItem.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-[11px]" />
-                                                        <input v-model="gItem.caption" type="text" placeholder="Caption / Alt Text" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs" />
+                                                        <input v-model="gItem.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg font-mono text-[11px]" />
+                                                        <input v-model="gItem.caption" type="text" placeholder="Caption / Alt Text" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg text-xs" />
 
-                                                        <img v-if="gItem.url" :src="gItem.url" class="w-full h-24 object-cover rounded-lg border border-slate-200 mt-1" />
+                                                        <img v-if="gItem.url" :src="gItem.url" class="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-800 mt-1" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1434,8 +1434,8 @@ const getFilteredPosts = (block) => {
                                             <div v-else-if="block.type === 'notice'" class="space-y-3 text-xs">
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Callout Style</label>
-                                                        <select v-model="block.style" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-semibold">
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Callout Style</label>
+                                                        <select v-model="block.style" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                                                             <option value="info">💡 Info Box (Sky Blue)</option>
                                                             <option value="warning">⚠️ Warning Box (Amber Gold)</option>
                                                             <option value="important">❗ Important Notice (Rose Red)</option>
@@ -1444,14 +1444,14 @@ const getFilteredPosts = (block) => {
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Box Header Title</label>
-                                                        <input v-model="block.title" type="text" placeholder="e.g. Important Announcement" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold" />
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Box Header Title</label>
+                                                        <input v-model="block.title" type="text" placeholder="e.g. Important Announcement" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
                                                     </div>
                                                 </div>
 
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 mb-1">Notice Body Message</label>
-                                                    <textarea v-model="block.text" rows="3" placeholder="Write callout announcement text here..." class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-xs"></textarea>
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Notice Body Message</label>
+                                                    <textarea v-model="block.text" rows="3" placeholder="Write callout announcement text here..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-xs"></textarea>
                                                 </div>
                                             </div>
 
@@ -1459,18 +1459,18 @@ const getFilteredPosts = (block) => {
                                             <div v-else-if="block.type === 'button'" class="space-y-3 text-xs">
                                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Button Label</label>
-                                                        <input v-model="block.label" type="text" placeholder="e.g. Learn More →" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold" />
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Label</label>
+                                                        <input v-model="block.label" type="text" placeholder="e.g. Learn More →" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Link Target URL</label>
-                                                        <input v-model="block.url" type="text" placeholder="https://..." class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Link Target URL</label>
+                                                        <input v-model="block.url" type="text" placeholder="https://..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Button Alignment</label>
-                                                        <select v-model="block.align" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-semibold">
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Alignment</label>
+                                                        <select v-model="block.align" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                                                             <option value="left">Left Aligned</option>
                                                             <option value="center">Centered</option>
                                                             <option value="right">Right Aligned</option>
@@ -1482,21 +1482,21 @@ const getFilteredPosts = (block) => {
                                             <!-- 6. Hero Banner Block -->
                                             <div v-else-if="block.type === 'hero'" class="space-y-3 text-xs">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 mb-1">Banner Title</label>
-                                                    <input v-model="block.title" placeholder="Hero Title" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Banner Title</label>
+                                                    <input v-model="block.title" placeholder="Hero Title" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 mb-1">Banner Subtitle</label>
-                                                    <input v-model="block.subtitle" placeholder="Hero Subtitle" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800" />
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Banner Subtitle</label>
+                                                    <input v-model="block.subtitle" placeholder="Hero Subtitle" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100" />
                                                 </div>
                                                 <div class="grid grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">CTA Button Text</label>
-                                                        <input v-model="block.cta_text" placeholder="e.g. Join Us" class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800 w-full font-semibold" />
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CTA Button Text</label>
+                                                        <input v-model="block.cta_text" placeholder="e.g. Join Us" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 w-full font-semibold" />
                                                     </div>
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">CTA Button Target Link</label>
-                                                        <input v-model="block.cta_link" placeholder="e.g. /site/lodge-of-fraternity/join-us" class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800 w-full font-mono text-[11px]" />
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CTA Button Target Link</label>
+                                                        <input v-model="block.cta_link" placeholder="e.g. /site/lodge-of-fraternity/join-us" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 w-full font-mono text-[11px]" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1504,14 +1504,14 @@ const getFilteredPosts = (block) => {
                                             <!-- 7. Dynamic News Feed & News List Block -->
                                             <div v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="space-y-3 text-xs">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 mb-1">Section Heading</label>
-                                                    <input v-model="block.heading" placeholder="e.g. Latest Club News & Articles" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
+                                                    <input v-model="block.heading" placeholder="e.g. Latest Club News & Articles" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
 
                                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">News Layout & Columns</label>
-                                                        <select v-model="block.columns" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500">
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">News Layout & Columns</label>
+                                                        <select v-model="block.columns" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
                                                             <option value="1">1 Column (Vertical List)</option>
                                                             <option value="2">2 Columns Grid</option>
                                                             <option value="3">3 Columns Grid (Default)</option>
@@ -1521,8 +1521,8 @@ const getFilteredPosts = (block) => {
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Featured Image Position</label>
-                                                        <select v-model="block.image_position" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500">
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Featured Image Position</label>
+                                                        <select v-model="block.image_position" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
                                                             <option value="above">Image Above Content (Top Banner)</option>
                                                             <option value="below">Image Below Content (Bottom Banner)</option>
                                                             <option value="left">Image on Left (Horizontal Layout)</option>
@@ -1532,8 +1532,8 @@ const getFilteredPosts = (block) => {
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Articles Per Page (Pagination)</label>
-                                                        <select v-model="block.limit" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500">
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Articles Per Page (Pagination)</label>
+                                                        <select v-model="block.limit" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
                                                             <option :value="3">3 Articles per page</option>
                                                             <option :value="6">6 Articles per page</option>
                                                             <option :value="9">9 Articles per page</option>
@@ -1544,7 +1544,7 @@ const getFilteredPosts = (block) => {
                                                     </div>
                                                 </div>
 
-                                                <div class="p-3 bg-sky-50 border border-sky-200/80 rounded-xl text-sky-900 text-xs">
+                                                <div class="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-blue-900 dark:text-blue-200 text-xs">
                                                     ⚡ <strong>Dynamic Paginated News List:</strong> Renders published news items in a <strong>{{ String(block.columns) === 'masonry' ? 'Masonry Grid' : (block.columns || 3) + ' Column' }}</strong> with automatic Previous / Next page controls when articles exceed {{ block.limit == 999 ? 'all articles' : block.limit + ' per page' }}.
                                                 </div>
                                             </div>
@@ -1552,10 +1552,10 @@ const getFilteredPosts = (block) => {
                                             <!-- 8. Dynamic Events Calendar Block -->
                                             <div v-else-if="block.type === 'events_calendar'" class="space-y-3 text-xs">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 mb-1">Section Heading</label>
-                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
+                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
-                                                <div class="p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl text-emerald-900 text-xs">
+                                                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 rounded-xl text-emerald-900 dark:text-emerald-200 text-xs">
                                                     ⚡ <strong>Dynamic Events & Summons Feed:</strong> Automatically displays upcoming club events, dinners, and meetings.
                                                 </div>
                                             </div>
@@ -1563,10 +1563,10 @@ const getFilteredPosts = (block) => {
                                             <!-- 9. Dynamic Pricing Cards Block -->
                                             <div v-else-if="block.type === 'pricing_cards'" class="space-y-3 text-xs">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 mb-1">Section Heading</label>
-                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
+                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
-                                                <div class="p-3 bg-purple-50 border border-purple-200/80 rounded-xl text-purple-900 text-xs">
+                                                <div class="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-blue-900 dark:text-blue-200 text-xs">
                                                     ⚡ <strong>Dynamic Membership Dues:</strong> Automatically renders active membership plans and pricing packages configured in Club Settings.
                                                 </div>
                                             </div>
@@ -1574,10 +1574,10 @@ const getFilteredPosts = (block) => {
                                             <!-- 10. Dynamic Donation Campaign Block -->
                                             <div v-else-if="block.type === 'donation_campaign'" class="space-y-3 text-xs">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 mb-1">Section Heading</label>
-                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
+                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
-                                                <div class="p-3 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-900 text-xs">
+                                                <div class="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/80 rounded-xl text-rose-900 dark:text-rose-200 text-xs">
                                                     ⚡ <strong>Dynamic Fundraising Feed:</strong> Automatically renders active fundraising campaigns and progress bars.
                                                 </div>
                                             </div>
@@ -1586,60 +1586,60 @@ const getFilteredPosts = (block) => {
                                             <div v-else-if="block.type === 'contact_details'" class="space-y-4 text-xs">
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Eyebrow Subtitle</label>
-                                                        <input v-model="block.eyebrow" placeholder="e.g. CONTACT" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Eyebrow Subtitle</label>
+                                                        <input v-model="block.eyebrow" placeholder="e.g. CONTACT" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                     </div>
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Main Section Title</label>
-                                                        <input v-model="block.title" placeholder="e.g. Get in Touch" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Main Section Title</label>
+                                                        <input v-model="block.title" placeholder="e.g. Get in Touch" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                     </div>
                                                 </div>
 
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 mb-1">Introductory Description</label>
-                                                    <textarea v-model="block.description" rows="2" placeholder="Introductory paragraph..." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium"></textarea>
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Introductory Description</label>
+                                                    <textarea v-model="block.description" rows="2" placeholder="Introductory paragraph..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"></textarea>
                                                 </div>
 
-                                                <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-3">
-                                                    <div class="font-bold text-amber-900 text-xs flex items-center gap-1.5">
+                                                <div class="p-3 bg-amber-50/70 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800/80 rounded-xl space-y-3">
+                                                    <div class="font-bold text-amber-900 dark:text-amber-200 text-xs flex items-center gap-1.5">
                                                         <span>📇 Contact Cards Details</span>
-                                                        <span class="text-[10px] text-amber-700/70 font-normal">(Initial defaults loaded from Website Settings)</span>
+                                                        <span class="text-[10px] text-amber-700/70 dark:text-amber-300/70 font-normal">(Initial defaults loaded from Website Settings)</span>
                                                     </div>
 
                                                     <!-- Email Card -->
                                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         <div>
-                                                            <label class="block font-bold text-slate-700 mb-1">Email Heading</label>
-                                                            <input v-model="block.email_heading" placeholder="Email" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold" />
+                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Email Heading</label>
+                                                            <input v-model="block.email_heading" placeholder="Email" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
                                                         </div>
                                                         <div class="sm:col-span-2">
-                                                            <label class="block font-bold text-slate-700 mb-1">Contact Email</label>
-                                                            <input v-model="block.email" :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'Not configured')" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold" />
-                                                            <span class="text-[10px] text-slate-500 mt-1 block">Leave blank to automatically use the Contact Email from Organization Settings.</span>
+                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Contact Email</label>
+                                                            <input v-model="block.email" :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'Not configured')" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
+                                                            <span class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">Leave blank to automatically use the Contact Email from Organization Settings.</span>
                                                         </div>
                                                     </div>
 
                                                     <!-- Meeting Times Card -->
                                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         <div>
-                                                            <label class="block font-bold text-slate-700 mb-1">Times Heading</label>
-                                                            <input v-model="block.times_heading" placeholder="Meeting Times" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold" />
+                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Times Heading</label>
+                                                            <input v-model="block.times_heading" placeholder="Meeting Times" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
                                                         </div>
                                                         <div class="sm:col-span-2">
-                                                            <label class="block font-bold text-slate-700 mb-1">Meeting Times & Schedule</label>
-                                                            <textarea v-model="block.times" rows="2" placeholder="e.g. 7:00 pm, 4th Thursday..." class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold"></textarea>
+                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Meeting Times & Schedule</label>
+                                                            <textarea v-model="block.times" rows="2" placeholder="e.g. 7:00 pm, 4th Thursday..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold"></textarea>
                                                         </div>
                                                     </div>
 
                                                     <!-- Location Card -->
                                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         <div>
-                                                            <label class="block font-bold text-slate-700 mb-1">Location Heading</label>
-                                                            <input v-model="block.location_heading" placeholder="Location" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold" />
+                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Location Heading</label>
+                                                            <input v-model="block.location_heading" placeholder="Location" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
                                                         </div>
                                                         <div class="sm:col-span-2">
-                                                            <label class="block font-bold text-slate-700 mb-1">Full Address / Location</label>
-                                                            <textarea v-model="block.location" rows="3" placeholder="e.g. Masonic Hall, Street, Town..." class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold"></textarea>
+                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Full Address / Location</label>
+                                                            <textarea v-model="block.location" rows="3" placeholder="e.g. Masonic Hall, Street, Town..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold"></textarea>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1649,40 +1649,40 @@ const getFilteredPosts = (block) => {
                                             <div v-else-if="block.type === 'contact_form'" class="space-y-4 text-xs">
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Section Heading</label>
-                                                        <input v-model="block.heading" placeholder="e.g. Send Us a Message" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
+                                                        <input v-model="block.heading" placeholder="e.g. Send Us a Message" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                     </div>
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 mb-1">Submit Button Label</label>
-                                                        <input v-model="block.button_text" placeholder="e.g. Send Message" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Submit Button Label</label>
+                                                        <input v-model="block.button_text" placeholder="e.g. Send Message" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                     </div>
                                                 </div>
 
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 mb-1">Subtitle / Instructions</label>
-                                                    <textarea v-model="block.subtitle" rows="2" placeholder="Subheading or instructions..." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium"></textarea>
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Subtitle / Instructions</label>
+                                                    <textarea v-model="block.subtitle" rows="2" placeholder="Subheading or instructions..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"></textarea>
                                                 </div>
 
-                                                <div class="p-3.5 bg-indigo-50/70 border border-indigo-200/80 rounded-xl space-y-3">
-                                                    <div class="font-bold text-indigo-900 text-xs flex items-center justify-between">
+                                                <div class="p-3.5 bg-blue-50/70 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/80 rounded-xl space-y-3">
+                                                    <div class="font-bold text-blue-900 dark:text-blue-200 text-xs flex items-center justify-between">
                                                         <span>📬 Email Routing & Notification Settings</span>
                                                     </div>
 
                                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                         <div>
-                                                            <label class="block font-bold text-slate-700 mb-1">Secretary / Recipient Email</label>
+                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Secretary / Recipient Email</label>
                                                             <div class="space-y-1.5">
                                                                 <input 
                                                                     v-model="block.recipient_email" 
                                                                     type="email"
                                                                     :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'secretary@' + club.slug + '.org.uk')" 
-                                                                    class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold text-xs" 
+                                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold text-xs" 
                                                                 />
                                                                 <div class="flex flex-wrap items-center gap-1.5 text-[10px]">
                                                                     <button 
                                                                         type="button" 
                                                                         @click="block.recipient_email = ''"
-                                                                        class="px-2 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition-colors cursor-pointer"
+                                                                        class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800/60 transition-colors cursor-pointer"
                                                                     >
                                                                         ⚡ Use Organization Default (Dynamic)
                                                                     </button>
@@ -1690,53 +1690,53 @@ const getFilteredPosts = (block) => {
                                                                         v-if="settingsForm.contact_email || club.contact_email"
                                                                         type="button" 
                                                                         @click="block.recipient_email = settingsForm.contact_email || club.contact_email"
-                                                                        class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold border border-slate-200 transition-colors cursor-pointer"
+                                                                        class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
                                                                     >
                                                                         ✉️ Fill: {{ settingsForm.contact_email || club.contact_email }}
                                                                     </button>
                                                                 </div>
-                                                                <span class="text-[10px] text-slate-500 block leading-tight">
+                                                                <span class="text-[10px] text-slate-500 dark:text-slate-400 block leading-tight">
                                                                     Form submissions route here. Leave blank to automatically use the Contact Email from Organization Settings ({{ settingsForm.contact_email || club.contact_email || 'Not configured' }}).
                                                                 </span>
                                                             </div>
                                                         </div>
 
                                                         <div>
-                                                            <label class="block font-bold text-slate-700 mb-1">CC Email Addresses (Comma-separated)</label>
-                                                            <input v-model="block.cc_emails" placeholder="e.g. treasurer@lodge.org, assistant@lodge.org" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-semibold text-xs" />
-                                                            <span class="text-[10px] text-slate-500 mt-1 block">Copies of form submissions will be sent here.</span>
+                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CC Email Addresses (Comma-separated)</label>
+                                                            <input v-model="block.cc_emails" placeholder="e.g. treasurer@lodge.org, assistant@lodge.org" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold text-xs" />
+                                                            <span class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">Copies of form submissions will be sent here.</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                                                    <div class="font-bold text-slate-800 text-xs">
+                                                <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
+                                                    <div class="font-bold text-slate-800 dark:text-slate-100 text-xs">
                                                         ⚙️ Mandatory Field Rules (Admin Configuration)
                                                     </div>
 
                                                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                                        <label class="flex items-center gap-2 text-slate-700 font-semibold text-xs cursor-pointer">
-                                                            <input type="checkbox" v-model="block.name_required" class="w-4 h-4 rounded text-indigo-600 accent-indigo-600" />
+                                                        <label class="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-xs cursor-pointer">
+                                                            <input type="checkbox" v-model="block.name_required" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" />
                                                             Name Required
                                                         </label>
-                                                        <label class="flex items-center gap-2 text-slate-700 font-semibold text-xs cursor-pointer">
-                                                            <input type="checkbox" v-model="block.email_required" class="w-4 h-4 rounded text-indigo-600 accent-indigo-600" />
+                                                        <label class="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-xs cursor-pointer">
+                                                            <input type="checkbox" v-model="block.email_required" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" />
                                                             Email Required
                                                         </label>
-                                                        <label class="flex items-center gap-2 text-slate-700 font-semibold text-xs cursor-pointer">
-                                                            <input type="checkbox" v-model="block.phone_required" class="w-4 h-4 rounded text-indigo-600 accent-indigo-600" />
+                                                        <label class="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-xs cursor-pointer">
+                                                            <input type="checkbox" v-model="block.phone_required" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" />
                                                             Phone Required
                                                         </label>
-                                                        <label class="flex items-center gap-2 text-slate-700 font-semibold text-xs cursor-pointer">
-                                                            <input type="checkbox" v-model="block.message_required" class="w-4 h-4 rounded text-indigo-600 accent-indigo-600" />
+                                                        <label class="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-xs cursor-pointer">
+                                                            <input type="checkbox" v-model="block.message_required" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" />
                                                             Message Required
                                                         </label>
                                                     </div>
                                                 </div>
 
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 mb-1">Success Message Displayed on Submission</label>
-                                                    <input v-model="block.success_message" placeholder="e.g. Thank you! Your message has been sent successfully." class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-semibold" />
+                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Success Message Displayed on Submission</label>
+                                                    <input v-model="block.success_message" placeholder="e.g. Thank you! Your message has been sent successfully." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
                                             </div>
 
@@ -1746,15 +1746,15 @@ const getFilteredPosts = (block) => {
                                     <!-- Insert Divider Below Block -->
                                     <div class="relative py-1 flex items-center justify-center insert-menu-container">
                                         <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                                            <div class="w-full border-t border-dashed border-slate-200 hover:border-slate-300 transition-colors"></div>
+                                            <div class="w-full border-t border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"></div>
                                         </div>
                                         <div class="relative flex justify-center">
                                             <button
                                                 type="button"
                                                 @click.stop="toggleInsertMenu(bIdx + 1, $event)"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-sky-300 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
                                             >
-                                                <span class="w-4 h-4 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-black">+</span>
+                                                <span class="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center text-xs font-black">+</span>
                                                 <span>Insert block here</span>
                                             </button>
 
@@ -1762,18 +1762,18 @@ const getFilteredPosts = (block) => {
                                             <div
                                                 v-if="activeInsertIndex === bIdx + 1"
                                                 :class="[
-                                                    'absolute z-40 w-[680px] max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 -translate-x-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
+                                                    'absolute z-40 w-[680px] max-w-[90vw] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 -translate-x-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
                                                     insertMenuPlacement === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
                                                 ]"
                                             >
-                                                <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                                                <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
                                                     <span>Insert Element Here</span>
-                                                    <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer p-1">✕</button>
+                                                    <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs cursor-pointer p-1">✕</button>
                                                 </div>
 
                                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                                                     <div v-for="(col, cIdx) in blockColumns" :key="cIdx" class="space-y-1.5">
-                                                        <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                                                        <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
                                                             {{ col.title }}
                                                         </div>
                                                         <div class="space-y-1">
@@ -1782,13 +1782,13 @@ const getFilteredPosts = (block) => {
                                                                 :key="item.type"
                                                                 type="button"
                                                                 @click="addBlock(item.type, bIdx + 1)"
-                                                                class="w-full flex items-start gap-2.5 p-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 border border-slate-100 hover:border-sky-200 rounded-xl transition-all cursor-pointer group"
+                                                                class="w-full flex items-start gap-2.5 p-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800/60 rounded-xl transition-all cursor-pointer group"
                                                             >
                                                                 <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shrink-0 transition-transform group-hover:scale-110" :class="[item.bg, item.color]">
                                                                     {{ item.icon }}
                                                                 </span>
                                                                 <div class="min-w-0">
-                                                                    <span class="block font-bold text-slate-900 group-hover:text-sky-600 transition-colors truncate">{{ item.label }}</span>
+                                                                    <span class="block font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">{{ item.label }}</span>
                                                                     <span class="text-[10px] text-slate-400 font-normal leading-tight block line-clamp-2">{{ item.desc }}</span>
                                                                 </div>
                                                             </button>
@@ -1800,10 +1800,10 @@ const getFilteredPosts = (block) => {
                                     </div>
                                 </template>
 
-                                <div v-if="!form.blocks.length" class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-3">
+                                <div v-if="!form.blocks.length" class="text-center py-10 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-3">
                                     <span class="text-3xl">🧩</span>
-                                    <p class="text-xs font-bold text-slate-500">No content elements added yet.</p>
-                                    <button type="button" @click="addBlock('text')" class="py-2 px-4 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md">
+                                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400">No content elements added yet.</p>
+                                    <button type="button" @click="addBlock('text')" class="py-2 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md">
                                         ➕ Add First Text Block
                                     </button>
                                 </div>
@@ -1815,7 +1815,7 @@ const getFilteredPosts = (block) => {
                                     v-if="form.id && !isDefaultPage(activePage)"
                                     @click="triggerDeleteModal(activePage)"
                                     type="button"
-                                    class="py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition-colors cursor-pointer"
+                                    class="py-2.5 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800/60 transition-colors cursor-pointer"
                                 >
                                     🗑️ Delete Custom Page
                                 </button>
@@ -1828,9 +1828,9 @@ const getFilteredPosts = (block) => {
                                     :disabled="form.processing"
                                     :class="[
                                         'px-6 py-3 font-bold text-xs rounded-xl shadow-md transition-all duration-300 flex items-center gap-2 cursor-pointer',
-                                        form.processing ? 'bg-indigo-500 text-white cursor-wait opacity-80' :
+                                        form.processing ? 'bg-blue-500 text-white cursor-wait opacity-80' :
                                         isSavedSuccess ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 scale-105 ring-2 ring-emerald-400/50' :
-                                        'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                                        'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
                                     ]"
                                 >
                                     <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved Successfully!' : '💾 Save & Publish Page') }}</span>
@@ -1841,7 +1841,7 @@ const getFilteredPosts = (block) => {
                         <!-- SUB-VIEW 2: LIVE PREVIEW VIEW -->
                         <div v-else-if="pageViewMode === 'preview'" class="space-y-4">
                             <!-- Theme Preview Control Toolbar -->
-                            <div class="bg-slate-900 text-white p-4 sm:px-6 rounded-3xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+                            <div class="bg-slate-900 dark:bg-slate-700 text-white p-4 sm:px-6 rounded-3xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
                                 <div class="flex items-center gap-3 flex-wrap">
                                     <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                                         <span>🎨 Previewing Theme:</span>
@@ -1849,7 +1849,7 @@ const getFilteredPosts = (block) => {
                                     <select
                                         :value="effectivePreviewThemeKey"
                                         @change="e => activePreviewThemeId = e.target.value"
-                                        class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                                        class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                                     >
                                         <option v-for="t in THEMES" :key="t.id" :value="t.id">
                                             {{ t.name }} {{ currentThemeKey === t.id ? '(Active Live)' : '' }}
@@ -1862,7 +1862,7 @@ const getFilteredPosts = (block) => {
                                         v-if="effectivePreviewThemeKey !== currentThemeKey"
                                         type="button"
                                         @click="applyPreviewTheme()"
-                                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
                                     >
                                         <span>✨ Apply This Theme</span>
                                     </button>
@@ -1882,7 +1882,7 @@ const getFilteredPosts = (block) => {
                                 <!-- Website Nav Bar Mockup -->
                                 <div :class="['rounded-2xl p-4 border flex items-center justify-between transition-colors', previewThemeClasses.nav]">
                                     <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs">
+                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-500 to-blue-600 flex items-center justify-center font-bold text-white text-xs">
                                             🏆
                                         </div>
                                         <div>
@@ -1968,7 +1968,7 @@ const getFilteredPosts = (block) => {
                                             block.style === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' :
                                             block.style === 'important' ? 'bg-rose-500/10 border-rose-500/30 text-rose-200' :
                                             block.style === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' :
-                                            'bg-sky-500/10 border-sky-500/30 text-sky-200'
+                                            'bg-blue-500/10 border-blue-500/30 text-blue-200'
                                         ]">
                                             <h4 v-if="block.title" class="font-extrabold text-sm flex items-center gap-2">
                                                 <span>📢</span> {{ block.title }}
@@ -1980,7 +1980,7 @@ const getFilteredPosts = (block) => {
                                     <!-- 6. Button Link Block -->
                                     <section v-else-if="block.type === 'button'" class="max-w-3xl mx-auto">
                                         <div :class="['flex', block.align === 'left' ? 'justify-start' : block.align === 'right' ? 'justify-end' : 'justify-center']">
-                                            <span class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold text-xs shadow-md">
+                                            <span class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-xs shadow-md">
                                                 {{ block.label || 'Learn More →' }}
                                             </span>
                                         </div>
@@ -1990,15 +1990,15 @@ const getFilteredPosts = (block) => {
                                     <section v-else-if="block.type === 'pricing_cards'" class="max-w-5xl mx-auto space-y-4">
                                         <h3 class="text-xl font-bold text-white text-center">{{ block.heading || 'Membership Options & Dues' }}</h3>
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div v-for="plan in membershipPlans" :key="plan.id" class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase">
+                                            <div v-for="plan in membershipPlans" :key="plan.id" class="p-5 rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 space-y-3">
+                                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
                                                     {{ plan.billing_period }}
                                                 </span>
                                                 <h4 class="text-base font-bold text-white">{{ plan.name }}</h4>
                                                 <p class="text-xs text-slate-400">{{ plan.description }}</p>
                                                 <div class="pt-2 border-t border-slate-800 flex items-baseline justify-between">
                                                     <span class="text-lg font-black text-white">£{{ plan.price }}</span>
-                                                    <span class="text-xs text-sky-400 font-bold">Subscribe →</span>
+                                                    <span class="text-xs text-blue-400 font-bold">Subscribe →</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -2006,7 +2006,7 @@ const getFilteredPosts = (block) => {
 
                                     <!-- 8. Dynamic Donation Campaign Block -->
                                     <section v-else-if="block.type === 'donation_campaign'" class="space-y-4">
-                                        <div v-for="d in donations" :key="d.id" class="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+                                        <div v-for="d in donations" :key="d.id" class="p-6 rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 space-y-4">
                                             <div class="flex justify-between items-start">
                                                 <div>
                                                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
@@ -2037,7 +2037,7 @@ const getFilteredPosts = (block) => {
                                             <template v-for="(post, pIdx) in getFilteredPosts(block)" :key="post.id">
                                                 
                                                 <!-- No Image Layout (Text-only card, no placeholder) -->
-                                                <div v-if="!post.cover_image_url" :class="['rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-1.5 flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
+                                                <div v-if="!post.cover_image_url" :class="['rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 p-4 space-y-1.5 flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
                                                     <div class="space-y-1.5">
                                                         <div class="flex items-center justify-between text-[10px] text-slate-400">
                                                             <span v-if="post.author_name">By {{ post.author_name }}</span>
@@ -2049,7 +2049,7 @@ const getFilteredPosts = (block) => {
                                                 </div>
 
                                                 <!-- Image Left Layout -->
-                                                <div v-else-if="getPostImagePos(block, pIdx) === 'left'" :class="['rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden grid grid-cols-1 sm:grid-cols-3 gap-0 transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
+                                                <div v-else-if="getPostImagePos(block, pIdx) === 'left'" :class="['rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 overflow-hidden grid grid-cols-1 sm:grid-cols-3 gap-0 transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
                                                     <div class="sm:col-span-1 min-h-[140px] bg-slate-800 overflow-hidden relative">
                                                         <img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" />
                                                     </div>
@@ -2066,7 +2066,7 @@ const getFilteredPosts = (block) => {
                                                 </div>
 
                                                 <!-- Image Right Layout -->
-                                                <div v-else-if="getPostImagePos(block, pIdx) === 'right'" :class="['rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden grid grid-cols-1 sm:grid-cols-3 gap-0 transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
+                                                <div v-else-if="getPostImagePos(block, pIdx) === 'right'" :class="['rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 overflow-hidden grid grid-cols-1 sm:grid-cols-3 gap-0 transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
                                                     <div class="sm:col-span-2 p-4 space-y-2 flex flex-col justify-between order-2 sm:order-1">
                                                         <div class="space-y-1.5">
                                                             <div class="flex items-center justify-between text-[10px] text-slate-400">
@@ -2083,7 +2083,7 @@ const getFilteredPosts = (block) => {
                                                 </div>
 
                                                 <!-- Image Below Layout -->
-                                                <div v-else-if="getPostImagePos(block, pIdx) === 'below'" :class="['rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
+                                                <div v-else-if="getPostImagePos(block, pIdx) === 'below'" :class="['rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 overflow-hidden flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
                                                     <div class="p-4 space-y-1.5">
                                                         <div class="flex items-center justify-between text-[10px] text-slate-400">
                                                             <span v-if="post.author_name">By {{ post.author_name }}</span>
@@ -2098,7 +2098,7 @@ const getFilteredPosts = (block) => {
                                                 </div>
 
                                                 <!-- Image Above Layout (Default) -->
-                                                <div v-else :class="['rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
+                                                <div v-else :class="['rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 overflow-hidden flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
                                                     <div class="h-36 w-full bg-slate-800 overflow-hidden relative border-b border-slate-800">
                                                         <img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" />
                                                     </div>
@@ -2121,7 +2121,7 @@ const getFilteredPosts = (block) => {
                                                 type="button"
                                                 @click="setNewsPage(block.id, getNewsCurrentPage(block.id) - 1)"
                                                 :disabled="getNewsCurrentPage(block.id) <= 1"
-                                                class="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-xs font-bold text-slate-300 border border-slate-800 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                                                class="py-1.5 px-3 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 disabled:opacity-40 text-xs font-bold text-slate-300 border border-slate-800 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
                                             >
                                                 ← Previous
                                             </button>
@@ -2134,7 +2134,7 @@ const getFilteredPosts = (block) => {
                                                 type="button"
                                                 @click="setNewsPage(block.id, getNewsCurrentPage(block.id) + 1)"
                                                 :disabled="getNewsCurrentPage(block.id) >= getNewsTotalPages(block)"
-                                                class="py-1.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-xs font-bold text-slate-300 border border-slate-800 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                                                class="py-1.5 px-3 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 disabled:opacity-40 text-xs font-bold text-slate-300 border border-slate-800 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
                                             >
                                                 Next →
                                             </button>
@@ -2145,7 +2145,7 @@ const getFilteredPosts = (block) => {
                                     <section v-else-if="block.type === 'events_calendar'" class="space-y-4">
                                         <h3 class="text-xl font-bold text-white">{{ block.heading || 'Upcoming Events & Dinners' }}</h3>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div v-for="e in upcomingEvents" :key="e.id" class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+                                            <div v-for="e in upcomingEvents" :key="e.id" class="p-4 rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 space-y-2">
                                                 <h4 class="text-sm font-bold text-white">{{ e.title }}</h4>
                                                 <p class="text-[11px] text-slate-400">📍 {{ e.location }} • 🕒 {{ e.starts_at }}</p>
                                             </div>
@@ -2163,8 +2163,8 @@ const getFilteredPosts = (block) => {
 
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                                             <!-- Email Card -->
-                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
-                                                <div class="w-12 h-12 rounded-full bg-slate-900 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
+                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 dark:bg-amber-950/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
+                                                <div class="w-12 h-12 rounded-full bg-slate-900 dark:bg-slate-700 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
                                                     ✉️
                                                 </div>
                                                 <h3 class="font-bold text-white text-base">{{ block.email_heading || 'Email' }}</h3>
@@ -2173,31 +2173,31 @@ const getFilteredPosts = (block) => {
                                                     :email="block.email || club.contact_email"
                                                     custom-class="text-amber-400 hover:text-amber-300 font-semibold text-xs sm:text-sm break-all cursor-pointer transition-colors"
                                                 />
-                                                <span v-else class="text-slate-500 text-xs italic">No email address configured</span>
+                                                <span v-else class="text-slate-500 dark:text-slate-400 text-xs italic">No email address configured</span>
                                             </div>
 
                                             <!-- Meeting Times Card -->
-                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
-                                                <div class="w-12 h-12 rounded-full bg-slate-900 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
+                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 dark:bg-amber-950/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
+                                                <div class="w-12 h-12 rounded-full bg-slate-900 dark:bg-slate-700 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
                                                     📅
                                                 </div>
                                                 <h3 class="font-bold text-white text-base">{{ block.times_heading || 'Meeting Times' }}</h3>
                                                 <p v-if="block.times || club.meeting_formula" class="text-slate-300 text-xs sm:text-sm whitespace-pre-line leading-relaxed">
                                                     {{ block.times || club.meeting_formula }}
                                                 </p>
-                                                <span v-else class="text-slate-500 text-xs italic">No meeting schedule configured</span>
+                                                <span v-else class="text-slate-500 dark:text-slate-400 text-xs italic">No meeting schedule configured</span>
                                             </div>
 
                                             <!-- Location Card -->
-                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
-                                                <div class="w-12 h-12 rounded-full bg-slate-900 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
+                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 dark:bg-amber-950/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
+                                                <div class="w-12 h-12 rounded-full bg-slate-900 dark:bg-slate-700 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
                                                     📍
                                                 </div>
                                                 <h3 class="font-bold text-white text-base">{{ block.location_heading || 'Location' }}</h3>
                                                 <p v-if="block.location || club.address" class="text-slate-300 text-xs sm:text-sm whitespace-pre-line leading-relaxed">
                                                     {{ block.location || club.address }}
                                                 </p>
-                                                <span v-else class="text-slate-500 text-xs italic">No location address configured</span>
+                                                <span v-else class="text-slate-500 dark:text-slate-400 text-xs italic">No location address configured</span>
                                             </div>
                                         </div>
                                     </section>
@@ -2239,11 +2239,11 @@ const getFilteredPosts = (block) => {
                                                 <textarea rows="4" disabled placeholder="Write your message here..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-400 opacity-80 cursor-not-allowed"></textarea>
                                             </div>
 
-                                            <button type="button" disabled class="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-extrabold shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 cursor-not-allowed opacity-90">
+                                            <button type="button" disabled class="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 text-white font-extrabold shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 cursor-not-allowed opacity-90">
                                                 <span>✉️ {{ block.button_text || 'Send Message' }}</span>
                                             </button>
 
-                                            <div class="text-[11px] text-slate-500 text-center flex items-center justify-center gap-1">
+                                            <div class="text-[11px] text-slate-500 dark:text-slate-400 text-center flex items-center justify-center gap-1">
                                                 <span>🔒 Submissions will route to:</span>
                                                 <strong class="text-slate-300">{{ block.recipient_email || settingsForm.contact_email || club.contact_email || club.email }}</strong>
                                                 <span v-if="block.cc_emails" class="text-slate-400">(CC: {{ block.cc_emails }})</span>
@@ -2255,7 +2255,7 @@ const getFilteredPosts = (block) => {
                             </div>
 
                             <!-- Website Footer Mockup -->
-                            <div class="border-t border-slate-800 pt-8 text-center text-xs text-slate-500 space-y-1">
+                            <div class="border-t border-slate-800 pt-8 text-center text-xs text-slate-500 dark:text-slate-400 space-y-1">
                                 <p>© 2026 {{ club.name }}. All rights reserved.</p>
                                 <p>Powered by ClubManager Multi-Tenant Platform</p>
                             </div>
@@ -2264,24 +2264,24 @@ const getFilteredPosts = (block) => {
                 </div>
 
                     <!-- View Mode: Global Website & SEO Settings -->
-                    <div v-else-if="activeNavSelection === 'settings'" class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
-                        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div v-else-if="activeNavSelection === 'settings'" class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-6">
+                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                             <div>
-                                <h2 class="text-xl font-bold text-slate-900">🌐 Global Website & SEO Settings</h2>
-                                <p class="text-xs text-slate-500 mt-0.5">Manage custom domain, global search engine optimization, social links, and header/footer branding.</p>
+                                <h2 class="text-xl font-bold text-slate-900 dark:text-white">🌐 Global Website & SEO Settings</h2>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage custom domain, global search engine optimization, social links, and header/footer branding.</p>
                             </div>
                             <button
                                 type="button"
                                 @click="submitWebsiteSettings"
                                 :disabled="settingsForm.processing"
-                                class="py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                                class="py-2.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                             >
                                 <span>💾 Save Website Settings</span>
                             </button>
                         </div>
 
                         <!-- Saved Success Alert -->
-                        <div v-if="isSavedSuccess" class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center gap-2">
+                        <div v-if="isSavedSuccess" class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center gap-2">
                             <span>✅ Website settings saved successfully!</span>
                         </div>
 
@@ -2290,101 +2290,101 @@ const getFilteredPosts = (block) => {
                             <!-- Section 1: Custom Domain Setup -->
                             <div class="space-y-4">
                                 <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Custom Domain Setup</h3>
-                                <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+                                <div class="p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-4">
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Custom Domain Name</label>
-                                        <input v-model="settingsForm.custom_domain" type="text" placeholder="e.g. members.oxfordboating.org" class="w-full sm:w-96 px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold" />
-                                        <p class="text-[10px] text-slate-500 mt-1">Connect your custom domain (e.g. <code class="bg-slate-200 text-slate-800 px-1 py-0.5 rounded font-bold">members.oxfordboating.org</code>) to your club portal.</p>
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Custom Domain Name</label>
+                                        <input v-model="settingsForm.custom_domain" type="text" placeholder="e.g. members.oxfordboating.org" class="w-full sm:w-96 px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Connect your custom domain (e.g. <code class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-1 py-0.5 rounded font-bold">members.oxfordboating.org</code>) to your club portal.</p>
                                     </div>
 
-                                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2 text-amber-900">
+                                    <div class="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl space-y-2 text-amber-900 dark:text-amber-200">
                                         <div class="font-bold text-xs">DNS Configuration Instructions:</div>
                                         <p class="text-[11px]">Add a CNAME record at your DNS provider pointing your subdomain/domain to this server's target hostname.</p>
-                                        <div class="font-mono text-[11px] bg-white p-2.5 rounded-xl border border-amber-200 font-bold">
+                                        <div class="font-mono text-[11px] bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-amber-200 dark:border-amber-800/60 font-bold">
                                             Host: @ or members • Type: CNAME • Target: manager.360fusionhosting.co.uk
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <hr class="border-slate-100" />
+                            <hr class="border-slate-100 dark:border-slate-800" />
 
                             <!-- Section 2: Search Engine Optimization (SEO) -->
                             <div class="space-y-4">
                                 <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Search Engine Optimization (SEO)</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Page Title Suffix</label>
-                                        <input v-model="settingsForm.seo_title_suffix" type="text" placeholder="| The Lodge of Fraternity" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Page Title Suffix</label>
+                                        <input v-model="settingsForm.seo_title_suffix" type="text" placeholder="| The Lodge of Fraternity" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                         <p class="text-[10px] text-slate-400 mt-1">Appended to page titles in browser tabs and search engines.</p>
                                     </div>
 
                                     <div class="sm:col-span-2">
-                                        <label class="block font-bold text-slate-700 mb-1">Default Meta Description</label>
-                                        <textarea v-model="settingsForm.seo_meta_description" rows="3" placeholder="Official homepage for events, membership, news, and history." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800"></textarea>
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default Meta Description</label>
+                                        <textarea v-model="settingsForm.seo_meta_description" rows="3" placeholder="Official homepage for events, membership, news, and history." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800 dark:text-slate-100"></textarea>
                                     </div>
                                 </div>
                             </div>
 
-                            <hr class="border-slate-100" />
+                            <hr class="border-slate-100 dark:border-slate-800" />
 
                             <!-- Section 2: Header Navigation & Call to Action -->
                             <div class="space-y-4">
                                 <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Header Navigation & Action Button</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Header CTA Button Text</label>
-                                        <input v-model="settingsForm.header_cta_text" type="text" placeholder="e.g. Join Our Club" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Header CTA Button Text</label>
+                                        <input v-model="settingsForm.header_cta_text" type="text" placeholder="e.g. Join Our Club" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
 
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Header CTA Button Link</label>
-                                        <input v-model="settingsForm.header_cta_link" type="text" placeholder="e.g. /site/oxford-boating/join-us" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Header CTA Button Link</label>
+                                        <input v-model="settingsForm.header_cta_link" type="text" placeholder="e.g. /site/oxford-boating/join-us" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
                                 </div>
                             </div>
 
-                            <hr class="border-slate-100" />
+                            <hr class="border-slate-100 dark:border-slate-800" />
 
                             <!-- Section 3: Public Contact & Social Links -->
                             <div class="space-y-4">
                                 <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Public Contact Details & Social Channels</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Public Contact Email</label>
-                                        <input v-model="settingsForm.contact_email" type="email" placeholder="admin@club.org" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Public Contact Email</label>
+                                        <input v-model="settingsForm.contact_email" type="email" placeholder="admin@club.org" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
 
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Public Phone Number</label>
-                                        <input v-model="settingsForm.phone" type="text" placeholder="+44 20 7946 0912" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Public Phone Number</label>
+                                        <input v-model="settingsForm.phone" type="text" placeholder="+44 20 7946 0912" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
 
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Facebook Page URL</label>
-                                        <input v-model="settingsForm.social_facebook" type="text" placeholder="https://facebook.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Facebook Page URL</label>
+                                        <input v-model="settingsForm.social_facebook" type="text" placeholder="https://facebook.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
 
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Instagram Profile URL</label>
-                                        <input v-model="settingsForm.social_instagram" type="text" placeholder="https://instagram.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Instagram Profile URL</label>
+                                        <input v-model="settingsForm.social_instagram" type="text" placeholder="https://instagram.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
 
                                     <div class="sm:col-span-2">
-                                        <label class="block font-bold text-slate-700 mb-1">Twitter / X Handle URL</label>
-                                        <input v-model="settingsForm.social_twitter" type="text" placeholder="https://x.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Twitter / X Handle URL</label>
+                                        <input v-model="settingsForm.social_twitter" type="text" placeholder="https://x.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
                                 </div>
                             </div>
 
-                            <hr class="border-slate-100" />
+                            <hr class="border-slate-100 dark:border-slate-800" />
 
                             <!-- Section 4: Footer Copyright -->
                             <div class="space-y-4">
                                 <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Footer Copyright & Branding</h3>
                                 <div>
-                                    <label class="block font-bold text-slate-700 mb-1">Footer Copyright Line</label>
-                                    <input v-model="settingsForm.footer_copyright" type="text" placeholder="© 2026 Lodge of Fraternity. All rights reserved." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Footer Copyright Line</label>
+                                    <input v-model="settingsForm.footer_copyright" type="text" placeholder="© 2026 Lodge of Fraternity. All rights reserved." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                 </div>
                             </div>
 
@@ -2392,7 +2392,7 @@ const getFilteredPosts = (block) => {
                                 <button
                                     type="submit"
                                     :disabled="settingsForm.processing"
-                                    class="py-3 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                                    class="py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                                 >
                                     <span>💾 Save Website Settings</span>
                                 </button>
@@ -2401,16 +2401,16 @@ const getFilteredPosts = (block) => {
                     </div>
 
                     <!-- View Mode 3: Website Theme Selection Gallery -->
-                    <div v-else-if="activeNavSelection === 'themes'" class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
-                        <div class="flex items-center justify-between border-b border-slate-100 pb-4 flex-wrap gap-3">
+                    <div v-else-if="activeNavSelection === 'themes'" class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-6">
+                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 flex-wrap gap-3">
                             <div>
                                 <div class="flex items-center gap-2.5">
-                                    <h2 class="text-xl font-bold text-slate-900">🎨 Website Themes & Layout Designs</h2>
-                                    <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">🎨 Website Themes & Layout Designs</h2>
+                                    <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
                                         Active: {{ THEMES.find(t => t.id === currentThemeKey)?.name || 'Classic Heritage' }}
                                     </span>
                                 </div>
-                                <p class="text-xs text-slate-500 mt-0.5">Select a theme layout to transform your public website appearance. All page content, news, events, and forms remain unchanged.</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Select a theme layout to transform your public website appearance. All page content, news, events, and forms remain unchanged.</p>
                             </div>
                         </div>
 
@@ -2421,26 +2421,26 @@ const getFilteredPosts = (block) => {
                                 :key="theme.id"
                                 :class="[
                                     'rounded-3xl border p-6 space-y-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between',
-                                    currentThemeKey === theme.id ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg bg-indigo-50/20' : 'border-slate-200/90 hover:border-slate-300 bg-white shadow-sm hover:shadow-md'
+                                    currentThemeKey === theme.id ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-lg bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md'
                                 ]"
                             >
                                 <!-- Card Header & Palette Preview -->
                                 <div class="space-y-4 pt-1">
                                     <!-- Visual Header Mockup Bar -->
                                     <div :class="['h-28 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden', theme.previewBg]">
-                                        <div :class="['flex items-center justify-between text-xs font-extrabold', theme.isLight ? 'text-slate-900' : 'text-white']">
+                                        <div :class="['flex items-center justify-between text-xs font-extrabold', theme.isLight ? 'text-slate-900 dark:text-white' : 'text-white']">
                                             <span class="flex items-center gap-1.5">
-                                                <span :class="['w-2.5 h-2.5 rounded-full', theme.isLight ? 'bg-indigo-600' : 'bg-amber-400']"></span>
+                                                <span :class="['w-2.5 h-2.5 rounded-full', theme.isLight ? 'bg-blue-600' : 'bg-amber-400']"></span>
                                                 <span class="drop-shadow-sm">{{ theme.name }}</span>
                                             </span>
-                                            <span :class="['text-[9px] px-2 py-0.5 rounded font-black border', theme.isLight ? 'bg-slate-900/10 text-slate-900 border-slate-300' : 'bg-white/15 text-white border-white/30 backdrop-blur-md']">
+                                            <span :class="['text-[9px] px-2 py-0.5 rounded font-black border', theme.isLight ? 'bg-slate-900/10 text-slate-900 border-slate-300 dark:border-slate-700' : 'bg-white/15 dark:bg-slate-900/15 text-white border-white/30 backdrop-blur-md']">
                                                 Layout Preview
                                             </span>
                                         </div>
 
                                         <div class="space-y-1">
-                                            <div :class="['w-3/4 h-3 rounded-full', theme.isLight ? 'bg-slate-900/70' : 'bg-white/80']"></div>
-                                            <div :class="['w-1/2 h-2 rounded-full', theme.isLight ? 'bg-slate-900/35' : 'bg-white/40']"></div>
+                                            <div :class="['w-3/4 h-3 rounded-full', theme.isLight ? 'bg-slate-900/70' : 'bg-white/80 dark:bg-slate-900/80']"></div>
+                                            <div :class="['w-1/2 h-2 rounded-full', theme.isLight ? 'bg-slate-900/35' : 'bg-white/40 dark:bg-slate-900/40']"></div>
                                         </div>
 
                                         <!-- Color Swatches Bar -->
@@ -2451,29 +2451,29 @@ const getFilteredPosts = (block) => {
 
                                     <div class="space-y-1.5">
                                         <div class="flex items-center justify-between gap-2 flex-wrap">
-                                            <h3 class="text-base font-extrabold text-slate-900">{{ theme.name }}</h3>
-                                            <span v-if="currentThemeKey === theme.id" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-600 text-white shadow-sm flex items-center gap-1">
+                                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">{{ theme.name }}</h3>
+                                            <span v-if="currentThemeKey === theme.id" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white shadow-sm flex items-center gap-1">
                                                 ✓ ACTIVE LIVE THEME
                                             </span>
                                         </div>
-                                        <p class="text-xs text-slate-600 leading-relaxed">{{ theme.description }}</p>
+                                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{{ theme.description }}</p>
                                     </div>
 
                                     <!-- Feature Pills -->
                                     <div class="flex flex-wrap gap-1.5 pt-1">
-                                        <span v-for="(feat, fIdx) in theme.features" :key="fIdx" class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-semibold border border-slate-200">
+                                        <span v-for="(feat, fIdx) in theme.features" :key="fIdx" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-semibold border border-slate-200 dark:border-slate-800">
                                             • {{ feat }}
                                         </span>
                                     </div>
                                 </div>
 
                                 <!-- Action Buttons Footer -->
-                                <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-2.5 mt-4 flex-wrap">
+                                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2.5 mt-4 flex-wrap">
                                     <div class="flex items-center gap-1.5">
                                         <button
                                             type="button"
                                             @click="previewThemeInBuilder(theme)"
-                                            class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
+                                            class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
                                             title="Preview this theme in the Website Builder"
                                         >
                                             <span>👁️ Preview</span>
@@ -2481,7 +2481,7 @@ const getFilteredPosts = (block) => {
                                         <a
                                             :href="`/site/${club.slug}?preview_theme=${theme.id}`"
                                             target="_blank"
-                                            class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
+                                            class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
                                             title="Open full live preview with this theme in a new tab"
                                         >
                                             <span>🌐 Live ↗</span>
@@ -2491,7 +2491,7 @@ const getFilteredPosts = (block) => {
                                     <button
                                         v-if="currentThemeKey === theme.id"
                                         disabled
-                                        class="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold text-xs flex items-center gap-1.5 cursor-default"
+                                        class="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-extrabold text-xs flex items-center gap-1.5 cursor-default"
                                     >
                                         <span>✓ Active Theme</span>
                                     </button>
@@ -2500,7 +2500,7 @@ const getFilteredPosts = (block) => {
                                         v-else
                                         type="button"
                                         @click="openApplyThemeModal(theme)"
-                                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-1.5"
+                                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1.5"
                                     >
                                         <span>✨ Select Theme</span>
                                     </button>
@@ -2510,15 +2510,15 @@ const getFilteredPosts = (block) => {
                     </div>
 
                     <!-- View Mode 4: All Pages Overview Table -->
-                    <div v-else class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-                        <div class="p-6 border-b border-slate-100">
-                            <h2 class="text-base font-bold text-slate-900">Manage Pages</h2>
-                            <p class="text-xs text-slate-500 mt-0.5">Comprehensive view of all pages configured for {{ club.name }}.</p>
+                    <div v-else class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">Manage Pages</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Comprehensive view of all pages configured for {{ club.name }}.</p>
                         </div>
 
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs whitespace-nowrap">
-                                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                                <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider">
                                     <tr>
                                         <th class="p-4 w-12 text-center">#</th>
                                         <th class="p-4">Page Title</th>
@@ -2528,30 +2528,30 @@ const getFilteredPosts = (block) => {
                                         <th class="p-4 text-right min-w-[200px]">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100 font-medium">
-                                    <tr v-for="(p, idx) in pages" :key="p.id" class="hover:bg-slate-50/50 transition-colors">
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                                    <tr v-for="(p, idx) in pages" :key="p.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50 transition-colors">
                                         <td class="p-4 text-center font-bold text-slate-400">
                                             {{ idx + 1 }}
                                         </td>
 
-                                        <td class="p-4 font-bold text-slate-900 flex items-center gap-2">
+                                        <td class="p-4 font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                             <span class="text-base">{{ getPageIcon(p) }}</span>
                                             <span>{{ p.title }}</span>
                                         </td>
 
-                                        <td class="p-4 font-mono text-slate-500">
+                                        <td class="p-4 font-mono text-slate-500 dark:text-slate-400">
                                             /{{ p.slug }}
                                         </td>
 
                                         <td class="p-4">
-                                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
                                                 {{ p.blocks ? p.blocks.length : 0 }} Blocks
                                             </span>
                                         </td>
 
                                         <td class="p-4">
-                                            <span v-if="p.is_published" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">PUBLISHED</span>
-                                            <span v-else class="text-[10px] font-extrabold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">DRAFT</span>
+                                            <span v-if="p.is_published" class="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60">PUBLISHED</span>
+                                            <span v-else class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">DRAFT</span>
                                         </td>
 
                                         <td class="p-4 text-right">
@@ -2561,7 +2561,7 @@ const getFilteredPosts = (block) => {
                                                     :disabled="idx <= 1"
                                                     :class="[
                                                         'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all cursor-pointer',
-                                                        idx <= 1 ? 'bg-slate-100 text-slate-300 opacity-40 cursor-not-allowed' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                                                        idx <= 1 ? 'bg-slate-100 dark:bg-slate-800 text-slate-300 opacity-40 cursor-not-allowed' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800'
                                                     ]"
                                                     :title="idx === 0 ? 'Home page is anchored at top' : (idx === 1 ? 'First non-home page' : 'Move page up')"
                                                 >
@@ -2573,7 +2573,7 @@ const getFilteredPosts = (block) => {
                                                     :disabled="idx === 0 || idx >= pages.length - 1"
                                                     :class="[
                                                         'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all cursor-pointer',
-                                                        (idx === 0 || idx >= pages.length - 1) ? 'bg-slate-100 text-slate-300 opacity-40 cursor-not-allowed' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                                                        (idx === 0 || idx >= pages.length - 1) ? 'bg-slate-100 dark:bg-slate-800 text-slate-300 opacity-40 cursor-not-allowed' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800'
                                                     ]"
                                                     :title="idx === 0 ? 'Home page is anchored at top' : 'Move page down'"
                                                 >
@@ -2585,8 +2585,8 @@ const getFilteredPosts = (block) => {
                                                     :disabled="p.is_homepage || p.slug === 'home'"
                                                     :class="[
                                                         'w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all cursor-pointer',
-                                                        p.is_homepage ? 'bg-emerald-50 text-emerald-600 opacity-60 cursor-not-allowed' :
-                                                        p.is_published ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200'
+                                                        p.is_homepage ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 opacity-60 cursor-not-allowed' :
+                                                        p.is_published ? 'bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
                                                     ]"
                                                     :title="p.is_homepage ? 'Homepage must remain published' : (p.is_published ? 'Published - Click to hide/unpublish' : 'Hidden - Click to publish')"
                                                 >
@@ -2601,7 +2601,7 @@ const getFilteredPosts = (block) => {
 
                                                 <button
                                                     @click="selectPageForEdit(p.id)"
-                                                    class="w-8 h-8 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+                                                    class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
                                                     title="Edit Page Builder"
                                                 >
                                                     ✏️
@@ -2609,7 +2609,7 @@ const getFilteredPosts = (block) => {
 
                                                 <button
                                                     @click="selectPageForPreview(p.id)"
-                                                    class="w-8 h-8 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+                                                    class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
                                                     title="Live Page Preview"
                                                 >
                                                     👁️
@@ -2618,7 +2618,7 @@ const getFilteredPosts = (block) => {
                                                 <a
                                                     :href="p.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${p.slug}`"
                                                     target="_blank"
-                                                    class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 flex items-center justify-center text-xs font-bold transition-colors"
+                                                    class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-xs font-bold transition-colors"
                                                     title="Open Live Site in New Tab"
                                                 >
                                                     🌐
@@ -2627,7 +2627,7 @@ const getFilteredPosts = (block) => {
                                                 <button
                                                     v-if="!isDefaultPage(p)"
                                                     @click="triggerDeleteModal(p)"
-                                                    class="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+                                                    class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
                                                     title="Delete Custom Page"
                                                 >
                                                     🗑️
@@ -2635,7 +2635,7 @@ const getFilteredPosts = (block) => {
                                                 <button
                                                     v-else
                                                     disabled
-                                                    class="w-8 h-8 rounded-xl bg-slate-50 text-slate-300 border border-slate-100 flex items-center justify-center text-xs opacity-40 cursor-not-allowed"
+                                                    class="w-8 h-8 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-slate-300 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-xs opacity-40 cursor-not-allowed"
                                                     title="Original default page cannot be deleted"
                                                 >
                                                     🗑️
@@ -2656,11 +2656,11 @@ const getFilteredPosts = (block) => {
 
         <!-- Delete Confirmation Modal -->
         <div v-if="showDeleteConfirmModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
-                <h3 class="text-lg font-bold text-slate-900">Delete Page?</h3>
-                <p class="text-xs text-slate-600">Are you sure you want to delete <strong>{{ pageToDelete ? pageToDelete.title : form.title }}</strong>? This action cannot be undone.</p>
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200 dark:border-slate-800">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Delete Page?</h3>
+                <p class="text-xs text-slate-600 dark:text-slate-300">Are you sure you want to delete <strong>{{ pageToDelete ? pageToDelete.title : form.title }}</strong>? This action cannot be undone.</p>
                 <div class="flex items-center justify-end gap-3 pt-2">
-                    <button @click="showDeleteConfirmModal = false; pageToDelete = null;" class="py-2 px-4 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs cursor-pointer">Cancel</button>
+                    <button @click="showDeleteConfirmModal = false; pageToDelete = null;" class="py-2 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer">Cancel</button>
                     <button @click="confirmDeleteActivePage" class="py-2 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md cursor-pointer">Confirm Delete</button>
                 </div>
             </div>
@@ -2681,15 +2681,15 @@ const getFilteredPosts = (block) => {
                 v-if="showUnsavedModal" 
                 class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
             >
-                <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden">
+                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden">
                     <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 text-amber-600 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0 shadow-inner">
                             ⚠️
                         </div>
                         <div class="space-y-1 pt-0.5">
-                            <h3 class="text-lg font-black text-slate-900 leading-tight">Unsaved Changes</h3>
-                            <p class="text-xs font-semibold text-slate-500">
-                                You have modified <strong class="text-slate-900 font-bold">"{{ form.title || 'this page' }}"</strong>. 
+                            <h3 class="text-lg font-black text-slate-900 dark:text-white leading-tight">Unsaved Changes</h3>
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                You have modified <strong class="text-slate-900 dark:text-white font-bold">"{{ form.title || 'this page' }}"</strong>. 
                                 What would you like to do with your changes before leaving?
                             </p>
                         </div>
@@ -2699,19 +2699,19 @@ const getFilteredPosts = (block) => {
                         <button
                             @click="handleSaveAndProceed"
                             :disabled="form.processing"
-                            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 flex items-center justify-between transition-all cursor-pointer disabled:opacity-50"
+                            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 flex items-center justify-between transition-all cursor-pointer disabled:opacity-50"
                         >
                             <span class="flex items-center gap-2">
                                 <span>💾</span>
                                 <span>{{ form.processing ? 'Saving Changes...' : 'Save Changes & Proceed' }}</span>
                             </span>
-                            <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-black">Recommended</span>
+                            <span class="text-[10px] bg-white/20 dark:bg-slate-900/20 px-2 py-0.5 rounded font-black">Recommended</span>
                         </button>
 
                         <button
                             @click="handleDiscardAndProceed"
                             :disabled="form.processing"
-                            class="w-full py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                            class="w-full py-3 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                         >
                             <span>🗑️</span>
                             <span>Discard Changes & Switch Page</span>
@@ -2720,7 +2720,7 @@ const getFilteredPosts = (block) => {
                         <button
                             @click="handleStayAndEdit"
                             :disabled="form.processing"
-                            class="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                            class="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                         >
                             <span>✏️</span>
                             <span>Stay & Continue Editing</span>
@@ -2736,24 +2736,24 @@ const getFilteredPosts = (block) => {
                 v-if="showThemeConfirmModal && selectedThemeForModal" 
                 class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
             >
-                <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden">
+                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden">
                     <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-100 border border-indigo-200 text-indigo-600 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl shrink-0 shadow-inner">
                             🎨
                         </div>
                         <div class="space-y-1 pt-0.5">
-                            <h3 class="text-lg font-black text-slate-900 leading-tight">Apply New Website Theme?</h3>
-                            <p class="text-xs font-semibold text-slate-500">
-                                You are about to switch your active design to <strong class="text-indigo-600 font-bold">"{{ selectedThemeForModal.name }}"</strong>.
+                            <h3 class="text-lg font-black text-slate-900 dark:text-white leading-tight">Apply New Website Theme?</h3>
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                You are about to switch your active design to <strong class="text-blue-600 dark:text-blue-400 font-bold">"{{ selectedThemeForModal.name }}"</strong>.
                             </p>
                         </div>
                     </div>
 
-                    <div class="p-3.5 bg-amber-50 border border-amber-200/80 rounded-2xl text-xs space-y-1.5">
-                        <div class="font-bold text-amber-900 flex items-center gap-1.5">
+                    <div class="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 rounded-2xl text-xs space-y-1.5">
+                        <div class="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
                             <span>⚠️ Notice</span>
                         </div>
-                        <p class="text-amber-800 text-[11px] leading-relaxed">
+                        <p class="text-amber-800 dark:text-amber-200 text-[11px] leading-relaxed">
                             This will immediately change the visual appearance, color scheme, and layout of your live public site. 
                             <strong>All your existing pages, news, events, and forms will stay intact.</strong>
                         </p>
@@ -2763,14 +2763,14 @@ const getFilteredPosts = (block) => {
                         <button
                             @click="showThemeConfirmModal = false; selectedThemeForModal = null;"
                             :disabled="themeForm.processing"
-                            class="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
+                            class="py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-all cursor-pointer"
                         >
                             Cancel
                         </button>
                         <button
                             @click="confirmApplyTheme"
                             :disabled="themeForm.processing"
-                            class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-2"
+                            class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-2"
                         >
                             <span>{{ themeForm.processing ? 'Applying Theme...' : '✨ Apply Theme to Live Site' }}</span>
                         </button>

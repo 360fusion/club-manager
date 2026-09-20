@@ -31,8 +31,10 @@ use App\Http\Controllers\ClubSettingsController;
 use App\Http\Controllers\EventAdminController;
 use App\Http\Controllers\GoCardlessWebhookController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\LegacyClubUrlController;
 use App\Http\Controllers\MediaAdminController;
 use App\Http\Controllers\MeetingAdminController;
+use App\Http\Controllers\MemberHomeController;
 use App\Http\Controllers\MemberImportExportController;
 use App\Http\Controllers\MemberPortalController;
 use App\Http\Controllers\MemberSubscriptionsController;
@@ -71,8 +73,8 @@ Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create']
 Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
 
 // Member Email Invitation Setup Routes
-Route::get('/clubs/{slug}/invite/{token}', [InvitationController::class, 'showForm'])->name('invitation.accept');
-Route::post('/clubs/{slug}/invite/{token}', [InvitationController::class, 'accept'])->name('invitation.submit');
+Route::get('/{slug}/invite/{token}', [InvitationController::class, 'showForm'])->name('invitation.accept');
+Route::post('/{slug}/invite/{token}', [InvitationController::class, 'accept'])->name('invitation.submit');
 
 // Passwordless Summons Email RSVP Routes
 Route::get('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'show'])->name('summons.rsvp.show');
@@ -81,12 +83,10 @@ Route::post('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'store'
 // Multi-Tenant Public Admin & Workspace Landing Routes
 Route::get('/', [ClubController::class, 'index'])->name('home');
 
-// Legacy Redirects for old club URLs (e.g. oxford-boating)
-Route::get('/clubs/oxford-boating/{path?}', function ($path = null) {
-    $activeSlug = Club::first()?->slug ?? 'lodge-of-fraternity';
-
-    return redirect('/clubs/'.$activeSlug.($path ? '/'.$path : ''), 301);
-})->where('path', '.*');
+// Legacy /clubs/... URLs, from before club slugs moved to the top level.
+Route::any('/clubs/{legacySlug}/{path?}', LegacyClubUrlController::class)
+    ->where('legacySlug', '[A-Za-z0-9_-]+')
+    ->where('path', '.*');
 
 Route::get('/site/oxford-boating', function () {
     $activeSlug = Club::first()?->slug ?? 'lodge-of-fraternity';
@@ -97,11 +97,16 @@ Route::get('/site/oxford-boating', function () {
 Route::get('/site/{clubSlug}/{pageSlug?}', [PublicSiteController::class, 'showPage'])->name('public.site');
 Route::post('/site/{clubSlug}/contact-form', [PublicSiteController::class, 'submitContactForm'])->name('public.site.contact_form');
 
-Route::get('/clubs/{slug}', [ClubController::class, 'show'])->name('clubs.show');
-Route::get('/clubs/{slug}/visitor-register', [VisitorRegistrationController::class, 'create'])->name('clubs.visitor.register');
-Route::post('/clubs/{slug}/visitor-register', [VisitorRegistrationController::class, 'store'])->name('clubs.visitor.store');
+Route::get('/{slug}/overview', [ClubController::class, 'show'])->name('clubs.show');
+Route::get('/{slug}/visitor-register', [VisitorRegistrationController::class, 'create'])->name('clubs.visitor.register');
+Route::post('/{slug}/visitor-register', [VisitorRegistrationController::class, 'store'])->name('clubs.visitor.store');
 
 // Protected Authenticated Routes
+// Local-only preview of the shared UI primitives.
+if (app()->isLocal()) {
+    Route::get('/ui-kit', fn () => inertia('UiKit'))->name('ui_kit');
+}
+
 // GoCardless posts here unauthenticated; the request is authenticated by its
 // HMAC signature instead. Must stay outside the auth group and exempt from CSRF.
 Route::post('/webhooks/gocardless/{clubId}', [GoCardlessWebhookController::class, 'handle'])
@@ -115,112 +120,112 @@ Route::middleware(['auth'])->group(function () {
 
     // Multi-Tenant Admin & Workspace Routes
     Route::get('/admin/clubs', [ClubController::class, 'myClubs'])->name('admin.clubs.index');
-    Route::get('/clubs/{clubSlug}/admin/settings', [ClubSettingsController::class, 'show'])->name('admin.settings.show');
-    Route::put('/clubs/{clubSlug}/admin/settings', [ClubSettingsController::class, 'update'])->name('admin.settings.update');
-    Route::post('/clubs/{slug}/domain', [ClubController::class, 'updateDomain'])->name('clubs.domain.update');
+    Route::get('/{clubSlug}/admin/settings', [ClubSettingsController::class, 'show'])->name('admin.settings.show');
+    Route::put('/{clubSlug}/admin/settings', [ClubSettingsController::class, 'update'])->name('admin.settings.update');
+    Route::post('/{slug}/domain', [ClubController::class, 'updateDomain'])->name('clubs.domain.update');
 
     // Central Spatie Media Library Routes
-    Route::get('/clubs/{clubSlug}/admin/media-manager', [MediaAdminController::class, 'page'])->name('admin.media.page');
-    Route::get('/clubs/{clubSlug}/admin/media', [MediaAdminController::class, 'index'])->name('admin.media.index');
-    Route::post('/clubs/{clubSlug}/admin/media', [MediaAdminController::class, 'store'])->name('admin.media.store');
-    Route::put('/clubs/{clubSlug}/admin/media/{id}', [MediaAdminController::class, 'update'])->name('admin.media.update');
-    Route::post('/clubs/{clubSlug}/admin/media/{id}/crop', [MediaAdminController::class, 'crop'])->name('admin.media.crop');
-    Route::post('/clubs/{clubSlug}/admin/media/{id}/revert', [MediaAdminController::class, 'revert'])->name('admin.media.revert');
-    Route::post('/clubs/{clubSlug}/admin/media/{id}/restore', [MediaAdminController::class, 'restore'])->name('admin.media.restore');
-    Route::delete('/clubs/{clubSlug}/admin/media/{id}/force', [MediaAdminController::class, 'forceDelete'])->name('admin.media.force_delete');
-    Route::get('/clubs/{clubSlug}/admin/media/{id}/usage', [MediaAdminController::class, 'usage'])->name('admin.media.usage');
-    Route::post('/clubs/{clubSlug}/admin/media/bulk-delete', [MediaAdminController::class, 'bulkDelete'])->name('admin.media.bulk_delete');
-    Route::post('/clubs/{clubSlug}/admin/media/bulk-restore', [MediaAdminController::class, 'bulkRestore'])->name('admin.media.bulk_restore');
-    Route::post('/clubs/{clubSlug}/admin/media/bulk-force-delete', [MediaAdminController::class, 'bulkForceDelete'])->name('admin.media.bulk_force_delete');
-    Route::post('/clubs/{clubSlug}/admin/media/bulk-move', [MediaAdminController::class, 'bulkMove'])->name('admin.media.bulk_move');
-    Route::delete('/clubs/{clubSlug}/admin/media/{id}', [MediaAdminController::class, 'destroy'])->name('admin.media.destroy');
+    Route::get('/{clubSlug}/admin/media-manager', [MediaAdminController::class, 'page'])->name('admin.media.page');
+    Route::get('/{clubSlug}/admin/media', [MediaAdminController::class, 'index'])->name('admin.media.index');
+    Route::post('/{clubSlug}/admin/media', [MediaAdminController::class, 'store'])->name('admin.media.store');
+    Route::put('/{clubSlug}/admin/media/{id}', [MediaAdminController::class, 'update'])->name('admin.media.update');
+    Route::post('/{clubSlug}/admin/media/{id}/crop', [MediaAdminController::class, 'crop'])->name('admin.media.crop');
+    Route::post('/{clubSlug}/admin/media/{id}/revert', [MediaAdminController::class, 'revert'])->name('admin.media.revert');
+    Route::post('/{clubSlug}/admin/media/{id}/restore', [MediaAdminController::class, 'restore'])->name('admin.media.restore');
+    Route::delete('/{clubSlug}/admin/media/{id}/force', [MediaAdminController::class, 'forceDelete'])->name('admin.media.force_delete');
+    Route::get('/{clubSlug}/admin/media/{id}/usage', [MediaAdminController::class, 'usage'])->name('admin.media.usage');
+    Route::post('/{clubSlug}/admin/media/bulk-delete', [MediaAdminController::class, 'bulkDelete'])->name('admin.media.bulk_delete');
+    Route::post('/{clubSlug}/admin/media/bulk-restore', [MediaAdminController::class, 'bulkRestore'])->name('admin.media.bulk_restore');
+    Route::post('/{clubSlug}/admin/media/bulk-force-delete', [MediaAdminController::class, 'bulkForceDelete'])->name('admin.media.bulk_force_delete');
+    Route::post('/{clubSlug}/admin/media/bulk-move', [MediaAdminController::class, 'bulkMove'])->name('admin.media.bulk_move');
+    Route::delete('/{clubSlug}/admin/media/{id}', [MediaAdminController::class, 'destroy'])->name('admin.media.destroy');
 
     // CSV Member Import & Export Routes
-    Route::post('/clubs/{slug}/members/import', [MemberImportExportController::class, 'import'])->name('clubs.members.import');
-    Route::get('/clubs/{slug}/members/export', [MemberImportExportController::class, 'export'])->name('clubs.members.export');
+    Route::post('/{slug}/members/import', [MemberImportExportController::class, 'import'])->name('clubs.members.import');
+    Route::get('/{slug}/members/export', [MemberImportExportController::class, 'export'])->name('clubs.members.export');
 
     // Executive Analytics Route
-    Route::get('/clubs/{slug}/admin/analytics', [AnalyticsController::class, 'show'])->name('admin.analytics');
+    Route::get('/{slug}/admin/analytics', [AnalyticsController::class, 'show'])->name('admin.analytics');
 
     // Invoice & Receipt Routes
-    Route::get('/clubs/{slug}/invoices/{id}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+    Route::get('/{slug}/invoices/{id}/download', [InvoiceController::class, 'download'])->name('invoices.download');
 
     // Admin Website Builder Routes
-    Route::get('/clubs/{clubSlug}/admin/pages', [PageAdminController::class, 'index'])->name('admin.pages.index');
-    Route::get('/clubs/{clubSlug}/admin/pages/create', [PageAdminController::class, 'edit'])->name('admin.pages.create');
-    Route::get('/clubs/{clubSlug}/admin/pages/settings', [PageAdminController::class, 'settings'])->name('admin.pages.settings');
-    Route::post('/clubs/{clubSlug}/admin/pages/settings', [PageAdminController::class, 'updateSettings'])->name('admin.pages.settings.update');
-    Route::get('/clubs/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'themes'])->name('admin.pages.themes');
-    Route::post('/clubs/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'updateTheme'])->name('admin.pages.themes.update');
-    Route::get('/clubs/{clubSlug}/admin/pages/{id}/edit', [PageAdminController::class, 'edit'])->name('admin.pages.edit');
-    Route::post('/clubs/{clubSlug}/admin/pages', [PageAdminController::class, 'store'])->name('admin.pages.store');
-    Route::post('/clubs/{clubSlug}/admin/pages/reorder', [PageAdminController::class, 'reorder'])->name('admin.pages.reorder');
-    Route::post('/clubs/{clubSlug}/admin/pages/{id}/toggle-publish', [PageAdminController::class, 'togglePublish'])->name('admin.pages.toggle_publish');
-    Route::delete('/clubs/{clubSlug}/admin/pages/{id}', [PageAdminController::class, 'destroy'])->name('admin.pages.destroy');
+    Route::get('/{clubSlug}/admin/pages', [PageAdminController::class, 'index'])->name('admin.pages.index');
+    Route::get('/{clubSlug}/admin/pages/create', [PageAdminController::class, 'edit'])->name('admin.pages.create');
+    Route::get('/{clubSlug}/admin/pages/settings', [PageAdminController::class, 'settings'])->name('admin.pages.settings');
+    Route::post('/{clubSlug}/admin/pages/settings', [PageAdminController::class, 'updateSettings'])->name('admin.pages.settings.update');
+    Route::get('/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'themes'])->name('admin.pages.themes');
+    Route::post('/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'updateTheme'])->name('admin.pages.themes.update');
+    Route::get('/{clubSlug}/admin/pages/{id}/edit', [PageAdminController::class, 'edit'])->name('admin.pages.edit');
+    Route::post('/{clubSlug}/admin/pages', [PageAdminController::class, 'store'])->name('admin.pages.store');
+    Route::post('/{clubSlug}/admin/pages/reorder', [PageAdminController::class, 'reorder'])->name('admin.pages.reorder');
+    Route::post('/{clubSlug}/admin/pages/{id}/toggle-publish', [PageAdminController::class, 'togglePublish'])->name('admin.pages.toggle_publish');
+    Route::delete('/{clubSlug}/admin/pages/{id}', [PageAdminController::class, 'destroy'])->name('admin.pages.destroy');
 
     // Admin Event Management Routes
-    Route::get('/clubs/{clubSlug}/admin/events', [EventAdminController::class, 'index'])->name('admin.events.index');
-    Route::get('/clubs/{clubSlug}/admin/events/create', [EventAdminController::class, 'edit'])->name('admin.events.create');
-    Route::get('/clubs/{clubSlug}/admin/events/{id}/edit', [EventAdminController::class, 'edit'])->name('admin.events.edit');
-    Route::get('/clubs/{clubSlug}/admin/events/{id}/subscribers', [EventAdminController::class, 'subscribers'])->name('admin.events.subscribers');
-    Route::post('/clubs/{clubSlug}/admin/events/{id}/subscribers/{userId}/payment-status', [EventAdminController::class, 'updateSubscriberPaymentStatus'])->name('admin.events.subscribers.payment_status');
-    Route::post('/clubs/{clubSlug}/admin/events', [EventAdminController::class, 'store'])->name('admin.events.store');
-    Route::delete('/clubs/{clubSlug}/admin/events/{id}', [EventAdminController::class, 'destroy'])->name('admin.events.destroy');
+    Route::get('/{clubSlug}/admin/events', [EventAdminController::class, 'index'])->name('admin.events.index');
+    Route::get('/{clubSlug}/admin/events/create', [EventAdminController::class, 'edit'])->name('admin.events.create');
+    Route::get('/{clubSlug}/admin/events/{id}/edit', [EventAdminController::class, 'edit'])->name('admin.events.edit');
+    Route::get('/{clubSlug}/admin/events/{id}/subscribers', [EventAdminController::class, 'subscribers'])->name('admin.events.subscribers');
+    Route::post('/{clubSlug}/admin/events/{id}/subscribers/{userId}/payment-status', [EventAdminController::class, 'updateSubscriberPaymentStatus'])->name('admin.events.subscribers.payment_status');
+    Route::post('/{clubSlug}/admin/events', [EventAdminController::class, 'store'])->name('admin.events.store');
+    Route::delete('/{clubSlug}/admin/events/{id}', [EventAdminController::class, 'destroy'])->name('admin.events.destroy');
 
     // Admin Meeting & Summons Management Routes
-    Route::get('/clubs/{clubSlug}/admin/meetings', [MeetingAdminController::class, 'index'])->name('admin.meetings.index');
-    Route::get('/clubs/{clubSlug}/admin/meetings/create', [MeetingAdminController::class, 'create'])->name('admin.meetings.create');
-    Route::get('/clubs/{clubSlug}/admin/meetings/{id}/edit', [MeetingAdminController::class, 'edit'])->name('admin.meetings.edit');
-    Route::get('/clubs/{clubSlug}/admin/meetings/settings-json', [MeetingAdminController::class, 'settingsJson'])->name('admin.meetings.settings_json');
-    Route::post('/clubs/{clubSlug}/admin/meetings', [MeetingAdminController::class, 'store'])->name('admin.meetings.store');
-    Route::get('/clubs/{clubSlug}/admin/meetings/{id}', [MeetingAdminController::class, 'show'])->name('admin.meetings.show');
-    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/rsvp', [MeetingAdminController::class, 'updateRsvp'])->name('admin.meetings.rsvp.update');
-    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/rsvp-payment-status', [MeetingAdminController::class, 'updatePaymentStatus'])->name('admin.meetings.rsvp.payment_status');
-    Route::get('/clubs/{clubSlug}/admin/meetings/{id}/financial-return', [MeetingAdminController::class, 'financialReturn'])->name('admin.meetings.financial_return.show');
-    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/financial-return', [MeetingAdminController::class, 'storeFinancialReturn'])->name('admin.meetings.financial_return.store');
-    Route::get('/clubs/{clubSlug}/admin/meetings/{id}/pdf', [MeetingAdminController::class, 'pdf'])->name('admin.meetings.pdf');
-    Route::post('/clubs/{clubSlug}/admin/meetings/generate-season', [MeetingAdminController::class, 'generateSeason'])->name('admin.meetings.generate_season');
-    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/publish', [MeetingAdminController::class, 'publishSummons'])->name('admin.meetings.publish');
-    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/duplicate', [MeetingAdminController::class, 'duplicate'])->name('admin.meetings.duplicate');
-    Route::get('/clubs/{clubSlug}/admin/meetings/{id}/officer-election', [MeetingAdminController::class, 'officerElectionData'])->name('admin.meetings.officer_election.data');
-    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/officer-election', [MeetingAdminController::class, 'storeOfficerElection'])->name('admin.meetings.officer_election.store');
-    Route::post('/clubs/{clubSlug}/admin/meetings/{id}/officer-election/confirm', [MeetingAdminController::class, 'confirmOfficerElection'])->name('admin.meetings.officer_election.confirm');
-    Route::get('/clubs/{clubSlug}/admin/officers', [OfficerRosterAdminController::class, 'index'])->name('admin.officers.index');
-    Route::post('/clubs/{clubSlug}/admin/officers', [OfficerRosterAdminController::class, 'store'])->name('admin.officers.store');
-    Route::post('/clubs/{clubSlug}/admin/officers/quick-member', [OfficerRosterAdminController::class, 'storeQuickMember'])->name('admin.officers.quick_member');
-    Route::post('/clubs/{clubSlug}/admin/officers/{id}/status', [OfficerRosterAdminController::class, 'updateStatus'])->name('admin.officers.status');
-    Route::post('/clubs/{clubSlug}/admin/officers/{id}/install', [OfficerRosterAdminController::class, 'install'])->name('admin.officers.install');
-    Route::delete('/clubs/{clubSlug}/admin/meetings/{id}', [MeetingAdminController::class, 'destroy'])->name('admin.meetings.destroy');
+    Route::get('/{clubSlug}/admin/meetings', [MeetingAdminController::class, 'index'])->name('admin.meetings.index');
+    Route::get('/{clubSlug}/admin/meetings/create', [MeetingAdminController::class, 'create'])->name('admin.meetings.create');
+    Route::get('/{clubSlug}/admin/meetings/{id}/edit', [MeetingAdminController::class, 'edit'])->name('admin.meetings.edit');
+    Route::get('/{clubSlug}/admin/meetings/settings-json', [MeetingAdminController::class, 'settingsJson'])->name('admin.meetings.settings_json');
+    Route::post('/{clubSlug}/admin/meetings', [MeetingAdminController::class, 'store'])->name('admin.meetings.store');
+    Route::get('/{clubSlug}/admin/meetings/{id}', [MeetingAdminController::class, 'show'])->name('admin.meetings.show');
+    Route::post('/{clubSlug}/admin/meetings/{id}/rsvp', [MeetingAdminController::class, 'updateRsvp'])->name('admin.meetings.rsvp.update');
+    Route::post('/{clubSlug}/admin/meetings/{id}/rsvp-payment-status', [MeetingAdminController::class, 'updatePaymentStatus'])->name('admin.meetings.rsvp.payment_status');
+    Route::get('/{clubSlug}/admin/meetings/{id}/financial-return', [MeetingAdminController::class, 'financialReturn'])->name('admin.meetings.financial_return.show');
+    Route::post('/{clubSlug}/admin/meetings/{id}/financial-return', [MeetingAdminController::class, 'storeFinancialReturn'])->name('admin.meetings.financial_return.store');
+    Route::get('/{clubSlug}/admin/meetings/{id}/pdf', [MeetingAdminController::class, 'pdf'])->name('admin.meetings.pdf');
+    Route::post('/{clubSlug}/admin/meetings/generate-season', [MeetingAdminController::class, 'generateSeason'])->name('admin.meetings.generate_season');
+    Route::post('/{clubSlug}/admin/meetings/{id}/publish', [MeetingAdminController::class, 'publishSummons'])->name('admin.meetings.publish');
+    Route::post('/{clubSlug}/admin/meetings/{id}/duplicate', [MeetingAdminController::class, 'duplicate'])->name('admin.meetings.duplicate');
+    Route::get('/{clubSlug}/admin/meetings/{id}/officer-election', [MeetingAdminController::class, 'officerElectionData'])->name('admin.meetings.officer_election.data');
+    Route::post('/{clubSlug}/admin/meetings/{id}/officer-election', [MeetingAdminController::class, 'storeOfficerElection'])->name('admin.meetings.officer_election.store');
+    Route::post('/{clubSlug}/admin/meetings/{id}/officer-election/confirm', [MeetingAdminController::class, 'confirmOfficerElection'])->name('admin.meetings.officer_election.confirm');
+    Route::get('/{clubSlug}/admin/officers', [OfficerRosterAdminController::class, 'index'])->name('admin.officers.index');
+    Route::post('/{clubSlug}/admin/officers', [OfficerRosterAdminController::class, 'store'])->name('admin.officers.store');
+    Route::post('/{clubSlug}/admin/officers/quick-member', [OfficerRosterAdminController::class, 'storeQuickMember'])->name('admin.officers.quick_member');
+    Route::post('/{clubSlug}/admin/officers/{id}/status', [OfficerRosterAdminController::class, 'updateStatus'])->name('admin.officers.status');
+    Route::post('/{clubSlug}/admin/officers/{id}/install', [OfficerRosterAdminController::class, 'install'])->name('admin.officers.install');
+    Route::delete('/{clubSlug}/admin/meetings/{id}', [MeetingAdminController::class, 'destroy'])->name('admin.meetings.destroy');
 
     // Admin Blog & News Posts Routes
-    Route::get('/clubs/{clubSlug}/admin/posts', [PostAdminController::class, 'index'])->name('admin.posts.index');
-    Route::get('/clubs/{clubSlug}/admin/posts/create', [PostAdminController::class, 'edit'])->name('admin.posts.create');
-    Route::get('/clubs/{clubSlug}/admin/posts/{id}', [PostAdminController::class, 'show'])->name('admin.posts.show');
-    Route::get('/clubs/{clubSlug}/admin/posts/{id}/edit', [PostAdminController::class, 'edit'])->name('admin.posts.edit');
-    Route::post('/clubs/{clubSlug}/admin/posts', [PostAdminController::class, 'store'])->name('admin.posts.store');
-    Route::delete('/clubs/{clubSlug}/admin/posts/{id}', [PostAdminController::class, 'destroy'])->name('admin.posts.destroy');
+    Route::get('/{clubSlug}/admin/posts', [PostAdminController::class, 'index'])->name('admin.posts.index');
+    Route::get('/{clubSlug}/admin/posts/create', [PostAdminController::class, 'edit'])->name('admin.posts.create');
+    Route::get('/{clubSlug}/admin/posts/{id}', [PostAdminController::class, 'show'])->name('admin.posts.show');
+    Route::get('/{clubSlug}/admin/posts/{id}/edit', [PostAdminController::class, 'edit'])->name('admin.posts.edit');
+    Route::post('/{clubSlug}/admin/posts', [PostAdminController::class, 'store'])->name('admin.posts.store');
+    Route::delete('/{clubSlug}/admin/posts/{id}', [PostAdminController::class, 'destroy'])->name('admin.posts.destroy');
 
     // Admin Newsletter Broadcast & Channels Routes
-    Route::get('/clubs/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'index'])->name('admin.newsletters.index');
-    Route::get('/clubs/{clubSlug}/admin/newsletters/create', [NewsletterAdminController::class, 'edit'])->name('admin.newsletters.create');
-    Route::get('/clubs/{clubSlug}/admin/newsletters/types', [NewsletterTypeAdminController::class, 'index'])->name('admin.newsletters.types');
-    Route::get('/clubs/{clubSlug}/admin/newsletters/types/create', [NewsletterTypeAdminController::class, 'edit'])->name('admin.newsletters.types.create');
-    Route::get('/clubs/{clubSlug}/admin/newsletters/types/{id}/edit', [NewsletterTypeAdminController::class, 'edit'])->name('admin.newsletters.types.edit');
-    Route::post('/clubs/{clubSlug}/admin/newsletters/types', [NewsletterTypeAdminController::class, 'store'])->name('admin.newsletters.types.store');
-    Route::delete('/clubs/{clubSlug}/admin/newsletters/types/{id}', [NewsletterTypeAdminController::class, 'destroy'])->name('admin.newsletters.types.destroy');
-    Route::get('/clubs/{clubSlug}/admin/newsletters/subscribers', [NewsletterTypeAdminController::class, 'subscribers'])->name('admin.newsletters.subscribers');
-    Route::post('/clubs/{clubSlug}/admin/newsletters/subscribers/{id}/status', [NewsletterTypeAdminController::class, 'updateSubscriberStatus'])->name('admin.newsletters.subscribers.status');
-    Route::get('/clubs/{clubSlug}/admin/newsletters/{id}/edit', [NewsletterAdminController::class, 'edit'])->name('admin.newsletters.edit');
-    Route::post('/clubs/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'store'])->name('admin.newsletters.store');
-    Route::post('/clubs/{clubSlug}/admin/newsletters/{id}/send', [NewsletterAdminController::class, 'send'])->name('admin.newsletters.send');
-    Route::delete('/clubs/{clubSlug}/admin/newsletters/{id}', [NewsletterAdminController::class, 'destroy'])->name('admin.newsletters.destroy');
+    Route::get('/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'index'])->name('admin.newsletters.index');
+    Route::get('/{clubSlug}/admin/newsletters/create', [NewsletterAdminController::class, 'edit'])->name('admin.newsletters.create');
+    Route::get('/{clubSlug}/admin/newsletters/types', [NewsletterTypeAdminController::class, 'index'])->name('admin.newsletters.types');
+    Route::get('/{clubSlug}/admin/newsletters/types/create', [NewsletterTypeAdminController::class, 'edit'])->name('admin.newsletters.types.create');
+    Route::get('/{clubSlug}/admin/newsletters/types/{id}/edit', [NewsletterTypeAdminController::class, 'edit'])->name('admin.newsletters.types.edit');
+    Route::post('/{clubSlug}/admin/newsletters/types', [NewsletterTypeAdminController::class, 'store'])->name('admin.newsletters.types.store');
+    Route::delete('/{clubSlug}/admin/newsletters/types/{id}', [NewsletterTypeAdminController::class, 'destroy'])->name('admin.newsletters.types.destroy');
+    Route::get('/{clubSlug}/admin/newsletters/subscribers', [NewsletterTypeAdminController::class, 'subscribers'])->name('admin.newsletters.subscribers');
+    Route::post('/{clubSlug}/admin/newsletters/subscribers/{id}/status', [NewsletterTypeAdminController::class, 'updateSubscriberStatus'])->name('admin.newsletters.subscribers.status');
+    Route::get('/{clubSlug}/admin/newsletters/{id}/edit', [NewsletterAdminController::class, 'edit'])->name('admin.newsletters.edit');
+    Route::post('/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'store'])->name('admin.newsletters.store');
+    Route::post('/{clubSlug}/admin/newsletters/{id}/send', [NewsletterAdminController::class, 'send'])->name('admin.newsletters.send');
+    Route::delete('/{clubSlug}/admin/newsletters/{id}', [NewsletterAdminController::class, 'destroy'])->name('admin.newsletters.destroy');
 
     // Admin Updates & Weekly Digest Routes
-    Route::get('/clubs/{clubSlug}/admin/updates', [UpdateAdminController::class, 'index'])->name('admin.updates.index');
-    Route::post('/clubs/{clubSlug}/admin/updates', [UpdateAdminController::class, 'store'])->name('admin.updates.store');
-    Route::post('/clubs/{clubSlug}/admin/updates/{id}/status', [UpdateAdminController::class, 'updateStatus'])->name('admin.updates.status.update');
-    Route::delete('/clubs/{clubSlug}/admin/updates/{id}', [UpdateAdminController::class, 'destroy'])->name('admin.updates.destroy');
-    Route::post('/clubs/{clubSlug}/admin/updates/dispatch-digest', [UpdateAdminController::class, 'triggerDigest'])->name('admin.updates.dispatch_digest');
+    Route::get('/{clubSlug}/admin/updates', [UpdateAdminController::class, 'index'])->name('admin.updates.index');
+    Route::post('/{clubSlug}/admin/updates', [UpdateAdminController::class, 'store'])->name('admin.updates.store');
+    Route::post('/{clubSlug}/admin/updates/{id}/status', [UpdateAdminController::class, 'updateStatus'])->name('admin.updates.status.update');
+    Route::delete('/{clubSlug}/admin/updates/{id}', [UpdateAdminController::class, 'destroy'])->name('admin.updates.destroy');
+    Route::post('/{clubSlug}/admin/updates/dispatch-digest', [UpdateAdminController::class, 'triggerDigest'])->name('admin.updates.dispatch_digest');
 
     // National Directory & Member Subscriptions Hub Routes
     Route::get('/directory', [ClubDirectoryController::class, 'index'])->name('directory.index');
@@ -229,87 +234,87 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/portal/subscriptions/{clubSlug}/{typeId}/toggle', [MemberSubscriptionsController::class, 'toggle'])->name('portal.subscriptions.toggle');
 
     // Admin Subscriptions Plans Routes
-    Route::get('/clubs/{clubSlug}/admin/subscriptions', function ($clubSlug) {
+    Route::get('/{clubSlug}/admin/subscriptions', function ($clubSlug) {
         return redirect()->route('admin.club_acc.subscriptions.index', ['clubSlug' => $clubSlug]);
     })->name('admin.memberships.index');
 
     // Admin Members Routes
-    Route::get('/clubs/{clubSlug}/admin/users', [UserAdminController::class, 'index'])->name('admin.users.index');
-    Route::get('/clubs/{clubSlug}/admin/users/{userId}', [UserAdminController::class, 'show'])->name('admin.users.show');
-    Route::post('/clubs/{clubSlug}/admin/users', [UserAdminController::class, 'storeMember'])->name('admin.users.store');
-    Route::post('/clubs/{clubSlug}/admin/users/{userId}/invite', [UserAdminController::class, 'sendInvite'])->name('admin.users.invite');
-    Route::post('/clubs/{clubSlug}/admin/users/{userId}/revoke-invite', [UserAdminController::class, 'revokeInvite'])->name('admin.users.revoke_invite');
-    Route::post('/clubs/{clubSlug}/admin/users/{userId}/status', [UserAdminController::class, 'updateStatus'])->name('admin.users.status.update');
-    Route::post('/clubs/{clubSlug}/admin/users/{userId}/role', [UserAdminController::class, 'updateRole'])->name('admin.users.role.update');
-    Route::post('/clubs/{clubSlug}/admin/users/{userId}/rank', [UserAdminController::class, 'updateRank'])->name('admin.users.rank.update');
-    Route::post('/clubs/{clubSlug}/admin/users/{userId}/committee-role', [UserAdminController::class, 'updateCommitteeRole'])->name('admin.users.committee_role.update');
-    Route::delete('/clubs/{clubSlug}/admin/users/{userId}', [UserAdminController::class, 'removeMember'])->name('admin.users.destroy');
-    Route::delete('/clubs/{clubSlug}/admin/users/{userId}/force', [UserAdminController::class, 'forceDeleteMember'])->name('admin.users.force_delete');
+    Route::get('/{clubSlug}/admin/users', [UserAdminController::class, 'index'])->name('admin.users.index');
+    Route::get('/{clubSlug}/admin/users/{userId}', [UserAdminController::class, 'show'])->name('admin.users.show');
+    Route::post('/{clubSlug}/admin/users', [UserAdminController::class, 'storeMember'])->name('admin.users.store');
+    Route::post('/{clubSlug}/admin/users/{userId}/invite', [UserAdminController::class, 'sendInvite'])->name('admin.users.invite');
+    Route::post('/{clubSlug}/admin/users/{userId}/revoke-invite', [UserAdminController::class, 'revokeInvite'])->name('admin.users.revoke_invite');
+    Route::post('/{clubSlug}/admin/users/{userId}/status', [UserAdminController::class, 'updateStatus'])->name('admin.users.status.update');
+    Route::post('/{clubSlug}/admin/users/{userId}/role', [UserAdminController::class, 'updateRole'])->name('admin.users.role.update');
+    Route::post('/{clubSlug}/admin/users/{userId}/rank', [UserAdminController::class, 'updateRank'])->name('admin.users.rank.update');
+    Route::post('/{clubSlug}/admin/users/{userId}/committee-role', [UserAdminController::class, 'updateCommitteeRole'])->name('admin.users.committee_role.update');
+    Route::delete('/{clubSlug}/admin/users/{userId}', [UserAdminController::class, 'removeMember'])->name('admin.users.destroy');
+    Route::delete('/{clubSlug}/admin/users/{userId}/force', [UserAdminController::class, 'forceDeleteMember'])->name('admin.users.force_delete');
 
     // Billing & Subscription Management Routes
-    Route::get('/clubs/{clubSlug}/admin/billing', [BillingController::class, 'index'])->name('billing.index');
-    Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
-    Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
-    Route::post('/clubs/{clubSlug}/admin/billing/provider', [BillingController::class, 'updateProvider'])->name('billing.provider.update');
+    Route::get('/{clubSlug}/admin/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::get('/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
+    Route::post('/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+    Route::post('/{clubSlug}/admin/billing/provider', [BillingController::class, 'updateProvider'])->name('billing.provider.update');
 
     // Admin Accounting & ERP Routes
-    Route::post('/clubs/{clubSlug}/admin/accounting/accounts', [AccountingAdminController::class, 'storeAccount'])->name('admin.accounting.accounts.store');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/store', [AccountingAdminController::class, 'storeBankAccount'])->name('admin.accounting.bank_accounts.store');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/paypal/connect', [AccountingAdminController::class, 'connectPayPal'])->name('admin.accounting.bank_accounts.paypal.connect');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/{id}/paypal/test', [AccountingAdminController::class, 'testPayPalConnection'])->name('admin.accounting.bank_accounts.paypal.test');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/{id}/paypal/sync', [AccountingAdminController::class, 'syncPayPalTransactions'])->name('admin.accounting.bank_accounts.paypal.sync');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/stripe/connect', [AccountingAdminController::class, 'connectStripe'])->name('admin.accounting.bank_accounts.stripe.connect');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/{id}/stripe/sync', [AccountingAdminController::class, 'syncStripeTransactions'])->name('admin.accounting.bank_accounts.stripe.sync');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/sumup/connect', [AccountingAdminController::class, 'connectSumUp'])->name('admin.accounting.bank_accounts.sumup.connect');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/{id}/sumup/sync', [AccountingAdminController::class, 'syncSumUpTransactions'])->name('admin.accounting.bank_accounts.sumup.sync');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/gocardless/connect', [AccountingAdminController::class, 'connectGoCardless'])->name('admin.accounting.bank_accounts.gocardless.connect');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/{id}/gocardless/sync', [AccountingAdminController::class, 'syncGoCardlessTransactions'])->name('admin.accounting.bank_accounts.gocardless.sync');
-    Route::post('/clubs/{clubSlug}/admin/accounting/giftaid/reconcile-auto', [AccountingAdminController::class, 'autoReconcileGiftAid'])->name('admin.accounting.giftaid.reconcile_auto');
-    Route::get('/clubs/{clubSlug}/admin/accounting/giftaid/export-schedule', [AccountingAdminController::class, 'exportGiftAidSchedule'])->name('admin.accounting.giftaid.export_schedule');
-    Route::get('/clubs/{clubSlug}/admin/accounting/giftaid/reconciled-donations', [AccountingAdminController::class, 'filterReconciledDonations'])->name('admin.accounting.giftaid.reconciled_donations');
-    Route::get('/clubs/{clubSlug}/admin/accounting/giftaid/transactions', [CharityAdminController::class, 'giftAidTransactionsPage'])->name('admin.accounting.giftaid.transactions_page');
-    Route::get('/clubs/{clubSlug}/admin/charity/gift-aid-transactions', [CharityAdminController::class, 'giftAidTransactionsPage'])->name('admin.charity.giftaid.transactions_page');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bank-accounts/{id}/toggle', [AccountingAdminController::class, 'toggleBankAccount'])->name('admin.accounting.bank_accounts.toggle');
-    Route::post('/clubs/{clubSlug}/admin/accounting/opening-balance', [AccountingAdminController::class, 'storeOpeningBalance'])->name('admin.accounting.opening_balance.store');
-    Route::get('/clubs/{clubSlug}/admin/accounting/journal-entries/create', [AccountingAdminController::class, 'createJournal'])->name('admin.accounting.journal.create');
-    Route::post('/clubs/{clubSlug}/admin/accounting/journal-entries', [AccountingAdminController::class, 'storeJournalEntry'])->name('admin.accounting.journal.store');
-    Route::get('/clubs/{clubSlug}/admin/accounting/journal-entries/{id}/edit', [AccountingAdminController::class, 'editJournalEntry'])->name('admin.accounting.journal.edit');
-    Route::put('/clubs/{clubSlug}/admin/accounting/journal-entries/{id}', [AccountingAdminController::class, 'updateJournalEntry'])->name('admin.accounting.journal.update');
-    Route::get('/clubs/{clubSlug}/admin/accounting/invoices/create', [AccountingAdminController::class, 'createInvoice'])->name('admin.accounting.invoices.create');
-    Route::get('/clubs/{clubSlug}/admin/accounting/invoices/{id}/edit', [AccountingAdminController::class, 'editInvoice'])->name('admin.accounting.invoices.edit');
-    Route::post('/clubs/{clubSlug}/admin/accounting/invoices', [AccountingAdminController::class, 'storeInvoice'])->name('admin.accounting.invoices.store');
-    Route::put('/clubs/{clubSlug}/admin/accounting/invoices/{id}', [AccountingAdminController::class, 'updateInvoice'])->name('admin.accounting.invoices.update');
-    Route::delete('/clubs/{clubSlug}/admin/accounting/invoices/{id}', [AccountingAdminController::class, 'destroyInvoice'])->name('admin.accounting.invoices.destroy');
-    Route::post('/clubs/{clubSlug}/admin/accounting/invoices/{id}/publish', [AccountingAdminController::class, 'publishInvoice'])->name('admin.accounting.invoices.publish');
-    Route::post('/clubs/{clubSlug}/admin/accounting/invoices/{id}/pay', [AccountingAdminController::class, 'markInvoicePaid'])->name('admin.accounting.invoices.pay');
-    Route::delete('/clubs/{clubSlug}/admin/accounting/invoices/{id}/attachment', [AccountingAdminController::class, 'deleteInvoiceAttachment'])->name('admin.accounting.invoices.attachment.destroy');
-    Route::get('/clubs/{clubSlug}/admin/accounting/bills/create', [AccountingAdminController::class, 'createBill'])->name('admin.accounting.bills.create');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bills', [AccountingAdminController::class, 'storeBill'])->name('admin.accounting.bills.store');
-    Route::get('/clubs/{clubSlug}/admin/accounting/bills/{id}/edit', [AccountingAdminController::class, 'editBill'])->name('admin.accounting.bills.edit');
-    Route::put('/clubs/{clubSlug}/admin/accounting/bills/{id}', [AccountingAdminController::class, 'updateBill'])->name('admin.accounting.bills.update');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bills/{id}/publish', [AccountingAdminController::class, 'publishBill'])->name('admin.accounting.bills.publish');
-    Route::post('/clubs/{clubSlug}/admin/accounting/bills/{id}/pay', [AccountingAdminController::class, 'markBillPaid'])->name('admin.accounting.bills.pay');
-    Route::delete('/clubs/{clubSlug}/admin/accounting/bills/{id}/attachment', [AccountingAdminController::class, 'deleteBillAttachment'])->name('admin.accounting.bills.attachment.destroy');
-    Route::delete('/clubs/{clubSlug}/admin/accounting/bills/{id}', [AccountingAdminController::class, 'destroyBill'])->name('admin.accounting.bills.destroy');
-    Route::get('/clubs/{clubSlug}/admin/accounting/contacts/create', [AccountingAdminController::class, 'createContact'])->name('admin.accounting.contacts.create');
-    Route::get('/clubs/{clubSlug}/admin/accounting/contacts/member/{userId}/edit', [AccountingAdminController::class, 'editMemberContact'])->name('admin.accounting.contacts.member.edit');
-    Route::get('/clubs/{clubSlug}/admin/accounting/contacts/{id}/edit', [AccountingAdminController::class, 'editContact'])->name('admin.accounting.contacts.edit');
-    Route::post('/clubs/{clubSlug}/admin/accounting/contacts', [AccountingAdminController::class, 'storeContact'])->name('admin.accounting.contacts.store');
-    Route::put('/clubs/{clubSlug}/admin/accounting/contacts/{id}', [AccountingAdminController::class, 'updateContact'])->name('admin.accounting.contacts.update');
-    Route::delete('/clubs/{clubSlug}/admin/accounting/contacts/{id}', [AccountingAdminController::class, 'destroyContact'])->name('admin.accounting.contacts.destroy');
-    Route::post('/clubs/{clubSlug}/admin/accounting/reconcile', [AccountingAdminController::class, 'reconcileBankTransaction'])->name('admin.accounting.reconcile');
-    Route::post('/clubs/{clubSlug}/admin/accounting/ignore-transaction', [AccountingAdminController::class, 'ignoreBankTransaction'])->name('admin.accounting.ignore_transaction');
-    Route::post('/clubs/{clubSlug}/admin/accounting/statement-lines/delete', [AccountingAdminController::class, 'deleteBankStatementLines'])->name('admin.accounting.statement_lines.delete');
-    Route::post('/clubs/{clubSlug}/admin/accounting/statement-lines/restore', [AccountingAdminController::class, 'restoreBankStatementLines'])->name('admin.accounting.statement_lines.restore');
-    Route::post('/clubs/{clubSlug}/admin/accounting/account-transactions/remove-and-redo', [AccountingAdminController::class, 'removeAndRedoAccountTransactions'])->name('admin.accounting.account_transactions.remove_redo');
-    Route::post('/clubs/{clubSlug}/admin/accounting/import-statement', [AccountingAdminController::class, 'importBankStatement'])->name('admin.accounting.import_statement');
-    Route::get('/clubs/{clubSlug}/admin/accounting/{tab?}/{report?}', [AccountingAdminController::class, 'index'])->where('tab', '^(?!invoices|bills|reconcile|ignore-transaction|statement-lines|account-transactions|import-statement|accounts|opening-balance|journal-entries).*$')->name('admin.accounting.index');
+    Route::post('/{clubSlug}/admin/accounting/accounts', [AccountingAdminController::class, 'storeAccount'])->name('admin.accounting.accounts.store');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/store', [AccountingAdminController::class, 'storeBankAccount'])->name('admin.accounting.bank_accounts.store');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/paypal/connect', [AccountingAdminController::class, 'connectPayPal'])->name('admin.accounting.bank_accounts.paypal.connect');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/paypal/test', [AccountingAdminController::class, 'testPayPalConnection'])->name('admin.accounting.bank_accounts.paypal.test');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/paypal/sync', [AccountingAdminController::class, 'syncPayPalTransactions'])->name('admin.accounting.bank_accounts.paypal.sync');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/stripe/connect', [AccountingAdminController::class, 'connectStripe'])->name('admin.accounting.bank_accounts.stripe.connect');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/stripe/sync', [AccountingAdminController::class, 'syncStripeTransactions'])->name('admin.accounting.bank_accounts.stripe.sync');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/sumup/connect', [AccountingAdminController::class, 'connectSumUp'])->name('admin.accounting.bank_accounts.sumup.connect');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/sumup/sync', [AccountingAdminController::class, 'syncSumUpTransactions'])->name('admin.accounting.bank_accounts.sumup.sync');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/gocardless/connect', [AccountingAdminController::class, 'connectGoCardless'])->name('admin.accounting.bank_accounts.gocardless.connect');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/gocardless/sync', [AccountingAdminController::class, 'syncGoCardlessTransactions'])->name('admin.accounting.bank_accounts.gocardless.sync');
+    Route::post('/{clubSlug}/admin/accounting/giftaid/reconcile-auto', [AccountingAdminController::class, 'autoReconcileGiftAid'])->name('admin.accounting.giftaid.reconcile_auto');
+    Route::get('/{clubSlug}/admin/accounting/giftaid/export-schedule', [AccountingAdminController::class, 'exportGiftAidSchedule'])->name('admin.accounting.giftaid.export_schedule');
+    Route::get('/{clubSlug}/admin/accounting/giftaid/reconciled-donations', [AccountingAdminController::class, 'filterReconciledDonations'])->name('admin.accounting.giftaid.reconciled_donations');
+    Route::get('/{clubSlug}/admin/accounting/giftaid/transactions', [CharityAdminController::class, 'giftAidTransactionsPage'])->name('admin.accounting.giftaid.transactions_page');
+    Route::get('/{clubSlug}/admin/charity/gift-aid-transactions', [CharityAdminController::class, 'giftAidTransactionsPage'])->name('admin.charity.giftaid.transactions_page');
+    Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/toggle', [AccountingAdminController::class, 'toggleBankAccount'])->name('admin.accounting.bank_accounts.toggle');
+    Route::post('/{clubSlug}/admin/accounting/opening-balance', [AccountingAdminController::class, 'storeOpeningBalance'])->name('admin.accounting.opening_balance.store');
+    Route::get('/{clubSlug}/admin/accounting/journal-entries/create', [AccountingAdminController::class, 'createJournal'])->name('admin.accounting.journal.create');
+    Route::post('/{clubSlug}/admin/accounting/journal-entries', [AccountingAdminController::class, 'storeJournalEntry'])->name('admin.accounting.journal.store');
+    Route::get('/{clubSlug}/admin/accounting/journal-entries/{id}/edit', [AccountingAdminController::class, 'editJournalEntry'])->name('admin.accounting.journal.edit');
+    Route::put('/{clubSlug}/admin/accounting/journal-entries/{id}', [AccountingAdminController::class, 'updateJournalEntry'])->name('admin.accounting.journal.update');
+    Route::get('/{clubSlug}/admin/accounting/invoices/create', [AccountingAdminController::class, 'createInvoice'])->name('admin.accounting.invoices.create');
+    Route::get('/{clubSlug}/admin/accounting/invoices/{id}/edit', [AccountingAdminController::class, 'editInvoice'])->name('admin.accounting.invoices.edit');
+    Route::post('/{clubSlug}/admin/accounting/invoices', [AccountingAdminController::class, 'storeInvoice'])->name('admin.accounting.invoices.store');
+    Route::put('/{clubSlug}/admin/accounting/invoices/{id}', [AccountingAdminController::class, 'updateInvoice'])->name('admin.accounting.invoices.update');
+    Route::delete('/{clubSlug}/admin/accounting/invoices/{id}', [AccountingAdminController::class, 'destroyInvoice'])->name('admin.accounting.invoices.destroy');
+    Route::post('/{clubSlug}/admin/accounting/invoices/{id}/publish', [AccountingAdminController::class, 'publishInvoice'])->name('admin.accounting.invoices.publish');
+    Route::post('/{clubSlug}/admin/accounting/invoices/{id}/pay', [AccountingAdminController::class, 'markInvoicePaid'])->name('admin.accounting.invoices.pay');
+    Route::delete('/{clubSlug}/admin/accounting/invoices/{id}/attachment', [AccountingAdminController::class, 'deleteInvoiceAttachment'])->name('admin.accounting.invoices.attachment.destroy');
+    Route::get('/{clubSlug}/admin/accounting/bills/create', [AccountingAdminController::class, 'createBill'])->name('admin.accounting.bills.create');
+    Route::post('/{clubSlug}/admin/accounting/bills', [AccountingAdminController::class, 'storeBill'])->name('admin.accounting.bills.store');
+    Route::get('/{clubSlug}/admin/accounting/bills/{id}/edit', [AccountingAdminController::class, 'editBill'])->name('admin.accounting.bills.edit');
+    Route::put('/{clubSlug}/admin/accounting/bills/{id}', [AccountingAdminController::class, 'updateBill'])->name('admin.accounting.bills.update');
+    Route::post('/{clubSlug}/admin/accounting/bills/{id}/publish', [AccountingAdminController::class, 'publishBill'])->name('admin.accounting.bills.publish');
+    Route::post('/{clubSlug}/admin/accounting/bills/{id}/pay', [AccountingAdminController::class, 'markBillPaid'])->name('admin.accounting.bills.pay');
+    Route::delete('/{clubSlug}/admin/accounting/bills/{id}/attachment', [AccountingAdminController::class, 'deleteBillAttachment'])->name('admin.accounting.bills.attachment.destroy');
+    Route::delete('/{clubSlug}/admin/accounting/bills/{id}', [AccountingAdminController::class, 'destroyBill'])->name('admin.accounting.bills.destroy');
+    Route::get('/{clubSlug}/admin/accounting/contacts/create', [AccountingAdminController::class, 'createContact'])->name('admin.accounting.contacts.create');
+    Route::get('/{clubSlug}/admin/accounting/contacts/member/{userId}/edit', [AccountingAdminController::class, 'editMemberContact'])->name('admin.accounting.contacts.member.edit');
+    Route::get('/{clubSlug}/admin/accounting/contacts/{id}/edit', [AccountingAdminController::class, 'editContact'])->name('admin.accounting.contacts.edit');
+    Route::post('/{clubSlug}/admin/accounting/contacts', [AccountingAdminController::class, 'storeContact'])->name('admin.accounting.contacts.store');
+    Route::put('/{clubSlug}/admin/accounting/contacts/{id}', [AccountingAdminController::class, 'updateContact'])->name('admin.accounting.contacts.update');
+    Route::delete('/{clubSlug}/admin/accounting/contacts/{id}', [AccountingAdminController::class, 'destroyContact'])->name('admin.accounting.contacts.destroy');
+    Route::post('/{clubSlug}/admin/accounting/reconcile', [AccountingAdminController::class, 'reconcileBankTransaction'])->name('admin.accounting.reconcile');
+    Route::post('/{clubSlug}/admin/accounting/ignore-transaction', [AccountingAdminController::class, 'ignoreBankTransaction'])->name('admin.accounting.ignore_transaction');
+    Route::post('/{clubSlug}/admin/accounting/statement-lines/delete', [AccountingAdminController::class, 'deleteBankStatementLines'])->name('admin.accounting.statement_lines.delete');
+    Route::post('/{clubSlug}/admin/accounting/statement-lines/restore', [AccountingAdminController::class, 'restoreBankStatementLines'])->name('admin.accounting.statement_lines.restore');
+    Route::post('/{clubSlug}/admin/accounting/account-transactions/remove-and-redo', [AccountingAdminController::class, 'removeAndRedoAccountTransactions'])->name('admin.accounting.account_transactions.remove_redo');
+    Route::post('/{clubSlug}/admin/accounting/import-statement', [AccountingAdminController::class, 'importBankStatement'])->name('admin.accounting.import_statement');
+    Route::get('/{clubSlug}/admin/accounting/{tab?}/{report?}', [AccountingAdminController::class, 'index'])->where('tab', '^(?!invoices|bills|reconcile|ignore-transaction|statement-lines|account-transactions|import-statement|accounts|opening-balance|journal-entries).*$')->name('admin.accounting.index');
 
     // Lodge Committee & Board Governance Routes (Livewire Domain)
-    Route::get('/clubs/{clubSlug}/admin/committee', MeetingIndex::class)->name('admin.committee.index');
-    Route::get('/clubs/{clubSlug}/admin/committee/{meetingId}', MeetingWorkspace::class)->name('admin.committee.workspace');
-    Route::get('/clubs/{clubSlug}/admin/committee/{meetingId}/minutes', LiveMinuteTaker::class)->name('admin.committee.minutes');
-    Route::get('/clubs/{clubSlug}/admin/committee/{meetingId}/pack-pdf', [CommitteePackController::class, 'pdf'])->name('admin.committee.pack.pdf');
+    Route::get('/{clubSlug}/admin/committee', MeetingIndex::class)->name('admin.committee.index');
+    Route::get('/{clubSlug}/admin/committee/{meetingId}', MeetingWorkspace::class)->name('admin.committee.workspace');
+    Route::get('/{clubSlug}/admin/committee/{meetingId}/minutes', LiveMinuteTaker::class)->name('admin.committee.minutes');
+    Route::get('/{clubSlug}/admin/committee/{meetingId}/pack-pdf', [CommitteePackController::class, 'pdf'])->name('admin.committee.pack.pdf');
     Route::get('/committee/meetings/{meetingId}/pack-pdf', [CommitteePackController::class, 'pdf'])->name('committee.pack.pdf');
     Route::get('/committee/meetings/{meetingId}/minutes', function ($meetingId) {
         $meeting = ClubCommitteeMeeting::with('club')->findOrFail($meetingId);
@@ -329,27 +334,27 @@ Route::middleware(['auth'])->group(function () {
     })->name('committee.workspace');
 
     // Core Member Management, Dues & Banking Domain Routes
-    Route::get('/clubs/{clubSlug}/admin/members', MemberIndex::class)->name('admin.club_acc.members.index');
-    Route::get('/clubs/{clubSlug}/admin/members/{memberId}', MemberProfile::class)->name('admin.club_acc.members.show');
-    Route::get('/clubs/{clubSlug}/admin/candidates', CandidatePipeline::class)->name('admin.club_acc.candidates.index');
-    Route::get('/clubs/{clubSlug}/admin/dues-subscriptions', SubscriptionIndex::class)->name('admin.club_acc.subscriptions.index');
-    Route::get('/clubs/{clubSlug}/admin/bank-accounts', BankAccountsIndex::class)->name('admin.club_acc.bank_accounts.index');
-    Route::get('/clubs/{clubSlug}/admin/bank-imports', BankImportIndex::class)->name('admin.club_acc.bank_imports.index');
-    Route::get('/clubs/{clubSlug}/admin/bank-reconciliation', function ($clubSlug) {
+    Route::get('/{clubSlug}/admin/members', MemberIndex::class)->name('admin.club_acc.members.index');
+    Route::get('/{clubSlug}/admin/members/{memberId}', MemberProfile::class)->name('admin.club_acc.members.show');
+    Route::get('/{clubSlug}/admin/candidates', CandidatePipeline::class)->name('admin.club_acc.candidates.index');
+    Route::get('/{clubSlug}/admin/dues-subscriptions', SubscriptionIndex::class)->name('admin.club_acc.subscriptions.index');
+    Route::get('/{clubSlug}/admin/bank-accounts', BankAccountsIndex::class)->name('admin.club_acc.bank_accounts.index');
+    Route::get('/{clubSlug}/admin/bank-imports', BankImportIndex::class)->name('admin.club_acc.bank_imports.index');
+    Route::get('/{clubSlug}/admin/bank-reconciliation', function ($clubSlug) {
         return redirect()->route('admin.accounting.index', ['clubSlug' => $clubSlug, 'tab' => 'reconciliation']);
     })->name('admin.club_acc.bank_reconciliation.index');
-    Route::get('/clubs/{clubSlug}/admin/reconciliation-workspace', BankReconciliationWorkspace::class)->name('banking.bank-reconciliation-workspace');
-    Route::get('/clubs/{clubSlug}/admin/charity', [CharityAdminController::class, 'index'])->name('admin.club_acc.charity.index');
-    Route::get('/clubs/{clubSlug}/admin/charity/festival', [CharityAdminController::class, 'festivalPage'])->name('admin.club_acc.charity.festival');
-    Route::post('/clubs/{clubSlug}/admin/charity/collections', [CharityAdminController::class, 'storeCollection'])->name('admin.charity.collections.store');
-    Route::post('/clubs/{clubSlug}/admin/charity/grants', [CharityAdminController::class, 'storeGrant'])->name('admin.charity.grants.store');
-    Route::post('/clubs/{clubSlug}/admin/charity/grants/{grantId}/status', [CharityAdminController::class, 'updateGrantStatus'])->name('admin.charity.grants.update_status');
-    Route::post('/clubs/{clubSlug}/admin/charity/festival/target', [CharityAdminController::class, 'updateFestivalTarget'])->name('admin.charity.festival.target.update');
-    Route::post('/clubs/{clubSlug}/admin/charity/festival/giving/{memberId}', [CharityAdminController::class, 'updateMemberGiving'])->name('admin.charity.festival.giving.update');
+    Route::get('/{clubSlug}/admin/reconciliation-workspace', BankReconciliationWorkspace::class)->name('banking.bank-reconciliation-workspace');
+    Route::get('/{clubSlug}/admin/charity', [CharityAdminController::class, 'index'])->name('admin.club_acc.charity.index');
+    Route::get('/{clubSlug}/admin/charity/festival', [CharityAdminController::class, 'festivalPage'])->name('admin.club_acc.charity.festival');
+    Route::post('/{clubSlug}/admin/charity/collections', [CharityAdminController::class, 'storeCollection'])->name('admin.charity.collections.store');
+    Route::post('/{clubSlug}/admin/charity/grants', [CharityAdminController::class, 'storeGrant'])->name('admin.charity.grants.store');
+    Route::post('/{clubSlug}/admin/charity/grants/{grantId}/status', [CharityAdminController::class, 'updateGrantStatus'])->name('admin.charity.grants.update_status');
+    Route::post('/{clubSlug}/admin/charity/festival/target', [CharityAdminController::class, 'updateFestivalTarget'])->name('admin.charity.festival.target.update');
+    Route::post('/{clubSlug}/admin/charity/festival/giving/{memberId}', [CharityAdminController::class, 'updateMemberGiving'])->name('admin.charity.festival.giving.update');
 
-    Route::post('/clubs/{clubSlug}/admin/billing/business-account', [BillingController::class, 'updateBusinessAccount'])->name('billing.business.update');
-    Route::post('/clubs/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
-    Route::get('/clubs/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
+    Route::post('/{clubSlug}/admin/billing/business-account', [BillingController::class, 'updateBusinessAccount'])->name('billing.business.update');
+    Route::post('/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+    Route::get('/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
     // 2FA Profile Settings Routes
     Route::get('/admin/profile/two-factor', [TwoFactorAuthController::class, 'show'])->name('admin.profile.two-factor');
@@ -359,25 +364,25 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/profile/two-factor/recovery-codes', [TwoFactorAuthController::class, 'generateRecoveryCodes'])->name('admin.two-factor.recovery-codes');
 
     // Member Portal & Self-Service Routes
-    Route::get('/clubs/{slug}/portal', [MemberPortalController::class, 'show'])->name('member.dashboard');
-    Route::get('/clubs/{slug}/portal/clubs', [MemberPortalController::class, 'myClubs'])->name('member.clubs');
-    Route::get('/clubs/{slug}/portal/events', [MemberPortalController::class, 'events'])->name('member.events');
-    Route::get('/clubs/{slug}/portal/news/{id}', [MemberPortalController::class, 'showPost'])->name('member.posts.show');
-    Route::get('/clubs/{slug}/portal/dues', [MemberPortalController::class, 'dues'])->name('member.dues');
-    Route::get('/clubs/{slug}/portal/profile', [MemberPortalController::class, 'profile'])->name('member.profile');
-    Route::post('/clubs/{slug}/portal/profile', [MemberPortalController::class, 'updateProfile'])->name('member.profile.update');
-    Route::post('/clubs/{slug}/portal/events/{id}/rsvp', [MemberPortalController::class, 'updateRsvp'])->name('member.rsvp');
-    Route::get('/clubs/{slug}/portal/meetings/{id}/summons', [MemberPortalController::class, 'summons'])->name('member.meetings.summons');
-    Route::post('/clubs/{slug}/portal/meetings/{id}/rsvp', [MemberPortalController::class, 'updateMeetingRsvp'])->name('member.meetings.rsvp');
-    Route::get('/clubs/{slug}/portal/meetings/{id}/pdf', [MemberPortalController::class, 'downloadMeetingPdf'])->name('member.meetings.pdf');
+    Route::get('/members', MemberHomeController::class)->name('members.home');
+    Route::get('/{slug}/clubs', [MemberPortalController::class, 'myClubs'])->name('member.clubs');
+    Route::get('/{slug}/events', [MemberPortalController::class, 'events'])->name('member.events');
+    Route::get('/{slug}/news/{id}', [MemberPortalController::class, 'showPost'])->name('member.posts.show');
+    Route::get('/{slug}/dues', [MemberPortalController::class, 'dues'])->name('member.dues');
+    Route::get('/{slug}/profile', [MemberPortalController::class, 'profile'])->name('member.profile');
+    Route::post('/{slug}/profile', [MemberPortalController::class, 'updateProfile'])->name('member.profile.update');
+    Route::post('/{slug}/events/{id}/rsvp', [MemberPortalController::class, 'updateRsvp'])->name('member.rsvp');
+    Route::get('/{slug}/meetings/{id}/summons', [MemberPortalController::class, 'summons'])->name('member.meetings.summons');
+    Route::post('/{slug}/meetings/{id}/rsvp', [MemberPortalController::class, 'updateMeetingRsvp'])->name('member.meetings.rsvp');
+    Route::get('/{slug}/meetings/{id}/pdf', [MemberPortalController::class, 'downloadMeetingPdf'])->name('member.meetings.pdf');
 
     // Invite-Only Member Approval & Rejection Routes
-    Route::post('/clubs/{slug}/members/{userId}/approve', [ClubController::class, 'approveMember'])->name('clubs.members.approve');
-    Route::post('/clubs/{slug}/members/{userId}/reject', [ClubController::class, 'rejectMember'])->name('clubs.members.reject');
+    Route::post('/{slug}/members/{userId}/approve', [ClubController::class, 'approveMember'])->name('clubs.members.approve');
+    Route::post('/{slug}/members/{userId}/reject', [ClubController::class, 'rejectMember'])->name('clubs.members.reject');
 
     // Admin Attendance Check-In Routes
-    Route::get('/clubs/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'show'])->name('admin.events.checkin');
-    Route::post('/clubs/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'checkIn'])->name('admin.events.checkin.store');
+    Route::get('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'show'])->name('admin.events.checkin');
+    Route::post('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'checkIn'])->name('admin.events.checkin.store');
 });
 
 // Sanctum API Token & Pennant Feature Routes
@@ -424,3 +429,7 @@ Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
 
 // Dev Utility Helper Route
 Route::get('/auth/make-me-superadmin', [SuperAdminController::class, 'makeMeSuperAdmin'])->middleware('auth')->name('auth.make_me_superadmin');
+
+// A club's member area. This is a single-segment route, so it has to stay last;
+// the {slug} constraint keeps reserved words (login, members, site...) out of it.
+Route::get('/{slug}', [MemberPortalController::class, 'show'])->name('member.dashboard');

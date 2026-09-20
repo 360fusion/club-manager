@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\Visibility;
+use App\Models\Concerns\HasVisibility;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +13,11 @@ use Illuminate\Support\Carbon;
 
 class Event extends Model
 {
-    use HasFactory;
+    use HasFactory, HasVisibility;
+
+    protected $attributes = [
+        'rsvp_audience' => 'club',
+    ];
 
     protected $fillable = [
         'club_id',
@@ -35,6 +41,8 @@ class Event extends Model
         'rsvp_deadline',
         'booking_cutoff_days',
         'status',
+        'visibility',
+        'rsvp_audience',
     ];
 
     protected function casts(): array
@@ -44,12 +52,23 @@ class Event extends Model
             'ends_at' => 'datetime',
             'rsvp_deadline' => 'datetime',
             'booking_cutoff_days' => 'integer',
+            'rsvp_audience' => Visibility::class,
             'is_recurring' => 'boolean',
             'requires_payment' => 'boolean',
             'has_dining' => 'boolean',
             'price' => 'decimal:2',
             'dining_price' => 'decimal:2',
         ];
+    }
+
+    /**
+     * Whether the viewer may respond to this event. RSVPs are open to the
+     * audience chosen for the invite, and only to people who can see the event.
+     */
+    public function canBeRsvpedBy(?User $viewer): bool
+    {
+        return $this->isVisibleTo($viewer)
+            && $this->rsvp_audience->includes($viewer, (int) $this->club_id);
     }
 
     public function getFormattedLocationAttribute(): string

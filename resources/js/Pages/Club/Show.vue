@@ -81,14 +81,14 @@ const calculateTotal = (event) => {
 };
 
 const saveDomain = () => {
-    domainForm.post(`/clubs/${props.club.slug}/domain`, {
+    domainForm.post(`/${props.club.slug}/domain`, {
         preserveScroll: true,
     });
 };
 
 const handleImport = () => {
     if (importForm.csv_file) {
-        importForm.post(`/clubs/${props.club.slug}/members/import`, {
+        importForm.post(`/${props.club.slug}/members/import`, {
             preserveScroll: true,
         });
     }
@@ -132,19 +132,19 @@ const getIcon = (typeCode) => {
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <Link :href="`/clubs/${club.slug}/admin/events`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20">
+                    <Link :href="`/${club.slug}/admin/events`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20">
                         🎫 Events
                     </Link>
-                    <Link :href="`/clubs/${club.slug}/admin/posts`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20">
+                    <Link :href="`/${club.slug}/admin/posts`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20">
                         📰 Blog & News
                     </Link>
-                    <Link :href="`/clubs/${club.slug}/admin/memberships`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20">
+                    <Link :href="`/${club.slug}/admin/memberships`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20">
                         💳 Memberships
                     </Link>
-                    <Link :href="`/clubs/${club.slug}/admin/pages`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20">
+                    <Link :href="`/${club.slug}/admin/pages`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20">
                         🎨 CMS Builder
                     </Link>
-                    <Link :href="`/clubs/${club.slug}/admin/analytics`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <Link :href="`/${club.slug}/admin/analytics`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                         📊 Analytics
                     </Link>
                     <a :href="`/site/${club.slug}`" target="_blank" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:text-white">
@@ -160,21 +160,21 @@ const getIcon = (typeCode) => {
             <div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-4 mb-8">
                 <button 
                     @click="activeTab = 'events'"
-                    :class="activeTab === 'events' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
+                    :class="activeTab === 'events' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
                     class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
                 >
                     <span>🎫</span> Events & Eventbrite Ticketing ({{ club.events.length }})
                 </button>
                 <button 
                     @click="activeTab = 'domain'"
-                    :class="activeTab === 'domain' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
+                    :class="activeTab === 'domain' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
                     class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
                 >
                     <span>🌐</span> Custom Domain Setup
                 </button>
                 <button 
                     @click="activeTab = 'members'"
-                    :class="activeTab === 'members' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
+                    :class="activeTab === 'members' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
                     class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
                 >
                     <span>👥</span> Member Roster ({{ club.members.length }})
@@ -196,10 +196,10 @@ const getIcon = (typeCode) => {
                             <div class="flex items-start justify-between">
                                 <div>
                                     <div class="flex items-center gap-2 mb-1">
-                                        <span v-if="event.ticket_tiers.length > 0" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                        <span v-if="event.ticket_tiers.length > 0" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                             🎟️ {{ event.ticket_tiers.length }} Ticket Tiers
                                         </span>
-                                        <span v-if="event.has_dining" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                                        <span v-if="event.has_dining" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                             🍽️ 3-Course Dining
                                         </span>
                                     </div>
@@ -211,7 +211,7 @@ const getIcon = (typeCode) => {
                             <p class="text-sm text-slate-300">{{ event.description }}</p>
 
                             <!-- Eventbrite Ticket Tiers Preview -->
-                            <div v-if="event.ticket_tiers.length > 0" class="p-4 rounded-xl bg-slate-950 border border-indigo-500/20 space-y-2">
+                            <div v-if="event.ticket_tiers.length > 0" class="p-4 rounded-xl bg-slate-950 border border-blue-500/20 space-y-2">
                                 <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">🎟️ Available Ticket Tiers & Capacity:</span>
                                 <div class="space-y-1.5 text-xs">
                                     <div v-for="tier in event.ticket_tiers" :key="tier.id" class="p-2 rounded bg-slate-900 flex items-center justify-between">
@@ -233,7 +233,7 @@ const getIcon = (typeCode) => {
                                 <div v-for="att in event.attendees" :key="att.id" class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
                                     <div class="space-y-1">
                                         <div class="font-bold text-white">{{ att.name }}</div>
-                                        <div class="font-mono text-[10px] text-sky-400">📱 QR Pass: {{ att.ticket_qr_code }}</div>
+                                        <div class="font-mono text-[10px] text-blue-400">📱 QR Pass: {{ att.ticket_qr_code }}</div>
                                     </div>
                                     <span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 font-bold uppercase text-[10px]">
                                         PAID £{{ att.amount_paid }}
@@ -242,7 +242,7 @@ const getIcon = (typeCode) => {
                             </div>
                         </div>
 
-                        <button @click="openRsvp(event)" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-bold text-sm shadow-xl shadow-indigo-600/20">
+                        <button @click="openRsvp(event)" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-600/20">
                             🎟️ Select Ticket Tier & Generate QR Pass
                         </button>
                     </div>
@@ -273,7 +273,7 @@ const getIcon = (typeCode) => {
                         <h3 class="font-bold text-white text-lg">Member Roster & Invite Approvals</h3>
                         <p class="text-xs text-slate-400 mt-0.5">Manage active club members and approve invite-only registration requests.</p>
                     </div>
-                    <a :href="`/clubs/${club.slug}/members/export`" class="py-2.5 px-4 rounded-xl bg-slate-800 text-white text-xs font-bold">Export Roster CSV</a>
+                    <a :href="`/${club.slug}/members/export`" class="py-2.5 px-4 rounded-xl bg-slate-800 text-white text-xs font-bold">Export Roster CSV</a>
                 </div>
 
                 <!-- Pending Member Invites Banner -->
@@ -318,7 +318,7 @@ const getIcon = (typeCode) => {
                                 <td class="p-4 text-slate-400">{{ m.email }}</td>
                                 <td class="p-4 font-mono text-slate-400">{{ m.member_number }}</td>
                                 <td class="p-4">
-                                    <span class="px-2.5 py-0.5 rounded-full font-bold uppercase text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                    <span class="px-2.5 py-0.5 rounded-full font-bold uppercase text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                         {{ m.role }}
                                     </span>
                                 </td>
@@ -354,7 +354,7 @@ const getIcon = (typeCode) => {
                                 v-for="tier in selectedEvent.ticket_tiers" 
                                 :key="tier.id"
                                 @click="rsvpForm.selected_tier_id = tier.id"
-                                :class="rsvpForm.selected_tier_id === tier.id ? 'bg-indigo-600/20 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'"
+                                :class="rsvpForm.selected_tier_id === tier.id ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'"
                                 class="p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all"
                             >
                                 <div>
@@ -387,7 +387,7 @@ const getIcon = (typeCode) => {
                             <span>Total Due for Ticket:</span>
                             <span class="text-2xl">£{{ calculateTotal(selectedEvent) }}</span>
                         </div>
-                        <div class="text-center p-3 rounded-lg bg-slate-950 font-mono text-xs text-sky-400">
+                        <div class="text-center p-3 rounded-lg bg-slate-950 font-mono text-xs text-blue-400">
                             📱 Scannable QR Pass: <strong>TICKET-OUBC-{{ Math.floor(1000 + Math.random() * 9000) }}</strong>
                         </div>
                     </div>
@@ -395,7 +395,7 @@ const getIcon = (typeCode) => {
 
                 <div class="flex gap-3 pt-2">
                     <button @click="showRsvpModal = false" class="w-full py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm">Cancel</button>
-                    <button @click="showRsvpModal = false" class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 text-white font-bold text-sm">Checkout & Issue QR Pass</button>
+                    <button @click="showRsvpModal = false" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold text-sm">Checkout & Issue QR Pass</button>
                 </div>
             </div>
         </div>

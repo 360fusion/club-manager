@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Support\ReservedClubSlugs;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use InvalidArgumentException;
 use Laravel\Cashier\Billable as StripeBillable;
 use Laravel\Paddle\Billable as PaddleBillable;
 use Spatie\MediaLibrary\HasMedia;
@@ -79,6 +81,12 @@ class Club extends Model implements HasMedia
 
     protected static function booted(): void
     {
+        static::saving(function (Club $club) {
+            if (ReservedClubSlugs::isReserved((string) $club->slug)) {
+                throw new InvalidArgumentException("The club slug \"{$club->slug}\" is reserved.");
+            }
+        });
+
         static::created(function (Club $club) {
             $club->ensureDefaultPages();
         });

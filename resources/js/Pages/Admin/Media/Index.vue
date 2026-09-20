@@ -37,15 +37,15 @@ const availableMonths = ref([]);
 const trashCount = ref(0);
 
 const folders = computed(() => [
-  { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100', text: 'text-slate-700' },
-  { id: 'summons', label: 'Summonses', icon: '📜', bg: 'bg-indigo-50', text: 'text-indigo-700' },
-  { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-indigo-50', text: 'text-indigo-700' },
-  { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50', text: 'text-blue-700' },
-  { id: 'newsletters', label: 'Newsletters', icon: '✉️', bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-sky-50', text: 'text-sky-700' },
-  { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-purple-50', text: 'text-purple-700' },
-  { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50', text: 'text-amber-700' },
-  { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50', text: 'text-rose-700' },
+  { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-200' },
+  { id: 'summons', label: 'Summonses', icon: '📜', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'newsletters', label: 'Newsletters', icon: '✉️', bg: 'bg-emerald-50 dark:bg-emerald-950/40', text: 'text-emerald-700 dark:text-emerald-300' },
+  { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
+  { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50 dark:bg-rose-950/40', text: 'text-rose-700 dark:text-rose-300' },
 ]);
 
 const selectableFolders = [
@@ -82,7 +82,7 @@ const fetchMedia = async () => {
     if (filterDate.value !== 'all') params.append('date', filterDate.value);
     if (sortBy.value !== 'newest') params.append('sort', sortBy.value);
 
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media?${params.toString()}`);
+    const res = await fetch(`/${props.club.slug}/admin/media?${params.toString()}`);
     if (res.ok) {
       const data = await res.json();
       mediaItems.value = data.media || [];
@@ -168,7 +168,7 @@ const uploadFiles = async (filesList) => {
 
     try {
       const token = getCsrfToken();
-      const res = await fetch(`/clubs/${props.club.slug}/admin/media`, {
+      const res = await fetch(`/${props.club.slug}/admin/media`, {
         method: 'POST',
         headers: {
           'X-CSRF-TOKEN': token,
@@ -258,7 +258,7 @@ const handleBulkDelete = async () => {
   if (!confirm(`Are you sure you want to delete ${selectedMediaIds.value.length} selected files?`)) return;
 
   try {
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media/bulk-delete`, {
+    const res = await fetch(`/${props.club.slug}/admin/media/bulk-delete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -284,7 +284,7 @@ const handleBulkMove = async () => {
   if (!selectedMediaIds.value.length) return;
 
   try {
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media/bulk-move`, {
+    const res = await fetch(`/${props.club.slug}/admin/media/bulk-move`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -313,7 +313,7 @@ const fetchUsage = async (id) => {
   assetUsages.value = [];
   isLoadingUsages.value = true;
   try {
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media/${id}/usage`);
+    const res = await fetch(`/${props.club.slug}/admin/media/${id}/usage`);
     if (res.ok) {
       const data = await res.json();
       assetUsages.value = data.usages || [];
@@ -436,7 +436,7 @@ const applyCrop = async (mode = 'replace') => {
       formData.append('file', blob, previewItem.value.file_name);
       formData.append('save_mode', mode);
 
-      const res = await fetch(`/clubs/${props.club.slug}/admin/media/${previewItem.value.id}/crop`, {
+      const res = await fetch(`/${props.club.slug}/admin/media/${previewItem.value.id}/crop`, {
         method: 'POST',
         headers: {
           'X-CSRF-TOKEN': getCsrfToken(),
@@ -477,7 +477,7 @@ const revertMediaToOriginal = async () => {
   saveSuccessMsg.value = '';
 
   try {
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media/${previewItem.value.id}/revert`, {
+    const res = await fetch(`/${props.club.slug}/admin/media/${previewItem.value.id}/revert`, {
       method: 'POST',
       headers: {
         'X-CSRF-TOKEN': getCsrfToken(),
@@ -508,7 +508,7 @@ const saveMediaDetails = async () => {
   saveSuccessMsg.value = '';
 
   try {
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media/${previewItem.value.id}`, {
+    const res = await fetch(`/${props.club.slug}/admin/media/${previewItem.value.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -545,7 +545,7 @@ const saveMediaDetails = async () => {
 
 const restoreItem = async (item) => {
   try {
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media/${item.id}/restore`, {
+    const res = await fetch(`/${props.club.slug}/admin/media/${item.id}/restore`, {
       method: 'POST',
       headers: {
         'X-CSRF-TOKEN': getCsrfToken(),
@@ -572,7 +572,7 @@ const forceDeleteItem = async (item) => {
   if (!confirm(`Are you sure you want to PERMANENTLY delete "${item.file_name}"? This action cannot be undone.`)) return;
 
   try {
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media/${item.id}/force`, {
+    const res = await fetch(`/${props.club.slug}/admin/media/${item.id}/force`, {
       method: 'DELETE',
       headers: {
         'X-CSRF-TOKEN': getCsrfToken(),
@@ -599,7 +599,7 @@ const handleBulkRestore = async () => {
   if (!selectedMediaIds.value.length) return;
 
   try {
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media/bulk-restore`, {
+    const res = await fetch(`/${props.club.slug}/admin/media/bulk-restore`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -627,7 +627,7 @@ const handleBulkForceDelete = async () => {
   if (!confirm(`Are you sure you want to PERMANENTLY delete ${selectedMediaIds.value.length} selected files? This action CANNOT be undone.`)) return;
 
   try {
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media/bulk-force-delete`, {
+    const res = await fetch(`/${props.club.slug}/admin/media/bulk-force-delete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -654,7 +654,7 @@ const deleteItem = async (item) => {
   if (!confirm(`Move "${item.file_name}" to Trash bin?`)) return;
 
   try {
-    const res = await fetch(`/clubs/${props.club.slug}/admin/media/${item.id}`, {
+    const res = await fetch(`/${props.club.slug}/admin/media/${item.id}`, {
       method: 'DELETE',
       headers: {
         'X-CSRF-TOKEN': getCsrfToken(),
@@ -700,22 +700,22 @@ const isImage = (mimeOrUrl) => {
     <div class="space-y-6 max-w-6xl mx-auto">
       
       <!-- Top Action Bar -->
-      <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-3">
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">File Manager</h1>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-sky-50 text-sky-700 border border-sky-200">
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">File Manager</h1>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
               {{ club.slug }}
             </span>
           </div>
-          <p class="text-xs sm:text-sm text-slate-500 mt-1">Organize, search, and upload club logos, news images, newsletters, galleries, and downloadable documents.</p>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Organize, search, and upload club logos, news images, newsletters, galleries, and downloadable documents.</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
           <!-- Target Folder Selection Dropdown -->
-          <div v-if="activeFolder === 'all'" class="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700">
+          <div v-if="activeFolder === 'all'" class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
             <span class="text-slate-400">Target:</span>
-            <select v-model="uploadFolder" class="bg-transparent font-bold text-slate-900 focus:outline-none cursor-pointer">
+            <select v-model="uploadFolder" class="bg-transparent font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
               <option v-for="f in selectableFolders" :key="f.id" :value="f.id">{{ f.label }}</option>
             </select>
           </div>
@@ -725,7 +725,7 @@ const isImage = (mimeOrUrl) => {
             type="button"
             @click="triggerUpload"
             :disabled="isUploading"
-            class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-md transition-all duration-200 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all duration-200 flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             <span v-if="isUploading" class="animate-spin text-sm">🔄</span>
             <span v-else class="text-sm">📤</span>
@@ -746,7 +746,7 @@ const isImage = (mimeOrUrl) => {
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         
         <!-- Left Sidebar Folders -->
-        <div class="lg:col-span-1 bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm space-y-3 sticky top-6">
+        <div class="lg:col-span-1 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-3 sticky top-6">
           <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 px-3 pt-1">
             Media Folders
           </div>
@@ -760,8 +760,8 @@ const isImage = (mimeOrUrl) => {
               :class="[
                 'w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all text-left cursor-pointer',
                 activeFolder === folder.id
-                  ? 'bg-slate-900 text-white shadow-md'
-                  : 'text-slate-700 hover:bg-slate-100'
+                  ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md'
+                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
               ]"
             >
               <span class="flex items-center gap-2.5">
@@ -772,7 +772,7 @@ const isImage = (mimeOrUrl) => {
                 v-if="folder.id === 'trash' && trashCount > 0"
                 :class="[
                   'px-2 py-0.5 rounded-full text-[10px] font-black',
-                  activeFolder === 'trash' ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700'
+                  activeFolder === 'trash' ? 'bg-rose-500 text-white' : 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
                 ]"
               >
                 {{ trashCount }}
@@ -788,19 +788,19 @@ const isImage = (mimeOrUrl) => {
           @dragleave.prevent="isDragging = false"
           @drop.prevent="handleDrop"
           :class="[
-            'lg:col-span-3 bg-white p-6 sm:p-8 rounded-3xl border transition-all duration-200 shadow-sm space-y-6 relative',
-            isDragging ? 'border-sky-500 ring-4 ring-sky-100 bg-sky-50/20' : 'border-slate-200/80'
+            'lg:col-span-3 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border transition-all duration-200 shadow-sm space-y-6 relative',
+            isDragging ? 'border-blue-500 ring-4 ring-blue-100 bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200/80 dark:border-slate-800/80'
           ]"
         >
           <!-- Drag Over Highlight Overlay -->
-          <div v-if="isDragging" class="absolute inset-0 bg-sky-500/10 backdrop-blur-[2px] rounded-3xl border-2 border-dashed border-sky-500 z-30 flex flex-col items-center justify-center p-6 text-sky-700 pointer-events-none">
+          <div v-if="isDragging" class="absolute inset-0 bg-blue-500/10 backdrop-blur-[2px] rounded-3xl border-2 border-dashed border-blue-500 z-30 flex flex-col items-center justify-center p-6 text-blue-700 pointer-events-none">
             <span class="text-5xl animate-bounce mb-2">📥</span>
             <span class="text-base font-extrabold">Drop files here to upload</span>
-            <span class="text-xs font-bold text-sky-600 mt-1">Target folder: {{ activeFolder !== 'all' ? activeFolder : uploadFolder }}</span>
+            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1">Target folder: {{ activeFolder !== 'all' ? activeFolder : uploadFolder }}</span>
           </div>
 
           <!-- Inline Search & Filter Controls Bar -->
-          <div class="space-y-4 pb-4 border-b border-slate-100">
+          <div class="space-y-4 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               
               <!-- Search Input Bar -->
@@ -809,22 +809,22 @@ const isImage = (mimeOrUrl) => {
                   v-model="searchQuery"
                   type="text"
                   placeholder="Search files by name..."
-                  class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
+                  class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
                 />
                 <span class="absolute left-3.5 top-2.5 text-slate-400 text-xs">🔍</span>
                 <button
                   v-if="searchQuery"
                   type="button"
                   @click="searchQuery = ''"
-                  class="absolute right-3 top-2 text-slate-400 hover:text-slate-700 text-xs font-bold"
+                  class="absolute right-3 top-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-bold"
                 >
                   ✕
                 </button>
               </div>
 
               <!-- Counter Badge -->
-              <div class="text-xs font-bold text-slate-500 shrink-0">
-                Showing {{ mediaItems.length }} {{ mediaItems.length === 1 ? 'file' : 'files' }} in <span class="text-slate-900 font-extrabold capitalize">{{ activeFolder }}</span>
+              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                Showing {{ mediaItems.length }} {{ mediaItems.length === 1 ? 'file' : 'files' }} in <span class="text-slate-900 dark:text-white font-extrabold capitalize">{{ activeFolder }}</span>
               </div>
             </div>
 
@@ -832,9 +832,9 @@ const isImage = (mimeOrUrl) => {
             <div class="flex flex-wrap items-center gap-2 pt-1">
               
               <!-- 1. Category / Type Filter -->
-              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
                 <span class="text-slate-400">Type:</span>
-                <select v-model="filterType" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                <select v-model="filterType" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="all">All Types</option>
                   <option value="image">🖼️ Images Only</option>
                   <option value="document">📄 Documents Only</option>
@@ -842,9 +842,9 @@ const isImage = (mimeOrUrl) => {
               </div>
 
               <!-- 2. Dynamic File Extension Filter (Only available extensions listed) -->
-              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
                 <span class="text-slate-400">Extension:</span>
-                <select v-model="filterExtension" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                <select v-model="filterExtension" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="all">All Extensions</option>
                   <option v-for="ext in availableExtensions" :key="ext" :value="ext">
                     .{{ ext.toUpperCase() }}
@@ -853,9 +853,9 @@ const isImage = (mimeOrUrl) => {
               </div>
 
               <!-- 3. Dynamic Date Added Filter (Year / Month) -->
-              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
                 <span class="text-slate-400">Date:</span>
-                <select v-model="filterDate" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                <select v-model="filterDate" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="all">All Dates</option>
                   <option v-for="m in availableMonths" :key="m.value" :value="m.value">
                     📅 {{ m.label }}
@@ -864,9 +864,9 @@ const isImage = (mimeOrUrl) => {
               </div>
 
               <!-- 4. Sort Order -->
-              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
+              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
                 <span class="text-slate-400">Sort:</span>
-                <select v-model="sortBy" class="bg-transparent font-extrabold text-slate-900 focus:outline-none cursor-pointer">
+                <select v-model="sortBy" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
                   <option value="name_asc">Name (A to Z)</option>
@@ -881,7 +881,7 @@ const isImage = (mimeOrUrl) => {
                 v-if="searchQuery || filterType !== 'all' || filterExtension !== 'all' || filterDate !== 'all' || sortBy !== 'newest'"
                 type="button"
                 @click="resetFilters"
-                class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold rounded-xl border border-rose-200 transition-all cursor-pointer flex items-center gap-1"
+                class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer flex items-center gap-1"
                 title="Reset all search and filter settings"
               >
                 <span>✕ Reset Filters</span>
@@ -890,9 +890,9 @@ const isImage = (mimeOrUrl) => {
           </div>
 
           <!-- Bulk Actions Floating Control Bar -->
-          <div v-if="selectedMediaIds.length > 0" class="p-4 bg-slate-900 text-white rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+          <div v-if="selectedMediaIds.length > 0" class="p-4 bg-slate-900 dark:bg-slate-700 text-white rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
             <div class="flex items-center gap-3">
-              <span class="px-2.5 py-1 bg-sky-500 text-white rounded-xl text-xs font-black">
+              <span class="px-2.5 py-1 bg-blue-500 text-white rounded-xl text-xs font-black">
                 {{ selectedMediaIds.length }} Selected
               </span>
               <button
@@ -926,14 +926,14 @@ const isImage = (mimeOrUrl) => {
                 <div class="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
                   <span class="text-slate-400">Move to:</span>
                   <select v-model="targetBulkFolder" class="bg-transparent font-bold text-white focus:outline-none cursor-pointer">
-                    <option v-for="f in selectableFolders" :key="f.id" :value="f.id" class="bg-slate-900 text-white">{{ f.label }}</option>
+                    <option v-for="f in selectableFolders" :key="f.id" :value="f.id" class="bg-slate-900 dark:bg-slate-700 text-white">{{ f.label }}</option>
                   </select>
                 </div>
 
                 <button
                   type="button"
                   @click="handleBulkMove"
-                  class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
+                  class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
                 >
                   📁 Move
                 </button>
@@ -958,20 +958,20 @@ const isImage = (mimeOrUrl) => {
           </div>
 
           <!-- Upload Status / Error / Success Alerts -->
-          <div v-if="uploadStatus" class="p-3.5 bg-sky-50 border border-sky-200 text-sky-800 text-xs font-bold rounded-xl flex items-center gap-2.5 animate-pulse">
+          <div v-if="uploadStatus" class="p-3.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-800 dark:text-blue-200 text-xs font-bold rounded-xl flex items-center gap-2.5 animate-pulse">
             <span class="animate-spin text-sm">🔄</span>
             <span>{{ uploadStatus }}</span>
           </div>
 
-          <div v-if="uploadError" class="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold rounded-xl flex items-center justify-between gap-2">
+          <div v-if="uploadError" class="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 text-xs font-bold rounded-xl flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <span>⚠️</span>
               <span>{{ uploadError }}</span>
             </div>
-            <button type="button" @click="uploadError = ''" class="text-rose-500 hover:text-rose-800 text-xs font-bold">✕</button>
+            <button type="button" @click="uploadError = ''" class="text-rose-500 hover:text-rose-800 dark:hover:text-rose-200 text-xs font-bold">✕</button>
           </div>
 
-          <div v-if="copyToast" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in">
+          <div v-if="copyToast" class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in">
             <span>✓</span>
             <span>{{ copyToast }}</span>
           </div>
@@ -982,16 +982,16 @@ const isImage = (mimeOrUrl) => {
               <span class="animate-spin text-xl mr-2">🔄</span> Loading Media Library...
             </div>
 
-            <div v-else-if="!mediaItems.length" class="text-center py-20 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 space-y-3">
+            <div v-else-if="!mediaItems.length" class="text-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-800/50/50 space-y-3">
               <span class="text-4xl block">📁</span>
               <div>
-                <span class="text-sm font-bold text-slate-800 block">No media files in this folder</span>
+                <span class="text-sm font-bold text-slate-800 dark:text-slate-100 block">No media files in this folder</span>
                 <span class="text-xs text-slate-400">Drag & drop files here or click below to upload.</span>
               </div>
               <button
                 type="button"
                 @click="triggerUpload"
-                class="px-4 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all inline-flex items-center gap-1.5 cursor-pointer mt-2"
+                class="px-4 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all inline-flex items-center gap-1.5 cursor-pointer mt-2"
               >
                 <span>📤 Choose Files to Upload</span>
               </button>
@@ -1004,14 +1004,14 @@ const isImage = (mimeOrUrl) => {
                 :class="[
                   'group rounded-2xl border p-3 transition-all shadow-sm hover:shadow-md flex flex-col justify-between relative',
                   selectedMediaIds.includes(item.id)
-                    ? 'bg-sky-50/80 border-sky-400 ring-2 ring-sky-300'
-                    : 'bg-slate-50 hover:bg-slate-100/80 border-slate-200'
+                    ? 'bg-blue-50/80 dark:bg-blue-950/80 border-blue-400 ring-2 ring-blue-300'
+                    : 'bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 border-slate-200 dark:border-slate-800'
                 ]"
               >
                 <!-- Image or Icon Box -->
                 <div
                   @click="openPreview(item)"
-                  class="h-40 w-full rounded-xl overflow-hidden bg-white border border-slate-200 flex items-center justify-center relative mb-3 cursor-pointer group-hover:border-sky-300"
+                  class="h-40 w-full rounded-xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center relative mb-3 cursor-pointer group-hover:border-blue-300 dark:group-hover:border-blue-700/60"
                 >
                   <img
                     v-if="isImage(item.mime_type || item.file_name)"
@@ -1030,7 +1030,7 @@ const isImage = (mimeOrUrl) => {
                       type="checkbox"
                       :checked="selectedMediaIds.includes(item.id)"
                       @change="toggleSelectItem(item.id)"
-                      class="w-4 h-4 rounded text-sky-600 border-slate-300 focus:ring-sky-500 cursor-pointer shadow-sm"
+                      class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer shadow-sm"
                     />
                   </div>
 
@@ -1039,7 +1039,7 @@ const isImage = (mimeOrUrl) => {
                     <span class="px-2 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider shadow-sm">
                       {{ item.collection_name }}
                     </span>
-                    <span v-if="item.is_variant" class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
+                    <span v-if="item.is_variant" class="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
                       ✂️ Variant
                     </span>
                     <span v-if="item.is_trashed" class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
@@ -1055,24 +1055,24 @@ const isImage = (mimeOrUrl) => {
 
                 <!-- File Info -->
                 <div class="space-y-1 cursor-pointer" @click="openPreview(item)">
-                  <div class="font-bold text-slate-900 text-xs truncate group-hover:text-sky-700" :title="item.name || item.file_name">
+                  <div class="font-bold text-slate-900 dark:text-white text-xs truncate group-hover:text-blue-700 dark:group-hover:text-blue-300" :title="item.name || item.file_name">
                     {{ item.name || item.file_name }}
                   </div>
-                  <div v-if="item.alt_text" class="text-[10px] text-slate-500 font-semibold italic truncate">
+                  <div v-if="item.alt_text" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold italic truncate">
                     Alt: "{{ item.alt_text }}"
                   </div>
-                  <div class="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
+                  <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
                     <span>{{ item.human_size }}</span>
                     <span>{{ item.created_at }}</span>
                   </div>
                 </div>
 
                 <!-- Card Bottom Controls -->
-                <div class="pt-3 border-t border-slate-200/80 mt-3 flex items-center justify-between gap-1">
+                <div class="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 mt-3 flex items-center justify-between gap-1">
                   <button
                     type="button"
                     @click="openPreview(item)"
-                    class="px-2.5 py-1 bg-white hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-300 transition-all cursor-pointer flex items-center gap-1"
+                    class="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded-lg border border-slate-300 dark:border-slate-700 transition-all cursor-pointer flex items-center gap-1"
                     title="View details & edit metadata"
                   >
                     🔍 Details
@@ -1081,7 +1081,7 @@ const isImage = (mimeOrUrl) => {
                   <button
                     type="button"
                     @click="copyUrl(item)"
-                    class="px-2 py-1 text-slate-500 hover:text-sky-600 text-[11px] font-bold transition-colors cursor-pointer"
+                    class="px-2 py-1 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-bold transition-colors cursor-pointer"
                     title="Copy direct file URL"
                   >
                     📋 Copy
@@ -1091,7 +1091,7 @@ const isImage = (mimeOrUrl) => {
                     <button
                       type="button"
                       @click="restoreItem(item)"
-                      class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-lg border border-emerald-200 transition-colors cursor-pointer flex items-center gap-0.5"
+                      class="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold rounded-lg border border-emerald-200 dark:border-emerald-800/60 transition-colors cursor-pointer flex items-center gap-0.5"
                       title="Restore file from Trash"
                     >
                       ↻ Restore
@@ -1099,7 +1099,7 @@ const isImage = (mimeOrUrl) => {
                     <button
                       type="button"
                       @click="forceDeleteItem(item)"
-                      class="p-1 text-slate-400 hover:text-rose-600 text-xs transition-colors cursor-pointer"
+                      class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 text-xs transition-colors cursor-pointer"
                       title="Permanently delete file"
                     >
                       🔥
@@ -1109,7 +1109,7 @@ const isImage = (mimeOrUrl) => {
                     <button
                       type="button"
                       @click="deleteItem(item)"
-                      class="p-1 text-slate-400 hover:text-rose-600 text-xs transition-colors cursor-pointer"
+                      class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 text-xs transition-colors cursor-pointer"
                       title="Move file to Trash bin"
                     >
                       🗑️
@@ -1129,23 +1129,23 @@ const isImage = (mimeOrUrl) => {
 
     <!-- Media Asset Details & Inspector Modal -->
     <div v-if="previewItem" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="previewItem = null">
-      <div class="bg-white rounded-3xl max-w-4xl w-full py-4 px-6 sm:px-8 shadow-2xl border border-slate-200 space-y-3.5 relative overflow-hidden" @click.stop>
+      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full py-4 px-6 sm:px-8 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3.5 relative overflow-hidden" @click.stop>
         
         <!-- Modal Top Header -->
-        <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+        <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
           <div class="flex items-center gap-3">
             <span class="text-2xl">{{ getFileIcon(previewItem.mime_type || previewItem.file_name) }}</span>
             <div>
-              <h3 class="text-lg font-black text-slate-900 tracking-tight">Media Asset Inspector</h3>
-              <p class="text-xs text-slate-500">View asset, edit display name & alt text, or copy direct asset URL.</p>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white tracking-tight">Media Asset Inspector</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">View asset, edit display name & alt text, or copy direct asset URL.</p>
             </div>
           </div>
 
-          <button type="button" @click="previewItem = null" class="p-2 text-slate-400 hover:text-slate-700 font-bold rounded-xl transition-colors cursor-pointer text-sm">✕</button>
+          <button type="button" @click="previewItem = null" class="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold rounded-xl transition-colors cursor-pointer text-sm">✕</button>
         </div>
 
         <!-- Success Toast Alert -->
-        <div v-if="saveSuccessMsg" class="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in">
+        <div v-if="saveSuccessMsg" class="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in">
           <span>✓</span>
           <span>{{ saveSuccessMsg }}</span>
         </div>
@@ -1155,7 +1155,7 @@ const isImage = (mimeOrUrl) => {
           
           <!-- Left Column: Visual Image / File Preview Box & Technical Specs -->
           <div class="space-y-3">
-            <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200 flex flex-col items-center justify-center min-h-[160px] max-h-[240px] overflow-hidden relative">
+            <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center min-h-[160px] max-h-[240px] overflow-hidden relative">
               <img
                 v-if="isImage(previewItem.mime_type || previewItem.file_name)"
                 :src="previewItem.original_url"
@@ -1164,30 +1164,30 @@ const isImage = (mimeOrUrl) => {
               />
               <div v-else class="py-6 text-center space-y-1.5">
                 <span class="text-5xl block">{{ getFileIcon(previewItem.mime_type || previewItem.file_name) }}</span>
-                <span class="text-xs font-extrabold text-slate-800 block">{{ previewItem.file_name }}</span>
+                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">{{ previewItem.file_name }}</span>
                 <span class="text-[11px] font-semibold text-slate-400 block">{{ previewItem.human_size }}</span>
               </div>
             </div>
 
             <!-- Technical File Specifications Table -->
-            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1.5 text-xs">
-              <div class="font-extrabold text-slate-900 uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60">
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
+              <div class="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60 dark:border-slate-800/60">
                 Technical Specifications
               </div>
-              <div class="grid grid-cols-2 gap-2 text-slate-600 font-semibold">
-                <div><span class="text-slate-400 block text-[10px]">Folder:</span> <span class="capitalize text-slate-900 font-bold">{{ previewItem.collection_name }}</span></div>
-                <div><span class="text-slate-400 block text-[10px]">File Size:</span> <span class="text-slate-900 font-bold">{{ previewItem.human_size }}</span></div>
-                <div><span class="text-slate-400 block text-[10px]">MIME Type:</span> <span class="text-slate-900 font-bold">{{ previewItem.mime_type }}</span></div>
-                <div><span class="text-slate-400 block text-[10px]">Uploaded On:</span> <span class="text-slate-900 font-bold">{{ previewItem.created_at }}</span></div>
+              <div class="grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-300 font-semibold">
+                <div><span class="text-slate-400 block text-[10px]">Folder:</span> <span class="capitalize text-slate-900 dark:text-white font-bold">{{ previewItem.collection_name }}</span></div>
+                <div><span class="text-slate-400 block text-[10px]">File Size:</span> <span class="text-slate-900 dark:text-white font-bold">{{ previewItem.human_size }}</span></div>
+                <div><span class="text-slate-400 block text-[10px]">MIME Type:</span> <span class="text-slate-900 dark:text-white font-bold">{{ previewItem.mime_type }}</span></div>
+                <div><span class="text-slate-400 block text-[10px]">Uploaded On:</span> <span class="text-slate-900 dark:text-white font-bold">{{ previewItem.created_at }}</span></div>
               </div>
             </div>
 
             <!-- Asset Usage Tracking Section -->
-            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1.5 text-xs">
-              <div class="font-extrabold text-slate-900 uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60 flex items-center justify-between">
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
+              <div class="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between">
                 <span>Asset Usage Tracking</span>
-                <span v-if="isLoadingUsages" class="animate-spin text-sky-600">🔄</span>
-                <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="assetUsages.length ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'">
+                <span v-if="isLoadingUsages" class="animate-spin text-blue-600 dark:text-blue-400">🔄</span>
+                <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="assetUsages.length ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
                   {{ assetUsages.length }} {{ assetUsages.length === 1 ? 'Location' : 'Locations' }}
                 </span>
               </div>
@@ -1204,13 +1204,13 @@ const isImage = (mimeOrUrl) => {
                 <div
                   v-for="(u, idx) in assetUsages"
                   :key="idx"
-                  class="p-1.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs"
+                  class="p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
                 >
                   <div class="truncate pr-2">
-                    <span class="font-bold text-slate-900 block truncate">{{ u.title }}</span>
+                    <span class="font-bold text-slate-900 dark:text-white block truncate">{{ u.title }}</span>
                     <span class="text-[10px] text-slate-400 font-medium">{{ u.location }}</span>
                   </div>
-                  <span class="px-2 py-0.5 rounded bg-sky-50 text-sky-700 text-[10px] font-bold border border-sky-200 shrink-0">
+                  <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800/60 shrink-0">
                     {{ u.type }}
                   </span>
                 </div>
@@ -1219,61 +1219,61 @@ const isImage = (mimeOrUrl) => {
           </div>
 
           <!-- Right Column: Editable Metadata Form -->
-          <div class="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200">
-            <div class="font-extrabold text-slate-900 uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200">
+          <div class="space-y-3 bg-slate-50/50 dark:bg-slate-800/50/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200 dark:border-slate-800">
               Editable Asset Metadata
             </div>
 
             <!-- 1. Display Title / Name -->
             <div class="space-y-1">
-              <label class="block text-xs font-extrabold text-slate-800">Display Title / Asset Name</label>
+              <label class="block text-xs font-extrabold text-slate-800 dark:text-slate-100">Display Title / Asset Name</label>
               <input
                 v-model="previewItem.name"
                 type="text"
                 placeholder="Enter display title..."
-                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
+                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
               />
             </div>
 
             <!-- 2. Alt Text (Accessibility & SEO) -->
             <div class="space-y-1">
-              <label class="block text-xs font-extrabold text-slate-800 flex items-center justify-between">
+              <label class="block text-xs font-extrabold text-slate-800 dark:text-slate-100 flex items-center justify-between">
                 <span>Alt Text (Accessibility & SEO)</span>
-                <span class="text-[10px] text-sky-600 font-bold">Auto-generated from filename</span>
+                <span class="text-[10px] text-blue-600 dark:text-blue-400 font-bold">Auto-generated from filename</span>
               </label>
               <input
                 v-model="previewItem.alt_text"
                 type="text"
                 placeholder="Descriptive alt text for screen readers..."
-                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm"
+                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
               />
             </div>
 
             <!-- 3. Caption / Description -->
             <div class="space-y-1">
-              <label class="block text-xs font-extrabold text-slate-800">Caption / Description</label>
+              <label class="block text-xs font-extrabold text-slate-800 dark:text-slate-100">Caption / Description</label>
               <textarea
                 v-model="previewItem.caption"
                 rows="2"
                 placeholder="Add optional caption or description..."
-                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-sky-500 shadow-sm resize-none"
+                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm resize-none"
               ></textarea>
             </div>
 
             <!-- 4. Direct Asset Link Box -->
             <div class="space-y-1 pt-0.5">
-              <label class="block text-xs font-extrabold text-slate-800">Direct Asset Link (URL)</label>
+              <label class="block text-xs font-extrabold text-slate-800 dark:text-slate-100">Direct Asset Link (URL)</label>
               <div class="flex items-center gap-2">
                 <input
                   :value="previewItem.original_url"
                   readonly
                   type="text"
-                  class="w-full px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-xl text-[11px] font-mono text-slate-600 focus:outline-none select-all"
+                  class="w-full px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-mono text-slate-600 dark:text-slate-300 focus:outline-none select-all"
                 />
                 <button
                   type="button"
                   @click="copyUrl(previewItem)"
-                  class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl border border-slate-200 shadow-sm transition-all shrink-0 cursor-pointer flex items-center gap-1"
+                  class="px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all shrink-0 cursor-pointer flex items-center gap-1"
                 >
                   📋 Copy
                 </button>
@@ -1285,13 +1285,13 @@ const isImage = (mimeOrUrl) => {
         </div>
 
         <!-- Modal Bottom Actions Toolbar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-100 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 text-xs">
           <div class="flex flex-wrap items-center gap-2">
             <button
               v-if="isImage(previewItem.mime_type || previewItem.file_name)"
               type="button"
               @click="openCropper"
-              class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer"
+              class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer"
             >
               <span>✂️ Visual Crop & Resize</span>
             </button>
@@ -1299,14 +1299,14 @@ const isImage = (mimeOrUrl) => {
             <a
               :href="previewItem.original_url"
               download
-              class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl border border-slate-300 transition-all inline-flex items-center gap-1.5"
+              class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all inline-flex items-center gap-1.5"
             >
               <span>⬇️ Download File</span>
             </a>
             <a
               :href="previewItem.original_url"
               target="_blank"
-              class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-200 transition-all inline-flex items-center gap-1.5"
+              class="px-3.5 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl border border-slate-200 dark:border-slate-800 transition-all inline-flex items-center gap-1.5"
             >
               <span>↗️ Open in New Tab</span>
             </a>
@@ -1335,7 +1335,7 @@ const isImage = (mimeOrUrl) => {
                 type="button"
                 @click="revertMediaToOriginal"
                 :disabled="isReverting"
-                class="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-xl border border-amber-300 transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+                class="px-3.5 py-1.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 font-bold text-xs rounded-xl border border-amber-300 dark:border-amber-700/60 transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
                 title="Revert image back to original uncropped master"
               >
                 <span v-if="isReverting" class="animate-spin">🔄</span>
@@ -1347,7 +1347,7 @@ const isImage = (mimeOrUrl) => {
                 type="button"
                 @click="saveMediaDetails"
                 :disabled="isSavingDetails"
-                class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-extrabold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 <span v-if="isSavingDetails" class="animate-spin">🔄</span>
                 <span v-else>💾</span>
@@ -1357,7 +1357,7 @@ const isImage = (mimeOrUrl) => {
               <button
                 type="button"
                 @click="deleteItem(previewItem)"
-                class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                class="px-3.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer inline-flex items-center gap-1.5"
               >
                 <span>🗑️ Move to Trash</span>
               </button>
@@ -1370,47 +1370,47 @@ const isImage = (mimeOrUrl) => {
 
     <!-- Visual Image Cropper Modal -->
     <div v-if="showCropModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto" @click="closeCropper">
-      <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 relative overflow-hidden" @click.stop>
-        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-6 relative overflow-hidden" @click.stop>
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
           <div class="flex items-center gap-2.5">
             <span class="text-2xl">✂️</span>
             <div>
-              <h3 class="text-lg font-black text-slate-900">Interactive Image Cropper & Resizer</h3>
-              <p class="text-xs text-slate-500">Drag to move crop area or grab corner handles to adjust crop box size.</p>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">Interactive Image Cropper & Resizer</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Drag to move crop area or grab corner handles to adjust crop box size.</p>
             </div>
           </div>
-          <button type="button" @click="closeCropper" class="p-2 text-slate-400 hover:text-slate-700 font-bold rounded-xl text-sm cursor-pointer">✕</button>
+          <button type="button" @click="closeCropper" class="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold rounded-xl text-sm cursor-pointer">✕</button>
         </div>
 
         <!-- Aspect Ratio Presets Toolbar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Presets:</span>
+            <span class="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Presets:</span>
             <button
               type="button"
               @click="setCropAspect('free')"
-              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === 'free' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === 'free' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               Free Crop
             </button>
             <button
               type="button"
               @click="setCropAspect('1:1')"
-              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '1:1' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '1:1' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               1:1 Square (Logo)
             </button>
             <button
               type="button"
               @click="setCropAspect('16:9')"
-              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '16:9' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '16:9' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               16:9 Banner
             </button>
             <button
               type="button"
               @click="setCropAspect('4:3')"
-              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '4:3' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100']"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '4:3' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               4:3 Gallery
             </button>
@@ -1419,7 +1419,7 @@ const isImage = (mimeOrUrl) => {
           <button
             type="button"
             @click="rotateCropper(90)"
-            class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl border border-slate-200 transition-all cursor-pointer flex items-center gap-1"
+            class="px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 transition-all cursor-pointer flex items-center gap-1"
           >
             🔄 Rotate 90°
           </button>
@@ -1436,11 +1436,11 @@ const isImage = (mimeOrUrl) => {
         </div>
 
         <!-- Cropper Action Footer with Variant and Master Backup buttons -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100">
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
             @click="closeCropper"
-            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+            class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer"
           >
             Cancel
           </button>
@@ -1449,7 +1449,7 @@ const isImage = (mimeOrUrl) => {
               type="button"
               @click="applyCrop('variant')"
               :disabled="isCropping"
-              class="px-4 py-2.5 bg-white hover:bg-slate-100 text-indigo-700 font-extrabold text-xs rounded-xl border border-indigo-200 shadow-sm transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              class="px-4 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-700 dark:text-blue-300 font-extrabold text-xs rounded-xl border border-blue-200 dark:border-blue-800/60 shadow-sm transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
               <span>➕ Save as New Copy (Variant)</span>
             </button>
@@ -1457,7 +1457,7 @@ const isImage = (mimeOrUrl) => {
               type="button"
               @click="applyCrop('replace')"
               :disabled="isCropping"
-              class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+              class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
             >
               <span v-if="isCropping" class="animate-spin text-sm">🔄</span>
               <span v-else>⚡</span>

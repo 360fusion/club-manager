@@ -46,7 +46,7 @@ class MediaLibraryAdminTest extends TestCase
         $file = UploadedFile::fake()->image('club-logo.png', 400, 400);
 
         $response = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => $file,
                 'folder' => 'logos',
             ]);
@@ -67,19 +67,19 @@ class MediaLibraryAdminTest extends TestCase
         $logoFile = UploadedFile::fake()->image('logo.png');
         $docFile = UploadedFile::fake()->create('document.pdf', 100);
 
-        $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", [
+        $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", [
             'file' => $logoFile,
             'folder' => 'logos',
         ]);
 
-        $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", [
+        $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", [
             'file' => $docFile,
             'folder' => 'documents',
         ]);
 
         // Filter by logos
         $responseLogos = $this->actingAs($this->user)
-            ->getJson("/clubs/{$this->club->slug}/admin/media?folder=logos");
+            ->getJson("/{$this->club->slug}/admin/media?folder=logos");
 
         $responseLogos->assertOk()
             ->assertJsonCount(1, 'media')
@@ -87,7 +87,7 @@ class MediaLibraryAdminTest extends TestCase
 
         // Filter by all
         $responseAll = $this->actingAs($this->user)
-            ->getJson("/clubs/{$this->club->slug}/admin/media?folder=all");
+            ->getJson("/{$this->club->slug}/admin/media?folder=all");
 
         $responseAll->assertOk()
             ->assertJsonCount(2, 'media');
@@ -98,7 +98,7 @@ class MediaLibraryAdminTest extends TestCase
         $file = UploadedFile::fake()->image('news-banner.jpg');
 
         $uploadRes = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => $file,
                 'folder' => 'news',
             ]);
@@ -106,7 +106,7 @@ class MediaLibraryAdminTest extends TestCase
         $mediaId = $uploadRes->json('media.id');
 
         $deleteRes = $this->actingAs($this->user)
-            ->deleteJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}");
+            ->deleteJson("/{$this->club->slug}/admin/media/{$mediaId}");
 
         $deleteRes->assertOk()
             ->assertJsonPath('success', true);
@@ -120,19 +120,19 @@ class MediaLibraryAdminTest extends TestCase
     {
         $file = UploadedFile::fake()->image('restore-me.png');
         $uploadRes = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => $file,
                 'folder' => 'images',
             ]);
         $mediaId = $uploadRes->json('media.id');
 
         // Soft delete
-        $this->actingAs($this->user)->deleteJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}");
+        $this->actingAs($this->user)->deleteJson("/{$this->club->slug}/admin/media/{$mediaId}");
         $this->assertSoftDeleted('media', ['id' => $mediaId]);
 
         // Restore
         $restoreRes = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}/restore");
+            ->postJson("/{$this->club->slug}/admin/media/{$mediaId}/restore");
 
         $restoreRes->assertOk()
             ->assertJsonPath('success', true);
@@ -147,18 +147,18 @@ class MediaLibraryAdminTest extends TestCase
     {
         $file = UploadedFile::fake()->image('purge-me.png');
         $uploadRes = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => $file,
                 'folder' => 'images',
             ]);
         $mediaId = $uploadRes->json('media.id');
 
         // Soft delete first
-        $this->actingAs($this->user)->deleteJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}");
+        $this->actingAs($this->user)->deleteJson("/{$this->club->slug}/admin/media/{$mediaId}");
 
         // Force delete
         $forceRes = $this->actingAs($this->user)
-            ->deleteJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}/force");
+            ->deleteJson("/{$this->club->slug}/admin/media/{$mediaId}/force");
 
         $forceRes->assertOk()
             ->assertJsonPath('success', true);
@@ -172,7 +172,7 @@ class MediaLibraryAdminTest extends TestCase
         $file = UploadedFile::fake()->create('large-doc.pdf', 11264);
 
         $response = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => $file,
                 'folder' => 'documents',
             ]);
@@ -186,7 +186,7 @@ class MediaLibraryAdminTest extends TestCase
         $file = UploadedFile::fake()->create('malicious.php', 100);
 
         $response = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => $file,
                 'folder' => 'documents',
             ]);
@@ -200,7 +200,7 @@ class MediaLibraryAdminTest extends TestCase
         $file = UploadedFile::fake()->create('document.pdf', 100);
 
         $response = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => $file,
                 'folder' => 'logos', // logos folder only accepts images
             ]);
@@ -215,7 +215,7 @@ class MediaLibraryAdminTest extends TestCase
         $file = UploadedFile::fake()->createWithContent('exploit.svg', $svgContent);
 
         $response = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => $file,
                 'folder' => 'images',
             ]);
@@ -228,33 +228,33 @@ class MediaLibraryAdminTest extends TestCase
         $imageFile = UploadedFile::fake()->image('banner.png', 200, 200);
         $pdfFile = UploadedFile::fake()->create('summons.pdf', 100);
 
-        $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", [
+        $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", [
             'file' => $imageFile,
             'folder' => 'images',
         ]);
 
-        $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", [
+        $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", [
             'file' => $pdfFile,
             'folder' => 'documents',
         ]);
 
         // Filter by type=image
         $resImages = $this->actingAs($this->user)
-            ->getJson("/clubs/{$this->club->slug}/admin/media?type=image");
+            ->getJson("/{$this->club->slug}/admin/media?type=image");
         $resImages->assertOk()
             ->assertJsonCount(1, 'media')
             ->assertJsonPath('media.0.file_name', 'banner.png');
 
         // Filter by extension=pdf
         $resPdf = $this->actingAs($this->user)
-            ->getJson("/clubs/{$this->club->slug}/admin/media?extension=pdf");
+            ->getJson("/{$this->club->slug}/admin/media?extension=pdf");
         $resPdf->assertOk()
             ->assertJsonCount(1, 'media')
             ->assertJsonPath('media.0.file_name', 'summons.pdf');
 
         // Check available_extensions & available_months metadata
         $resAll = $this->actingAs($this->user)
-            ->getJson("/clubs/{$this->club->slug}/admin/media");
+            ->getJson("/{$this->club->slug}/admin/media");
         $resAll->assertOk()
             ->assertJsonPath('available_extensions', ['png', 'pdf']);
     }
@@ -264,7 +264,7 @@ class MediaLibraryAdminTest extends TestCase
         $file = UploadedFile::fake()->image('gallery-photo.jpg');
 
         $uploadRes = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => $file,
                 'folder' => 'galleries',
             ]);
@@ -272,7 +272,7 @@ class MediaLibraryAdminTest extends TestCase
         $mediaId = $uploadRes->json('media.id');
 
         $updateRes = $this->actingAs($this->user)
-            ->putJson("/clubs/{$this->club->slug}/admin/media/{$mediaId}", [
+            ->putJson("/{$this->club->slug}/admin/media/{$mediaId}", [
                 'name' => 'Oxford Regatta Victory Celebration 2026',
                 'alt_text' => 'Boating team celebrating trophy victory on river Isis',
                 'caption' => 'The Lodge of Fraternity members holding trophy after winning Torpids Regatta 2026.',
@@ -290,7 +290,7 @@ class MediaLibraryAdminTest extends TestCase
         $file = UploadedFile::fake()->image('oxford_boating_trophy_2026.png', 400, 400);
 
         $response = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media", [
+            ->postJson("/{$this->club->slug}/admin/media", [
                 'file' => $file,
                 'folder' => 'images',
             ]);
@@ -305,11 +305,11 @@ class MediaLibraryAdminTest extends TestCase
         $file1 = UploadedFile::fake()->image('photo1.jpg');
         $file2 = UploadedFile::fake()->image('photo2.jpg');
 
-        $id1 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'images'])->json('media.id');
-        $id2 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'images'])->json('media.id');
+        $id1 = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'images'])->json('media.id');
+        $id2 = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'images'])->json('media.id');
 
         $response = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media/bulk-delete", [
+            ->postJson("/{$this->club->slug}/admin/media/bulk-delete", [
                 'ids' => [$id1, $id2],
             ]);
 
@@ -325,11 +325,11 @@ class MediaLibraryAdminTest extends TestCase
         $file1 = UploadedFile::fake()->image('logo1.png');
         $file2 = UploadedFile::fake()->image('logo2.png');
 
-        $id1 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'logos'])->json('media.id');
-        $id2 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'logos'])->json('media.id');
+        $id1 = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'logos'])->json('media.id');
+        $id2 = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'logos'])->json('media.id');
 
         $response = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media/bulk-move", [
+            ->postJson("/{$this->club->slug}/admin/media/bulk-move", [
                 'ids' => [$id1, $id2],
                 'folder' => 'news',
             ]);
@@ -344,10 +344,10 @@ class MediaLibraryAdminTest extends TestCase
     public function test_admin_can_check_asset_usage(): void
     {
         $file = UploadedFile::fake()->image('club-logo.png');
-        $id = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file, 'folder' => 'logos'])->json('media.id');
+        $id = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file, 'folder' => 'logos'])->json('media.id');
 
         $response = $this->actingAs($this->user)
-            ->getJson("/clubs/{$this->club->slug}/admin/media/{$id}/usage");
+            ->getJson("/{$this->club->slug}/admin/media/{$id}/usage");
 
         $response->assertOk()
             ->assertJsonStructure(['usage_count', 'usages']);
@@ -356,13 +356,13 @@ class MediaLibraryAdminTest extends TestCase
     public function test_admin_can_crop_image_and_create_variant(): void
     {
         $file = UploadedFile::fake()->image('original.png', 800, 600);
-        $id = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file, 'folder' => 'images'])->json('media.id');
+        $id = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file, 'folder' => 'images'])->json('media.id');
 
         $croppedFile = UploadedFile::fake()->image('cropped.png', 400, 400);
 
         // Crop as variant
         $variantRes = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media/{$id}/crop", [
+            ->postJson("/{$this->club->slug}/admin/media/{$id}/crop", [
                 'file' => $croppedFile,
                 'save_mode' => 'variant',
             ]);
@@ -374,12 +374,12 @@ class MediaLibraryAdminTest extends TestCase
         $variantId = $variantRes->json('media.id');
 
         // Admin can delete variant (move to trash)
-        $deleteRes = $this->actingAs($this->user)->deleteJson("/clubs/{$this->club->slug}/admin/media/{$variantId}");
+        $deleteRes = $this->actingAs($this->user)->deleteJson("/{$this->club->slug}/admin/media/{$variantId}");
         $deleteRes->assertOk();
         $this->assertSoftDeleted('media', ['id' => $variantId]);
 
         // Admin can restore variant from trash
-        $restoreRes = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media/{$variantId}/restore");
+        $restoreRes = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media/{$variantId}/restore");
         $restoreRes->assertOk();
         $this->assertDatabaseHas('media', ['id' => $variantId, 'deleted_at' => null]);
     }
@@ -389,17 +389,17 @@ class MediaLibraryAdminTest extends TestCase
         $file1 = UploadedFile::fake()->image('trash1.jpg');
         $file2 = UploadedFile::fake()->image('trash2.jpg');
 
-        $id1 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'images'])->json('media.id');
-        $id2 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'images'])->json('media.id');
+        $id1 = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'images'])->json('media.id');
+        $id2 = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'images'])->json('media.id');
 
         // Delete both to trash
-        $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media/bulk-delete", ['ids' => [$id1, $id2]]);
+        $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media/bulk-delete", ['ids' => [$id1, $id2]]);
         $this->assertSoftDeleted('media', ['id' => $id1]);
         $this->assertSoftDeleted('media', ['id' => $id2]);
 
         // Bulk restore
         $response = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media/bulk-restore", [
+            ->postJson("/{$this->club->slug}/admin/media/bulk-restore", [
                 'ids' => [$id1, $id2],
             ]);
 
@@ -415,15 +415,15 @@ class MediaLibraryAdminTest extends TestCase
         $file1 = UploadedFile::fake()->image('purge1.jpg');
         $file2 = UploadedFile::fake()->image('purge2.jpg');
 
-        $id1 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'images'])->json('media.id');
-        $id2 = $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'images'])->json('media.id');
+        $id1 = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file1, 'folder' => 'images'])->json('media.id');
+        $id2 = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => $file2, 'folder' => 'images'])->json('media.id');
 
         // Delete to trash first
-        $this->actingAs($this->user)->postJson("/clubs/{$this->club->slug}/admin/media/bulk-delete", ['ids' => [$id1, $id2]]);
+        $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media/bulk-delete", ['ids' => [$id1, $id2]]);
 
         // Bulk force delete
         $response = $this->actingAs($this->user)
-            ->postJson("/clubs/{$this->club->slug}/admin/media/bulk-force-delete", [
+            ->postJson("/{$this->club->slug}/admin/media/bulk-force-delete", [
                 'ids' => [$id1, $id2],
             ]);
 

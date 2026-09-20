@@ -59,7 +59,7 @@ class BankStatementLineStatusTest extends TestCase
         $user = $this->makeClubAdmin(User::factory()->create(), $this->club);
 
         $response = $this->actingAs($user)->post(
-            "/clubs/{$this->club->slug}/admin/accounting/statement-lines/delete",
+            "/{$this->club->slug}/admin/accounting/statement-lines/delete",
             ['transaction_ids' => [$this->transactionId]],
         );
 
@@ -80,7 +80,7 @@ class BankStatementLineStatusTest extends TestCase
             ->update(['status' => BankTransactionStatus::Ignored->value]);
 
         $response = $this->actingAs($user)->post(
-            "/clubs/{$this->club->slug}/admin/accounting/statement-lines/restore",
+            "/{$this->club->slug}/admin/accounting/statement-lines/restore",
             ['transaction_ids' => [$this->transactionId]],
         );
 

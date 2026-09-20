@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\SanitizedHtml;
 use App\Casts\SanitizedHtmlBlocks;
+use App\Models\Concerns\HasVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Post extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, HasVisibility, InteractsWithMedia;
 
     protected $fillable = [
         'club_id',
@@ -26,6 +27,7 @@ class Post extends Model implements HasMedia
         'attachments',
         'cover_image_url',
         'status',
+        'visibility',
         'published_at',
         'expires_at',
     ];

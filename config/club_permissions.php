@@ -7,7 +7,7 @@
  * used when a club has not customised its own. A club may override the roles
  * for any capability; overrides live in club.settings.permission_matrix.
  *
- * `route_map` maps the first segment after /clubs/{slug}/admin/ to the
+ * `route_map` maps the first segment after /{slug}/admin/ to the
  * capability that guards it. Prefixes absent from this map fall back to
  * requiring any staff role.
  */

@@ -167,7 +167,7 @@ class WeeklyUpdateDigestService
 
                     $html .= '<div style="margin-top: 8px;">';
                     $html .= '<a href="'.e($gCalUrl).'" target="_blank" style="font-size: 11px; font-weight: 700; color: #d97706; background: #fffbeb; padding: 4px 8px; border-radius: 6px; text-decoration: none; margin-right: 6px;">+ Calendar</a>';
-                    $html .= '<a href="'.url('/clubs/'.$club->slug.'/portal/events').'" style="font-size: 11px; font-weight: 700; color: #ffffff; background: #d97706; padding: 4px 10px; border-radius: 6px; text-decoration: none;">Book / RSVP →</a>';
+                    $html .= '<a href="'.url('/'.$club->slug.'/events').'" style="font-size: 11px; font-weight: 700; color: #ffffff; background: #d97706; padding: 4px 10px; border-radius: 6px; text-decoration: none;">Book / RSVP →</a>';
                     $html .= '</div>';
                     $html .= '</div>';
                 }
@@ -194,7 +194,7 @@ class WeeklyUpdateDigestService
                     if ($post->excerpt) {
                         $html .= '<p style="margin: 4px 0 6px 0; font-size: 12px; color: #64748b;">'.e($post->excerpt).'</p>';
                     }
-                    $html .= '<a href="'.url('/clubs/'.$club->slug.'/portal/news/'.$post->id).'" style="font-size: 11px; font-weight: 700; color: #0284c7; text-decoration: none;">Read Article →</a>';
+                    $html .= '<a href="'.url('/'.$club->slug.'/news/'.$post->id).'" style="font-size: 11px; font-weight: 700; color: #0284c7; text-decoration: none;">Read Article →</a>';
                     $html .= '</div>';
                 }
                 $html .= '</div>';

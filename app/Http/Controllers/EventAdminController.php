@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Visibility;
 use App\Models\Club;
 use App\Models\Event;
 use App\Models\EventMenuItem;
@@ -12,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -154,11 +157,14 @@ class EventAdminController extends Controller
                 'requires_payment' => true,
                 'has_dining' => false,
                 'status' => 'upcoming',
+                'visibility' => Visibility::Club,
+                'rsvp_audience' => Visibility::Club,
             ]);
 
         return Inertia::render('Admin/Events/Form', [
             'club' => $club,
             'event' => $event,
+            'visibilityOptions' => Visibility::options(),
         ]);
     }
 
@@ -187,10 +193,22 @@ class EventAdminController extends Controller
             'dining_price' => 'nullable|numeric|min:0',
             'booking_cutoff_days' => 'nullable|integer|min:0',
             'status' => 'required|in:upcoming,completed,cancelled',
+            'visibility' => ['nullable', Rule::enum(Visibility::class)],
+            'rsvp_audience' => ['nullable', Rule::enum(Visibility::class)],
             'ticket_tiers' => 'array',
             'promos' => 'array',
             'menu_items' => 'array',
         ]);
+
+        $existing = ! empty($validated['id']) ? Event::where('club_id', $club->id)->find($validated['id']) : null;
+        $visibility = Visibility::from($validated['visibility'] ?? $existing?->visibility->value ?? Visibility::Club->value);
+        $rsvpAudience = Visibility::from($validated['rsvp_audience'] ?? $existing?->rsvp_audience->value ?? Visibility::Club->value);
+
+        if (! $rsvpAudience->isNoBroaderThan($visibility)) {
+            throw ValidationException::withMessages([
+                'rsvp_audience' => 'People who cannot see this event cannot RSVP to it. Choose an RSVP audience that is no wider than who can see the event.',
+            ]);
+        }
 
         $addressParts = array_filter([
             $validated['address_line_1'] ?? null,
@@ -221,6 +239,8 @@ class EventAdminController extends Controller
                 'dining_price' => $validated['dining_price'] ?? 0,
                 'booking_cutoff_days' => isset($validated['booking_cutoff_days']) ? (int) $validated['booking_cutoff_days'] : null,
                 'status' => $validated['status'] ?? 'upcoming',
+                'visibility' => $visibility,
+                'rsvp_audience' => $rsvpAudience,
             ]
         );
 

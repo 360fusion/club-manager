@@ -92,7 +92,7 @@ const moveBlock = (index, direction) => {
 };
 
 const submit = () => {
-    form.post(`/clubs/${props.club.slug}/admin/pages`);
+    form.post(`/${props.club.slug}/admin/pages`);
 };
 </script>
 
@@ -104,12 +104,12 @@ const submit = () => {
             <!-- Header -->
             <div class="flex items-center justify-between border-b border-slate-800 pb-6">
                 <div>
-                    <Link :href="`/clubs/${club.slug}/admin/pages`" class="text-xs text-slate-400 hover:text-white">← Back to Page List</Link>
+                    <Link :href="`/${club.slug}/admin/pages`" class="text-xs text-slate-400 hover:text-white">← Back to Page List</Link>
                     <h1 class="text-3xl font-black text-white mt-1">Visual Block Page Builder</h1>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button @click="submit" :disabled="form.processing" class="py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-sky-600 text-white font-bold text-sm shadow-xl shadow-emerald-600/20">
+                    <button @click="submit" :disabled="form.processing" class="py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-blue-600 text-white font-bold text-sm shadow-xl shadow-emerald-600/20">
                         💾 Save & Publish Page
                     </button>
                 </div>
@@ -137,7 +137,7 @@ const submit = () => {
                         Set as Homepage
                     </label>
                     <label class="flex items-center gap-2 text-xs font-semibold text-slate-300">
-                        <input type="checkbox" v-model="form.show_in_navigation" class="w-4 h-4 accent-sky-500" />
+                        <input type="checkbox" v-model="form.show_in_navigation" class="w-4 h-4 accent-blue-500" />
                         Show in Header Nav
                     </label>
                 </div>
@@ -147,10 +147,10 @@ const submit = () => {
             <div class="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
                 <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Add Content Section Block:</h2>
                 <div class="flex flex-wrap gap-2">
-                    <button @click="addBlock('hero')" class="py-2 px-3 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs font-bold">
+                    <button @click="addBlock('hero')" class="py-2 px-3 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold">
                         ➕ Hero Banner Block
                     </button>
-                    <button @click="addBlock('rich_text')" class="py-2 px-3 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-bold">
+                    <button @click="addBlock('rich_text')" class="py-2 px-3 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold">
                         ➕ Rich Text Block
                     </button>
                     <button @click="addBlock('news_feed')" class="py-2 px-3 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">
@@ -162,7 +162,7 @@ const submit = () => {
                     <button @click="addBlock('events_calendar')" class="py-2 px-3 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold">
                         ➕ Dynamic Events Block
                     </button>
-                    <button @click="addBlock('pricing_cards')" class="py-2 px-3 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 text-xs font-bold">
+                    <button @click="addBlock('pricing_cards')" class="py-2 px-3 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold">
                         ➕ Membership Pricing Cards Block
                     </button>
                 </div>
@@ -173,10 +173,10 @@ const submit = () => {
                 <div 
                     v-for="(block, index) in form.blocks" 
                     :key="index" 
-                    class="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 relative"
+                    class="p-6 rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 space-y-4 relative"
                 >
                     <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <span class="text-xs font-bold uppercase tracking-wider text-sky-400">
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-400">
                             Block #{{ index + 1 }}: {{ block.type.replace('_', ' ') }}
                         </span>
 
@@ -214,7 +214,7 @@ const submit = () => {
 
                     <div v-else-if="block.type === 'pricing_cards'" class="space-y-3 text-sm">
                         <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
-                        <p class="text-xs text-purple-400">⚡ Automatically pulls active Membership Plans & Pricing from your club's database.</p>
+                        <p class="text-xs text-blue-400">⚡ Automatically pulls active Membership Plans & Pricing from your club's database.</p>
                     </div>
                 </div>
             </div>

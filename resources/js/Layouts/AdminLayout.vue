@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
+import ThemeToggle from '@/Components/ThemeToggle.vue';
 
 const showNavMediaModal = ref(false);
 
@@ -81,12 +82,12 @@ const currentActiveTab = computed(() => {
 <template>
   <Head :title="`${title} - ClubAdmin`" />
 
-  <div class="min-h-screen bg-[#f1f5f9] text-slate-800 font-sans flex flex-col md:flex-row">
+  <div class="min-h-screen bg-[#f1f5f9] text-slate-800 font-sans flex flex-col md:flex-row dark:bg-slate-950 dark:text-slate-200">
     
     <!-- Mobile Sidebar Toggle Header -->
     <div class="md:hidden bg-[#1e293b] text-white p-4 flex items-center justify-between border-b border-slate-700">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-black text-white text-xs shadow-md">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-xs shadow-md">
           CA
         </div>
         <span class="font-extrabold tracking-wider text-base uppercase">CLUBADMIN</span>
@@ -113,13 +114,13 @@ const currentActiveTab = computed(() => {
             class="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 transition-all group"
           >
             <div class="flex items-center gap-3 overflow-hidden">
-              <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-sky-400 text-white font-black flex items-center justify-center text-xs shadow-md uppercase flex-shrink-0">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-500 to-blue-400 text-white font-black flex items-center justify-center text-xs shadow-md uppercase flex-shrink-0">
                 {{ clubName.substring(0, 2) }}
               </div>
               <div class="text-left overflow-hidden">
-                <div class="text-xs font-bold text-white truncate group-hover:text-indigo-300 transition-colors">{{ clubName }}</div>
+                <div class="text-xs font-bold text-white truncate group-hover:text-blue-300 transition-colors">{{ clubName }}</div>
                 <div class="flex items-center gap-1.5 mt-0.5">
-                  <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">
                     {{ currentClubRole }}
                   </span>
                 </div>
@@ -149,11 +150,11 @@ const currentActiveTab = computed(() => {
                 @click="switchWorkspace(c)"
                 :class="[
                   'w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all text-xs',
-                  c.slug === clubSlug ? 'bg-indigo-600/20 border border-indigo-500/40 text-white font-bold' : 'hover:bg-slate-800 text-slate-300'
+                  c.slug === clubSlug ? 'bg-blue-600/20 border border-blue-500/40 text-white font-bold' : 'hover:bg-slate-800 text-slate-300'
                 ]"
               >
                 <div class="flex items-center gap-2.5 overflow-hidden">
-                  <div class="w-6 h-6 rounded-md bg-slate-800 border border-slate-700 font-bold text-[10px] text-indigo-400 flex items-center justify-center uppercase">
+                  <div class="w-6 h-6 rounded-md bg-slate-800 border border-slate-700 font-bold text-[10px] text-blue-400 flex items-center justify-center uppercase">
                     {{ c.name.substring(0, 2) }}
                   </div>
                   <div class="truncate">
@@ -161,12 +162,12 @@ const currentActiveTab = computed(() => {
                     <div class="text-[10px] text-slate-400 capitalize">{{ c.role }}</div>
                   </div>
                 </div>
-                <span v-if="c.slug === clubSlug" class="text-indigo-400 text-xs">✓</span>
+                <span v-if="c.slug === clubSlug" class="text-blue-400 text-xs">✓</span>
               </button>
             </div>
 
             <div class="pt-2 border-t border-slate-800 space-y-1">
-              <Link :href="route('admin.clubs.index')" class="block w-full text-center py-2 px-3 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-300 rounded-xl transition-all">
+              <Link :href="route('admin.clubs.index')" class="block w-full text-center py-2 px-3 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-blue-300 rounded-xl transition-all">
                 + View All Joined Clubs
               </Link>
             </div>
@@ -185,7 +186,7 @@ const currentActiveTab = computed(() => {
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
-            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
             <span>Dashboard</span>
@@ -201,7 +202,7 @@ const currentActiveTab = computed(() => {
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
-            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span>Meetings</span>
@@ -217,7 +218,7 @@ const currentActiveTab = computed(() => {
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
-            <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
             </svg>
             <span>Events</span>
@@ -233,7 +234,7 @@ const currentActiveTab = computed(() => {
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
-            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             <span>Members</span>
@@ -265,7 +266,7 @@ const currentActiveTab = computed(() => {
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
-            <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <span>Website Builder</span>
@@ -281,7 +282,7 @@ const currentActiveTab = computed(() => {
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
-            <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
             <span>File Manager</span>
@@ -327,7 +328,7 @@ const currentActiveTab = computed(() => {
                 : 'hover:bg-slate-800 hover:text-white text-slate-300'
             ]"
           >
-            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -336,23 +337,25 @@ const currentActiveTab = computed(() => {
         </nav>
       </div>
 
-      <!-- Footer Quick Action / User Profile -->
+      <div class="p-3 border-t border-slate-800">
+        <ThemeToggle tone="onDark" />
+      </div>
     </aside>
 
     <!-- Main Right Content Area -->
     <main class="flex-1 overflow-y-auto flex flex-col min-w-0">
       
       <!-- Top Title Bar -->
-      <header class="bg-white border-b border-slate-200 px-6 md:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+      <header class="bg-white border-b border-slate-200 px-6 md:px-10 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight">{{ title }}</h1>
-          <p class="text-xs text-slate-500 font-medium mt-0.5">Managing {{ clubName }}</p>
+          <h1 class="text-2xl font-black text-slate-900 tracking-tight dark:text-white">{{ title }}</h1>
+          <p class="text-xs text-slate-500 font-medium mt-0.5 dark:text-slate-400">Managing {{ clubName }}</p>
         </div>
 
         <!-- Quick Actions & User Profile Dropdown -->
         <div class="flex items-center gap-3">
-          <Link :href="route('member.dashboard', clubSlug)" class="hidden sm:flex px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold rounded-xl transition-all items-center gap-1.5 shadow-sm">
-            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <Link :href="route('member.dashboard', clubSlug)" class="hidden sm:flex px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-bold rounded-xl transition-all items-center gap-1.5 shadow-sm dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 dark:border-emerald-800/60 dark:text-emerald-300">
+            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
             <span>Switch to Member Portal</span>
@@ -365,16 +368,16 @@ const currentActiveTab = computed(() => {
 
             <button 
               @click="userMenuOpen = !userMenuOpen"
-              class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 border border-slate-200 transition-all group focus:outline-none"
+              class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 border border-slate-200 transition-all group focus:outline-none dark:hover:bg-slate-800 dark:border-slate-700"
             >
-              <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-600 shadow-sm bg-gradient-to-tr from-indigo-600 to-sky-500 text-white font-black text-xs flex items-center justify-center">
+              <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-blue-600 shadow-sm bg-gradient-to-tr from-blue-600 to-blue-500 text-white font-black text-xs flex items-center justify-center">
                 <img v-if="page.props.auth?.user?.avatar_url" :src="page.props.auth.user.avatar_url" class="w-full h-full object-cover" />
                 <span v-else>{{ page.props.auth?.user?.name ? page.props.auth.user.name.substring(0, 2).toUpperCase() : 'ME' }}</span>
               </div>
-              <span class="text-xs font-bold text-slate-700 group-hover:text-indigo-600 hidden sm:inline-block max-w-[120px] truncate">
+              <span class="text-xs font-bold text-slate-700 group-hover:text-blue-600 hidden sm:inline-block max-w-[120px] truncate dark:text-slate-200 dark:group-hover:text-blue-300">
                 {{ page.props.auth?.user?.name || 'Account' }}
               </span>
-              <svg class="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-transform" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-transform dark:group-hover:text-slate-300" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -382,14 +385,14 @@ const currentActiveTab = computed(() => {
             <!-- User Menu Dropdown -->
             <div 
               v-if="userMenuOpen" 
-              class="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-2 space-y-1 text-slate-700 animate-in fade-in slide-in-from-top-2"
+              class="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-2 space-y-1 text-slate-700 animate-in fade-in slide-in-from-top-2 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
             >
               <!-- Header User Info -->
-              <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <div class="text-xs font-black text-slate-900 truncate">{{ page.props.auth?.user?.name || 'Administrator' }}</div>
-                <div class="text-[11px] text-slate-500 truncate">{{ page.props.auth?.user?.email || 'admin@oxford.edu' }}</div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 dark:bg-slate-800/60 dark:border-slate-800">
+                <div class="text-xs font-black text-slate-900 truncate dark:text-white">{{ page.props.auth?.user?.name || 'Administrator' }}</div>
+                <div class="text-[11px] text-slate-500 truncate dark:text-slate-400">{{ page.props.auth?.user?.email || 'admin@oxford.edu' }}</div>
                 <div class="mt-2 flex items-center gap-1.5">
-                  <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-indigo-100 text-indigo-800 border border-indigo-200">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60">
                     {{ currentClubRole }}
                   </span>
                 </div>
@@ -402,11 +405,22 @@ const currentActiveTab = computed(() => {
                 </div>
 
                 <Link 
+                  :href="route('members.home')" 
+                  @click="userMenuOpen = false"
+                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                >
+                  <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <span>Home</span>
+                </Link>
+
+                <Link 
                   :href="route('profile.edit')" 
                   @click="userMenuOpen = false"
-                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
+                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                 >
-                  <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <span>Global Account & Photo</span>
@@ -415,7 +429,7 @@ const currentActiveTab = computed(() => {
                 <Link 
                   :href="route('admin.profile.two-factor')" 
                   @click="userMenuOpen = false"
-                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
+                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                 >
                   <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -425,7 +439,7 @@ const currentActiveTab = computed(() => {
               </div>
 
               <!-- Active Club Links -->
-              <div class="py-1 border-t border-slate-100 space-y-1">
+              <div class="py-1 border-t border-slate-100 space-y-1 dark:border-slate-800">
                 <div class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                   Active Club Context
                 </div>
@@ -433,7 +447,7 @@ const currentActiveTab = computed(() => {
                 <Link 
                   :href="route('member.profile', { slug: clubSlug })" 
                   @click="userMenuOpen = false"
-                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
+                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                 >
                   <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -444,9 +458,9 @@ const currentActiveTab = computed(() => {
                 <Link 
                   :href="route('admin.settings.show', { clubSlug })" 
                   @click="userMenuOpen = false"
-                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all"
+                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                 >
-                  <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   </svg>
                   <span>Club Settings</span>
@@ -455,9 +469,9 @@ const currentActiveTab = computed(() => {
                 <Link 
                   :href="route('member.dashboard', clubSlug)" 
                   @click="userMenuOpen = false"
-                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all"
+                  class="flex items-center gap-2.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all dark:text-emerald-300 dark:hover:bg-slate-800"
                 >
-                  <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>
                   <span>Switch to Member Portal</span>
@@ -465,9 +479,9 @@ const currentActiveTab = computed(() => {
               </div>
 
               <!-- Logout -->
-              <div class="pt-1 border-t border-slate-100">
+              <div class="pt-1 border-t border-slate-100 dark:border-slate-800">
                 <form method="POST" action="/logout" class="block">
-                  <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left">
+                  <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left dark:text-rose-400 dark:hover:bg-slate-800">
                     <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>

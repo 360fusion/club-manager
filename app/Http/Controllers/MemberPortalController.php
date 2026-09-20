@@ -26,7 +26,7 @@ class MemberPortalController extends Controller
     /**
      * Display member portal dashboard.
      */
-    public function show(string $slug): Response
+    public function show(string $slug): Response|RedirectResponse
     {
         $user = Auth::user();
         $club = Club::where('slug', $slug)
@@ -36,6 +36,11 @@ class MemberPortalController extends Controller
         // Get user's membership pivot status
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
         $isPending = $memberPivot && $memberPivot->status === 'pending';
+
+        // The club root is the member area. Everyone else sees the public website.
+        if ($memberPivot === null && ! $user?->is_super_admin) {
+            return redirect()->route('public.site', ['clubSlug' => $club->slug]);
+        }
 
         // Attendance stats
         $userRsvps = DB::table('event_user')
@@ -84,6 +89,7 @@ class MemberPortalController extends Controller
 
         // Upcoming Events
         $events = Event::where('club_id', $club->id)
+            ->visibleTo($user)
             ->with(['menuItems', 'ticketTiers'])
             ->orderBy('starts_at', 'asc')
             ->get()
@@ -225,6 +231,7 @@ class MemberPortalController extends Controller
             });
 
         $events = Event::where('club_id', $club->id)
+            ->visibleTo($user)
             ->with(['menuItems', 'ticketTiers'])
             ->orderBy('starts_at', 'asc')
             ->get()
@@ -419,6 +426,8 @@ class MemberPortalController extends Controller
         $club = Club::where('slug', $slug)->firstOrFail();
         $event = Event::where('club_id', $club->id)->findOrFail($eventId);
 
+        abort_unless($event->canBeRsvpedBy($user), 403, 'This event is not open to your account.');
+
         if ($event->is_booking_closed) {
             return redirect()->back()->withErrors([
                 'booking_closed' => 'Bookings for this event closed '.($event->booking_cutoff_days ? $event->booking_cutoff_days.' days' : '').' before the event date.',
@@ -571,7 +580,7 @@ class MemberPortalController extends Controller
     {
         $user = Auth::user();
         $club = Club::where('slug', $slug)->firstOrFail();
-        $post = Post::where('club_id', $club->id)->published()->findOrFail($id);
+        $post = Post::where('club_id', $club->id)->published()->visibleTo($user)->findOrFail($id);
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 
