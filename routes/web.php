@@ -55,7 +55,10 @@ use Illuminate\Support\Facades\Route;
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'create'])->name('login');
 Route::post('/login', [LoginController::class, 'store']);
-Route::match(['get', 'post'], '/logout', [LoginController::class, 'destroy'])->name('logout');
+// Unnamed: Fortify already registers a route named 'logout'. Two routes sharing a
+// name is fatal to route:cache in production. Layouts post to the /logout URL
+// directly, so this route needs no name of its own.
+Route::match(['get', 'post'], '/logout', [LoginController::class, 'destroy']);
 
 // Public Member Registration Routes
 Route::get('/register', [RegisterController::class, 'create'])->name('register');
