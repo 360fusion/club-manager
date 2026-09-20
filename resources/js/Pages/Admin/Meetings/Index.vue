@@ -136,52 +136,52 @@ const duplicateMeeting = (id) => {
       <MeetingsTabs :club="club" active-tab="lodge" />
       
       <!-- Top Header & Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">Meetings & Summons Management</h2>
-          <p class="text-xs text-slate-500 mt-1">Generate season schedules using nth-weekday rules, publish summonses, and track passwordless RSVPs.</p>
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Meetings & Summons Management</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Generate season schedules using nth-weekday rules, publish summonses, and track passwordless RSVPs.</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-3">
-          <button @click="showSeasonModal = true" class="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all cursor-pointer">
+          <button @click="showSeasonModal = true" class="px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer">
             ⚡ Generate Season / Masonic Year
           </button>
-          <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5">
+          <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-1.5">
             📜 + Add Meeting
           </Link>
         </div>
       </div>
 
       <!-- Tabs & Search Filter Bar -->
-      <div v-if="meetings.length" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
+      <div v-if="meetings.length" class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
         
         <!-- Tabs Bar -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div class="flex items-center gap-2 overflow-x-auto">
-            <button @click="activeTab = 'upcoming'" :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2', activeTab === 'upcoming' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100']">
+            <button @click="activeTab = 'upcoming'" :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2', activeTab === 'upcoming' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
               <span>📅 Upcoming / Future Meetings</span>
-              <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', activeTab === 'upcoming' ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-700']">
+              <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', activeTab === 'upcoming' ? 'bg-white/20 dark:bg-slate-900/20 text-white' : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300']">
                 {{ upcomingMeetings.length }}
               </span>
             </button>
 
-            <button @click="activeTab = 'past'" :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2', activeTab === 'past' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100']">
+            <button @click="activeTab = 'past'" :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2', activeTab === 'past' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
               <span>🏛️ Past Meetings</span>
-              <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', activeTab === 'past' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700']">
+              <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', activeTab === 'past' ? 'bg-white/20 dark:bg-slate-900/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200']">
                 {{ pastMeetings.length }}
               </span>
             </button>
 
-            <button @click="activeTab = 'all'" :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2', activeTab === 'all' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100']">
+            <button @click="activeTab = 'all'" :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2', activeTab === 'all' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
               <span>All Meetings</span>
-              <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700']">
+              <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', activeTab === 'all' ? 'bg-white/20 dark:bg-slate-900/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200']">
                 {{ meetings.length }}
               </span>
             </button>
           </div>
 
-          <div class="text-xs text-slate-500 font-medium">
-            Showing <strong class="text-slate-900">{{ filteredMeetings.length }}</strong> of {{ meetings.length }} meetings
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Showing <strong class="text-slate-900 dark:text-white">{{ filteredMeetings.length }}</strong> of {{ meetings.length }} meetings
           </div>
         </div>
 
@@ -189,14 +189,14 @@ const duplicateMeeting = (id) => {
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1">
           <!-- Text Search -->
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Search Title / Venue</label>
-            <input type="text" v-model="searchQuery" placeholder="Search..." class="w-full text-xs rounded-xl border-slate-300 focus:ring-indigo-500 p-2 bg-slate-50" />
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Search Title / Venue</label>
+            <input type="text" v-model="searchQuery" placeholder="Search..." class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:ring-blue-500 p-2 bg-slate-50 dark:bg-slate-800/50" />
           </div>
 
           <!-- Year Dropdown -->
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Filter by Year</label>
-            <select v-model="selectedYear" class="w-full text-xs rounded-xl border-slate-300 focus:ring-indigo-500 p-2 bg-slate-50 font-medium">
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Filter by Year</label>
+            <select v-model="selectedYear" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:ring-blue-500 p-2 bg-slate-50 dark:bg-slate-800/50 font-medium">
               <option value="all">All Years</option>
               <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
             </select>
@@ -204,16 +204,16 @@ const duplicateMeeting = (id) => {
 
           <!-- Start Date -->
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">From Date</label>
-            <input type="date" v-model="startDate" class="w-full text-xs rounded-xl border-slate-300 focus:ring-indigo-500 p-2 bg-slate-50" />
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">From Date</label>
+            <input type="date" v-model="startDate" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:ring-blue-500 p-2 bg-slate-50 dark:bg-slate-800/50" />
           </div>
 
           <!-- End Date -->
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">To Date</label>
+            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">To Date</label>
             <div class="flex items-center gap-2">
-              <input type="date" v-model="endDate" class="w-full text-xs rounded-xl border-slate-300 focus:ring-indigo-500 p-2 bg-slate-50" />
-              <button v-if="searchQuery || selectedYear !== 'all' || startDate || endDate" @click="clearFilters" title="Clear Filters" class="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 cursor-pointer flex-shrink-0">
+              <input type="date" v-model="endDate" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:ring-blue-500 p-2 bg-slate-50 dark:bg-slate-800/50" />
+              <button v-if="searchQuery || selectedYear !== 'all' || startDate || endDate" @click="clearFilters" title="Clear Filters" class="px-2.5 py-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 cursor-pointer flex-shrink-0">
                 ✕ Reset
               </button>
             </div>
@@ -224,19 +224,19 @@ const duplicateMeeting = (id) => {
 
       <!-- Meetings Roster Grid -->
       <div v-if="filteredMeetings.length" class="grid grid-cols-1 gap-4">
-        <div v-for="meeting in filteredMeetings" :key="meeting.id" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 hover:border-indigo-200 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div v-for="meeting in filteredMeetings" :key="meeting.id" class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-200 dark:hover:border-blue-800/60 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div class="space-y-2">
-            <h3 class="text-lg font-bold text-slate-900">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">
               {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formatDate(meeting.meeting_date) }} at {{ formatTime(meeting.starts_at) }}
             </h3>
 
             <div class="flex items-center gap-3 text-xs pt-1">
-              <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']" title="Meeting Status" aria-label="Meeting Status">
+              <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']" title="Meeting Status" aria-label="Meeting Status">
                 {{ meeting.status }}
               </span>
-              <span class="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200" title="Members Dining" aria-label="Members Dining">🍽️ {{ meeting.dining_count }} Dining</span>
-              <span class="text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded border border-rose-200" title="Members Apologies" aria-label="Members Apologies">✉️ {{ meeting.apologies_count }} Apologies</span>
-              <span class="text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded border border-purple-200" title="Visiting Brethren" aria-label="Visiting Brethren">🏛️ {{ meeting.visitors_count || 0 }} Visitors</span>
+              <span class="text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60" title="Members Dining" aria-label="Members Dining">🍽️ {{ meeting.dining_count }} Dining</span>
+              <span class="text-rose-700 dark:text-rose-300 font-semibold bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800/60" title="Members Apologies" aria-label="Members Apologies">✉️ {{ meeting.apologies_count }} Apologies</span>
+              <span class="text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/60" title="Visiting Brethren" aria-label="Visiting Brethren">🏛️ {{ meeting.visitors_count || 0 }} Visitors</span>
             </div>
           </div>
 
@@ -250,44 +250,44 @@ const duplicateMeeting = (id) => {
               >
                 <span>💰 Financial Return</span>
               </Link>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
                 Meeting Financial Return & Dining Calculator
                 <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
             </div>
 
             <div class="relative group">
-              <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" title="Edit Summons Details" aria-label="Edit Summons Details" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all flex items-center gap-1">
+              <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" title="Edit Summons Details" aria-label="Edit Summons Details" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1">
                 📜 Edit Summons
               </Link>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
                 Edit Summons Details
                 <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
             </div>
 
             <div class="relative group">
-              <Link :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })" title="Secretary Dashboard" aria-label="Secretary Dashboard" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1">
+              <Link :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })" title="Secretary Dashboard" aria-label="Secretary Dashboard" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1">
                 📊 Secretary Dashboard
               </Link>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
                 Secretary Dashboard
                 <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
             </div>
 
             <div class="relative group">
-              <button @click="duplicateMeeting(meeting.id)" title="Duplicate Meeting" aria-label="Duplicate Meeting" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer">
+              <button @click="duplicateMeeting(meeting.id)" title="Duplicate Meeting" aria-label="Duplicate Meeting" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
                 📋
               </button>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
                 Duplicate Meeting
                 <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
             </div>
 
             <div class="relative group">
-              <button @click="deleteMeeting(meeting.id)" title="Delete Meeting" aria-label="Delete Meeting" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-xl border border-rose-200 transition-all cursor-pointer">
+              <button @click="deleteMeeting(meeting.id)" title="Delete Meeting" aria-label="Delete Meeting" class="px-3 py-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer">
                 🗑️
               </button>
               <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-rose-950 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-rose-900">
@@ -300,25 +300,25 @@ const duplicateMeeting = (id) => {
       </div>
 
       <!-- Empty Filter State -->
-      <div v-else-if="meetings.length" class="bg-white rounded-2xl p-12 text-center shadow-sm border border-slate-200/80 space-y-3">
-        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl mx-auto">🔍</div>
-        <h3 class="text-base font-bold text-slate-900">No Meetings Match Selected Filters</h3>
-        <p class="text-xs text-slate-500 max-w-sm mx-auto">Try switching tabs, clearing search terms, or resetting date filters.</p>
-        <button @click="clearFilters" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 cursor-pointer">
+      <div v-else-if="meetings.length" class="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+        <div class="w-12 h-12 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-xl mx-auto">🔍</div>
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">No Meetings Match Selected Filters</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Try switching tabs, clearing search terms, or resetting date filters.</p>
+        <button @click="clearFilters" class="px-4 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer">
           Reset All Filters
         </button>
       </div>
 
       <!-- Blank Slate State -->
-      <div v-else class="bg-white rounded-2xl p-12 text-center shadow-sm border border-slate-200/80">
-        <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">📜</div>
-        <h3 class="text-lg font-bold text-slate-900">No Meetings Scheduled Yet</h3>
-        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Use the rule-based recurring engine to automatically calculate and generate your annual meeting dates, or create a single meeting summons manually.</p>
+      <div v-else class="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center shadow-sm border border-slate-200/80 dark:border-slate-800/80">
+        <div class="w-16 h-16 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">📜</div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">No Meetings Scheduled Yet</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">Use the rule-based recurring engine to automatically calculate and generate your annual meeting dates, or create a single meeting summons manually.</p>
         <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
+          <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5">
             📜 + Add Meeting
           </Link>
-          <button @click="showSeasonModal = true" class="px-5 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all">
+          <button @click="showSeasonModal = true" class="px-5 py-2.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all">
             ⚡ Generate Season Meetings
           </button>
         </div>
@@ -326,25 +326,25 @@ const duplicateMeeting = (id) => {
 
       <!-- Batch Season Generator Modal -->
       <div v-if="showSeasonModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-6">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <h3 class="text-lg font-bold text-slate-900">Generate Season Meeting Rules</h3>
-              <p class="text-xs text-slate-500">Calculate exact dates using positional weekdays for active months.</p>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white">Generate Season Meeting Rules</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Calculate exact dates using positional weekdays for active months.</p>
             </div>
-            <button @click="showSeasonModal = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+            <button @click="showSeasonModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold">✕</button>
           </div>
 
           <form @submit.prevent="generateSeason" class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Masonic / Season Year</label>
-                <input v-model="seasonForm.year" type="number" min="2025" max="2035" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Masonic / Season Year</label>
+                <input v-model="seasonForm.year" type="number" min="2025" max="2035" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Occurrence</label>
-                <select v-model="seasonForm.occurrence" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs">
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Occurrence</label>
+                <select v-model="seasonForm.occurrence" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs">
                   <option value="1st">1st</option>
                   <option value="2nd">2nd</option>
                   <option value="3rd">3rd</option>
@@ -356,8 +356,8 @@ const duplicateMeeting = (id) => {
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Day of Week</label>
-                <select v-model="seasonForm.day_of_week" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs">
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Day of Week</label>
+                <select v-model="seasonForm.day_of_week" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs">
                   <option value="Monday">Monday</option>
                   <option value="Tuesday">Tuesday</option>
                   <option value="Wednesday">Wednesday</option>
@@ -369,29 +369,29 @@ const duplicateMeeting = (id) => {
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Meeting Start Time</label>
-                <input v-model="seasonForm.starts_at" type="text" placeholder="18:30" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Meeting Start Time</label>
+                <input v-model="seasonForm.starts_at" type="text" placeholder="18:30" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
               </div>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Rehearsal Start Time (Optional)</label>
-              <input v-model="seasonForm.rehearsal_starts_at" type="text" placeholder="17:30" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Rehearsal Start Time (Optional)</label>
+              <input v-model="seasonForm.rehearsal_starts_at" type="text" placeholder="17:30" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Active Meeting Months (Recess Skipped)</label>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-2">Active Meeting Months (Recess Skipped)</label>
               <div class="grid grid-cols-4 gap-2 text-xs">
-                <label v-for="(mName, idx) in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']" :key="idx" class="flex items-center gap-1.5 p-2 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer">
-                  <input type="checkbox" :value="idx + 1" v-model="seasonForm.active_months" class="rounded text-indigo-600" />
+                <label v-for="(mName, idx) in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']" :key="idx" class="flex items-center gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer">
+                  <input type="checkbox" :value="idx + 1" v-model="seasonForm.active_months" class="rounded text-blue-600 dark:text-blue-400" />
                   <span>{{ mName }}</span>
                 </label>
               </div>
             </div>
 
-            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-              <button type="button" @click="showSeasonModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancel</button>
-              <button type="submit" :disabled="seasonForm.processing" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md">
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <button type="button" @click="showSeasonModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">Cancel</button>
+              <button type="submit" :disabled="seasonForm.processing" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md">
                 ⚡ Calculate & Create Dates
               </button>
             </div>

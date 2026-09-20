@@ -62,13 +62,13 @@ enum LodgeOffice: string
     public function badgeClass(): string
     {
         return match ($this) {
-            self::WorshipfulMaster, self::IPM => 'bg-amber-100 text-amber-900 border-amber-300 font-extrabold',
-            self::SeniorWarden, self::JuniorWarden => 'bg-indigo-100 text-indigo-900 border-indigo-200 font-bold',
-            self::Secretary, self::Treasurer => 'bg-purple-100 text-purple-900 border-purple-200 font-bold',
-            self::Almoner, self::CharitySteward => 'bg-emerald-100 text-emerald-900 border-emerald-200 font-bold',
-            self::CommitteeMember => 'bg-teal-100 text-teal-900 border-teal-200 font-bold',
-            self::Member => 'bg-slate-100 text-slate-600 border-slate-200',
-            default => 'bg-blue-50 text-blue-800 border-blue-200',
+            self::WorshipfulMaster, self::IPM => 'bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 font-extrabold',
+            self::SeniorWarden, self::JuniorWarden => 'bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 border-blue-200 dark:border-blue-800/60 font-bold',
+            self::Secretary, self::Treasurer => 'bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 border-blue-200 dark:border-blue-800/60 font-bold',
+            self::Almoner, self::CharitySteward => 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800/60 font-bold',
+            self::CommitteeMember => 'bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 border-blue-200 dark:border-blue-800/60 font-bold',
+            self::Member => 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800',
+            default => 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60',
         };
     }
 

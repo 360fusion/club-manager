@@ -69,29 +69,29 @@ const deleteContact = () => {
       <!-- Top Breadcrumb & Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1" aria-label="Breadcrumb">
+          <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1" aria-label="Breadcrumb">
             <Link
               :href="route('admin.accounting.index', club.slug)"
-              class="hover:text-slate-900 transition-colors"
+              class="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               Accounting ERP
             </Link>
             <span>/</span>
             <Link
               :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })"
-              class="hover:text-slate-900 transition-colors"
+              class="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               Contacts Directory
             </Link>
             <span>/</span>
-            <span class="text-slate-900 font-bold" aria-current="page">
+            <span class="text-slate-900 dark:text-white font-bold" aria-current="page">
               {{ isEditing ? 'Edit Contact' : 'New Contact' }}
             </span>
           </nav>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight">
+          <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             {{ isEditing ? 'Edit Contact Details' : 'Add New Directory Contact' }}
           </h1>
-          <p class="text-sm text-slate-600 mt-1">
+          <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
             <span v-if="isMember">Update billing address, tax info, and notes for this club member.</span>
             <span v-else-if="isEditing">Update address, tax information, role, and notes for this contact.</span>
             <span v-else>Create a new contractor, client, or sponsor in your accounting directory.</span>
@@ -101,7 +101,7 @@ const deleteContact = () => {
         <div class="flex items-center gap-3">
           <Link
             :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })"
-            class="inline-flex items-center gap-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors"
+            class="inline-flex items-center gap-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-colors"
           >
             ← Back to Directory
           </Link>
@@ -109,7 +109,7 @@ const deleteContact = () => {
             v-if="isEditing && !isMember"
             type="button"
             @click="deleteContact"
-            class="inline-flex items-center gap-1 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+            class="inline-flex items-center gap-1 px-4 py-2 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-700 dark:text-red-300 font-bold text-xs rounded-xl transition-colors cursor-pointer"
           >
             🗑️ Delete
           </button>
@@ -126,53 +126,53 @@ const deleteContact = () => {
           <div :class="[
             'rounded-2xl border p-4 flex flex-col gap-1',
             memberSummary.amount_owed > 0
-              ? 'bg-red-50 border-red-200'
-              : 'bg-slate-50 border-slate-200'
+              ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/60'
+              : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'
           ]">
             <span class="text-[10px] font-extrabold uppercase tracking-wider" :class="memberSummary.amount_owed > 0 ? 'text-red-500' : 'text-slate-400'">Amount Owed</span>
-            <span class="text-xl font-black" :class="memberSummary.amount_owed > 0 ? 'text-red-700' : 'text-slate-400'">{{ memberSummary.amount_owed_formatted }}</span>
-            <span class="text-[10px] text-slate-500 font-medium">{{ memberSummary.amount_owed > 0 ? 'Outstanding subs / invoices' : 'All paid up ✓' }}</span>
+            <span class="text-xl font-black" :class="memberSummary.amount_owed > 0 ? 'text-red-700 dark:text-red-300' : 'text-slate-400'">{{ memberSummary.amount_owed_formatted }}</span>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{{ memberSummary.amount_owed > 0 ? 'Outstanding subs / invoices' : 'All paid up ✓' }}</span>
           </div>
 
           <!-- Credit Balance -->
           <div :class="[
             'rounded-2xl border p-4 flex flex-col gap-1',
             memberSummary.credit_balance > 0
-              ? 'bg-sky-50 border-sky-200'
-              : 'bg-slate-50 border-slate-200'
+              ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/60'
+              : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'
           ]">
-            <span class="text-[10px] font-extrabold uppercase tracking-wider" :class="memberSummary.credit_balance > 0 ? 'text-sky-500' : 'text-slate-400'">Credit / Advance</span>
-            <span class="text-xl font-black" :class="memberSummary.credit_balance > 0 ? 'text-sky-700' : 'text-slate-400'">{{ memberSummary.credit_balance_formatted }}</span>
-            <span class="text-[10px] text-slate-500 font-medium">Paid in advance / refunds</span>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider" :class="memberSummary.credit_balance > 0 ? 'text-blue-500' : 'text-slate-400'">Credit / Advance</span>
+            <span class="text-xl font-black" :class="memberSummary.credit_balance > 0 ? 'text-blue-700 dark:text-blue-300' : 'text-slate-400'">{{ memberSummary.credit_balance_formatted }}</span>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Paid in advance / refunds</span>
           </div>
 
           <!-- Total Paid -->
-          <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex flex-col gap-1">
+          <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-4 flex flex-col gap-1">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-500">Total Paid</span>
-            <span class="text-xl font-black text-emerald-700">{{ memberSummary.total_paid_formatted }}</span>
-            <span class="text-[10px] text-slate-500 font-medium">Lifetime contributions</span>
+            <span class="text-xl font-black text-emerald-700 dark:text-emerald-300">{{ memberSummary.total_paid_formatted }}</span>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Lifetime contributions</span>
           </div>
 
           <!-- Last Payment -->
-          <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex flex-col gap-1">
-            <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-500">Last Payment</span>
-            <span class="text-base font-black text-indigo-700">{{ memberSummary.last_payment_amount ?? '—' }}</span>
-            <span class="text-[10px] text-slate-500 font-medium">{{ memberSummary.last_payment_date ?? 'No payments yet' }}</span>
+          <div class="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-2xl p-4 flex flex-col gap-1">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-500">Last Payment</span>
+            <span class="text-base font-black text-blue-700 dark:text-blue-300">{{ memberSummary.last_payment_amount ?? '—' }}</span>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{{ memberSummary.last_payment_date ?? 'No payments yet' }}</span>
           </div>
         </div>
 
         <!-- Membership Plan + Member Since Row -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <!-- Active Plan -->
-          <div class="bg-white border border-slate-200 rounded-2xl p-4 flex items-start gap-3">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-start gap-3">
             <span class="text-2xl">🎫</span>
             <div>
               <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-0.5">Membership Plan</p>
-              <p v-if="memberSummary.membership_plan" class="text-sm font-extrabold text-slate-900">
+              <p v-if="memberSummary.membership_plan" class="text-sm font-extrabold text-slate-900 dark:text-white">
                 {{ memberSummary.membership_plan }}
               </p>
               <p v-else class="text-sm font-bold text-slate-400">No active plan</p>
-              <p v-if="memberSummary.membership_plan" class="text-[11px] text-slate-500 mt-0.5">
+              <p v-if="memberSummary.membership_plan" class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                 {{ memberSummary.membership_price }} / {{ memberSummary.membership_period }}
                 <span v-if="memberSummary.membership_renews"> · Renews {{ memberSummary.membership_renews }}</span>
               </p>
@@ -180,24 +180,24 @@ const deleteContact = () => {
           </div>
 
           <!-- Member Since -->
-          <div class="bg-white border border-slate-200 rounded-2xl p-4 flex items-start gap-3">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-start gap-3">
             <span class="text-2xl">📅</span>
             <div>
               <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-0.5">Member Since</p>
-              <p class="text-sm font-extrabold text-slate-900">{{ memberSummary.member_since ?? 'Unknown' }}</p>
-              <p class="text-[11px] text-slate-500 mt-0.5">{{ memberSummary.invoice_count }} invoice(s) on record</p>
+              <p class="text-sm font-extrabold text-slate-900 dark:text-white">{{ memberSummary.member_since ?? 'Unknown' }}</p>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ memberSummary.invoice_count }} invoice(s) on record</p>
             </div>
           </div>
         </div>
 
         <!-- Unpaid Invoices breakdown -->
-        <div v-if="memberSummary.unpaid_invoices?.length" class="bg-red-50 border border-red-200 rounded-2xl overflow-hidden">
-          <div class="px-4 py-3 border-b border-red-200 flex items-center gap-2">
-            <span class="text-xs font-extrabold text-red-700 uppercase tracking-wider">⚠️ Outstanding Invoices</span>
+        <div v-if="memberSummary.unpaid_invoices?.length" class="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 rounded-2xl overflow-hidden">
+          <div class="px-4 py-3 border-b border-red-200 dark:border-red-800/60 flex items-center gap-2">
+            <span class="text-xs font-extrabold text-red-700 dark:text-red-300 uppercase tracking-wider">⚠️ Outstanding Invoices</span>
           </div>
           <table class="w-full text-left">
             <thead>
-              <tr class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider border-b border-red-100">
+              <tr class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider border-b border-red-100 dark:border-red-900/40">
                 <th class="px-4 py-2">Invoice</th>
                 <th class="px-4 py-2">Description</th>
                 <th class="px-4 py-2">Issued</th>
@@ -205,11 +205,11 @@ const deleteContact = () => {
               </tr>
             </thead>
             <tbody class="divide-y divide-red-100">
-              <tr v-for="inv in memberSummary.unpaid_invoices" :key="inv.id" class="text-xs font-semibold text-slate-700">
-                <td class="px-4 py-2.5 font-mono text-[11px] text-slate-500">{{ inv.invoice_number }}</td>
+              <tr v-for="inv in memberSummary.unpaid_invoices" :key="inv.id" class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                <td class="px-4 py-2.5 font-mono text-[11px] text-slate-500 dark:text-slate-400">{{ inv.invoice_number }}</td>
                 <td class="px-4 py-2.5">{{ inv.title }}</td>
-                <td class="px-4 py-2.5 text-slate-500">{{ inv.created_at }}</td>
-                <td class="px-4 py-2.5 text-right font-extrabold text-red-700">{{ inv.amount }}</td>
+                <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400">{{ inv.created_at }}</td>
+                <td class="px-4 py-2.5 text-right font-extrabold text-red-700 dark:text-red-300">{{ inv.amount }}</td>
               </tr>
             </tbody>
           </table>
@@ -219,19 +219,19 @@ const deleteContact = () => {
       <!-- ─────────────────────────────────────────────────────────────── -->
 
       <!-- Main Contact Form Card -->
-      <form @submit.prevent="submitForm" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <form @submit.prevent="submitForm" class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div class="p-6 sm:p-8 space-y-6">
 
           <!-- Section 1: Name & Classification -->
           <div class="space-y-4">
-            <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
+            <h2 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
               1. Name & Classification
             </h2>
 
             <!-- Row 1: First + Middle + Last -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
               <div>
-                <label for="contact-first-name" class="block text-xs font-bold text-slate-800 mb-1">
+                <label for="contact-first-name" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
                   First Name <span class="text-red-500">*</span>
                 </label>
                 <input
@@ -239,15 +239,15 @@ const deleteContact = () => {
                   v-model="form.first_name"
                   type="text"
                   placeholder="e.g. Robert"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                   autocomplete="given-name"
                 />
-                <p v-if="form.errors.first_name" class="text-xs text-red-600 font-semibold mt-1">{{ form.errors.first_name }}</p>
+                <p v-if="form.errors.first_name" class="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">{{ form.errors.first_name }}</p>
               </div>
 
               <div>
-                <label for="contact-middle-names" class="block text-xs font-bold text-slate-800 mb-1">
+                <label for="contact-middle-names" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
                   Middle Name(s)
                 </label>
                 <input
@@ -255,14 +255,14 @@ const deleteContact = () => {
                   v-model="form.middle_names"
                   type="text"
                   placeholder="e.g. James"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   autocomplete="additional-name"
                 />
-                <p v-if="form.errors.middle_names" class="text-xs text-red-600 font-semibold mt-1">{{ form.errors.middle_names }}</p>
+                <p v-if="form.errors.middle_names" class="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">{{ form.errors.middle_names }}</p>
               </div>
 
               <div>
-                <label for="contact-last-name" class="block text-xs font-bold text-slate-800 mb-1">
+                <label for="contact-last-name" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
                   Surname
                 </label>
                 <input
@@ -270,16 +270,16 @@ const deleteContact = () => {
                   v-model="form.last_name"
                   type="text"
                   placeholder="e.g. Sterling"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   autocomplete="family-name"
                 />
-                <p v-if="form.errors.last_name" class="text-xs text-red-600 font-semibold mt-1">{{ form.errors.last_name }}</p>
+                <p v-if="form.errors.last_name" class="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">{{ form.errors.last_name }}</p>
               </div>
             </div>
 
             <!-- Row 2: Preferred name -->
             <div class="sm:w-1/2">
-              <label for="contact-preferred-name" class="block text-xs font-bold text-slate-800 mb-1">
+              <label for="contact-preferred-name" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
                 Preferred / Display Name
                 <span class="ml-1 text-slate-400 font-medium">(nickname or how they like to be addressed)</span>
               </label>
@@ -288,26 +288,26 @@ const deleteContact = () => {
                 v-model="form.preferred_name"
                 type="text"
                 placeholder="e.g. Bob"
-                class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 autocomplete="nickname"
               />
-              <p v-if="form.errors.preferred_name" class="text-xs text-red-600 font-semibold mt-1">{{ form.errors.preferred_name }}</p>
+              <p v-if="form.errors.preferred_name" class="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">{{ form.errors.preferred_name }}</p>
             </div>
 
             <!-- Role / Category Select -->
             <div>
-              <label for="contact-role" class="block text-xs font-bold text-slate-800 mb-1">
+              <label for="contact-role" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
                 Relationship / Role Category <span class="text-red-500">*</span>
               </label>
               <!-- Locked badge for members -->
-              <div v-if="isMember" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-extrabold text-emerald-800">
+              <div v-if="isMember" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-extrabold text-emerald-800 dark:text-emerald-200">
                 💳 Club Member
               </div>
               <select
                 v-else
                 id="contact-role"
                 v-model="form.role"
-                class="w-full sm:w-1/2 px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                class="w-full sm:w-1/2 px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               >
                 <option value="Contractor / Coach">Contractor / Coach</option>
@@ -316,41 +316,41 @@ const deleteContact = () => {
                 <option value="Client / Customer">Client / Customer</option>
                 <option value="Club Member">Club Member</option>
               </select>
-              <p v-if="form.errors.role" class="text-xs text-red-600 font-semibold mt-1">{{ form.errors.role }}</p>
+              <p v-if="form.errors.role" class="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">{{ form.errors.role }}</p>
             </div>
           </div>
 
           <!-- Section 2: Contact Methods & Tax Info -->
-          <div class="space-y-4 pt-4 border-t border-slate-100">
-            <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
+          <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <h2 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
               2. Contact Details
             </h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label for="contact-email" class="block text-xs font-bold text-slate-800 mb-1">Email Address</label>
+                <label for="contact-email" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Email Address</label>
                 <input
                   id="contact-email"
                   v-model="form.email"
                   type="email"
                   placeholder="robert@example.co.uk"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   autocomplete="email"
                 />
-                <p v-if="form.errors.email" class="text-xs text-red-600 font-semibold mt-1">{{ form.errors.email }}</p>
+                <p v-if="form.errors.email" class="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">{{ form.errors.email }}</p>
               </div>
 
               <div>
-                <label for="contact-phone" class="block text-xs font-bold text-slate-800 mb-1">Phone Number</label>
+                <label for="contact-phone" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Phone Number</label>
                 <input
                   id="contact-phone"
                   v-model="form.phone"
                   type="text"
                   placeholder="+44 7700 900123"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   autocomplete="tel"
                 />
-                <p v-if="form.errors.phone" class="text-xs text-red-600 font-semibold mt-1">{{ form.errors.phone }}</p>
+                <p v-if="form.errors.phone" class="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">{{ form.errors.phone }}</p>
               </div>
 
 
@@ -358,32 +358,32 @@ const deleteContact = () => {
           </div>
 
           <!-- Section 3: Billing Address -->
-          <div class="space-y-4 pt-4 border-t border-slate-100">
-            <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
+          <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <h2 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
               3. Billing Address
             </h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label for="address-line-1" class="block text-xs font-bold text-slate-800 mb-1">Address Line 1</label>
+                <label for="address-line-1" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Address Line 1</label>
                 <input
                   id="address-line-1"
                   v-model="form.address_line_1"
                   type="text"
                   placeholder="14 Boathouse Lane"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   autocomplete="address-line1"
                 />
               </div>
 
               <div>
-                <label for="address-line-2" class="block text-xs font-bold text-slate-800 mb-1">Address Line 2</label>
+                <label for="address-line-2" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Address Line 2</label>
                 <input
                   id="address-line-2"
                   v-model="form.address_line_2"
                   type="text"
                   placeholder="Abingdon Road"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   autocomplete="address-line2"
                 />
               </div>
@@ -391,37 +391,37 @@ const deleteContact = () => {
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label for="city" class="block text-xs font-bold text-slate-800 mb-1">City / Town</label>
+                <label for="city" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">City / Town</label>
                 <input
                   id="city"
                   v-model="form.city"
                   type="text"
                   placeholder="Oxford"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   autocomplete="address-level2"
                 />
               </div>
 
               <div>
-                <label for="postcode" class="block text-xs font-bold text-slate-800 mb-1">Postcode / Zip</label>
+                <label for="postcode" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Postcode / Zip</label>
                 <input
                   id="postcode"
                   v-model="form.postcode"
                   type="text"
                   placeholder="OX2 0ES"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   autocomplete="postal-code"
                 />
               </div>
 
               <div>
-                <label for="country" class="block text-xs font-bold text-slate-800 mb-1">Country</label>
+                <label for="country" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Country</label>
                 <input
                   id="country"
                   v-model="form.country"
                   type="text"
                   placeholder="United Kingdom"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   autocomplete="country-name"
                 />
               </div>
@@ -429,29 +429,29 @@ const deleteContact = () => {
           </div>
 
           <!-- Section 4: Internal Notes -->
-          <div class="space-y-4 pt-4 border-t border-slate-100">
-            <h2 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
+          <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <h2 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
               4. Internal Bookkeeping Notes & Payment Terms
             </h2>
 
             <div>
-              <label for="contact-notes" class="block text-xs font-bold text-slate-800 mb-1">Notes & Terms</label>
+              <label for="contact-notes" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Notes & Terms</label>
               <textarea
                 id="contact-notes"
                 v-model="form.notes"
                 rows="3"
                 placeholder="e.g. Membership since 2021. Direct debit set up. Payment terms Net 30."
-                class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               ></textarea>
             </div>
           </div>
         </div>
 
         <!-- Footer Actions Bar -->
-        <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-between">
+        <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <Link
             :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })"
-            class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl shadow-sm transition-colors"
+            class="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl shadow-sm transition-colors"
           >
             Cancel & Return
           </Link>
@@ -459,7 +459,7 @@ const deleteContact = () => {
           <button
             type="submit"
             :disabled="form.processing"
-            class="px-6 py-2.5 bg-[#007bce] hover:bg-sky-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-colors cursor-pointer flex items-center gap-2"
+            class="px-6 py-2.5 bg-[#007bce] hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-colors cursor-pointer flex items-center gap-2"
           >
             <span v-if="form.processing" class="animate-spin">⌛</span>
             <span>{{ isEditing ? 'Update Contact Details' : 'Save Contact to Directory' }}</span>

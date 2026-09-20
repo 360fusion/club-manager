@@ -28,7 +28,7 @@ const editor = useEditor({
       openOnClick: false,
       autolink: true,
       HTMLAttributes: {
-        class: 'text-indigo-600 underline font-bold hover:text-indigo-800 transition-colors',
+        class: 'text-blue-600 dark:text-blue-400 underline font-bold hover:text-blue-800 dark:hover:text-blue-200 transition-colors',
         target: '_blank',
         rel: 'noopener noreferrer',
       },
@@ -36,7 +36,7 @@ const editor = useEditor({
   ],
   editorProps: {
     attributes: {
-      class: 'focus:outline-none min-h-[180px] p-4 text-slate-800 text-xs leading-relaxed font-sans bg-slate-50 rounded-b-xl border border-t-0 border-slate-300',
+      class: 'focus:outline-none min-h-[180px] p-4 text-slate-800 dark:text-slate-100 text-xs leading-relaxed font-sans bg-slate-50 dark:bg-slate-800/50 rounded-b-xl border border-t-0 border-slate-300 dark:border-slate-700',
     },
   },
   onUpdate: () => {
@@ -88,15 +88,15 @@ const removeLink = () => {
 </script>
 
 <template>
-  <div class="border border-slate-300 rounded-xl overflow-hidden bg-white shadow-sm relative">
+  <div class="border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-sm relative">
     <!-- Formatting Toolbar -->
-    <div v-if="editor" class="flex flex-wrap items-center gap-1 p-2 bg-slate-100 border-b border-slate-300 text-xs font-semibold text-slate-700">
+    <div v-if="editor" class="flex flex-wrap items-center gap-1 p-2 bg-slate-100 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200">
       
       <!-- Bold -->
       <button 
         type="button"
         @click="editor.chain().focus().toggleBold().run()"
-        :class="['px-2.5 py-1 rounded hover:bg-slate-200 transition-all font-bold cursor-pointer', editor.isActive('bold') ? 'bg-slate-300 text-slate-900' : '']"
+        :class="['px-2.5 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all font-bold cursor-pointer', editor.isActive('bold') ? 'bg-slate-300 text-slate-900 dark:text-white' : '']"
         title="Bold (Ctrl+B)"
       >
         B
@@ -106,7 +106,7 @@ const removeLink = () => {
       <button 
         type="button"
         @click="editor.chain().focus().toggleItalic().run()"
-        :class="['px-2.5 py-1 rounded hover:bg-slate-200 transition-all italic font-serif cursor-pointer', editor.isActive('italic') ? 'bg-slate-300 text-slate-900' : '']"
+        :class="['px-2.5 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all italic font-serif cursor-pointer', editor.isActive('italic') ? 'bg-slate-300 text-slate-900 dark:text-white' : '']"
         title="Italic (Ctrl+I)"
       >
         I
@@ -116,7 +116,7 @@ const removeLink = () => {
       <button 
         type="button"
         @click="editor.chain().focus().toggleStrike().run()"
-        :class="['px-2.5 py-1 rounded hover:bg-slate-200 transition-all line-through cursor-pointer', editor.isActive('strike') ? 'bg-slate-300 text-slate-900' : '']"
+        :class="['px-2.5 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all line-through cursor-pointer', editor.isActive('strike') ? 'bg-slate-300 text-slate-900 dark:text-white' : '']"
         title="Strikethrough"
       >
         S
@@ -126,7 +126,7 @@ const removeLink = () => {
       <button 
         type="button"
         @click="openLinkPrompt"
-        :class="['px-2.5 py-1 rounded hover:bg-slate-200 transition-all flex items-center gap-1 font-bold cursor-pointer', editor.isActive('link') ? 'bg-indigo-200 text-indigo-900 border border-indigo-300' : '']"
+        :class="['px-2.5 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-1 font-bold cursor-pointer', editor.isActive('link') ? 'bg-blue-200 dark:bg-blue-900/60 text-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-700/60' : '']"
         title="Insert or Edit Hyperlink"
       >
         🔗 Link
@@ -138,7 +138,7 @@ const removeLink = () => {
       <button 
         type="button"
         @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-        :class="['px-2 py-1 rounded hover:bg-slate-200 transition-all text-xs font-black cursor-pointer', editor.isActive('heading', { level: 1 }) ? 'bg-slate-300 text-slate-900' : '']"
+        :class="['px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-xs font-black cursor-pointer', editor.isActive('heading', { level: 1 }) ? 'bg-slate-300 text-slate-900 dark:text-white' : '']"
         title="Heading 1"
       >
         H1
@@ -148,7 +148,7 @@ const removeLink = () => {
       <button 
         type="button"
         @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-        :class="['px-2 py-1 rounded hover:bg-slate-200 transition-all text-xs font-bold cursor-pointer', editor.isActive('heading', { level: 2 }) ? 'bg-slate-300 text-slate-900' : '']"
+        :class="['px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-xs font-bold cursor-pointer', editor.isActive('heading', { level: 2 }) ? 'bg-slate-300 text-slate-900 dark:text-white' : '']"
         title="Heading 2"
       >
         H2
@@ -158,7 +158,7 @@ const removeLink = () => {
       <button 
         type="button"
         @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
-        :class="['px-2 py-1 rounded hover:bg-slate-200 transition-all text-xs font-semibold cursor-pointer', editor.isActive('heading', { level: 3 }) ? 'bg-slate-300 text-slate-900' : '']"
+        :class="['px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-xs font-semibold cursor-pointer', editor.isActive('heading', { level: 3 }) ? 'bg-slate-300 text-slate-900 dark:text-white' : '']"
         title="Heading 3"
       >
         H3
@@ -170,7 +170,7 @@ const removeLink = () => {
       <button 
         type="button"
         @click="editor.chain().focus().toggleBulletList().run()"
-        :class="['px-2.5 py-1 rounded hover:bg-slate-200 transition-all cursor-pointer', editor.isActive('bulletList') ? 'bg-slate-300 text-slate-900' : '']"
+        :class="['px-2.5 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer', editor.isActive('bulletList') ? 'bg-slate-300 text-slate-900 dark:text-white' : '']"
         title="Bulleted List"
       >
         • List
@@ -180,7 +180,7 @@ const removeLink = () => {
       <button 
         type="button"
         @click="editor.chain().focus().toggleOrderedList().run()"
-        :class="['px-2.5 py-1 rounded hover:bg-slate-200 transition-all cursor-pointer', editor.isActive('orderedList') ? 'bg-slate-300 text-slate-900' : '']"
+        :class="['px-2.5 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer', editor.isActive('orderedList') ? 'bg-slate-300 text-slate-900 dark:text-white' : '']"
         title="Numbered List"
       >
         1. List
@@ -190,7 +190,7 @@ const removeLink = () => {
       <button 
         type="button"
         @click="editor.chain().focus().toggleBlockquote().run()"
-        :class="['px-2.5 py-1 rounded hover:bg-slate-200 transition-all font-serif cursor-pointer', editor.isActive('blockquote') ? 'bg-slate-300 text-slate-900' : '']"
+        :class="['px-2.5 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all font-serif cursor-pointer', editor.isActive('blockquote') ? 'bg-slate-300 text-slate-900 dark:text-white' : '']"
         title="Quote Block"
       >
         “ Quote
@@ -203,7 +203,7 @@ const removeLink = () => {
         type="button"
         @click="editor.chain().focus().undo().run()"
         :disabled="!editor.can().undo()"
-        class="px-2 py-1 rounded hover:bg-slate-200 disabled:opacity-40 transition-all cursor-pointer"
+        class="px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 transition-all cursor-pointer"
         title="Undo"
       >
         ↩
@@ -214,7 +214,7 @@ const removeLink = () => {
         type="button"
         @click="editor.chain().focus().redo().run()"
         :disabled="!editor.can().redo()"
-        class="px-2 py-1 rounded hover:bg-slate-200 disabled:opacity-40 transition-all cursor-pointer"
+        class="px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 transition-all cursor-pointer"
         title="Redo"
       >
         ↪
@@ -222,19 +222,19 @@ const removeLink = () => {
     </div>
 
     <!-- Inline Link Dialog Popup -->
-    <div v-if="showLinkModal" class="p-3 bg-indigo-50/90 border-b border-indigo-200 flex flex-wrap items-center gap-2 text-xs">
-      <span class="font-bold text-indigo-950">🔗 Enter URL:</span>
+    <div v-if="showLinkModal" class="p-3 bg-blue-50/90 dark:bg-blue-950/90 border-b border-blue-200 dark:border-blue-800/60 flex flex-wrap items-center gap-2 text-xs">
+      <span class="font-bold text-blue-950 dark:text-blue-100">🔗 Enter URL:</span>
       <input 
         v-model="linkUrl" 
         type="text" 
         placeholder="https://example.com" 
-        class="px-3 py-1.5 bg-white border border-indigo-300 rounded-lg text-xs text-slate-900 font-mono focus:outline-none focus:border-indigo-600 flex-1 min-w-[200px]" 
+        class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700/60 rounded-lg text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-blue-600 flex-1 min-w-[200px]" 
         @keyup.enter="applyLink"
       />
       <button 
         type="button" 
         @click="applyLink" 
-        class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm cursor-pointer"
+        class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm cursor-pointer"
       >
         Apply Link
       </button>
@@ -242,14 +242,14 @@ const removeLink = () => {
         v-if="editor && editor.isActive('link')"
         type="button" 
         @click="removeLink" 
-        class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-lg cursor-pointer"
+        class="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold rounded-lg cursor-pointer"
       >
         Remove Link
       </button>
       <button 
         type="button" 
         @click="showLinkModal = false" 
-        class="px-2.5 py-1.5 text-slate-500 hover:text-slate-700 font-bold cursor-pointer"
+        class="px-2.5 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold cursor-pointer"
       >
         ✕
       </button>

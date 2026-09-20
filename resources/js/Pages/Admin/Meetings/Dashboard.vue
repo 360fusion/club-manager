@@ -135,16 +135,16 @@ const isPastMeeting = computed(() => {
     <div class="space-y-6">
       
       <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">
             {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formattedMeetingDate }} at {{ meeting.starts_at ? meeting.starts_at.substring(0, 5) : '18:30' }}
           </h2>
           <div class="flex items-center gap-3 text-xs mt-1.5 flex-wrap">
-            <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
+            <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']">
               {{ meeting.status }}
             </span>
-            <span class="text-slate-500 font-medium">📅 {{ formattedMeetingDate }} • 📍 {{ meeting.venue }} • Rehearsal: {{ meeting.rehearsal_starts_at ? meeting.rehearsal_starts_at.substring(0, 5) : '-' }}</span>
+            <span class="text-slate-500 dark:text-slate-400 font-medium">📅 {{ formattedMeetingDate }} • 📍 {{ meeting.venue }} • Rehearsal: {{ meeting.rehearsal_starts_at ? meeting.rehearsal_starts_at.substring(0, 5) : '-' }}</span>
           </div>
         </div>
 
@@ -159,47 +159,47 @@ const isPastMeeting = computed(() => {
               >
                 <span>💰 Financial Return</span>
               </Link>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
                 Open Full Page Financial Return & Dining Calculator
                 <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
             </div>
 
             <div class="relative group">
-              <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" title="Download or Print Summons PDF" aria-label="Download or Print Summons PDF" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition-all flex items-center gap-1">
+              <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" title="Download or Print Summons PDF" aria-label="Download or Print Summons PDF" class="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-xl border border-emerald-200 dark:border-emerald-800/60 transition-all flex items-center gap-1">
                 🖨️ PDF
               </a>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
                 Download / Print PDF
                 <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
             </div>
 
             <div class="relative group">
-              <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" title="Edit Summons Details" aria-label="Edit Summons Details" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all flex items-center gap-1">
+              <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" title="Edit Summons Details" aria-label="Edit Summons Details" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1">
                 📜 Edit Summons
               </Link>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
                 Edit Summons Details
                 <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
             </div>
 
             <div class="relative group">
-              <button @click="openManualRsvpModal(null)" title="Record or Update Member RSVP" aria-label="Record or Update Member RSVP" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all cursor-pointer flex items-center gap-1">
+              <button @click="openManualRsvpModal(null)" title="Record or Update Member RSVP" aria-label="Record or Update Member RSVP" class="px-4 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer flex items-center gap-1">
                 ✍️ Record RSVP
               </button>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
                 Record / Edit Member RSVP
                 <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
             </div>
 
             <div class="relative group">
-              <button @click="showApologiesModal = true" title="Copy Apologies for Minutes" aria-label="Copy Apologies for Minutes" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer flex items-center gap-1">
+              <button @click="showApologiesModal = true" title="Copy Apologies for Minutes" aria-label="Copy Apologies for Minutes" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all cursor-pointer flex items-center gap-1">
                 📋 Copy Minutes Apologies
               </button>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
                 Copy Minutes Apologies
                 <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
               </div>
@@ -211,7 +211,7 @@ const isPastMeeting = computed(() => {
             <button @click="publishSummons" title="Publish & Dispatch Passwordless RSVPs" aria-label="Publish & Dispatch Passwordless RSVPs" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5">
               <span>✉️ Publish & Dispatch Summons</span>
             </button>
-            <div class="absolute top-full mt-2 right-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:translate-y-1 z-30 whitespace-nowrap bg-slate-900 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+            <div class="absolute top-full mt-2 right-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
               Publish & Dispatch Summons to All Members
               <div class="absolute bottom-full right-4 -mb-1 border-4 border-transparent border-b-slate-900"></div>
             </div>
@@ -221,67 +221,67 @@ const isPastMeeting = computed(() => {
 
       <!-- Live KPI Cards Grid -->
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Attending</div>
-          <div class="text-2xl font-black text-indigo-600">{{ stats.total_attending ?? (stats.attending_dining + stats.attending_meeting_only + stats.visiting_attending + stats.guest_meals) }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Meeting attendees</div>
+          <div class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ stats.total_attending ?? (stats.attending_dining + stats.attending_meeting_only + stats.visiting_attending + stats.guest_meals) }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Meeting attendees</div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Dining</div>
-          <div class="text-2xl font-black text-emerald-600">{{ stats.total_dining ?? stats.total_caterer_headcount }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">{{ (stats.dining_members_and_visitors ?? (stats.attending_dining + stats.visiting_dining)) }} Dining + {{ stats.guest_meals }} Guests</div>
+          <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ stats.total_dining ?? stats.total_caterer_headcount }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ (stats.dining_members_and_visitors ?? (stats.attending_dining + stats.visiting_dining)) }} Dining + {{ stats.guest_meals }} Guests</div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Meeting Only</div>
-          <div class="text-2xl font-black text-sky-600">{{ stats.attending_meeting_only }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Attending without dining</div>
+          <div class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ stats.attending_meeting_only }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Attending without dining</div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Apologies Received</div>
-          <div class="text-2xl font-black text-rose-600">{{ stats.apologies }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Formally recorded absence</div>
+          <div class="text-2xl font-black text-rose-600 dark:text-rose-400">{{ stats.apologies }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Formally recorded absence</div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visitors Attending</div>
-          <div class="text-2xl font-black text-purple-600">{{ stats.visiting_attending }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Visiting Brethren & Guests</div>
+          <div class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ stats.visiting_attending }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Visiting Brethren & Guests</div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Awaiting RSVP</div>
-          <div class="text-2xl font-black text-amber-600">{{ stats.awaiting }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">{{ meeting.status === 'published' ? 'Emailed members pending' : 'Invites not sent yet' }}</div>
+          <div class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ stats.awaiting }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ meeting.status === 'published' ? 'Emailed members pending' : 'Invites not sent yet' }}</div>
         </div>
       </div>
 
       <!-- Filter Tabs & RSVP Grid -->
-      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-        <div class="flex items-center gap-2 border-b border-slate-100 pb-3 overflow-x-auto">
-          <button @click="activeTab = 'all'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100']">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+        <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3 overflow-x-auto">
+          <button @click="activeTab = 'all'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'all' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
             All Responses ({{ memberRsvps.length }})
           </button>
-          <button @click="activeTab = 'attending_dining'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'attending_dining' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-slate-100']">
+          <button @click="activeTab = 'attending_dining'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'attending_dining' ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
             Attending Dining ({{ stats.attending_dining }})
           </button>
-          <button @click="activeTab = 'attending_meeting_only'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'attending_meeting_only' ? 'bg-sky-600 text-white' : 'text-slate-600 hover:bg-slate-100']">
+          <button @click="activeTab = 'attending_meeting_only'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'attending_meeting_only' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
             Meeting Only ({{ stats.attending_meeting_only }})
           </button>
-          <button @click="activeTab = 'apologies'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'apologies' ? 'bg-rose-600 text-white' : 'text-slate-600 hover:bg-slate-100']">
+          <button @click="activeTab = 'apologies'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'apologies' ? 'bg-rose-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
             Apologies ({{ stats.apologies }})
           </button>
-          <button @click="activeTab = 'visitors'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'visitors' ? 'bg-purple-600 text-white' : 'text-slate-600 hover:bg-slate-100']">
+          <button @click="activeTab = 'visitors'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'visitors' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
             Visitors ({{ stats.visiting_count || 0 }})
           </button>
         </div>
 
         <div class="overflow-x-auto">
           <!-- Invited Visitors Roster Table -->
-          <table v-if="activeTab === 'visitors'" class="w-full text-xs text-left text-slate-700">
-            <thead class="bg-purple-50/80 text-purple-900 uppercase font-bold text-[10px] tracking-wider">
+          <table v-if="activeTab === 'visitors'" class="w-full text-xs text-left text-slate-700 dark:text-slate-200">
+            <thead class="bg-blue-50/80 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 uppercase font-bold text-[10px] tracking-wider">
               <tr>
                 <th class="p-3">Visitor Name & Rank</th>
                 <th class="p-3">Home Lodge / Club</th>
@@ -292,43 +292,43 @@ const isPastMeeting = computed(() => {
                 <th class="p-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
-              <tr v-for="v in visitorsList" :key="v.id" class="hover:bg-purple-50/30 transition-all">
-                <td class="p-3 font-bold text-slate-900">
-                  <span v-if="v.rank" class="text-slate-500 font-normal mr-1">{{ v.rank }}</span>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr v-for="v in visitorsList" :key="v.id" class="hover:bg-blue-50/30 dark:hover:bg-blue-950/30 transition-all">
+                <td class="p-3 font-bold text-slate-900 dark:text-white">
+                  <span v-if="v.rank" class="text-slate-500 dark:text-slate-400 font-normal mr-1">{{ v.rank }}</span>
                   {{ v.name }}
                 </td>
-                <td class="p-3 font-semibold text-purple-900">
+                <td class="p-3 font-semibold text-blue-900 dark:text-blue-200">
                   🏛️ {{ v.home_club_info || 'Visitor' }}
                 </td>
-                <td class="p-3 text-slate-600 font-mono text-[11px]">{{ v.email }}</td>
+                <td class="p-3 text-slate-600 dark:text-slate-300 font-mono text-[11px]">{{ v.email }}</td>
                 <td class="p-3">
-                  <span v-if="v.attendance_status === 'attending_dining'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span v-if="v.attendance_status === 'attending_dining'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                     🟢 Attending (Dining)
                   </span>
-                  <span v-else-if="v.attendance_status === 'attending_meeting_only'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-sky-50 text-sky-700 border border-sky-200">
+                  <span v-else-if="v.attendance_status === 'attending_meeting_only'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
                     🔵 Attending (Meeting Only)
                   </span>
-                  <span v-else-if="v.attendance_status === 'apologies'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200">
+                  <span v-else-if="v.attendance_status === 'apologies'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">
                     🔴 Apologies Received
                   </span>
-                  <span v-else-if="v.summons_sent" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+                  <span v-else-if="v.summons_sent" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
                     ✉️ Summons Sent (Awaiting Response)
                   </span>
-                  <span v-else class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                  <span v-else class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                     Registered Visitor
                   </span>
                 </td>
-                <td class="p-3 text-slate-600">{{ v.dietary_notes || 'Standard' }}</td>
+                <td class="p-3 text-slate-600 dark:text-slate-300">{{ v.dietary_notes || 'Standard' }}</td>
                 <td class="p-3">
                   <div v-if="v.attendance_status === 'attending_dining'">
                     <button 
                       @click="setPaymentStatus(v.id, v.payment_status === 'paid' ? 'unpaid' : 'paid')"
                       :class="['px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border cursor-pointer transition-all flex items-center gap-1 w-fit', 
-                        v.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' :
-                        v.payment_status === 'waived' ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100' :
-                        v.payment_status === 'refunded' ? 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100' :
-                        'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100']"
+                        v.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40' :
+                        v.payment_status === 'waived' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60 hover:bg-blue-100 dark:hover:bg-blue-900/40' :
+                        v.payment_status === 'refunded' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700/60 hover:bg-rose-100 dark:hover:bg-rose-900/40' :
+                        'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/40']"
                       :title="'Click to toggle paid/unpaid status'"
                     >
                       <span v-if="v.payment_status === 'paid'">✅ Paid</span>
@@ -343,7 +343,7 @@ const isPastMeeting = computed(() => {
                   </div>
                 </td>
                 <td class="p-3 text-right">
-                  <button @click="openManualRsvpModal(v.id)" class="px-2.5 py-1 text-[11px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-all cursor-pointer">
+                  <button @click="openManualRsvpModal(v.id)" class="px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer">
                     ✏️ Edit
                   </button>
                 </td>
@@ -355,8 +355,8 @@ const isPastMeeting = computed(() => {
           </table>
 
           <!-- Standard Responses Table -->
-          <table v-else class="w-full text-xs text-left text-slate-700">
-            <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
+          <table v-else class="w-full text-xs text-left text-slate-700 dark:text-slate-200">
+            <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase font-bold text-[10px] tracking-wider">
               <tr>
                 <th class="p-3">Member Name</th>
                 <th class="p-3">Attendance</th>
@@ -366,20 +366,20 @@ const isPastMeeting = computed(() => {
                 <th class="p-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
-              <tr v-for="r in filteredRsvps" :key="r.id" class="hover:bg-slate-50/80 transition-all">
-                <td class="p-3 font-bold text-slate-900">
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr v-for="r in filteredRsvps" :key="r.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-all">
+                <td class="p-3 font-bold text-slate-900 dark:text-white">
                   {{ r.user ? r.user.name : 'Member' }}
                 </td>
                 <td class="p-3">
-                  <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', r.attendance_status === 'attending_dining' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : r.attendance_status === 'apologies' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-sky-50 text-sky-700 border-sky-200']">
+                  <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', r.attendance_status === 'attending_dining' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : r.attendance_status === 'apologies' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60' : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60']">
                     {{ r.attendance_status ? r.attendance_status.replace('_', ' ') : 'awaiting' }}
                   </span>
                 </td>
-                <td class="p-3 text-slate-600">{{ r.dietary_requirements || 'Standard' }}</td>
+                <td class="p-3 text-slate-600 dark:text-slate-300">{{ r.dietary_requirements || 'Standard' }}</td>
                 <td class="p-3">
                   <div v-if="r.guests?.length" class="space-y-1">
-                    <div v-for="g in r.guests" :key="g.id" class="text-[11px] font-medium text-slate-800">
+                    <div v-for="g in r.guests" :key="g.id" class="text-[11px] font-medium text-slate-800 dark:text-slate-100">
                       👤 {{ g.guest_name }} <span class="text-slate-400">({{ g.home_club_lodge || 'Visitor' }})</span>
                     </div>
                   </div>
@@ -390,10 +390,10 @@ const isPastMeeting = computed(() => {
                     <button 
                       @click="setPaymentStatus(r.user_id, r.payment_status === 'paid' ? 'unpaid' : 'paid')"
                       :class="['px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border cursor-pointer transition-all flex items-center gap-1 w-fit', 
-                        r.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' :
-                        r.payment_status === 'waived' ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100' :
-                        r.payment_status === 'refunded' ? 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100' :
-                        'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100']"
+                        r.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40' :
+                        r.payment_status === 'waived' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60 hover:bg-blue-100 dark:hover:bg-blue-900/40' :
+                        r.payment_status === 'refunded' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700/60 hover:bg-rose-100 dark:hover:bg-rose-900/40' :
+                        'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/40']"
                       :title="'Click to toggle paid/unpaid status'"
                     >
                       <span v-if="r.payment_status === 'paid'">✅ Paid</span>
@@ -408,7 +408,7 @@ const isPastMeeting = computed(() => {
                   </div>
                 </td>
                 <td class="p-3 text-right">
-                  <button @click="openManualRsvpModal(r.user_id)" class="px-2.5 py-1 text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-all cursor-pointer">
+                  <button @click="openManualRsvpModal(r.user_id)" class="px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer">
                     ✏️ Edit
                   </button>
                 </td>
@@ -422,33 +422,33 @@ const isPastMeeting = computed(() => {
       </div>
 
       <!-- Caterer Breakdown Drawer -->
-      <div v-if="stats.dietary_constraints?.length" class="bg-amber-50 border border-amber-200 rounded-2xl p-6 space-y-3">
-        <h3 class="text-sm font-bold text-amber-900 flex items-center gap-2">
+      <div v-if="stats.dietary_constraints?.length" class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-6 space-y-3">
+        <h3 class="text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-2">
           <span>🍽️ Itemized Caterer Dietary Breakdown</span>
-          <span class="px-2 py-0.5 bg-amber-200/80 text-amber-800 text-[10px] font-bold rounded-full">{{ stats.dietary_constraints.length }} Requests</span>
+          <span class="px-2 py-0.5 bg-amber-200/80 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200 text-[10px] font-bold rounded-full">{{ stats.dietary_constraints.length }} Requests</span>
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div v-for="(d, idx) in stats.dietary_constraints" :key="idx" class="bg-white p-3 rounded-xl border border-amber-200 text-xs">
-            <div class="font-bold text-slate-900">{{ d.person }}</div>
-            <div class="text-amber-700 font-semibold mt-0.5">⚠️ {{ d.requirement }}</div>
+          <div v-for="(d, idx) in stats.dietary_constraints" :key="idx" class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-amber-200 dark:border-amber-800/60 text-xs">
+            <div class="font-bold text-slate-900 dark:text-white">{{ d.person }}</div>
+            <div class="text-amber-700 dark:text-amber-300 font-semibold mt-0.5">⚠️ {{ d.requirement }}</div>
           </div>
         </div>
       </div>
 
       <!-- Apologies Modal for Minutes -->
       <div v-if="showApologiesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="text-base font-bold text-slate-900">Formatted Minutes Apologies Export</h3>
-            <button @click="showApologiesModal = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Formatted Minutes Apologies Export</h3>
+            <button @click="showApologiesModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold">✕</button>
           </div>
 
-          <textarea :value="apologiesFormattedText" readonly rows="5" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-800 focus:outline-none"></textarea>
+          <textarea :value="apologiesFormattedText" readonly rows="5" class="w-full p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-800 dark:text-slate-100 focus:outline-none"></textarea>
 
           <div class="flex justify-end gap-3 pt-2">
-            <button @click="showApologiesModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Close</button>
-            <button @click="copyApologiesText" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md">
+            <button @click="showApologiesModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">Close</button>
+            <button @click="copyApologiesText" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md">
               📋 Copy to Clipboard
             </button>
           </div>
@@ -457,40 +457,40 @@ const isPastMeeting = computed(() => {
 
       <!-- Manual Admin RSVP Modal -->
       <div v-if="showManualRsvpModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="text-base font-bold text-slate-900">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">
               {{ selectedUserId ? '✏️ Edit Attendance & Dining RSVP' : '✍️ Record Manual RSVP' }}
             </h3>
-            <button @click="showManualRsvpModal = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+            <button @click="showManualRsvpModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold">✕</button>
           </div>
 
           <form @submit.prevent="submitManualRsvp" class="space-y-4">
             <!-- Member / Visitor Select -->
             <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Select Member / Visitor</label>
-              <select v-model="manualRsvpForm.user_id" :disabled="!!selectedUserId" class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50 p-2.5 font-medium">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Select Member / Visitor</label>
+              <select v-model="manualRsvpForm.user_id" :disabled="!!selectedUserId" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500 bg-slate-50 dark:bg-slate-800/50 p-2.5 font-medium">
                 <option value="" disabled>-- Select a member or visitor --</option>
                 <option v-for="u in allClubUsers" :key="u.id" :value="u.id">
                   {{ u.name }} ({{ u.email }}) {{ u.is_visitor ? '• Visitor' : '' }}
                 </option>
               </select>
-              <div v-if="manualRsvpForm.errors.user_id" class="text-rose-600 text-[11px] mt-1">{{ manualRsvpForm.errors.user_id }}</div>
+              <div v-if="manualRsvpForm.errors.user_id" class="text-rose-600 dark:text-rose-400 text-[11px] mt-1">{{ manualRsvpForm.errors.user_id }}</div>
             </div>
 
             <!-- Attendance Status -->
             <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Attendance Status</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Attendance Status</label>
               <div class="grid grid-cols-3 gap-2">
-                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'attending_dining' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'attending_dining' ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
                   <input type="radio" v-model="manualRsvpForm.attendance_status" value="attending_dining" class="sr-only" />
                   🟢 Dining & Meeting
                 </label>
-                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'attending_meeting_only' ? 'bg-sky-50 border-sky-500 text-sky-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'attending_meeting_only' ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 text-blue-800 dark:text-blue-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
                   <input type="radio" v-model="manualRsvpForm.attendance_status" value="attending_meeting_only" class="sr-only" />
                   🔵 Meeting Only
                 </label>
-                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'apologies' ? 'bg-rose-50 border-rose-500 text-rose-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'apologies' ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-800 dark:text-rose-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
                   <input type="radio" v-model="manualRsvpForm.attendance_status" value="apologies" class="sr-only" />
                   🔴 Apologies
                 </label>
@@ -499,67 +499,67 @@ const isPastMeeting = computed(() => {
 
             <!-- Payment Status (Only shown for Dining) -->
             <div v-if="manualRsvpForm.attendance_status === 'attending_dining' || manualRsvpForm.guests?.some(g => g.attending_dining)">
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Dining Payment Status</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Dining Payment Status</label>
               <div class="grid grid-cols-4 gap-2">
-                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'unpaid' ? 'bg-amber-50 border-amber-500 text-amber-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'unpaid' ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 text-amber-800 dark:text-amber-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
                   <input type="radio" v-model="manualRsvpForm.payment_status" value="unpaid" class="sr-only" />
                   💳 Unpaid
                 </label>
-                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'paid' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
                   <input type="radio" v-model="manualRsvpForm.payment_status" value="paid" class="sr-only" />
                   ✅ Paid
                 </label>
-                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'waived' ? 'bg-purple-50 border-purple-500 text-purple-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'waived' ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 text-blue-800 dark:text-blue-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
                   <input type="radio" v-model="manualRsvpForm.payment_status" value="waived" class="sr-only" />
                   🎁 Waived
                 </label>
-                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'refunded' ? 'bg-rose-50 border-rose-500 text-rose-800' : 'bg-slate-50 border-slate-200 text-slate-600']">
+                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'refunded' ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-800 dark:text-rose-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
                   <input type="radio" v-model="manualRsvpForm.payment_status" value="refunded" class="sr-only" />
                   ↩️ Refunded
                 </label>
               </div>
             </div>
-            <div v-else class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 font-medium">
+            <div v-else class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400 font-medium">
               ℹ️ Payment is only required for Dining RSVPs. No payment due for Meeting-Only attendance or Apologies.
             </div>
 
             <!-- Dietary Requirements (if dining) -->
             <div v-if="manualRsvpForm.attendance_status === 'attending_dining'">
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Member Dietary Requirements</label>
-              <input type="text" v-model="manualRsvpForm.dietary_requirements" placeholder="e.g. Vegetarian, Gluten-free, Nut allergy" class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 p-2.5" />
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Member Dietary Requirements</label>
+              <input type="text" v-model="manualRsvpForm.dietary_requirements" placeholder="e.g. Vegetarian, Gluten-free, Nut allergy" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500 p-2.5" />
             </div>
 
             <!-- Apology Reason (if apologies) -->
             <div v-if="manualRsvpForm.attendance_status === 'apologies'">
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Apology Reason / Notes</label>
-              <textarea v-model="manualRsvpForm.apology_reason" rows="2" placeholder="e.g. Away on business, unwell" class="w-full text-xs rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 p-2.5"></textarea>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Apology Reason / Notes</label>
+              <textarea v-model="manualRsvpForm.apology_reason" rows="2" placeholder="e.g. Away on business, unwell" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500 p-2.5"></textarea>
             </div>
 
             <!-- Guests Section (if dining) -->
-            <div v-if="manualRsvpForm.attendance_status === 'attending_dining'" class="space-y-2 pt-2 border-t border-slate-100">
+            <div v-if="manualRsvpForm.attendance_status === 'attending_dining'" class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <div class="flex items-center justify-between">
-                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Accompanying Guests</label>
-                <button type="button" @click="addGuestRow" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200">
+                <label class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Accompanying Guests</label>
+                <button type="button" @click="addGuestRow" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800/60">
                   + Add Guest
                 </button>
               </div>
 
-              <div v-for="(g, idx) in manualRsvpForm.guests" :key="idx" class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <div v-for="(g, idx) in manualRsvpForm.guests" :key="idx" class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-700">Guest #{{ idx + 1 }}</span>
-                  <button type="button" @click="removeGuestRow(idx)" class="text-rose-600 hover:text-rose-800 text-xs font-bold">Remove</button>
+                  <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Guest #{{ idx + 1 }}</span>
+                  <button type="button" @click="removeGuestRow(idx)" class="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 text-xs font-bold">Remove</button>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input type="text" v-model="g.guest_name" placeholder="Guest Full Name" class="text-xs rounded-lg border-slate-300 p-2" required />
-                  <input type="text" v-model="g.dietary_requirements" placeholder="Dietary notes (optional)" class="text-xs rounded-lg border-slate-300 p-2" />
+                  <input type="text" v-model="g.guest_name" placeholder="Guest Full Name" class="text-xs rounded-lg border-slate-300 dark:border-slate-700 p-2" required />
+                  <input type="text" v-model="g.dietary_requirements" placeholder="Dietary notes (optional)" class="text-xs rounded-lg border-slate-300 dark:border-slate-700 p-2" />
                 </div>
               </div>
             </div>
 
             <!-- Submit buttons -->
-            <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
-              <button type="button" @click="showManualRsvpModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancel</button>
-              <button type="submit" :disabled="manualRsvpForm.processing" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50">
+            <div class="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button type="button" @click="showManualRsvpModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">Cancel</button>
+              <button type="submit" :disabled="manualRsvpForm.processing" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50">
                 Save RSVP
               </button>
             </div>

@@ -328,23 +328,23 @@ const sendBroadcast = () => {
     <div class="max-w-4xl mx-auto space-y-6">
       
       <!-- Top Action Bar -->
-      <div class="flex items-center justify-between bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex items-center justify-between bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">{{ newsletter.id ? 'Edit Newsletter Broadcast' : 'Compose New Email Broadcast' }}</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Target specific channels, member roles, visiting subscribers, and attach downloadable files.</p>
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ newsletter.id ? 'Edit Newsletter Broadcast' : 'Compose New Email Broadcast' }}</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Target specific channels, member roles, visiting subscribers, and attach downloadable files.</p>
         </div>
-        <Link :href="route('admin.newsletters.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-all">
+        <Link :href="route('admin.newsletters.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all">
           &larr; Back to Newsletters
         </Link>
       </div>
 
       <!-- Form -->
-      <form @submit.prevent class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-6">
+      <form @submit.prevent class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="col-span-1">
-            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Newsletter Channel *</label>
-            <select v-model="form.newsletter_type_id" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500">
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Newsletter Channel *</label>
+            <select v-model="form.newsletter_type_id" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
               <option v-for="t in types" :key="t.id" :value="t.id">
                 {{ t.icon }} {{ t.name }}
               </option>
@@ -352,14 +352,14 @@ const sendBroadcast = () => {
           </div>
 
           <div class="col-span-2">
-            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Email Subject Line *</label>
-            <input v-model="form.subject" type="text" required placeholder="Summer Regatta Schedule & Summons Circular" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500" />
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Email Subject Line *</label>
+            <input v-model="form.subject" type="text" required placeholder="Summer Regatta Schedule & Summons Circular" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
           </div>
         </div>
 
         <!-- Target Roles Selector -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Target Internal Member Roles</label>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Target Internal Member Roles</label>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div 
               v-for="role in availableRoles" 
@@ -368,23 +368,23 @@ const sendBroadcast = () => {
               :class="[
                 'p-3 rounded-xl border text-xs font-bold cursor-pointer transition-all flex items-center justify-between',
                 form.target_roles.includes(role.id)
-                  ? 'bg-indigo-50 border-indigo-300 text-indigo-900 shadow-sm'
-                  : 'bg-slate-50 border-slate-200 text-slate-500'
+                  ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 text-blue-900 dark:text-blue-200 shadow-sm'
+                  : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
               ]"
             >
               <span>{{ role.label }}</span>
-              <span v-if="form.target_roles.includes(role.id)" class="text-indigo-600">✓</span>
+              <span v-if="form.target_roles.includes(role.id)" class="text-blue-600 dark:text-blue-400">✓</span>
             </div>
           </div>
         </div>
 
         <!-- System Content Picker Trigger Card -->
-        <div class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-100 flex items-center justify-between">
+        <div class="bg-emerald-50/70 dark:bg-emerald-950/70 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 flex items-center justify-between">
           <div>
-            <h4 class="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+            <h4 class="text-xs font-bold text-emerald-950 dark:text-emerald-100 flex items-center gap-1.5">
               <span>🧩</span> Select & Insert System Content
             </h4>
-            <p class="text-[11px] text-emerald-800/80 mt-0.5">Select approved summonses, upcoming meetings, events, or news posts to automatically embed into your email body.</p>
+            <p class="text-[11px] text-emerald-800/80 dark:text-emerald-200/80 mt-0.5">Select approved summonses, upcoming meetings, events, or news posts to automatically embed into your email body.</p>
           </div>
           <button
             type="button"
@@ -396,33 +396,33 @@ const sendBroadcast = () => {
         </div>
 
         <!-- News Items Builder Toggle Bar -->
-        <div class="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 flex items-center justify-between">
+        <div class="bg-blue-50/60 dark:bg-blue-950/60 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/40 flex items-center justify-between">
           <div>
-            <h4 class="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+            <h4 class="text-xs font-bold text-blue-950 dark:text-blue-100 flex items-center gap-1.5">
               <span>📰</span> Add News Items List to Newsletter
             </h4>
-            <p class="text-[11px] text-indigo-700/80 mt-0.5">Format and embed published club news or custom stories with images, headlines, and teaser text.</p>
+            <p class="text-[11px] text-blue-700/80 dark:text-blue-300/80 mt-0.5">Format and embed published club news or custom stories with images, headlines, and teaser text.</p>
           </div>
           <button
             type="button"
             @click="showNewsBuilder = !showNewsBuilder"
-            class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1"
+            class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1"
           >
             {{ showNewsBuilder ? 'Hide News Builder' : '⚡ Open News Items Builder' }}
           </button>
         </div>
 
         <!-- News Items Builder Card -->
-        <div v-if="showNewsBuilder" class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4 text-xs">
-          <div class="flex items-center justify-between border-b border-slate-200/80 pb-3">
-            <span class="font-bold text-slate-900 text-sm">📰 Construct News Items List</span>
-            <span class="text-slate-500 text-[11px]">Format: Thumbnail image side-by-side with headline & teaser text</span>
+        <div v-if="showNewsBuilder" class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4 text-xs">
+          <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-3">
+            <span class="font-bold text-slate-900 dark:text-white text-sm">📰 Construct News Items List</span>
+            <span class="text-slate-500 dark:text-slate-400 text-[11px]">Format: Thumbnail image side-by-side with headline & teaser text</span>
           </div>
 
           <!-- Select from Published Posts -->
           <div v-if="posts && posts.length" class="space-y-1">
-            <label class="block font-bold text-slate-700">Import from Published Club Posts</label>
-            <select v-model="selectedPostId" @change="onSelectPost" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800">
+            <label class="block font-bold text-slate-700 dark:text-slate-200">Import from Published Club Posts</label>
+            <select v-model="selectedPostId" @change="onSelectPost" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-800 dark:text-slate-100">
               <option value="">-- Choose a published news post to import --</option>
               <option v-for="post in posts" :key="post.id" :value="post.id">
                 {{ post.title }} ({{ post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Published' }})
@@ -432,30 +432,30 @@ const sendBroadcast = () => {
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Headline Title *</label>
-              <input v-model="customHeadline" type="text" placeholder="e.g. Annual Regatta Trophies Awarded" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-semibold" />
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Headline Title *</label>
+              <input v-model="customHeadline" type="text" placeholder="e.g. Annual Regatta Trophies Awarded" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold" />
             </div>
 
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Cover Image URL (Optional)</label>
-              <input v-model="customImageUrl" type="text" placeholder="https://example.com/image.jpg" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Cover Image URL (Optional)</label>
+              <input v-model="customImageUrl" type="text" placeholder="https://example.com/image.jpg" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
             </div>
           </div>
 
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Teaser Text Excerpt</label>
-            <textarea v-model="customTeaser" rows="2" placeholder="Short teaser summary that appears below the headline..." class="w-full p-2.5 bg-white border border-slate-300 rounded-xl"></textarea>
+            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Teaser Text Excerpt</label>
+            <textarea v-model="customTeaser" rows="2" placeholder="Short teaser summary that appears below the headline..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl"></textarea>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Story Link URL (Optional)</label>
-              <input v-model="customLinkUrl" type="text" placeholder="https://..." class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono text-[11px]" />
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Story Link URL (Optional)</label>
+              <input v-model="customLinkUrl" type="text" placeholder="https://..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
             </div>
 
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Thumbnail Layout</label>
-              <select v-model="imagePosition" class="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-semibold">
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Thumbnail Layout</label>
+              <select v-model="imagePosition" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                 <option value="left">Image on Left (Headline & Teaser on Right)</option>
                 <option value="right">Image on Right (Headline & Teaser on Left)</option>
               </select>
@@ -467,15 +467,15 @@ const sendBroadcast = () => {
               type="button"
               @click="addNewsItemToList"
               :disabled="!customHeadline.trim()"
-              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all cursor-pointer"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all cursor-pointer"
             >
               + Add News Item to List
             </button>
           </div>
 
           <!-- Staged Items Preview List -->
-          <div v-if="stagedNewsItems.length" class="space-y-3 pt-3 border-t border-slate-200">
-            <div class="font-bold text-slate-900 flex items-center justify-between">
+          <div v-if="stagedNewsItems.length" class="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <div class="font-bold text-slate-900 dark:text-white flex items-center justify-between">
               <span>Staged News List ({{ stagedNewsItems.length }} {{ stagedNewsItems.length === 1 ? 'item' : 'items' }})</span>
               <button
                 type="button"
@@ -490,14 +490,14 @@ const sendBroadcast = () => {
               <div
                 v-for="(item, idx) in stagedNewsItems"
                 :key="idx"
-                class="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-3"
+                class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3"
               >
                 <div class="flex items-center gap-3 overflow-hidden">
                   <img v-if="item.imageUrl" :src="item.imageUrl" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                  <div v-else class="w-12 h-12 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center font-bold flex-shrink-0">📰</div>
+                  <div v-else class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center font-bold flex-shrink-0">📰</div>
                   <div class="truncate">
-                    <h5 class="font-bold text-slate-900 truncate">{{ item.headline }}</h5>
-                    <p class="text-[11px] text-slate-500 truncate">{{ item.teaser || 'No teaser text' }}</p>
+                    <h5 class="font-bold text-slate-900 dark:text-white truncate">{{ item.headline }}</h5>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ item.teaser || 'No teaser text' }}</p>
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -505,7 +505,7 @@ const sendBroadcast = () => {
                     v-if="item.linkUrl"
                     :href="item.linkUrl"
                     target="_blank"
-                    class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-300 transition-all flex items-center gap-1"
+                    class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded-lg border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1"
                     title="Preview Target Link"
                   >
                     👁️ Preview
@@ -513,7 +513,7 @@ const sendBroadcast = () => {
                   <button
                     type="button"
                     @click="removeStagedNewsItem(idx)"
-                    class="text-slate-400 hover:text-rose-600 font-bold p-1 rounded cursor-pointer"
+                    class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold p-1 rounded cursor-pointer"
                     title="Remove item"
                   >
                     ✕
@@ -526,29 +526,29 @@ const sendBroadcast = () => {
 
         <!-- Newsletter Content -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Newsletter Content (WYSIWYG)</label>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Newsletter Content (WYSIWYG)</label>
           <RichTextEditor v-model="form.content" placeholder="Write rich email newsletter content here..." />
         </div>
 
         <!-- Attachments Section -->
-        <div class="space-y-3 pt-4 border-t border-slate-100">
+        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div class="flex items-center justify-between">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">📎 Attachments & Downloads</label>
-              <p class="text-[11px] text-slate-500">Attach Summons PDFs, meeting agendas, financial reports, or image circulars for recipients.</p>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">📎 Attachments & Downloads</label>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">Attach Summons PDFs, meeting agendas, financial reports, or image circulars for recipients.</p>
             </div>
             <div class="flex items-center gap-2">
               <button
                 type="button"
                 @click="showMediaModal = true"
-                class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200 transition-all flex items-center gap-1 cursor-pointer"
+                class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800/60 transition-all flex items-center gap-1 cursor-pointer"
               >
                 📁 Select from File Manager
               </button>
               <button
                 type="button"
                 @click="triggerFileInput"
-                class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200 transition-all flex items-center gap-1 cursor-pointer"
+                class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all flex items-center gap-1 cursor-pointer"
               >
                 + Upload New Attachment
               </button>
@@ -570,21 +570,21 @@ const sendBroadcast = () => {
             <div
               v-for="(att, idx) in existingAttachments"
               :key="'existing-' + idx"
-              class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs"
+              class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/80 text-xs"
             >
               <div class="flex items-center gap-2.5 overflow-hidden">
                 <span class="text-lg">{{ getFileIcon(att.mime_type || att.name) }}</span>
                 <div class="truncate">
-                  <a :href="att.url" target="_blank" class="font-bold text-slate-900 hover:text-indigo-600 truncate block">
+                  <a :href="att.url" target="_blank" class="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 truncate block">
                     {{ att.name }}
                   </a>
-                  <span class="text-[10px] text-slate-500">{{ att.size || 'Saved File' }}</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400">{{ att.size || 'Saved File' }}</span>
                 </div>
               </div>
               <button
                 type="button"
                 @click="removeExistingAttachment(idx)"
-                class="text-slate-400 hover:text-rose-600 font-bold p-1 rounded transition-colors cursor-pointer"
+                class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold p-1 rounded transition-colors cursor-pointer"
                 title="Remove attachment"
               >
                 ✕
@@ -595,19 +595,19 @@ const sendBroadcast = () => {
             <div
               v-for="(file, idx) in newFiles"
               :key="'new-' + idx"
-              class="flex items-center justify-between bg-indigo-50/50 p-3 rounded-xl border border-indigo-200/80 text-xs"
+              class="flex items-center justify-between bg-blue-50/50 dark:bg-blue-950/50 p-3 rounded-xl border border-blue-200/80 dark:border-blue-800/80 text-xs"
             >
               <div class="flex items-center gap-2.5 overflow-hidden">
                 <span class="text-lg">{{ getFileIcon(file.name) }}</span>
                 <div class="truncate">
-                  <span class="font-bold text-indigo-900 truncate block">{{ file.name }}</span>
-                  <span class="text-[10px] text-indigo-600 font-semibold">{{ formatBytes(file.size) }} (Pending upload)</span>
+                  <span class="font-bold text-blue-900 dark:text-blue-200 truncate block">{{ file.name }}</span>
+                  <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">{{ formatBytes(file.size) }} (Pending upload)</span>
                 </div>
               </div>
               <button
                 type="button"
                 @click="removeNewFile(idx)"
-                class="text-indigo-400 hover:text-rose-600 font-bold p-1 rounded transition-colors cursor-pointer"
+                class="text-blue-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold p-1 rounded transition-colors cursor-pointer"
                 title="Remove file"
               >
                 ✕
@@ -616,18 +616,18 @@ const sendBroadcast = () => {
 
           </div>
 
-          <div v-else @click="triggerFileInput" class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-300 transition-colors cursor-pointer bg-slate-50/50">
+          <div v-else @click="triggerFileInput" class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center hover:border-blue-300 dark:hover:border-blue-700/60 transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-800/50/50">
             <span class="text-2xl block mb-1">📁</span>
-            <span class="text-xs font-bold text-slate-700 block">Click to upload attachments</span>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Click to upload attachments</span>
             <span class="text-[11px] text-slate-400">PDFs, Word Documents, Excel sheets, Images, or Zip files (up to 10MB per file)</span>
           </div>
         </div>
 
-        <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
-          <button type="button" @click="saveDraft" :disabled="form.processing" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs border border-slate-300 transition-all cursor-pointer">
+        <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" @click="saveDraft" :disabled="form.processing" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
             💾 Save as Draft
           </button>
-          <button type="button" @click="sendBroadcast" :disabled="form.processing" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-600/20 transition-all cursor-pointer">
+          <button type="button" @click="sendBroadcast" :disabled="form.processing" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer">
             🚀 Send Email Broadcast Now
           </button>
         </div>

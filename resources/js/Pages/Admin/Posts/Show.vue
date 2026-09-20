@@ -25,34 +25,34 @@ const getFileIcon = (mimeOrName) => {
     <div class="space-y-6">
 
       <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div class="space-y-1">
           <div class="flex items-center gap-2">
             <Link
               :href="route('admin.posts.index', { clubSlug: club.slug })"
-              class="text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors"
+              class="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               ← Back to Communications
             </Link>
             <span class="text-slate-300">•</span>
-            <span :class="['px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border', post.status === 'published' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200']">
+            <span :class="['px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border', post.status === 'published' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']">
               {{ post.status }}
             </span>
           </div>
-          <h2 class="text-xl font-bold text-slate-900">Article Preview</h2>
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Article Preview</h2>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
           <Link
             :href="route('admin.posts.edit', { clubSlug: club.slug, id: post.id })"
-            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-all flex items-center gap-1.5"
+            class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-800 transition-all flex items-center gap-1.5"
           >
             ✏️ Edit Article
           </Link>
           <a
             :href="route('member.posts.show', { slug: club.slug, id: post.id })"
             target="_blank"
-            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5"
+            class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-1.5"
           >
             ↗️ Member Portal View
           </a>
@@ -61,12 +61,12 @@ const getFileIcon = (mimeOrName) => {
 
       <!-- Article Preview Container -->
       <div class="max-w-3xl mx-auto space-y-6">
-        <article class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 space-y-6">
+        <article class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
           
           <!-- Header -->
           <div class="space-y-3">
-            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500">
-              <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-100 uppercase tracking-wider text-[10px]">
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <span class="px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold border border-blue-100 dark:border-blue-900/40 uppercase tracking-wider text-[10px]">
                 📰 News Bulletin
               </span>
               <span>•</span>
@@ -75,17 +75,17 @@ const getFileIcon = (mimeOrName) => {
               <span>By {{ post.author_name }}</span>
             </div>
 
-            <h1 class="text-2xl md:text-3xl font-black text-slate-900 leading-tight">
+            <h1 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-tight">
               {{ post.title }}
             </h1>
 
-            <p v-if="post.excerpt" class="text-sm font-medium text-slate-600 italic border-l-4 border-indigo-500 pl-3 py-1 bg-slate-50 rounded-r-xl">
+            <p v-if="post.excerpt" class="text-sm font-medium text-slate-600 dark:text-slate-300 italic border-l-4 border-blue-500 pl-3 py-1 bg-slate-50 dark:bg-slate-800/50 rounded-r-xl">
               {{ post.excerpt }}
             </p>
           </div>
 
           <!-- Cover Image -->
-          <div v-if="post.cover_image_url" class="rounded-xl overflow-hidden border border-slate-200">
+          <div v-if="post.cover_image_url" class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
             <img :src="post.cover_image_url" :alt="post.title" class="w-full max-h-96 object-cover" />
           </div>
 
@@ -96,7 +96,7 @@ const getFileIcon = (mimeOrName) => {
               <!-- 1. Text Block -->
               <div
                 v-if="block.type === 'text'"
-                class="prose prose-slate max-w-none text-sm leading-relaxed text-slate-800 space-y-3"
+                class="prose prose-slate max-w-none text-sm leading-relaxed text-slate-800 dark:text-slate-100 space-y-3"
                 v-html="block.content"
               ></div>
 
@@ -109,11 +109,11 @@ const getFileIcon = (mimeOrName) => {
                 ]"
               >
                 <figure :class="[
-                  'rounded-xl overflow-hidden border border-slate-200 bg-white p-1 shadow-sm',
+                  'rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-sm',
                   block.size === 'small' ? 'w-full sm:w-1/4' : block.size === 'medium' ? 'w-full sm:w-1/2' : block.size === 'large' ? 'w-full sm:3/4' : 'w-full'
                 ]">
                   <img :src="block.url" :alt="block.caption || post.title" class="w-full h-auto max-h-[500px] object-cover rounded-lg" />
-                  <figcaption v-if="block.caption" class="text-xs text-center text-slate-500 italic mt-2 p-1">
+                  <figcaption v-if="block.caption" class="text-xs text-center text-slate-500 dark:text-slate-400 italic mt-2 p-1">
                     {{ block.caption }}
                   </figcaption>
                 </figure>
@@ -128,10 +128,10 @@ const getFileIcon = (mimeOrName) => {
                   <figure
                     v-for="(gItem, gIdx) in block.items"
                     :key="gIdx"
-                    class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-1 shadow-sm"
+                    class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-1 shadow-sm"
                   >
                     <img v-if="gItem.url" :src="gItem.url" :alt="gItem.caption || ''" class="w-full h-40 object-cover rounded-lg" />
-                    <figcaption v-if="gItem.caption" class="text-[11px] text-center text-slate-600 font-medium italic mt-1.5 p-1">
+                    <figcaption v-if="gItem.caption" class="text-[11px] text-center text-slate-600 dark:text-slate-300 font-medium italic mt-1.5 p-1">
                       {{ gItem.caption }}
                     </figcaption>
                   </figure>
@@ -143,10 +143,10 @@ const getFileIcon = (mimeOrName) => {
                 v-else-if="block.type === 'notice'"
                 :class="[
                   'p-4 rounded-xl border text-xs space-y-1 my-4',
-                  block.style === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-900' :
-                  block.style === 'important' ? 'bg-purple-50 border-purple-200 text-purple-900' :
-                  block.style === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' :
-                  'bg-blue-50 border-blue-200 text-blue-900'
+                  block.style === 'warning' ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200' :
+                  block.style === 'important' ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/60 text-blue-900 dark:text-blue-200' :
+                  block.style === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200' :
+                  'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/60 text-blue-900 dark:text-blue-200'
                 ]"
               >
                 <h4 class="font-bold text-sm flex items-center gap-1.5">
@@ -167,7 +167,7 @@ const getFileIcon = (mimeOrName) => {
                 <a
                   :href="block.url"
                   target="_blank"
-                  class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-1"
+                  class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-1"
                 >
                   {{ block.label }}
                 </a>
@@ -179,13 +179,13 @@ const getFileIcon = (mimeOrName) => {
           <!-- Fallback Raw Content -->
           <div
             v-else-if="post.content"
-            class="prose prose-slate max-w-none text-sm leading-relaxed text-slate-800 space-y-4"
+            class="prose prose-slate max-w-none text-sm leading-relaxed text-slate-800 dark:text-slate-100 space-y-4"
             v-html="post.content"
           ></div>
 
           <!-- Downloadable Attachments Section -->
-          <div v-if="post.attachments && post.attachments.length" class="pt-6 border-t border-slate-100 space-y-3">
-            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+          <div v-if="post.attachments && post.attachments.length" class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
               <span>📎</span> Downloadable Files & Documents ({{ post.attachments.length }})
             </h4>
 
@@ -195,18 +195,18 @@ const getFileIcon = (mimeOrName) => {
                 :key="aIdx"
                 :href="att.url"
                 target="_blank"
-                class="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition-all text-xs group"
+                class="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 transition-all text-xs group"
               >
                 <div class="flex items-center gap-3 overflow-hidden">
                   <span class="text-xl">{{ getFileIcon(att.mime_type || att.name) }}</span>
                   <div class="truncate">
-                    <span class="font-bold text-slate-900 group-hover:text-indigo-600 truncate block">
+                    <span class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate block">
                       {{ att.name }}
                     </span>
-                    <span class="text-[10px] text-slate-500 font-semibold">{{ att.size || 'Download File' }}</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">{{ att.size || 'Download File' }}</span>
                   </div>
                 </div>
-                <span class="text-indigo-600 font-bold group-hover:translate-x-0.5 transition-transform">
+                <span class="text-blue-600 dark:text-blue-400 font-bold group-hover:translate-x-0.5 transition-transform">
                   Download ↓
                 </span>
               </a>

@@ -155,7 +155,7 @@ function getCountryFlag(country) {
                 </div>
 
                 <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1 dark:bg-slate-900 dark:border-slate-800">
-                    <span class="text-[10px] font-bold text-sky-700 uppercase tracking-wider block dark:text-sky-400">🏴󠁧󠁢󠁳󠁣󠁴󠁿 SCOTLAND (GLoS)</span>
+                    <span class="text-[10px] font-bold text-blue-700 uppercase tracking-wider block dark:text-blue-400">🏴󠁧󠁢󠁳󠁣󠁴󠁿 SCOTLAND (GLoS)</span>
                     <span class="text-2xl font-black text-slate-900 block dark:text-white">
                         {{ provinces.filter(p => p.grand_lodge?.code === 'glos' || p.country === 'Scotland').length }}
                     </span>

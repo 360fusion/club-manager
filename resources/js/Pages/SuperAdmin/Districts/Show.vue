@@ -172,7 +172,7 @@ const badge = typeBadge(props.district.type);
 
                 <!-- Social Media & Online Presence -->
                 <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-                    <h2 class="text-xs font-extrabold text-sky-700 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-sky-400 dark:border-slate-800">
+                    <h2 class="text-xs font-extrabold text-blue-700 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-blue-400 dark:border-slate-800">
                         <span>🌐</span> <span>Social Media &amp; Online</span>
                     </h2>
                     <dl class="space-y-3 text-xs">

@@ -215,11 +215,11 @@ const filteredUpdates = computed(() => {
 
 const getCategoryBadge = (cat) => {
   switch (cat) {
-    case 'summons': return { label: '📜 Visiting Summons', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
-    case 'provincial': return { label: '🏛️ Provincial News', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-    case 'event_notice': return { label: '🎟️ Event Notice', color: 'bg-amber-50 text-amber-700 border-amber-200' };
-    case 'charity': return { label: '❤️ Charity Notice', color: 'bg-rose-50 text-rose-700 border-rose-200' };
-    default: return { label: '📣 General Notice', color: 'bg-sky-50 text-sky-700 border-sky-200' };
+    case 'summons': return { label: '📜 Visiting Summons', color: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60' };
+    case 'provincial': return { label: '🏛️ Provincial News', color: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' };
+    case 'event_notice': return { label: '🎟️ Event Notice', color: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60' };
+    case 'charity': return { label: '❤️ Charity Notice', color: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60' };
+    default: return { label: '📣 General Notice', color: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60' };
   }
 };
 </script>
@@ -232,22 +232,22 @@ const getCategoryBadge = (cat) => {
       <CommunicationsTabs :club="club" active-tab="updates" />
       
       <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
           <div class="flex items-center gap-2">
-            <h2 class="text-xl font-bold text-slate-900">Updates & Weekly Digest Hub</h2>
-            <span v-if="counts.approved > 0" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 animate-pulse">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Updates & Weekly Digest Hub</h2>
+            <span v-if="counts.approved > 0" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 animate-pulse">
               {{ counts.approved }} Approved Ready
             </span>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">Collect forwarded summonses, provincial bulletins, and notices to automatically compile into weekly newsletters.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Collect forwarded summonses, provincial bulletins, and notices to automatically compile into weekly newsletters.</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
           <button
             type="button"
             @click="showContentPicker = true"
-            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all flex items-center gap-1.5 cursor-pointer"
+            class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
           >
             🧩 Content Picker
           </button>
@@ -255,7 +255,7 @@ const getCategoryBadge = (cat) => {
           <button
             type="button"
             @click="openCreateModal"
-            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
           >
             + Log New Update Entry
           </button>
@@ -272,22 +272,22 @@ const getCategoryBadge = (cat) => {
       </div>
 
       <!-- Inbound Forwarding Info Card -->
-      <div class="p-4 bg-gradient-to-r from-indigo-900 to-slate-900 text-white rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="p-4 bg-gradient-to-r from-blue-900 to-slate-900 text-white rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-          <span class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">📨</span>
+          <span class="w-10 h-10 rounded-xl bg-white/10 dark:bg-slate-900/10 flex items-center justify-center text-xl">📨</span>
           <div>
-            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-200">Email Forwarding Address</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-blue-200">Email Forwarding Address</h3>
             <p class="text-sm font-mono font-bold text-white mt-0.5">updates-{{ club.slug }}@inbound.360fusionhosting.co.uk</p>
             <p class="text-[11px] text-slate-300 mt-0.5">Forward emails here to automatically log drafts with PDF summonses & flyer attachments.</p>
           </div>
         </div>
-        <div class="text-xs text-indigo-200 bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
+        <div class="text-xs text-blue-200 bg-white/10 dark:bg-slate-900/10 px-3 py-1.5 rounded-xl border border-white/10">
           Status: <strong>Forwarded emails saved as Drafts</strong>
         </div>
       </div>
 
       <!-- Main Filter Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-3 rounded-2xl border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800/80">
         
         <!-- Status Filter Tabs -->
         <div class="flex items-center gap-1 overflow-x-auto">
@@ -295,7 +295,7 @@ const getCategoryBadge = (cat) => {
             @click="activeTab = 'all'"
             :class="[
               'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer',
-              activeTab === 'all' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              activeTab === 'all' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             ]"
           >
             All Items ({{ counts.all }})
@@ -305,40 +305,40 @@ const getCategoryBadge = (cat) => {
             @click="activeTab = 'draft'"
             :class="[
               'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-              activeTab === 'draft' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              activeTab === 'draft' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             ]"
           >
             <span>📄 Drafts (Needs Review)</span>
-            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-100 text-amber-900">{{ counts.draft }}</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200">{{ counts.draft }}</span>
           </button>
 
           <button
             @click="activeTab = 'approved'"
             :class="[
               'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-              activeTab === 'approved' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              activeTab === 'approved' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             ]"
           >
             <span>✅ Approved (Queued)</span>
-            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900">{{ counts.approved }}</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200">{{ counts.approved }}</span>
           </button>
 
           <button
             @click="activeTab = 'sent'"
             :class="[
               'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-              activeTab === 'sent' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              activeTab === 'sent' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             ]"
           >
             <span>✉️ Sent</span>
-            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-900">{{ counts.sent }}</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200">{{ counts.sent }}</span>
           </button>
         </div>
 
         <!-- Category Dropdown Filter -->
         <select
           v-model="activeCategoryFilter"
-          class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-700"
+          class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200"
         >
           <option value="all">Filter All Categories</option>
           <option value="summons">📜 Visiting Summonses</option>
@@ -353,13 +353,13 @@ const getCategoryBadge = (cat) => {
         <div
           v-for="item in filteredUpdates"
           :key="item.id"
-          class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+          class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div class="flex items-start gap-4 min-w-0 flex-1">
             <img
               v-if="item.cover_image_url"
               :src="item.cover_image_url"
-              class="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0"
+              class="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shrink-0"
             />
             <div class="min-w-0 flex-1 space-y-1">
               <div class="flex items-center gap-2 flex-wrap">
@@ -368,19 +368,19 @@ const getCategoryBadge = (cat) => {
                 </span>
 
                 <!-- Status Badge -->
-                <span v-if="item.status === 'draft'" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                <span v-if="item.status === 'draft'" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60">
                   📄 Draft (Review Required)
                 </span>
-                <span v-else-if="item.status === 'approved'" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                <span v-else-if="item.status === 'approved'" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60">
                   ✅ Approved & Queued
                 </span>
-                <span v-else-if="item.status === 'sent'" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                <span v-else-if="item.status === 'sent'" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800/60">
                   ✉️ Sent in Digest
                 </span>
               </div>
 
-              <h3 class="text-sm font-bold text-slate-900 leading-snug">{{ item.title }}</h3>
-              <p v-if="item.summary" class="text-xs text-slate-500 line-clamp-2 leading-relaxed">{{ item.summary }}</p>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white leading-snug">{{ item.title }}</h3>
+              <p v-if="item.summary" class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{{ item.summary }}</p>
 
               <!-- Attachments -->
               <div v-if="item.attachments && item.attachments.length" class="flex flex-wrap items-center gap-1.5 pt-1">
@@ -390,7 +390,7 @@ const getCategoryBadge = (cat) => {
                   :key="aIdx"
                   :href="att.url"
                   target="_blank"
-                  class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-md border border-slate-200 transition-all flex items-center gap-1"
+                  class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold rounded-md border border-slate-200 dark:border-slate-800 transition-all flex items-center gap-1"
                 >
                   📄 {{ att.name }}
                 </a>
@@ -399,7 +399,7 @@ const getCategoryBadge = (cat) => {
           </div>
 
           <!-- Item Action Buttons -->
-          <div class="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+          <div class="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-800">
             <!-- Approve Button -->
             <button
               v-if="item.status === 'draft'"
@@ -415,7 +415,7 @@ const getCategoryBadge = (cat) => {
               v-if="item.status === 'approved'"
               type="button"
               @click="updateStatus(item, 'draft')"
-              class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-xl border border-amber-200 transition-all cursor-pointer"
+              class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800/60 transition-all cursor-pointer"
             >
               ↩️ Revert to Draft
             </button>
@@ -424,7 +424,7 @@ const getCategoryBadge = (cat) => {
             <button
               type="button"
               @click="editUpdate(item)"
-              class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all cursor-pointer"
+              class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all cursor-pointer"
             >
               ✏️ Edit
             </button>
@@ -433,7 +433,7 @@ const getCategoryBadge = (cat) => {
             <button
               type="button"
               @click="deleteUpdate(item)"
-              class="p-1.5 text-slate-400 hover:text-rose-600 font-bold transition-all cursor-pointer"
+              class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold transition-all cursor-pointer"
               title="Delete"
             >
               🗑️
@@ -442,14 +442,14 @@ const getCategoryBadge = (cat) => {
         </div>
       </div>
 
-      <div v-else class="bg-white rounded-2xl p-12 text-center border border-slate-200/80 space-y-3">
+      <div v-else class="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200/80 dark:border-slate-800/80 space-y-3">
         <span class="text-4xl">📭</span>
-        <h3 class="text-sm font-bold text-slate-800">No Update Entries Found</h3>
-        <p class="text-xs text-slate-500">Log forwarded summonses, provincial bulletins, or news items to get started.</p>
+        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">No Update Entries Found</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Log forwarded summonses, provincial bulletins, or news items to get started.</p>
         <button
           type="button"
           @click="openCreateModal"
-          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all inline-block cursor-pointer"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all inline-block cursor-pointer"
         >
           + Log First Update Entry
         </button>
@@ -459,22 +459,22 @@ const getCategoryBadge = (cat) => {
 
     <!-- Create / Edit Drawer Modal -->
     <div v-if="showCreateDrawer" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-          <h3 class="text-base font-bold text-slate-900">{{ isEditing ? 'Edit Update Entry' : 'Log New Update Entry' }}</h3>
-          <button type="button" @click="showCreateDrawer = false" class="text-slate-400 hover:text-slate-600 font-bold text-sm cursor-pointer">✕</button>
+      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ isEditing ? 'Edit Update Entry' : 'Log New Update Entry' }}</h3>
+          <button type="button" @click="showCreateDrawer = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-bold text-sm cursor-pointer">✕</button>
         </div>
 
         <form @submit.prevent="saveUpdate" class="p-6 overflow-y-auto space-y-4 text-xs">
           <div>
-            <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">Title / Subject *</label>
-            <input v-model="form.title" type="text" required placeholder="Visiting Summons - Lodge of Fidelity No. 452" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900" />
+            <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Title / Subject *</label>
+            <input v-model="form.title" type="text" required placeholder="Visiting Summons - Lodge of Fidelity No. 452" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white" />
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">Category *</label>
-              <select v-model="form.category" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold">
+              <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Category *</label>
+              <select v-model="form.category" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-bold">
                 <option value="summons">📜 Visiting Summons</option>
                 <option value="provincial">🏛️ Provincial News</option>
                 <option value="event_notice">🎟️ Event Notice</option>
@@ -484,8 +484,8 @@ const getCategoryBadge = (cat) => {
             </div>
 
             <div>
-              <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">Approval Status *</label>
-              <select v-model="form.status" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold">
+              <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Approval Status *</label>
+              <select v-model="form.status" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-bold">
                 <option value="draft">📄 Draft (Review Required)</option>
                 <option value="approved">✅ Approved & Queued for Mailer</option>
                 <option value="sent">✉️ Sent</option>
@@ -495,36 +495,36 @@ const getCategoryBadge = (cat) => {
 
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="block font-bold text-slate-700 uppercase tracking-wider">Summary / Body Text</label>
+              <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Summary / Body Text</label>
               <button
                 type="button"
                 @click="cleanTextInForm"
-                class="px-2.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-lg border border-indigo-200 transition-all cursor-pointer"
+                class="px-2.5 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer"
                 title="Strip email headers and forwarded signatures"
               >
                 🧹 Clean Email Text
               </button>
             </div>
-            <textarea v-model="form.summary" rows="5" placeholder="Paste or clean forwarded email body here..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs"></textarea>
+            <textarea v-model="form.summary" rows="5" placeholder="Paste or clean forwarded email body here..." class="w-full p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
           </div>
 
           <!-- Cover Image Upload & URL Selection -->
-          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
             <div class="flex items-center justify-between">
-              <label class="block font-bold text-slate-700 uppercase tracking-wider">🖼️ Cover Photo / Banner</label>
+              <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">🖼️ Cover Photo / Banner</label>
               <div class="flex items-center gap-2">
                 <button
                   v-if="coverImagePreview || form.cover_image_url"
                   type="button"
                   @click="removeCoverImage"
-                  class="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold rounded-lg border border-rose-200 transition-all cursor-pointer"
+                  class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-lg border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer"
                 >
                   🗑️ Remove
                 </button>
                 <button
                   type="button"
                   @click="openMediaLibrary('cover', 'updates')"
-                  class="px-2.5 py-0.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-bold rounded-lg border border-sky-200 transition-all cursor-pointer flex items-center gap-1"
+                  class="px-2.5 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer flex items-center gap-1"
                 >
                   📁 Choose from Media Library
                 </button>
@@ -533,22 +533,22 @@ const getCategoryBadge = (cat) => {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Image URL</label>
-                <input v-model="form.cover_image_url" type="text" placeholder="https://..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono" />
+                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Image URL</label>
+                <input v-model="form.cover_image_url" type="text" placeholder="https://..." class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono" />
               </div>
 
               <div>
-                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Or Upload Image File</label>
+                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Or Upload Image File</label>
                 <input
                   type="file"
                   accept="image/*"
                   @change="onCoverFileSelect"
-                  class="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer"
+                  class="w-full text-xs text-slate-600 dark:text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 dark:file:bg-blue-950/40 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40 cursor-pointer"
                 />
               </div>
             </div>
 
-            <div v-if="coverImagePreview || form.cover_image_url" class="relative max-w-xs rounded-xl overflow-hidden border border-slate-200 mt-2">
+            <div v-if="coverImagePreview || form.cover_image_url" class="relative max-w-xs rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 mt-2">
               <img :src="coverImagePreview || form.cover_image_url" class="w-full h-28 object-cover" />
               <button
                 type="button"
@@ -561,24 +561,24 @@ const getCategoryBadge = (cat) => {
           </div>
 
           <!-- Downloadable Attachments & Document Uploads -->
-          <div class="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <div class="space-y-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
             <div class="flex items-center justify-between">
               <div>
-                <label class="block font-bold text-slate-700 uppercase tracking-wider">📎 Downloadable Attachments & Documents</label>
-                <p class="text-[10px] text-slate-500">Upload PDF summonses, agendas, spreadsheets, or flyers.</p>
+                <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">📎 Downloadable Attachments & Documents</label>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">Upload PDF summonses, agendas, spreadsheets, or flyers.</p>
               </div>
               <div class="flex items-center gap-2">
                 <button
                   type="button"
                   @click="openMediaLibrary('attachment', 'updates')"
-                  class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[10px] font-bold rounded-lg border border-amber-200 transition-all cursor-pointer flex items-center gap-1"
+                  class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-[10px] font-bold rounded-lg border border-amber-200 dark:border-amber-800/60 transition-all cursor-pointer flex items-center gap-1"
                 >
                   📁 Select from Media Library
                 </button>
                 <button
                   type="button"
                   @click="triggerDocumentUpload"
-                  class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold rounded-lg shadow-xs transition-all cursor-pointer flex items-center gap-1"
+                  class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-lg shadow-xs transition-all cursor-pointer flex items-center gap-1"
                 >
                   + Upload Document Files
                 </button>
@@ -598,17 +598,17 @@ const getCategoryBadge = (cat) => {
               <div
                 v-for="(att, idx) in form.attachments"
                 :key="idx"
-                class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 text-xs shadow-xs"
+                class="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-xs"
               >
                 <div class="flex items-center gap-2 truncate pr-2">
                   <span class="text-base">📄</span>
-                  <span class="font-bold text-slate-800 truncate">{{ att.name }}</span>
-                  <span v-if="att.isPendingFile" class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-indigo-100 text-indigo-800">New File Upload</span>
+                  <span class="font-bold text-slate-800 dark:text-slate-100 truncate">{{ att.name }}</span>
+                  <span v-if="att.isPendingFile" class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">New File Upload</span>
                 </div>
                 <button
                   type="button"
                   @click="removeAttachment(idx)"
-                  class="text-rose-600 hover:text-rose-800 font-bold px-2 py-0.5 text-xs cursor-pointer"
+                  class="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 font-bold px-2 py-0.5 text-xs cursor-pointer"
                   title="Remove Attachment"
                 >
                   ✕ Remove
@@ -617,21 +617,21 @@ const getCategoryBadge = (cat) => {
             </div>
 
             <!-- Manual Attachment Link Fallback -->
-            <div class="pt-2 border-t border-slate-200/80">
+            <div class="pt-2 border-t border-slate-200/80 dark:border-slate-800/80">
               <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Or Add Document by Web Link:</span>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <input v-model="newAttachmentName" type="text" placeholder="Document Label (e.g. Summons PDF)" class="p-2 bg-white border border-slate-300 rounded-lg text-xs" />
+                <input v-model="newAttachmentName" type="text" placeholder="Document Label (e.g. Summons PDF)" class="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs" />
                 <div class="flex items-center gap-2">
-                  <input v-model="newAttachmentUrl" type="text" placeholder="URL (https://...)" class="flex-1 p-2 bg-white border border-slate-300 rounded-lg text-xs font-mono" />
+                  <input v-model="newAttachmentUrl" type="text" placeholder="URL (https://...)" class="flex-1 p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono" />
                   <button type="button" @click="addAttachmentByUrl" class="px-3 py-2 bg-slate-700 text-white font-bold rounded-lg text-xs cursor-pointer">+ Link</button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="pt-4 border-t border-slate-200 flex items-center justify-end gap-2">
-            <button type="button" @click="showCreateDrawer = false" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl cursor-pointer">Cancel</button>
-            <button type="submit" :disabled="form.processing" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm cursor-pointer">Save Update Item</button>
+          <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+            <button type="button" @click="showCreateDrawer = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl cursor-pointer">Cancel</button>
+            <button type="submit" :disabled="form.processing" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm cursor-pointer">Save Update Item</button>
           </div>
         </form>
       </div>

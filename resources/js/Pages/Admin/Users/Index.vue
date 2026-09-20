@@ -99,13 +99,13 @@ const roleBadgeClass = (role) => {
   switch (role) {
     case 'owner':
     case 'admin':
-      return 'bg-purple-50 text-purple-700 border-purple-200';
+      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60';
     case 'coach':
-      return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60';
     case 'treasurer':
-      return 'bg-amber-50 text-amber-700 border-amber-200';
+      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60';
     default:
-      return 'bg-slate-100 text-slate-700 border-slate-200';
+      return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800';
   }
 };
 
@@ -275,23 +275,23 @@ const submitImportCsv = () => {
     <div class="space-y-6">
       
       <!-- Top Action Bar & Summary Header -->
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
           <div class="flex items-center gap-3">
-            <h2 class="text-xl font-bold text-slate-900">Club Member Roster</h2>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Club Member Roster</h2>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
               {{ members.length }} Total Members
             </span>
           </div>
-          <p class="text-xs text-slate-500 mt-1">Manage club member directory, member IDs, administrative roles, pending approvals, and roster exports.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage club member directory, member IDs, administrative roles, pending approvals, and roster exports.</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5">
           <a
             :href="route('clubs.members.export', { slug: club.slug })"
-            class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+            class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
           >
-            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <span>Export CSV</span>
@@ -299,9 +299,9 @@ const submitImportCsv = () => {
 
           <button
             @click="showImportModal = true"
-            class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+            class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
           >
-            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             <span>Import CSV</span>
@@ -309,7 +309,7 @@ const submitImportCsv = () => {
 
           <button
             @click="showAddModal = true"
-            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5"
+            class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-1.5"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -320,22 +320,22 @@ const submitImportCsv = () => {
       </div>
 
       <!-- Pending Approval Banner (If Invite-Only Registrations are Pending) -->
-      <div v-if="pendingMembers.length > 0" class="bg-amber-50/80 border border-amber-200 p-5 rounded-2xl shadow-sm space-y-4">
+      <div v-if="pendingMembers.length > 0" class="bg-amber-50/80 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800/60 p-5 rounded-2xl shadow-sm space-y-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2.5">
             <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-            <h3 class="text-sm font-bold text-amber-900">
+            <h3 class="text-sm font-bold text-amber-900 dark:text-amber-200">
               Pending Member Approval Requests ({{ pendingMembers.length }})
             </h3>
           </div>
-          <span class="text-xs text-amber-700 font-medium">Invite-Only Approvals</span>
+          <span class="text-xs text-amber-700 dark:text-amber-300 font-medium">Invite-Only Approvals</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div v-for="pending in pendingMembers" :key="pending.id" class="bg-white p-4 rounded-xl border border-amber-200/90 shadow-sm flex items-center justify-between gap-3">
+          <div v-for="pending in pendingMembers" :key="pending.id" class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-amber-200/90 dark:border-amber-800/90 shadow-sm flex items-center justify-between gap-3">
             <div class="overflow-hidden">
-              <div class="text-xs font-bold text-slate-900 truncate">{{ pending.name }}</div>
-              <div class="text-[11px] text-slate-500 truncate">{{ pending.email }}</div>
+              <div class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ pending.name }}</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ pending.email }}</div>
             </div>
             <div class="flex items-center gap-1.5 flex-shrink-0">
               <button
@@ -346,7 +346,7 @@ const submitImportCsv = () => {
               </button>
               <button
                 @click="rejectMember(pending.id)"
-                class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[11px] font-bold rounded-lg transition-all"
+                class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 text-[11px] font-bold rounded-lg transition-all"
               >
                 Reject
               </button>
@@ -356,18 +356,18 @@ const submitImportCsv = () => {
       </div>
 
       <!-- Navigation Tabs along top of Roster -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200/80">
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200/80 dark:border-slate-800/80">
         <button
           @click="activeRosterTab = 'all'"
           :class="[
             'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
             activeRosterTab === 'all'
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+              ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-sm'
+              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
           ]"
         >
           <span>👥 All Members</span>
-          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700']">
+          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200']">
             {{ counts.all }}
           </span>
         </button>
@@ -378,11 +378,11 @@ const submitImportCsv = () => {
             'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
             activeRosterTab === 'active'
               ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
-              : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
           ]"
         >
           <span>✅ Active</span>
-          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200']">
+          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60']">
             {{ counts.active }}
           </span>
         </button>
@@ -393,11 +393,11 @@ const submitImportCsv = () => {
             'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
             activeRosterTab === 'invited_pending'
               ? 'bg-amber-600 text-white shadow-sm shadow-amber-600/20'
-              : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
           ]"
         >
           <span>✉️ Invited & Pending</span>
-          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'invited_pending' ? 'bg-amber-700 text-white' : 'bg-amber-50 text-amber-700 border border-amber-200']">
+          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'invited_pending' ? 'bg-amber-700 text-white' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60']">
             {{ counts.invited_pending }}
           </span>
         </button>
@@ -408,11 +408,11 @@ const submitImportCsv = () => {
             'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
             activeRosterTab === 'deactivated'
               ? 'bg-slate-700 text-white shadow-sm'
-              : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
           ]"
         >
           <span>⏸️ Deactivated</span>
-          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'deactivated' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200']">
+          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'deactivated' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800']">
             {{ counts.deactivated }}
           </span>
         </button>
@@ -423,18 +423,18 @@ const submitImportCsv = () => {
             'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
             activeRosterTab === 'past'
               ? 'bg-rose-600 text-white shadow-sm shadow-rose-600/20'
-              : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/80'
+              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
           ]"
         >
           <span>📜 Past Members</span>
-          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'past' ? 'bg-rose-700 text-white' : 'bg-rose-50 text-rose-700 border border-rose-200']">
+          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'past' ? 'bg-rose-700 text-white' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60']">
             {{ counts.past }}
           </span>
         </button>
       </div>
 
       <!-- Filter & Search Controls -->
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row gap-3 items-center justify-between">
         <!-- Search Input -->
         <div class="relative w-full sm:w-80">
           <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -444,7 +444,7 @@ const submitImportCsv = () => {
             v-model="searchQuery"
             type="text"
             placeholder="Search by name, email, or MEM #..."
-            class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 text-xs rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+            class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
           />
         </div>
 
@@ -453,7 +453,7 @@ const submitImportCsv = () => {
           <select
             v-if="enableMemberRanks"
             v-model="rankFilter"
-            class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium"
+            class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-medium"
           >
             <option value="">All Ranks</option>
             <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
@@ -461,7 +461,7 @@ const submitImportCsv = () => {
 
           <select
             v-model="roleFilter"
-            class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+            class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           >
             <option value="">All Roles</option>
             <option value="admin">Admin / Owner</option>
@@ -472,7 +472,7 @@ const submitImportCsv = () => {
 
           <select
             v-model="statusFilter"
-            class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+            class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           >
             <option value="">All Statuses</option>
             <option value="active">Active</option>
@@ -483,7 +483,7 @@ const submitImportCsv = () => {
 
           <select
             v-model="committeeRoleFilter"
-            class="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium"
+            class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-medium"
           >
             <option value="">All Committee Roles</option>
             <option value="any">On Committee (Any)</option>
@@ -496,11 +496,11 @@ const submitImportCsv = () => {
       </div>
 
       <!-- Members Directory Table -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
-              <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+              <tr class="bg-slate-50/80 dark:bg-slate-800/50/80 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <th class="py-3.5 px-6">Member Name & Email</th>
                 <th class="py-3.5 px-4">Member ID #</th>
                 <th v-if="enableMemberRanks" class="py-3.5 px-4">Rank</th>
@@ -511,35 +511,35 @@ const submitImportCsv = () => {
                 <th class="py-3.5 px-6 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200">
               <tr
                 v-for="m in filteredMembers"
                 :key="m.id"
-                class="hover:bg-slate-50/50 transition-colors"
+                class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50 transition-colors"
               >
                 <!-- Name & Email -->
                 <td class="py-4 px-6">
                   <div class="flex items-center gap-3">
                     <Link 
                       :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
-                      class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-sky-400 text-white font-bold flex items-center justify-center text-xs uppercase flex-shrink-0 shadow-sm hover:opacity-90 transition-opacity"
+                      class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-400 text-white font-bold flex items-center justify-center text-xs uppercase flex-shrink-0 shadow-sm hover:opacity-90 transition-opacity"
                     >
                       {{ m.name.substring(0, 2) }}
                     </Link>
                     <div class="overflow-hidden">
                       <Link 
                         :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
-                        class="font-bold text-slate-900 hover:text-indigo-600 transition-colors truncate block"
+                        class="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate block"
                       >
                         {{ m.name }}
                       </Link>
-                      <div class="text-[11px] text-slate-500 truncate">{{ m.email }}</div>
+                      <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ m.email }}</div>
                     </div>
                   </div>
                 </td>
 
                 <!-- Member Number -->
-                <td class="py-4 px-4 font-mono font-bold text-slate-800">
+                <td class="py-4 px-4 font-mono font-bold text-slate-800 dark:text-slate-100">
                   {{ m.member_number }}
                 </td>
 
@@ -548,7 +548,7 @@ const submitImportCsv = () => {
                   <select
                     :value="m.rank"
                     @change="updateRank(m.id, $event.target.value)"
-                    class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-slate-50 text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-all"
+                    class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 outline-none cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                   >
                     <option value="">No Rank</option>
                     <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
@@ -580,12 +580,12 @@ const submitImportCsv = () => {
                     :class="[
                       'px-2.5 py-1 text-xs font-bold rounded-lg border outline-none cursor-pointer transition-all',
                       m.committee_role === 'chair'
-                        ? 'bg-amber-50 text-amber-800 border-amber-300'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700/60'
                         : m.committee_role === 'secretary'
-                        ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
+                        ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700/60'
                         : m.committee_role === 'member'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                        : 'bg-slate-50 text-slate-400 border-slate-200'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700/60'
+                        : 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 border-slate-200 dark:border-slate-800'
                     ]"
                   >
                     <option value="">— None —</option>
@@ -601,12 +601,12 @@ const submitImportCsv = () => {
                     :class="[
                       'px-2.5 py-0.5 rounded-full text-[11px] font-bold border uppercase tracking-wider',
                       m.status === 'active'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
                         : m.status === 'inactive'
-                        ? 'bg-slate-100 text-slate-700 border-slate-300'
+                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700'
                         : m.status === 'past'
-                        ? 'bg-rose-50 text-rose-700 border-rose-200'
-                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                        ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60'
+                        : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
                     ]"
                   >
                     {{ m.status === 'inactive' ? 'Deactivated' : m.status === 'past' ? 'Past Member' : m.status }}
@@ -614,7 +614,7 @@ const submitImportCsv = () => {
                 </td>
 
                 <!-- Joined Date -->
-                <td class="py-4 px-4 text-slate-500">
+                <td class="py-4 px-4 text-slate-500 dark:text-slate-400">
                   {{ m.joined_at }}
                 </td>
 
@@ -624,7 +624,7 @@ const submitImportCsv = () => {
                   <template v-if="m.status === 'pending' && !m.invitation_accepted_at">
                     <button
                       @click="sendInviteEmail(m.id)"
-                      class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                      class="px-2 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
                       :title="m.invitation_token ? `Invited on ${m.invited_at}` : 'Send activation email'"
                     >
                       <span>✉️</span>
@@ -633,7 +633,7 @@ const submitImportCsv = () => {
                     <button
                       v-if="m.invitation_token || m.invited_at"
                       @click="revokeInviteEmail(m.id, m.name)"
-                      class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                      class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
                       title="Revoke active invitation token"
                     >
                       <span>Revoke</span>
@@ -645,7 +645,7 @@ const submitImportCsv = () => {
                   <template v-if="m.status === 'inactive'">
                     <button
                       @click="restoreMember(m.id, m.name)"
-                      class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                      class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold rounded-lg transition-all cursor-pointer"
                     >
                       ✓ Restore Access
                     </button>
@@ -655,7 +655,7 @@ const submitImportCsv = () => {
                   <template v-else-if="m.status === 'past'">
                     <button
                       @click="restoreMember(m.id, m.name)"
-                      class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                      class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold rounded-lg transition-all cursor-pointer"
                     >
                       ↺ Restore Member
                     </button>
@@ -681,14 +681,14 @@ const submitImportCsv = () => {
       </div>
 
       <!-- Public Registration Link Widget Card (At Bottom) -->
-      <div class="bg-gradient-to-r from-indigo-50/90 via-sky-50/70 to-white p-5 rounded-2xl border border-indigo-100/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="bg-gradient-to-r from-blue-50/90 dark:from-blue-950/90 via-blue-50/70 dark:via-blue-950/70 to-white p-5 rounded-2xl border border-blue-100/90 dark:border-blue-900/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="space-y-1">
           <div class="flex items-center gap-2">
             <span class="text-base">🔗</span>
-            <h3 class="text-sm font-bold text-slate-900">Public Member Registration Link</h3>
-            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-indigo-100 text-indigo-700">Invite Link</span>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Public Member Registration Link</h3>
+            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">Invite Link</span>
           </div>
-          <p class="text-xs text-slate-500">Share this direct URL with prospective members so they can register or submit membership requests.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Share this direct URL with prospective members so they can register or submit membership requests.</p>
         </div>
 
         <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -696,13 +696,13 @@ const submitImportCsv = () => {
             type="text"
             readonly
             :value="registrationUrl"
-            class="w-full sm:w-80 px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs font-mono text-slate-700 truncate outline-none select-all shadow-sm"
+            class="w-full sm:w-80 px-3 py-2 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-mono text-slate-700 dark:text-slate-200 truncate outline-none select-all shadow-sm"
           />
           <button
             @click="copyRegistrationLink"
             :class="[
               'px-4 py-2 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm whitespace-nowrap cursor-pointer',
-              inviteCopied ? 'bg-emerald-600 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white'
+              inviteCopied ? 'bg-emerald-600 text-white' : 'bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white'
             ]"
           >
             <svg v-if="!inviteCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -723,43 +723,43 @@ const submitImportCsv = () => {
       v-if="showAddModal"
       class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
     >
-      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-100">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 class="text-base font-bold text-slate-900">Add New Club Member</h3>
-          <button @click="showAddModal = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Add New Club Member</h3>
+          <button @click="showAddModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold">
             &times;
           </button>
         </div>
 
         <form @submit.prevent="submitAddMember" class="space-y-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Full Name</label>
             <input
               v-model="addForm.name"
               type="text"
               required
               placeholder="e.g. Samuel Green"
-              class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Email Address</label>
             <input
               v-model="addForm.email"
               type="email"
               required
               placeholder="samuel@example.com"
-              class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Club Role</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Club Role</label>
               <select
                 v-model="addForm.role"
-                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="member">Member</option>
                 <option value="coach">Coach</option>
@@ -769,10 +769,10 @@ const submitImportCsv = () => {
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Committee Role</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Committee Role</label>
               <select
                 v-model="addForm.committee_role"
-                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">— Not on Committee —</option>
                 <option value="chair">👑 Chair</option>
@@ -782,10 +782,10 @@ const submitImportCsv = () => {
             </div>
 
             <div v-if="enableMemberRanks">
-              <label class="block text-xs font-bold text-slate-700 mb-1">Member Rank</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Member Rank</label>
               <select
                 v-model="addForm.rank"
-                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">No Rank Assigned</option>
                 <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
@@ -793,12 +793,12 @@ const submitImportCsv = () => {
             </div>
 
             <div :class="enableMemberRanks ? '' : 'col-span-2'">
-              <label class="block text-xs font-bold text-slate-700 mb-1">Member Number</label>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Member Number</label>
               <input
                 v-model="addForm.member_number"
                 type="text"
                 placeholder="OUBC-204"
-                class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -807,23 +807,23 @@ const submitImportCsv = () => {
             <input
               type="checkbox"
               v-model="addForm.send_invite"
-              class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer"
             />
-            <span class="text-xs font-bold text-slate-700">Send email invitation to activate account</span>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Send email invitation to activate account</span>
           </label>
 
-          <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               @click="showAddModal = false"
-              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl"
+              class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
               :disabled="addForm.processing"
-              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20"
             >
               Add Member
             </button>
@@ -837,16 +837,16 @@ const submitImportCsv = () => {
       v-if="showImportModal"
       class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
     >
-      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-100">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 class="text-base font-bold text-slate-900">Bulk Import Roster via CSV</h3>
-          <button @click="showImportModal = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Bulk Import Roster via CSV</h3>
+          <button @click="showImportModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold">
             &times;
           </button>
         </div>
 
-        <p class="text-xs text-slate-500">
-          Upload a CSV file containing columns: <code class="bg-slate-100 text-slate-700 px-1 py-0.5 rounded">Name, Email, Role, MemberNumber</code>.
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Upload a CSV file containing columns: <code class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-1 py-0.5 rounded">Name, Email, Role, MemberNumber</code>.
         </p>
 
         <form @submit.prevent="submitImportCsv" class="space-y-4">
@@ -856,15 +856,15 @@ const submitImportCsv = () => {
               accept=".csv,.txt"
               @change="importForm.csv_file = $event.target.files[0]"
               required
-              class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              class="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 dark:file:bg-blue-950/40 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40"
             />
           </div>
 
-          <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               @click="showImportModal = false"
-              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl"
+              class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl"
             >
               Cancel
             </button>

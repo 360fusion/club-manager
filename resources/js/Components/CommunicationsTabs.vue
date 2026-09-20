@@ -11,12 +11,12 @@ defineProps({
 </script>
 
 <template>
-  <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 mb-6 shadow-inner">
+  <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 dark:border-slate-700/60 mb-6 shadow-inner">
     <Link
       :href="route('admin.posts.index', { clubSlug: club.slug })"
       :class="[
         'px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer',
-        activeTab === 'posts' ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+        activeTab === 'posts' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60'
       ]"
     >
       <span>📰</span>
@@ -27,7 +27,7 @@ defineProps({
       :href="route('admin.newsletters.index', { clubSlug: club.slug })"
       :class="[
         'px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer',
-        activeTab === 'newsletters' ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+        activeTab === 'newsletters' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60'
       ]"
     >
       <span>✉️</span>
@@ -38,7 +38,7 @@ defineProps({
       :href="route('admin.updates.index', { clubSlug: club.slug })"
       :class="[
         'px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer',
-        activeTab === 'updates' ? 'bg-slate-900 text-white shadow-md font-black' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+        activeTab === 'updates' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60'
       ]"
     >
       <span>📜</span>

@@ -73,12 +73,12 @@ class ClubCommitteeMeeting extends Model
     public function displayBadgeClass(): string
     {
         if ($this->isPast()) {
-            return 'bg-slate-100 text-slate-600 border-slate-200';
+            return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800';
         }
 
         return match ($this->status) {
-            CommitteeMeetingStatus::Draft, CommitteeMeetingStatus::DraftSaved => 'bg-amber-50 text-amber-800 border-amber-200',
-            CommitteeMeetingStatus::Scheduled => 'bg-sky-100 text-sky-800 border-sky-200',
+            CommitteeMeetingStatus::Draft, CommitteeMeetingStatus::DraftSaved => 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800/60',
+            CommitteeMeetingStatus::Scheduled => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60',
             default => $this->status->badgeClass(),
         };
     }

@@ -58,20 +58,20 @@ const saveChannel = () => {
     <div class="max-w-4xl mx-auto space-y-6">
       
       <!-- Top Action Bar -->
-      <div class="flex items-center justify-between bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex items-center justify-between bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
           <div class="flex items-center gap-2 mb-1">
             <Link
               :href="route('admin.newsletters.types', club.slug)"
-              class="inline-flex items-center text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors"
+              class="inline-flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               ← Back to Channels
             </Link>
           </div>
-          <h2 class="text-xl font-bold text-slate-900">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">
             {{ type.id ? '⚙️ Edit Channel Settings — ' + type.name : '✨ Create Newsletter Channel' }}
           </h2>
-          <p class="text-xs text-slate-500 mt-0.5">
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Configure channel identity, visiting brethren access, Secretary approval rules, and delivery settings.
           </p>
         </div>
@@ -81,32 +81,32 @@ const saveChannel = () => {
       <form @submit.prevent="saveChannel" class="space-y-6">
         
         <!-- Section 1: Channel Identity & Branding -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-2">
             1. Channel Identity & Branding
           </h3>
 
           <div class="grid grid-cols-4 gap-4">
             <div class="col-span-1">
-              <label class="block text-xs font-bold text-slate-700 mb-1">Channel Icon *</label>
-              <input v-model="form.icon" type="text" class="w-full p-2.5 border border-slate-300 rounded-xl text-center text-xl font-bold bg-slate-50" required />
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Channel Icon *</label>
+              <input v-model="form.icon" type="text" class="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-xl font-bold bg-slate-50 dark:bg-slate-800/50" required />
             </div>
             <div class="col-span-3">
-              <label class="block text-xs font-bold text-slate-700 mb-1">Channel Name *</label>
-              <input v-model="form.name" type="text" placeholder="e.g. Meeting Summonses, General News, Social Bulletins" class="w-full p-2.5 border border-slate-300 rounded-xl font-bold text-slate-900 bg-slate-50" required />
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Channel Name *</label>
+              <input v-model="form.name" type="text" placeholder="e.g. Meeting Summonses, General News, Social Bulletins" class="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800/50" required />
             </div>
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Channel Description</label>
-            <textarea v-model="form.description" rows="2" placeholder="Briefly describe the purpose of this channel..." class="w-full p-2.5 border border-slate-300 rounded-xl text-xs bg-slate-50"></textarea>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Channel Description</label>
+            <textarea v-model="form.description" rows="2" placeholder="Briefly describe the purpose of this channel..." class="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs bg-slate-50 dark:bg-slate-800/50"></textarea>
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Badge Theme Color</label>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Badge Theme Color</label>
             <div class="flex items-center gap-3">
-              <input v-model="form.color" type="color" class="w-12 h-9 rounded-xl border border-slate-300 cursor-pointer" />
-              <input v-model="form.color" type="text" class="w-32 p-2 border border-slate-300 rounded-xl font-mono text-xs font-bold bg-slate-50 text-slate-900" />
+              <input v-model="form.color" type="color" class="w-12 h-9 rounded-xl border border-slate-300 dark:border-slate-700 cursor-pointer" />
+              <input v-model="form.color" type="text" class="w-32 p-2 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-xs font-bold bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white" />
               <span :style="{ backgroundColor: form.color }" class="px-3 py-1 rounded-lg text-white font-bold text-xs shadow-xs flex items-center gap-1">
                 {{ form.icon }} {{ form.name || 'Sample Badge' }}
               </span>
@@ -115,41 +115,41 @@ const saveChannel = () => {
         </div>
 
         <!-- Section 2: Visibility & Visiting Brethren Access -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-2">
             2. Visibility & External Subscriptions
           </h3>
 
           <div class="space-y-3">
-            <label class="flex items-start gap-3 cursor-pointer bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition-all">
-              <input v-model="form.is_external_subscribable" type="checkbox" class="mt-1 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+            <label class="flex items-start gap-3 cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all">
+              <input v-model="form.is_external_subscribable" type="checkbox" class="mt-1 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 w-4 h-4" />
               <div>
-                <span class="font-bold text-slate-900 text-sm">🌐 Allow External Subscriptions (Visiting Brethren / Other Lodges)</span>
-                <p class="text-slate-500 text-xs mt-0.5">When enabled, this channel will be listed in the National Directory allowing brethren from other lodges to subscribe.</p>
+                <span class="font-bold text-slate-900 dark:text-white text-sm">🌐 Allow External Subscriptions (Visiting Brethren / Other Lodges)</span>
+                <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">When enabled, this channel will be listed in the National Directory allowing brethren from other lodges to subscribe.</p>
               </div>
             </label>
 
-            <label v-if="form.is_external_subscribable" class="flex items-start gap-3 cursor-pointer bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-amber-300 transition-all ml-4">
-              <input v-model="form.require_approval" type="checkbox" class="mt-1 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+            <label v-if="form.is_external_subscribable" class="flex items-start gap-3 cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700/60 transition-all ml-4">
+              <input v-model="form.require_approval" type="checkbox" class="mt-1 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 w-4 h-4" />
               <div>
-                <span class="font-bold text-slate-900 text-sm">⏳ Require Secretary Approval for Visiting Brethren</span>
-                <p class="text-slate-500 text-xs mt-0.5">External subscription requests will enter a pending approval queue before receiving broadcasts.</p>
+                <span class="font-bold text-slate-900 dark:text-white text-sm">⏳ Require Secretary Approval for Visiting Brethren</span>
+                <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">External subscription requests will enter a pending approval queue before receiving broadcasts.</p>
               </div>
             </label>
 
-            <label class="flex items-start gap-3 cursor-pointer bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-purple-300 transition-all">
-              <input v-model="form.is_mandatory" type="checkbox" class="mt-1 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+            <label class="flex items-start gap-3 cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all">
+              <input v-model="form.is_mandatory" type="checkbox" class="mt-1 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 w-4 h-4" />
               <div>
-                <span class="font-bold text-slate-900 text-sm">🔒 Mandatory Official Notice (No Member Unsubscribe)</span>
-                <p class="text-slate-500 text-xs mt-0.5">Enforces lodge bylaws compliance — active internal members cannot unsubscribe from official notices like Summonses.</p>
+                <span class="font-bold text-slate-900 dark:text-white text-sm">🔒 Mandatory Official Notice (No Member Unsubscribe)</span>
+                <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Enforces lodge bylaws compliance — active internal members cannot unsubscribe from official notices like Summonses.</p>
               </div>
             </label>
           </div>
         </div>
 
         <!-- Section 3: Default Target Roles -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-2">
             3. Default Recipient Roles
           </h3>
 
@@ -161,34 +161,34 @@ const saveChannel = () => {
               :class="[
                 'p-3.5 rounded-xl border text-xs font-bold cursor-pointer transition-all flex items-center justify-between',
                 form.default_roles.includes(role.id)
-                  ? 'bg-indigo-50 border-indigo-300 text-indigo-900 shadow-sm'
-                  : 'bg-slate-50 border-slate-200 text-slate-500'
+                  ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 text-blue-900 dark:text-blue-200 shadow-sm'
+                  : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
               ]"
             >
               <span>{{ role.label }}</span>
-              <span v-if="form.default_roles.includes(role.id)" class="text-indigo-600">✓</span>
+              <span v-if="form.default_roles.includes(role.id)" class="text-blue-600 dark:text-blue-400">✓</span>
             </div>
           </div>
         </div>
 
         <!-- Section 4: Automated Digest & Content Sources -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-2">
             4. Automated Digest & Content Sources
           </h3>
 
-          <label class="flex items-start gap-3 cursor-pointer bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition-all">
-            <input v-model="form.is_automated_digest" type="checkbox" class="mt-1 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+          <label class="flex items-start gap-3 cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all">
+            <input v-model="form.is_automated_digest" type="checkbox" class="mt-1 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 w-4 h-4" />
             <div>
-              <span class="font-bold text-slate-900 text-sm">🤖 Enable Automated Weekly Digest Schedule</span>
-              <p class="text-slate-500 text-xs mt-0.5">Automatically compiles and sends a consolidated newsletter on a scheduled day and time.</p>
+              <span class="font-bold text-slate-900 dark:text-white text-sm">🤖 Enable Automated Weekly Digest Schedule</span>
+              <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Automatically compiles and sends a consolidated newsletter on a scheduled day and time.</p>
             </div>
           </label>
 
-          <div v-if="form.is_automated_digest" class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
+          <div v-if="form.is_automated_digest" class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-blue-50/50 dark:bg-blue-950/50 rounded-xl border border-blue-100 dark:border-blue-900/40">
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Frequency</label>
-              <select v-model="form.digest_frequency" class="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs font-bold">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Frequency</label>
+              <select v-model="form.digest_frequency" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold">
                 <option value="weekly">Weekly</option>
                 <option value="biweekly">Bi-Weekly</option>
                 <option value="monthly">Monthly</option>
@@ -196,8 +196,8 @@ const saveChannel = () => {
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Dispatch Day</label>
-              <select v-model="form.digest_send_day" class="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs font-bold">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Dispatch Day</label>
+              <select v-model="form.digest_send_day" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold">
                 <option value="monday">Monday</option>
                 <option value="tuesday">Tuesday</option>
                 <option value="wednesday">Wednesday</option>
@@ -209,49 +209,49 @@ const saveChannel = () => {
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Dispatch Time</label>
-              <input v-model="form.digest_send_time" type="time" class="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold" />
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Dispatch Time</label>
+              <input v-model="form.digest_send_time" type="time" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold" />
             </div>
           </div>
 
           <div class="space-y-2 pt-2">
-            <span class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Automated Content Modules to Aggregate:</span>
+            <span class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Automated Content Modules to Aggregate:</span>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
-                <input v-model="form.include_updates" type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" />
-                <span class="text-xs font-bold text-slate-800">📜 Approved Updates & Forwarded Summonses</span>
+              <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+                <input v-model="form.include_updates" type="checkbox" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">📜 Approved Updates & Forwarded Summonses</span>
               </label>
 
-              <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
-                <input v-model="form.include_upcoming_meetings" type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" />
-                <span class="text-xs font-bold text-slate-800">📅 Upcoming Lodge & Committee Meetings</span>
+              <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+                <input v-model="form.include_upcoming_meetings" type="checkbox" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">📅 Upcoming Lodge & Committee Meetings</span>
               </label>
 
-              <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
-                <input v-model="form.include_upcoming_events" type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" />
-                <span class="text-xs font-bold text-slate-800">🎟️ Upcoming Events & Dining (Next 30 Days)</span>
+              <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+                <input v-model="form.include_upcoming_events" type="checkbox" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">🎟️ Upcoming Events & Dining (Next 30 Days)</span>
               </label>
 
-              <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
-                <input v-model="form.include_news_posts" type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" />
-                <span class="text-xs font-bold text-slate-800">📰 Recent News Articles</span>
+              <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+                <input v-model="form.include_news_posts" type="checkbox" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">📰 Recent News Articles</span>
               </label>
             </div>
           </div>
         </div>
 
         <!-- Submit Bar -->
-        <div class="flex items-center justify-end gap-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+        <div class="flex items-center justify-end gap-3 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
           <Link
             :href="route('admin.newsletters.types', club.slug)"
-            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all"
+            class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition-all"
           >
             Cancel
           </Link>
           <button
             type="submit"
             :disabled="form.processing"
-            class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
+            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer"
           >
             💾 Save Newsletter Channel
           </button>

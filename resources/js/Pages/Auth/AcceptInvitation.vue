@@ -43,12 +43,12 @@ const submit = () => {
         <div v-if="club.logo_url" class="inline-block mb-1">
           <img :src="club.logo_url" :alt="club.name" class="h-14 max-w-44 object-contain mx-auto" />
         </div>
-        <div v-else class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-2xl font-black mb-1">
+        <div v-else class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-2xl font-black mb-1">
           {{ club.name.substring(0, 2).toUpperCase() }}
         </div>
 
         <div>
-          <span class="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <span class="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
             {{ isExistingUser ? 'Existing Account Access' : 'Official Member Invitation' }}
           </span>
           <h1 class="text-2xl font-black text-white mt-2">
@@ -66,7 +66,7 @@ const submit = () => {
           {{ isExistingUser ? 'Confirm Access For' : 'Invited Member' }}
         </div>
         <div class="font-bold text-sm text-slate-100">{{ user.name }}</div>
-        <div class="text-xs font-mono text-indigo-400">{{ user.email }}</div>
+        <div class="text-xs font-mono text-blue-400">{{ user.email }}</div>
         <p v-if="isExistingUser" class="text-[11px] text-slate-400 pt-1">
           You already have an active Club Manager account. Enter your password to log in and access <strong>{{ club.name }}</strong>.
         </p>
@@ -89,7 +89,7 @@ const submit = () => {
             required
             autofocus
             :placeholder="isExistingUser ? 'Your account password...' : 'Min. 8 characters...'"
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
 
@@ -102,14 +102,14 @@ const submit = () => {
             type="password"
             required
             placeholder="Confirm password..."
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
 
         <button
           type="submit"
           :disabled="form.processing"
-          class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 mt-2 cursor-pointer flex items-center justify-center gap-2"
+          class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 mt-2 cursor-pointer flex items-center justify-center gap-2"
         >
           <span>{{ isExistingUser ? `Log In & Access ${club.name}` : 'Activate Account & Enter Member Portal' }}</span>
           <span>&rarr;</span>

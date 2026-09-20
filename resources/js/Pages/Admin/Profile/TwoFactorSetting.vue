@@ -44,34 +44,34 @@ const generateNewRecoveryCodes = () => {
     <div class="max-w-4xl mx-auto space-y-6">
       
       <!-- Top Action & Info Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
           <div class="flex items-center gap-2">
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
               Security & Authentication
             </span>
           </div>
-          <h2 class="text-xl font-bold text-slate-900 mt-1">Two-Factor Authentication (2FA)</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Secure your administrator account using Google Authenticator, Authy, or 1Password.</p>
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1">Two-Factor Authentication (2FA)</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Secure your administrator account using Google Authenticator, Authy, or 1Password.</p>
         </div>
 
-        <Link :href="route('profile.edit')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-all flex items-center gap-1.5 justify-center self-start sm:self-auto">
+        <Link :href="route('profile.edit')" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 transition-all flex items-center gap-1.5 justify-center self-start sm:self-auto">
           <span>&larr; Back to Profile</span>
         </Link>
       </div>
 
       <!-- Main Status Card -->
-      <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 space-y-6">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
         
         <!-- Status Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-2xl">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 flex items-center justify-center text-2xl">
               🛡️
             </div>
             <div>
-              <h3 class="text-base font-bold text-slate-900">2FA Protection Status</h3>
-              <p class="text-xs text-slate-500 mt-0.5">
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">2FA Protection Status</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {{ twoFactorEnabled ? 'Two-Factor Authentication is active and protecting your account.' : (twoFactorPending ? '2FA setup initiated. Confirm your authenticator code below.' : 'Two-Factor Authentication is currently disabled.') }}
               </p>
             </div>
@@ -80,7 +80,7 @@ const generateNewRecoveryCodes = () => {
           <span
             :class="[
               'px-3 py-1 rounded-full text-xs font-bold uppercase border tracking-wider self-start sm:self-auto',
-              twoFactorEnabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (twoFactorPending ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-700 border-slate-200')
+              twoFactorEnabled ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : (twoFactorPending ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800')
             ]"
           >
             {{ twoFactorEnabled ? 'Active' : (twoFactorPending ? 'Pending Confirmation' : 'Disabled') }}
@@ -89,13 +89,13 @@ const generateNewRecoveryCodes = () => {
 
         <!-- Setup Step 1: Enable 2FA Button -->
         <div v-if="!twoFactorEnabled && !twoFactorPending" class="space-y-4">
-          <p class="text-xs text-slate-600 leading-relaxed">
+          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
             When Two-Factor Authentication is enabled, you will be prompted for a secure 6-digit TOTP token generated by your mobile authenticator app (Google Authenticator, Authy, Microsoft Authenticator, etc.) whenever you sign in.
           </p>
 
           <button
             @click="enable2FA"
-            class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-indigo-600/20"
+            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-600/20"
           >
             Enable Two-Factor Authentication &rarr;
           </button>
@@ -103,16 +103,16 @@ const generateNewRecoveryCodes = () => {
 
         <!-- Setup Step 2: Pending Confirmation (QR Code Display) -->
         <div v-if="twoFactorPending" class="space-y-6">
-          <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row items-center gap-6">
-            <div v-if="qrCodeSvg" v-html="qrCodeSvg" class="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm flex-shrink-0"></div>
+          <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center gap-6">
+            <div v-if="qrCodeSvg" v-html="qrCodeSvg" class="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex-shrink-0"></div>
 
             <div class="space-y-3">
-              <h4 class="font-bold text-slate-900 text-sm">Scan with your Authenticator App</h4>
-              <p class="text-xs text-slate-600 leading-relaxed">
+              <h4 class="font-bold text-slate-900 dark:text-white text-sm">Scan with your Authenticator App</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 Open Google Authenticator, Authy, 1Password, or Microsoft Authenticator on your mobile phone and scan the QR code.
               </p>
-              <div v-if="secretKey" class="text-xs font-mono bg-white px-3 py-2 rounded-xl border border-slate-200 text-slate-700">
-                Manual Entry Key: <strong class="text-indigo-600 select-all font-bold">{{ secretKey }}</strong>
+              <div v-if="secretKey" class="text-xs font-mono bg-white dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200">
+                Manual Entry Key: <strong class="text-blue-600 dark:text-blue-400 select-all font-bold">{{ secretKey }}</strong>
               </div>
             </div>
           </div>
@@ -120,7 +120,7 @@ const generateNewRecoveryCodes = () => {
           <!-- Confirm TOTP Form -->
           <form @submit.prevent="confirm2FA" class="space-y-4 max-w-sm">
             <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-2">
                 Enter 6-Digit Code from App
               </label>
               <input
@@ -128,9 +128,9 @@ const generateNewRecoveryCodes = () => {
                 type="text"
                 maxlength="6"
                 placeholder="123456"
-                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-center text-lg font-mono text-slate-900 focus:outline-none focus:border-indigo-500"
+                class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-lg font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
               />
-              <div v-if="confirmForm.errors.code" class="text-xs text-rose-600 mt-1">{{ confirmForm.errors.code }}</div>
+              <div v-if="confirmForm.errors.code" class="text-xs text-rose-600 dark:text-rose-400 mt-1">{{ confirmForm.errors.code }}</div>
             </div>
 
             <button
@@ -148,30 +148,30 @@ const generateNewRecoveryCodes = () => {
           
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <h4 class="font-bold text-slate-900 text-sm">Emergency Recovery Codes</h4>
+              <h4 class="font-bold text-slate-900 dark:text-white text-sm">Emergency Recovery Codes</h4>
               <button
                 @click="generateNewRecoveryCodes"
-                class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-all"
+                class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 transition-all"
               >
                 Regenerate Codes
               </button>
             </div>
-            <p class="text-xs text-slate-500 leading-relaxed">
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               Store these single-use recovery codes in a secure password manager. If you lose access to your phone, these codes allow emergency login.
             </p>
           </div>
 
-          <div v-if="recoveryCodes && recoveryCodes.length" class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-            <div v-for="code in recoveryCodes" :key="code" class="p-2.5 bg-white rounded-xl font-mono text-xs text-center text-slate-800 border border-slate-200 select-all font-semibold shadow-2xs">
+          <div v-if="recoveryCodes && recoveryCodes.length" class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div v-for="code in recoveryCodes" :key="code" class="p-2.5 bg-white dark:bg-slate-900 rounded-xl font-mono text-xs text-center text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-800 select-all font-semibold shadow-2xs">
               {{ code }}
             </div>
           </div>
 
           <!-- Disable Button -->
-          <div class="pt-4 border-t border-slate-100 flex justify-end">
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
             <button
               @click="disable2FA"
-              class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl transition-all"
+              class="px-4 py-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-xs font-bold rounded-xl transition-all"
             >
               Disable Two-Factor Authentication
             </button>

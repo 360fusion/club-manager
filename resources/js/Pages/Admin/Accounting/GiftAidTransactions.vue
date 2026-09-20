@@ -98,11 +98,11 @@ const resetFilters = () => {
     <div class="max-w-7xl mx-auto space-y-6 pb-12">
 
       <!-- Top Charity Section Sub-Navigation Bar -->
-      <div class="bg-white border border-slate-200/90 rounded-2xl p-2 shadow-sm flex items-center justify-between gap-2 overflow-x-auto">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-2 shadow-sm flex items-center justify-between gap-2 overflow-x-auto">
         <div class="flex items-center gap-1.5">
           <Link
             :href="route('admin.club_acc.charity.index', club.slug)"
-            class="px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            class="px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 whitespace-nowrap text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <span>📊</span>
             <span>Charity Dashboard</span>
@@ -110,7 +110,7 @@ const resetFilters = () => {
 
           <Link
             :href="route('admin.charity.giftaid.transactions_page', club.slug)"
-            class="px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 whitespace-nowrap bg-purple-700 text-white shadow-md font-extrabold"
+            class="px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 whitespace-nowrap bg-blue-700 text-white shadow-md font-extrabold"
           >
             <span>🏛️</span>
             <span>Gift Aid Page</span>
@@ -118,7 +118,7 @@ const resetFilters = () => {
 
           <Link
             :href="route('admin.club_acc.charity.festival', club.slug)"
-            class="px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            class="px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 whitespace-nowrap text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <span>🏆</span>
             <span>Festival Information</span>
@@ -127,7 +127,7 @@ const resetFilters = () => {
       </div>
 
       <!-- Top Navigation & Action Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 text-white p-6 rounded-3xl shadow-xl">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 dark:bg-slate-700 text-white p-6 rounded-3xl shadow-xl">
         <div class="space-y-1">
           <div class="flex items-center gap-2.5">
             <Link
@@ -136,7 +136,7 @@ const resetFilters = () => {
             >
               <span>← Charity Dashboard</span>
             </Link>
-            <span class="text-slate-600">/</span>
+            <span class="text-slate-600 dark:text-slate-300">/</span>
             <span class="text-xs font-extrabold text-amber-400 uppercase tracking-wider">Gift Aid Ledger</span>
           </div>
           <h1 class="text-2xl font-black tracking-tight flex items-center gap-2 pt-1">
@@ -170,60 +170,60 @@ const resetFilters = () => {
       <!-- KPI Position Summary Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- 1. Total Eligible Donations -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Eligible Donations Total</span>
-          <span class="text-xl font-black text-slate-900 block">{{ giftAidSummary?.formatted_total_eligible || '£0.00' }}</span>
-          <span class="text-[10px] text-slate-500 block">Meeting collections &amp; envelope gifts</span>
+          <span class="text-xl font-black text-slate-900 dark:text-white block">{{ giftAidSummary?.formatted_total_eligible || '£0.00' }}</span>
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Meeting collections &amp; envelope gifts</span>
         </div>
 
         <!-- 2. Reclaimed Gift Aid -->
-        <div class="bg-white p-5 rounded-2xl border border-purple-200 shadow-sm space-y-1">
-          <span class="text-[10px] font-extrabold text-purple-600 uppercase tracking-wider block">25% Gift Aid Reclaimed</span>
-          <span class="text-xl font-black text-purple-700 block">{{ giftAidSummary?.formatted_gift_aid_reclaimed || '£0.00' }}</span>
-          <span class="text-[10px] text-purple-600/80 block">Reconciled to bank deposits</span>
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-blue-200 dark:border-blue-800/60 shadow-sm space-y-1">
+          <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">25% Gift Aid Reclaimed</span>
+          <span class="text-xl font-black text-blue-700 dark:text-blue-300 block">{{ giftAidSummary?.formatted_gift_aid_reclaimed || '£0.00' }}</span>
+          <span class="text-[10px] text-blue-600/80 dark:text-blue-400/80 block">Reconciled to bank deposits</span>
         </div>
 
         <!-- 3. Pending Unclaimed -->
-        <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm space-y-1">
-          <span class="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider block">Unclaimed Tax Relief</span>
-          <span class="text-xl font-black text-amber-800 block">{{ giftAidSummary?.formatted_pending_gift_aid || '£0.00' }}</span>
-          <span class="text-[10px] text-amber-700/80 block">{{ giftAidSummary?.pending_claim_count || 0 }} collection batch(es) pending</span>
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-amber-200 dark:border-amber-800/60 shadow-sm space-y-1">
+          <span class="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 uppercase tracking-wider block">Unclaimed Tax Relief</span>
+          <span class="text-xl font-black text-amber-800 dark:text-amber-200 block">{{ giftAidSummary?.formatted_pending_gift_aid || '£0.00' }}</span>
+          <span class="text-[10px] text-amber-700/80 dark:text-amber-300/80 block">{{ giftAidSummary?.pending_claim_count || 0 }} collection batch(es) pending</span>
         </div>
 
         <!-- 4. Net Relief Chest Position -->
-        <div class="bg-white p-5 rounded-2xl border border-sky-200 shadow-sm space-y-1">
-          <span class="text-[10px] font-extrabold text-sky-700 uppercase tracking-wider block">Net Relief Chest Position</span>
-          <span class="text-xl font-black text-sky-800 block">{{ giftAidSummary?.formatted_net_relief_chest_balance || '£0.00' }}</span>
-          <span class="text-[10px] text-sky-700/80 block">Relief Chest Ref: {{ giftAidSummary?.relief_chest_ref || 'E1418' }}</span>
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-blue-200 dark:border-blue-800/60 shadow-sm space-y-1">
+          <span class="text-[10px] font-extrabold text-blue-700 dark:text-blue-300 uppercase tracking-wider block">Net Relief Chest Position</span>
+          <span class="text-xl font-black text-blue-800 dark:text-blue-200 block">{{ giftAidSummary?.formatted_net_relief_chest_balance || '£0.00' }}</span>
+          <span class="text-[10px] text-blue-700/80 dark:text-blue-300/80 block">Relief Chest Ref: {{ giftAidSummary?.relief_chest_ref || 'E1418' }}</span>
         </div>
       </div>
 
       <!-- Main Filter & Transactions Table Card -->
-      <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
         
         <!-- Header & Filter Stats -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between pb-4 border-b border-slate-100 gap-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 gap-4">
           <div>
-            <h2 class="text-base font-extrabold text-slate-900">Charity Gift Aid Transactions Listing</h2>
-            <p class="text-xs text-slate-500 font-medium">Filter transactions by collection date, donor person, Gift Aid status, or search terms.</p>
+            <h2 class="text-base font-extrabold text-slate-900 dark:text-white">Charity Gift Aid Transactions Listing</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Filter transactions by collection date, donor person, Gift Aid status, or search terms.</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2 text-xs">
-            <span class="px-3.5 py-1.5 bg-purple-50 text-purple-800 font-extrabold rounded-xl border border-purple-200/80">
+            <span class="px-3.5 py-1.5 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 font-extrabold rounded-xl border border-blue-200/80 dark:border-blue-800/80">
               Filtered Donations: {{ formatCurrency(filteredTotalDonations) }}
             </span>
-            <span class="px-3.5 py-1.5 bg-emerald-50 text-emerald-800 font-extrabold rounded-xl border border-emerald-200/80">
+            <span class="px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-extrabold rounded-xl border border-emerald-200/80 dark:border-emerald-800/80">
               Filtered Gift Aid: {{ formatCurrency(filteredTotalGiftAid) }}
             </span>
-            <span class="px-3.5 py-1.5 bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-200">
+            <span class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl border border-slate-200 dark:border-slate-800">
               Showing {{ filteredCollections.length }} of {{ reconciledDonations?.totals?.total_count || 0 }} records
             </span>
           </div>
         </div>
 
         <!-- Interactive Filters Toolbar -->
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
-          <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
             <span class="flex items-center gap-1.5">
               <span>🔍</span>
               <span>Filter Options</span>
@@ -231,7 +231,7 @@ const resetFilters = () => {
             <button
               type="button"
               @click="resetFilters"
-              class="text-purple-700 hover:text-purple-900 underline font-bold cursor-pointer"
+              class="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 underline font-bold cursor-pointer"
             >
               Reset All Filters
             </button>
@@ -240,30 +240,30 @@ const resetFilters = () => {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
             <!-- From Date -->
             <div>
-              <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">From Date</label>
+              <label class="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1">From Date</label>
               <input
                 v-model="filterDateFrom"
                 type="date"
-                class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <!-- To Date -->
             <div>
-              <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">To Date</label>
+              <label class="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1">To Date</label>
               <input
                 v-model="filterDateTo"
                 type="date"
-                class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <!-- Donor / Person Filter -->
             <div>
-              <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">Donor / Person</label>
+              <label class="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1">Donor / Person</label>
               <select
                 v-model="filterPerson"
-                class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 cursor-pointer"
+                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="">All Donors &amp; Brethren</option>
                 <option
@@ -278,10 +278,10 @@ const resetFilters = () => {
 
             <!-- Status Filter -->
             <div>
-              <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">Gift Aid Status</label>
+              <label class="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1">Gift Aid Status</label>
               <select
                 v-model="filterStatus"
-                class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 cursor-pointer"
+                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="all">All Statuses</option>
                 <option value="reconciled">Reconciled Only</option>
@@ -292,21 +292,21 @@ const resetFilters = () => {
 
             <!-- Search Terms -->
             <div>
-              <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">Search Keywords</label>
+              <label class="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1">Search Keywords</label>
               <input
                 v-model="filterSearch"
                 type="text"
                 placeholder="Search notes, donor..."
-                class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500"
+                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
         </div>
 
         <!-- Full Transactions Table -->
-        <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
           <table class="w-full text-left text-xs border-collapse">
-            <thead class="bg-slate-900 text-white text-[11px] font-extrabold uppercase tracking-wider">
+            <thead class="bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-extrabold uppercase tracking-wider">
               <tr>
                 <th class="py-3.5 px-4">Date</th>
                 <th class="py-3.5 px-4">Donor / Person</th>
@@ -318,19 +318,19 @@ const resetFilters = () => {
                 <th class="py-3.5 px-4">Notes</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 font-medium text-slate-800">
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-800 dark:text-slate-100">
               <tr
                 v-for="item in filteredCollections"
                 :key="item.id"
-                class="hover:bg-purple-50/40 transition-colors"
+                class="hover:bg-blue-50/40 dark:hover:bg-blue-950/40 transition-colors"
               >
                 <!-- Date -->
-                <td class="py-3.5 px-4 font-mono text-[11px] text-slate-600 whitespace-nowrap">
+                <td class="py-3.5 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-300 whitespace-nowrap">
                   {{ item.created_at }}
                 </td>
 
                 <!-- Donor / Person -->
-                <td class="py-3.5 px-4 font-bold text-slate-900 whitespace-nowrap">
+                <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">
                   <div class="flex items-center gap-1.5">
                     <span class="text-sm">👤</span>
                     <span>{{ item.donor_name }}</span>
@@ -339,18 +339,18 @@ const resetFilters = () => {
 
                 <!-- Collection Type -->
                 <td class="py-3.5 px-4 whitespace-nowrap">
-                  <span class="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px]">
+                  <span class="px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[10px]">
                     {{ item.collection_type }}
                   </span>
                 </td>
 
                 <!-- Donation Total -->
-                <td class="py-3.5 px-4 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                <td class="py-3.5 px-4 text-right font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
                   {{ item.formatted_total }}
                 </td>
 
                 <!-- 25% Gift Aid -->
-                <td class="py-3.5 px-4 text-right font-mono font-extrabold text-purple-700 whitespace-nowrap">
+                <td class="py-3.5 px-4 text-right font-mono font-extrabold text-blue-700 dark:text-blue-300 whitespace-nowrap">
                   {{ item.formatted_gift_aid }}
                 </td>
 
@@ -359,9 +359,9 @@ const resetFilters = () => {
                   <span
                     :class="[
                       'px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1',
-                      item.gift_aid_status === 'reconciled' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
-                      (item.gift_aid_status === 'claimed' ? 'bg-purple-100 text-purple-800 border border-purple-300' :
-                      'bg-amber-100 text-amber-900 border border-amber-300')
+                      item.gift_aid_status === 'reconciled' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700/60' :
+                      (item.gift_aid_status === 'claimed' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700/60' :
+                      'bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/60')
                     ]"
                   >
                     <span v-if="item.gift_aid_status === 'reconciled'">✓ Reconciled</span>
@@ -371,13 +371,13 @@ const resetFilters = () => {
                 </td>
 
                 <!-- Matched Bank Deposit -->
-                <td class="py-3.5 px-4 text-xs text-slate-600 max-w-xs">
-                  <div v-if="item.bank_transaction" class="p-2 bg-emerald-50/70 border border-emerald-200 rounded-lg text-[11px] space-y-0.5">
-                    <div class="font-extrabold text-emerald-900 flex items-center justify-between">
+                <td class="py-3.5 px-4 text-xs text-slate-600 dark:text-slate-300 max-w-xs">
+                  <div v-if="item.bank_transaction" class="p-2 bg-emerald-50/70 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/60 rounded-lg text-[11px] space-y-0.5">
+                    <div class="font-extrabold text-emerald-900 dark:text-emerald-200 flex items-center justify-between">
                       <span>Bank Credit: {{ item.bank_transaction.formatted_amount }}</span>
-                      <span class="text-[9px] text-emerald-700">{{ item.bank_transaction.transaction_date }}</span>
+                      <span class="text-[9px] text-emerald-700 dark:text-emerald-300">{{ item.bank_transaction.transaction_date }}</span>
                     </div>
-                    <div class="text-[10px] text-emerald-800 truncate" :title="item.bank_transaction.raw_description">
+                    <div class="text-[10px] text-emerald-800 dark:text-emerald-200 truncate" :title="item.bank_transaction.raw_description">
                       {{ item.bank_transaction.raw_description }}
                     </div>
                   </div>
@@ -385,7 +385,7 @@ const resetFilters = () => {
                 </td>
 
                 <!-- Notes -->
-                <td class="py-3.5 px-4 text-slate-500 text-[11px] max-w-xs truncate" :title="item.notes || 'No notes'">
+                <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-[11px] max-w-xs truncate" :title="item.notes || 'No notes'">
                   {{ item.notes || '—' }}
                 </td>
               </tr>

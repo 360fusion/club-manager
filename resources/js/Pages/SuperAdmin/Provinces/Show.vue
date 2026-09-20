@@ -198,7 +198,7 @@ function getCountryFlag(country) {
               <div class="bg-slate-100 p-3.5 rounded-2xl border border-slate-200 space-y-1 dark:bg-slate-800 dark:border-slate-800">
                 <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block dark:text-slate-400">Social Channels</span>
                 <div class="flex items-center gap-3 pt-0.5">
-                  <a v-if="province.twitter_url" :href="province.twitter_url" target="_blank" class="text-sky-700 hover:underline font-bold dark:text-sky-400">
+                  <a v-if="province.twitter_url" :href="province.twitter_url" target="_blank" class="text-blue-700 hover:underline font-bold dark:text-blue-400">
                     Twitter / X ↗
                   </a>
                   <a v-if="province.facebook_url" :href="province.facebook_url" target="_blank" class="text-blue-700 hover:underline font-bold dark:text-blue-300">

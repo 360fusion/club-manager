@@ -109,7 +109,7 @@ function typeBadge(type) {
                     <span class="text-[11px] text-slate-500 block font-medium dark:text-slate-400">UGLE international jurisdictions</span>
                 </div>
                 <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1 dark:bg-slate-900 dark:border-slate-800">
-                    <span class="text-[10px] font-bold text-sky-700 uppercase tracking-wider block dark:text-sky-400">🌐 Active Districts</span>
+                    <span class="text-[10px] font-bold text-blue-700 uppercase tracking-wider block dark:text-blue-400">🌐 Active Districts</span>
                     <span class="text-2xl font-black text-slate-900 block dark:text-white">{{ activeDistricts.length }}</span>
                     <span class="text-[11px] text-slate-500 block font-medium dark:text-slate-400">District Grand Lodges overseas</span>
                 </div>

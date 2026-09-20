@@ -50,33 +50,33 @@ const confirmInsertion = () => {
 
 <template>
   <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-150">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-3xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-150">
       
       <!-- Modal Header -->
-      <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+      <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
         <div>
-          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <span>🧩</span> Select Content Items to Insert
           </h3>
-          <p class="text-xs text-slate-500 mt-0.5">Pick approved updates, upcoming meetings, events, or news posts to include in your newsletter.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pick approved updates, upcoming meetings, events, or news posts to include in your newsletter.</p>
         </div>
         <button
           type="button"
           @click="$emit('close')"
-          class="w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-600 flex items-center justify-center text-sm font-bold transition-all cursor-pointer"
+          class="w-8 h-8 rounded-full bg-slate-200/80 dark:bg-slate-700/80 hover:bg-slate-300 text-slate-600 dark:text-slate-300 flex items-center justify-center text-sm font-bold transition-all cursor-pointer"
         >
           ✕
         </button>
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="flex items-center gap-1 p-2 bg-slate-100 border-b border-slate-200">
+      <div class="flex items-center gap-1 p-2 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-800">
         <button
           type="button"
           @click="activeTab = 'updates'"
           :class="[
             'px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
-            activeTab === 'updates' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            activeTab === 'updates' ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           ]"
         >
           <span>📜</span> Approved Updates ({{ updates.length }})
@@ -86,7 +86,7 @@ const confirmInsertion = () => {
           @click="activeTab = 'meetings'"
           :class="[
             'px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
-            activeTab === 'meetings' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            activeTab === 'meetings' ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           ]"
         >
           <span>📅</span> Meetings ({{ meetings.length }})
@@ -96,7 +96,7 @@ const confirmInsertion = () => {
           @click="activeTab = 'events'"
           :class="[
             'px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
-            activeTab === 'events' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            activeTab === 'events' ? 'bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-300 shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           ]"
         >
           <span>🎟️</span> Events ({{ events.length }})
@@ -106,7 +106,7 @@ const confirmInsertion = () => {
           @click="activeTab = 'news'"
           :class="[
             'px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
-            activeTab === 'news' ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            activeTab === 'news' ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           ]"
         >
           <span>📰</span> News ({{ news.length }})
@@ -126,21 +126,21 @@ const confirmInsertion = () => {
             :key="item.id"
             :class="[
               'flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none',
-              selectedUpdateIds.includes(item.id) ? 'bg-indigo-50/60 border-indigo-300' : 'bg-white border-slate-200 hover:bg-slate-50'
+              selectedUpdateIds.includes(item.id) ? 'bg-blue-50/60 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700/60' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
             ]"
           >
             <input
               type="checkbox"
               :checked="selectedUpdateIds.includes(item.id)"
               @change="toggleSelection(selectedUpdateIds, item.id)"
-              class="mt-1 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              class="mt-1 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer"
             />
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-slate-900 truncate">{{ item.title }}</span>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 uppercase tracking-wider">{{ item.category }}</span>
+                <span class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ item.title }}</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 uppercase tracking-wider">{{ item.category }}</span>
               </div>
-              <p v-if="item.summary" class="text-xs text-slate-500 line-clamp-2 mt-0.5">{{ item.summary }}</p>
+              <p v-if="item.summary" class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">{{ item.summary }}</p>
             </div>
           </label>
         </div>
@@ -155,18 +155,18 @@ const confirmInsertion = () => {
             :key="m.id"
             :class="[
               'flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none',
-              selectedMeetingIds.includes(m.id) ? 'bg-emerald-50/60 border-emerald-300' : 'bg-white border-slate-200 hover:bg-slate-50'
+              selectedMeetingIds.includes(m.id) ? 'bg-emerald-50/60 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700/60' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
             ]"
           >
             <input
               type="checkbox"
               :checked="selectedMeetingIds.includes(m.id)"
               @change="toggleSelection(selectedMeetingIds, m.id)"
-              class="rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              class="rounded text-emerald-600 dark:text-emerald-400 focus:ring-emerald-500 cursor-pointer"
             />
             <div class="flex-1 min-w-0">
-              <div class="font-bold text-xs text-slate-900">{{ m.title }}</div>
-              <div class="text-[11px] text-slate-500 mt-0.5">🗓️ {{ m.date }} • 📍 {{ m.room }}</div>
+              <div class="font-bold text-xs text-slate-900 dark:text-white">{{ m.title }}</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">🗓️ {{ m.date }} • 📍 {{ m.room }}</div>
             </div>
           </label>
         </div>
@@ -181,18 +181,18 @@ const confirmInsertion = () => {
             :key="evt.id"
             :class="[
               'flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none',
-              selectedEventIds.includes(evt.id) ? 'bg-amber-50/60 border-amber-300' : 'bg-white border-slate-200 hover:bg-slate-50'
+              selectedEventIds.includes(evt.id) ? 'bg-amber-50/60 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700/60' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
             ]"
           >
             <input
               type="checkbox"
               :checked="selectedEventIds.includes(evt.id)"
               @change="toggleSelection(selectedEventIds, evt.id)"
-              class="rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+              class="rounded text-amber-600 dark:text-amber-400 focus:ring-amber-500 cursor-pointer"
             />
             <div class="flex-1 min-w-0">
-              <div class="font-bold text-xs text-slate-900">{{ evt.title }}</div>
-              <div class="text-[11px] text-slate-500 mt-0.5">🗓️ {{ evt.date }} • {{ evt.price }}</div>
+              <div class="font-bold text-xs text-slate-900 dark:text-white">{{ evt.title }}</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">🗓️ {{ evt.date }} • {{ evt.price }}</div>
             </div>
           </label>
         </div>
@@ -207,18 +207,18 @@ const confirmInsertion = () => {
             :key="n.id"
             :class="[
               'flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none',
-              selectedNewsIds.includes(n.id) ? 'bg-sky-50/60 border-sky-300' : 'bg-white border-slate-200 hover:bg-slate-50'
+              selectedNewsIds.includes(n.id) ? 'bg-blue-50/60 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700/60' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
             ]"
           >
             <input
               type="checkbox"
               :checked="selectedNewsIds.includes(n.id)"
               @change="toggleSelection(selectedNewsIds, n.id)"
-              class="mt-1 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+              class="mt-1 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer"
             />
             <div class="flex-1 min-w-0">
-              <div class="font-bold text-xs text-slate-900">{{ n.title }}</div>
-              <p v-if="n.excerpt" class="text-xs text-slate-500 line-clamp-1 mt-0.5">{{ n.excerpt }}</p>
+              <div class="font-bold text-xs text-slate-900 dark:text-white">{{ n.title }}</div>
+              <p v-if="n.excerpt" class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">{{ n.excerpt }}</p>
             </div>
           </label>
         </div>
@@ -226,11 +226,11 @@ const confirmInsertion = () => {
       </div>
 
       <!-- Modal Footer -->
-      <div class="p-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-          <span class="text-xs font-semibold text-slate-600">Selected Items: <strong class="text-slate-900">{{ totalSelected }}</strong></span>
-          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-700 cursor-pointer select-none border-l border-slate-300 pl-3">
-            <input type="checkbox" v-model="attachFilesToNewsletter" class="rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+          <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Selected Items: <strong class="text-slate-900 dark:text-white">{{ totalSelected }}</strong></span>
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer select-none border-l border-slate-300 dark:border-slate-700 pl-3">
+            <input type="checkbox" v-model="attachFilesToNewsletter" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer" />
             <span>📎 Also attach document files (PDFs) to Newsletter</span>
           </label>
         </div>
@@ -239,7 +239,7 @@ const confirmInsertion = () => {
           <button
             type="button"
             @click="$emit('close')"
-            class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+            class="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer"
           >
             Cancel
           </button>
@@ -247,7 +247,7 @@ const confirmInsertion = () => {
             type="button"
             @click="confirmInsertion"
             :disabled="!totalSelected"
-            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
           >
             Insert Selected Items →
           </button>

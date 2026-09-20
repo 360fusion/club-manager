@@ -17,62 +17,62 @@ const props = defineProps({
     <div class="space-y-6">
       
       <!-- Top Action & Summary Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
           <div class="flex items-center gap-3">
-            <h2 class="text-xl font-bold text-slate-900">Membership Dues & Billing</h2>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Membership Dues & Billing</h2>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
               Good Standing #{{ memberNumber }}
             </span>
           </div>
-          <p class="text-xs text-slate-500 mt-1">Review active membership dues, download receipts, and view payment transaction history.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Review active membership dues, download receipts, and view payment transaction history.</p>
         </div>
       </div>
 
       <!-- Membership Plans Grid -->
       <div class="space-y-4">
-        <h3 class="text-base font-bold text-slate-900">Available Membership Plans</h3>
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">Available Membership Plans</h3>
         
         <div v-if="plans.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div
             v-for="plan in plans"
             :key="plan.id"
-            class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 hover:border-emerald-300 transition-all flex flex-col justify-between space-y-6"
+            class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-300 dark:hover:border-emerald-700/60 transition-all flex flex-col justify-between space-y-6"
           >
             <div class="space-y-3">
               <div class="flex items-center justify-between">
-                <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 tracking-wider">
+                <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 tracking-wider">
                   {{ plan.billing_period }}
                 </span>
-                <span class="text-2xl font-black text-slate-900">£{{ plan.price }}</span>
+                <span class="text-2xl font-black text-slate-900 dark:text-white">£{{ plan.price }}</span>
               </div>
 
-              <h4 class="text-lg font-bold text-slate-900">{{ plan.name }}</h4>
-              <p class="text-xs text-slate-500">{{ plan.description }}</p>
+              <h4 class="text-lg font-bold text-slate-900 dark:text-white">{{ plan.name }}</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400">{{ plan.description }}</p>
             </div>
 
-            <div class="pt-4 border-t border-slate-100">
-              <span class="block w-full text-center py-2 bg-emerald-50 text-emerald-700 font-bold text-xs rounded-xl border border-emerald-200">
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <span class="block w-full text-center py-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-xs rounded-xl border border-emerald-200 dark:border-emerald-800/60">
                 Active Subscription Tier
               </span>
             </div>
           </div>
         </div>
 
-        <div v-else class="bg-white rounded-2xl p-8 text-center border border-slate-200/80 text-slate-500 text-xs">
+        <div v-else class="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200/80 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 text-xs">
           No membership plans listed.
         </div>
       </div>
 
       <!-- Payment Receipts & Invoices Table -->
       <div class="space-y-4 pt-4">
-        <h3 class="text-base font-bold text-slate-900">Payment Receipts & Invoices</h3>
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">Payment Receipts & Invoices</h3>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                <tr class="bg-slate-50/80 dark:bg-slate-800/50/80 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <th class="py-3.5 px-6">Invoice #</th>
                   <th class="py-3.5 px-4">Title / Description</th>
                   <th class="py-3.5 px-4">Amount</th>
@@ -81,27 +81,27 @@ const props = defineProps({
                   <th class="py-3.5 px-6 text-right">Receipt</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/50 transition-colors">
-                  <td class="py-4 px-6 font-mono font-bold text-slate-900">{{ inv.invoice_number }}</td>
-                  <td class="py-4 px-4 font-semibold text-slate-800">{{ inv.title }}</td>
-                  <td class="py-4 px-4 font-black text-slate-900">£{{ inv.amount }}</td>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200">
+                <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50 transition-colors">
+                  <td class="py-4 px-6 font-mono font-bold text-slate-900 dark:text-white">{{ inv.invoice_number }}</td>
+                  <td class="py-4 px-4 font-semibold text-slate-800 dark:text-slate-100">{{ inv.title }}</td>
+                  <td class="py-4 px-4 font-black text-slate-900 dark:text-white">£{{ inv.amount }}</td>
                   <td class="py-4 px-4">
                     <span
                       :class="[
                         'px-2.5 py-0.5 rounded-full text-[11px] font-bold border uppercase tracking-wider',
-                        inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                        inv.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
                       ]"
                     >
                       {{ inv.status }}
                     </span>
                   </td>
-                  <td class="py-4 px-4 text-slate-500">{{ inv.paid_at || inv.created_at }}</td>
+                  <td class="py-4 px-4 text-slate-500 dark:text-slate-400">{{ inv.paid_at || inv.created_at }}</td>
                   <td class="py-4 px-6 text-right">
                     <a
                       :href="route('invoices.download', { slug: club.slug, id: inv.id })"
                       target="_blank"
-                      class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1"
+                      class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1"
                     >
                       📄 PDF Receipt
                     </a>

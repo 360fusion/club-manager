@@ -1,9 +1,9 @@
 <div class="space-y-6">
     <!-- Top Executive Meeting Header Bar -->
-    <div class="bg-white rounded-3xl border border-slate-200 p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="space-y-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
-                <a href="{{ route('admin.committee.workspace', ['clubSlug' => $club->slug, 'meetingId' => $meeting->id]) }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1">
+                <a href="{{ route('admin.committee.workspace', ['clubSlug' => $club->slug, 'meetingId' => $meeting->id]) }}" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors flex items-center gap-1">
                     <span>←</span>
                     <span>Back to Agenda Pack</span>
                 </a>
@@ -13,18 +13,18 @@
                 </span>
                 @if($meeting->meeting_date)
                     <span class="text-slate-300">•</span>
-                    <span class="text-xs font-medium text-slate-500">
+                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
                         🗓️ {{ $meeting->meeting_date->format('D, jS M Y • H:i') }}
                     </span>
                 @endif
             </div>
-            <h1 class="text-xl font-black text-slate-900 truncate">{{ $meeting->title }} — Live Minutes</h1>
-            <p class="text-xs text-slate-500">Executive live minutes ledger with automated @mention routing, task delegation, and notice-of-motion tagging.</p>
+            <h1 class="text-xl font-black text-slate-900 dark:text-white truncate">{{ $meeting->title }} — Live Minutes</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Executive live minutes ledger with automated @mention routing, task delegation, and notice-of-motion tagging.</p>
         </div>
 
         <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
             <!-- Auto-save Status Indicator -->
-            <div class="text-xs font-bold text-slate-500 flex items-center gap-2 bg-slate-50 px-3.5 py-2 rounded-2xl border border-slate-200 shadow-inner">
+            <div class="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>Auto-saved at {{ $lastSavedAt }}</span>
             </div>
@@ -33,7 +33,7 @@
             <button
                 type="button"
                 @click="$wire.commitDetectedItems($refs.notesEditor?.value)"
-                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-2xl border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-2xl border border-slate-200 dark:border-slate-800 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                 title="Synchronize extracted tasks and motions from current notes"
             >
                 <span>⚡</span>
@@ -62,10 +62,10 @@
         <!-- ================================================================= -->
         <div class="col-span-12 lg:col-span-3 space-y-4">
             <!-- Agenda Items Panel -->
-            <div class="bg-white rounded-3xl border border-slate-200 p-4 shadow-sm space-y-3">
-                <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-3">
+                <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
                     <div>
-                        <h3 class="font-black text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <h3 class="font-black text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
                             <span>📋</span>
                             <span>Agenda & Pacing</span>
                         </h3>
@@ -76,7 +76,7 @@
                         type="button"
                         wire:click="loadAgendaOutline"
                         wire:confirm="Load full agenda outline into notes? Existing text will be preserved."
-                        class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] rounded-xl border border-indigo-200/80 transition-all flex items-center gap-1 cursor-pointer"
+                        class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold text-[10px] rounded-xl border border-blue-200/80 dark:border-blue-800/80 transition-all flex items-center gap-1 cursor-pointer"
                         title="Inject full agenda outline and roll call into notes"
                     >
                         <span>⚡</span>
@@ -94,22 +94,22 @@
                             $typeIcon = $itemTypeEnum ? $itemTypeEnum->icon() : '📋';
                             $typeValue = $itemTypeEnum ? $itemTypeEnum->value : 'general';
                         @endphp
-                        <div class="p-2.5 rounded-2xl border transition-all text-xs space-y-2 {{ $item->is_approved ? 'bg-emerald-50/30 border-emerald-200/70' : 'bg-slate-50 border-slate-200/80 hover:border-slate-300' }}">
+                        <div class="p-2.5 rounded-2xl border transition-all text-xs space-y-2 {{ $item->is_approved ? 'bg-emerald-50/30 dark:bg-emerald-950/30 border-emerald-200/70 dark:border-emerald-800/70' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700' }}">
                             <div class="flex items-start justify-between gap-1.5">
                                 <div class="flex items-start gap-2 min-w-0">
-                                    <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                                    <span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                                         {{ $item->order }}
                                     </span>
                                     <div class="min-w-0 space-y-0.5">
-                                        <h4 class="font-bold text-slate-900 leading-snug text-xs break-words">{{ $item->title }}</h4>
+                                        <h4 class="font-bold text-slate-900 dark:text-white leading-snug text-xs break-words">{{ $item->title }}</h4>
                                         <div>
                                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold {{ match($typeValue) {
-                                                'general' => 'bg-slate-200/80 text-slate-700',
-                                                'candidate_vetting' => 'bg-blue-100 text-blue-800 border border-blue-200',
-                                                'accounts_audit' => 'bg-emerald-100 text-emerald-800 border border-emerald-200',
-                                                'hall_affairs' => 'bg-purple-100 text-purple-800 border border-purple-200',
-                                                'motion' => 'bg-amber-100 text-amber-800 border border-amber-200',
-                                                default => 'bg-slate-200/80 text-slate-700',
+                                                'general' => 'bg-slate-200/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200',
+                                                'candidate_vetting' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800/60',
+                                                'accounts_audit' => 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60',
+                                                'hall_affairs' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800/60',
+                                                'motion' => 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60',
+                                                default => 'bg-slate-200/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200',
                                             } }}">
                                                 <span>{{ $typeIcon }}</span>
                                                 <span class="truncate max-w-[130px]">{{ $typeLabel }}</span>
@@ -120,14 +120,14 @@
                             </div>
 
                             @if($item->description)
-                                <p class="text-[10px] text-slate-500 pl-7 line-clamp-2">{{ $item->description }}</p>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 pl-7 line-clamp-2">{{ $item->description }}</p>
                             @endif
 
-                            <div class="flex items-center justify-between pt-1.5 border-t border-slate-200/50 text-[10px]">
+                            <div class="flex items-center justify-between pt-1.5 border-t border-slate-200/50 dark:border-slate-800/50 text-[10px]">
                                 <button
                                     type="button"
                                     wire:click="insertAgendaItem({{ $item->id }})"
-                                    class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-0.5 transition-colors cursor-pointer"
+                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-bold flex items-center gap-0.5 transition-colors cursor-pointer"
                                     title="Stamp section heading into live minutes"
                                 >
                                     <span>✍️</span>
@@ -137,14 +137,14 @@
                                 <button
                                     type="button"
                                     wire:click="toggleAgendaApproval({{ $item->id }})"
-                                    class="px-2 py-0.5 rounded font-black uppercase text-[9px] transition-all cursor-pointer {{ $item->is_approved ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-600 hover:bg-slate-300' }}"
+                                    class="px-2 py-0.5 rounded font-black uppercase text-[9px] transition-all cursor-pointer {{ $item->is_approved ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700/60' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300' }}"
                                 >
                                     {{ $item->is_approved ? '✓ Approved' : 'Pending' }}
                                 </button>
                             </div>
                         </div>
                     @empty
-                        <div class="p-4 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <div class="p-4 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                             No agenda items recorded for this meeting.
                         </div>
                     @endforelse
@@ -152,9 +152,9 @@
             </div>
 
             <!-- Roll-Call Quick Reference -->
-            <div class="bg-white rounded-3xl border border-slate-200 p-4 shadow-sm space-y-2.5 text-xs">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <h4 class="font-black text-slate-900 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-2.5 text-xs">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <h4 class="font-black text-slate-900 dark:text-white text-[11px] uppercase tracking-wider flex items-center gap-1.5">
                         <span>👥</span>
                         <span>Roll-Call Summary</span>
                     </h4>
@@ -168,22 +168,22 @@
                 @endphp
 
                 <div class="grid grid-cols-3 gap-1.5 text-center">
-                    <div class="p-2 bg-emerald-50/60 border border-emerald-200 rounded-xl">
-                        <span class="text-xs font-black text-emerald-700 block">{{ $presentCount }}</span>
-                        <span class="text-[9px] font-bold text-emerald-600">Present</span>
+                    <div class="p-2 bg-emerald-50/60 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 rounded-xl">
+                        <span class="text-xs font-black text-emerald-700 dark:text-emerald-300 block">{{ $presentCount }}</span>
+                        <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">Present</span>
                     </div>
-                    <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl">
-                        <span class="text-xs font-black text-slate-700 block">{{ $apologyCount }}</span>
-                        <span class="text-[9px] font-bold text-slate-500">Apology</span>
+                    <div class="p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+                        <span class="text-xs font-black text-slate-700 dark:text-slate-200 block">{{ $apologyCount }}</span>
+                        <span class="text-[9px] font-bold text-slate-500 dark:text-slate-400">Apology</span>
                     </div>
-                    <div class="p-2 bg-sky-50/60 border border-sky-200 rounded-xl">
-                        <span class="text-xs font-black text-sky-700 block">{{ $remoteCount }}</span>
-                        <span class="text-[9px] font-bold text-sky-600">Remote</span>
+                    <div class="p-2 bg-blue-50/60 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 rounded-xl">
+                        <span class="text-xs font-black text-blue-700 dark:text-blue-300 block">{{ $remoteCount }}</span>
+                        <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400">Remote</span>
                     </div>
                 </div>
 
                 <div class="pt-1">
-                    <a href="{{ route('admin.committee.workspace', ['clubSlug' => $club->slug, 'meetingId' => $meeting->id]) }}" class="text-[10px] font-bold text-indigo-600 hover:underline block text-center">
+                    <a href="{{ route('admin.committee.workspace', ['clubSlug' => $club->slug, 'meetingId' => $meeting->id]) }}" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline block text-center">
                         Manage Roll-Call in Pre-Meeting Pack →
                     </a>
                 </div>
@@ -195,34 +195,34 @@
         <!-- ================================================================= -->
         <div class="col-span-12 lg:col-span-6 space-y-3 min-w-0">
             @if (session()->has('success'))
-                <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fade-in">
+                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fade-in">
                     <div class="flex items-center gap-2">
                         <span>✅</span>
                         <span>{{ session('success') }}</span>
                     </div>
-                    <button type="button" @click="$el.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 text-xs cursor-pointer">✕</button>
+                    <button type="button" @click="$el.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300 text-xs cursor-pointer">✕</button>
                 </div>
             @endif
 
             @if (session()->has('error'))
-                <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fade-in">
+                <div class="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-fade-in">
                     <div class="flex items-center gap-2">
                         <span>⚠️</span>
                         <span>{{ session('error') }}</span>
                     </div>
-                    <button type="button" @click="$el.parentElement.remove()" class="text-rose-500 hover:text-rose-700 text-xs cursor-pointer">✕</button>
+                    <button type="button" @click="$el.parentElement.remove()" class="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 text-xs cursor-pointer">✕</button>
                 </div>
             @endif
 
             <!-- Insertion Toolbar -->
-            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider mr-1">Insert:</span>
 
                     <button
                         type="button"
                         wire:click="insertTemplate('task')"
-                        class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
+                        class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
                         title="Insert task checkbox with automated delegation"
                     >
                         ☑️ [ ] Task
@@ -231,7 +231,7 @@
                     <button
                         type="button"
                         wire:click="insertTemplate('motion')"
-                        class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
+                        class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800/60 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
                         title="Insert formal notice of motion tag"
                     >
                         📜 /motion
@@ -240,7 +240,7 @@
                     <button
                         type="button"
                         wire:click="insertTemplate('candidate')"
-                        class="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
+                        class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800/60 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
                         title="Insert candidate vetting template"
                     >
                         👤 Candidate
@@ -249,7 +249,7 @@
                     <button
                         type="button"
                         wire:click="insertTemplate('audit')"
-                        class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
+                        class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
                         title="Insert accounts audit template"
                     >
                         🔍 Audit
@@ -258,7 +258,7 @@
                     <button
                         type="button"
                         wire:click="insertTemplate('donation')"
-                        class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
+                        class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800/60 font-bold rounded-xl transition-all cursor-pointer text-[11px]"
                         title="Insert charitable donation proposal template"
                     >
                         ❤️ Donation
@@ -273,26 +273,26 @@
                             type="text"
                             wire:model.live.debounce.250ms="memberQuery"
                             placeholder="mention member..."
-                            class="pl-6 pr-2.5 py-1 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full"
+                            class="pl-6 pr-2.5 py-1 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                         />
                     </div>
 
                     @if(!empty($mentionSuggestions))
-                        <div class="absolute right-0 top-full mt-1.5 w-60 bg-white border border-slate-200 rounded-2xl shadow-2xl z-30 overflow-hidden text-xs divide-y divide-slate-100">
-                            <div class="px-3 py-1.5 bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        <div class="absolute right-0 top-full mt-1.5 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-30 overflow-hidden text-xs divide-y divide-slate-100 dark:divide-slate-800">
+                            <div class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 text-[10px] font-black uppercase tracking-wider text-slate-400">
                                 Select Member to @Mention
                             </div>
                             @foreach($mentionSuggestions as $sugg)
                                 <button
                                     type="button"
                                     wire:click="insertMention('{{ $sugg['mention_tag'] }}')"
-                                    class="w-full px-3 py-2 text-left hover:bg-indigo-50 flex items-center justify-between transition-colors cursor-pointer"
+                                    class="w-full px-3 py-2 text-left hover:bg-blue-50 dark:hover:bg-blue-950/40 flex items-center justify-between transition-colors cursor-pointer"
                                 >
                                     <div>
-                                        <span class="font-bold text-slate-900 block">{{ $sugg['name'] }}</span>
+                                        <span class="font-bold text-slate-900 dark:text-white block">{{ $sugg['name'] }}</span>
                                         <span class="text-[10px] text-slate-400">{{ $sugg['role'] }}</span>
                                     </div>
-                                    <span class="text-[10px] font-mono text-indigo-600 font-bold">{{ $sugg['mention_tag'] }}</span>
+                                    <span class="text-[10px] font-mono text-blue-600 dark:text-blue-400 font-bold">{{ $sugg['mention_tag'] }}</span>
                                 </button>
                             @endforeach
                         </div>
@@ -301,9 +301,9 @@
             </div>
 
             <!-- Auto-saving Note Area -->
-            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-5 space-y-3">
-                <div class="flex items-center justify-between text-xs text-slate-400 font-bold border-b border-slate-100 pb-2">
-                    <span class="text-slate-700 font-black flex items-center gap-1.5">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-5 space-y-3">
+                <div class="flex items-center justify-between text-xs text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <span class="text-slate-700 dark:text-slate-200 font-black flex items-center gap-1.5">
                         <span>📝</span>
                         <span>Live Minute Ledger</span>
                     </span>
@@ -317,7 +317,7 @@
                     wire:model.live.debounce.1000ms="notesRaw"
                     rows="22"
                     placeholder="Type committee proceedings here... Use [ ] for action items, @Name for delegation, and /motion for notices of motion..."
-                    class="w-full p-4 border border-slate-200 rounded-2xl text-xs font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50/50 resize-y min-h-[520px]"
+                    class="w-full p-4 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 dark:bg-slate-800/50/50 resize-y min-h-[520px]"
                 ></textarea>
 
                 <div class="flex items-center justify-between pt-1 text-xs">
@@ -325,7 +325,7 @@
                         <button
                             type="button"
                             wire:click="autoSave"
-                            class="text-indigo-600 font-bold hover:underline cursor-pointer"
+                            class="text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer"
                         >
                             Save Now
                         </button>
@@ -338,7 +338,7 @@
                     <button
                         type="button"
                         @click="$wire.commitDetectedItems($refs.notesEditor?.value)"
-                        class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer text-xs active:scale-95"
+                        class="px-3.5 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer text-xs active:scale-95"
                     >
                         <span>⚡</span>
                         <span>Sync Extracted Tasks & Motions</span>
@@ -351,34 +351,34 @@
         <!-- COLUMN 3 (Right Rail, 3 Cols): Consolidated Live Extraction Tab   -->
         <!-- ================================================================= -->
         <div class="col-span-12 lg:col-span-3 space-y-4">
-            <div class="bg-white rounded-3xl border border-slate-200 p-4 shadow-sm space-y-3.5">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-3.5">
                 <!-- Navigation Tabs -->
-                <div class="flex items-center bg-slate-100 p-1 rounded-2xl text-xs font-bold text-slate-600">
+                <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300">
                     <button
                         type="button"
                         wire:click="$set('activeRightTab', 'live')"
-                        class="flex-1 py-1.5 text-center rounded-xl transition-all cursor-pointer {{ $activeRightTab === 'live' ? 'bg-white text-slate-900 shadow-sm font-black' : 'hover:text-slate-900' }}"
+                        class="flex-1 py-1.5 text-center rounded-xl transition-all cursor-pointer {{ $activeRightTab === 'live' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm font-black' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         <span>⚡ Live</span>
                     </button>
                     <button
                         type="button"
                         wire:click="$set('activeRightTab', 'tasks')"
-                        class="flex-1 py-1.5 text-center rounded-xl transition-all cursor-pointer {{ $activeRightTab === 'tasks' ? 'bg-white text-slate-900 shadow-sm font-black' : 'hover:text-slate-900' }}"
+                        class="flex-1 py-1.5 text-center rounded-xl transition-all cursor-pointer {{ $activeRightTab === 'tasks' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm font-black' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         <span>☑️ Tasks ({{ $tasks->count() }})</span>
                     </button>
                     <button
                         type="button"
                         wire:click="$set('activeRightTab', 'motions')"
-                        class="flex-1 py-1.5 text-center rounded-xl transition-all cursor-pointer {{ $activeRightTab === 'motions' ? 'bg-white text-slate-900 shadow-sm font-black' : 'hover:text-slate-900' }}"
+                        class="flex-1 py-1.5 text-center rounded-xl transition-all cursor-pointer {{ $activeRightTab === 'motions' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm font-black' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         <span>📜 Motions</span>
                     </button>
                     <button
                         type="button"
                         wire:click="$set('activeRightTab', 'grants')"
-                        class="flex-1 py-1.5 text-center rounded-xl transition-all cursor-pointer {{ $activeRightTab === 'grants' ? 'bg-white text-slate-900 shadow-sm font-black' : 'hover:text-slate-900' }}"
+                        class="flex-1 py-1.5 text-center rounded-xl transition-all cursor-pointer {{ $activeRightTab === 'grants' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm font-black' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         <span>❤️ Grants ({{ $charityGrants->count() }})</span>
                     </button>
@@ -398,7 +398,7 @@
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mentioned Brethren</span>
                                 <div class="flex flex-wrap gap-1.5">
                                     @foreach($parsedPreview['mentions'] as $m)
-                                        <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-[10px] border border-indigo-200 flex items-center gap-1">
+                                        <span class="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[10px] border border-blue-200 dark:border-blue-800/60 flex items-center gap-1">
                                             <span>👤</span>
                                             <span>{{ $m['name'] }}</span>
                                         </span>
@@ -413,9 +413,9 @@
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Extracted Tasks ([ ])</span>
                                 <div class="space-y-1.5">
                                     @foreach($parsedPreview['tasks'] as $t)
-                                        <div class="p-2.5 bg-amber-50/70 border border-amber-200 rounded-xl text-xs space-y-1">
-                                            <span class="font-bold text-slate-900 block">{{ $t['title'] }}</span>
-                                            <div class="flex items-center gap-2 text-[10px] text-amber-800 font-medium flex-wrap">
+                                        <div class="p-2.5 bg-amber-50/70 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800/60 rounded-xl text-xs space-y-1">
+                                            <span class="font-bold text-slate-900 dark:text-white block">{{ $t['title'] }}</span>
+                                            <div class="flex items-center gap-2 text-[10px] text-amber-800 dark:text-amber-200 font-medium flex-wrap">
                                                 @if($t['assigned_to_name'])
                                                     <span>👤 {{ $t['assigned_to_name'] }}</span>
                                                 @endif
@@ -435,8 +435,8 @@
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Formal Motions (/motion)</span>
                                 <div class="space-y-1.5">
                                     @foreach($parsedPreview['motions'] as $mot)
-                                        <div class="p-2.5 bg-indigo-50/70 border border-indigo-200 rounded-xl text-xs">
-                                            <span class="font-bold text-indigo-950 block">📜 {{ $mot['motion_text'] }}</span>
+                                        <div class="p-2.5 bg-blue-50/70 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs">
+                                            <span class="font-bold text-blue-950 dark:text-blue-100 block">📜 {{ $mot['motion_text'] }}</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -444,7 +444,7 @@
                         @endif
 
                         @if(empty($parsedPreview['mentions']) && empty($parsedPreview['tasks']) && empty($parsedPreview['motions']))
-                            <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                                 Type notes in the editor. Mentions, tasks, and motions will parse live here.
                             </div>
                         @endif
@@ -453,7 +453,7 @@
                             <button
                                 type="button"
                                 @click="$wire.commitDetectedItems($refs.notesEditor?.value)"
-                                class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                                class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                             >
                                 <span>⚡</span>
                                 <span>Commit Detected Items</span>
@@ -467,12 +467,12 @@
                     <div class="space-y-2.5 text-xs">
                         <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
                             <span>Delegated Action Points</span>
-                            <span class="font-bold text-slate-700">{{ $tasks->count() }} active</span>
+                            <span class="font-bold text-slate-700 dark:text-slate-200">{{ $tasks->count() }} active</span>
                         </div>
 
                         <div class="space-y-2 max-h-[520px] overflow-y-auto pr-1">
                             @forelse($tasks as $task)
-                                <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-start justify-between gap-2 text-xs">
+                                <div class="p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl flex items-start justify-between gap-2 text-xs">
                                     <div class="space-y-1 flex-1 min-w-0">
                                         <div class="flex items-start gap-2">
                                             <button
@@ -482,11 +482,11 @@
                                             >
                                                 {{ $task->status->value === 'completed' ? '✅' : '⬜' }}
                                             </button>
-                                            <span class="font-bold leading-snug break-words {{ $task->status->value === 'completed' ? 'line-through text-slate-400' : 'text-slate-900' }}">
+                                            <span class="font-bold leading-snug break-words {{ $task->status->value === 'completed' ? 'line-through text-slate-400' : 'text-slate-900 dark:text-white' }}">
                                                 {{ $task->title }}
                                             </span>
                                         </div>
-                                        <div class="flex items-center gap-2.5 text-[10px] text-slate-500 pl-6 flex-wrap">
+                                        <div class="flex items-center gap-2.5 text-[10px] text-slate-500 dark:text-slate-400 pl-6 flex-wrap">
                                             <span>👤 {{ $task->assignedTo ? $task->assignedTo->name : ($task->assigned_to_name ?: 'Unassigned') }}</span>
                                             @if($task->due_date)
                                                 <span>🗓️ {{ $task->due_date->format('d M') }}</span>
@@ -498,7 +498,7 @@
                                         <button
                                             type="button"
                                             wire:click="notifyAssignedMember({{ $task->id }})"
-                                            class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] rounded-lg border border-indigo-200 transition-all cursor-pointer shrink-0"
+                                            class="px-2 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold text-[10px] rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer shrink-0"
                                             title="Send email alert to assigned brother"
                                         >
                                             📧
@@ -506,7 +506,7 @@
                                     @endif
                                 </div>
                             @empty
-                                <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                                     No tasks committed yet. Insert [ ] in notes and click "Sync".
                                 </div>
                             @endforelse
@@ -519,30 +519,30 @@
                     <div class="space-y-2.5 text-xs">
                         <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
                             <span>Notices of Motion</span>
-                            <span class="font-bold text-slate-700">{{ $motions->count() }} total</span>
+                            <span class="font-bold text-slate-700 dark:text-slate-200">{{ $motions->count() }} total</span>
                         </div>
 
                         <div class="space-y-2 max-h-[520px] overflow-y-auto pr-1">
                             @forelse($motions as $motion)
-                                <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 text-xs">
+                                <div class="p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl space-y-2 text-xs">
                                     <div class="flex items-start justify-between gap-1.5">
-                                        <span class="font-bold text-slate-900 leading-snug">{{ $motion->title }}</span>
-                                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded border shrink-0 {{ $motion->status === 'published_on_summons' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-amber-100 text-amber-800 border-amber-200' }}">
+                                        <span class="font-bold text-slate-900 dark:text-white leading-snug">{{ $motion->title }}</span>
+                                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded border shrink-0 {{ $motion->status === 'published_on_summons' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800/60' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800/60' }}">
                                             {{ str_replace('_', ' ', $motion->status) }}
                                         </span>
                                     </div>
 
-                                    <p class="text-[10px] text-slate-600 bg-white p-2 rounded-xl border border-slate-100 italic">
+                                    <p class="text-[10px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800 italic">
                                         "{{ $motion->motion_text }}"
                                     </p>
 
-                                    <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1">
+                                    <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1">
                                         <span>Proposer: <strong>{{ $motion->proposer_name ?: ($motion->proposer?->name ?: 'Committee') }}</strong></span>
                                         @if($motion->status === 'draft_committee')
                                             <button
                                                 type="button"
                                                 wire:click="approveMotionForSummons({{ $motion->id }})"
-                                                class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm text-[10px]"
+                                                class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm text-[10px]"
                                             >
                                                 Approve
                                             </button>
@@ -550,7 +550,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                                     No formal notices of motion drafted yet. Use /motion in notes.
                                 </div>
                             @endforelse
@@ -563,23 +563,23 @@
                     <div class="space-y-2.5 text-xs">
                         <div class="flex items-center justify-between text-[11px] font-bold text-slate-400">
                             <span>Charitable Donation Proposals</span>
-                            <span class="font-bold text-slate-700">{{ $charityGrants->count() }} total</span>
+                            <span class="font-bold text-slate-700 dark:text-slate-200">{{ $charityGrants->count() }} total</span>
                         </div>
 
                         <div class="space-y-2 max-h-[520px] overflow-y-auto pr-1">
                             @forelse($charityGrants as $grant)
-                                <div class="p-3 bg-amber-50/70 border border-amber-200/90 rounded-2xl space-y-2 text-xs">
+                                <div class="p-3 bg-amber-50/70 dark:bg-amber-950/70 border border-amber-200/90 dark:border-amber-800/90 rounded-2xl space-y-2 text-xs">
                                     <div class="flex items-start justify-between gap-1.5">
                                         <div>
-                                            <span class="font-black text-slate-900 block">£{{ number_format($grant->amount, 2) }} — {{ $grant->recipient_name }}</span>
-                                            <span class="text-[10px] text-amber-900 font-medium block mt-0.5">{{ $grant->purpose }}</span>
+                                            <span class="font-black text-slate-900 dark:text-white block">£{{ number_format($grant->amount, 2) }} — {{ $grant->recipient_name }}</span>
+                                            <span class="text-[10px] text-amber-900 dark:text-amber-200 font-medium block mt-0.5">{{ $grant->purpose }}</span>
                                         </div>
-                                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded border shrink-0 bg-amber-100 text-amber-900 border-amber-300">
+                                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded border shrink-0 bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60">
                                             {{ str_replace('_', ' ', $grant->approval_status->value ?? $grant->approval_status) }}
                                         </span>
                                     </div>
 
-                                    <div class="space-y-0.5 text-[10px] text-slate-600 bg-white p-2 rounded-xl border border-amber-100">
+                                    <div class="space-y-0.5 text-[10px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 p-2 rounded-xl border border-amber-100 dark:border-amber-900/40">
                                         @if($grant->proposer)
                                             <div>Proposed by: <strong>{{ $grant->proposer->formatted_rank_name }}</strong></div>
                                         @endif
@@ -614,7 +614,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                <div class="p-6 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
                                     No charitable donation proposals logged yet.
                                 </div>
                             @endforelse

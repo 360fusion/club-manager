@@ -308,17 +308,17 @@ const submit = () => {
     <div class="max-w-6xl mx-auto space-y-6">
       
       <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
-          <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Edit Summons</h2>
-          <p class="text-xs sm:text-sm text-slate-500 mt-1">Customize formal summons sections, business agenda, officers, festive board, and fraternal visits.</p>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Edit Summons</h2>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Customize formal summons sections, business agenda, officers, festive board, and fraternal visits.</p>
         </div>
         
         <div class="flex flex-wrap items-center gap-3">
-          <a v-if="meeting.id" :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" class="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
+          <a v-if="meeting.id" :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" class="px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
             🖨️ Preview PDF
           </a>
-          <button @click="submit" :disabled="form.processing" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center gap-2 cursor-pointer">
+          <button @click="submit" :disabled="form.processing" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-2 cursor-pointer">
             Save Changes
           </button>
         </div>
@@ -330,9 +330,9 @@ const submit = () => {
         <!-- Left Sidebar Navigation -->
         <div class="lg:col-span-1 space-y-4">
           <!-- Mobile Dropdown Selector -->
-          <div class="lg:hidden bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
-            <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Summons Section</label>
-            <select v-model="activeSection" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+          <div class="lg:hidden bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-2">
+            <label class="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Summons Section</label>
+            <select v-model="activeSection" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
               <option value="general">📜 1. General & Intro Letter</option>
               <option value="agenda">📋 2. Order of Business (Agenda)</option>
               <option value="festive">🍽️ 3. Festive Board & Banking</option>
@@ -343,7 +343,7 @@ const submit = () => {
           </div>
 
           <!-- Desktop Vertical Sidebar Navigation Card -->
-          <div class="hidden lg:block bg-white p-3.5 rounded-3xl border border-slate-200/80 shadow-sm space-y-5 sticky top-6">
+          <div class="hidden lg:block bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-5 sticky top-6">
             <div>
               <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Summons Sections</div>
               <div class="space-y-0.5 text-xs font-bold">
@@ -353,7 +353,7 @@ const submit = () => {
                   @click="activeSection = 'general'"
                   :class="[
                     'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'general' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    activeSection === 'general' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>📜</span> General & Intro</span>
@@ -364,7 +364,7 @@ const submit = () => {
                   @click="activeSection = 'agenda'"
                   :class="[
                     'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'agenda' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    activeSection === 'agenda' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>📋</span> Order of Business</span>
@@ -375,7 +375,7 @@ const submit = () => {
                   @click="activeSection = 'festive'"
                   :class="[
                     'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'festive' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    activeSection === 'festive' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>🍽️</span> Festive Board</span>
@@ -386,7 +386,7 @@ const submit = () => {
                   @click="activeSection = 'visits'"
                   :class="[
                     'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'visits' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    activeSection === 'visits' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>🏛️</span> Fraternal & Honorary</span>
@@ -397,7 +397,7 @@ const submit = () => {
                   @click="activeSection = 'front_page'"
                   :class="[
                     'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'front_page' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    activeSection === 'front_page' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>🏛️</span> Front page</span>
@@ -408,7 +408,7 @@ const submit = () => {
                   @click="activeSection = 'officers'"
                   :class="[
                     'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'officers' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    activeSection === 'officers' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>👔</span> Officers for Year</span>
@@ -424,26 +424,26 @@ const submit = () => {
           <form @submit.prevent="submit" class="space-y-6">
             
             <!-- SECTION 0: Front Page Cover Page -->
-            <div v-show="activeSection === 'front_page'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-3">
+            <div v-show="activeSection === 'front_page'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <h3 class="text-base font-bold text-slate-900">🏛️ Front Page — PDF Cover Configuration</h3>
-                  <p class="text-xs text-slate-500">Configure the emblem, province header, lodge title, motto, and Worshipful Master details rendered on Page 1 (Cover Page).</p>
+                  <h3 class="text-base font-bold text-slate-900 dark:text-white">🏛️ Front Page — PDF Cover Configuration</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Configure the emblem, province header, lodge title, motto, and Worshipful Master details rendered on Page 1 (Cover Page).</p>
                 </div>
                 <button
                   type="button"
                   @click="importProvincialRulersFromSettings"
-                  class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-start sm:self-auto"
+                  class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-start sm:self-auto"
                 >
                   👔 Import Provincial Rulers
                 </button>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Logo / Emblem Image Upload</label>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Logo / Emblem Image Upload</label>
                 
-                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                  <div class="w-16 h-16 rounded-xl border border-slate-300 bg-white flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
+                <div class="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <div class="w-16 h-16 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
                     <img v-if="logoPreview" :src="logoPreview" class="w-full h-full object-contain p-1" alt="Logo Preview" />
                     <span v-else class="text-2xl text-slate-400">🏛️</span>
                   </div>
@@ -453,11 +453,11 @@ const submit = () => {
                       type="file"
                       accept="image/*"
                       @change="handleLogoUpload"
-                      class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"
+                      class="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
                     />
                     <div class="flex items-center gap-3 text-[11px] text-slate-400">
                       <span>Upload logo image (PNG, JPG, SVG, WEBP up to 5MB)</span>
-                      <button v-if="logoPreview" type="button" @click="clearLogo" class="text-rose-600 font-bold hover:underline">
+                      <button v-if="logoPreview" type="button" @click="clearLogo" class="text-rose-600 dark:text-rose-400 font-bold hover:underline">
                         Remove Logo
                       </button>
                     </div>
@@ -467,53 +467,53 @@ const submit = () => {
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Title (Province / Organization Header)</label>
-                  <input v-model="form.front_page_title" type="text" placeholder="PROVINCIAL GRAND LODGE" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Title (Province / Organization Header)</label>
+                  <input v-model="form.front_page_title" type="text" placeholder="PROVINCIAL GRAND LODGE" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Provincial Grand Master</label>
-                  <input v-model="form.provincial_grand_master" type="text" placeholder="R WBro John David Watts" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Provincial Grand Master</label>
+                  <input v-model="form.provincial_grand_master" type="text" placeholder="R WBro John David Watts" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Deputy Provincial Grand Master</label>
-                  <input v-model="form.deputy_provincial_grand_master" type="text" placeholder="WBro Andrew Peter Faul Foster PSGD" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Deputy Provincial Grand Master</label>
+                  <input v-model="form.deputy_provincial_grand_master" type="text" placeholder="WBro Andrew Peter Faul Foster PSGD" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Assistant Provincial Grand Masters (One per line)</label>
-                <textarea v-model="form.assistant_provincial_grand_masters" rows="4" placeholder="WBro Dr. Rakesh Bhalla PSGD..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono"></textarea>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Assistant Provincial Grand Masters (One per line)</label>
+                <textarea v-model="form.assistant_provincial_grand_masters" rows="4" placeholder="WBro Dr. Rakesh Bhalla PSGD..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono"></textarea>
               </div>
 
-              <div class="border-t border-slate-100 pt-4 space-y-4">
-                <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Lodge / Club Branding Header</h4>
+              <div class="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-4">
+                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Lodge / Club Branding Header</h4>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Club Name (Large Text)</label>
-                    <input v-model="form.cover_club_name" type="text" placeholder="LODGE OF FRATERNITY" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold" />
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Club Name (Large Text)</label>
+                    <input v-model="form.cover_club_name" type="text" placeholder="LODGE OF FRATERNITY" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold" />
                   </div>
 
                   <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Club Number (Smaller Text)</label>
-                    <input v-model="form.cover_club_number" type="text" placeholder="1418" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Club Number (Smaller Text)</label>
+                    <input v-model="form.cover_club_number" type="text" placeholder="1418" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                   </div>
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Club Motto</label>
-                  <input v-model="form.cover_motto" type="text" placeholder="Fraternus Amor Maneto" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs italic" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Club Motto</label>
+                  <input v-model="form.cover_motto" type="text" placeholder="Fraternus Amor Maneto" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs italic" />
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Worshipful Master (Pull from Rank / Master Name)</label>
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Worshipful Master (Pull from Rank / Master Name)</label>
                   <div class="flex items-center gap-2">
-                    <input v-model="form.cover_worshipful_master" type="text" placeholder="WBro KD Lord" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold" />
-                    <select @change="e => form.cover_worshipful_master = e.target.value" class="px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-medium cursor-pointer">
+                    <input v-model="form.cover_worshipful_master" type="text" placeholder="WBro KD Lord" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold" />
+                    <select @change="e => form.cover_worshipful_master = e.target.value" class="px-3 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium cursor-pointer">
                       <option value="">Pull from Member Rank...</option>
                       <option v-for="m in members" :key="m.id" :value="`${m.pivot?.rank_prefix || 'WBro'} ${m.name}`">
                         {{ m.pivot?.rank_prefix || 'WBro' }} {{ m.name }} ({{ m.pivot?.rank || 'Member' }})
@@ -525,104 +525,104 @@ const submit = () => {
             </div>
 
             <!-- SECTION 1: General & Intro Letter -->
-            <div v-show="activeSection === 'general'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
-              <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">📜 Meeting Intro & Schedule Details</h3>
+            <div v-show="activeSection === 'general'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <h3 class="text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">📜 Meeting Intro & Schedule Details</h3>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Meeting Title</label>
-                  <input v-model="form.title" type="text" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Meeting Title</label>
+                  <input v-model="form.title" type="text" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Meeting Date</label>
-                  <input v-model="form.meeting_date" type="date" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Meeting Date</label>
+                  <input v-model="form.meeting_date" type="date" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Meeting Start Time</label>
-                  <input v-model="form.starts_at" type="text" required placeholder="7:00pm" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Meeting Start Time</label>
+                  <input v-model="form.starts_at" type="text" required placeholder="7:00pm" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Rehearsal Time</label>
-                  <input v-model="form.rehearsal_starts_at" type="text" placeholder="6:00pm" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Rehearsal Time</label>
+                  <input v-model="form.rehearsal_starts_at" type="text" placeholder="6:00pm" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Dress Code</label>
-                  <input v-model="form.dress_code" type="text" required placeholder="Dinner Jacket, White Gloves" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Dress Code</label>
+                  <input v-model="form.dress_code" type="text" required placeholder="Dinner Jacket, White Gloves" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Venue Address</label>
-                <input v-model="form.venue" type="text" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Venue Address</label>
+                <input v-model="form.venue" type="text" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Formal Salutation</label>
-                <input v-model="form.salutation" type="text" placeholder="Dear Sir and Brother," class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Formal Salutation</label>
+                <input v-model="form.salutation" type="text" placeholder="Dear Sir and Brother," class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Intro Request Text (Page 2)</label>
-                <textarea v-model="form.intro_text" rows="3" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs"></textarea>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Intro Request Text (Page 2)</label>
+                <textarea v-model="form.intro_text" rows="3" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Rehearsal Notice Text</label>
-                <input v-model="form.rehearsal_text" type="text" placeholder="The rehearsal should it be necessary will be at 6:00pm on Friday..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Rehearsal Notice Text</label>
+                <input v-model="form.rehearsal_text" type="text" placeholder="The rehearsal should it be necessary will be at 6:00pm on Friday..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
               </div>
             </div>
 
             <!-- SECTION 2: Order of Business (Agenda) -->
-            <div v-show="activeSection === 'agenda'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
-              <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div v-show="activeSection === 'agenda'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <h3 class="text-base font-bold text-slate-900">📋 BUSINESS — Order of Business</h3>
-                  <p class="text-xs text-slate-500">Numbered items rendered directly under the BUSINESS header on Page 2.</p>
+                  <h3 class="text-base font-bold text-slate-900 dark:text-white">📋 BUSINESS — Order of Business</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Numbered items rendered directly under the BUSINESS header on Page 2.</p>
                 </div>
-                <button type="button" @click="addAgendaItem" class="px-3.5 py-2 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-xl hover:bg-indigo-100 transition-all cursor-pointer">
+                <button type="button" @click="addAgendaItem" class="px-3.5 py-2 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-xs rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all cursor-pointer">
                   + Add Agenda Item
                 </button>
               </div>
 
-              <div v-for="(item, idx) in form.agenda_items" :key="idx" class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
+              <div v-for="(item, idx) in form.agenda_items" :key="idx" class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 space-y-3">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-700">Item #{{ idx + 1 }}</span>
-                  <button type="button" @click="removeAgendaItem(idx)" class="text-xs font-bold text-rose-600 cursor-pointer">Delete Item</button>
+                  <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Item #{{ idx + 1 }}</span>
+                  <button type="button" @click="removeAgendaItem(idx)" class="text-xs font-bold text-rose-600 dark:text-rose-400 cursor-pointer">Delete Item</button>
                 </div>
-                <input v-model="item.title" type="text" required placeholder="To confirm the minutes / ballot for candidate..." class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold" />
-                <textarea v-model="item.description" rows="2" placeholder="Optional notes or details..." class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs"></textarea>
+                <input v-model="item.title" type="text" required placeholder="To confirm the minutes / ballot for candidate..." class="w-full px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold" />
+                <textarea v-model="item.description" rows="2" placeholder="Optional notes or details..." class="w-full px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
               </div>
 
               <!-- Charitable Grants linked or active for this club -->
-              <div v-if="charityGrants && charityGrants.length > 0" class="mt-6 pt-6 border-t border-slate-200/80 space-y-3">
+              <div v-if="charityGrants && charityGrants.length > 0" class="mt-6 pt-6 border-t border-slate-200/80 dark:border-slate-800/80 space-y-3">
                 <div class="flex items-center justify-between">
-                  <h4 class="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <h4 class="text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-wider flex items-center gap-1.5">
                     <span>❤️</span> Charitable Donation Proposals & Alms Voting
                   </h4>
-                  <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                  <span class="text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-200 dark:border-amber-800/60">
                     {{ charityGrants.length }} Proposal(s) Logged
                   </span>
                 </div>
                 <div class="space-y-2">
-                  <div v-for="grant in charityGrants" :key="grant.id" class="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200/80 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div v-for="grant in charityGrants" :key="grant.id" class="p-3.5 bg-amber-50/70 dark:bg-amber-950/70 rounded-2xl border border-amber-200/80 dark:border-amber-800/80 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <div class="font-bold text-slate-900">
+                      <div class="font-bold text-slate-900 dark:text-white">
                         £{{ parseFloat(grant.amount).toFixed(2) }} — {{ grant.recipient_name }}
                       </div>
-                      <div class="text-slate-600 text-[11px] mt-0.5">{{ grant.purpose }}</div>
-                      <div class="flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500 mt-1 font-medium">
+                      <div class="text-slate-600 dark:text-slate-300 text-[11px] mt-0.5">{{ grant.purpose }}</div>
+                      <div class="flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
                         <span v-if="grant.proposer">Proposed by: <strong>{{ grant.proposer.first_name }} {{ grant.proposer.last_name }}</strong></span>
                         <span v-if="grant.seconder">Seconded by: <strong>{{ grant.seconder.first_name }} {{ grant.seconder.last_name }}</strong></span>
                       </div>
                     </div>
                     <div class="flex items-center gap-2 self-start sm:self-center">
-                      <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-amber-100 text-amber-900 border border-amber-300">
+                      <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/60">
                         {{ (grant.approval_status || 'proposed').replace('_', ' ') }}
                       </span>
                       <button
@@ -639,13 +639,13 @@ const submit = () => {
             </div>
 
             <!-- SECTION 3: Officers for Year -->
-            <div v-show="activeSection === 'officers'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
-              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div v-show="activeSection === 'officers'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
-                  <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <span>👔</span> OFFICERS FOR THE YEAR
                   </h3>
-                  <p class="text-xs text-slate-500 mt-1">
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Officers listed below will appear on the summons PDF. You can manage and edit officers on the Club Settings page.
                   </p>
                 </div>
@@ -653,7 +653,7 @@ const submit = () => {
                 <div class="flex flex-wrap items-center gap-2">
                   <Link
                     :href="route('admin.settings.show', { clubSlug: club.slug }) + '#officers'"
-                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200"
+                    class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200 dark:border-slate-800"
                     title="Go to Club Settings to manage officers"
                   >
                     ⚙️ Manage Officers in Settings
@@ -662,23 +662,23 @@ const submit = () => {
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Section Header Label</label>
-                <input v-model="form.officers_year_label" type="text" placeholder="OFFICERS FOR 2025-2026" class="w-full sm:w-96 px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold" />
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Section Header Label</label>
+                <input v-model="form.officers_year_label" type="text" placeholder="OFFICERS FOR 2025-2026" class="w-full sm:w-96 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold" />
               </div>
 
               <!-- Officers Table -->
-              <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+              <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
                 <table class="w-full text-left border-collapse">
                   <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-600">
+                    <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                       <th class="py-3 px-3 w-12 text-center">#</th>
                       <th class="py-3 px-4">Officer Role Title</th>
                       <th class="py-3 px-4">Assigned Member / Officer Name</th>
                       <th v-if="isEditingRoster" class="py-3 px-3 text-right w-28">Actions</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-slate-100 text-xs">
-                    <tr v-for="(item, idx) in form.officers_roster" :key="idx" class="hover:bg-slate-50/50">
+                  <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                    <tr v-for="(item, idx) in form.officers_roster" :key="idx" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50">
                       <td class="py-2.5 px-3 text-center font-bold text-slate-400">
                         {{ idx + 1 }}
                       </td>
@@ -689,9 +689,9 @@ const submit = () => {
                           v-model="item.role"
                           type="text"
                           placeholder="e.g. Worshipful Master"
-                          class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                          class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                        <span v-else class="text-xs font-bold text-slate-800">{{ item.role }}</span>
+                        <span v-else class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ item.role }}</span>
                       </td>
 
                       <td class="py-2.5 px-4">
@@ -700,11 +700,11 @@ const submit = () => {
                             v-model="item.name"
                             type="text"
                             placeholder="e.g. W. Bro. K. D. Lord"
-                            class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-500"
+                            class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
                           />
                           <select
                             @change="e => { if (e.target.value) item.name = e.target.value }"
-                            class="px-2 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-medium cursor-pointer text-slate-600"
+                            class="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-[11px] font-medium cursor-pointer text-slate-600 dark:text-slate-300"
                           >
                             <option value="">Quick Select...</option>
                             <option v-for="m in members" :key="m.id" :value="`${m.pivot?.rank_prefix || 'W. Bro.'} ${m.name}`">
@@ -712,7 +712,7 @@ const submit = () => {
                             </option>
                           </select>
                         </div>
-                        <span v-else class="text-xs font-semibold text-slate-600">{{ item.name }}</span>
+                        <span v-else class="text-xs font-semibold text-slate-600 dark:text-slate-300">{{ item.name }}</span>
                       </td>
 
                       <td v-if="isEditingRoster" class="py-2.5 px-3 text-right space-x-1">
@@ -720,7 +720,7 @@ const submit = () => {
                           type="button"
                           @click="moveOfficerUp(idx)"
                           :disabled="idx === 0"
-                          class="px-1.5 py-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer font-bold"
+                          class="px-1.5 py-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer font-bold"
                           title="Move Up"
                         >
                           ↑
@@ -729,7 +729,7 @@ const submit = () => {
                           type="button"
                           @click="moveOfficerDown(idx)"
                           :disabled="idx === form.officers_roster.length - 1"
-                          class="px-1.5 py-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer font-bold"
+                          class="px-1.5 py-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer font-bold"
                           title="Move Down"
                         >
                           ↓
@@ -737,7 +737,7 @@ const submit = () => {
                         <button
                           type="button"
                           @click="removeOfficerRow(idx)"
-                          class="px-1.5 py-1 text-rose-500 hover:text-rose-700 font-bold cursor-pointer"
+                          class="px-1.5 py-1 text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 font-bold cursor-pointer"
                           title="Remove"
                         >
                           ✕
@@ -755,73 +755,73 @@ const submit = () => {
             </div>
 
             <!-- SECTION 4: Festive Board & Banking -->
-            <div v-show="activeSection === 'festive'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
-              <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">🍽️ FESTIVE BOARD & Payment Information</h3>
+            <div v-show="activeSection === 'festive'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <h3 class="text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">🍽️ FESTIVE BOARD & Payment Information</h3>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Festive Board Theme / Notice Text</label>
-                <textarea v-model="form.festive_board_theme" rows="2" placeholder="The Lodge of Fraternity will be holding their Annual Burns Night..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs"></textarea>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Festive Board Theme / Notice Text</label>
+                <textarea v-model="form.festive_board_theme" rows="2" placeholder="The Lodge of Fraternity will be holding their Annual Burns Night..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Menu (Optional)</label>
-                <textarea v-model="form.festive_board_menu" rows="3" placeholder="Starter: Tomato Soup&#10;Main: Roast Beef & Seasonal Vegetables&#10;Dessert: Apple Crumble & Custard" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono"></textarea>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Menu (Optional)</label>
+                <textarea v-model="form.festive_board_menu" rows="3" placeholder="Starter: Tomato Soup&#10;Main: Roast Beef & Seasonal Vegetables&#10;Dessert: Apple Crumble & Custard" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono"></textarea>
                 <p class="text-[11px] text-slate-400 mt-1">If entered, this menu will be listed on the summons PDF under the Festive Board section.</p>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Price Per Head (£)</label>
-                  <input v-model="form.dining_cost_member" type="number" step="0.01" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Price Per Head (£)</label>
+                  <input v-model="form.dining_cost_member" type="number" step="0.01" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Bank Sort Code</label>
-                  <input v-model="form.bank_sort_code" type="text" placeholder="20-82-18" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Bank Sort Code</label>
+                  <input v-model="form.bank_sort_code" type="text" placeholder="20-82-18" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Bank Account Number</label>
-                  <input v-model="form.bank_account_number" type="text" placeholder="80288373" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Bank Account Number</label>
+                  <input v-model="form.bank_account_number" type="text" placeholder="80288373" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
 
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Payment Reference Convention</label>
-                  <input v-model="form.payment_reference_prefix" type="text" placeholder="your name or names" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Payment Reference Convention</label>
+                  <input v-model="form.payment_reference_prefix" type="text" placeholder="your name or names" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Direct Online Payment Link / URL (Optional)</label>
-                <input v-model="form.payment_link" type="url" placeholder="https://buy.stripe.com/..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs" />
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Direct Online Payment Link / URL (Optional)</label>
+                <input v-model="form.payment_link" type="url" placeholder="https://buy.stripe.com/..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 <p class="text-[11px] text-slate-400 mt-1">If provided, members will see a direct "💳 Pay Online Now" button on their passwordless RSVP page.</p>
               </div>
             </div>
 
             <!-- SECTION 5: Fraternal Visits & Honorary Members -->
-            <div v-show="activeSection === 'visits'" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
-              <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">🏛️ FRATERNAL VISITS & HONORARY MEMBERS</h3>
+            <div v-show="activeSection === 'visits'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+              <h3 class="text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">🏛️ FRATERNAL VISITS & HONORARY MEMBERS</h3>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">FRATERNAL VISITS Text (Page 2 Right)</label>
-                <textarea v-model="form.fraternal_visits_text" rows="3" placeholder="The Worshipful Master and Brethren of Haven of Rest Lodge No 4350..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs"></textarea>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">FRATERNAL VISITS Text (Page 2 Right)</label>
+                <textarea v-model="form.fraternal_visits_text" rows="3" placeholder="The Worshipful Master and Brethren of Haven of Rest Lodge No 4350..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">HONORARY MEMBER Text (Page 2 Left)</label>
-                <textarea v-model="form.honorary_members_text" rows="2" placeholder="RW Bro Sir David Hugh Wootton Past Deputy Grand Master" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs"></textarea>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">HONORARY MEMBER Text (Page 2 Left)</label>
+                <textarea v-model="form.honorary_members_text" rows="2" placeholder="RW Bro Sir David Hugh Wootton Past Deputy Grand Master" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Pastoral / Almoner Emergency Contact Notice</label>
-                <textarea v-model="form.sick_distressed_notes" rows="2" placeholder="Should you be aware of any illness..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs"></textarea>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Pastoral / Almoner Emergency Contact Notice</label>
+                <textarea v-model="form.sick_distressed_notes" rows="2" placeholder="Should you be aware of any illness..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
               </div>
             </div>
 
             <!-- Action Footer -->
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-              <Link :href="route('admin.meetings.index', { clubSlug: club.slug })" class="px-5 py-2.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancel</Link>
-              <button type="submit" :disabled="form.processing" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer">
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <Link :href="route('admin.meetings.index', { clubSlug: club.slug })" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">Cancel</Link>
+              <button type="submit" :disabled="form.processing" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer">
                 Save Summons Changes
               </button>
             </div>

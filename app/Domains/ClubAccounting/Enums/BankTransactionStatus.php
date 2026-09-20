@@ -20,9 +20,9 @@ enum BankTransactionStatus: string
     public function badgeClasses(): string
     {
         return match ($this) {
-            self::Unmatched => 'bg-amber-50 text-amber-800 border-amber-300',
-            self::Matched => 'bg-emerald-50 text-emerald-800 border-emerald-300',
-            self::Ignored => 'bg-slate-100 text-slate-600 border-slate-300',
+            self::Unmatched => 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700/60',
+            self::Matched => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700/60',
+            self::Ignored => 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700',
         };
     }
 }

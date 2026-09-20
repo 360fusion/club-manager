@@ -1,6 +1,6 @@
 <div class="space-y-6">
     <!-- Header Banner -->
-    <div class="p-6 bg-slate-900 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="p-6 bg-slate-900 dark:bg-slate-700 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-3">
                 <span class="p-2.5 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30">⚡</span>
@@ -24,7 +24,7 @@
 
     <!-- Flash Notifications -->
     @if (session()->has('success'))
-        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-2xl shadow-sm flex items-center justify-between">
+        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 text-xs font-semibold rounded-2xl shadow-sm flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <span>✅</span>
                 <span>{{ session('success') }}</span>
@@ -32,7 +32,7 @@
         </div>
     @endif
     @if (session()->has('error'))
-        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold rounded-2xl shadow-sm flex items-center justify-between">
+        <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 text-xs font-semibold rounded-2xl shadow-sm flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <span>⚠️</span>
                 <span>{{ session('error') }}</span>
@@ -45,13 +45,13 @@
         
         <!-- LEFT COLUMN: Unmatched Statement Lines Stack (5 Columns wide on lg) -->
         <div class="lg:col-span-5 space-y-4">
-            <div class="p-4 bg-white border border-slate-200/80 rounded-2xl shadow-sm space-y-3">
+            <div class="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm space-y-3">
                 <div class="flex items-center justify-between">
-                    <h3 class="font-black text-xs text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <h3 class="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                         <span>📥</span>
                         <span>Unmatched Statement Lines</span>
                     </h3>
-                    <span class="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-amber-100 text-amber-900">
+                    <span class="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200">
                         {{ $unmatchedCount }} Pending
                     </span>
                 </div>
@@ -61,7 +61,7 @@
                         type="text"
                         wire:model.live.debounce.300ms="search"
                         placeholder="Search statement description..."
-                        class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        class="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                     <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
@@ -74,33 +74,33 @@
                     @endphp
                     <div
                         wire:click="selectTransaction({{ $tx->id }})"
-                        class="p-4 rounded-2xl border transition-all cursor-pointer text-xs space-y-2 {{ $isSelected ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/30 shadow-md' : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm' }}"
+                        class="p-4 rounded-2xl border transition-all cursor-pointer text-xs space-y-2 {{ $isSelected ? 'bg-amber-50/80 dark:bg-amber-950/80 border-amber-400 ring-2 ring-amber-400/30 shadow-md' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm' }}"
                     >
                         <div class="flex items-start justify-between gap-2">
-                            <span class="font-bold text-slate-500 text-[11px] whitespace-nowrap">
+                            <span class="font-bold text-slate-500 dark:text-slate-400 text-[11px] whitespace-nowrap">
                                 {{ $tx->transaction_date ? $tx->transaction_date->format('d M Y') : '—' }}
                             </span>
-                            <span class="font-black text-sm whitespace-nowrap {{ $tx->amount > 0 ? 'text-emerald-700' : 'text-rose-700' }}">
+                            <span class="font-black text-sm whitespace-nowrap {{ $tx->amount > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">
                                 {{ $tx->amount > 0 ? '+' : '' }}£{{ number_format(abs($tx->amount), 2) }}
                             </span>
                         </div>
 
                         <div>
-                            <span class="font-extrabold text-slate-900 block line-clamp-2">{{ $tx->raw_description }}</span>
+                            <span class="font-extrabold text-slate-900 dark:text-white block line-clamp-2">{{ $tx->raw_description }}</span>
                             @if($tx->reference)
-                                <span class="text-[10px] text-slate-500 font-mono block mt-0.5">Ref: {{ $tx->reference }}</span>
+                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono block mt-0.5">Ref: {{ $tx->reference }}</span>
                             @endif
                         </div>
                     </div>
                 @empty
-                    <div class="p-8 text-center bg-white border border-slate-200 rounded-2xl text-slate-400 text-xs italic">
+                    <div class="p-8 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 text-xs italic">
                         All bank statement lines reconciled! No unmatched lines pending.
                     </div>
                 @endforelse
             </div>
 
             @if($unmatchedTransactions->hasPages())
-                <div class="p-3 bg-white border border-slate-200 rounded-2xl">
+                <div class="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
                     {{ $unmatchedTransactions->links() }}
                 </div>
             @endif
@@ -110,7 +110,7 @@
         <div class="lg:col-span-7 space-y-4">
             @if($selectedTx)
                 <!-- Selected Statement Line Card -->
-                <div class="p-6 bg-slate-900 text-white rounded-3xl shadow-lg space-y-3">
+                <div class="p-6 bg-slate-900 dark:bg-slate-700 text-white rounded-3xl shadow-lg space-y-3">
                     <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                         <span class="text-[10px] font-black uppercase tracking-wider text-amber-400">Statement Line Inspector</span>
                         <span class="text-xs font-bold text-slate-400">{{ $selectedTx->transaction_date ? $selectedTx->transaction_date->format('l, d F Y') : '' }}</span>
@@ -135,18 +135,18 @@
                 </div>
 
                 <!-- Suggested Matches Engine Panel -->
-                <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                         <div class="flex items-center gap-2">
                             <span class="text-lg">🎯</span>
-                            <h3 class="font-black text-slate-900 text-sm">Automated Rule-Based Match Suggestions</h3>
+                            <h3 class="font-black text-slate-900 dark:text-white text-sm">Automated Rule-Based Match Suggestions</h3>
                         </div>
-                        <span class="text-xs font-bold text-slate-500">{{ count($suggestedMatches) }} Candidate Matches</span>
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ count($suggestedMatches) }} Candidate Matches</span>
                     </div>
 
                     <div class="space-y-3">
                         @forelse($suggestedMatches as $match)
-                            <div class="p-4 rounded-2xl border transition-all space-y-3 {{ $match['confidence_level'] === 'high' ? 'bg-emerald-50/70 border-emerald-300' : 'bg-amber-50/70 border-amber-300' }}">
+                            <div class="p-4 rounded-2xl border transition-all space-y-3 {{ $match['confidence_level'] === 'high' ? 'bg-emerald-50/70 dark:bg-emerald-950/70 border-emerald-300 dark:border-emerald-700/60' : 'bg-amber-50/70 dark:bg-amber-950/70 border-amber-300 dark:border-amber-700/60' }}">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="flex items-center gap-2">
                                         @if($match['confidence_level'] === 'high')
@@ -159,13 +159,13 @@
                                             </span>
                                         @endif
                                     </div>
-                                    <span class="text-[11px] font-semibold text-slate-500">{{ $match['match_reason'] }}</span>
+                                    <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{{ $match['match_reason'] }}</span>
                                 </div>
 
                                 <div class="flex items-center justify-between gap-3 pt-1">
                                     <div>
-                                        <h4 class="font-black text-slate-900 text-sm">{{ $match['target_title'] }}</h4>
-                                        <span class="text-xs text-slate-600 font-medium">Target Dues / Amount: £{{ number_format($match['target_amount'], 2) }}</span>
+                                        <h4 class="font-black text-slate-900 dark:text-white text-sm">{{ $match['target_title'] }}</h4>
+                                        <span class="text-xs text-slate-600 dark:text-slate-300 font-medium">Target Dues / Amount: £{{ number_format($match['target_amount'], 2) }}</span>
                                     </div>
 
                                     <button
@@ -179,7 +179,7 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="p-6 text-center bg-slate-50 border border-slate-200 rounded-2xl text-slate-500 text-xs space-y-1">
+                            <div class="p-6 text-center bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-500 dark:text-slate-400 text-xs space-y-1">
                                 <p class="font-bold">No automatic rule-based match found for this statement line.</p>
                                 <p class="text-slate-400">Use the manual lookup drawer below to allocate to a member, vendor bill, or ledger code.</p>
                             </div>
@@ -187,11 +187,11 @@
                     </div>
 
                     <!-- Secondary Action Buttons -->
-                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
                         <button
                             type="button"
                             wire:click="openManualDrawer({{ $selectedTx->id }})"
-                            class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-2 cursor-pointer"
+                            class="px-4 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-2 cursor-pointer"
                         >
                             <span>🔍</span>
                             <span>Manual Lookup &amp; Allocation Drawer</span>
@@ -201,14 +201,14 @@
                             type="button"
                             wire:click="ignoreLine({{ $selectedTx->id }})"
                             wire:confirm="Mark this bank statement transaction line as ignored?"
-                            class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs rounded-xl transition cursor-pointer"
+                            class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold text-xs rounded-xl transition cursor-pointer"
                         >
                             Ignore Line
                         </button>
                     </div>
                 </div>
             @else
-                <div class="p-12 bg-white border border-slate-200 rounded-3xl text-center text-slate-400 text-xs italic">
+                <div class="p-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl text-center text-slate-400 text-xs italic">
                     Select an unmatched statement line from the left panel to inspect and reconcile.
                 </div>
             @endif
@@ -218,38 +218,38 @@
     <!-- Manual Lookup & Allocation Drawer Modal -->
     @if($showManualDrawer && $selectedTx)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-            <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full p-6 space-y-5 border border-slate-100 max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-xl w-full p-6 space-y-5 border border-slate-100 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                     <div class="flex items-center gap-2">
                         <span class="text-xl">🔍</span>
                         <div>
-                            <h3 class="font-black text-slate-900 text-base">Manual Ledger Allocation Drawer</h3>
-                            <p class="text-[10px] text-slate-500 font-medium">Allocating: <strong class="text-slate-800">{{ $selectedTx->raw_description }}</strong> (£{{ number_format(abs($selectedTx->amount), 2) }})</p>
+                            <h3 class="font-black text-slate-900 dark:text-white text-base">Manual Ledger Allocation Drawer</h3>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Allocating: <strong class="text-slate-800 dark:text-slate-100">{{ $selectedTx->raw_description }}</strong> (£{{ number_format(abs($selectedTx->amount), 2) }})</p>
                         </div>
                     </div>
-                    <button type="button" wire:click="$set('showManualDrawer', false)" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+                    <button type="button" wire:click="$set('showManualDrawer', false)" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg">✕</button>
                 </div>
 
                 <!-- Allocation Type Selector -->
-                <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl text-xs font-bold text-slate-700">
+                <div class="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200">
                     <button
                         type="button"
                         wire:click="$set('manualAllocationType', 'member_subscription')"
-                        class="flex-1 py-1.5 px-3 rounded-lg transition {{ $manualAllocationType === 'member_subscription' ? 'bg-white text-slate-950 shadow-sm' : 'hover:text-slate-900' }}"
+                        class="flex-1 py-1.5 px-3 rounded-lg transition {{ $manualAllocationType === 'member_subscription' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         Member Dues
                     </button>
                     <button
                         type="button"
                         wire:click="$set('manualAllocationType', 'supplier_bill')"
-                        class="flex-1 py-1.5 px-3 rounded-lg transition {{ $manualAllocationType === 'supplier_bill' ? 'bg-white text-slate-950 shadow-sm' : 'hover:text-slate-900' }}"
+                        class="flex-1 py-1.5 px-3 rounded-lg transition {{ $manualAllocationType === 'supplier_bill' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         Vendor Bill
                     </button>
                     <button
                         type="button"
                         wire:click="$set('manualAllocationType', 'ledger_account')"
-                        class="flex-1 py-1.5 px-3 rounded-lg transition {{ $manualAllocationType === 'ledger_account' ? 'bg-white text-slate-950 shadow-sm' : 'hover:text-slate-900' }}"
+                        class="flex-1 py-1.5 px-3 rounded-lg transition {{ $manualAllocationType === 'ledger_account' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         Nominal Code
                     </button>
@@ -262,21 +262,21 @@
                             type="text"
                             wire:model.live.debounce.300ms="manualSearch"
                             placeholder="Search member name or vendor bill..."
-                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                            class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                         />
                     </div>
 
                     <!-- Candidates List -->
                     <div class="space-y-2 text-xs max-h-60 overflow-y-auto">
                         @forelse($manualCandidates as $cand)
-                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between">
                                 <div>
                                     @if($manualAllocationType === 'member_subscription')
-                                        <span class="font-black text-slate-900 block">{{ $cand->member->formatted_rank_name }}</span>
-                                        <span class="text-[10px] text-slate-500">Invoice: {{ $cand->invoice_reference }} (Dues: £{{ number_format($cand->balance_due, 2) }})</span>
+                                        <span class="font-black text-slate-900 dark:text-white block">{{ $cand->member->formatted_rank_name }}</span>
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Invoice: {{ $cand->invoice_reference }} (Dues: £{{ number_format($cand->balance_due, 2) }})</span>
                                     @else
-                                        <span class="font-black text-slate-900 block">{{ $cand->vendor_name }} (Bill: {{ $cand->bill_number }})</span>
-                                        <span class="text-[10px] text-slate-500">Bill Amount: £{{ number_format($cand->amount, 2) }}</span>
+                                        <span class="font-black text-slate-900 dark:text-white block">{{ $cand->vendor_name }} (Bill: {{ $cand->bill_number }})</span>
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Bill Amount: £{{ number_format($cand->amount, 2) }}</span>
                                     @endif
                                 </div>
 
@@ -296,8 +296,8 @@
                     <!-- Nominal Ledger Allocation -->
                     <div class="space-y-3 text-xs">
                         <div>
-                            <label class="font-bold text-slate-700 block mb-1">Nominal Ledger Account Code</label>
-                            <select wire:model="manualNominalCode" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none font-bold">
+                            <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Nominal Ledger Account Code</label>
+                            <select wire:model="manualNominalCode" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none font-bold">
                                 <option value="4000">4000 - General Donations &amp; Dues</option>
                                 <option value="4100">4100 - Dining &amp; Festive Board Fees</option>
                                 <option value="7000">7000 - Rent &amp; Temple Premises</option>
@@ -318,8 +318,8 @@
                     </div>
                 @endif
 
-                <div class="pt-3 border-t border-slate-100 flex justify-end">
-                    <button type="button" wire:click="$set('showManualDrawer', false)" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition">Cancel</button>
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                    <button type="button" wire:click="$set('showManualDrawer', false)" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
                 </div>
             </div>
         </div>

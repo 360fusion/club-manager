@@ -245,11 +245,11 @@ class ClubSettingsController extends Controller
             'members' => $members,
             'provinces' => $provinces,
             'availableRoles' => [
-                ['code' => 'owner', 'name' => 'Owner', 'badge' => 'bg-purple-100 text-purple-800 border-purple-200'],
-                ['code' => 'admin', 'name' => 'Admin', 'badge' => 'bg-indigo-100 text-indigo-800 border-indigo-200'],
-                ['code' => 'coach', 'name' => 'Coach', 'badge' => 'bg-sky-100 text-sky-800 border-sky-200'],
-                ['code' => 'treasurer', 'name' => 'Treasurer', 'badge' => 'bg-amber-100 text-amber-800 border-amber-200'],
-                ['code' => 'member', 'name' => 'Member', 'badge' => 'bg-slate-100 text-slate-800 border-slate-200'],
+                ['code' => 'owner', 'name' => 'Owner', 'badge' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60'],
+                ['code' => 'admin', 'name' => 'Admin', 'badge' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60'],
+                ['code' => 'coach', 'name' => 'Coach', 'badge' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60'],
+                ['code' => 'treasurer', 'name' => 'Treasurer', 'badge' => 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800/60'],
+                ['code' => 'member', 'name' => 'Member', 'badge' => 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-800'],
             ],
         ]);
     }

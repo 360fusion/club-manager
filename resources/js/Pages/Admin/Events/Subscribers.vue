@@ -60,23 +60,23 @@ const setPaymentStatus = (subscriberId, status) => {
     <div class="space-y-6">
       
       <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
         <div>
           <div class="flex items-center gap-2 mb-1">
             <Link
               :href="route('admin.events.index', club.slug)"
-              class="inline-flex items-center text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors"
+              class="inline-flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               ← Back to Events
             </Link>
           </div>
-          <h2 class="text-xl font-bold text-slate-900">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">
             👥 {{ event.title }} — Subscriptions & RSVPs
           </h2>
-          <div class="flex items-center gap-3 text-xs mt-1.5 flex-wrap text-slate-500 font-medium">
+          <div class="flex items-center gap-3 text-xs mt-1.5 flex-wrap text-slate-500 dark:text-slate-400 font-medium">
             <span>📅 {{ event.starts_at || 'Date TBD' }}</span>
             <span v-if="event.location">📍 {{ event.location }}</span>
-            <span v-if="event.has_dining" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-sky-50 text-sky-700 border border-sky-200">
+            <span v-if="event.has_dining" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
               🍽️ 3-Course Dining (£{{ event.dining_price }})
             </span>
           </div>
@@ -85,7 +85,7 @@ const setPaymentStatus = (subscriberId, status) => {
         <div class="flex items-center gap-3">
           <Link
             :href="route('admin.events.edit', { clubSlug: club.slug, id: event.id })"
-            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-all flex items-center gap-1"
+            class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1"
           >
             ✏️ Edit Event Details
           </Link>
@@ -94,57 +94,57 @@ const setPaymentStatus = (subscriberId, status) => {
 
       <!-- Live KPI Cards Grid -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Subscribed</div>
-          <div class="text-2xl font-black text-indigo-600">{{ stats.total }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Registered Attendees</div>
+          <div class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ stats.total }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Registered Attendees</div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dining Attendees</div>
-          <div class="text-2xl font-black text-emerald-600">{{ stats.diningCount }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">3-Course Meal Selections</div>
+          <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ stats.diningCount }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">3-Course Meal Selections</div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Payments Received</div>
-          <div class="text-2xl font-black text-emerald-600">{{ stats.paidCount }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Paid Subscriptions</div>
+          <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ stats.paidCount }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Paid Subscriptions</div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-1">
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Awaiting Payment</div>
-          <div class="text-2xl font-black text-amber-600">{{ stats.unpaidCount }}</div>
-          <div class="text-[11px] text-slate-500 font-medium">Unpaid Subscriptions</div>
+          <div class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ stats.unpaidCount }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Unpaid Subscriptions</div>
         </div>
       </div>
 
       <!-- Filter Tabs & Subscribers Table Card -->
-      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <!-- Filter Tabs -->
           <div class="flex items-center gap-2 overflow-x-auto">
             <button
               @click="activeTab = 'all'"
-              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', activeTab === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100']"
+              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', activeTab === 'all' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               All Subscribers ({{ subscribers.length }})
             </button>
             <button
               @click="activeTab = 'paid'"
-              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', activeTab === 'paid' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-slate-100']"
+              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', activeTab === 'paid' ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               Paid ({{ stats.paidCount }})
             </button>
             <button
               @click="activeTab = 'unpaid'"
-              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', activeTab === 'unpaid' ? 'bg-amber-600 text-white' : 'text-slate-600 hover:bg-slate-100']"
+              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', activeTab === 'unpaid' ? 'bg-amber-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               Unpaid ({{ stats.unpaidCount }})
             </button>
             <button
               @click="activeTab = 'dining'"
-              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', activeTab === 'dining' ? 'bg-sky-600 text-white' : 'text-slate-600 hover:bg-slate-100']"
+              :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer', activeTab === 'dining' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
               Dining ({{ stats.diningCount }})
             </button>
@@ -156,15 +156,15 @@ const setPaymentStatus = (subscriberId, status) => {
               v-model="searchQuery"
               type="text"
               placeholder="Search subscriber, email, lodge..."
-              class="w-full pl-3 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              class="w-full pl-3 pr-4 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
         </div>
 
         <!-- Table -->
         <div class="overflow-x-auto">
-          <table class="w-full text-xs text-left text-slate-700">
-            <thead class="bg-indigo-50/80 text-indigo-900 uppercase font-bold text-[10px] tracking-wider">
+          <table class="w-full text-xs text-left text-slate-700 dark:text-slate-200">
+            <thead class="bg-blue-50/80 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 uppercase font-bold text-[10px] tracking-wider">
               <tr>
                 <th class="p-3">Subscriber Name & Rank</th>
                 <th class="p-3">Home Lodge / Club</th>
@@ -175,16 +175,16 @@ const setPaymentStatus = (subscriberId, status) => {
                 <th class="p-3">Payment Status</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
               <tr
                 v-for="sub in filteredSubscribers"
                 :key="sub.user_id"
-                class="hover:bg-indigo-50/30 transition-all"
+                class="hover:bg-blue-50/30 dark:hover:bg-blue-950/30 transition-all"
               >
                 <!-- Subscriber Name & Rank -->
                 <td class="p-3">
-                  <div class="font-bold text-slate-900">
-                    <span v-if="sub.rank" class="text-slate-500 font-normal mr-1">{{ sub.rank }}</span>
+                  <div class="font-bold text-slate-900 dark:text-white">
+                    <span v-if="sub.rank" class="text-slate-500 dark:text-slate-400 font-normal mr-1">{{ sub.rank }}</span>
                     {{ sub.name }}
                   </div>
                   <div v-if="sub.member_number" class="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -193,22 +193,22 @@ const setPaymentStatus = (subscriberId, status) => {
                 </td>
 
                 <!-- Home Lodge / Club -->
-                <td class="p-3 font-semibold text-slate-800">
+                <td class="p-3 font-semibold text-slate-800 dark:text-slate-100">
                   <span v-if="sub.home_club_lodge">🏛️ {{ sub.home_club_lodge }}</span>
                   <span v-else class="text-slate-400 italic">Not specified</span>
                 </td>
 
                 <!-- Email Address -->
-                <td class="p-3 text-slate-600 font-mono text-[11px]">
+                <td class="p-3 text-slate-600 dark:text-slate-300 font-mono text-[11px]">
                   {{ sub.email }}
                 </td>
 
                 <!-- Ticket Tier -->
                 <td class="p-3">
-                  <span v-if="sub.ticket_tier" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  <span v-if="sub.ticket_tier" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
                     🎟️ {{ sub.ticket_tier.name }} (£{{ sub.ticket_tier.price }})
                   </span>
-                  <span v-else class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                  <span v-else class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                     Standard Admission
                   </span>
                 </td>
@@ -216,13 +216,13 @@ const setPaymentStatus = (subscriberId, status) => {
                 <!-- Food Choices -->
                 <td class="p-3">
                   <div v-if="sub.has_food_choice" class="space-y-0.5 text-[11px]">
-                    <div v-if="sub.menu_selections.starter" class="text-slate-700">
+                    <div v-if="sub.menu_selections.starter" class="text-slate-700 dark:text-slate-200">
                       <span class="font-semibold text-slate-400">Starter:</span> {{ sub.menu_selections.starter }}
                     </div>
-                    <div v-if="sub.menu_selections.main" class="text-slate-700">
+                    <div v-if="sub.menu_selections.main" class="text-slate-700 dark:text-slate-200">
                       <span class="font-semibold text-slate-400">Main:</span> {{ sub.menu_selections.main }}
                     </div>
-                    <div v-if="sub.menu_selections.dessert" class="text-slate-700">
+                    <div v-if="sub.menu_selections.dessert" class="text-slate-700 dark:text-slate-200">
                       <span class="font-semibold text-slate-400">Dessert:</span> {{ sub.menu_selections.dessert }}
                     </div>
                   </div>
@@ -231,7 +231,7 @@ const setPaymentStatus = (subscriberId, status) => {
 
                 <!-- Dietary Notes -->
                 <td class="p-3">
-                  <span v-if="sub.dietary_requirements" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
+                  <span v-if="sub.dietary_requirements" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60">
                     ⚠️ {{ sub.dietary_requirements }}
                   </span>
                   <span v-else class="text-slate-400 italic text-[11px]">Standard</span>
@@ -242,10 +242,10 @@ const setPaymentStatus = (subscriberId, status) => {
                   <button 
                     @click="setPaymentStatus(sub.user_id, sub.payment_status === 'paid' ? 'unpaid' : 'paid')"
                     :class="['px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border cursor-pointer transition-all flex items-center gap-1 w-fit', 
-                      sub.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' :
-                      sub.payment_status === 'waived' ? 'bg-purple-50 text-purple-700 border-purple-300 hover:bg-purple-100' :
-                      sub.payment_status === 'refunded' ? 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100' :
-                      'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100']"
+                      sub.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40' :
+                      sub.payment_status === 'waived' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60 hover:bg-blue-100 dark:hover:bg-blue-900/40' :
+                      sub.payment_status === 'refunded' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700/60 hover:bg-rose-100 dark:hover:bg-rose-900/40' :
+                      'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/40']"
                     :title="'Click to toggle paid/unpaid status'"
                   >
                     <span v-if="sub.payment_status === 'paid'">✅ Paid</span>
@@ -257,7 +257,7 @@ const setPaymentStatus = (subscriberId, status) => {
               </tr>
 
               <tr v-if="filteredSubscribers.length === 0">
-                <td colspan="7" class="p-8 text-center text-slate-500 font-medium">
+                <td colspan="7" class="p-8 text-center text-slate-500 dark:text-slate-400 font-medium">
                   No subscribers found matching your filter criteria.
                 </td>
               </tr>
