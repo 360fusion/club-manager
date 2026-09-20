@@ -11,9 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // The grand_lodge_id foreign key is added by the migration that creates
+        // grand_lodges (2026_09_20_200000), which runs after this one. Creating the
+        // constraint here failed on a fresh database and, on MySQL, left the table
+        // behind so that every retry then failed with "table already exists".
+        if (Schema::hasTable('districts')) {
+            return;
+        }
+
         Schema::create('districts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('grand_lodge_id')->nullable()->constrained('grand_lodges')->nullOnDelete();
+            $table->unsignedBigInteger('grand_lodge_id')->nullable();
             $table->string('name');                         // e.g. "District Grand Lodge of Gibraltar"
             $table->string('code')->unique();               // slug-style key e.g. "gibraltar"
             $table->enum('type', ['district', 'group', 'dormant'])->default('district');
