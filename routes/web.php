@@ -412,6 +412,7 @@ Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
     Route::delete('/superadmin/districts/{id}', [SuperAdminController::class, 'destroyDistrict'])->name('superadmin.districts.destroy');
 
     Route::get('/superadmin/australian-grand-lodges', [SuperAdminController::class, 'australianGrandLodges'])->name('superadmin.australian_grand_lodges');
+    Route::get('/superadmin/us-grand-lodges', [SuperAdminController::class, 'usGrandLodges'])->name('superadmin.us_grand_lodges');
 });
 
 // Dev Utility Helper Route

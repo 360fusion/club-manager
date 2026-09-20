@@ -101,6 +101,17 @@ const user = page.props.auth?.user;
           </Link>
 
           <Link
+            :href="route('superadmin.us_grand_lodges')"
+            :class="[
+              'flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all',
+              $page.url.startsWith('/superadmin/us-grand-lodges') ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+            ]"
+          >
+            <span class="text-base">🇺🇸</span>
+            <span>US Grand Lodges</span>
+          </Link>
+
+          <Link
             :href="route('superadmin.email_templates.index')"
             :class="[
               'flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all',

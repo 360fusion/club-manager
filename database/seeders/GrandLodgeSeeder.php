@@ -82,14 +82,7 @@ class GrandLodgeSeeder extends Seeder
             ],
 
             // Americas
-            [
-                'name' => 'Grand Lodge of New York',
-                'code' => 'glny',
-                'short_name' => 'GLNY',
-                'country' => 'United States',
-                'website_url' => 'https://nymasons.org',
-                'description' => 'Sovereign Masonic jurisdiction for the State of New York.',
-            ],
+            // United States jurisdictions live in UsGrandLodgeSeeder.
             [
                 'name' => 'Grand Lodge of Canada in Ontario',
                 'code' => 'glc_ontario',

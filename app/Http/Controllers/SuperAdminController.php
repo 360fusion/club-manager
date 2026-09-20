@@ -530,12 +530,28 @@ class SuperAdminController extends Controller
      */
     public function australianGrandLodges(): Response
     {
-        $australianGrandLodges = GrandLodge::where('country', 'Australia')
+        $australianGrandLodges = GrandLodge::withCount(['provinces', 'clubs'])
+            ->where('country', 'Australia')
             ->orderBy('name')
             ->get();
 
         return inertia('SuperAdmin/GrandLodges/Australia', [
             'australianGrandLodges' => $australianGrandLodges,
+        ]);
+    }
+
+    /**
+     * United States Grand Lodges reference page.
+     */
+    public function usGrandLodges(): Response
+    {
+        $usGrandLodges = GrandLodge::withCount(['provinces', 'clubs'])
+            ->where('country', 'United States')
+            ->orderBy('name')
+            ->get();
+
+        return inertia('SuperAdmin/GrandLodges/UnitedStates', [
+            'usGrandLodges' => $usGrandLodges,
         ]);
     }
 }
