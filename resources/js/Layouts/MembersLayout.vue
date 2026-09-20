@@ -1,9 +1,11 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import AccountMenu from '@/Components/AccountMenu.vue';
 import Alert from '@/Components/Ui/Alert.vue';
+import ClubSwitcher from '@/Components/ClubSwitcher.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
-import ThemeToggle from '@/Components/ThemeToggle.vue';
+import { navMode } from '@/Utils/navMode';
 
 const props = defineProps({
     title: { type: String, default: 'Members' },
@@ -15,24 +17,28 @@ const props = defineProps({
 });
 
 const page = usePage();
-const user = computed(() => page.props.auth?.user);
-const menuOpen = ref(false);
-const switcherOpen = ref(false);
-
 const slug = computed(() => props.club?.slug ?? null);
+const side = computed(() => navMode.value === 'side');
 
-const memberClubs = computed(() => (page.props.auth?.clubs ?? []).filter((club) => club.status === 'active'));
-
-const currentRole = computed(() => memberClubs.value.find((club) => club.slug === slug.value)?.role ?? 'member');
-
-const initials = computed(() => (user.value?.name || 'ME').split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase());
+const currentRole = computed(() => (page.props.auth?.clubs ?? []).find((club) => club.slug === slug.value)?.role ?? 'member');
+const isStaff = computed(() => Boolean(props.club) && currentRole.value !== 'member');
 
 const flash = computed(() => page.props.flash ?? {});
 // Only the notices that no form field shows itself; field errors stay next to their fields.
 const NOTICE_KEYS = ['cutoff', 'booking_closed', 'rsvp'];
 const errors = computed(() => NOTICE_KEYS.map((key) => page.props.errors?.[key]).filter(Boolean));
 
-const SCOPED = ['calendar', 'events', 'meetings', 'news', 'dues'];
+const ICONS = {
+    dashboard: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+    calendar: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+    events: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
+    meetings: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    news: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h11a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
+    dues: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
+    directory: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+    subscriptions: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+    profile: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+};
 
 const allRoutes = { dashboard: 'members.dashboard', calendar: 'members.calendar', events: 'members.events', meetings: 'members.meetings', news: 'members.news', dues: 'members.dues' };
 const clubRoutes = { dashboard: 'member.dashboard', calendar: 'member.calendar', events: 'member.events', meetings: 'member.meetings', news: 'member.news', dues: 'member.dues' };
@@ -60,120 +66,91 @@ const nav = computed(() => (slug.value
         ...item,
         href: item.key === 'directory' ? route('directory.index') : item.key === 'subscriptions' ? route('portal.subscriptions') : route(allRoutes[item.key]),
     }))));
-
-// Switching club keeps you on the same section when that section exists at the other scope.
-const switchTo = (target) => {
-    const key = SCOPED.includes(props.activeTab) ? props.activeTab : 'dashboard';
-
-    return target ? route(clubRoutes[key], { slug: target }) : route(allRoutes[key]);
-};
 </script>
 
 <template>
     <Head :title="`${title} - ClubManager`" />
 
-    <div class="min-h-screen bg-slate-50 font-sans text-slate-800 dark:bg-slate-950 dark:text-slate-200">
-        <header class="sticky top-0 z-40 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-            <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-                <div class="flex min-w-0 items-center gap-3">
-                    <Link :href="route('members.dashboard')" class="flex shrink-0 items-center gap-2" aria-label="ClubManager home">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-black text-white">CM</span>
-                        <span class="hidden text-base font-bold tracking-tight text-slate-900 dark:text-white md:inline">ClubManager</span>
-                    </Link>
+    <div class="min-h-screen bg-slate-100 font-sans text-slate-800 dark:bg-slate-950 dark:text-slate-200 lg:flex">
+        <aside v-if="side" class="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-6 overflow-y-auto bg-[#1e293b] p-4 text-slate-300 lg:flex">
+            <Link :href="route('members.dashboard')" class="flex items-center gap-2.5 px-2 pt-1" aria-label="ClubManager home">
+                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-sm font-black text-white shadow-md shadow-blue-600/30">CM</span>
+                <span class="text-base font-bold tracking-tight text-white">ClubManager</span>
+            </Link>
 
-                    <div class="relative min-w-0">
-                        <div v-if="switcherOpen" class="fixed inset-0 z-40" @click="switcherOpen = false" />
-                        <button
-                            type="button"
-                            class="relative z-50 flex max-w-[14rem] items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                            :aria-expanded="switcherOpen"
-                            aria-haspopup="listbox"
-                            @click="switcherOpen = !switcherOpen"
-                        >
-                            <span class="truncate">{{ club?.name ?? 'All my clubs' }}</span>
-                            <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                        </button>
+            <ClubSwitcher :club="club" :active-tab="activeTab" tone="onDark" block />
 
-                        <ul v-if="switcherOpen" role="listbox" class="absolute left-0 z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] space-y-0.5 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                            <li>
-                                <Link :href="switchTo(null)" role="option" :aria-selected="!club" class="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800" :class="!club ? 'bg-slate-100 dark:bg-slate-800' : ''" @click="switcherOpen = false">All my clubs</Link>
-                            </li>
-                            <li v-for="option in memberClubs" :key="option.id">
-                                <Link :href="switchTo(option.slug)" role="option" :aria-selected="option.slug === slug" class="flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800" :class="option.slug === slug ? 'bg-slate-100 dark:bg-slate-800' : ''" @click="switcherOpen = false">
-                                    <span class="truncate">{{ option.name }}</span>
-                                    <span class="shrink-0 text-[11px] capitalize text-slate-500 dark:text-slate-400">{{ option.role }}</span>
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <Link v-if="club && currentRole !== 'member'" :href="route('admin.analytics', { slug })" class="hidden rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-blue-300 sm:block">
-                        Admin
-                    </Link>
-
-                    <NotificationBell />
-
-                    <div class="relative">
-                        <div v-if="menuOpen" class="fixed inset-0 z-40" @click="menuOpen = false" />
-
-                        <button
-                            type="button"
-                            class="relative z-50 flex items-center gap-2 rounded-xl border border-slate-200 p-1.5 pr-3 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-                            :aria-expanded="menuOpen"
-                            aria-haspopup="menu"
-                            @click="menuOpen = !menuOpen"
-                        >
-                            <span class="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-xs font-bold text-white">
-                                <img v-if="user?.avatar_url" :src="user.avatar_url" alt="" class="h-full w-full object-cover" />
-                                <span v-else>{{ initials }}</span>
-                            </span>
-                            <span class="hidden max-w-[120px] truncate text-xs font-semibold text-slate-700 dark:text-slate-200 sm:inline">{{ user?.name }}</span>
-                        </button>
-
-                        <div v-if="menuOpen" role="menu" class="absolute right-0 z-50 mt-2 w-64 space-y-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                            <div class="rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
-                                <div class="truncate text-xs font-bold text-slate-900 dark:text-white">{{ user?.name }}</div>
-                                <div class="truncate text-[11px] text-slate-500 dark:text-slate-400">{{ user?.email }}</div>
-                            </div>
-
-                            <Link :href="route('profile.edit')" role="menuitem" class="block rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800" @click="menuOpen = false">Profile and photo</Link>
-                            <Link :href="route('admin.profile.two-factor')" role="menuitem" class="block rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800" @click="menuOpen = false">Password and 2FA</Link>
-                            <Link :href="route('portal.subscriptions')" role="menuitem" class="block rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800" @click="menuOpen = false">Email subscriptions</Link>
-                            <Link v-if="user?.is_super_admin" :href="route('superadmin.dashboard')" role="menuitem" class="block rounded-xl px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-slate-800" @click="menuOpen = false">Platform admin</Link>
-
-                            <div class="border-t border-slate-100 pt-1 dark:border-slate-800"><ThemeToggle /></div>
-
-                            <div class="border-t border-slate-100 pt-1 dark:border-slate-800">
-                                <Link href="/logout" method="post" as="button" class="w-full rounded-xl px-3 py-2 text-left text-xs font-bold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-slate-800">Log out</Link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <nav class="mx-auto max-w-6xl overflow-x-auto px-4 sm:px-6" aria-label="Members">
-                <ul class="flex gap-1">
+            <nav aria-label="Members" class="flex-1">
+                <ul class="space-y-0.5">
                     <li v-for="item in nav" :key="item.key">
                         <Link
                             :href="item.href"
                             :aria-current="activeTab === item.key ? 'page' : undefined"
-                            :class="['-mb-px block whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors', activeTab === item.key ? 'border-blue-600 text-blue-700 dark:border-blue-400 dark:text-blue-300' : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white']"
+                            :class="['flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors', activeTab === item.key ? 'bg-slate-700/70 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white']"
                         >
+                            <svg class="h-5 w-5 shrink-0" :class="activeTab === item.key ? 'text-blue-400' : 'text-slate-400'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" :d="ICONS[item.key]" /></svg>
                             {{ item.label }}
                         </Link>
                     </li>
                 </ul>
             </nav>
-        </header>
 
-        <main class="mx-auto max-w-6xl space-y-4 px-4 py-8 sm:px-6">
-            <Alert v-if="flash.success" variant="success">{{ flash.success }}</Alert>
-            <Alert v-if="flash.error" variant="danger">{{ flash.error }}</Alert>
-            <Alert v-if="errors.length" variant="danger" title="That didn't work"><ul class="list-disc pl-4"><li v-for="message in errors" :key="message">{{ message }}</li></ul></Alert>
+            <Link v-if="isStaff" :href="route('admin.analytics', { slug })" class="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-600/20 hover:bg-blue-500">
+                Open club admin
+            </Link>
+        </aside>
 
-            <slot />
-        </main>
+        <div class="min-w-0 flex-1">
+            <header :class="['sticky top-0 z-40 border-b border-slate-800 bg-[#1e293b] text-slate-200', side ? 'lg:hidden' : '']">
+                <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+                    <div class="flex min-w-0 items-center gap-3">
+                        <Link :href="route('members.dashboard')" class="flex shrink-0 items-center gap-2" aria-label="ClubManager home">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-black text-white shadow-md shadow-blue-600/30">CM</span>
+                            <span class="hidden text-base font-bold tracking-tight text-white md:inline">ClubManager</span>
+                        </Link>
+                        <ClubSwitcher :club="club" :active-tab="activeTab" tone="onDark" />
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <Link v-if="isStaff" :href="route('admin.analytics', { slug })" class="hidden rounded-xl border border-blue-400/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-200 hover:bg-blue-500/20 sm:block">Admin</Link>
+                        <NotificationBell tone="onDark" />
+                        <AccountMenu tone="onDark" />
+                    </div>
+                </div>
+
+                <nav class="mx-auto max-w-6xl overflow-x-auto px-4 sm:px-6" aria-label="Members">
+                    <ul class="flex gap-1">
+                        <li v-for="item in nav" :key="item.key">
+                            <Link
+                                :href="item.href"
+                                :aria-current="activeTab === item.key ? 'page' : undefined"
+                                :class="['-mb-px block whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors', activeTab === item.key ? 'border-blue-400 text-white' : 'border-transparent text-slate-400 hover:text-white']"
+                            >
+                                {{ item.label }}
+                            </Link>
+                        </li>
+                    </ul>
+                </nav>
+            </header>
+
+            <div v-if="side" class="sticky top-0 z-40 hidden items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-6 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 lg:flex">
+                <p class="truncate text-sm font-medium text-slate-500 dark:text-slate-400">
+                    <span class="text-slate-900 dark:text-white">{{ club?.name ?? 'All my clubs' }}</span>
+                    <span aria-hidden="true"> / </span>{{ title }}
+                </p>
+                <div class="flex items-center gap-2">
+                    <NotificationBell />
+                    <AccountMenu />
+                </div>
+            </div>
+
+            <main class="mx-auto max-w-6xl space-y-4 px-4 py-8 sm:px-6">
+                <Alert v-if="flash.success" variant="success">{{ flash.success }}</Alert>
+                <Alert v-if="flash.error" variant="danger">{{ flash.error }}</Alert>
+                <Alert v-if="errors.length" variant="danger" title="That didn't work"><ul class="list-disc pl-4"><li v-for="message in errors" :key="message">{{ message }}</li></ul></Alert>
+
+                <slot />
+            </main>
+        </div>
     </div>
 </template>

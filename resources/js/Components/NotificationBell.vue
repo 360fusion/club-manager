@@ -2,8 +2,17 @@
 import { ref, computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 
+const props = defineProps({
+    // 'onDark' when the bell sits on the navy header or sidebar.
+    tone: { type: String, default: 'default' },
+});
+
 const page = usePage();
 const open = ref(false);
+
+const buttonClasses = computed(() => (props.tone === 'onDark'
+    ? 'border-slate-600 text-slate-200 hover:bg-slate-700'
+    : 'border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'));
 
 const unread = computed(() => page.props.bell?.unread ?? 0);
 const recent = computed(() => page.props.bell?.recent ?? []);
@@ -40,7 +49,7 @@ const markAllRead = () => {
 
         <button
             type="button"
-            class="relative z-50 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            :class="['relative z-50 flex h-10 w-10 items-center justify-center rounded-xl border transition-colors', buttonClasses]"
             :aria-label="unread ? `Notifications, ${unread} unread` : 'Notifications'"
             :aria-expanded="open"
             aria-haspopup="true"
