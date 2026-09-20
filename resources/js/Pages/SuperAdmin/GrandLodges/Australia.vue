@@ -211,7 +211,6 @@ function dbEntry(code) {
                                 <!-- Name -->
                                 <td class="py-3.5 px-4">
                                     <div class="font-bold text-white group-hover:text-emerald-300 transition">{{ gl.name }}</div>
-                                    <div class="text-[10px] text-slate-500 mt-0.5">{{ gl.description }}</div>
                                 </td>
 
                                 <!-- State -->
