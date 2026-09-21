@@ -242,7 +242,7 @@ class SecurityAuditTest extends TestCase
 
     public function test_responses_carry_basic_security_headers(): void
     {
-        $this->get('/login')->assertHeader('X-Content-Type-Options', 'nosniff')->assertHeader('X-Frame-Options')->assertHeader('Referrer-Policy');
+        $this->get('/login')->assertHeader('X-Content-Type-Options', 'nosniff')->assertHeader('X-Frame-Options')->assertHeader('Referrer-Policy')->assertHeader('Content-Security-Policy-Report-Only');
     }
 
     public function test_only_owners_can_change_who_holds_the_settings_capability(): void
