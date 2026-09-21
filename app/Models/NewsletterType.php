@@ -52,16 +52,25 @@ class NewsletterType extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return HasMany<NewsletterSubscription, $this>
+     */
     public function subscriptions(): HasMany
     {
         return $this->hasMany(NewsletterSubscription::class);
     }
 
+    /**
+     * @return HasMany<Newsletter, $this>
+     */
     public function newsletters(): HasMany
     {
         return $this->hasMany(Newsletter::class);

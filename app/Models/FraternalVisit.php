@@ -19,6 +19,9 @@ class FraternalVisit extends Model
         'notes',
     ];
 
+    /**
+     * @return BelongsTo<Meeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class);

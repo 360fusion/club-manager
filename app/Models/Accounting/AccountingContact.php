@@ -58,11 +58,17 @@ class AccountingContact extends Model
         return implode(' ', $parts) ?: ($this->name ?? '');
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -39,16 +39,25 @@ class AnnualOfficerRoster extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<Meeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class);
     }
 
+    /**
+     * @return HasMany<AnnualOfficerAssignment, $this>
+     */
     public function assignments(): HasMany
     {
         return $this->hasMany(AnnualOfficerAssignment::class, 'roster_id');

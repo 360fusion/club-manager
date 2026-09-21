@@ -21,6 +21,9 @@ class DefaultRank extends Model
         'hierarchy_order' => 'integer',
     ];
 
+    /**
+     * @return BelongsTo<ClubType, $this>
+     */
     public function clubType(): BelongsTo
     {
         return $this->belongsTo(ClubType::class);

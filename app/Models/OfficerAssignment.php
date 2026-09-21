@@ -21,21 +21,33 @@ class OfficerAssignment extends Model
         'suffix_titles',
     ];
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<Meeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class);
     }
 
+    /**
+     * @return BelongsTo<OfficerRole, $this>
+     */
     public function officerRole(): BelongsTo
     {
         return $this->belongsTo(OfficerRole::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

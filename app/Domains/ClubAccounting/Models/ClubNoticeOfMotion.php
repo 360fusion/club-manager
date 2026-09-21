@@ -40,31 +40,49 @@ class ClubNoticeOfMotion extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<ClubCommitteeMeeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(ClubCommitteeMeeting::class, 'committee_meeting_id');
     }
 
+    /**
+     * @return BelongsTo<ClubCommitteeAgendaItem, $this>
+     */
     public function agendaItem(): BelongsTo
     {
         return $this->belongsTo(ClubCommitteeAgendaItem::class, 'agenda_item_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function proposer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'proposer_user_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function seconder(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seconder_user_id');
     }
 
+    /**
+     * @return BelongsTo<Meeting, $this>
+     */
     public function targetLodgeMeeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class, 'target_lodge_meeting_id');

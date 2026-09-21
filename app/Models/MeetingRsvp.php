@@ -33,16 +33,25 @@ class MeetingRsvp extends Model
         'is_postal_printed' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<Meeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return HasMany<MeetingRsvpGuest, $this>
+     */
     public function guests(): HasMany
     {
         return $this->hasMany(MeetingRsvpGuest::class, 'meeting_rsvp_id');

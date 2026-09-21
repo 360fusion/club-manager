@@ -23,11 +23,17 @@ class OfficerRole extends Model
         'is_executive' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return HasMany<OfficerAssignment, $this>
+     */
     public function assignments(): HasMany
     {
         return $this->hasMany(OfficerAssignment::class);

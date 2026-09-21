@@ -28,11 +28,17 @@ class Donation extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return HasMany<DonationContribution, $this>
+     */
     public function contributions(): HasMany
     {
         return $this->hasMany(DonationContribution::class);

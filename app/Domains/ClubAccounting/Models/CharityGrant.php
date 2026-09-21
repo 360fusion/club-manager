@@ -38,26 +38,41 @@ class CharityGrant extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function proposer(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'proposer_member_id');
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function seconder(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'seconder_member_id');
     }
 
+    /**
+     * @return BelongsTo<ClubCommitteeMeeting, $this>
+     */
     public function committeeMeeting(): BelongsTo
     {
         return $this->belongsTo(ClubCommitteeMeeting::class, 'committee_meeting_id');
     }
 
+    /**
+     * @return BelongsTo<Meeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class, 'meeting_id');

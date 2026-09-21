@@ -54,16 +54,25 @@ class BankTransaction extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<BankAccount, $this>
+     */
     public function bankAccount(): BelongsTo
     {
         return $this->belongsTo(BankAccount::class, 'bank_account_id');
     }
 
+    /**
+     * @return BelongsTo<BankImport, $this>
+     */
     public function import(): BelongsTo
     {
         return $this->belongsTo(BankImport::class, 'bank_import_id');

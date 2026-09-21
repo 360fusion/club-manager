@@ -148,31 +148,49 @@ class Member extends Model
     }
 
     // Relationships
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<AccountingContact, $this>
+     */
     public function customerAccount(): BelongsTo
     {
         return $this->belongsTo(AccountingContact::class, 'customer_account_id');
     }
 
+    /**
+     * @return BelongsTo<SubscriptionTier, $this>
+     */
     public function subscriptionTier(): BelongsTo
     {
         return $this->belongsTo(SubscriptionTier::class, 'subscription_tier_id');
     }
 
+    /**
+     * @return HasMany<MemberSubscription, $this>
+     */
     public function subscriptions(): HasMany
     {
         return $this->hasMany(MemberSubscription::class, 'member_id');
     }
 
+    /**
+     * @return HasMany<AnnualOfficerAssignment, $this>
+     */
     public function annualAssignments(): HasMany
     {
         return $this->hasMany(AnnualOfficerAssignment::class, 'member_id');

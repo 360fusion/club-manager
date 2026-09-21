@@ -65,21 +65,33 @@ class BankAccount extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<Account, $this>
+     */
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class, 'account_id');
     }
 
+    /**
+     * @return HasMany<BankImport, $this>
+     */
     public function imports(): HasMany
     {
         return $this->hasMany(BankImport::class, 'bank_account_id');
     }
 
+    /**
+     * @return HasMany<BankTransaction, $this>
+     */
     public function transactions(): HasMany
     {
         return $this->hasMany(BankTransaction::class, 'bank_account_id');

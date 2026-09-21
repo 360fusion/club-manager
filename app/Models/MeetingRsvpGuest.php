@@ -28,6 +28,9 @@ class MeetingRsvpGuest extends Model
         'dining_fee' => 'decimal:2',
     ];
 
+    /**
+     * @return BelongsTo<MeetingRsvp, $this>
+     */
     public function rsvp(): BelongsTo
     {
         return $this->belongsTo(MeetingRsvp::class, 'meeting_rsvp_id');

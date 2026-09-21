@@ -269,16 +269,25 @@ class Club extends Model implements HasMedia
         }
     }
 
+    /**
+     * @return BelongsTo<ClubType, $this>
+     */
     public function clubType(): BelongsTo
     {
         return $this->belongsTo(ClubType::class);
     }
 
+    /**
+     * @return BelongsTo<Province, $this>
+     */
     public function province(): BelongsTo
     {
         return $this->belongsTo(Province::class);
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
@@ -286,51 +295,81 @@ class Club extends Model implements HasMedia
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<MembershipPlan, $this>
+     */
     public function membershipPlans(): HasMany
     {
         return $this->hasMany(MembershipPlan::class);
     }
 
+    /**
+     * @return HasMany<Membership, $this>
+     */
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
     }
 
+    /**
+     * @return HasMany<Post, $this>
+     */
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);
     }
 
+    /**
+     * @return HasMany<Newsletter, $this>
+     */
     public function newsletters(): HasMany
     {
         return $this->hasMany(Newsletter::class);
     }
 
+    /**
+     * @return HasMany<NewsletterType, $this>
+     */
     public function newsletterTypes(): HasMany
     {
         return $this->hasMany(NewsletterType::class);
     }
 
+    /**
+     * @return HasMany<NewsletterSubscription, $this>
+     */
     public function newsletterSubscriptions(): HasMany
     {
         return $this->hasMany(NewsletterSubscription::class);
     }
 
+    /**
+     * @return HasMany<Event, $this>
+     */
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);
     }
 
+    /**
+     * @return HasMany<Page, $this>
+     */
     public function pages(): HasMany
     {
         return $this->hasMany(Page::class);
     }
 
+    /**
+     * @return HasMany<Donation, $this>
+     */
     public function donations(): HasMany
     {
         return $this->hasMany(Donation::class);
     }
 
+    /**
+     * @return HasMany<Invoice, $this>
+     */
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);

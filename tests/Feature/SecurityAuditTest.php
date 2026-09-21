@@ -14,12 +14,16 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Page;
 use App\Models\User;
+use App\Support\EmailVerification;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Locked;
 use Livewire\Livewire;
 use ReflectionClass;
@@ -381,5 +385,68 @@ class SecurityAuditTest extends TestCase
 
         $response->assertStatus(422);
         $this->assertDatabaseMissing('club_acc_annual_officer_rosters', ['club_id' => $this->a->id, 'masonic_year' => '2026-2027']);
+    }
+
+    public function test_registration_needs_a_confirmed_email_and_does_not_reveal_existing_accounts(): void
+    {
+        config(['auth.require_email_verification' => true]);
+        Notification::fake();
+        $payload = ['name' => 'New Person', 'email' => 'new@example.test', 'password' => 'a-long-safe-passphrase', 'password_confirmation' => 'a-long-safe-passphrase'];
+
+        $fresh = $this->post('/register', $payload);
+        $fresh->assertRedirect(route('login'));
+        $this->assertGuest();
+        $user = User::where('email', 'new@example.test')->first();
+        Notification::assertSentTo($user, VerifyEmail::class);
+
+        $this->post('/login', ['email' => 'new@example.test', 'password' => 'a-long-safe-passphrase'])->assertSessionHasErrors('email');
+        $this->assertGuest();
+
+        $link = URL::signedRoute('verification.verify', ['id' => $user->id, 'hash' => sha1($user->email)]);
+        $this->get($link)->assertRedirect(route('login'));
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+
+        $this->post('/login', ['email' => 'new@example.test', 'password' => 'a-long-safe-passphrase'])->assertRedirect();
+        $this->assertAuthenticated();
+
+        auth()->logout();
+        $existing = $this->post('/register', ['email' => $this->member->email] + $payload);
+        $existing->assertRedirect(route('login'));
+        $this->assertSame($fresh->getSession()->get('success'), $existing->getSession()->get('success'));
+        $this->assertSame(1, User::where('email', $this->member->email)->count());
+    }
+
+    public function test_a_verification_link_needs_the_right_signature_and_hash(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $this->get(route('verification.verify', ['id' => $user->id, 'hash' => sha1($user->email)]))->assertForbidden();
+        $this->get(URL::signedRoute('verification.verify', ['id' => $user->id, 'hash' => 'wrong']))->assertForbidden();
+        $this->assertFalse($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_visitor_sign_up_cannot_rename_an_existing_account(): void
+    {
+        $original = $this->member->name;
+
+        $this->post(route('clubs.visitor.store', ['slug' => 'club-a']), [
+            'name' => 'Hijacked', 'email' => $this->member->email, 'home_club_name' => 'Elsewhere',
+        ]);
+
+        $this->assertSame($original, $this->member->fresh()->name);
+    }
+
+    public function test_sign_up_stays_open_while_mail_is_not_configured(): void
+    {
+        config(['mail.default' => 'log', 'auth.require_email_verification' => null]);
+
+        $this->post('/register', ['name' => 'No Mail', 'email' => 'nomail@example.test', 'password' => 'a-long-safe-passphrase', 'password_confirmation' => 'a-long-safe-passphrase'])->assertRedirect(route('login'));
+        $this->assertTrue(User::where('email', 'nomail@example.test')->first()->hasVerifiedEmail());
+
+        $this->post('/login', ['email' => 'nomail@example.test', 'password' => 'a-long-safe-passphrase'])->assertRedirect();
+        $this->assertAuthenticated();
+
+        config(['mail.default' => 'smtp']);
+        $this->assertTrue(EmailVerification::required());
     }
 }

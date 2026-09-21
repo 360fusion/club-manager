@@ -85,16 +85,25 @@ class Candidate extends Model
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function proposer(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'proposer_member_id');
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function seconder(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'seconder_member_id');
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function convertedMember(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'converted_member_id');

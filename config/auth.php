@@ -114,4 +114,16 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification
+    |--------------------------------------------------------------------------
+    |
+    | null decides from the mail driver (required once real mail is set up);
+    | true or false forces it.
+    |
+    */
+
+    'require_email_verification' => env('REQUIRE_EMAIL_VERIFICATION'),
+
 ];

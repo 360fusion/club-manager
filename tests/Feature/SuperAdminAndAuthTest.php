@@ -15,7 +15,7 @@ class SuperAdminAndAuthTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_logout_works_for_both_post_and_get_requests(): void
+    public function test_logout_only_happens_on_post(): void
     {
         $user = User::factory()->create();
 
@@ -24,11 +24,10 @@ class SuperAdminAndAuthTest extends TestCase
         $response->assertRedirect('/login');
         $this->assertGuest();
 
-        // 2. GET logout
+        // 2. GET must not log anyone out
         $this->actingAs($user);
-        $getLogout = $this->get('/logout');
-        $getLogout->assertRedirect('/login');
-        $this->assertGuest();
+        $this->get('/logout')->assertRedirect('/login');
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_guest_is_redirected_to_login_when_accessing_superadmin(): void

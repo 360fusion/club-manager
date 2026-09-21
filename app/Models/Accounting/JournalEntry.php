@@ -30,16 +30,25 @@ class JournalEntry extends Model
         'entry_date' => 'date:Y-m-d',
     ];
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * @return HasMany<JournalItem, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(JournalItem::class, 'journal_entry_id');

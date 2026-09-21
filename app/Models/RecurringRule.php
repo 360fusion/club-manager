@@ -27,11 +27,17 @@ class RecurringRule extends Model
         'active_months' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return HasMany<Meeting, $this>
+     */
     public function meetings(): HasMany
     {
         return $this->hasMany(Meeting::class);

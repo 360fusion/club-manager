@@ -112,6 +112,10 @@ class InvitationController extends Controller
             'status' => 'active',
         ]);
 
+        if (! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
+
         Auth::login($user);
 
         return redirect()->route('member.dashboard', ['slug' => $club->slug])

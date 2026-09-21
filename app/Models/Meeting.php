@@ -66,36 +66,57 @@ class Meeting extends Model
         'officers_roster' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<RecurringRule, $this>
+     */
     public function recurringRule(): BelongsTo
     {
         return $this->belongsTo(RecurringRule::class);
     }
 
+    /**
+     * @return HasMany<AgendaItem, $this>
+     */
     public function agendaItems(): HasMany
     {
         return $this->hasMany(AgendaItem::class)->orderBy('item_number');
     }
 
+    /**
+     * @return HasMany<OfficerAssignment, $this>
+     */
     public function officerAssignments(): HasMany
     {
         return $this->hasMany(OfficerAssignment::class);
     }
 
+    /**
+     * @return HasMany<FraternalVisit, $this>
+     */
     public function fraternalVisits(): HasMany
     {
         return $this->hasMany(FraternalVisit::class);
     }
 
+    /**
+     * @return HasMany<MeetingRsvp, $this>
+     */
     public function rsvps(): HasMany
     {
         return $this->hasMany(MeetingRsvp::class);
     }
 
+    /**
+     * @return HasOne<MeetingFinancialReturn, $this>
+     */
     public function financialReturn(): HasOne
     {
         return $this->hasOne(MeetingFinancialReturn::class);

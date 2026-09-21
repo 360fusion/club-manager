@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\InvitationController;
 use App\Http\Controllers\Auth\LoginController;
@@ -61,11 +62,14 @@ use Illuminate\Support\Facades\Route;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'create'])->name('login');
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware(['signed', 'throttle:auth-forms'])->name('verification.verify');
 Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:login');
 // Unnamed: Fortify already registers a route named 'logout'. Two routes sharing a
 // name is fatal to route:cache in production. Layouts post to the /logout URL
 // directly, so this route needs no name of its own.
-Route::match(['get', 'post'], '/logout', [LoginController::class, 'destroy']);
+Route::post('/logout', [LoginController::class, 'destroy']);
+// A link or another site must not be able to log someone out; visiting the URL just goes to the login page.
+Route::get('/logout', fn () => redirect()->route('login'));
 
 // Public Member Registration Routes
 Route::get('/register', [RegisterController::class, 'create'])->name('register');

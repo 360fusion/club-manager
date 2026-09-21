@@ -114,26 +114,41 @@ class Event extends Model
         return $cutoff ? Carbon::now()->isAfter($cutoff) : false;
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return HasMany<EventMenuItem, $this>
+     */
     public function menuItems(): HasMany
     {
         return $this->hasMany(EventMenuItem::class);
     }
 
+    /**
+     * @return HasMany<EventTicketTier, $this>
+     */
     public function ticketTiers(): HasMany
     {
         return $this->hasMany(EventTicketTier::class);
     }
 
+    /**
+     * @return HasMany<EventPromo, $this>
+     */
     public function promos(): HasMany
     {
         return $this->hasMany(EventPromo::class);
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function attendees(): BelongsToMany
     {
         return $this->belongsToMany(User::class)

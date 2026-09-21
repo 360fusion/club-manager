@@ -32,16 +32,25 @@ class ClubType extends Model
         ];
     }
 
+    /**
+     * @return HasMany<Club, $this>
+     */
     public function clubs(): HasMany
     {
         return $this->hasMany(Club::class);
     }
 
+    /**
+     * @return HasMany<DefaultOfficerRole, $this>
+     */
     public function defaultOfficerRoles(): HasMany
     {
         return $this->hasMany(DefaultOfficerRole::class);
     }
 
+    /**
+     * @return HasMany<DefaultRank, $this>
+     */
     public function defaultRanks(): HasMany
     {
         return $this->hasMany(DefaultRank::class);

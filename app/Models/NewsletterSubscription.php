@@ -32,16 +32,25 @@ class NewsletterSubscription extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<NewsletterType, $this>
+     */
     public function newsletterType(): BelongsTo
     {
         return $this->belongsTo(NewsletterType::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

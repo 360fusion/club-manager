@@ -37,16 +37,25 @@ class ClubCommitteeAgendaItem extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<ClubCommitteeMeeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(ClubCommitteeMeeting::class, 'committee_meeting_id');
     }
 
+    /**
+     * @return HasMany<ClubCommitteeTask, $this>
+     */
     public function tasks(): HasMany
     {
         return $this->hasMany(ClubCommitteeTask::class, 'agenda_item_id');
     }
 
+    /**
+     * @return HasMany<ClubNoticeOfMotion, $this>
+     */
     public function noticesOfMotion(): HasMany
     {
         return $this->hasMany(ClubNoticeOfMotion::class, 'agenda_item_id');

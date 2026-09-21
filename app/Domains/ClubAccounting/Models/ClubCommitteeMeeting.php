@@ -83,41 +83,65 @@ class ClubCommitteeMeeting extends Model
         };
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function chair(): BelongsTo
     {
         return $this->belongsTo(User::class, 'chair_user_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function secretary(): BelongsTo
     {
         return $this->belongsTo(User::class, 'secretary_user_id');
     }
 
+    /**
+     * @return HasMany<ClubCommitteeAttendee, $this>
+     */
     public function attendees(): HasMany
     {
         return $this->hasMany(ClubCommitteeAttendee::class, 'committee_meeting_id');
     }
 
+    /**
+     * @return HasMany<ClubCommitteeAgendaItem, $this>
+     */
     public function agendaItems(): HasMany
     {
         return $this->hasMany(ClubCommitteeAgendaItem::class, 'committee_meeting_id')->orderBy('order');
     }
 
+    /**
+     * @return HasMany<ClubCommitteeTask, $this>
+     */
     public function tasks(): HasMany
     {
         return $this->hasMany(ClubCommitteeTask::class, 'committee_meeting_id');
     }
 
+    /**
+     * @return HasMany<ClubNoticeOfMotion, $this>
+     */
     public function noticesOfMotion(): HasMany
     {
         return $this->hasMany(ClubNoticeOfMotion::class, 'committee_meeting_id');
     }
 
+    /**
+     * @return BelongsTo<Meeting, $this>
+     */
     public function linkedRegularMeeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class, 'linked_regular_meeting_id');

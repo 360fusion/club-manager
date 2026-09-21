@@ -86,26 +86,41 @@ class CharityCollection extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function countedBy(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'counted_by_member_id');
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function witnessedBy(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'witnessed_by_member_id');
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function donor(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'donor_member_id');
     }
 
+    /**
+     * @return BelongsTo<BankTransaction, $this>
+     */
     public function bankTransaction(): BelongsTo
     {
         return $this->belongsTo(BankTransaction::class, 'bank_transaction_id');

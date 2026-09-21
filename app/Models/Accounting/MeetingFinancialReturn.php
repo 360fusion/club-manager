@@ -55,21 +55,33 @@ class MeetingFinancialReturn extends Model
         'net_bank_deposit' => 'decimal:2',
     ];
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<Meeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class);
     }
 
+    /**
+     * @return BelongsTo<Bill, $this>
+     */
     public function vendorBill(): BelongsTo
     {
         return $this->belongsTo(Bill::class, 'vendor_bill_id');
     }
 
+    /**
+     * @return BelongsTo<JournalEntry, $this>
+     */
     public function journalEntry(): BelongsTo
     {
         return $this->belongsTo(JournalEntry::class, 'journal_entry_id');

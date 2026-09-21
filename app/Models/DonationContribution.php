@@ -25,6 +25,9 @@ class DonationContribution extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Donation, $this>
+     */
     public function donation(): BelongsTo
     {
         return $this->belongsTo(Donation::class);

@@ -28,16 +28,25 @@ class DirectDebitMandate extends Model
         'account_number_ending',
     ];
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<Membership, $this>
+     */
     public function membership(): BelongsTo
     {
         return $this->belongsTo(Membership::class);

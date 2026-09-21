@@ -27,11 +27,17 @@ class Account extends Model
         'is_active' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return HasMany<JournalItem, $this>
+     */
     public function journalItems(): HasMany
     {
         return $this->hasMany(JournalItem::class, 'account_id');

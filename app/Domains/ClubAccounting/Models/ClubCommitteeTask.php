@@ -35,16 +35,25 @@ class ClubCommitteeTask extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<ClubCommitteeMeeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(ClubCommitteeMeeting::class, 'committee_meeting_id');
     }
 
+    /**
+     * @return BelongsTo<ClubCommitteeAgendaItem, $this>
+     */
     public function agendaItem(): BelongsTo
     {
         return $this->belongsTo(ClubCommitteeAgendaItem::class, 'agenda_item_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function assignedTo(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to_user_id');

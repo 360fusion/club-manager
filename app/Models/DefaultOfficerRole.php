@@ -24,6 +24,9 @@ class DefaultOfficerRole extends Model
         'rank_level' => 'integer',
     ];
 
+    /**
+     * @return BelongsTo<ClubType, $this>
+     */
     public function clubType(): BelongsTo
     {
         return $this->belongsTo(ClubType::class);

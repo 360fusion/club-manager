@@ -32,16 +32,25 @@ class SubscriptionTier extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return HasMany<Member, $this>
+     */
     public function members(): HasMany
     {
         return $this->hasMany(Member::class, 'subscription_tier_id');
     }
 
+    /**
+     * @return HasMany<MemberSubscription, $this>
+     */
     public function subscriptions(): HasMany
     {
         return $this->hasMany(MemberSubscription::class, 'tier_id');

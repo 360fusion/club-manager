@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,7 +21,7 @@ use Laravel\Sanctum\HasApiTokens;
 // request input. Grant it explicitly via forceFill or the superadmin:grant command.
 #[Fillable(['name', 'email', 'avatar_url', 'password'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;
@@ -74,6 +74,9 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * @return BelongsToMany<Club, $this>
+     */
     public function clubs(): BelongsToMany
     {
         return $this->belongsToMany(Club::class)
@@ -91,6 +94,9 @@ class User extends Authenticatable
         return $this->clubs()->wherePivot('status', 'active')->pluck('clubs.id');
     }
 
+    /**
+     * @return HasMany<Membership, $this>
+     */
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);

@@ -17,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['club.admin' => EnsureUserCanAdministerClub::class]);
 
+        // Set TRUSTED_PROXIES (comma separated IPs, or * for a load balancer or
+        // Cloudflare in front) so HTTPS, the client IP and rate limits are read correctly.
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
+
         $middleware->web(append: [
             SecurityHeaders::class,
             HandleInertiaRequests::class,

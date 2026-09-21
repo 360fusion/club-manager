@@ -34,11 +34,17 @@ class Newsletter extends Model implements HasMedia
         ];
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<NewsletterType, $this>
+     */
     public function newsletterType(): BelongsTo
     {
         return $this->belongsTo(NewsletterType::class);

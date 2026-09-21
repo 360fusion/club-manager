@@ -32,11 +32,17 @@ class ClubCommitteeAttendee extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<ClubCommitteeMeeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(ClubCommitteeMeeting::class, 'committee_meeting_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -1,9 +1,13 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     demoCredentials: { type: Object, default: null },
 });
+
+const page = usePage();
+const notice = computed(() => page.props.flash?.success || page.props.status || null);
 
 const form = useForm({
     email: props.demoCredentials?.email ?? '',
@@ -36,6 +40,8 @@ const submit = () => {
                 <h1 class="text-2xl font-black text-white">ClubManager Admin Login</h1>
                 <p class="text-xs text-slate-400">Access your club portal & executive dashboard</p>
             </div>
+
+            <p v-if="notice" class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-200" role="status">{{ notice }}</p>
 
             <!-- Preset Demo Credentials Callout -->
             <div v-if="demoCredentials" class="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs space-y-1.5">

@@ -80,7 +80,7 @@ class PublicSiteController extends Controller
                 'author_name' => $p->author?->name ?? 'Club Admin',
                 'published_at' => ($p->published_at ?? $p->created_at)?->format('M d, Y'),
             ]),
-            'upcomingEvents' => $club->events()->visibleTo($viewer)->get()->take(3)->values()->map(fn ($e) => [
+            'upcomingEvents' => $club->events()->visibleTo($viewer)->limit(3)->get()->map(fn ($e) => [
                 'id' => $e->id,
                 'title' => $e->title,
                 'slug' => $e->slug,

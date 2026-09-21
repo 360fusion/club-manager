@@ -25,11 +25,17 @@ class AgendaItem extends Model
         'is_installation' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<Meeting, $this>
+     */
     public function meeting(): BelongsTo
     {
         return $this->belongsTo(Meeting::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function presenter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'presenter_user_id');

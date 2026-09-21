@@ -34,21 +34,33 @@ class BankImport extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<BankAccount, $this>
+     */
     public function bankAccount(): BelongsTo
     {
         return $this->belongsTo(BankAccount::class, 'bank_account_id');
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function importedBy(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'imported_by_member_id');
     }
 
+    /**
+     * @return HasMany<BankTransaction, $this>
+     */
     public function transactions(): HasMany
     {
         return $this->hasMany(BankTransaction::class, 'bank_import_id');

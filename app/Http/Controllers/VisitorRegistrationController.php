@@ -51,9 +51,6 @@ class VisitorRegistrationController extends Controller
                 'email' => strtolower($validated['email']),
                 'password' => Hash::make(Str::random(24)),
             ]);
-        } else {
-            // Update name if needed
-            $user->update(['name' => $validated['name']]);
         }
 
         // Attach or update visitor relationship in club_user pivot

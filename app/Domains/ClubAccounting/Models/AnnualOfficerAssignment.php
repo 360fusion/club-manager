@@ -20,11 +20,17 @@ class AnnualOfficerAssignment extends Model
         'category',
     ];
 
+    /**
+     * @return BelongsTo<AnnualOfficerRoster, $this>
+     */
     public function roster(): BelongsTo
     {
         return $this->belongsTo(AnnualOfficerRoster::class, 'roster_id');
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function member(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'member_id');

@@ -47,16 +47,25 @@ class MemberSubscription extends Model
         );
     }
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function member(): BelongsTo
     {
         return $this->belongsTo(Member::class);
     }
 
+    /**
+     * @return BelongsTo<SubscriptionTier, $this>
+     */
     public function tier(): BelongsTo
     {
         return $this->belongsTo(SubscriptionTier::class, 'tier_id');
