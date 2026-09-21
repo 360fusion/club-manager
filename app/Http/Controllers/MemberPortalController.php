@@ -12,6 +12,7 @@ use App\Models\MeetingRsvp;
 use App\Models\Newsletter;
 use App\Models\Post;
 use App\Support\ClubAccess;
+use App\Support\EmailVerification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -158,7 +159,7 @@ class MemberPortalController extends Controller
     /**
      * Display member events & RSVPs page inside member portal.
      */
-    public function events(Request $request, string $slug): Response
+    public function events(Request $request, string $slug): Response|RedirectResponse
     {
         $user = Auth::user();
         $club = Club::where('slug', $slug)
@@ -166,6 +167,10 @@ class MemberPortalController extends Controller
             ->firstOrFail();
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
+
+        if ($memberPivot === null && ! $user?->is_super_admin) {
+            return redirect()->route('public.site', ['clubSlug' => $club->slug]);
+        }
 
         // Published Meetings & Summons for the member
         $meetings = Meeting::where('club_id', $club->id)
@@ -312,6 +317,8 @@ class MemberPortalController extends Controller
         $club = Club::where('slug', $slug)->firstOrFail();
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
+        abort_if($memberPivot === null && ! $user?->is_super_admin, 403, 'You are not a member of this club.');
+
         $accMember = $user ? Member::where('club_id', $club->id)->where('user_id', $user->id)->first() : null;
 
         return Inertia::render('Member/Profile', [
@@ -355,11 +362,13 @@ class MemberPortalController extends Controller
 
         $club = Club::where('slug', $slug)->firstOrFail();
 
+        abort_unless($user->clubs()->where('clubs.id', $club->id)->exists(), 403, 'You are not a member of this club.');
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'avatar_url' => ['nullable', 'string', 'max:1000'],
-            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp,svg', 'max:4096'],
+            'avatar_url' => ['nullable', 'string', 'max:1000', 'regex:#^(https?://|avatars/)#i'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:4096'],
             'phone' => ['nullable', 'string', 'max:100'],
             'emergency_contact' => ['nullable', 'string', 'max:255'],
             'dietary_notes' => ['nullable', 'string', 'max:1000'],
@@ -374,11 +383,17 @@ class MemberPortalController extends Controller
             $user->avatar_url = $request->avatar_url;
         }
 
-        if ($user->isDirty('email')) {
+        $emailChanged = $user->isDirty('email');
+
+        if ($emailChanged && EmailVerification::required()) {
             $user->email_verified_at = null;
         }
 
         $user->save();
+
+        if ($emailChanged && EmailVerification::required()) {
+            $user->sendEmailVerificationNotification();
+        }
 
         // Update club-specific member pivot attributes
         $user->clubs()->updateExistingPivot($club->id, [

@@ -449,4 +449,30 @@ class SecurityAuditTest extends TestCase
         config(['mail.default' => 'smtp']);
         $this->assertTrue(EmailVerification::required());
     }
+
+    public function test_profile_updates_reject_svg_avatars_and_reconfirm_changed_emails(): void
+    {
+        Storage::fake('public');
+        Notification::fake();
+        config(['auth.require_email_verification' => true]);
+
+        $url = route('member.profile.update', ['slug' => 'club-a']);
+        $base = ['name' => $this->member->name, 'email' => $this->member->email];
+
+        $this->actingAs($this->member)->post($url, $base + ['avatar' => UploadedFile::fake()->create('a.svg', 2, 'image/svg+xml')])->assertSessionHasErrors('avatar');
+        $this->actingAs($this->member)->post($url, $base + ['avatar_url' => 'javascript:alert(1)'])->assertSessionHasErrors('avatar_url');
+
+        $this->actingAs($this->member)->post($url, ['name' => $this->member->name, 'email' => 'changed@example.test']);
+        $this->assertFalse($this->member->fresh()->hasVerifiedEmail());
+        Notification::assertSentTo($this->member->fresh(), VerifyEmail::class);
+    }
+
+    public function test_the_members_events_page_does_not_show_other_clubs_meetings_to_outsiders(): void
+    {
+        Meeting::create(['club_id' => $this->a->id, 'title' => 'Regular', 'meeting_date' => now()->addDays(9)->toDateString(), 'starts_at' => '19:00:00', 'venue' => 'Secret Hall', 'dress_code' => 'Suit', 'status' => 'published']);
+
+        $this->actingAs($this->outsider)->get(route('member.events', ['slug' => 'club-a']))->assertRedirect(route('public.site', ['clubSlug' => 'club-a']));
+        $this->actingAs($this->outsider)->get(route('member.profile', ['slug' => 'club-a']))->assertForbidden();
+        $this->assertStringContainsString('Secret Hall', (string) $this->actingAs($this->member)->get(route('member.events', ['slug' => 'club-a']))->getContent());
+    }
 }
