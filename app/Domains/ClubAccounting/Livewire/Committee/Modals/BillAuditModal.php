@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeAgendaItem;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Accounting\Bill;
 use App\Support\ClubAccess;
+use App\Support\Currencies;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -51,10 +52,10 @@ class BillAuditModal extends Component
             'order' => $meeting->agendaItems()->count() + 1,
             'item_type' => CommitteeItemType::AccountsAudit,
             'title' => "Bill Audit: {$bill->vendor_name} ({$bill->bill_number})",
-            'description' => "Audit of {$bill->vendor_name} for £".number_format($bill->amount, 2)." ({$bill->category}).",
+            'description' => "Audit of {$bill->vendor_name} for ".Currencies::format($bill->amount, $meeting->club)." ({$bill->category}).",
             'discussion_notes' => $this->auditNotes,
             'recommendation_text' => $this->isApprovedForPayment
-                ? "AUDITED & APPROVED: Committee recommends payment of bill {$bill->bill_number} (£".number_format($bill->amount, 2).') to open lodge.'
+                ? "AUDITED & APPROVED: Committee recommends payment of bill {$bill->bill_number} (".Currencies::format($bill->amount, $meeting->club).') to open lodge.'
                 : 'QUERY RAISED: Bill payment held pending clarification with vendor.',
             'is_approved' => $this->isApprovedForPayment,
             'reference_id' => $bill->id,
@@ -69,8 +70,9 @@ class BillAuditModal extends Component
     public function render()
     {
         $bill = null;
+        $meeting = isset($this->meetingId) ? ClubCommitteeMeeting::find($this->meetingId) : null;
+
         if ($this->billId) {
-            $meeting = ClubCommitteeMeeting::find($this->meetingId);
             $bill = $meeting && ClubAccess::can(auth()->user(), $meeting->club, 'manage_meetings')
                 ? Bill::with('media')->where('club_id', $meeting->club_id)->find($this->billId)
                 : null;
@@ -78,6 +80,7 @@ class BillAuditModal extends Component
 
         return view('livewire.committee.bill-audit-modal', [
             'bill' => $bill,
+            'cs' => Currencies::symbolFor($meeting?->club),
         ]);
     }
 }

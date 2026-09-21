@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Club;
+use App\Support\Currencies;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,6 +41,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
+            'currency' => fn () => $this->currencyFor($request),
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
@@ -72,5 +75,22 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
         ];
+    }
+
+    /**
+     * The currency of the club named in the URL, so every page shows amounts in it.
+     * Pages that span several clubs get the default; they format amounts per club on the server.
+     *
+     * @return array{code: string, name: string, symbol: string}
+     */
+    private function currencyFor(Request $request): array
+    {
+        $slug = $request->route('clubSlug') ?? $request->route('slug');
+
+        $club = is_string($slug) && $slug !== ''
+            ? Club::with('province.grandLodge')->where('slug', $slug)->first()
+            : null;
+
+        return Currencies::describe($club?->currencyCode() ?? Currencies::DEFAULT);
     }
 }

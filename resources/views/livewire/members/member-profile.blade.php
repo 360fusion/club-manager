@@ -437,14 +437,14 @@
                         {{ $member->subscriptionTier ? $member->subscriptionTier->name : 'Standard Lodge Dues' }}
                     </span>
                     @if($member->subscriptionTier)
-                        <span class="text-[10px] text-slate-500 dark:text-slate-400 block">£{{ number_format($member->subscriptionTier->annual_amount, 2) }} / year</span>
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ $cs }}{{ number_format($member->subscriptionTier->annual_amount, 2) }} / year</span>
                     @endif
                 </div>
 
                 <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-1">
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Annual Dues Override</span>
                     <span class="text-base font-black text-slate-900 dark:text-white block">
-                        {{ $member->annual_dues_override ? '£' . number_format($member->annual_dues_override, 2) : 'None (Standard Rate)' }}
+                        {{ $member->annual_dues_override ? $cs . number_format($member->annual_dues_override, 2) : 'None (Standard Rate)' }}
                     </span>
                 </div>
 
@@ -480,8 +480,8 @@
                                 <tr>
                                     <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">{{ $sub->billing_year }} / {{ $sub->billing_year + 1 }}</td>
                                     <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-300">{{ $sub->invoice_reference ?: '—' }}</td>
-                                    <td class="py-2.5 px-3 text-right font-semibold">£{{ number_format($sub->amount_due, 2) }}</td>
-                                    <td class="py-2.5 px-3 text-right font-bold text-emerald-700 dark:text-emerald-300">£{{ number_format($sub->amount_paid, 2) }}</td>
+                                    <td class="py-2.5 px-3 text-right font-semibold">{{ $cs }}{{ number_format($sub->amount_due, 2) }}</td>
+                                    <td class="py-2.5 px-3 text-right font-bold text-emerald-700 dark:text-emerald-300">{{ $cs }}{{ number_format($sub->amount_paid, 2) }}</td>
                                     <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300">{{ $sub->due_date ? $sub->due_date->format('d M Y') : '—' }}</td>
                                     <td class="py-2.5 px-3">
                                         <span class="px-2 py-0.5 text-[9px] font-extrabold rounded-full border {{ $sub->status->badgeClasses() }}">

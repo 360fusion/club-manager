@@ -10,6 +10,7 @@ use App\Models\Post;
 use App\Notifications\ClubNotification;
 use App\Services\ClubNotifier;
 use App\Services\WeeklyUpdateDigestService;
+use App\Support\Currencies;
 use App\Support\ImageDownscaler;
 use App\Support\UploadRules;
 use Carbon\Carbon;
@@ -62,7 +63,7 @@ class UpdateAdminController extends Controller
                 'id' => $e->id,
                 'title' => $e->title,
                 'date' => Carbon::parse($e->starts_at)->format('M d, Y g:i A'),
-                'price' => $e->price ? '£'.number_format($e->price, 2) : 'Free',
+                'price' => $e->price ? Currencies::format($e->price, $club) : 'Free',
             ]);
 
         $recentNews = Post::where('club_id', $club->id)

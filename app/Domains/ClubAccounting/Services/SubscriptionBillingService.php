@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Models\SubscriptionTier;
 use App\Models\Club;
+use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -105,7 +106,7 @@ class SubscriptionBillingService
 
             $noteText = $subscription->notes ?? '';
             if ($notes || $reference) {
-                $paymentLog = sprintf("\nPayment of £%.2f recorded on %s (Ref: %s)", $amount, Carbon::now()->format('Y-m-d'), $reference ?: 'Direct');
+                $paymentLog = sprintf("\nPayment of %s%.2f recorded on %s (Ref: %s)", Currencies::symbol(Currencies::codeForClubId($subscription->club_id)), $amount, Carbon::now()->format('Y-m-d'), $reference ?: 'Direct');
                 $noteText .= $paymentLog.($notes ? " - {$notes}" : '');
             }
 

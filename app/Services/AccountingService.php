@@ -9,6 +9,7 @@ use App\Models\Accounting\MeetingFinancialReturn;
 use App\Models\Club;
 use App\Models\Invoice;
 use App\Models\Meeting;
+use App\Support\Currencies;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -51,7 +52,7 @@ class AccountingService
                 [
                     'name' => $acc['name'],
                     'type' => $acc['type'],
-                    'currency' => 'GBP',
+                    'currency' => $club->currencyCode(),
                     'is_active' => true,
                 ]
             );
@@ -93,7 +94,7 @@ class AccountingService
         }
 
         if (abs($totalDebit - $totalCredit) > 0.001) {
-            throw new InvalidArgumentException("Journal entry is not balanced. Total Debits (£{$totalDebit}) must equal Total Credits (£{$totalCredit}).");
+            throw new InvalidArgumentException("Journal entry is not balanced. Total Debits ({$club->currencySymbol()}{$totalDebit}) must equal Total Credits ({$club->currencySymbol()}{$totalCredit}).");
         }
 
         return DB::transaction(function () use ($club, $data, $items) {
@@ -136,7 +137,7 @@ class AccountingService
         $totalCredit = array_reduce($items, fn ($sum, $i) => $sum + (float) ($i['credit'] ?? 0), 0.0);
 
         if (abs($totalDebit - $totalCredit) > 0.001) {
-            throw new InvalidArgumentException('Journal entry must be balanced. Total Debit (£'.number_format($totalDebit, 2).') does not equal Total Credit (£'.number_format($totalCredit, 2).').');
+            throw new InvalidArgumentException('Journal entry must be balanced. Total Debit ('.Currencies::format($totalDebit, $club).') does not equal Total Credit ('.Currencies::format($totalCredit, $club).').');
         }
 
         return DB::transaction(function () use ($entry, $data, $items) {
@@ -545,7 +546,7 @@ class AccountingService
                     'category' => 'Catering & Food Supplies',
                     'amount' => $totalKitchenBill,
                     'due_date' => $returnDate,
-                    'notes' => "Kitchen catering for {$meeting->title} ({$totalMeals} meals @ £{$kitchenCostPerHead}/head)",
+                    'notes' => "Kitchen catering for {$meeting->title} ({$totalMeals} meals @ {$club->currencySymbol()}{$kitchenCostPerHead}/head)",
                 ]);
             }
 

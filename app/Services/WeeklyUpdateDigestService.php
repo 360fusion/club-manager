@@ -9,6 +9,7 @@ use App\Models\Event;
 use App\Models\Newsletter;
 use App\Models\NewsletterType;
 use App\Models\Post;
+use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -162,7 +163,7 @@ class WeeklyUpdateDigestService
                     $html .= '<p style="margin: 2px 0 6px 0; font-size: 12px; color: #64748b;">🗓️ '.$eDate->format('F j, Y \a\t g:i A').($evt->location ? ' • 📍 '.e($evt->location) : '').'</p>';
 
                     if ($evt->price) {
-                        $html .= '<span style="font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7; padding: 2px 8px; border-radius: 4px; margin-right: 6px;">💰 Ticket: £'.number_format($evt->price, 2).'</span>';
+                        $html .= '<span style="font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7; padding: 2px 8px; border-radius: 4px; margin-right: 6px;">💰 Ticket: '.Currencies::format($evt->price, $club).'</span>';
                     }
 
                     $html .= '<div style="margin-top: 8px;">';

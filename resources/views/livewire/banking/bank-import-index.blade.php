@@ -69,7 +69,7 @@
 
         <div class="p-5 bg-blue-50/60 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/80 rounded-2xl shadow-sm">
             <span class="text-[11px] font-bold uppercase tracking-wider text-blue-800 dark:text-blue-200">Net Staged Amount</span>
-            <div class="text-2xl font-black text-blue-950 dark:text-blue-100 mt-1">£{{ number_format($totalNetAmount, 2) }}</div>
+            <div class="text-2xl font-black text-blue-950 dark:text-blue-100 mt-1">{{ $cs }}{{ number_format($totalNetAmount, 2) }}</div>
             <span class="text-[10px] text-blue-700 dark:text-blue-300 mt-1 block">Net balance of staged transactions</span>
         </div>
     </div>
@@ -120,7 +120,7 @@
                     <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         <th class="py-3.5 px-4">Date</th>
                         <th class="py-3.5 px-4">Raw Description &amp; Reference</th>
-                        <th class="py-3.5 px-4 text-right">Amount (£)</th>
+                        <th class="py-3.5 px-4 text-right">Amount ({{ $cs }})</th>
                         <th class="py-3.5 px-4 text-right">Balance After</th>
                         <th class="py-3.5 px-4">Batch Import File</th>
                         <th class="py-3.5 px-4">Status</th>
@@ -142,11 +142,11 @@
                             </td>
 
                             <td class="py-3 px-4 text-right font-black whitespace-nowrap {{ $tx->amount > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">
-                                {{ $tx->amount > 0 ? '+' : '' }}£{{ number_format(abs($tx->amount), 2) }}
+                                {{ $tx->amount > 0 ? '+' : '' }}{{ $cs }}{{ number_format(abs($tx->amount), 2) }}
                             </td>
 
                             <td class="py-3 px-4 text-right font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                                {{ $tx->balance_after !== null ? '£' . number_format($tx->balance_after, 2) : '—' }}
+                                {{ $tx->balance_after !== null ? $cs . number_format($tx->balance_after, 2) : '—' }}
                             </td>
 
                             <td class="py-3 px-4 text-slate-600 dark:text-slate-300 font-medium truncate max-w-[150px]" title="{{ $tx->import?->filename }}">
@@ -235,7 +235,7 @@
                             <tr class="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider sticky top-0 bg-slate-100">
                                 <th class="py-2.5 px-3">Date</th>
                                 <th class="py-2.5 px-3">Description</th>
-                                <th class="py-2.5 px-3 text-right">Amount (£)</th>
+                                <th class="py-2.5 px-3 text-right">Amount ({{ $cs }})</th>
                                 <th class="py-2.5 px-3">Status</th>
                             </tr>
                         </thead>
@@ -245,7 +245,7 @@
                                     <td class="py-2.5 px-3 whitespace-nowrap">{{ $line['transaction_date']->format('d M Y') }}</td>
                                     <td class="py-2.5 px-3 font-semibold">{{ $line['raw_description'] }}</td>
                                     <td class="py-2.5 px-3 text-right font-black whitespace-nowrap {{ $line['amount'] > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">
-                                        {{ $line['amount'] > 0 ? '+' : '' }}£{{ number_format(abs($line['amount']), 2) }}
+                                        {{ $line['amount'] > 0 ? '+' : '' }}{{ $cs }}{{ number_format(abs($line['amount']), 2) }}
                                     </td>
                                     <td class="py-2.5 px-3 whitespace-nowrap">
                                         @if($line['is_duplicate'])

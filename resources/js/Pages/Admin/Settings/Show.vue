@@ -19,6 +19,14 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  currencies: {
+    type: Array,
+    default: () => [],
+  },
+  currencyLocked: {
+    type: Boolean,
+    default: false,
+  },
   members: {
     type: Array,
     default: () => [],
@@ -122,7 +130,7 @@ const form = useForm({
   logo_url: props.club.logo_url || '',
   primary_color: props.settings.primary_color || '#0369a1',
   sidebar_theme: props.settings.sidebar_theme || 'dark_slate',
-  currency: props.settings.currency || 'GBP',
+  currency: props.settings.currency || props.currencies?.[0]?.code || 'GBP',
   timezone: props.settings.timezone || 'Europe/London',
   contact_email: props.settings.contact_email || '',
   phone: props.settings.phone || '',
@@ -1443,11 +1451,12 @@ const moveOfficerDown = (index) => {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-xs">
             <div>
               <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Base Accounting Currency</label>
-              <select v-model="form.currency" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                <option value="GBP">GBP (£) - British Pound Sterling</option>
-                <option value="USD">USD ($) - US Dollar</option>
-                <option value="EUR">EUR (€) - Euro</option>
+              <select v-model="form.currency" :disabled="currencyLocked" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold disabled:opacity-60">
+                <option v-for="c in currencies" :key="c.code" :value="c.code">{{ c.code }} ({{ c.symbol.trim() }}) - {{ c.name }}</option>
               </select>
+              <p v-if="currencyLocked" class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Locked: this club already has financial records, and amounts are not converted between currencies.</p>
+              <p v-else class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Every amount in this club's accounts uses this currency. It is locked once you record any money.</p>
+              <p v-if="form.errors?.currency" class="mt-1 text-[11px] font-semibold text-rose-600">{{ form.errors.currency }}</p>
             </div>
 
             <div>

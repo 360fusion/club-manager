@@ -42,7 +42,7 @@
                     <h2 class="text-base font-black text-slate-900 dark:text-white">{{ $target->festival_name }}</h2>
                     <span class="px-2.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 text-[10px] font-black rounded-full">Chest Ref: {{ $target->relief_chest_ref }}</span>
                 </div>
-                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Provincial Honor Milestone Target: £{{ number_format($target->target_amount, 2) }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Provincial Honor Milestone Target: {{ $cs }}{{ number_format($target->target_amount, 2) }}</p>
             </div>
 
             <div class="flex items-center gap-3">
@@ -55,7 +55,7 @@
         <!-- Progress Bar & Milestones -->
         <div class="space-y-2">
             <div class="flex items-center justify-between text-xs font-black">
-                <span class="text-slate-700 dark:text-slate-200">Total Festival Raised: £{{ number_format($totalRaisedForFestival, 2) }}</span>
+                <span class="text-slate-700 dark:text-slate-200">Total Festival Raised: {{ $cs }}{{ number_format($totalRaisedForFestival, 2) }}</span>
                 <span class="text-blue-700 dark:text-blue-300 font-extrabold">{{ $targetPercentage }}% Complete</span>
             </div>
 
@@ -68,19 +68,19 @@
             <div class="grid grid-cols-4 gap-2 pt-2 text-[10px] font-bold text-center">
                 <div class="p-3 rounded-xl border {{ $totalRaisedForFestival >= $target->bronze_tier ? 'bg-amber-100/70 dark:bg-amber-900/70 border-amber-300 dark:border-amber-700/60 text-amber-950 dark:text-amber-100' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-400' }}">
                     <span>🥉 Bronze Tier</span>
-                    <span class="block font-black text-xs">£{{ number_format($target->bronze_tier, 0) }}</span>
+                    <span class="block font-black text-xs">{{ $cs }}{{ number_format($target->bronze_tier, 0) }}</span>
                 </div>
                 <div class="p-3 rounded-xl border {{ $totalRaisedForFestival >= $target->silver_tier ? 'bg-slate-200 dark:bg-slate-700 border-slate-400 text-slate-900 dark:text-white' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-400' }}">
                     <span>🥈 Silver Tier</span>
-                    <span class="block font-black text-xs">£{{ number_format($target->silver_tier, 0) }}</span>
+                    <span class="block font-black text-xs">{{ $cs }}{{ number_format($target->silver_tier, 0) }}</span>
                 </div>
                 <div class="p-3 rounded-xl border {{ $totalRaisedForFestival >= $target->gold_tier ? 'bg-yellow-100 dark:bg-yellow-900/40 border-yellow-300 dark:border-yellow-700/60 text-yellow-950 dark:text-yellow-100' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-400' }}">
                     <span>🥇 Gold Tier</span>
-                    <span class="block font-black text-xs">£{{ number_format($target->gold_tier, 0) }}</span>
+                    <span class="block font-black text-xs">{{ $cs }}{{ number_format($target->gold_tier, 0) }}</span>
                 </div>
                 <div class="p-3 rounded-xl border {{ $totalRaisedForFestival >= $target->platinum_tier ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700/60 text-blue-950 dark:text-blue-100' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-400' }}">
                     <span>💎 Platinum Tier</span>
-                    <span class="block font-black text-xs">£{{ number_format($target->platinum_tier, 0) }}</span>
+                    <span class="block font-black text-xs">{{ $cs }}{{ number_format($target->platinum_tier, 0) }}</span>
                 </div>
             </div>
         </div>
@@ -120,10 +120,10 @@
                                 {{ $m->formatted_rank_name }}
                             </td>
                             <td class="py-3 px-4 text-right font-semibold text-slate-800 dark:text-slate-100">
-                                {{ $giving && $giving->regular_giving_amount > 0 ? '£' . number_format($giving->regular_giving_amount, 2) : '—' }}
+                                {{ $giving && $giving->regular_giving_amount > 0 ? $cs . number_format($giving->regular_giving_amount, 2) : '—' }}
                             </td>
                             <td class="py-3 px-4 text-right font-black text-blue-950 dark:text-blue-100">
-                                £{{ number_format($donated, 2) }}
+                                {{ $cs }}{{ number_format($donated, 2) }}
                             </td>
                             <td class="py-3 px-4">
                                 <div class="flex items-center gap-1.5">
@@ -179,22 +179,22 @@
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Bronze Tier Target (£)</label>
+                            <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Bronze Tier Target ({{ $cs }})</label>
                             <input type="number" step="0.01" wire:model="bronze_tier" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
                         </div>
                         <div>
-                            <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Silver Tier Target (£)</label>
+                            <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Silver Tier Target ({{ $cs }})</label>
                             <input type="number" step="0.01" wire:model="silver_tier" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Gold Tier Target (£)</label>
+                            <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Gold Tier Target ({{ $cs }})</label>
                             <input type="number" step="0.01" wire:model="gold_tier" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
                         </div>
                         <div>
-                            <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Platinum Target (£)</label>
+                            <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Platinum Target ({{ $cs }})</label>
                             <input type="number" step="0.01" wire:model="platinum_tier" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
                         </div>
                     </div>
@@ -222,24 +222,24 @@
 
                 <form wire:submit.prevent="saveMemberGiving" class="space-y-4 text-xs">
                     <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Monthly Regular Giving Commitment (£)</label>
+                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Monthly Regular Giving Commitment ({{ $cs }})</label>
                         <input type="number" step="0.01" wire:model="regular_giving_amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                     </div>
 
                     <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Total Donated to Date (£) *</label>
+                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Total Donated to Date ({{ $cs }}) *</label>
                         <input type="number" step="0.01" wire:model="total_donated_to_date" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
                     </div>
 
                     <div class="space-y-2 p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl">
                         <label class="flex items-center gap-2 font-bold text-blue-950 dark:text-blue-100 cursor-pointer">
                             <input type="checkbox" wire:model="qualifies_for_jewel" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-                            <span>Qualifies for Festival Jewel (>= £250)</span>
+                            <span>Qualifies for Festival Jewel (>= {{ $cs }}250)</span>
                         </label>
 
                         <label class="flex items-center gap-2 font-bold text-blue-950 dark:text-blue-100 cursor-pointer">
                             <input type="checkbox" wire:model="qualifies_for_bar" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-                            <span>Qualifies for Honor Bar (>= £500)</span>
+                            <span>Qualifies for Honor Bar (>= {{ $cs }}500)</span>
                         </label>
                     </div>
 

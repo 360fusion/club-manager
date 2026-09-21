@@ -17,7 +17,7 @@
                     <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-slate-900 dark:text-white text-sm">{{ $bill->vendor_name }}</span>
-                            <span class="font-mono font-black text-slate-900 dark:text-white text-base">£{{ number_format($bill->amount, 2) }}</span>
+                            <span class="font-mono font-black text-slate-900 dark:text-white text-base">{{ $cs }}{{ number_format($bill->amount, 2) }}</span>
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">

@@ -87,7 +87,7 @@ const previewNumber = computed(() => {
         <span class="text-xl shrink-0">💡</span>
         <div class="text-xs text-blue-900 dark:text-blue-200 space-y-1">
           <p class="font-extrabold">What's the difference between an Invoice and a Journal Entry?</p>
-          <p><strong>Invoice</strong> — A document issued to a member requesting payment (e.g. annual subs £120). It automatically creates a receivable in the ledger and tracks whether it's been paid.</p>
+          <p><strong>Invoice</strong> — A document issued to a member requesting payment (e.g. annual subs {{ $cs }}120). It automatically creates a receivable in the ledger and tracks whether it's been paid.</p>
           <p><strong>Journal Entry</strong> — A manual internal ledger adjustment used by bookkeepers for corrections, accruals, or complex double-entry transactions. Never sent to a member.</p>
         </div>
       </div>
@@ -186,10 +186,10 @@ const previewNumber = computed(() => {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label for="invoice-amount" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
-                  Amount (£) <span class="text-red-500">*</span>
+                  Amount ({{ $cs }}) <span class="text-red-500">*</span>
                 </label>
                 <div class="relative">
-                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 font-bold text-xs">£</span>
+                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 font-bold text-xs">{{ $cs }}</span>
                   <input
                     id="invoice-amount"
                     v-model="form.amount"
@@ -258,11 +258,11 @@ const previewNumber = computed(() => {
             <p class="font-extrabold text-slate-800 dark:text-slate-100 mb-1">📒 What happens in the ledger when you save:</p>
             <div class="flex items-center justify-between font-mono">
               <span class="text-slate-500 dark:text-slate-400">DR  Accounts Receivable (1200)</span>
-              <span class="font-black text-slate-900 dark:text-white">£{{ form.amount || '0.00' }}</span>
+              <span class="font-black text-slate-900 dark:text-white">{{ $cs }}{{ form.amount || '0.00' }}</span>
             </div>
             <div class="flex items-center justify-between font-mono">
               <span class="text-slate-500 dark:text-slate-400">CR  Membership Income (4000)</span>
-              <span class="font-black text-slate-900 dark:text-white">£{{ form.amount || '0.00' }}</span>
+              <span class="font-black text-slate-900 dark:text-white">{{ $cs }}{{ form.amount || '0.00' }}</span>
             </div>
           </div>
 

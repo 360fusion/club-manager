@@ -192,7 +192,7 @@ const submit = () => {
 
           <div v-for="(tier, index) in form.ticket_tiers" :key="index" class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-800/80 grid grid-cols-1 sm:grid-cols-4 gap-3 items-center">
             <input v-model="tier.name" type="text" placeholder="Tier Name (e.g. Early Bird)" class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-800 dark:text-slate-100" />
-            <input v-model="tier.price" type="number" step="0.01" placeholder="Price (£)" class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-800 dark:text-slate-100" />
+            <input v-model="tier.price" type="number" step="0.01" :placeholder="'Price (' + $cs + ')'" class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-800 dark:text-slate-100" />
             <input v-model="tier.max_quantity" type="number" placeholder="Capacity" class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-800 dark:text-slate-100" />
             <button type="button" @click="removeTier(index)" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs font-semibold">Remove</button>
           </div>

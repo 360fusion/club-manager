@@ -81,7 +81,7 @@
                                 {{ $tx->transaction_date ? $tx->transaction_date->format('d M Y') : '—' }}
                             </span>
                             <span class="font-black text-sm whitespace-nowrap {{ $tx->amount > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">
-                                {{ $tx->amount > 0 ? '+' : '' }}£{{ number_format(abs($tx->amount), 2) }}
+                                {{ $tx->amount > 0 ? '+' : '' }}{{ $cs }}{{ number_format(abs($tx->amount), 2) }}
                             </span>
                         </div>
 
@@ -125,7 +125,7 @@
                         </div>
                         <div class="text-right">
                             <span class="text-2xl font-black {{ $selectedTx->amount > 0 ? 'text-emerald-400' : 'text-rose-400' }}">
-                                {{ $selectedTx->amount > 0 ? '+' : '' }}£{{ number_format(abs($selectedTx->amount), 2) }}
+                                {{ $selectedTx->amount > 0 ? '+' : '' }}{{ $cs }}{{ number_format(abs($selectedTx->amount), 2) }}
                             </span>
                             <span class="text-[10px] text-slate-400 block font-semibold uppercase">
                                 {{ $selectedTx->amount > 0 ? 'Incoming Credit (Income)' : 'Outgoing Debit (Expense)' }}
@@ -165,7 +165,7 @@
                                 <div class="flex items-center justify-between gap-3 pt-1">
                                     <div>
                                         <h4 class="font-black text-slate-900 dark:text-white text-sm">{{ $match['target_title'] }}</h4>
-                                        <span class="text-xs text-slate-600 dark:text-slate-300 font-medium">Target Dues / Amount: £{{ number_format($match['target_amount'], 2) }}</span>
+                                        <span class="text-xs text-slate-600 dark:text-slate-300 font-medium">Target Dues / Amount: {{ $cs }}{{ number_format($match['target_amount'], 2) }}</span>
                                     </div>
 
                                     <button
@@ -224,7 +224,7 @@
                         <span class="text-xl">🔍</span>
                         <div>
                             <h3 class="font-black text-slate-900 dark:text-white text-base">Manual Ledger Allocation Drawer</h3>
-                            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Allocating: <strong class="text-slate-800 dark:text-slate-100">{{ $selectedTx->raw_description }}</strong> (£{{ number_format(abs($selectedTx->amount), 2) }})</p>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Allocating: <strong class="text-slate-800 dark:text-slate-100">{{ $selectedTx->raw_description }}</strong> ({{ $cs }}{{ number_format(abs($selectedTx->amount), 2) }})</p>
                         </div>
                     </div>
                     <button type="button" wire:click="$set('showManualDrawer', false)" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg">✕</button>
@@ -273,10 +273,10 @@
                                 <div>
                                     @if($manualAllocationType === 'member_subscription')
                                         <span class="font-black text-slate-900 dark:text-white block">{{ $cand->member->formatted_rank_name }}</span>
-                                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Invoice: {{ $cand->invoice_reference }} (Dues: £{{ number_format($cand->balance_due, 2) }})</span>
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Invoice: {{ $cand->invoice_reference }} (Dues: {{ $cs }}{{ number_format($cand->balance_due, 2) }})</span>
                                     @else
                                         <span class="font-black text-slate-900 dark:text-white block">{{ $cand->vendor_name }} (Bill: {{ $cand->bill_number }})</span>
-                                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Bill Amount: £{{ number_format($cand->amount, 2) }}</span>
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Bill Amount: {{ $cs }}{{ number_format($cand->amount, 2) }}</span>
                                     @endif
                                 </div>
 

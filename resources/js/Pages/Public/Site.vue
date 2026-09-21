@@ -420,7 +420,7 @@ const getSiteUrl = (urlPath) => {
                             </div>
                             <div class="pt-4 border-t border-slate-800 flex items-baseline justify-between">
                                 <div>
-                                    <span class="text-2xl font-black text-white">£{{ plan.price }}</span>
+                                    <span class="text-2xl font-black text-white">{{ $cs }}{{ plan.price }}</span>
                                     <span class="text-xs text-slate-400"> / {{ plan.billing_period }}</span>
                                 </div>
                                 <Link :href="`/${club.slug}/admin/subscriptions`" class="py-2 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-500">
@@ -451,8 +451,8 @@ const getSiteUrl = (urlPath) => {
                         <!-- Progress Bar -->
                         <div class="space-y-2">
                             <div class="flex items-center justify-between text-sm">
-                                <span class="text-slate-400 font-medium">Raised: <strong class="text-emerald-400 font-bold">£{{ d.current_amount }}</strong></span>
-                                <span class="text-slate-400 font-medium">Target: <strong class="text-white font-bold">£{{ d.target_amount }}</strong></span>
+                                <span class="text-slate-400 font-medium">Raised: <strong class="text-emerald-400 font-bold">{{ $cs }}{{ d.current_amount }}</strong></span>
+                                <span class="text-slate-400 font-medium">Target: <strong class="text-white font-bold">{{ $cs }}{{ d.target_amount }}</strong></span>
                             </div>
                             <div class="w-full h-4 rounded-full bg-slate-950 border border-slate-800 overflow-hidden p-0.5">
                                 <div class="h-full rounded-full bg-gradient-to-r from-amber-500 via-emerald-400 to-blue-400 transition-all duration-500" :style="{ width: `${d.percentage}%` }"></div>
@@ -751,7 +751,7 @@ const getSiteUrl = (urlPath) => {
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Donation Amount (£)</label>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Donation Amount ({{ $cs }})</label>
                         <input v-model="donationForm.amount" type="number" min="1" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-bold text-lg" />
                     </div>
 

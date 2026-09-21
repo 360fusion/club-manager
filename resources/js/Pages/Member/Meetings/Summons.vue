@@ -240,7 +240,7 @@ function formatDateTime(dateTimeVal) {
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 dark:border-amber-800/60 pb-2">
                 <div>
                   <h4 class="text-base font-black text-slate-900 dark:text-white">
-                    £{{ numberFormat(grant.amount) }} — {{ grant.recipient_name }}
+                    {{ $cs }}{{ numberFormat(grant.amount) }} — {{ grant.recipient_name }}
                   </h4>
                   <p class="text-xs text-amber-900 dark:text-amber-200 font-semibold mt-0.5">{{ grant.purpose }}</p>
                 </div>
@@ -279,12 +279,12 @@ function formatDateTime(dateTimeVal) {
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl text-sm space-y-1">
               <div class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Member Dining Fee</div>
-              <div class="text-2xl font-black text-emerald-900 dark:text-emerald-200">£{{ numberFormat(meeting.dining_cost_member) }}</div>
+              <div class="text-2xl font-black text-emerald-900 dark:text-emerald-200">{{ $cs }}{{ numberFormat(meeting.dining_cost_member) }}</div>
             </div>
 
             <div class="p-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-2xl text-sm space-y-1">
               <div class="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">Guest Dining Fee</div>
-              <div class="text-2xl font-black text-blue-900 dark:text-blue-200">£{{ numberFormat(meeting.dining_cost_guest) }}</div>
+              <div class="text-2xl font-black text-blue-900 dark:text-blue-200">{{ $cs }}{{ numberFormat(meeting.dining_cost_guest) }}</div>
             </div>
 
             <div class="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl text-sm space-y-1">

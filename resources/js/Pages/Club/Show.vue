@@ -218,7 +218,7 @@ const getIcon = (typeCode) => {
                                         <span class="font-bold text-white">{{ tier.name }}</span>
                                         <div class="flex items-center gap-3">
                                             <span class="text-slate-400">Available: <strong class="text-amber-400 font-mono">{{ tier.available }}</strong></span>
-                                            <span class="text-emerald-400 font-bold">£{{ tier.price }}</span>
+                                            <span class="text-emerald-400 font-bold">{{ $cs }}{{ tier.price }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -236,7 +236,7 @@ const getIcon = (typeCode) => {
                                         <div class="font-mono text-[10px] text-blue-400">📱 QR Pass: {{ att.ticket_qr_code }}</div>
                                     </div>
                                     <span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 font-bold uppercase text-[10px]">
-                                        PAID £{{ att.amount_paid }}
+                                        PAID {{ $cs }}{{ att.amount_paid }}
                                     </span>
                                 </div>
                             </div>
@@ -361,7 +361,7 @@ const getIcon = (typeCode) => {
                                     <span class="font-bold">{{ tier.name }}</span>
                                     <span class="text-xs text-slate-400 block">Available: {{ tier.available }}</span>
                                 </div>
-                                <span class="font-bold text-emerald-400 text-base">£{{ tier.price }}</span>
+                                <span class="font-bold text-emerald-400 text-base">{{ $cs }}{{ tier.price }}</span>
                             </div>
                         </div>
                     </div>
@@ -385,7 +385,7 @@ const getIcon = (typeCode) => {
                     <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-3">
                         <div class="flex items-center justify-between font-bold text-emerald-300">
                             <span>Total Due for Ticket:</span>
-                            <span class="text-2xl">£{{ calculateTotal(selectedEvent) }}</span>
+                            <span class="text-2xl">{{ $cs }}{{ calculateTotal(selectedEvent) }}</span>
                         </div>
                         <div class="text-center p-3 rounded-lg bg-slate-950 font-mono text-xs text-blue-400">
                             📱 Scannable QR Pass: <strong>TICKET-OUBC-{{ Math.floor(1000 + Math.random() * 9000) }}</strong>

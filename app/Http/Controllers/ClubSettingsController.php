@@ -6,9 +6,11 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
 use App\Models\Province;
 use App\Support\ClubAccess;
+use App\Support\Currencies;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -58,7 +60,7 @@ class ClubSettingsController extends Controller
             'meeting_formula' => '4th Thu. 1 To 11 Ex. 6, 7, 8',
             'primary_color' => '#0369a1',
             'sidebar_theme' => 'dark_slate',
-            'currency' => 'GBP',
+            'currency' => $club->currencyCode(),
             'timezone' => 'Europe/London',
             'contact_email' => 'admin@'.$club->slug.'.org',
             'phone' => '+44 20 7946 0912',
@@ -190,6 +192,9 @@ class ClubSettingsController extends Controller
             'permission_matrix' => self::defaultPermissionMatrix(),
         ], $club->settings ?? []);
 
+        // Always show the currency actually in use, even if the stored value is missing or unknown.
+        $settings['currency'] = $club->currencyCode();
+
         // Ensure permission matrix has all navigation page keys
         $settings['permission_matrix'] = array_merge(
             self::defaultPermissionMatrix(),
@@ -246,6 +251,8 @@ class ClubSettingsController extends Controller
             'allModules' => $allModules,
             'members' => $members,
             'provinces' => $provinces,
+            'currencies' => array_values(Currencies::available()),
+            'currencyLocked' => $club->currencyIsLocked(),
             'availableRoles' => [
                 ['code' => 'owner', 'name' => 'Owner', 'badge' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60'],
                 ['code' => 'admin', 'name' => 'Admin', 'badge' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60'],
@@ -280,7 +287,7 @@ class ClubSettingsController extends Controller
             'logo_url' => ['nullable', 'string', 'max:500', 'regex:#^(https?://|/)#i'],
             'primary_color' => 'nullable|string|max:50',
             'sidebar_theme' => 'nullable|string|max:50',
-            'currency' => 'nullable|string|max:10',
+            'currency' => ['nullable', 'string', 'size:3', Rule::in(array_keys(Currencies::available()))],
             'timezone' => 'nullable|string|max:100',
             'contact_email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:100',
@@ -375,6 +382,14 @@ class ClubSettingsController extends Controller
 
         if (array_key_exists('permission_matrix', $validated)) {
             $validated['permission_matrix'] = $this->cleanPermissionMatrix($request, $club, $validated['permission_matrix'] ?? []);
+        }
+
+        if (! empty($validated['currency'])) {
+            $validated['currency'] = strtoupper($validated['currency']);
+
+            if ($validated['currency'] !== $club->currencyCode() && $club->currencyIsLocked() && ! $request->user()->is_super_admin) {
+                throw ValidationException::withMessages(['currency' => 'This club already has financial records, so its currency can no longer be changed. Contact support if it was set by mistake.']);
+            }
         }
 
         if (isset($validated['name'])) {

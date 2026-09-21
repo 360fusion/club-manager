@@ -327,12 +327,12 @@
                         <td><strong>{{ $bill->vendor_name }}</strong></td>
                         <td>{{ $bill->category ?: 'General Supplies' }}</td>
                         <td>{{ $bill->due_date ? $bill->due_date->format('d M Y') : 'Immediate' }}</td>
-                        <td class="text-right text-bold">£{{ number_format($bill->amount, 2) }}</td>
+                        <td class="text-right text-bold">{{ \App\Support\Currencies::symbolFor($club) }}{{ number_format($bill->amount, 2) }}</td>
                     </tr>
                 @endforeach
                 <tr style="background: #f1f5f9;">
                     <td colspan="4" class="text-bold text-right">Total Invoices Pending Audit & Payment Approval:</td>
-                    <td class="text-right text-bold" style="color: #b91c1c;">£{{ number_format($totalBills, 2) }}</td>
+                    <td class="text-right text-bold" style="color: #b91c1c;">{{ \App\Support\Currencies::symbolFor($club) }}{{ number_format($totalBills, 2) }}</td>
                 </tr>
             </tbody>
         </table>

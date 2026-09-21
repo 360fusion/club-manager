@@ -282,7 +282,7 @@ const submitMeetingRsvp = () => {
           <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1">
             <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Plan</div>
             <div class="text-sm font-bold text-slate-900 dark:text-white">Senior Rower Tier</div>
-            <div class="text-xs text-emerald-700 dark:text-emerald-300 font-bold">£35.00 / Monthly Dues</div>
+            <div class="text-xs text-emerald-700 dark:text-emerald-300 font-bold">{{ $cs }}35.00 / Monthly Dues</div>
           </div>
           <div class="text-xs text-slate-500 dark:text-slate-400 pt-1">
             Status: <strong class="text-emerald-700 dark:text-emerald-300 uppercase font-mono">Good Standing</strong>

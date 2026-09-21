@@ -95,8 +95,8 @@ const submit = () => {
         </div>
 
         <div class="flex items-center gap-4 text-xs font-bold shrink-0">
-          <div>Debits: <span class="font-mono text-sm text-slate-900 dark:text-white">£{{ totalDebit.toFixed(2) }}</span></div>
-          <div>Credits: <span class="font-mono text-sm text-slate-900 dark:text-white">£{{ totalCredit.toFixed(2) }}</span></div>
+          <div>Debits: <span class="font-mono text-sm text-slate-900 dark:text-white">{{ $cs }}{{ totalDebit.toFixed(2) }}</span></div>
+          <div>Credits: <span class="font-mono text-sm text-slate-900 dark:text-white">{{ $cs }}{{ totalCredit.toFixed(2) }}</span></div>
         </div>
       </div>
 
@@ -151,8 +151,8 @@ const submit = () => {
                   <tr>
                     <th class="py-3 px-4 w-1/3">Account</th>
                     <th class="py-3 px-4">Line Memo</th>
-                    <th class="py-3 px-4 w-28 text-right">Debit (£)</th>
-                    <th class="py-3 px-4 w-28 text-right">Credit (£)</th>
+                    <th class="py-3 px-4 w-28 text-right">Debit ({{ $cs }})</th>
+                    <th class="py-3 px-4 w-28 text-right">Credit ({{ $cs }})</th>
                     <th class="py-3 px-3 w-10 text-center"></th>
                   </tr>
                 </thead>
@@ -214,8 +214,8 @@ const submit = () => {
                 <tfoot class="bg-slate-50 dark:bg-slate-800/50 font-bold border-t border-slate-200 dark:border-slate-800">
                   <tr>
                     <td colspan="2" class="py-3 px-4 text-right text-slate-600 dark:text-slate-300">Totals:</td>
-                    <td class="py-3 px-4 text-right font-mono text-slate-900 dark:text-white">£{{ totalDebit.toFixed(2) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-slate-900 dark:text-white">£{{ totalCredit.toFixed(2) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-900 dark:text-white">{{ $cs }}{{ totalDebit.toFixed(2) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-900 dark:text-white">{{ $cs }}{{ totalCredit.toFixed(2) }}</td>
                     <td></td>
                   </tr>
                 </tfoot>

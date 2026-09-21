@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useForm, Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
+import { currencySymbol } from '@/Utils/currency';
 const props = defineProps({
   club: Object,
   meeting: Object,
@@ -283,12 +284,12 @@ const addAgendaItem = () => {
 const addGrantToAgenda = (grant) => {
   const proposerName = grant.proposer ? `${grant.proposer.first_name} ${grant.proposer.last_name}` : '';
   const seconderName = grant.seconder ? `${grant.seconder.first_name} ${grant.seconder.last_name}` : '';
-  let desc = `To consider and, if approved, pass a resolution proposing a Charity Grant of £${parseFloat(grant.amount).toFixed(2)} to ${grant.recipient_name} (${grant.purpose}).`;
+  let desc = `To consider and, if approved, pass a resolution proposing a Charity Grant of ${currencySymbol()}${parseFloat(grant.amount).toFixed(2)} to ${grant.recipient_name} (${grant.purpose}).`;
   if (proposerName) desc += ` Proposed by ${proposerName}.`;
   if (seconderName) desc += ` Seconded by ${seconderName}.`;
 
   form.agenda_items.push({
-    title: `Charity Grant Proposition: £${parseFloat(grant.amount).toFixed(2)} to ${grant.recipient_name}`,
+    title: `Charity Grant Proposition: ${currencySymbol()}${parseFloat(grant.amount).toFixed(2)} to ${grant.recipient_name}`,
     description: desc,
   });
 };
@@ -613,7 +614,7 @@ const submit = () => {
                   <div v-for="grant in charityGrants" :key="grant.id" class="p-3.5 bg-amber-50/70 dark:bg-amber-950/70 rounded-2xl border border-amber-200/80 dark:border-amber-800/80 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <div class="font-bold text-slate-900 dark:text-white">
-                        £{{ parseFloat(grant.amount).toFixed(2) }} — {{ grant.recipient_name }}
+                        {{ $cs }}{{ parseFloat(grant.amount).toFixed(2) }} — {{ grant.recipient_name }}
                       </div>
                       <div class="text-slate-600 dark:text-slate-300 text-[11px] mt-0.5">{{ grant.purpose }}</div>
                       <div class="flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
@@ -771,7 +772,7 @@ const submit = () => {
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Price Per Head (£)</label>
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Price Per Head ({{ $cs }})</label>
                   <input v-model="form.dining_cost_member" type="number" step="0.01" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
                 </div>
 

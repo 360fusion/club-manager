@@ -135,8 +135,8 @@ const submit = () => {
                   <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
                     <th class="p-3 w-1/3">Account</th>
                     <th class="p-3 w-1/4">Memo</th>
-                    <th class="p-3 w-1/6 text-right">Debit (£)</th>
-                    <th class="p-3 w-1/6 text-right">Credit (£)</th>
+                    <th class="p-3 w-1/6 text-right">Debit ({{ $cs }})</th>
+                    <th class="p-3 w-1/6 text-right">Credit ({{ $cs }})</th>
                     <th class="p-3 w-12 text-center"></th>
                   </tr>
                 </thead>
@@ -196,8 +196,8 @@ const submit = () => {
                 <tfoot>
                   <tr class="bg-slate-50 dark:bg-slate-800/50 font-bold text-xs border-t border-slate-200 dark:border-slate-800">
                     <td colspan="2" class="p-3 text-right text-slate-600 dark:text-slate-300 uppercase tracking-wider">Total:</td>
-                    <td class="p-3 text-right font-mono text-slate-900 dark:text-white">£{{ totalDebit.toFixed(2) }}</td>
-                    <td class="p-3 text-right font-mono text-slate-900 dark:text-white">£{{ totalCredit.toFixed(2) }}</td>
+                    <td class="p-3 text-right font-mono text-slate-900 dark:text-white">{{ $cs }}{{ totalDebit.toFixed(2) }}</td>
+                    <td class="p-3 text-right font-mono text-slate-900 dark:text-white">{{ $cs }}{{ totalCredit.toFixed(2) }}</td>
                     <td></td>
                   </tr>
                 </tfoot>
@@ -218,7 +218,7 @@ const submit = () => {
                 <span class="text-base">{{ isBalanced ? '✓' : '⚠️' }}</span>
                 <div>
                   <p class="font-extrabold">{{ isBalanced ? 'Balanced Entry' : 'Entry Out of Balance' }}</p>
-                  <p v-if="!isBalanced">Total Debits (£{{ totalDebit.toFixed(2) }}) must equal Total Credits (£{{ totalCredit.toFixed(2) }}). Difference: £{{ Math.abs(totalDebit - totalCredit).toFixed(2) }}</p>
+                  <p v-if="!isBalanced">Total Debits ({{ $cs }}{{ totalDebit.toFixed(2) }}) must equal Total Credits ({{ $cs }}{{ totalCredit.toFixed(2) }}). Difference: {{ $cs }}{{ Math.abs(totalDebit - totalCredit).toFixed(2) }}</p>
                 </div>
               </div>
             </div>

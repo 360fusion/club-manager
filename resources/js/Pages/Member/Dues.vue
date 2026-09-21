@@ -44,7 +44,7 @@ const props = defineProps({
                 <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 tracking-wider">
                   {{ plan.billing_period }}
                 </span>
-                <span class="text-2xl font-black text-slate-900 dark:text-white">£{{ plan.price }}</span>
+                <span class="text-2xl font-black text-slate-900 dark:text-white">{{ $cs }}{{ plan.price }}</span>
               </div>
 
               <h4 class="text-lg font-bold text-slate-900 dark:text-white">{{ plan.name }}</h4>
@@ -85,7 +85,7 @@ const props = defineProps({
                 <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50 transition-colors">
                   <td class="py-4 px-6 font-mono font-bold text-slate-900 dark:text-white">{{ inv.invoice_number }}</td>
                   <td class="py-4 px-4 font-semibold text-slate-800 dark:text-slate-100">{{ inv.title }}</td>
-                  <td class="py-4 px-4 font-black text-slate-900 dark:text-white">£{{ inv.amount }}</td>
+                  <td class="py-4 px-4 font-black text-slate-900 dark:text-white">{{ $cs }}{{ inv.amount }}</td>
                   <td class="py-4 px-4">
                     <span
                       :class="[

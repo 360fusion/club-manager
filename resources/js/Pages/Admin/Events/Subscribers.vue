@@ -77,7 +77,7 @@ const setPaymentStatus = (subscriberId, status) => {
             <span>📅 {{ event.starts_at || 'Date TBD' }}</span>
             <span v-if="event.location">📍 {{ event.location }}</span>
             <span v-if="event.has_dining" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-              🍽️ 3-Course Dining (£{{ event.dining_price }})
+              🍽️ 3-Course Dining ({{ $cs }}{{ event.dining_price }})
             </span>
           </div>
         </div>
@@ -206,7 +206,7 @@ const setPaymentStatus = (subscriberId, status) => {
                 <!-- Ticket Tier -->
                 <td class="p-3">
                   <span v-if="sub.ticket_tier" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                    🎟️ {{ sub.ticket_tier.name }} (£{{ sub.ticket_tier.price }})
+                    🎟️ {{ sub.ticket_tier.name }} ({{ $cs }}{{ sub.ticket_tier.price }})
                   </span>
                   <span v-else class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                     Standard Admission

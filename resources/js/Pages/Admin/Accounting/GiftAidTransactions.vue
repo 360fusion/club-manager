@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
+import { currencySymbol } from '@/Utils/currency';
 const props = defineProps({
   club: {
     type: Object,
@@ -18,9 +19,9 @@ const props = defineProps({
       collections: [],
       totals: {
         total_donations: 0,
-        formatted_total_donations: '£0.00',
+        formatted_total_donations: (currencySymbol() + '0.00'),
         total_gift_aid: 0,
-        formatted_total_gift_aid: '£0.00',
+        formatted_total_gift_aid: (currencySymbol() + '0.00'),
         reconciled_count: 0,
         total_count: 0,
       },
@@ -79,7 +80,7 @@ const filteredTotalGiftAid = computed(() => {
 });
 
 const formatCurrency = (amount) => {
-  return '£' + Number(amount || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return currencySymbol() + Number(amount || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 const resetFilters = () => {
@@ -172,28 +173,28 @@ const resetFilters = () => {
         <!-- 1. Total Eligible Donations -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Eligible Donations Total</span>
-          <span class="text-xl font-black text-slate-900 dark:text-white block">{{ giftAidSummary?.formatted_total_eligible || '£0.00' }}</span>
+          <span class="text-xl font-black text-slate-900 dark:text-white block">{{ giftAidSummary?.formatted_total_eligible || ($cs + '0.00') }}</span>
           <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Meeting collections &amp; envelope gifts</span>
         </div>
 
         <!-- 2. Reclaimed Gift Aid -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-blue-200 dark:border-blue-800/60 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">25% Gift Aid Reclaimed</span>
-          <span class="text-xl font-black text-blue-700 dark:text-blue-300 block">{{ giftAidSummary?.formatted_gift_aid_reclaimed || '£0.00' }}</span>
+          <span class="text-xl font-black text-blue-700 dark:text-blue-300 block">{{ giftAidSummary?.formatted_gift_aid_reclaimed || ($cs + '0.00') }}</span>
           <span class="text-[10px] text-blue-600/80 dark:text-blue-400/80 block">Reconciled to bank deposits</span>
         </div>
 
         <!-- 3. Pending Unclaimed -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-amber-200 dark:border-amber-800/60 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 uppercase tracking-wider block">Unclaimed Tax Relief</span>
-          <span class="text-xl font-black text-amber-800 dark:text-amber-200 block">{{ giftAidSummary?.formatted_pending_gift_aid || '£0.00' }}</span>
+          <span class="text-xl font-black text-amber-800 dark:text-amber-200 block">{{ giftAidSummary?.formatted_pending_gift_aid || ($cs + '0.00') }}</span>
           <span class="text-[10px] text-amber-700/80 dark:text-amber-300/80 block">{{ giftAidSummary?.pending_claim_count || 0 }} collection batch(es) pending</span>
         </div>
 
         <!-- 4. Net Relief Chest Position -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-blue-200 dark:border-blue-800/60 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-blue-700 dark:text-blue-300 uppercase tracking-wider block">Net Relief Chest Position</span>
-          <span class="text-xl font-black text-blue-800 dark:text-blue-200 block">{{ giftAidSummary?.formatted_net_relief_chest_balance || '£0.00' }}</span>
+          <span class="text-xl font-black text-blue-800 dark:text-blue-200 block">{{ giftAidSummary?.formatted_net_relief_chest_balance || ($cs + '0.00') }}</span>
           <span class="text-[10px] text-blue-700/80 dark:text-blue-300/80 block">Relief Chest Ref: {{ giftAidSummary?.relief_chest_ref || 'E1418' }}</span>
         </div>
       </div>

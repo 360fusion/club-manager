@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Models\Event;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Support\Currencies;
 use App\Support\MemberScope;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -83,7 +84,7 @@ class MemberInbox
             $meeting = $rsvp->meeting;
             $club = $scope->clubFor($meeting->club_id);
 
-            return $this->item('dining_payment', 2, 'Pay for dining at '.$meeting->title, $club, '£'.number_format((float) $meeting->dining_cost_member, 2).' · '.($meeting->meeting_date?->format('j M Y') ?? ''), $meeting->meeting_date, null, route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id], false));
+            return $this->item('dining_payment', 2, 'Pay for dining at '.$meeting->title, $club, Currencies::format((float) $meeting->dining_cost_member, $club).' · '.($meeting->meeting_date?->format('j M Y') ?? ''), $meeting->meeting_date, null, route('member.meetings.summons', ['slug' => $club->slug, 'id' => $meeting->id], false));
         })->values();
     }
 
@@ -100,7 +101,7 @@ class MemberInbox
                 $club = $scope->clubFor($subscription->club_id);
                 $arrears = $subscription->status->isArrears();
 
-                return $this->item('dues', $arrears ? 3 : 2, ($arrears ? 'Overdue dues' : 'Dues to pay').' at '.$club->name, $club, '£'.number_format($subscription->balance_due, 2).($subscription->due_date ? ' · due '.$subscription->due_date->format('j M Y') : ''), $subscription->due_date, null, route('members.dues', ['club' => $club->slug], false));
+                return $this->item('dues', $arrears ? 3 : 2, ($arrears ? 'Overdue dues' : 'Dues to pay').' at '.$club->name, $club, Currencies::format($subscription->balance_due, $club).($subscription->due_date ? ' · due '.$subscription->due_date->format('j M Y') : ''), $subscription->due_date, null, route('members.dues', ['club' => $club->slug], false));
             })->values();
     }
 

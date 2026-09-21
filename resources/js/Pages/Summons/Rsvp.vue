@@ -125,7 +125,7 @@ const formatDate = (dateVal) => {
                 <input type="radio" value="attending_dining" v-model="form.attendance_status" class="text-emerald-600 dark:text-emerald-400 focus:ring-emerald-500" />
                 <div class="text-xs">
                   <div>Attending Meeting & Dining</div>
-                  <div class="text-[10px] text-slate-500 dark:text-slate-400 font-normal">Festive Board (£{{ meeting.dining_cost_member }})</div>
+                  <div class="text-[10px] text-slate-500 dark:text-slate-400 font-normal">Festive Board ({{ $cs }}{{ meeting.dining_cost_member }})</div>
                 </div>
               </label>
 
@@ -186,7 +186,7 @@ const formatDate = (dateVal) => {
             <!-- Direct Online Payment Link Button (Dining Only) -->
             <div v-if="meeting.payment_link && (form.attendance_status === 'attending_dining' || form.guests.some(g => g.attending_dining))" class="pt-1">
               <a :href="meeting.payment_link" target="_blank" class="block w-full text-center py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all">
-                💳 Pay Online Now (£{{ meeting.dining_cost_member }}) &rarr;
+                💳 Pay Online Now ({{ $cs }}{{ meeting.dining_cost_member }}) &rarr;
               </a>
             </div>
 

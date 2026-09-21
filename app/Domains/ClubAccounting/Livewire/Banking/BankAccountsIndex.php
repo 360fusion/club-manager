@@ -26,13 +26,14 @@ class BankAccountsIndex extends Component
 
     public string $sort_code = '';
 
-    public string $currency = 'GBP';
+    public string $currency = '';
 
     public float $opening_balance = 0.00;
 
     public function mount(string $clubSlug): void
     {
         $this->clubSlug = $clubSlug;
+        $this->currency = $this->getClub()->currencyCode();
         $this->ensureDefaultAccountExists();
     }
 
@@ -49,7 +50,7 @@ class BankAccountsIndex extends Component
                 'account_type' => 'current',
                 'account_number' => '12345678',
                 'sort_code' => '20-00-00',
-                'currency' => 'GBP',
+                'currency' => $club->currencyCode(),
                 'opening_balance' => 0.00,
                 'is_active' => true,
             ]);
@@ -58,12 +59,15 @@ class BankAccountsIndex extends Component
 
     public function openCreateModal(): void
     {
-        $this->reset(['bank_name', 'account_name', 'account_type', 'account_number', 'sort_code', 'currency', 'opening_balance']);
+        $this->reset(['bank_name', 'account_name', 'account_type', 'account_number', 'sort_code', 'opening_balance']);
         $this->showCreateModal = true;
     }
 
     public function saveBankAccount(): void
     {
+        // Each club keeps its books in one currency, so every bank account uses it.
+        $this->currency = $this->getClub()->currencyCode();
+
         $this->validate([
             'bank_name' => 'required|string|max:100',
             'account_name' => 'required|string|max:150',

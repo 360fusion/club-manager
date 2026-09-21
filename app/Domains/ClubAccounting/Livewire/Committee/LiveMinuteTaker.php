@@ -15,6 +15,7 @@ use App\Domains\ClubAccounting\Notifications\CommitteeTaskAssignedNotification;
 use App\Domains\ClubAccounting\Services\CommitteeNotesParserService;
 use App\Domains\ClubAccounting\Services\Integration\MemberMentionSearchService;
 use App\Models\Club;
+use App\Support\Currencies;
 use Carbon\Carbon;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -195,12 +196,12 @@ class LiveMinuteTaker extends Component
 
         $proposerName = $grant->proposer ? " (Proposed by {$grant->proposer->formatted_rank_name})" : '';
         $seconderName = $grant->seconder ? " (Seconded by {$grant->seconder->formatted_rank_name})" : '';
-        $noteSnippet = "\n- **Charitable Grant Approved by Committee:** £".number_format($grant->amount, 2)." to {$grant->recipient_name} ({$grant->purpose}){$proposerName}{$seconderName}. Recommended for Open Lodge sanction.\n";
+        $noteSnippet = "\n- **Charitable Grant Approved by Committee:** ".Currencies::format($grant->amount, $this->meeting->club)." to {$grant->recipient_name} ({$grant->purpose}){$proposerName}{$seconderName}. Recommended for Open Lodge sanction.\n";
 
         $this->notesRaw .= $noteSnippet;
         $this->updatedNotesRaw();
 
-        session()->flash('success', 'Charitable grant of £'.number_format($grant->amount, 2)." to {$grant->recipient_name} approved for Open Lodge Summons.");
+        session()->flash('success', 'Charitable grant of '.Currencies::format($grant->amount, $this->meeting->club)." to {$grant->recipient_name} approved for Open Lodge Summons.");
     }
 
     public function lodgeVoteGrant(int $grantId): void
@@ -250,11 +251,12 @@ class LiveMinuteTaker extends Component
 
     public function insertTemplate(string $type): void
     {
+        $symbol = Currencies::symbolFor($this->meeting->club);
         $snippet = match ($type) {
             'task' => "\n[ ] @MemberName Action to be completed by ".Carbon::now()->addDays(14)->format('Y-m-d')."\n",
             'motion' => "\n/motion That the lodge bylaws be amended to specify...\n",
             'candidate' => "\n### Candidate Vetting:\n- Candidate: @CandidateName\n- Proposer / Seconder check: Vetted and in order under Rule 159.\n- Recommendation: Approved to proceed to open lodge ballot.\n",
-            'donation' => "\n### Charitable Donation Proposal:\n- Recipient Name: Local Hospice\n- Proposed Amount: £250.00\n- Proposed By: @ProposerName\n- Seconded By: @SeconderName\n- Committee Recommendation: Approved by committee and recommended for open lodge sanction.\n",
+            'donation' => "\n### Charitable Donation Proposal:\n- Recipient Name: Local Hospice\n- Proposed Amount: {$symbol}250.00\n- Proposed By: @ProposerName\n- Seconded By: @SeconderName\n- Committee Recommendation: Approved by committee and recommended for open lodge sanction.\n",
             'audit' => "\n### Accounts & Bill Audit (Rule 158):\n- Audited invoices: Catering bill and hall rental confirmed against receipts.\n- Recommendation: Approved for payment by the Treasurer.\n",
             default => '',
         };

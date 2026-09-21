@@ -29,10 +29,10 @@ const statusVariant = (status) => ({ paid: 'success', waived: 'neutral', partial
                         <li v-for="item in subscriptions" :key="item.id" class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
                             <div>
                                 <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ item.club.name }} <span class="font-normal text-slate-500">· {{ item.year }}</span></p>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">£{{ item.amount_paid }} paid of £{{ item.amount_due }}<template v-if="item.due_date"> · due {{ day(item.due_date) }}</template></p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">{{ item.club.currency_symbol }}{{ item.amount_paid }} paid of {{ item.club.currency_symbol }}{{ item.amount_due }}<template v-if="item.due_date"> · due {{ day(item.due_date) }}</template></p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span v-if="item.outstanding" class="text-sm font-semibold text-slate-900 dark:text-white">£{{ item.balance }} to pay</span>
+                                <span v-if="item.outstanding" class="text-sm font-semibold text-slate-900 dark:text-white">{{ item.club.currency_symbol }}{{ item.balance }} to pay</span>
                                 <Badge :variant="statusVariant(item.status)">{{ item.status_label }}</Badge>
                             </div>
                         </li>
@@ -51,7 +51,7 @@ const statusVariant = (status) => ({ paid: 'success', waived: 'neutral', partial
                                 <p class="text-xs text-slate-500 dark:text-slate-400">{{ invoice.club.name }} · {{ invoice.number }} · {{ day(invoice.created_at) }}</p>
                             </div>
                             <div class="flex items-center gap-3">
-                                <span class="text-sm font-semibold text-slate-900 dark:text-white">£{{ invoice.amount }}</span>
+                                <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ invoice.club.currency_symbol }}{{ invoice.amount }}</span>
                                 <Badge :variant="invoice.status === 'paid' ? 'success' : 'warning'">{{ invoice.status }}</Badge>
                                 <Link :href="route('invoices.download', { slug: invoice.club.slug, id: invoice.id })" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Download</Link>
                             </div>

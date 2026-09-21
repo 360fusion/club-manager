@@ -111,9 +111,9 @@ const submit = () => {
               </div>
 
               <div class="space-y-1">
-                <label class="block text-sm font-bold text-slate-700 dark:text-slate-200">Amount (£) <span class="text-rose-500">*</span></label>
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-200">Amount ({{ $cs }}) <span class="text-rose-500">*</span></label>
                 <div class="relative">
-                  <span class="absolute left-3.5 top-2.5 text-slate-400 font-bold">£</span>
+                  <span class="absolute left-3.5 top-2.5 text-slate-400 font-bold">{{ $cs }}</span>
                   <input
                     v-model="form.amount"
                     type="number"

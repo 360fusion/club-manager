@@ -168,14 +168,14 @@
                     <strong>{{ $invoice->title }}</strong>
                     <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Club membership & activity fees</div>
                 </td>
-                <td style="text-align: right; font-weight: 700;">£{{ number_format($invoice->amount, 2) }}</td>
+                <td style="text-align: right; font-weight: 700;">{{ \App\Support\Currencies::symbolFor($club) }}{{ number_format($invoice->amount, 2) }}</td>
             </tr>
         </tbody>
     </table>
 
     <div class="total-box">
         <span class="total-label">Total Amount Paid:</span>
-        <div class="total-amount">£{{ number_format($invoice->amount, 2) }}</div>
+        <div class="total-amount">{{ \App\Support\Currencies::symbolFor($club) }}{{ number_format($invoice->amount, 2) }}</div>
     </div>
 
     <div class="footer">

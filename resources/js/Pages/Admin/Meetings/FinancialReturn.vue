@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
+import { currencySymbol } from '@/Utils/currency';
 const props = defineProps({
   club: {
     type: Object,
@@ -94,7 +95,7 @@ const submit = () => {
 
 const formatCurrency = (val) => {
   const num = parseFloat(val) || 0;
-  return '£' + num.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return currencySymbol() + num.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 </script>
 
@@ -227,10 +228,10 @@ const formatCurrency = (val) => {
 
             <div class="space-y-1.5 bg-amber-50/40 dark:bg-amber-950/40 p-4 rounded-2xl border-2 border-amber-200/80 dark:border-amber-800/80">
               <label for="dining_fee_per_head" class="block text-xs font-black text-slate-900 dark:text-white">
-                Dining Fee / Head (£) <span class="text-rose-600 dark:text-rose-400">*</span>
+                Dining Fee / Head ({{ $cs }}) <span class="text-rose-600 dark:text-rose-400">*</span>
               </label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-600 dark:text-slate-300 font-black text-sm">£</span>
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-600 dark:text-slate-300 font-black text-sm">{{ $cs }}</span>
                 <input
                   id="dining_fee_per_head"
                   type="number"
@@ -246,10 +247,10 @@ const formatCurrency = (val) => {
 
             <div class="space-y-1.5 bg-amber-50/40 dark:bg-amber-950/40 p-4 rounded-2xl border-2 border-amber-200/80 dark:border-amber-800/80">
               <label for="kitchen_cost_per_head" class="block text-xs font-black text-slate-900 dark:text-white">
-                Kitchen Cost / Head (£) <span class="text-rose-600 dark:text-rose-400">*</span>
+                Kitchen Cost / Head ({{ $cs }}) <span class="text-rose-600 dark:text-rose-400">*</span>
               </label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-600 dark:text-slate-300 font-black text-sm">£</span>
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-600 dark:text-slate-300 font-black text-sm">{{ $cs }}</span>
                 <input
                   id="kitchen_cost_per_head"
                   type="number"
@@ -328,10 +329,10 @@ const formatCurrency = (val) => {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <div class="space-y-1.5 bg-blue-50/50 dark:bg-blue-950/50 p-4 rounded-2xl border-2 border-blue-200 dark:border-blue-800/60">
               <label for="raffle_amount" class="block text-xs font-black text-slate-900 dark:text-white">
-                Raffle Collection (£)
+                Raffle Collection ({{ $cs }})
               </label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-blue-700 dark:text-blue-300 font-black text-sm">£</span>
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-blue-700 dark:text-blue-300 font-black text-sm">{{ $cs }}</span>
                 <input
                   id="raffle_amount"
                   type="number"
@@ -345,10 +346,10 @@ const formatCurrency = (val) => {
 
             <div class="space-y-1.5 bg-blue-50/50 dark:bg-blue-950/50 p-4 rounded-2xl border-2 border-blue-200 dark:border-blue-800/60">
               <label for="alms_amount" class="block text-xs font-black text-slate-900 dark:text-white">
-                Alms Box Collection (£)
+                Alms Box Collection ({{ $cs }})
               </label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-blue-700 dark:text-blue-300 font-black text-sm">£</span>
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-blue-700 dark:text-blue-300 font-black text-sm">{{ $cs }}</span>
                 <input
                   id="alms_amount"
                   type="number"
@@ -362,10 +363,10 @@ const formatCurrency = (val) => {
 
             <div class="space-y-1.5 bg-blue-50/50 dark:bg-blue-950/50 p-4 rounded-2xl border-2 border-blue-200 dark:border-blue-800/60">
               <label for="donations_amount" class="block text-xs font-black text-slate-900 dark:text-white">
-                Donations (£)
+                Donations ({{ $cs }})
               </label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-blue-700 dark:text-blue-300 font-black text-sm">£</span>
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-blue-700 dark:text-blue-300 font-black text-sm">{{ $cs }}</span>
                 <input
                   id="donations_amount"
                   type="number"
@@ -379,10 +380,10 @@ const formatCurrency = (val) => {
 
             <div class="space-y-1.5 bg-blue-50/50 dark:bg-blue-950/50 p-4 rounded-2xl border-2 border-blue-200 dark:border-blue-800/60">
               <label for="bequest_amount" class="block text-xs font-black text-slate-900 dark:text-white">
-                Bequests (£)
+                Bequests ({{ $cs }})
               </label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-blue-700 dark:text-blue-300 font-black text-sm">£</span>
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-blue-700 dark:text-blue-300 font-black text-sm">{{ $cs }}</span>
                 <input
                   id="bequest_amount"
                   type="number"

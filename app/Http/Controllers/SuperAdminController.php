@@ -11,6 +11,7 @@ use App\Models\GrandLodge;
 use App\Models\Meeting;
 use App\Models\Province;
 use App\Models\User;
+use App\Support\Currencies;
 use App\Support\OrderColours;
 use Database\Seeders\ClubTypeSeeder;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +30,7 @@ class SuperAdminController extends Controller
         $totalClubsCount = Club::count();
         $totalUsersCount = User::count();
         $totalMeetingsCount = Meeting::count();
-        $totalGrantsDisbursed = (float) CharityGrant::sum('amount');
+        $totalGrantsDisbursed = $this->grantsDisbursedByCurrency();
 
         $clubsByType = ClubType::with(['defaultOfficerRoles'])->withCount('clubs')->get()->map(fn ($ct) => [
             'id' => $ct->id,
@@ -63,7 +64,7 @@ class SuperAdminController extends Controller
                 'totalClubsCount' => $totalClubsCount,
                 'totalUsersCount' => $totalUsersCount,
                 'totalMeetingsCount' => $totalMeetingsCount,
-                'totalGrantsDisbursed' => '£'.number_format($totalGrantsDisbursed, 2),
+                'totalGrantsDisbursed' => $totalGrantsDisbursed,
             ],
             'clubsByType' => $clubsByType,
             'clubs' => $clubs,
@@ -564,5 +565,27 @@ class SuperAdminController extends Controller
         return inertia('SuperAdmin/GrandLodges/UnitedStates', [
             'usGrandLodges' => $usGrandLodges,
         ]);
+    }
+
+    /**
+     * Grants total per currency (lodges keep books in different currencies, so a single sum would be meaningless).
+     */
+    private function grantsDisbursedByCurrency(): string
+    {
+        $totals = [];
+
+        Club::with('province.grandLodge')->get()->each(function (Club $club) use (&$totals) {
+            $sum = (float) CharityGrant::where('club_id', $club->id)->sum('amount');
+
+            if ($sum > 0) {
+                $totals[$club->currencyCode()] = ($totals[$club->currencyCode()] ?? 0) + $sum;
+            }
+        });
+
+        if ($totals === []) {
+            return Currencies::symbol(Currencies::DEFAULT).'0.00';
+        }
+
+        return collect($totals)->map(fn ($sum, $code) => Currencies::symbol($code).number_format($sum, 2))->implode(' · ');
     }
 }

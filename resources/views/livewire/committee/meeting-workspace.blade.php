@@ -270,7 +270,7 @@
                             <div class="p-3 bg-blue-50/40 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-800/70 rounded-2xl flex items-center justify-between text-xs">
                                 <div>
                                     <span class="font-bold text-slate-900 dark:text-white block">{{ $bill->vendor_name }}</span>
-                                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 font-mono">£{{ number_format($bill->amount, 2) }} • {{ $bill->bill_number }}</span>
+                                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 font-mono">{{ $cs }}{{ number_format($bill->amount, 2) }} • {{ $bill->bill_number }}</span>
                                 </div>
 
                                 <button
@@ -314,7 +314,7 @@
                                 <div class="flex items-start justify-between gap-2">
                                     <div>
                                         <span class="font-bold text-slate-900 dark:text-white block">{{ $grant->recipient_name }}</span>
-                                        <span class="text-[11px] font-black text-blue-950 dark:text-blue-100">£{{ number_format($grant->amount, 2) }}</span>
+                                        <span class="text-[11px] font-black text-blue-950 dark:text-blue-100">{{ $cs }}{{ number_format($grant->amount, 2) }}</span>
                                     </div>
                                     <span class="px-2 py-0.5 text-[9px] font-black rounded-full border {{ $grant->approval_status->badgeClasses() }}">
                                         {{ $grant->approval_status->label() }}
@@ -400,7 +400,7 @@
                     </div>
 
                     <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Proposed Amount (£) *</label>
+                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Proposed Amount ({{ $cs }}) *</label>
                         <input type="number" step="0.01" wire:model="grantAmount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
                     </div>
 

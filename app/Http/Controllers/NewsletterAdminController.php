@@ -9,6 +9,7 @@ use App\Models\Event;
 use App\Models\Newsletter;
 use App\Models\NewsletterType;
 use App\Models\Post;
+use App\Support\Currencies;
 use App\Support\UploadRules;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -110,7 +111,7 @@ class NewsletterAdminController extends Controller
                 'id' => $e->id,
                 'title' => $e->title,
                 'date' => Carbon::parse($e->starts_at)->format('M d, Y g:i A'),
-                'price' => $e->price ? '£'.number_format($e->price, 2) : 'Free',
+                'price' => $e->price ? Currencies::format($e->price, $club) : 'Free',
             ]);
 
         $newsletter = $id

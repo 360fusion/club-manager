@@ -56,7 +56,7 @@ defineProps({
 
         <div class="bg-white/90 p-6 rounded-3xl border border-slate-200 shadow-lg space-y-2 dark:bg-slate-900/90 dark:border-slate-800">
           <span class="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider block dark:text-emerald-400">Charity Grants Disbursed</span>
-          <span class="text-3xl font-black text-slate-900 block dark:text-white">{{ metrics?.totalGrantsDisbursed || '£0.00' }}</span>
+          <span class="text-3xl font-black text-slate-900 block dark:text-white">{{ metrics?.totalGrantsDisbursed || ($cs + '0.00') }}</span>
           <span class="text-xs text-slate-500 block font-medium dark:text-slate-400">Total relief chest payouts</span>
         </div>
       </div>

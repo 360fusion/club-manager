@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Currencies;
 use App\Support\OrderColours;
 use App\Support\ReservedClubSlugs;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Laravel\Cashier\Billable as StripeBillable;
 use Laravel\Paddle\Billable as PaddleBillable;
@@ -398,5 +400,43 @@ class Club extends Model implements HasMedia
         $setting = $this->settings['max_guests_per_member'] ?? null;
 
         return is_numeric($setting) ? max(0, (int) $setting) : 10;
+    }
+
+    /**
+     * The currency this club keeps its books in: its own choice if valid, else
+     * the currency of its province's or grand lodge's country, else the default.
+     */
+    public function currencyCode(): string
+    {
+        $chosen = strtoupper((string) ($this->settings['currency'] ?? ''));
+
+        if (Currencies::isKnown($chosen)) {
+            return $chosen;
+        }
+
+        $province = $this->province;
+        $country = $province?->country ?: $province?->grandLodge?->country;
+
+        return Currencies::forCountry($country) ?? Currencies::DEFAULT;
+    }
+
+    public function currencySymbol(): string
+    {
+        return Currencies::symbol($this->currencyCode());
+    }
+
+    /**
+     * Whether the club has any financial records. Amounts carry no exchange
+     * rate, so the currency may not change once there is money on the books.
+     */
+    public function currencyIsLocked(): bool
+    {
+        return DB::table('invoices')->where('club_id', $this->id)->exists()
+            || DB::table('accounting_bills')->where('club_id', $this->id)->exists()
+            || DB::table('accounting_journal_entries')->where('club_id', $this->id)->exists()
+            || DB::table('club_acc_bank_transactions')->where('club_id', $this->id)->exists()
+            || DB::table('club_acc_charity_collections')->where('club_id', $this->id)->exists()
+            || DB::table('club_acc_charity_grants')->where('club_id', $this->id)->exists()
+            || DB::table('club_acc_member_subscriptions')->where('club_id', $this->id)->exists();
     }
 }

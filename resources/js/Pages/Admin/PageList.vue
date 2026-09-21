@@ -1997,7 +1997,7 @@ const getFilteredPosts = (block) => {
                                                 <h4 class="text-base font-bold text-white">{{ plan.name }}</h4>
                                                 <p class="text-xs text-slate-400">{{ plan.description }}</p>
                                                 <div class="pt-2 border-t border-slate-800 flex items-baseline justify-between">
-                                                    <span class="text-lg font-black text-white">£{{ plan.price }}</span>
+                                                    <span class="text-lg font-black text-white">{{ $cs }}{{ plan.price }}</span>
                                                     <span class="text-xs text-blue-400 font-bold">Subscribe →</span>
                                                 </div>
                                             </div>
@@ -2023,7 +2023,7 @@ const getFilteredPosts = (block) => {
                                                     <div class="h-full bg-gradient-to-r from-amber-500 to-emerald-400" :style="{ width: `${d.percentage}%` }"></div>
                                                 </div>
                                                 <div class="flex justify-between text-xs text-slate-400 font-medium">
-                                                    <span>Raised: £{{ d.current_amount }}</span>
+                                                    <span>Raised: {{ $cs }}{{ d.current_amount }}</span>
                                                     <span class="text-amber-400 font-bold">{{ d.percentage }}% Funded</span>
                                                 </div>
                                             </div>

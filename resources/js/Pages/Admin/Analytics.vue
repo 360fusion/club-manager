@@ -42,7 +42,7 @@ const copyInviteLink = () => {
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between space-y-3">
         <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total sales</div>
         <div class="text-4xl font-black text-slate-900 dark:text-white font-sans tracking-tight">
-          £{{ metrics.monthly_dues_est || '2,500' }}
+          {{ $cs }}{{ metrics.monthly_dues_est || '2,500' }}
         </div>
         <div class="text-xs font-semibold text-slate-400">
           +20.00

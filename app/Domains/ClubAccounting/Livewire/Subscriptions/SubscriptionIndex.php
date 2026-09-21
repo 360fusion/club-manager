@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Models\SubscriptionTier;
 use App\Domains\ClubAccounting\Services\SubscriptionBillingService;
 use App\Models\Club;
+use App\Support\Currencies;
 use Carbon\Carbon;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -104,7 +105,7 @@ class SubscriptionIndex extends Component
             Carbon::parse($this->billing_due_date)
         );
 
-        session()->flash('success', "Annual billing run completed for {$this->billing_year}: {$result['created_count']} new invoices created (£".number_format($result['total_billed'], 2)." total billed), {$result['skipped_count']} existing skipped.");
+        session()->flash('success', "Annual billing run completed for {$this->billing_year}: {$result['created_count']} new invoices created (".Currencies::format($result['total_billed'], $club)." total billed), {$result['skipped_count']} existing skipped.");
         $this->showBillingModal = false;
         $this->selectedYear = $this->billing_year;
     }
@@ -197,7 +198,7 @@ class SubscriptionIndex extends Component
             $this->payment_notes
         );
 
-        session()->flash('success', 'Payment of £'.number_format((float) $this->payment_amount, 2)." recorded for {$sub->member->full_name}.");
+        session()->flash('success', 'Payment of '.Currencies::format((float) $this->payment_amount, $club)." recorded for {$sub->member->full_name}.");
         $this->showPaymentModal = false;
     }
 

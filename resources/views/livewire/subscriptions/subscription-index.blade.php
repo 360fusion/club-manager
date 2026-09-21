@@ -98,17 +98,17 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm">
             <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Dues Billed ({{ $selectedYear }})</span>
-            <div class="text-2xl font-black text-slate-900 dark:text-white mt-1">£{{ number_format($totalBilled, 2) }}</div>
+            <div class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ $cs }}{{ number_format($totalBilled, 2) }}</div>
             <span class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">Total annual subscription invoicing</span>
         </div>
         <div class="p-5 bg-emerald-50/60 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 rounded-2xl shadow-sm">
             <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-200">Dues Collected</span>
-            <div class="text-2xl font-black text-emerald-950 dark:text-emerald-100 mt-1">£{{ number_format($totalCollected, 2) }}</div>
+            <div class="text-2xl font-black text-emerald-950 dark:text-emerald-100 mt-1">{{ $cs }}{{ number_format($totalCollected, 2) }}</div>
             <span class="text-[10px] text-emerald-700 dark:text-emerald-300 mt-1 block">Payments received &amp; reconciled</span>
         </div>
         <div class="p-5 bg-amber-50/60 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/80 rounded-2xl shadow-sm">
             <span class="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-200">Outstanding Balance</span>
-            <div class="text-2xl font-black text-amber-950 dark:text-amber-100 mt-1">£{{ number_format($totalOutstanding, 2) }}</div>
+            <div class="text-2xl font-black text-amber-950 dark:text-amber-100 mt-1">{{ $cs }}{{ number_format($totalOutstanding, 2) }}</div>
             <span class="text-[10px] text-amber-700 dark:text-amber-300 mt-1 block">Pending member payments</span>
         </div>
         <div class="p-5 bg-rose-50/60 dark:bg-rose-950/60 border border-rose-200/80 dark:border-rose-800/80 rounded-2xl shadow-sm">
@@ -147,7 +147,7 @@
                     <div class="space-y-1">
                         <div class="flex items-center justify-between">
                             <span class="font-extrabold text-slate-900 dark:text-white text-sm">{{ $t->name }}</span>
-                            <span class="font-black text-amber-950 dark:text-amber-100 text-base">£{{ number_format($t->annual_amount, 2) }}</span>
+                            <span class="font-black text-amber-950 dark:text-amber-100 text-base">{{ $cs }}{{ number_format($t->annual_amount, 2) }}</span>
                         </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t->description ?: 'Standard annual membership subscription rate.' }}</p>
                     </div>
@@ -163,7 +163,7 @@
                 </div>
             @empty
                 <div class="md:col-span-3 p-6 text-center text-slate-400 text-xs italic bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-                    No custom fee tiers configured. Default £160.00 rate will apply to annual billing runs.
+                    No custom fee tiers configured. Default {{ $cs }}160.00 rate will apply to annual billing runs.
                 </div>
             @endforelse
         </div>
@@ -259,15 +259,15 @@
                             </td>
 
                             <td class="py-3 px-4 text-right font-semibold text-slate-900 dark:text-white">
-                                £{{ number_format($sub->amount_due, 2) }}
+                                {{ $cs }}{{ number_format($sub->amount_due, 2) }}
                             </td>
 
                             <td class="py-3 px-4 text-right font-bold text-emerald-700 dark:text-emerald-300">
-                                £{{ number_format($sub->amount_paid, 2) }}
+                                {{ $cs }}{{ number_format($sub->amount_paid, 2) }}
                             </td>
 
                             <td class="py-3 px-4 text-right font-black {{ $sub->balance_due > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-slate-400' }}">
-                                £{{ number_format($sub->balance_due, 2) }}
+                                {{ $cs }}{{ number_format($sub->balance_due, 2) }}
                             </td>
 
                             <td class="py-3 px-4 text-slate-600 dark:text-slate-300 font-medium">
@@ -384,12 +384,12 @@
                                 <span class="text-slate-500 dark:text-slate-400 font-medium text-[11px]">{{ $t->description ?: 'Standard fee structure' }}</span>
                             </div>
                             <div class="flex items-center gap-3">
-                                <span class="font-black text-amber-900 dark:text-amber-200 text-sm">£{{ number_format($t->annual_amount, 2) }}</span>
+                                <span class="font-black text-amber-900 dark:text-amber-200 text-sm">{{ $cs }}{{ number_format($t->annual_amount, 2) }}</span>
                                 <button type="button" wire:click="openTierModal({{ $t->id }})" class="text-blue-600 dark:text-blue-400 hover:underline font-bold text-[11px]">Edit</button>
                             </div>
                         </div>
                     @empty
-                        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 text-slate-400 text-center text-xs rounded-xl">No custom tiers configured. Default £160.00 will apply.</div>
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 text-slate-400 text-center text-xs rounded-xl">No custom tiers configured. Default {{ $cs }}160.00 will apply.</div>
                     @endforelse
                 </div>
 
@@ -402,7 +402,7 @@
                     </div>
 
                     <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Annual Amount (£) *</label>
+                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Annual Amount ({{ $cs }}) *</label>
                         <input type="number" step="0.01" wire:model="tier_amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" required />
                     </div>
 
@@ -439,7 +439,7 @@
 
                 <form wire:submit.prevent="recordPayment" class="space-y-4 text-xs">
                     <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Payment Amount (£) *</label>
+                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Payment Amount ({{ $cs }}) *</label>
                         <input type="number" step="0.01" wire:model="payment_amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" required />
                     </div>
 
@@ -491,7 +491,7 @@
                                 <span class="text-rose-800 dark:text-rose-200 font-semibold text-[10px]">Invoice Ref: {{ $arrSub->invoice_reference }}</span>
                             </div>
                             <div class="text-right space-y-1">
-                                <span class="text-base font-black text-rose-950 dark:text-rose-100 block">£{{ number_format($arrSub->balance_due, 2) }}</span>
+                                <span class="text-base font-black text-rose-950 dark:text-rose-100 block">{{ $cs }}{{ number_format($arrSub->balance_due, 2) }}</span>
                                 <button
                                     type="button"
                                     wire:click="openPaymentModal({{ $arrSub->id }})"

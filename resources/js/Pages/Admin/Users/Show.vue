@@ -445,7 +445,7 @@ const statusBadgeClass = (status) => {
 
                 <div class="flex items-center gap-3">
                   <div class="text-right">
-                    <div class="font-bold text-slate-900 dark:text-white text-sm">£{{ inv.amount }}</div>
+                    <div class="font-bold text-slate-900 dark:text-white text-sm">{{ $cs }}{{ inv.amount }}</div>
                     <span class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                       {{ inv.status }}
                     </span>

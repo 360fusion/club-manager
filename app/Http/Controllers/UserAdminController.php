@@ -10,6 +10,7 @@ use App\Models\Club;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Support\ClubAccess;
+use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -99,7 +100,7 @@ class UserAdminController extends Controller
             ->map(fn ($i) => [
                 'id' => $i->id,
                 'number' => $i->invoice_number,
-                'amount_formatted' => $i->currency.' '.number_format($i->amount, 2),
+                'amount_formatted' => Currencies::format($i->amount, $club),
                 'status' => $i->status,
                 'due_date' => $i->due_date?->format('M d, Y') ?? 'Immediate',
             ]);

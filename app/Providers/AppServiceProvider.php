@@ -18,6 +18,7 @@ use App\Models\Club;
 use App\Models\DefaultEmailTemplate;
 use App\Models\PaddleSubscription;
 use App\Models\PaddleSubscriptionItem;
+use App\Support\Currencies;
 use App\Support\ReservedClubSlugs;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -25,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -48,6 +50,28 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Livewire views get the club's currency symbol ($cs) and code ($cc) from the component's public clubSlug.
+        View::composer('livewire.*', function ($view) {
+            static $clubs = [];
+
+            $data = $view->getData();
+
+            // A component that already supplies its own symbol (no public clubSlug) keeps it.
+            if (array_key_exists('cs', $data)) {
+                return;
+            }
+
+            $slug = $data['clubSlug'] ?? null;
+
+            if (is_string($slug) && ! array_key_exists($slug, $clubs)) {
+                $clubs[$slug] = Club::with('province.grandLodge')->where('slug', $slug)->first();
+            }
+
+            $club = is_string($slug) ? $clubs[$slug] : null;
+
+            $view->with('cs', Currencies::symbolFor($club))->with('cc', $club?->currencyCode() ?? Currencies::DEFAULT);
+        });
+
         // Longer passwords that have not appeared in known breaches (needs outbound access, so production only).
         Password::defaults(fn () => $this->app->isProduction() ? Password::min(10)->uncompromised() : Password::min(8));
 

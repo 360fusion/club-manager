@@ -571,7 +571,7 @@
                                 <div class="p-3 bg-amber-50/70 dark:bg-amber-950/70 border border-amber-200/90 dark:border-amber-800/90 rounded-2xl space-y-2 text-xs">
                                     <div class="flex items-start justify-between gap-1.5">
                                         <div>
-                                            <span class="font-black text-slate-900 dark:text-white block">£{{ number_format($grant->amount, 2) }} — {{ $grant->recipient_name }}</span>
+                                            <span class="font-black text-slate-900 dark:text-white block">{{ $cs }}{{ number_format($grant->amount, 2) }} — {{ $grant->recipient_name }}</span>
                                             <span class="text-[10px] text-amber-900 dark:text-amber-200 font-medium block mt-0.5">{{ $grant->purpose }}</span>
                                         </div>
                                         <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded border shrink-0 bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60">

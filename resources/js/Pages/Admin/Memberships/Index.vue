@@ -137,7 +137,7 @@ const deletePlan = (planId) => {
               <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 uppercase tracking-wider">
                 {{ plan.billing_period }}
               </span>
-              <span class="text-2xl font-black text-slate-900 dark:text-white">£{{ plan.price }}</span>
+              <span class="text-2xl font-black text-slate-900 dark:text-white">{{ $cs }}{{ plan.price }}</span>
             </div>
 
             <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ plan.name }}</h3>

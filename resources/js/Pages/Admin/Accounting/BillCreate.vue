@@ -117,9 +117,9 @@ const submit = (isDraft = false) => {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="space-y-1">
-                <label class="block text-sm font-bold text-slate-700 dark:text-slate-200">Total Amount (£) <span class="text-rose-500">*</span></label>
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-200">Total Amount ({{ $cs }}) <span class="text-rose-500">*</span></label>
                 <div class="relative">
-                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">£</span>
+                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">{{ $cs }}</span>
                   <input
                     v-model="form.amount"
                     type="number"

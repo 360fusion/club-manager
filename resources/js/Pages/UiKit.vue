@@ -88,7 +88,7 @@ const orders = [
                     <StatCard label="Clubs" :value="128" caption="Across 4 provinces" />
                     <StatCard label="Members" value="3,412" />
                     <StatCard label="Grand lodges" :value="70" caption="51 in the US" />
-                    <StatCard label="Outstanding dues" value="£1,240" caption="9 members" />
+                    <StatCard label="Outstanding dues" :value="$cs + '1,240'" caption="9 members" />
                 </div>
             </section>
 

@@ -86,11 +86,11 @@
                     <div class="mt-5 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
                         <div class="flex items-center justify-between text-xs">
                             <span class="font-bold text-slate-500 dark:text-slate-400">Statement Balance</span>
-                            <span class="font-black text-slate-900 dark:text-white text-sm">£{{ number_format($acc->statement_balance, 2) }}</span>
+                            <span class="font-black text-slate-900 dark:text-white text-sm">{{ $cs }}{{ number_format($acc->statement_balance, 2) }}</span>
                         </div>
                         <div class="flex items-center justify-between text-xs">
                             <span class="font-bold text-slate-500 dark:text-slate-400">Ledger Balance (Code {{ $acc->account?->code ?? '1000' }})</span>
-                            <span class="font-bold text-blue-700 dark:text-blue-300">£{{ number_format($acc->ledger_balance, 2) }}</span>
+                            <span class="font-bold text-blue-700 dark:text-blue-300">{{ $cs }}{{ number_format($acc->ledger_balance, 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -151,7 +151,7 @@
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Currency *</label>
-                            <input wire:model="currency" placeholder="GBP" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
+                            <input wire:model="currency" readonly class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
                         </div>
                     </div>
 
@@ -167,7 +167,7 @@
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance (£)</label>
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance ({{ $cs }})</label>
                         <input type="number" step="0.01" wire:model="opening_balance" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
                     </div>
 

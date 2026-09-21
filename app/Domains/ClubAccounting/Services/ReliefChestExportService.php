@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\FestivalTarget;
 use App\Models\Club;
 use App\Support\Csv;
+use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -26,7 +27,8 @@ class ReliefChestExportService
             $collections = CharityCollection::where('club_id', $clubObj->id)->with(['countedBy', 'witnessedBy'])->get();
         }
 
-        $csv = "Relief Chest Ref,Provincial Ref,Date,Collection Type,Cash Amount (£),Cheque Amount (£),Total Amount (£),Counter,Witness\n";
+        $sym = trim(Currencies::symbolFor($clubObj));
+        $csv = "Relief Chest Ref,Provincial Ref,Date,Collection Type,Cash Amount ({$sym}),Cheque Amount ({$sym}),Total Amount ({$sym}),Counter,Witness\n";
 
         foreach ($collections as $col) {
             $date = $col->created_at ? $col->created_at->format('Y-m-d') : Carbon::now()->format('Y-m-d');
@@ -54,7 +56,8 @@ class ReliefChestExportService
             $grants = CharityGrant::where('club_id', $clubObj->id)->get();
         }
 
-        $csv = "BACS Ref,Recipient Name,Relief Chest Number,Purpose,Amount (£),Approval Status,Date\n";
+        $sym = trim(Currencies::symbolFor($clubObj));
+        $csv = "BACS Ref,Recipient Name,Relief Chest Number,Purpose,Amount ({$sym}),Approval Status,Date\n";
 
         foreach ($grants as $g) {
             $bacsRef = $g->bacs_reference ?: 'BACS-'.($g->id ?: '001');

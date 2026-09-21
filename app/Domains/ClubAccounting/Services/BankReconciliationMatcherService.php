@@ -10,6 +10,7 @@ use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
 use App\Services\AccountingService;
+use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -28,6 +29,7 @@ class BankReconciliationMatcherService
     public function suggestMatches(BankTransaction $transaction): array
     {
         $clubId = $transaction->club_id;
+        $club = Club::with('province.grandLodge')->find($clubId);
         $desc = strtolower($transaction->raw_description);
         $ref = strtolower($transaction->reference ?? '');
         $amount = (float) $transaction->amount;
@@ -77,7 +79,7 @@ class BankReconciliationMatcherService
                 // Rule B: Name & Exact Dues Amount Match (95%)
                 elseif (($lastName && str_contains($desc, $lastName)) && abs($duesAmount - $amount) < 0.01) {
                     $score = 95;
-                    $reason = "Member Name ({$member->last_name}) & Dues Amount (£".number_format($duesAmount, 2).') Match';
+                    $reason = "Member Name ({$member->last_name}) & Dues Amount (".Currencies::format($duesAmount, $club).') Match';
                 }
                 // Rule C: First Name & Last Name in description (85%)
                 elseif ($lastName && $firstName && str_contains($desc, $lastName) && str_contains($desc, $firstName)) {
@@ -92,7 +94,7 @@ class BankReconciliationMatcherService
                 // Rule E: Dues Amount Match alone (60%)
                 elseif (abs($duesAmount - $amount) < 0.01) {
                     $score = 60;
-                    $reason = 'Dues Amount Match (£'.number_format($duesAmount, 2).')';
+                    $reason = 'Dues Amount Match ('.Currencies::format($duesAmount, $club).')';
                 }
 
                 if ($score > 0) {
@@ -143,7 +145,7 @@ class BankReconciliationMatcherService
                 // Rule D: Bill Amount Match (60%)
                 elseif (abs($billAmount - $absAmount) < 0.01) {
                     $score = 60;
-                    $reason = 'Vendor Bill Amount Match (£'.number_format($billAmount, 2).')';
+                    $reason = 'Vendor Bill Amount Match ('.Currencies::format($billAmount, $club).')';
                 }
 
                 if ($score > 0) {
@@ -223,7 +225,7 @@ class BankReconciliationMatcherService
                     'code' => $targetCode,
                     'name' => 'General Account ('.$targetCode.')',
                     'type' => $amount > 0 ? 'revenue' : 'expense',
-                    'currency' => 'GBP',
+                    'currency' => Currencies::codeForClubId($transaction->club_id),
                     'is_active' => true,
                 ]);
             }

@@ -159,9 +159,9 @@ const updateGrantStatus = (grantId, status) => {
           <div>
             <h3 class="font-black text-slate-900 dark:text-white text-sm">Automated Gift Aid &amp; Relief Chest Reconciliation Position</h3>
             <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-              Pending Gift Aid 25% Tax Reclaim: <strong class="text-amber-900 dark:text-amber-200 font-black">{{ giftAidSummary?.formatted_pending_gift_aid || '£0.00' }}</strong>
+              Pending Gift Aid 25% Tax Reclaim: <strong class="text-amber-900 dark:text-amber-200 font-black">{{ giftAidSummary?.formatted_pending_gift_aid || ($cs + '0.00') }}</strong>
               ({{ giftAidSummary?.pending_claim_count || 0 }} collection batches pending)
-              • Net Relief Chest Balance: <strong class="text-blue-900 dark:text-blue-200 font-black">{{ giftAidSummary?.formatted_net_relief_chest_balance || '£0.00' }}</strong>
+              • Net Relief Chest Balance: <strong class="text-blue-900 dark:text-blue-200 font-black">{{ giftAidSummary?.formatted_net_relief_chest_balance || ($cs + '0.00') }}</strong>
             </p>
           </div>
         </div>
@@ -214,7 +214,7 @@ const updateGrantStatus = (grantId, status) => {
               </div>
               <div class="text-right whitespace-nowrap">
                 <div class="font-black text-amber-950 dark:text-amber-100 text-sm">{{ col.formatted_total }}</div>
-                <span class="text-[10px] text-slate-400 block font-mono">Cash: £{{ col.cash_amount }} | Cheque: £{{ col.cheque_amount }}</span>
+                <span class="text-[10px] text-slate-400 block font-mono">Cash: {{ $cs }}{{ col.cash_amount }} | Cheque: {{ $cs }}{{ col.cheque_amount }}</span>
               </div>
             </div>
           </div>
@@ -309,11 +309,11 @@ const updateGrantStatus = (grantId, status) => {
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Cash Amount (£) *</label>
+                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Cash Amount ({{ $cs }}) *</label>
                 <input type="number" step="0.01" v-model="collectionForm.cash_amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
               </div>
               <div>
-                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Cheque Amount (£)</label>
+                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Cheque Amount ({{ $cs }})</label>
                 <input type="number" step="0.01" v-model="collectionForm.cheque_amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" />
               </div>
             </div>
@@ -365,7 +365,7 @@ const updateGrantStatus = (grantId, status) => {
             </div>
 
             <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Grant Amount (£) *</label>
+              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Grant Amount ({{ $cs }}) *</label>
               <input type="number" step="0.01" v-model="grantForm.amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
             </div>
 

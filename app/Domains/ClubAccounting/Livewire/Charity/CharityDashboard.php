@@ -13,6 +13,7 @@ use App\Domains\ClubAccounting\Models\MemberFestivalGiving;
 use App\Domains\ClubAccounting\Services\ReliefChestExportService;
 use App\Domains\ClubAccounting\Services\ReliefChestReconciliationService;
 use App\Models\Club;
+use App\Support\Currencies;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -147,7 +148,7 @@ class CharityDashboard extends Component
             'notes' => $this->collection_notes,
         ]);
 
-        session()->flash('success', 'Dual-custody meeting collection of £'.number_format($col->total_amount, 2).' recorded.');
+        session()->flash('success', 'Dual-custody meeting collection of '.Currencies::format($col->total_amount, $club).' recorded.');
         $this->showCollectionModal = false;
         $this->resetCollectionForm();
     }

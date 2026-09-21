@@ -22,9 +22,11 @@ use App\Models\Club;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Services\AccountingService;
+use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -53,7 +55,7 @@ class AccountingAdminController extends Controller
                 'currency' => $acc->currency,
                 'is_active' => $acc->is_active,
                 'balance' => $acc->balance,
-                'formatted_balance' => '£'.number_format($acc->balance, 2),
+                'formatted_balance' => Currencies::format($acc->balance, $club),
             ]);
 
         $journalEntries = JournalEntry::where('club_id', $club->id)
@@ -70,7 +72,7 @@ class AccountingAdminController extends Controller
                 'source_type' => $entry->source_type,
                 'status' => $entry->status,
                 'total_debit' => $entry->total_debit,
-                'formatted_total' => '£'.number_format($entry->total_debit, 2),
+                'formatted_total' => Currencies::format($entry->total_debit, $club),
                 'created_by' => $entry->createdBy ? $entry->createdBy->name : 'System',
                 'items' => $entry->items->map(fn ($item) => [
                     'id' => $item->id,
@@ -92,7 +94,7 @@ class AccountingAdminController extends Controller
                 'invoice_number' => $inv->invoice_number,
                 'title' => $inv->title,
                 'amount' => $inv->amount,
-                'formatted_amount' => '£'.number_format($inv->amount, 2),
+                'formatted_amount' => Currencies::format($inv->amount, $club),
                 'status' => $inv->status,
                 'recipient_name' => $inv->user ? $inv->user->name : 'Member',
                 'created_at' => $inv->created_at->format('d M Y'),
@@ -119,7 +121,7 @@ class AccountingAdminController extends Controller
                 'vendor_name' => $b->vendor_name,
                 'category' => $b->category,
                 'amount' => $b->amount,
-                'formatted_amount' => '£'.number_format($b->amount, 2),
+                'formatted_amount' => Currencies::format($b->amount, $club),
                 'due_date' => $b->due_date->format('d M Y'),
                 'status' => $b->status,
                 'notes' => $b->notes,
@@ -224,7 +226,7 @@ class AccountingAdminController extends Controller
             'county' => 'Oxfordshire',
             'postcode' => 'OX1 1AA',
             'country' => 'United Kingdom',
-            'currency' => 'GBP',
+            'currency' => $club->currencyCode(),
             'receipt_footer_notes' => 'Thank you for supporting our club. Fees support equipment & clubhouse operations.',
             'dues_grace_period_days' => 14,
             'auto_invoice_days_before' => 7,
@@ -237,7 +239,7 @@ class AccountingAdminController extends Controller
             ->orderBy('transaction_date', 'asc')
             ->get();
 
-        $unmatchedTransactions = $unmatchedTxModels->map(function ($tx) use ($matcher) {
+        $unmatchedTransactions = $unmatchedTxModels->map(function ($tx) use ($matcher, $club) {
             $suggestions = $matcher->suggestMatches($tx);
 
             return [
@@ -247,7 +249,7 @@ class AccountingAdminController extends Controller
                 'raw_description' => $tx->raw_description,
                 'reference' => $tx->reference,
                 'amount' => (float) $tx->amount,
-                'formatted_amount' => '£'.number_format((float) $tx->amount, 2),
+                'formatted_amount' => Currencies::format((float) $tx->amount, $club),
                 'status' => $tx->status->value ?? (string) $tx->status,
                 'suggested_matches' => array_map(function ($m) {
                     return [
@@ -275,7 +277,7 @@ class AccountingAdminController extends Controller
                 'raw_description' => $tx->raw_description,
                 'reference' => $tx->reference,
                 'amount' => (float) $tx->amount,
-                'formatted_amount' => '£'.number_format((float) $tx->amount, 2),
+                'formatted_amount' => Currencies::format((float) $tx->amount, $club),
                 'status' => $tx->status->value ?? (string) $tx->status,
                 'updated_at' => $tx->updated_at->format('d M Y H:i'),
             ]);
@@ -291,7 +293,7 @@ class AccountingAdminController extends Controller
                 'sort_code' => $imp->sort_code,
                 'total_lines' => $imp->total_lines,
                 'total_amount' => (float) $imp->total_amount,
-                'formatted_total' => '£'.number_format((float) $imp->total_amount, 2),
+                'formatted_total' => Currencies::format((float) $imp->total_amount, $club),
                 'created_at' => $imp->created_at->format('d M Y H:i'),
             ]);
 
@@ -304,7 +306,7 @@ class AccountingAdminController extends Controller
                 'invoice_reference' => $sub->invoice_reference,
                 'member_name' => $sub->member ? $sub->member->full_name : 'Unknown Member',
                 'amount_due' => (float) $sub->balance_due,
-                'formatted_amount' => '£'.number_format((float) $sub->balance_due, 2),
+                'formatted_amount' => Currencies::format((float) $sub->balance_due, $club),
             ]);
 
         $allStatementLines = BankTransaction::where('club_id', $club->id)
@@ -318,8 +320,8 @@ class AccountingAdminController extends Controller
                 'raw_description' => $tx->raw_description,
                 'reference' => $tx->reference ?: ($tx->amount < 0 ? 'DEBIT' : 'CREDIT'),
                 'amount' => (float) $tx->amount,
-                'spent' => $tx->amount < 0 ? '£'.number_format(abs((float) $tx->amount), 2) : '',
-                'received' => $tx->amount > 0 ? '£'.number_format((float) $tx->amount, 2) : '',
+                'spent' => $tx->amount < 0 ? Currencies::format(abs((float) $tx->amount), $club) : '',
+                'received' => $tx->amount > 0 ? Currencies::format((float) $tx->amount, $club) : '',
                 'source' => 'Bank Feed',
                 'status' => match (strtolower($tx->status->value ?? (string) $tx->status)) {
                     'matched', 'reconciled' => 'Reconciled',
@@ -340,8 +342,8 @@ class AccountingAdminController extends Controller
                 'description' => $tx->raw_description,
                 'reference' => $tx->reference ?: 'SYSTEM-REF',
                 'amount' => (float) $tx->amount,
-                'spent' => $tx->amount < 0 ? '£'.number_format(abs((float) $tx->amount), 2) : '',
-                'received' => $tx->amount > 0 ? '£'.number_format((float) $tx->amount, 2) : '',
+                'spent' => $tx->amount < 0 ? Currencies::format(abs((float) $tx->amount), $club) : '',
+                'received' => $tx->amount > 0 ? Currencies::format((float) $tx->amount, $club) : '',
                 'status' => 'Reconciled',
             ])
             ->concat(
@@ -354,7 +356,7 @@ class AccountingAdminController extends Controller
                     'reference' => $sub['invoice_reference'],
                     'amount' => (float) $sub['amount_due'],
                     'spent' => '',
-                    'received' => '£'.number_format((float) $sub['amount_due'], 2),
+                    'received' => Currencies::format((float) $sub['amount_due'], $club),
                     'status' => 'Unreconciled',
                 ])
             )->values();
@@ -391,7 +393,7 @@ class AccountingAdminController extends Controller
                 'account_type' => 'current',
                 'account_number' => '12345678',
                 'sort_code' => '20-00-00',
-                'currency' => 'GBP',
+                'currency' => $club->currencyCode(),
                 'opening_balance' => 0.00,
                 'is_active' => true,
             ]);
@@ -412,9 +414,9 @@ class AccountingAdminController extends Controller
             'currency' => $b->currency,
             'opening_balance' => (float) $b->opening_balance,
             'statement_balance' => $b->statement_balance,
-            'formatted_statement_balance' => '£'.number_format($b->statement_balance, 2),
+            'formatted_statement_balance' => Currencies::format($b->statement_balance, $club),
             'ledger_balance' => $b->ledger_balance,
-            'formatted_ledger_balance' => '£'.number_format($b->ledger_balance, 2),
+            'formatted_ledger_balance' => Currencies::format($b->ledger_balance, $club),
             'unreconciled_count' => $b->unreconciled_count,
             'is_active' => $b->is_active,
             'account_code' => $b->account?->code ?? '1000',
@@ -563,7 +565,7 @@ class AccountingAdminController extends Controller
             'code' => $validated['code'],
             'name' => $validated['name'],
             'type' => $validated['type'],
-            'currency' => 'GBP',
+            'currency' => $club->currencyCode(),
             'is_active' => true,
         ]);
 
@@ -1250,13 +1252,13 @@ class AccountingAdminController extends Controller
         $lastPaidInvoice = $userInvoices->where('status', 'paid')->first();
         $lastPaymentDate = $lastPaidInvoice?->paid_at?->format('d M Y')
             ?? $lastPaidInvoice?->created_at?->format('d M Y');
-        $lastPaymentAmount = $lastPaidInvoice ? '£'.number_format($lastPaidInvoice->amount, 2) : null;
+        $lastPaymentAmount = $lastPaidInvoice ? Currencies::format($lastPaidInvoice->amount, $club) : null;
 
         $unpaidInvoices = $userInvoices->where('status', 'unpaid')->map(fn ($inv) => [
             'id' => $inv->id,
             'invoice_number' => $inv->invoice_number,
             'title' => $inv->title,
-            'amount' => '£'.number_format($inv->amount, 2),
+            'amount' => Currencies::format($inv->amount, $club),
             'created_at' => $inv->created_at->format('d M Y'),
         ])->values();
 
@@ -1279,17 +1281,17 @@ class AccountingAdminController extends Controller
 
         $memberSummary = [
             'amount_owed' => $amountOwed,
-            'amount_owed_formatted' => '£'.number_format($amountOwed, 2),
+            'amount_owed_formatted' => Currencies::format($amountOwed, $club),
             'credit_balance' => $creditBalance,
-            'credit_balance_formatted' => '£'.number_format($creditBalance, 2),
+            'credit_balance_formatted' => Currencies::format($creditBalance, $club),
             'total_paid' => $totalPaid,
-            'total_paid_formatted' => '£'.number_format($totalPaid, 2),
+            'total_paid_formatted' => Currencies::format($totalPaid, $club),
             'invoice_count' => $invoiceCount,
             'last_payment_date' => $lastPaymentDate,
             'last_payment_amount' => $lastPaymentAmount,
             'unpaid_invoices' => $unpaidInvoices,
             'membership_plan' => $membership ? $membership->name : null,
-            'membership_price' => $membership ? '£'.number_format($membership->price, 2) : null,
+            'membership_price' => $membership ? Currencies::format($membership->price, $club) : null,
             'membership_period' => $membership ? $membership->billing_period : null,
             'membership_renews' => ($membership && $membership->ends_at)
                 ? Carbon::parse($membership->ends_at)->format('d M Y') : null,
@@ -1525,7 +1527,7 @@ class AccountingAdminController extends Controller
             'account_type' => 'required|string|in:current,savings,credit_card,payment_gateway,merchant,cash',
             'account_number' => 'nullable|string|max:50',
             'sort_code' => 'nullable|string|max:20',
-            'currency' => 'required|string|size:3',
+            'currency' => $this->clubCurrencyRule($clubSlug),
             'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
@@ -1582,7 +1584,7 @@ class AccountingAdminController extends Controller
             'paypal_client_id' => 'required|string',
             'paypal_client_secret' => 'required|string|max:500',
             'paypal_environment' => 'required|string|in:live,sandbox',
-            'currency' => 'required|string|size:3',
+            'currency' => $this->clubCurrencyRule($clubSlug),
             'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
@@ -1689,7 +1691,7 @@ class AccountingAdminController extends Controller
         $validated = $request->validate([
             'account_name' => 'required|string|max:150',
             'stripe_secret_key' => 'required|string|max:500',
-            'currency' => 'required|string|size:3',
+            'currency' => $this->clubCurrencyRule($clubSlug),
             'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
@@ -1771,7 +1773,7 @@ class AccountingAdminController extends Controller
         $validated = $request->validate([
             'account_name' => 'required|string|max:150',
             'sumup_api_key' => 'required|string|max:500',
-            'currency' => 'required|string|size:3',
+            'currency' => $this->clubCurrencyRule($clubSlug),
             'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
@@ -1856,7 +1858,7 @@ class AccountingAdminController extends Controller
             'gocardless_access_token' => 'required|string|max:500',
             'gocardless_environment' => 'required|string|in:sandbox,live',
             'gocardless_webhook_secret' => 'nullable|string|max:500',
-            'currency' => 'required|string|size:3',
+            'currency' => $this->clubCurrencyRule($clubSlug),
             'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
@@ -2009,5 +2011,17 @@ class AccountingAdminController extends Controller
             'Content-Disposition' => 'inline; filename="'.addslashes($media->file_name).'"',
             'X-Content-Type-Options' => 'nosniff',
         ]);
+    }
+
+    /**
+     * Every account in a club's books uses that club's own currency.
+     *
+     * @return list<mixed>
+     */
+    private function clubCurrencyRule(string $clubSlug): array
+    {
+        $currency = Club::where('slug', $clubSlug)->firstOrFail()->currencyCode();
+
+        return ['required', 'string', 'size:3', Rule::in([$currency])];
     }
 }

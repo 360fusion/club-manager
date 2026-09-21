@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
+import { currencyCode, currencySymbol } from '@/Utils/currency';
 const props = defineProps({
   club: {
     type: Object,
@@ -74,7 +75,7 @@ const props = defineProps({
       county: '',
       postcode: '',
       country: 'United Kingdom',
-      currency: 'GBP',
+      currency: currencyCode(),
       receipt_footer_notes: '',
       dues_grace_period_days: 14,
       auto_invoice_days_before: 7,
@@ -104,11 +105,11 @@ const props = defineProps({
         reconciled_gift_aid: 0,
         pending_bank_reconciliation_count: 0,
         total_eligible_count: 0,
-        formatted_total_donations: '£0.00',
-        formatted_claimable_gift_aid: '£0.00',
-        formatted_unclaimed_gift_aid: '£0.00',
-        formatted_claimed_gift_aid: '£0.00',
-        formatted_reconciled_gift_aid: '£0.00',
+        formatted_total_donations: (currencySymbol() + '0.00'),
+        formatted_claimable_gift_aid: (currencySymbol() + '0.00'),
+        formatted_unclaimed_gift_aid: (currencySymbol() + '0.00'),
+        formatted_claimed_gift_aid: (currencySymbol() + '0.00'),
+        formatted_reconciled_gift_aid: (currencySymbol() + '0.00'),
       },
     }),
   },
@@ -419,7 +420,7 @@ const bankAccountForm = useForm({
   account_type: 'current',
   account_number: '',
   sort_code: '',
-  currency: 'GBP',
+  currency: currencyCode(),
   opening_balance: 0,
 });
 
@@ -428,7 +429,7 @@ const payPalForm = useForm({
   paypal_client_id: '',
   paypal_client_secret: '',
   paypal_environment: 'live',
-  currency: 'GBP',
+  currency: currencyCode(),
   opening_balance: 0,
 });
 
@@ -534,7 +535,7 @@ const showStripeSecret = ref(false);
 const stripeForm = useForm({
   account_name: 'Lodge Stripe Account',
   stripe_secret_key: '',
-  currency: 'GBP',
+  currency: currencyCode(),
   opening_balance: 0,
 });
 
@@ -553,7 +554,7 @@ const showSumUpKey = ref(false);
 const sumUpForm = useForm({
   account_name: 'Lodge SumUp Merchant Account',
   sumup_api_key: '',
-  currency: 'GBP',
+  currency: currencyCode(),
   opening_balance: 0,
 });
 
@@ -575,7 +576,7 @@ const goCardlessForm = useForm({
   gocardless_access_token: '',
   gocardless_environment: 'sandbox',
   gocardless_webhook_secret: '',
-  currency: 'GBP',
+  currency: currencyCode(),
   opening_balance: 0,
 });
 
@@ -1488,7 +1489,7 @@ const filteredBills = computed(() => {
 
 const formatCurrency = (val) => {
   const num = parseFloat(val) || 0;
-  return '£' + num.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return currencySymbol() + num.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 const getTypeBadge = (type) => {
@@ -1836,7 +1837,7 @@ const getTypeBadge = (type) => {
           <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/70 dark:border-slate-800/70 space-y-1">
             <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Eligible Donations</span>
             <span class="text-lg font-black text-slate-900 dark:text-white block">
-              {{ reconciliation.gift_aid_summary?.formatted_total_donations || '£0.00' }}
+              {{ reconciliation.gift_aid_summary?.formatted_total_donations || ($cs + '0.00') }}
             </span>
             <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
               {{ reconciliation.gift_aid_summary?.total_eligible_count || 0 }} charity collections
@@ -1847,7 +1848,7 @@ const getTypeBadge = (type) => {
           <div class="p-4 bg-blue-50/60 dark:bg-blue-950/60 rounded-2xl border border-blue-100/80 dark:border-blue-900/80 space-y-1">
             <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">25% Gift Aid Claimable</span>
             <span class="text-lg font-black text-blue-700 dark:text-blue-300 block">
-              {{ reconciliation.gift_aid_summary?.formatted_claimable_gift_aid || '£0.00' }}
+              {{ reconciliation.gift_aid_summary?.formatted_claimable_gift_aid || ($cs + '0.00') }}
             </span>
             <span class="text-[10px] text-blue-600/80 dark:text-blue-400/80 block font-medium">Standard HMRC reclaim rate</span>
           </div>
@@ -1856,7 +1857,7 @@ const getTypeBadge = (type) => {
           <div class="p-4 bg-amber-50/60 dark:bg-amber-950/60 rounded-2xl border border-amber-100/80 dark:border-amber-900/80 space-y-1">
             <span class="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 uppercase tracking-wider block">Unclaimed Relief</span>
             <span class="text-lg font-black text-amber-700 dark:text-amber-300 block">
-              {{ reconciliation.gift_aid_summary?.formatted_unclaimed_gift_aid || '£0.00' }}
+              {{ reconciliation.gift_aid_summary?.formatted_unclaimed_gift_aid || ($cs + '0.00') }}
             </span>
             <span class="text-[10px] text-amber-700/80 dark:text-amber-300/80 block font-medium">Awaiting schedule export</span>
           </div>
@@ -1865,7 +1866,7 @@ const getTypeBadge = (type) => {
           <div class="p-4 bg-emerald-50/60 dark:bg-emerald-950/60 rounded-2xl border border-emerald-100/80 dark:border-emerald-900/80 space-y-1">
             <span class="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider block">Reconciled Credits</span>
             <span class="text-lg font-black text-emerald-700 dark:text-emerald-300 block">
-              {{ reconciliation.gift_aid_summary?.formatted_reconciled_gift_aid || '£0.00' }}
+              {{ reconciliation.gift_aid_summary?.formatted_reconciled_gift_aid || ($cs + '0.00') }}
             </span>
             <span class="text-[10px] text-emerald-700/80 dark:text-emerald-300/80 block font-medium">Matched to bank deposits</span>
           </div>
@@ -2408,7 +2409,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Audit verification comparing General Ledger vs actual bank feed balance.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-blue-800 dark:text-blue-200">
-              <span>System £401.33 vs Feed £476.49</span>
+              <span>System {{ $cs }}401.33 vs Feed {{ $cs }}476.49</span>
               <span>View Audit Report →</span>
             </div>
           </div>
@@ -2429,9 +2430,9 @@ const getTypeBadge = (type) => {
                     <th class="py-3 px-4">Code</th>
                     <th class="py-3 px-4">Account Name</th>
                     <th class="py-3 px-4">Type</th>
-                    <th class="py-3 px-4 text-right">Total Debit (£)</th>
-                    <th class="py-3 px-4 text-right">Total Credit (£)</th>
-                    <th class="py-3 px-4 text-right">Net Balance (£)</th>
+                    <th class="py-3 px-4 text-right">Total Debit ({{ $cs }})</th>
+                    <th class="py-3 px-4 text-right">Total Credit ({{ $cs }})</th>
+                    <th class="py-3 px-4 text-right">Net Balance ({{ $cs }})</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-700 dark:text-slate-200">
@@ -2800,7 +2801,7 @@ const getTypeBadge = (type) => {
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
                 <div class="flex justify-between items-center text-sm font-extrabold text-slate-900 dark:text-white">
                   <span>Balance in System (General Ledger)</span>
-                  <span class="font-mono text-lg text-slate-900 dark:text-white">£401.33</span>
+                  <span class="font-mono text-lg text-slate-900 dark:text-white">{{ $cs }}401.33</span>
                 </div>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400">Total cleared balance across all approved transactions in your books.</p>
               </div>
@@ -2809,7 +2810,7 @@ const getTypeBadge = (type) => {
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <div class="flex justify-between items-center text-xs font-black text-emerald-800 dark:text-emerald-200 border-b border-emerald-200 dark:border-emerald-800/60 pb-2">
                   <span class="uppercase tracking-wider">PLUS: Outstanding Receipts (Unreconciled Receive Money)</span>
-                  <span class="font-mono text-sm">+£190.00</span>
+                  <span class="font-mono text-sm">+{{ $cs }}190.00</span>
                 </div>
                 <div class="overflow-x-auto">
                   <table class="w-full text-left text-xs">
@@ -2824,17 +2825,17 @@ const getTypeBadge = (type) => {
                       <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <td class="py-2 px-3 font-mono">01 Oct 2026</td>
                         <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">DD 1418 LORD</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">£20.00</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ $cs }}20.00</td>
                       </tr>
                       <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <td class="py-2 px-3 font-mono">25 Sep 2026</td>
                         <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">BACS BURNS NIGHT C IRONS</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">£20.00</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ $cs }}20.00</td>
                       </tr>
                       <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <td class="py-2 px-3 font-mono">05 Sep 2026</td>
                         <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">ANNUAL SUBSCRIPTION W BRO J SMITH</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">£150.00</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ $cs }}150.00</td>
                       </tr>
                     </tbody>
                   </table>
@@ -2845,7 +2846,7 @@ const getTypeBadge = (type) => {
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <div class="flex justify-between items-center text-xs font-black text-rose-800 dark:text-rose-200 border-b border-rose-200 dark:border-rose-800/60 pb-2">
                   <span class="uppercase tracking-wider">LESS: Outstanding Payments (Unreconciled Spend Money)</span>
-                  <span class="font-mono text-sm">-£114.84</span>
+                  <span class="font-mono text-sm">-{{ $cs }}114.84</span>
                 </div>
                 <div class="overflow-x-auto">
                   <table class="w-full text-left text-xs">
@@ -2860,17 +2861,17 @@ const getTypeBadge = (type) => {
                       <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <td class="py-2 px-3 font-mono">14 Sep 2026</td>
                         <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">STOCKTON MASONIC HALL TRUST</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">£85.09</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">{{ $cs }}85.09</td>
                       </tr>
                       <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <td class="py-2 px-3 font-mono">12 Sep 2026</td>
                         <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">LINKEDINPREC*82482521 LNKD.I</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">£15.24</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">{{ $cs }}15.24</td>
                       </tr>
                       <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <td class="py-2 px-3 font-mono">08 Sep 2026</td>
                         <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">LARAVEL FORGE NEW YORK</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">£14.51</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">{{ $cs }}14.51</td>
                       </tr>
                     </tbody>
                   </table>
@@ -2881,18 +2882,18 @@ const getTypeBadge = (type) => {
               <div class="bg-gradient-to-br from-blue-50 dark:from-blue-950/40 to-blue-50/50 dark:to-blue-950/50 rounded-2xl p-5 border border-blue-200 dark:border-blue-800/60 shadow-sm space-y-4">
                 <div class="flex justify-between items-center text-sm font-extrabold text-blue-950 dark:text-blue-100">
                   <span>Calculated Bank Statement Balance</span>
-                  <span class="font-mono text-lg text-blue-950 dark:text-blue-100">£476.49</span>
+                  <span class="font-mono text-lg text-blue-950 dark:text-blue-100">{{ $cs }}476.49</span>
                 </div>
                 <div class="flex justify-between items-center text-sm font-extrabold text-slate-900 dark:text-white border-t border-blue-200 dark:border-blue-800/60 pt-3">
                   <span>Actual Bank Statement Feed Balance</span>
-                  <span class="font-mono text-lg text-slate-900 dark:text-white">£476.49</span>
+                  <span class="font-mono text-lg text-slate-900 dark:text-white">{{ $cs }}476.49</span>
                 </div>
                 <div class="flex justify-between items-center text-xs font-black text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-900/40 px-4 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-700/60">
                   <span class="flex items-center gap-2 text-sm">
                     <span>✅</span>
                     <span>Unreconciled Difference / Discrepancy</span>
                   </span>
-                  <span class="font-mono text-sm">£0.00 (Fully Reconciled)</span>
+                  <span class="font-mono text-sm">{{ $cs }}0.00 (Fully Reconciled)</span>
                 </div>
               </div>
 
@@ -3105,11 +3106,11 @@ const getTypeBadge = (type) => {
                 <div class="mt-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800/80 space-y-1.5 text-xs">
                   <div class="flex items-center justify-between">
                     <span class="font-bold text-slate-500 dark:text-slate-400">Statement Balance</span>
-                    <span class="font-black text-slate-900 dark:text-white">{{ acc.formatted_statement_balance || '£0.00' }}</span>
+                    <span class="font-black text-slate-900 dark:text-white">{{ acc.formatted_statement_balance || ($cs + '0.00') }}</span>
                   </div>
                   <div class="flex items-center justify-between">
                     <span class="font-bold text-slate-500 dark:text-slate-400">Ledger Balance (Code {{ acc.account_code || '1000' }})</span>
-                    <span class="font-bold text-blue-700 dark:text-blue-300">{{ acc.formatted_ledger_balance || '£0.00' }}</span>
+                    <span class="font-bold text-blue-700 dark:text-blue-300">{{ acc.formatted_ledger_balance || ($cs + '0.00') }}</span>
                   </div>
                 </div>
               </div>
@@ -3449,11 +3450,11 @@ const getTypeBadge = (type) => {
 
             <div class="flex flex-wrap items-center gap-4 text-xs font-semibold">
               <div>
-                <span class="font-extrabold text-slate-900 dark:text-white text-sm">{{ activeBankAccount?.formatted_statement_balance || '£0.00' }}</span>
+                <span class="font-extrabold text-slate-900 dark:text-white text-sm">{{ activeBankAccount?.formatted_statement_balance || ($cs + '0.00') }}</span>
                 <span class="text-slate-500 dark:text-slate-400 ml-1">Statement Balance</span>
               </div>
               <div class="border-l border-slate-200 dark:border-slate-800 pl-4">
-                <span class="font-extrabold text-slate-900 dark:text-white text-sm">{{ activeBankAccount?.formatted_ledger_balance || '£0.00' }}</span>
+                <span class="font-extrabold text-slate-900 dark:text-white text-sm">{{ activeBankAccount?.formatted_ledger_balance || ($cs + '0.00') }}</span>
                 <span class="text-slate-500 dark:text-slate-400 ml-1">Balance in System</span>
                 <a href="#" @click.prevent="showDifferentBalancesModal = true" class="text-blue-600 dark:text-blue-400 hover:underline ml-1 text-[11px] font-bold">— Different balances?</a>
               </div>
@@ -3590,12 +3591,12 @@ const getTypeBadge = (type) => {
             </div>
 
             <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Min Amount (£)</label>
+              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Min Amount ({{ $cs }})</label>
               <input v-model="filterMinAmount" type="number" step="0.01" placeholder="0.00" class="w-full p-1.5 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-900" />
             </div>
 
             <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Max Amount (£)</label>
+              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Max Amount ({{ $cs }})</label>
               <input v-model="filterMaxAmount" type="number" step="0.01" placeholder="9999.00" class="w-full p-1.5 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-900" />
             </div>
 
@@ -3914,7 +3915,7 @@ const getTypeBadge = (type) => {
                         >
                           <div>
                             <span class="font-black text-slate-900 dark:text-white block text-xs">{{ m.target_title }}</span>
-                            <span class="text-[11px] text-emerald-800 dark:text-emerald-200 font-medium">{{ m.match_reason }} — £{{ number_format(m.target_amount, 2) }}</span>
+                            <span class="text-[11px] text-emerald-800 dark:text-emerald-200 font-medium">{{ m.match_reason }} — {{ $cs }}{{ number_format(m.target_amount, 2) }}</span>
                           </div>
                           <button
                             type="button"
@@ -4091,7 +4092,7 @@ const getTypeBadge = (type) => {
                     </select>
                   </td>
                   <td :class="['py-2 px-3 text-right font-mono font-bold whitespace-nowrap', tx.amount > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-white']">
-                    £{{ number_format(Math.abs(tx.amount), 2) }}
+                    {{ $cs }}{{ number_format(Math.abs(tx.amount), 2) }}
                   </td>
                 </tr>
                 <tr v-if="filteredUnmatchedTx.length === 0">
@@ -4316,25 +4317,25 @@ const getTypeBadge = (type) => {
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
               <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-amber-200/60 dark:border-amber-800/60 shadow-2xs space-y-1">
                 <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Eligible Donations</span>
-                <span class="text-xl font-black text-slate-900 dark:text-white block">{{ reconciliation?.gift_aid_summary?.formatted_total_eligible || '£0.00' }}</span>
+                <span class="text-xl font-black text-slate-900 dark:text-white block">{{ reconciliation?.gift_aid_summary?.formatted_total_eligible || ($cs + '0.00') }}</span>
                 <span class="text-[10px] text-slate-400">Meeting Alms &amp; Envelopes</span>
               </div>
 
               <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs space-y-1">
                 <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider block">Reclaimed Gift Aid</span>
-                <span class="text-xl font-black text-emerald-800 dark:text-emerald-200 block">{{ reconciliation?.gift_aid_summary?.formatted_gift_aid_reclaimed || '£0.00' }}</span>
+                <span class="text-xl font-black text-emerald-800 dark:text-emerald-200 block">{{ reconciliation?.gift_aid_summary?.formatted_gift_aid_reclaimed || ($cs + '0.00') }}</span>
                 <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">25% HMRC Tax Reclaims Reconciled</span>
               </div>
 
               <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-amber-300 dark:border-amber-700/60 shadow-2xs space-y-1">
                 <span class="text-[11px] font-bold text-amber-800 dark:text-amber-200 uppercase tracking-wider block">Pending Reclaim</span>
-                <span class="text-xl font-black text-amber-900 dark:text-amber-200 block">{{ reconciliation?.gift_aid_summary?.formatted_pending_gift_aid || '£0.00' }}</span>
+                <span class="text-xl font-black text-amber-900 dark:text-amber-200 block">{{ reconciliation?.gift_aid_summary?.formatted_pending_gift_aid || ($cs + '0.00') }}</span>
                 <span class="text-[10px] text-amber-700 dark:text-amber-300 font-bold">{{ reconciliation?.gift_aid_summary?.pending_claim_count || 0 }} collection batch(es) pending</span>
               </div>
 
               <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-blue-200/60 dark:border-blue-800/60 shadow-2xs space-y-1">
                 <span class="text-[11px] font-bold text-blue-800 dark:text-blue-200 uppercase tracking-wider block">Net Relief Chest Position</span>
-                <span class="text-xl font-black text-blue-900 dark:text-blue-200 block">{{ reconciliation?.gift_aid_summary?.formatted_net_relief_chest_balance || '£0.00' }}</span>
+                <span class="text-xl font-black text-blue-900 dark:text-blue-200 block">{{ reconciliation?.gift_aid_summary?.formatted_net_relief_chest_balance || ($cs + '0.00') }}</span>
                 <span class="text-[10px] text-blue-700 dark:text-blue-300 font-bold">Chest Ref: {{ reconciliation?.gift_aid_summary?.relief_chest_ref || 'E1418' }}</span>
               </div>
             </div>
@@ -4634,7 +4635,7 @@ const getTypeBadge = (type) => {
               </div>
               <div>
                 <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Currency</span>
-                <span class="font-mono font-bold text-emerald-700 dark:text-emerald-300">GBP (£)</span>
+                <span class="font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ $page.props.currency.code }} ({{ $cs }})</span>
               </div>
             </div>
           </div>
@@ -4718,7 +4719,7 @@ const getTypeBadge = (type) => {
             </div>
             <div>
               <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Currency *</label>
-              <input v-model="bankAccountForm.currency" required placeholder="GBP" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
+              <input v-model="bankAccountForm.currency" readonly class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
             </div>
           </div>
 
@@ -4734,7 +4735,7 @@ const getTypeBadge = (type) => {
           </div>
 
           <div>
-            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance (£)</label>
+            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance ({{ $cs }})</label>
             <input type="number" step="0.01" v-model="bankAccountForm.opening_balance" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
           </div>
 
@@ -4831,12 +4832,12 @@ const getTypeBadge = (type) => {
             </div>
             <div>
               <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Currency *</label>
-              <input v-model="payPalForm.currency" required placeholder="GBP" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
+              <input v-model="payPalForm.currency" readonly class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
             </div>
           </div>
 
           <div>
-            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance (£)</label>
+            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance ({{ $cs }})</label>
             <input type="number" step="0.01" v-model="payPalForm.opening_balance" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
           </div>
 
@@ -4890,10 +4891,10 @@ const getTypeBadge = (type) => {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Currency *</label>
-              <input v-model="stripeForm.currency" required placeholder="GBP" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
+              <input v-model="stripeForm.currency" readonly class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
             </div>
             <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance (£)</label>
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance ({{ $cs }})</label>
               <input type="number" step="0.01" v-model="stripeForm.opening_balance" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
             </div>
           </div>
@@ -4948,10 +4949,10 @@ const getTypeBadge = (type) => {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Currency *</label>
-              <input v-model="sumUpForm.currency" required placeholder="GBP" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
+              <input v-model="sumUpForm.currency" readonly class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
             </div>
             <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance (£)</label>
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance ({{ $cs }})</label>
               <input type="number" step="0.01" v-model="sumUpForm.opening_balance" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
             </div>
           </div>
@@ -5036,10 +5037,10 @@ const getTypeBadge = (type) => {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Currency *</label>
-              <input v-model="goCardlessForm.currency" required placeholder="GBP" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
+              <input v-model="goCardlessForm.currency" readonly class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 uppercase" />
             </div>
             <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance (£)</label>
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Opening Balance ({{ $cs }})</label>
               <input type="number" step="0.01" v-model="goCardlessForm.opening_balance" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
             </div>
           </div>
@@ -5163,7 +5164,7 @@ const getTypeBadge = (type) => {
 
           <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
             <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Opening Balance (£)</label>
+              <label class="block font-bold text-slate-700 dark:text-slate-200">Opening Balance ({{ $cs }})</label>
               <input
                 v-model="accountForm.opening_balance"
                 type="number"
@@ -5269,7 +5270,7 @@ const getTypeBadge = (type) => {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="Debit (£)"
+                  :placeholder="'Debit (' + $cs + ')'"
                   class="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono focus:outline-none"
                 />
               </div>
@@ -5279,7 +5280,7 @@ const getTypeBadge = (type) => {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="Credit (£)"
+                  :placeholder="'Credit (' + $cs + ')'"
                   class="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono focus:outline-none"
                 />
               </div>
@@ -5362,7 +5363,7 @@ const getTypeBadge = (type) => {
           </div>
 
           <div class="space-y-1">
-            <label class="block font-bold text-slate-700 dark:text-slate-200">Amount (£)</label>
+            <label class="block font-bold text-slate-700 dark:text-slate-200">Amount ({{ $cs }})</label>
             <input
               v-model.number="invoiceForm.amount"
               type="number"
@@ -5438,7 +5439,7 @@ const getTypeBadge = (type) => {
 
           <div class="grid grid-cols-2 gap-3">
             <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Amount (£)</label>
+              <label class="block font-bold text-slate-700 dark:text-slate-200">Amount ({{ $cs }})</label>
               <input
                 v-model.number="billForm.amount"
                 type="number"
@@ -5545,7 +5546,7 @@ const getTypeBadge = (type) => {
 
           <div class="grid grid-cols-2 gap-3">
             <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Opening Amount (£) *</label>
+              <label class="block font-bold text-slate-700 dark:text-slate-200">Opening Amount ({{ $cs }}) *</label>
               <input
                 v-model="openingBalanceForm.opening_balance"
                 type="number"
@@ -5669,7 +5670,7 @@ const getTypeBadge = (type) => {
             >
               <option value="" disabled>Choose Unpaid Subscription...</option>
               <option v-for="sub in reconciliation.unpaid_subscriptions" :key="sub.id" :value="sub.id">
-                {{ sub.member_name }} (Inv: {{ sub.invoice_reference || 'N/A' }} - £{{ number_format(sub.amount_due, 2) }})
+                {{ sub.member_name }} (Inv: {{ sub.invoice_reference || 'N/A' }} - {{ $cs }}{{ number_format(sub.amount_due, 2) }})
               </option>
             </select>
           </div>
@@ -5682,7 +5683,7 @@ const getTypeBadge = (type) => {
             >
               <option value="" disabled>Choose Unpaid Bill...</option>
               <option v-for="bill in reconciliation.unpaid_bills" :key="bill.id" :value="bill.id">
-                Vendor: {{ bill.vendor_name }} (Bill: {{ bill.bill_number }} - £{{ number_format(bill.amount, 2) }})
+                Vendor: {{ bill.vendor_name }} (Bill: {{ bill.bill_number }} - {{ $cs }}{{ number_format(bill.amount, 2) }})
               </option>
             </select>
           </div>
@@ -5752,7 +5753,7 @@ const getTypeBadge = (type) => {
             <div>
               <span class="text-[10px] font-extrabold uppercase text-slate-400 block mb-0.5">Amount</span>
               <span :class="['font-black text-base', selectedStatementLineDetails.amount < 0 ? 'text-slate-900 dark:text-white' : 'text-emerald-700 dark:text-emerald-300']">
-                {{ selectedStatementLineDetails.amount < 0 ? 'Spent £' : 'Received £' }}{{ number_format(Math.abs(selectedStatementLineDetails.amount), 2) }}
+                {{ selectedStatementLineDetails.amount < 0 ? 'Spent ' + $cs : 'Received ' + $cs }}{{ number_format(Math.abs(selectedStatementLineDetails.amount), 2) }}
               </span>
             </div>
           </div>
@@ -5774,7 +5775,7 @@ const getTypeBadge = (type) => {
             <div class="space-y-1">
               <span class="text-[10px] font-extrabold uppercase text-slate-400 block">Running Balance</span>
               <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-800 dark:text-slate-100">
-                {{ selectedStatementLineDetails.balance_after ? '£' + number_format(selectedStatementLineDetails.balance_after, 2) : 'N/A' }}
+                {{ selectedStatementLineDetails.balance_after ? $cs + number_format(selectedStatementLineDetails.balance_after, 2) : 'N/A' }}
               </div>
             </div>
           </div>
@@ -5851,7 +5852,7 @@ const getTypeBadge = (type) => {
           <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2 font-mono text-[11px]">
             <div class="flex justify-between items-center text-slate-700 dark:text-slate-200">
               <span>Statement Balance (Bank):</span>
-              <span class="font-bold text-slate-900 dark:text-white">{{ activeBankAccount?.formatted_statement_balance || '£0.00' }}</span>
+              <span class="font-bold text-slate-900 dark:text-white">{{ activeBankAccount?.formatted_statement_balance || ($cs + '0.00') }}</span>
             </div>
             <div class="flex justify-between items-center text-amber-700 dark:text-amber-300">
               <span>Unreconciled Statement Items ({{ filteredUnmatchedTx.length }}):</span>
@@ -5859,7 +5860,7 @@ const getTypeBadge = (type) => {
             </div>
             <div class="border-t border-slate-200 dark:border-slate-800 pt-2 flex justify-between items-center text-blue-900 dark:text-blue-200 font-extrabold text-xs">
               <span>System Ledger Balance (Code {{ activeBankAccount?.account_code || '1000' }}):</span>
-              <span>{{ activeBankAccount?.formatted_ledger_balance || '£0.00' }}</span>
+              <span>{{ activeBankAccount?.formatted_ledger_balance || ($cs + '0.00') }}</span>
             </div>
           </div>
 

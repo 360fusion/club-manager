@@ -488,7 +488,7 @@
         <div style="font-size: 8.5pt; line-height: 1.3; color: #222;">
           @foreach($charityGrants as $grant)
             <div style="margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed #ccc;">
-              <strong>£{{ number_format($grant->amount, 2) }}</strong> to <strong>{{ $grant->recipient_name }}</strong> — {{ $grant->purpose }}
+              <strong>{{ \App\Support\Currencies::symbolFor($club) }}{{ number_format($grant->amount, 2) }}</strong> to <strong>{{ $grant->recipient_name }}</strong> — {{ $grant->purpose }}
               @if($grant->proposer || $grant->seconder)
                 <div style="font-size: 7.5pt; color: #555;">
                   @if($grant->proposer) Proposed by: Bro {{ $grant->proposer->first_name }} {{ $grant->proposer->last_name }} @endif
@@ -508,7 +508,7 @@
       <div class="section-title">FESTIVE BOARD</div>
       <div class="notice-box" style="background: #fdfdfd; border: 1px solid #ccc; padding: 6px 8px; font-size: 8.5pt;">
         {{ $meeting->festive_board_theme ?? 'The Lodge of Fraternity will be holding their Festive Board.' }} Please confirm your attendance to {{ $secretaryUser->name ?? 'Secretary' }} by emailing {{ $secretaryUser->email ?? 'secretary@lodge.org' }}.<br>
-        Price: <strong>£{{ number_format($meeting->dining_cost_member, 2) }}</strong><br>
+        Price: <strong>{{ \App\Support\Currencies::symbolFor($club) }}{{ number_format($meeting->dining_cost_member, 2) }}</strong><br>
         Sort Code: <strong>{{ $meeting->bank_sort_code ?: ($club->settings['bank_sort_code'] ?? '20-65-18') }}</strong> | Acc No: <strong>{{ $meeting->bank_account_number ?: ($club->settings['bank_account_number'] ?? '83920145') }}</strong><br>
         Reference: <strong>your name or names</strong>.<br>
         @if($meeting->payment_link)

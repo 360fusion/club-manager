@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\DirectDebitMandate;
 use App\Models\Membership;
 use App\Models\User;
+use App\Support\Currencies;
 use Exception;
 use GoCardlessPro\Client;
 use GoCardlessPro\Environment;
@@ -146,7 +147,7 @@ class GoCardlessService
     {
         $params = [
             'amount' => $amountInPence,
-            'currency' => 'GBP',
+            'currency' => Currencies::codeForClubId($mandate->club_id),
             'description' => $description,
             'links' => [
                 'mandate' => $mandate->gocardless_mandate_id,

@@ -154,7 +154,7 @@ class MemberListController extends Controller
      */
     private function clubPayload($club): array
     {
-        return ['name' => $club->name, 'slug' => $club->slug, 'colour' => $club->colourKey()];
+        return ['name' => $club->name, 'slug' => $club->slug, 'colour' => $club->colourKey(), 'currency_symbol' => $club->currencySymbol()];
     }
 
     /**
