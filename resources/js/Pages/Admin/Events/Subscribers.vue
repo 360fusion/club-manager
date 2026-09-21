@@ -187,7 +187,7 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
 
       <PaymentPanel v-if="panel" :key="panel.id" :club-slug="club.slug" :event-id="event.id" :registration-id="panel.id" :name="panel.name" @close="panel = null" @changed="reload" />
 
-      <OrganiserBookingModal :open="bookingOpen" :event="event" :club-slug="club.slug" :can-mark-paid="canManagePayments" :registration-id="editingId" @close="bookingOpen = false" @edit="openEdit" />
+      <OrganiserBookingModal :open="bookingOpen" :event="event" :club-slug="club.slug" :club-name="club.name" :can-mark-paid="canManagePayments" :registration-id="editingId" @close="bookingOpen = false" @edit="openEdit" />
 
       <!-- Live KPI Cards Grid -->
       <div class="grid grid-cols-2 md:grid-cols-5 gap-4">

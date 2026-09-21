@@ -10,6 +10,8 @@ const props = defineProps({
     // The event as sent to the registrations page: tiers, menu (by course), payment_options, capacity and so on.
     event: { type: Object, required: true },
     clubSlug: { type: String, required: true },
+    // Shown as the lodge of a member whose home lodge is not recorded: they belong to this one.
+    clubName: { type: String, default: '' },
     canMarkPaid: { type: Boolean, default: false },
     // The booking being changed, or null to add a new one.
     registrationId: { type: Number, default: null },
@@ -100,7 +102,8 @@ const pickMember = (found) => {
     form.member_id = found.id;
     form.contact_email = found.email ?? '';
     form.contact_phone = found.phone ?? '';
-    Object.assign(form.attendees[0], { name: found.name, organisation: found.lodge ?? '', dietary_requirements: found.dietary_notes ?? '' });
+    member.value = { ...found, lodge: found.lodge || props.clubName };
+    Object.assign(form.attendees[0], { name: found.name, organisation: found.lodge || props.clubName, dietary_requirements: found.dietary_notes ?? '' });
     search.value = '';
     results.value = [];
 };
@@ -132,6 +135,9 @@ const setDining = (person, on) => {
     if (!on) Object.assign(person, { starter_item_id: null, main_item_id: null, dessert_item_id: null });
 };
 
+// The booker only needs a card when there is something to choose for them: a ticket type or a meal.
+const bookerNeedsCard = computed(() => hasMenu.value || tiersFor(form.attendees[0]).length > 1);
+
 const addGuest = () => form.attendees.push(blankPerson(true));
 const removeGuest = (index) => form.attendees.splice(index, 1);
 const errorFor = (index, column) => form.errors[`attendees.${index}.${column}`];
@@ -160,6 +166,7 @@ const reset = () => {
     results.value = [];
     booking.value = null;
     loadError.value = '';
+    amountTouched.value = false;
 };
 
 watch(() => [props.open, props.registrationId], async ([open]) => {
@@ -203,6 +210,12 @@ const wouldBeFull = computed(() => props.event.capacity !== null && props.event.
 const showOverride = computed(() => wouldBeFull.value || !!form.errors.capacity);
 const canRecordPayment = computed(() => props.canMarkPaid && form.status === 'attending' && charged.value && !(editing.value && booking.value?.locked));
 const hasEmail = computed(() => !!form.contact_email);
+// Tick "already paid" and the amount is filled in with the total; change it if they paid only part.
+const amountTouched = ref(false);
+watch(() => [form.mark_paid.enabled, chosenQuote.value?.total], ([enabled, total]) => {
+    if (enabled && !amountTouched.value && total !== undefined) form.mark_paid.amount = String(total);
+});
+
 const paidAlready = computed(() => editing.value && Number(booking.value?.payment?.amount_paid) > 0);
 
 const topErrors = computed(() => ['registration', 'capacity', 'booking_closed', 'member_id', 'mark_paid', 'payment_method'].map((key) => form.errors[key]).filter(Boolean));
@@ -270,7 +283,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                                 <button type="button" class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800" @click="pickMember(found)">
                                     <span>
                                         <span class="font-bold text-slate-900 dark:text-white">{{ found.name }}</span>
-                                        <span class="block text-slate-500 dark:text-slate-400"><template v-if="found.rank">{{ found.rank }} · </template><template v-if="found.lodge">{{ found.lodge }} · </template>{{ found.email }}</span>
+                                        <span class="block text-slate-500 dark:text-slate-400"><template v-if="found.rank">{{ found.rank }} · </template>{{ found.lodge || clubName }} · {{ found.email }}</span>
                                     </span>
                                     <span v-if="found.registration_id" class="shrink-0 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
                                         Already booked
@@ -292,9 +305,10 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
 
             <!-- 2. People -->
             <section class="space-y-3">
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">2. Who is coming, and what are they having?</h3>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ hasMenu ? '2. Who is coming, and what are they having?' : '2. Is anyone else coming?' }}</h3>
 
-                <div v-for="(person, index) in form.attendees" :key="index" class="space-y-3 rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+                <template v-for="(person, index) in form.attendees" :key="index">
+                <div v-if="index > 0 || bookerNeedsCard" class="space-y-3 rounded-xl border border-slate-200 p-3 dark:border-slate-800">
                     <div class="flex items-center justify-between gap-2">
                         <span class="font-bold text-slate-900 dark:text-white">{{ index === 0 ? (form.attendees[0].name || 'The booker') : `Guest ${index}` }}</span>
                         <button v-if="index > 0" type="button" class="font-bold text-rose-600 hover:underline" @click="removeGuest(index)">Remove</button>
@@ -333,8 +347,9 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                         </div>
                     </template>
 
-                    <div><label :class="label">Dietary needs</label><input v-model="person.dietary_requirements" type="text" maxlength="1000" placeholder="Allergies, vegetarian..." :class="field" /></div>
+                    <div v-if="hasMenu"><label :class="label">Dietary needs</label><input v-model="person.dietary_requirements" type="text" maxlength="1000" placeholder="Allergies, vegetarian..." :class="field" /></div>
                 </div>
+                </template>
 
                 <button type="button" class="rounded-lg border border-dashed border-slate-300 px-3 py-2 font-bold text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:text-blue-400 dark:hover:bg-slate-800" @click="addGuest">+ Add another person</button>
             </section>
@@ -380,23 +395,23 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                     <div v-if="canRecordPayment" class="space-y-2 rounded-xl border border-emerald-300 p-3 dark:border-emerald-800/60">
                         <label class="flex items-center gap-2 font-bold text-slate-900 dark:text-white"><input v-model="form.mark_paid.enabled" type="checkbox" class="rounded" /> They have already paid</label>
                         <div v-if="form.mark_paid.enabled" class="grid gap-3 sm:grid-cols-3">
-                            <div><label :class="label">Amount received</label><input v-model="form.mark_paid.amount" type="number" step="0.01" min="0.01" :placeholder="chosenQuote ? String(chosenQuote.total) : ''" :class="field" /><p v-if="form.errors['mark_paid.amount']" :class="errorText">{{ form.errors['mark_paid.amount'] }}</p></div>
+                            <div><label :class="label">Amount received</label><input v-model="form.mark_paid.amount" type="number" step="0.01" min="0.01" :class="field" @input="amountTouched = true" /><p v-if="form.errors['mark_paid.amount']" :class="errorText">{{ form.errors['mark_paid.amount'] }}</p></div>
                             <div><label :class="label">Date received</label><input v-model="form.mark_paid.received_on" type="date" :class="field" /></div>
                             <div><label :class="label">Comment</label><input v-model="form.mark_paid.comment" type="text" maxlength="500" placeholder="e.g. cash at the door" :class="field" /></div>
                         </div>
-                        <p v-if="form.mark_paid.enabled" class="text-slate-500 dark:text-slate-400">Leave the amount blank for the full total. It is recorded in the payment history under your name.</p>
+                        <p v-if="form.mark_paid.enabled" class="text-slate-500 dark:text-slate-400">The full total is filled in. Change it if they only paid part. It is recorded in the payment history under your name.</p>
                     </div>
                 </template>
             </section>
 
             <!-- 4. Notes and confirmation -->
-            <section class="space-y-3">
+            <section class="space-y-3 pb-6">
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">4. Notes and confirmation</h3>
                 <div><label :class="label">Internal note (only organisers see this)</label><textarea v-model="form.internal_note" rows="2" maxlength="2000" placeholder="e.g. seat with the Master, phoned in on Tuesday" :class="field"></textarea></div>
-                <label class="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
-                    <input v-model="form.send_confirmation" type="checkbox" :disabled="!hasEmail" class="rounded" />
-                    Email them a confirmation <span v-if="!hasEmail" class="font-normal text-slate-400">(add an email address first)</span>
-                    <span v-else class="font-normal text-slate-500">(guests with their own email are told too)</span>
+                <label class="flex flex-wrap items-center gap-2.5 py-1 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    <input v-model="form.send_confirmation" type="checkbox" :disabled="!hasEmail" class="h-4 w-4 rounded" />
+                    Email them a confirmation <span v-if="!hasEmail" class="text-xs font-normal text-slate-500 dark:text-slate-400">(add an email address first)</span>
+                    <span v-else class="text-xs font-normal text-slate-500 dark:text-slate-400">(guests with their own email are told too)</span>
                 </label>
             </section>
 
