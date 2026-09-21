@@ -87,8 +87,7 @@ class ClubSettingsTest extends TestCase
     {
         $payload = [
             'permission_matrix' => [
-                'manage_roster' => [
-                    'label' => 'Manage Roster',
+                'manage_members' => [
                     'roles' => ['owner', 'admin', 'treasurer'],
                 ],
             ],
@@ -100,7 +99,7 @@ class ClubSettingsTest extends TestCase
         $response->assertRedirect();
 
         $this->club->refresh();
-        $this->assertEquals(['owner', 'admin', 'treasurer'], $this->club->settings['permission_matrix']['manage_roster']['roles']);
+        $this->assertEquals(['owner', 'admin', 'treasurer'], $this->club->settings['permission_matrix']['manage_members']['roles']);
     }
 
     public function test_admin_can_update_active_modules_and_custom_domain(): void

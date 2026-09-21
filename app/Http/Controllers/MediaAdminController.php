@@ -720,6 +720,13 @@ class MediaAdminController extends Controller
         imagedestroy($dstImage);
     }
 
+    private function privateUrl($media): string
+    {
+        $slug = Club::whereKey($media->model_id)->value('slug');
+
+        return $slug ? route('admin.accounting.attachments.show', ['clubSlug' => $slug, 'mediaId' => $media->id]) : '';
+    }
+
     private function transformMedia($media): array
     {
         $isAccountingProtected = $this->isAccountingProtected($media);
@@ -732,7 +739,7 @@ class MediaAdminController extends Controller
             'size' => $media->size,
             'human_size' => $this->formatBytes($media->size),
             'collection_name' => $media->collection_name,
-            'original_url' => $media->getFullUrl(),
+            'original_url' => $media->disk === 'public' ? $media->getFullUrl() : $this->privateUrl($media),
             'alt_text' => $media->getCustomProperty('alt_text', ''),
             'caption' => $media->getCustomProperty('caption', ''),
             'has_original_backup' => (bool) ($media->getCustomProperty('has_original_backup', false) && file_exists($media->getCustomProperty('original_master_path', ''))),

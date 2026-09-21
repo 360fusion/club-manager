@@ -292,6 +292,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/{clubSlug}/admin/accounting/invoices/{id}', [AccountingAdminController::class, 'destroyInvoice'])->name('admin.accounting.invoices.destroy');
     Route::post('/{clubSlug}/admin/accounting/invoices/{id}/publish', [AccountingAdminController::class, 'publishInvoice'])->name('admin.accounting.invoices.publish');
     Route::post('/{clubSlug}/admin/accounting/invoices/{id}/pay', [AccountingAdminController::class, 'markInvoicePaid'])->name('admin.accounting.invoices.pay');
+    Route::get('/{clubSlug}/admin/accounting/attachments/{mediaId}', [AccountingAdminController::class, 'showAttachment'])->name('admin.accounting.attachments.show');
     Route::delete('/{clubSlug}/admin/accounting/invoices/{id}/attachment', [AccountingAdminController::class, 'deleteInvoiceAttachment'])->name('admin.accounting.invoices.attachment.destroy');
     Route::get('/{clubSlug}/admin/accounting/bills/create', [AccountingAdminController::class, 'createBill'])->name('admin.accounting.bills.create');
     Route::post('/{clubSlug}/admin/accounting/bills', [AccountingAdminController::class, 'storeBill'])->name('admin.accounting.bills.store');

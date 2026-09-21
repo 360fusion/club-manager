@@ -27,6 +27,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AccountingAdminController extends Controller
 {
@@ -98,7 +100,8 @@ class AccountingAdminController extends Controller
                 'attachment' => $inv->media ? [
                     'id' => $inv->media->id,
                     'file_name' => $inv->media->file_name,
-                    'url' => $inv->media->getUrl(),
+                    'url' => $this->attachmentUrl($club, $inv->media),
+                    'original_url' => $this->attachmentUrl($club, $inv->media),
                     'mime_type' => $inv->media->mime_type,
                     'size' => $inv->media->human_readable_size ?? (round($inv->media->size / 1024, 1).' KB'),
                     'is_image' => str_starts_with($inv->media->mime_type ?? '', 'image/'),
@@ -124,7 +127,8 @@ class AccountingAdminController extends Controller
                 'attachment' => $b->media ? [
                     'id' => $b->media->id,
                     'file_name' => $b->media->file_name,
-                    'url' => $b->media->getUrl(),
+                    'url' => $this->attachmentUrl($club, $b->media),
+                    'original_url' => $this->attachmentUrl($club, $b->media),
                     'mime_type' => $b->media->mime_type,
                     'size' => $b->media->human_readable_size ?? (round($b->media->size / 1024, 1).' KB'),
                     'is_image' => str_starts_with($b->media->mime_type ?? '', 'image/'),
@@ -686,7 +690,7 @@ class AccountingAdminController extends Controller
                     'invoice_number' => $invNum,
                     'invoice_title' => $title,
                 ])
-                ->toMediaCollection('accounting');
+                ->toMediaCollection('accounting', 'local');
             $mediaId = $media->id;
         }
 
@@ -903,7 +907,7 @@ class AccountingAdminController extends Controller
                     'invoice_number' => $invoice->invoice_number,
                     'invoice_title' => $validated['title'],
                 ])
-                ->toMediaCollection('accounting');
+                ->toMediaCollection('accounting', 'local');
             $validated['media_id'] = $media->id;
         }
 
@@ -983,7 +987,7 @@ class AccountingAdminController extends Controller
                     'bill_number' => $bill->bill_number,
                     'vendor_name' => $validated['vendor_name'],
                 ])
-                ->toMediaCollection('accounting');
+                ->toMediaCollection('accounting', 'local');
             $validated['media_id'] = $media->id;
         }
 
@@ -1046,7 +1050,7 @@ class AccountingAdminController extends Controller
                 'amount' => (float) $invoice->amount,
                 'status' => $invoice->status,
                 'invoice_number' => $invoice->invoice_number,
-                'attachment_url' => $invoice->media_id && $invoice->media ? $invoice->media->getFullUrl() : null,
+                'attachment_url' => $invoice->media_id && $invoice->media ? $this->attachmentUrl($club, $invoice->media) : null,
                 'created_at' => $invoice->created_at->format('d M Y'),
             ],
             'members' => $members,
@@ -1073,7 +1077,7 @@ class AccountingAdminController extends Controller
                 'notes' => $bill->notes ?? '',
                 'status' => $bill->status,
                 'bill_number' => $bill->bill_number,
-                'attachment_url' => $bill->media_id && $bill->media ? $bill->media->getFullUrl() : null,
+                'attachment_url' => $bill->media_id && $bill->media ? $this->attachmentUrl($club, $bill->media) : null,
                 'created_at' => $bill->created_at->format('d M Y'),
             ],
         ]);
@@ -1981,6 +1985,29 @@ class AccountingAdminController extends Controller
             'giftAidSummary' => $giftAidSummary,
             'reconciledDonations' => $reconciledDonations,
             'filters' => $request->only(['date_from', 'date_to', 'person_id', 'status', 'search']),
+        ]);
+    }
+
+    /**
+     * Authorised link to an accounting attachment (stored on the private disk).
+     */
+    private function attachmentUrl(Club $club, Media $media): string
+    {
+        return route('admin.accounting.attachments.show', ['clubSlug' => $club->slug, 'mediaId' => $media->id]);
+    }
+
+    /**
+     * Stream an accounting attachment to a signed-in user who can manage billing at this club.
+     */
+    public function showAttachment(string $clubSlug, int $mediaId): BinaryFileResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $media = $club->media()->where('collection_name', 'accounting')->where('id', $mediaId)->firstOrFail();
+
+        return response()->file($media->getPath(), [
+            'Content-Type' => $media->mime_type,
+            'Content-Disposition' => 'inline; filename="'.addslashes($media->file_name).'"',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 }

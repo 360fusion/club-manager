@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
 use App\Models\Province;
+use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -275,7 +277,7 @@ class ClubSettingsController extends Controller
             'installation_month' => 'nullable|string|max:100',
             'provincial_ar_month' => 'nullable|string|max:100',
             'meeting_formula' => 'nullable|string|max:255',
-            'logo_url' => 'nullable|string|max:500',
+            'logo_url' => ['nullable', 'string', 'max:500', 'regex:#^(https?://|/)#i'],
             'primary_color' => 'nullable|string|max:50',
             'sidebar_theme' => 'nullable|string|max:50',
             'currency' => 'nullable|string|max:10',
@@ -289,25 +291,31 @@ class ClubSettingsController extends Controller
             'county' => 'nullable|string|max:255',
             'postcode' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:255',
-            'social_facebook' => 'nullable|string|max:500',
-            'social_instagram' => 'nullable|string|max:500',
-            'social_twitter' => 'nullable|string|max:500',
+            'social_facebook' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
+            'social_instagram' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
+            'social_twitter' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
             'registration_mode' => 'nullable|in:open,invite_only',
             'member_prefix' => 'nullable|string|max:50',
             'default_role' => 'nullable|in:member,coach,treasurer,admin',
             'invite_expiration_days' => 'nullable|integer|min:1|max:365',
             'membership_year_start' => 'nullable|string|max:50',
             'enable_member_ranks' => 'nullable|boolean',
-            'member_ranks' => 'nullable|array',
+            'member_ranks' => 'nullable|array|max:100',
+            'member_ranks.*' => 'nullable|string|max:255',
             'provincial_name' => 'nullable|string|max:255',
             'provincial_grand_master' => 'nullable|string|max:255',
             'deputy_provincial_grand_master' => 'nullable|string|max:255',
             'assistant_provincial_grand_masters' => 'nullable|string',
             'officers_year_label' => 'nullable|string|max:255',
-            'officers_roster' => 'nullable|array',
-            'custom_domain' => 'nullable|string|max:255',
-            'enabled_modules' => 'nullable|array',
+            'officers_roster' => 'nullable|array|max:100',
+            'officers_roster.*.role' => 'nullable|string|max:255',
+            'officers_roster.*.name' => 'nullable|string|max:255',
+            'custom_domain' => ['nullable', 'string', 'max:255', 'regex:/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i', Rule::unique('clubs', 'custom_domain')->ignore($club->id)],
+            'enabled_modules' => 'nullable|array|max:50',
+            'enabled_modules.*' => 'string|max:100',
             'permission_matrix' => 'nullable|array',
+            'permission_matrix.*.roles' => 'nullable|array|max:10',
+            'permission_matrix.*.roles.*' => ['string', Rule::in(['owner', 'admin', 'coach', 'treasurer', 'member'])],
 
             // Subscriptions & Dues
             'dues_grace_period_days' => 'nullable|integer|min:0|max:180',
@@ -365,6 +373,10 @@ class ClubSettingsController extends Controller
             'require_score_verification' => 'nullable|boolean',
         ]);
 
+        if (array_key_exists('permission_matrix', $validated)) {
+            $validated['permission_matrix'] = $this->cleanPermissionMatrix($request, $club, $validated['permission_matrix'] ?? []);
+        }
+
         if (isset($validated['name'])) {
             $club->name = $validated['name'];
         }
@@ -406,5 +418,39 @@ class ClubSettingsController extends Controller
         $club->save();
 
         return redirect()->back()->with('success', 'Club settings updated successfully.');
+    }
+
+    /**
+     * Keep only known capabilities with known roles. Only owners (and super
+     * admins) may change who holds the settings capability itself, so an admin
+     * cannot hand settings control to lower roles or lock others out.
+     *
+     * @param  array<string, mixed>  $submitted
+     * @return array<string, mixed>
+     */
+    private function cleanPermissionMatrix(Request $request, Club $club, array $submitted): array
+    {
+        $current = $club->settings['permission_matrix'] ?? [];
+        $current = is_array($current) ? $current : [];
+        $user = $request->user();
+        $isOwner = $user->is_super_admin || ClubAccess::role($user, $club) === 'owner';
+        $known = array_keys(self::defaultPermissionMatrix());
+        $clean = [];
+
+        foreach ($submitted as $capability => $override) {
+            if (in_array($capability, $known, true) && is_array($override) && isset($override['roles'])) {
+                $clean[$capability] = ['roles' => array_values(array_unique($override['roles']))];
+            }
+        }
+
+        if (! $isOwner) {
+            unset($clean['manage_settings']);
+
+            if (isset($current['manage_settings'])) {
+                $clean['manage_settings'] = $current['manage_settings'];
+            }
+        }
+
+        return $clean;
     }
 }

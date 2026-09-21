@@ -230,7 +230,7 @@ class ClubController extends Controller
         $club = Club::where('slug', $slug)->firstOrFail();
 
         $validated = $request->validate([
-            'custom_domain' => 'nullable|string|max:255|unique:clubs,custom_domain,'.$club->id,
+            'custom_domain' => ['nullable', 'string', 'max:255', 'regex:/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,}$/i', 'unique:clubs,custom_domain,'.$club->id],
         ]);
 
         $domain = $validated['custom_domain'] ? strtolower(trim($validated['custom_domain'])) : null;

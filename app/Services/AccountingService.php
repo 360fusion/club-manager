@@ -216,7 +216,7 @@ class AccountingService
                         'bill_number' => $billNum,
                         'vendor_name' => $data['vendor_name'],
                     ])
-                    ->toMediaCollection('accounting');
+                    ->toMediaCollection('accounting', 'local');
                 $mediaId = $media->id;
             }
 

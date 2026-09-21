@@ -14,6 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
 use ReflectionClass;
 use Tests\TestCase;
@@ -236,5 +237,59 @@ class SecurityAuditTest extends TestCase
     public function test_responses_carry_basic_security_headers(): void
     {
         $this->get('/login')->assertHeader('X-Content-Type-Options', 'nosniff')->assertHeader('X-Frame-Options')->assertHeader('Referrer-Policy');
+    }
+
+    public function test_only_owners_can_change_who_holds_the_settings_capability(): void
+    {
+        $url = route('admin.settings.update', ['clubSlug' => 'club-a']);
+
+        $this->actingAs($this->admin)->put($url, ['permission_matrix' => [
+            'manage_settings' => ['roles' => ['owner', 'admin', 'member']],
+            'manage_members' => ['roles' => ['owner', 'admin', 'treasurer']],
+            'made_up' => ['roles' => ['member']],
+        ]])->assertSessionHasNoErrors();
+
+        $saved = $this->a->fresh()->settings['permission_matrix'];
+        $this->assertArrayNotHasKey('manage_settings', $saved);
+        $this->assertArrayNotHasKey('made_up', $saved);
+        $this->assertSame(['owner', 'admin', 'treasurer'], $saved['manage_members']['roles']);
+
+        $this->actingAs($this->owner)->put($url, ['permission_matrix' => ['manage_settings' => ['roles' => ['owner', 'admin', 'treasurer']]]]);
+        $this->assertSame(['owner', 'admin', 'treasurer'], $this->a->fresh()->settings['permission_matrix']['manage_settings']['roles']);
+    }
+
+    public function test_settings_reject_script_urls_and_bad_domains(): void
+    {
+        $url = route('admin.settings.update', ['clubSlug' => 'club-a']);
+
+        $this->actingAs($this->admin)->put($url, [
+            'social_facebook' => 'javascript:alert(1)',
+            'logo_url' => 'javascript:alert(1)',
+            'custom_domain' => 'not a domain',
+        ])->assertSessionHasErrors(['social_facebook', 'logo_url', 'custom_domain']);
+    }
+
+    public function test_a_custom_domain_cannot_be_claimed_by_two_clubs(): void
+    {
+        $this->b->update(['custom_domain' => 'taken.example.org']);
+
+        $this->actingAs($this->admin)->put(route('admin.settings.update', ['clubSlug' => 'club-a']), ['custom_domain' => 'taken.example.org'])
+            ->assertSessionHasErrors('custom_domain');
+    }
+
+    public function test_accounting_attachments_are_private_and_need_billing_access(): void
+    {
+        Storage::fake('local');
+
+        $media = $this->a->addMedia(UploadedFile::fake()->create('receipt.pdf', 10, 'application/pdf'))->toMediaCollection('accounting', 'local');
+        $url = route('admin.accounting.attachments.show', ['clubSlug' => 'club-a', 'mediaId' => $media->id]);
+
+        $this->assertSame('local', $media->disk);
+        $this->actingAs($this->treasurer)->get($url)->assertOk();
+        $this->actingAs($this->member)->get($url)->assertForbidden();
+        $this->actingAs($this->adminB)->get($url)->assertForbidden();
+
+        $otherClubUrl = route('admin.accounting.attachments.show', ['clubSlug' => 'club-b', 'mediaId' => $media->id]);
+        $this->actingAs($this->adminB)->get($otherClubUrl)->assertNotFound();
     }
 }

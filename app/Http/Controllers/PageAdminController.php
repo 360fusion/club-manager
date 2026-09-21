@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Club;
 use App\Models\Page;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -59,16 +60,16 @@ class PageAdminController extends Controller
         $validated = $request->validate([
             'seo_title_suffix' => 'nullable|string|max:255',
             'seo_meta_description' => 'nullable|string|max:1000',
-            'custom_domain' => 'nullable|string|max:255',
+            'custom_domain' => ['nullable', 'string', 'max:255', 'regex:/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,}$/i', Rule::unique('clubs', 'custom_domain')->ignore($club->id)],
             'primary_color' => 'nullable|string|max:50',
             'contact_email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:100',
             'address' => 'nullable|string|max:500',
-            'social_facebook' => 'nullable|string|max:500',
-            'social_instagram' => 'nullable|string|max:500',
-            'social_twitter' => 'nullable|string|max:500',
+            'social_facebook' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
+            'social_instagram' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
+            'social_twitter' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
             'header_cta_text' => 'nullable|string|max:255',
-            'header_cta_link' => 'nullable|string|max:500',
+            'header_cta_link' => ['nullable', 'string', 'max:500', 'regex:#^(https?://|/|\\#|mailto:)#i'],
             'footer_copyright' => 'nullable|string|max:255',
         ]);
 
