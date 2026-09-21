@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\Visibility;
+use App\Mail\EventGuestBookingMail;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Event;
@@ -10,6 +11,7 @@ use App\Models\EventMenuItem;
 use App\Models\EventTicketTier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class EventBookingHttpTest extends TestCase
@@ -137,5 +139,65 @@ class EventBookingHttpTest extends TestCase
 
         $attendees = $this->event->registrations()->sole()->attendees;
         $this->assertSame([$memberTier->id, $guestTier->id], $attendees->pluck('ticket_tier_id')->all());
+    }
+
+    public function test_a_guest_given_an_email_is_sent_their_own_confirmation_once_and_never_the_bookers_private_details(): void
+    {
+        Mail::fake();
+        $guest = $this->person('Gary Guest', true, 1);
+        $guest['email'] = ' Gary@Example.test ';
+
+        $this->book([$this->person('Mia Member'), $guest])->assertSessionHasNoErrors();
+
+        Mail::assertSent(EventGuestBookingMail::class, function (EventGuestBookingMail $mail) {
+            $html = $mail->render();
+
+            return $mail->hasTo('gary@example.test')
+                && str_contains($html, 'Mia Member has booked')
+                && str_contains($html, 'Main 2')
+                && ! str_contains($html, '/booking/')
+                && ! str_contains($html, 'Reference');
+        });
+        $this->assertNotNull($this->event->registrations()->sole()->attendees->firstWhere('is_guest', true)->notified_at);
+
+        // Editing the booking does not email the same guest again; a newly added guest is emailed.
+        $second = $this->person('Sue Second', true, 2);
+        $second['email'] = 'sue@example.test';
+        $this->event->update(['max_guests_per_booking' => 3]);
+        $this->book([$this->person('Mia Member'), $guest, $second])->assertSessionHasNoErrors();
+
+        Mail::assertSent(EventGuestBookingMail::class, 2);
+        Mail::assertSent(EventGuestBookingMail::class, fn ($mail) => $mail->hasTo('sue@example.test'));
+    }
+
+    public function test_a_bad_guest_email_is_refused_and_a_guest_without_one_is_simply_not_emailed(): void
+    {
+        Mail::fake();
+        $bad = $this->person('Gary Guest', true);
+        $bad['email'] = 'not an email';
+
+        $this->book([$this->person('Mia Member'), $bad])->assertSessionHasErrors('attendees.1.email');
+        $this->assertSame(0, $this->event->registrations()->count());
+
+        $this->book([$this->person('Mia Member'), $this->person('No Email', true)])->assertSessionHasNoErrors();
+        Mail::assertNothingSent();
+    }
+
+    public function test_a_waitlisted_guest_is_told_they_are_waiting_and_the_organiser_sees_the_guests_own_email(): void
+    {
+        Mail::fake();
+        $this->event->update(['capacity' => 1]);
+        $guest = $this->person('Gary Guest', true);
+        $guest['email'] = 'gary@example.test';
+
+        $this->book([$this->person('Mia Member'), $guest])->assertSessionHasNoErrors();
+
+        Mail::assertSent(EventGuestBookingMail::class, fn ($mail) => str_contains($mail->render(), 'waiting list'));
+
+        $admin = User::factory()->create();
+        $this->club->users()->attach($admin->id, ['role' => 'admin', 'status' => 'active']);
+        $this->actingAs($admin)->get(route('admin.events.subscribers', ['clubSlug' => 'club-a', 'id' => $this->event->id]))->assertInertia(fn ($page) => $page
+            ->where('subscribers.1.name', 'Gary Guest')
+            ->where('subscribers.1.email', 'gary@example.test'));
     }
 }

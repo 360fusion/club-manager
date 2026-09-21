@@ -39,11 +39,13 @@ class EventRegistration extends Model
         'paid_at',
         'stripe_session_id',
         'stripe_payment_intent',
+        'paypal_order_id',
+        'paypal_capture_id',
         'summons_sent_at',
         'reminder_sent_at',
     ];
 
-    protected $hidden = ['token_hash', 'stripe_session_id', 'stripe_payment_intent'];
+    protected $hidden = ['token_hash', 'stripe_session_id', 'stripe_payment_intent', 'paypal_order_id', 'paypal_capture_id'];
 
     /** The emailed link token, only set on the request that created a guest booking. */
     public ?string $plainToken = null;

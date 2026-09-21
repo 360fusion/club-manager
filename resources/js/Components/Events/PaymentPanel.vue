@@ -61,6 +61,7 @@ const ACTIONS = {
     waived: ['Charge waived', 'text-blue-600'],
     refunded: ['Refunded', 'text-rose-600'],
     stripe_paid: ['Paid online', 'text-emerald-600'],
+    paypal_paid: ['Paid online (PayPal)', 'text-emerald-600'],
     reconciled: ['Matched to a bank line', 'text-emerald-600'],
 };
 

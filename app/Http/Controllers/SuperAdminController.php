@@ -16,6 +16,7 @@ use App\Support\OrderColours;
 use Database\Seeders\ClubTypeSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -209,6 +210,27 @@ class SuperAdminController extends Controller
         $template->update($validated);
 
         return redirect()->back()->with('success', "Email template '{$template->name}' updated.");
+    }
+
+    /**
+     * Email the template, with each placeholder shown as its own name, to the signed-in superadmin so they can see how it reads.
+     */
+    public function sendTestEmailTemplate(Request $request, int $id): RedirectResponse
+    {
+        $template = DefaultEmailTemplate::findOrFail($id);
+
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'body_html' => 'required|string|max:200000',
+        ]);
+
+        $samples = collect($template->available_placeholders ?? [])->mapWithKeys(fn (string $name) => ['{{'.$name.'}}' => '['.$name.']'])->all();
+        $subject = trim(str_replace(["\r", "\n"], ' ', strtr($validated['subject'], $samples)));
+        $body = strtr($validated['body_html'], $samples);
+
+        Mail::html($body, fn ($message) => $message->to($request->user()->email)->subject('[Test] '.$subject));
+
+        return redirect()->back()->with('success', 'A test of this template has been sent to '.$request->user()->email.'.');
     }
 
     /**

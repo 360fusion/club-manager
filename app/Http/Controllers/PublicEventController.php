@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Mail\EventBookingMail;
 use App\Models\Club;
-use App\Models\ClubPaymentMethod;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Services\Events\EventOnlinePayment;
@@ -53,6 +52,7 @@ class PublicEventController extends Controller
             'promo_code' => 'nullable|string|max:40',
             'attendees' => 'required|array|min:1|max:50',
             'attendees.*.name' => 'nullable|string|max:150',
+            'attendees.*.email' => 'nullable|string|max:255',
             'attendees.*.is_guest' => 'nullable|boolean',
             'attendees.*.ticket_tier_id' => 'nullable|integer',
             'attendees.*.attending_dining' => 'nullable|boolean',
@@ -89,9 +89,11 @@ class PublicEventController extends Controller
         $manageUrl = $this->manageUrl($club, (string) $registration->plainToken);
         Mail::to($email)->send(new EventBookingMail($event, $registration, $manageUrl));
 
-        // Chose to pay by card: straight on to Stripe, coming back to their private booking page.
-        if ($registration->status === 'attending' && $registration->paymentMethod?->type === ClubPaymentMethod::CARD && $online->canPay($registration)) {
-            return Inertia::location($online->start($registration, $manageUrl.'?payment=success', $manageUrl.'?payment=cancelled'));
+        $registrations->sendGuestConfirmations($registration);
+
+        // Chose to pay online (card or PayPal): straight on to the payment page, coming back to their private booking page.
+        if ($registration->status === 'attending' && $registration->paymentMethod?->isOnline() && $online->canPay($registration)) {
+            return Inertia::location($online->start($registration, $manageUrl.'?payment=success', $manageUrl.'?payment=cancelled', null, route('public.event.booking.paypal_return', ['clubSlug' => $club->slug, 'token' => (string) $registration->plainToken])));
         }
 
         return $this->thanks($club, $event);

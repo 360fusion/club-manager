@@ -25,6 +25,7 @@ const COURSES = [
 
 const blankPerson = (isGuest = false) => ({
     name: isGuest ? '' : myName.value,
+    email: '',
     is_guest: isGuest,
     ticket_tier_id: null,
     attending_dining: false,
@@ -45,6 +46,7 @@ const form = useForm({
     attendees: saved.length
         ? saved.map((a) => ({
             name: a.name,
+            email: a.email ?? '',
             is_guest: a.is_guest,
             ticket_tier_id: a.ticket_tier_id,
             attending_dining: a.attending_dining,
@@ -97,9 +99,9 @@ watch(quote, (value) => {
 });
 
 const paying = ref(false);
-const payNow = () => {
+const payNow = (option = null) => {
     paying.value = true;
-    router.post(route('member.events.pay', { slug: props.clubSlug, id: props.event.id }), {}, { onFinish: () => { paying.value = false; } });
+    router.post(route('member.events.pay', { slug: props.clubSlug, id: props.event.id }), { option }, { onFinish: () => { paying.value = false; } });
 };
 
 const addGuest = () => {
@@ -168,6 +170,12 @@ const generalError = computed(() => form.errors.capacity || form.errors.registra
                             <p v-if="errorFor(index, 'name')" class="mt-1 text-[11px] font-semibold text-rose-600">{{ errorFor(index, 'name') }}</p>
                         </div>
                         <button v-if="person.is_guest" type="button" class="self-end pb-2 text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400" @click="removeGuest(index)">Remove</button>
+                    </div>
+
+                    <div v-if="person.is_guest">
+                        <label :class="labelClass">Guest's email (optional)</label>
+                        <input v-model="person.email" type="email" maxlength="255" placeholder="We'll email them a confirmation of their place" :class="fieldClass" />
+                        <p v-if="errorFor(index, 'email')" class="mt-1 text-[11px] font-semibold text-rose-600">{{ errorFor(index, 'email') }}</p>
                     </div>
 
                     <div v-if="tiersFor(person).length > 1">

@@ -26,6 +26,7 @@ class PaymentOptionsController extends Controller
             'methods' => ClubPaymentMethod::where('club_id', $club->id)->orderBy('sort_order')->orderBy('id')->get()->map(fn (ClubPaymentMethod $m) => $this->present($m))->values(),
             // Pre-fill a first bank transfer option from the details the club already keeps.
             'stripeWebhookUrl' => route('webhooks.stripe.club', ['clubId' => $club->id]),
+            'paypalWebhookUrl' => route('webhooks.paypal.club', ['clubId' => $club->id]),
             'onlinePaymentsLive' => (bool) config('events.online_payments'),
             'bankDefaults' => [
                 'account_name' => $club->name,
@@ -98,6 +99,10 @@ class PaymentOptionsController extends Controller
             'config.stripe_publishable_key' => 'nullable|string|max:255',
             'config.stripe_secret_key' => 'nullable|string|max:500',
             'config.stripe_webhook_secret' => 'nullable|string|max:500',
+            'config.paypal_client_id' => 'nullable|string|max:255',
+            'config.paypal_client_secret' => 'nullable|string|max:500',
+            'config.paypal_webhook_id' => 'nullable|string|max:100',
+            'config.paypal_mode' => 'nullable|in:sandbox,live',
         ]);
 
         if ($method->exists && $validated['type'] !== $type) {
@@ -145,6 +150,17 @@ class PaymentOptionsController extends Controller
             return array_filter($config, fn ($v) => filled($v)) ?: null;
         }
 
+        if ($method->type === ClubPaymentMethod::PAYPAL) {
+            $config = [
+                'paypal_client_id' => $input['paypal_client_id'] ?? ($current['paypal_client_id'] ?? null),
+                'paypal_webhook_id' => $input['paypal_webhook_id'] ?? ($current['paypal_webhook_id'] ?? null),
+                'paypal_mode' => $input['paypal_mode'] ?? ($current['paypal_mode'] ?? 'live'),
+                'paypal_client_secret' => filled($input['paypal_client_secret'] ?? null) ? $input['paypal_client_secret'] : ($current['paypal_client_secret'] ?? null),
+            ];
+
+            return array_filter($config, fn ($v) => filled($v)) ?: null;
+        }
+
         return null;
     }
 
@@ -172,7 +188,12 @@ class PaymentOptionsController extends Controller
             'config' => [
                 ...$m->bankDetails(),
                 'stripe_publishable_key' => $config['stripe_publishable_key'] ?? null,
+                'paypal_client_id' => $config['paypal_client_id'] ?? null,
+                'paypal_webhook_id' => $config['paypal_webhook_id'] ?? null,
+                'paypal_mode' => $config['paypal_mode'] ?? 'live',
             ],
+            'has_paypal_secret' => ! empty($config['paypal_client_secret']),
+            'ready_for_paypal' => $m->isReadyForPayPal(),
             'has_stripe_secret_key' => ! empty($config['stripe_secret_key']),
             'has_stripe_webhook_secret' => ! empty($config['stripe_webhook_secret']),
             'ready_for_cards' => $m->isReadyForCards(),

@@ -19,12 +19,12 @@ const cancelled = computed(() => booking.value?.attendance_status === 'cancelled
 const waiting = computed(() => booking.value?.attendance_status === 'waitlisted');
 
 const paying = ref(false);
-const payNow = () => {
+const payNow = (option = null) => {
   paying.value = true;
-  router.post(route('public.event.booking.pay', { clubSlug: props.club.slug, token: props.token }), {}, { onFinish: () => { paying.value = false; } });
+  router.post(route('public.event.booking.pay', { clubSlug: props.club.slug, token: props.token }), { option }, { onFinish: () => { paying.value = false; } });
 };
 
-// Stripe sends people back here with ?payment=success or ?payment=cancelled.
+// Stripe and PayPal send people back here with ?payment=success or ?payment=cancelled.
 const returned = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('payment') : null;
 
 const cancelBooking = () => {

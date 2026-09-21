@@ -50,10 +50,12 @@ const STATUS = {
             </div>
             <p v-else-if="payment.method_type === 'cash_on_door'" :class="muted">Pay when you arrive.</p>
 
-            <button v-if="payment.online?.can_pay" type="button" :disabled="paying" class="w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-60" @click="emit('pay')">
-                {{ paying ? 'Taking you to the payment page...' : `Pay ${formatMoney(payment.online.total)} now by card` }}
-                <span v-if="payment.online.saving > 0" class="ml-1 font-normal opacity-90">(save {{ formatMoney(payment.online.saving) }})</span>
-            </button>
+            <template v-if="payment.online?.can_pay">
+                <button v-for="offer in payment.online.options" :key="offer.id" type="button" :disabled="paying" class="w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-60" @click="emit('pay', offer.id)">
+                    {{ paying ? 'Taking you to the payment page...' : `Pay ${formatMoney(offer.total)} now ${offer.type === 'paypal' ? 'with PayPal' : 'by card'}` }}
+                    <span v-if="offer.saving > 0" class="ml-1 font-normal opacity-90">(save {{ formatMoney(offer.saving) }})</span>
+                </button>
+            </template>
         </template>
     </div>
 </template>

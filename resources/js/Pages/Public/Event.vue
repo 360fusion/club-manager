@@ -21,7 +21,7 @@ const COURSES = [
   { key: 'dessert', column: 'dessert_item_id', label: 'Dessert' },
 ];
 
-const blankPerson = () => ({ name: '', ticket_tier_id: null, attending_dining: false, starter_item_id: null, main_item_id: null, dessert_item_id: null, dietary_requirements: '' });
+const blankPerson = () => ({ name: '', email: '', ticket_tier_id: null, attending_dining: false, starter_item_id: null, main_item_id: null, dessert_item_id: null, dietary_requirements: '' });
 
 const form = useForm({
   website: '',
@@ -168,6 +168,12 @@ const label = 'block text-[11px] font-semibold text-slate-400 uppercase tracking
               <p v-if="err(index, 'name')" class="mt-1 text-xs text-rose-400">{{ err(index, 'name') }}</p>
             </div>
             <button v-if="index > 0" type="button" class="pb-2 text-xs font-semibold text-rose-400" @click="removePerson(index)">Remove</button>
+          </div>
+
+          <div v-if="index > 0">
+            <label :class="label">Guest's email (optional)</label>
+            <input v-model="person.email" type="email" maxlength="255" placeholder="We'll email them a confirmation of their place" :class="field" />
+            <p v-if="err(index, 'email')" class="mt-1 text-xs text-rose-400">{{ err(index, 'email') }}</p>
           </div>
 
           <div v-if="tiers.length > 1">

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 
@@ -35,6 +35,17 @@ function updateTemplate() {
         },
     });
 }
+
+function sendTest() {
+    if (!selectedTemplate.value) return;
+    editForm.post(route('superadmin.email_templates.test', selectedTemplate.value.id), { preserveScroll: true });
+}
+
+const showPreview = ref(false);
+const previewHtml = computed(() => {
+    const samples = Object.fromEntries((selectedTemplate.value?.available_placeholders || []).map((p) => [`{{${p}}}`, `[${p}]`]));
+    return editForm.body_html.replace(/\{\{\w+\}\}/g, (m) => samples[m] ?? m);
+});
 
 function insertPlaceholder(variable) {
     editForm.body_html += ` {{${variable}}}`;
@@ -84,6 +95,9 @@ function insertPlaceholder(variable) {
                             <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ selectedTemplate.name }}</h2>
                             <span class="text-xs font-mono text-slate-500 dark:text-slate-400">{{ selectedTemplate.template_key }}</span>
                         </div>
+                        <div class="flex items-center gap-2">
+                        <button type="button" @click="showPreview = !showPreview" class="px-3 py-2 border border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-200 font-medium text-xs rounded-lg">{{ showPreview ? 'Hide preview' : 'Preview' }}</button>
+                        <button type="button" @click="sendTest" :disabled="editForm.processing" class="px-3 py-2 border border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-200 font-medium text-xs rounded-lg">Send test to me</button>
                         <button
                             @click="updateTemplate"
                             :disabled="editForm.processing"
@@ -94,7 +108,10 @@ function insertPlaceholder(variable) {
                             </svg>
                             {{ editForm.processing ? 'Saving...' : 'Save Template' }}
                         </button>
+                        </div>
                     </div>
+
+                    <iframe v-if="showPreview" sandbox="" :srcdoc="previewHtml" class="h-72 w-full rounded-lg border border-slate-300 bg-white dark:border-slate-700"></iframe>
 
                     <!-- Editor Fields -->
                     <div class="space-y-4 text-xs">

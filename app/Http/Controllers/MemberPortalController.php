@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
-use App\Models\ClubPaymentMethod;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Invoice;
@@ -367,6 +366,7 @@ class MemberPortalController extends Controller
             'promo_code' => 'nullable|string|max:40',
             'attendees' => 'nullable|array|max:50',
             'attendees.*.name' => 'nullable|string|max:150',
+            'attendees.*.email' => 'nullable|string|max:255',
             'attendees.*.is_guest' => 'nullable|boolean',
             'attendees.*.ticket_tier_id' => 'nullable|integer',
             'attendees.*.attending_dining' => 'nullable|boolean',
@@ -384,11 +384,13 @@ class MemberPortalController extends Controller
             'attendees' => $validated['attendees'] ?? [],
         ]);
 
-        // Chose to pay by card: straight on to Stripe for what they owe.
-        if ($registration->status === 'attending' && $registration->paymentMethod?->type === ClubPaymentMethod::CARD && $online->canPay($registration)) {
+        $registrations->sendGuestConfirmations($registration);
+
+        // Chose to pay online (card or PayPal): straight on to the payment page for what they owe.
+        if ($registration->status === 'attending' && $registration->paymentMethod?->isOnline() && $online->canPay($registration)) {
             $back = route('member.events', ['slug' => $club->slug]);
 
-            return Inertia::location($online->start($registration, $back.'?payment=success', $back.'?payment=cancelled'));
+            return Inertia::location($online->start($registration, $back.'?payment=success', $back.'?payment=cancelled', null, route('member.events.paypal_return', ['slug' => $club->slug, 'id' => $event->id])));
         }
 
         return redirect()->back()->with('success', $validated['attendance_status'] === 'declined' ? 'Your reply has been saved.' : 'Your booking has been saved.');

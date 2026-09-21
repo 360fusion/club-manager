@@ -14,7 +14,7 @@ const props = defineProps({
 
 const activeFilter = ref('all'); // 'all', 'meetings', 'events'
 
-// Stripe sends people back here with ?payment=success or ?payment=cancelled.
+// Stripe and PayPal send people back here with ?payment=success or ?payment=cancelled.
 const returned = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('payment') : null;
 
 // Social Event RSVP Modal State

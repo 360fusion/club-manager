@@ -9,6 +9,7 @@ use App\Models\EventPaymentLog;
 use App\Models\EventRegistration;
 use App\Models\User;
 use App\Services\AccountingService;
+use App\Services\Payment\PayPalGateway;
 use App\Services\Payment\StripeGateway;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -48,7 +49,11 @@ class EventPaymentService
             $registration->stripe_payment_intent = $paymentIntent ?? $registration->stripe_payment_intent;
             $registration->save();
 
-            $this->log($registration, $source === 'stripe_webhook' ? 'stripe_paid' : ($registration->payment_status === 'paid' ? 'marked_paid' : 'marked_part_paid'), $amount, $method, $comment, $actor, $source, $receivedAt, $externalId);
+            $this->log($registration, match ($source) {
+                'stripe_webhook' => 'stripe_paid',
+                'paypal' => 'paypal_paid',
+                default => null,
+            } ?? ($registration->payment_status === 'paid' ? 'marked_paid' : 'marked_part_paid'), $amount, $method, $comment, $actor, $source, $receivedAt, $externalId);
             $this->postIncome($registration, $amount, $actor);
 
             return $registration;
@@ -130,6 +135,12 @@ class EventPaymentService
                 app(StripeGateway::class)->refund($method, $registration->stripe_payment_intent, (int) round($amount * 100));
             }
 
+            $viaPayPal = ! $viaStripe && $registration->paypal_capture_id && $method?->type === ClubPaymentMethod::PAYPAL && $method->isReadyForPayPal();
+
+            if ($viaPayPal) {
+                app(PayPalGateway::class)->refund($method, $registration->paypal_capture_id, $amount, $registration->event->club->currencyCode());
+            }
+
             $registration->amount_refunded = round((float) $registration->amount_refunded + $amount, 2);
 
             if ($registration->amount_refunded + 0.001 >= (float) $registration->amount_paid) {
@@ -138,7 +149,7 @@ class EventPaymentService
 
             $registration->save();
 
-            $this->log($registration, 'refunded', $amount, $viaStripe ? 'Stripe refund' : null, $comment, $actor, 'admin');
+            $this->log($registration, 'refunded', $amount, $viaStripe ? 'Stripe refund' : ($viaPayPal ? 'PayPal refund' : null), $comment, $actor, 'admin');
             $this->postReversal($registration, $amount, $actor, 'Refund');
 
             return $registration;
@@ -158,6 +169,7 @@ class EventPaymentService
             'comment' => $row->comment,
             'by' => $row->user?->name ?? match ($row->source) {
                 'stripe_webhook' => 'Stripe',
+                'paypal' => 'PayPal',
                 'bank_reconciliation' => 'Bank reconciliation',
                 default => 'System',
             },

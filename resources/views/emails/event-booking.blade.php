@@ -14,33 +14,9 @@
   @endif
 
   <p style="margin-bottom: 4px;"><strong>Booked for</strong></p>
-  <ul style="padding-left: 18px; margin-top: 0;">
-    @foreach ($registration->attendees as $person)
-      @php($meal = array_filter($person->mealSummary()))
-      <li>{{ $person->name }}@if ($meal) &mdash; {{ implode(', ', $meal) }}@endif @if ($person->dietary_requirements)<br><small style="color:#64748b">Dietary: {{ $person->dietary_requirements }}</small>@endif</li>
-    @endforeach
-  </ul>
+  @include('emails.partials.event-attendees')
 
-  @if ((float) $payment['total'] > 0)
-    <p style="margin-bottom: 4px;"><strong>Payment</strong></p>
-    <p style="margin-top: 0;">
-      Total: {{ $symbol }}{{ number_format((float) $payment['total'], 2) }}
-      @if ((float) $payment['booking_fee'] > 0) (includes a {{ $symbol }}{{ number_format((float) $payment['booking_fee'], 2) }} {{ strtolower($payment['booking_fee_label']) }})@endif
-      @if ((float) $payment['amount_paid'] > 0)<br>Paid so far: {{ $symbol }}{{ number_format((float) $payment['amount_paid'], 2) }}@endif
-      @if ($payment['method_label'])<br>Paying by: {{ $payment['method_label'] }}@if ($payment['due_at']), due by {{ $payment['due_at'] }}@endif @endif
-    </p>
-    @if ($payment['instructions'])<p>{{ $payment['instructions'] }}</p>@endif
-    @if ($payment['bank'] && $registration->status !== 'waitlisted')
-      <p style="background:#f1f5f9;padding:10px;border-radius:6px;">
-        <strong>Bank transfer</strong><br>
-        @if ($payment['bank']['account_name'])Account name: {{ $payment['bank']['account_name'] }}<br>@endif
-        @if ($payment['bank']['sort_code'])Sort code: {{ $payment['bank']['sort_code'] }}<br>@endif
-        @if ($payment['bank']['account_number'])Account number: {{ $payment['bank']['account_number'] }}<br>@endif
-        <strong>Reference: {{ $payment['reference'] }}</strong><br>
-        <small>Please use the reference exactly so we can match your payment.</small>
-      </p>
-    @endif
-  @endif
+  @include('emails.partials.event-payment-summary')
 
   <p>You can view or cancel your booking at any time with this private link:<br>
     <a href="{{ $manageUrl }}">{{ $manageUrl }}</a></p>

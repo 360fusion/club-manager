@@ -147,6 +147,7 @@ class EventPayload
             'attendees' => $registration->attendees->map(fn (EventAttendee $a) => [
                 'id' => $a->id,
                 'name' => $a->name,
+                'email' => $a->email,
                 'is_guest' => $a->is_guest,
                 'ticket_tier_id' => $a->ticket_tier_id,
                 'attending_dining' => $a->attending_dining,
@@ -202,13 +203,14 @@ class EventPayload
     /**
      * Whether this booking can be paid by card now, and what that would cost.
      *
-     * @return array{can_pay: bool, total: ?float, saving: float}
+     * @return array{can_pay: bool, total: ?float, saving: float, options: list<array{id: int, label: string, type: string, total: float, saving: float}>}
      */
     private static function online(EventRegistration $registration): array
     {
         $registration->loadMissing('attendees');
-        $offer = app(EventOnlinePayment::class)->onlineOffer($registration);
+        $offers = app(EventOnlinePayment::class)->offers($registration);
+        $best = collect($offers)->sortBy('total')->first();
 
-        return ['can_pay' => $offer !== null, 'total' => $offer['total'] ?? null, 'saving' => $offer['saving'] ?? 0.0];
+        return ['can_pay' => $offers !== [], 'total' => $best['total'] ?? null, 'saving' => $best['saving'] ?? 0.0, 'options' => $offers];
     }
 }

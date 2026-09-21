@@ -120,7 +120,7 @@ class GuestListBuilder
             'name' => $attendee->name,
             'is_guest' => $attendee->is_guest,
             'guest_of' => $attendee->is_guest ? $registration->contact_name : null,
-            'email' => $registration->contact_email ?? $registration->user?->email,
+            'email' => $attendee->email ?? $registration->contact_email ?? $registration->user?->email,
             'ticket' => $attendee->ticketTier?->name,
             'dining' => $attendee->attending_dining,
             'meal' => $attendee->mealSummary(),

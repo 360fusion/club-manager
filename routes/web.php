@@ -53,6 +53,7 @@ use App\Http\Controllers\OfficerRosterAdminController;
 use App\Http\Controllers\PageAdminController;
 use App\Http\Controllers\PasswordlessRsvpController;
 use App\Http\Controllers\PaymentOptionsController;
+use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicSiteController;
@@ -115,6 +116,7 @@ Route::post('/site/{clubSlug}/events/{eventSlug}/quote', [EventQuoteController::
 Route::post('/site/{clubSlug}/events/{eventSlug}/register', [PublicEventController::class, 'register'])->name('public.event.register')->middleware('throttle:public-forms');
 Route::get('/site/{clubSlug}/booking/{token}', [PublicEventController::class, 'booking'])->name('public.event.booking')->middleware('throttle:auth-forms');
 Route::post('/site/{clubSlug}/booking/{token}/pay', [EventOnlinePaymentController::class, 'guest'])->name('public.event.booking.pay')->middleware('throttle:auth-forms');
+Route::get('/site/{clubSlug}/booking/{token}/paypal-return', [EventOnlinePaymentController::class, 'guestPayPalReturn'])->name('public.event.booking.paypal_return')->middleware('throttle:auth-forms');
 Route::post('/site/{clubSlug}/booking/{token}/cancel', [PublicEventController::class, 'cancel'])->name('public.event.booking.cancel')->middleware('throttle:auth-forms');
 Route::get('/site/{clubSlug}/{pageSlug?}', [PublicSiteController::class, 'showPage'])->name('public.site');
 Route::post('/site/{clubSlug}/contact-form', [PublicSiteController::class, 'submitContactForm'])->name('public.site.contact_form')->middleware('throttle:public-forms');
@@ -132,6 +134,7 @@ if (app()->isLocal()) {
 // GoCardless posts here unauthenticated; the request is authenticated by its
 // HMAC signature instead. Must stay outside the auth group and exempt from CSRF.
 Route::post('/webhooks/stripe/{clubId}', [StripeWebhookController::class, 'handle'])->name('webhooks.stripe.club');
+Route::post('/webhooks/paypal/{clubId}', [PayPalWebhookController::class, 'handle'])->name('webhooks.paypal.club');
 Route::post('/webhooks/gocardless/{clubId}', [GoCardlessWebhookController::class, 'handle'])
     ->name('webhooks.gocardless');
 
@@ -416,6 +419,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/meetings', [MemberListController::class, 'meetings'])->name('member.meetings');
     Route::post('/members/{slug}/meetings/{id}/quick-rsvp', [QuickRsvpController::class, 'meeting'])->name('member.meetings.quick_rsvp');
     Route::post('/members/{slug}/events/{id}/pay', [EventOnlinePaymentController::class, 'member'])->name('member.events.pay');
+    Route::get('/members/{slug}/events/{id}/paypal-return', [EventOnlinePaymentController::class, 'memberPayPalReturn'])->name('member.events.paypal_return');
     Route::post('/members/{slug}/events/{id}/quote', [EventQuoteController::class, 'member'])->name('member.events.quote');
     Route::post('/members/{slug}/events/{id}/quick-rsvp', [QuickRsvpController::class, 'event'])->name('member.events.quick_rsvp');
     Route::get('/members/{slug}/events', [MemberPortalController::class, 'events'])->name('member.events');
@@ -464,6 +468,7 @@ Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
     Route::put('/superadmin/club-types/{id}', [SuperAdminController::class, 'updateClubType'])->name('superadmin.club_types.update');
     Route::get('/superadmin/email-templates', [SuperAdminController::class, 'emailTemplatesIndex'])->name('superadmin.email_templates.index');
     Route::put('/superadmin/email-templates/{id}', [SuperAdminController::class, 'updateEmailTemplate'])->name('superadmin.email_templates.update');
+    Route::post('/superadmin/email-templates/{id}/test', [SuperAdminController::class, 'sendTestEmailTemplate'])->middleware('throttle:10,1')->name('superadmin.email_templates.test');
     Route::get('/superadmin/grand-lodges', [SuperAdminController::class, 'grandLodgesIndex'])->name('superadmin.grand_lodges.index');
     Route::post('/superadmin/grand-lodges', [SuperAdminController::class, 'storeGrandLodge'])->name('superadmin.grand_lodges.store');
     Route::put('/superadmin/grand-lodges/{id}', [SuperAdminController::class, 'updateGrandLodge'])->name('superadmin.grand_lodges.update');

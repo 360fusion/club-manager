@@ -14,6 +14,8 @@ class EventAttendee extends Model
         'registration_id',
         'user_id',
         'name',
+        'email',
+        'notified_at',
         'is_guest',
         'ticket_tier_id',
         'attending_dining',
@@ -35,6 +37,7 @@ class EventAttendee extends Model
             'legacy_menu' => 'array',
             'price' => 'decimal:2',
             'checked_in_at' => 'datetime',
+            'notified_at' => 'datetime',
         ];
     }
 

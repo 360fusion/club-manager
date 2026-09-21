@@ -8,12 +8,14 @@ const props = defineProps({
   methods: { type: Array, default: () => [] },
   bankDefaults: { type: Object, default: () => ({}) },
   stripeWebhookUrl: { type: String, default: '' },
+  paypalWebhookUrl: { type: String, default: '' },
   onlinePaymentsLive: { type: Boolean, default: false },
 });
 
 const TYPES = [
   { value: 'bank_transfer', label: 'Bank transfer', help: 'People pay into your bank account using a reference. You mark them paid once you have checked the account.', fee: false },
   { value: 'card_online', label: 'Pay online by card', help: 'People pay on Stripe\'s secure page with your own Stripe account, and the money goes straight to you.', fee: false },
+  { value: 'paypal', label: 'Pay online with PayPal', help: 'People pay on PayPal\'s secure page with your own PayPal business account, and the money goes straight to you.', fee: false },
   { value: 'pay_later', label: 'Pay later', help: 'People book now and pay before a due date you set. They can pay any time before then.', fee: true },
   { value: 'cash_on_door', label: 'Pay on the night', help: 'People pay when they arrive.', fee: true },
 ];
@@ -40,7 +42,7 @@ const form = useForm(blank());
 const open = (method = null) => {
   form.clearErrors();
   const data = method
-    ? { ...blank(method.type), ...method, config: { ...method.config, stripe_secret_key: '', stripe_webhook_secret: '' } }
+    ? { ...blank(method.type), ...method, config: { ...method.config, stripe_secret_key: '', stripe_webhook_secret: '', paypal_client_secret: '' } }
     : blank();
   form.defaults(data).reset();
   Object.assign(form, data);
@@ -50,7 +52,7 @@ const open = (method = null) => {
 const chooseType = (value) => {
   form.type = value;
   form.label = typeInfo(value).label;
-  form.config = value === 'bank_transfer' ? { ...props.bankDefaults, reference_prefix: '' } : {};
+  form.config = value === 'bank_transfer' ? { ...props.bankDefaults, reference_prefix: '' } : (value === 'paypal' ? { paypal_mode: 'live' } : {});
   if (!typeInfo(value).fee && form.default_adjustment_kind === 'fee') form.default_adjustment_kind = 'none';
 };
 
@@ -170,6 +172,25 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
             <p v-if="!onlinePaymentsLive" class="font-semibold text-amber-700 dark:text-amber-300">Card payments are not switched on for this site yet, so this option won't be offered to people until they are.</p>
           </div>
           <p class="sm:col-span-2 text-[11px] text-slate-500 dark:text-slate-400">Keys are stored encrypted and never shown again.</p>
+        </div>
+
+        <!-- PayPal -->
+        <div v-if="form.type === 'paypal'" class="grid gap-4 sm:grid-cols-2">
+          <div class="sm:col-span-2"><label :class="label">PayPal client ID</label><input v-model="form.config.paypal_client_id" type="text" maxlength="255" autocomplete="off" :class="input" /></div>
+          <div><label :class="label">PayPal client secret</label><input v-model="form.config.paypal_client_secret" type="password" maxlength="500" autocomplete="off" :class="input" :placeholder="current?.has_paypal_secret ? 'Saved - leave blank to keep' : ''" /></div>
+          <div><label :class="label">PayPal webhook ID</label><input v-model="form.config.paypal_webhook_id" type="text" maxlength="100" autocomplete="off" :class="input" /></div>
+          <div>
+            <label :class="label">Mode</label>
+            <select v-model="form.config.paypal_mode" :class="input"><option value="live">Live</option><option value="sandbox">Sandbox (testing)</option></select>
+          </div>
+          <div class="sm:col-span-2 space-y-1 rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 text-[11px] text-slate-600 dark:text-slate-300">
+            <p class="font-bold text-slate-900 dark:text-white">Set this up in your PayPal developer dashboard</p>
+            <p>Create an app (a REST API app) for your business account and copy its client ID and secret above. Then add a webhook pointing to:</p>
+            <p class="break-all font-mono text-[11px] text-slate-900 dark:text-white">{{ paypalWebhookUrl }}</p>
+            <p>Subscribe it to <span class="font-mono">Payment capture completed</span>, then paste the webhook's ID above. People are only offered PayPal once all three are saved, and only in currencies PayPal supports (GBP, EUR, USD, AUD, NZD, CAD, CHF, BRL).</p>
+            <p v-if="!onlinePaymentsLive" class="font-semibold text-amber-700 dark:text-amber-300">Online payments are not switched on for this site yet, so this option won't be offered to people until they are.</p>
+          </div>
+          <p class="sm:col-span-2 text-[11px] text-slate-500 dark:text-slate-400">The secret is stored encrypted and never shown again. Like card payments, PayPal can be discounted but not given a fee.</p>
         </div>
 
         <!-- Pay later -->

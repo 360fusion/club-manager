@@ -76,6 +76,23 @@ class PaymentOptionsTest extends TestCase
         $this->assertSame('Pay online now', $fresh->label);
     }
 
+    public function test_paypal_credentials_are_encrypted_never_sent_back_kept_when_blank_and_cannot_carry_a_fee(): void
+    {
+        $this->create(['type' => 'paypal', 'label' => 'PayPal', 'config' => ['paypal_client_id' => 'client-1', 'paypal_client_secret' => 'PPSECRET', 'paypal_webhook_id' => 'WH-1', 'paypal_mode' => 'sandbox']])->assertSessionHasNoErrors();
+        $method = ClubPaymentMethod::sole();
+
+        $response = $this->actingAs($this->treasurer)->get(route('admin.payment_options.index', ['clubSlug' => 'club-a']));
+        $response->assertInertia(fn ($page) => $page->where('methods.0.has_paypal_secret', true)->where('methods.0.ready_for_paypal', true)->where('methods.0.config.paypal_client_id', 'client-1'));
+        $this->assertStringNotContainsString('PPSECRET', (string) $response->getContent());
+        $this->assertStringNotContainsString('PPSECRET', $method->getRawOriginal('config'));
+
+        $this->actingAs($this->treasurer)->put(route('admin.payment_options.update', ['clubSlug' => 'club-a', 'id' => $method->id]), $this->base(['type' => 'paypal', 'label' => 'PayPal', 'config' => ['paypal_client_id' => 'client-2', 'paypal_client_secret' => '', 'paypal_webhook_id' => 'WH-1', 'paypal_mode' => 'live']]))->assertSessionHasNoErrors();
+        $this->assertSame('PPSECRET', $method->fresh()->config['paypal_client_secret']);
+        $this->assertSame('client-2', $method->fresh()->config['paypal_client_id']);
+
+        $this->create(['type' => 'paypal', 'label' => 'PayPal 2', 'default_adjustment_kind' => 'fee', 'default_adjustment_amount' => 5])->assertSessionHasErrors('default_adjustment_kind');
+    }
+
     public function test_a_fee_is_only_allowed_on_pay_later_and_pay_on_the_night(): void
     {
         $fee = ['default_adjustment_kind' => 'fee', 'default_adjustment_amount' => 5];

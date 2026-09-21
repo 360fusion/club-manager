@@ -76,7 +76,7 @@ class EventAdminController extends Controller
                 'name' => $attendee->name,
                 'is_guest' => $attendee->is_guest,
                 'booked_by' => $attendee->is_guest ? $registration->contact_name : null,
-                'email' => $registration->contact_email ?? $registration->user?->email,
+                'email' => $attendee->email ?? $registration->contact_email ?? $registration->user?->email,
                 'rank' => $member?->rank ?? '',
                 'role' => $member?->role ?? ($registration->user_id ? 'member' : 'guest'),
                 'home_club_lodge' => $member?->home_club_name ?? '',

@@ -19,7 +19,15 @@ class ClubPaymentMethod extends Model
 
     public const DOOR = 'cash_on_door';
 
-    public const TYPES = [self::BANK, self::CARD, self::LATER, self::DOOR];
+    public const PAYPAL = 'paypal';
+
+    public const TYPES = [self::BANK, self::CARD, self::PAYPAL, self::LATER, self::DOOR];
+
+    /** Types paid on a provider's own page. They need the lodge's credentials and can only be discounted. */
+    public const ONLINE_TYPES = [self::CARD, self::PAYPAL];
+
+    /** The currencies PayPal can take that the app supports. */
+    public const PAYPAL_CURRENCIES = ['GBP', 'EUR', 'USD', 'AUD', 'NZD', 'CAD', 'CHF', 'BRL'];
 
     /** Types where the lodge may add a fee. Card and bank payments may only ever be discounted. */
     public const FEE_TYPES = [self::LATER, self::DOOR];
@@ -102,5 +110,32 @@ class ClubPaymentMethod extends Model
     public function isReadyForCards(): bool
     {
         return $this->type === self::CARD && $this->hasStripeKeys() && ! empty($this->config['stripe_webhook_secret']);
+    }
+
+    /**
+     * A PayPal option needs the lodge's app credentials and its webhook id, so payments are confirmed even if the payer never returns.
+     */
+    public function isReadyForPayPal(): bool
+    {
+        $config = $this->config ?? [];
+
+        return $this->type === self::PAYPAL && ! empty($config['paypal_client_id']) && ! empty($config['paypal_client_secret']) && ! empty($config['paypal_webhook_id']);
+    }
+
+    public function isOnline(): bool
+    {
+        return in_array($this->type, self::ONLINE_TYPES, true);
+    }
+
+    /**
+     * Whether this option can be offered to payers in the given currency: always for offline types, once set up for online ones.
+     */
+    public function isReadyFor(string $currency): bool
+    {
+        return match ($this->type) {
+            self::CARD => $this->isReadyForCards(),
+            self::PAYPAL => $this->isReadyForPayPal() && in_array(strtoupper($currency), self::PAYPAL_CURRENCIES, true),
+            default => true,
+        };
     }
 }

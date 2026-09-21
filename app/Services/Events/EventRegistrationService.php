@@ -2,6 +2,7 @@
 
 namespace App\Services\Events;
 
+use App\Mail\EventGuestBookingMail;
 use App\Models\ClubPaymentMethod;
 use App\Models\Event;
 use App\Models\EventAttendee;
@@ -14,6 +15,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -66,7 +68,10 @@ class EventRegistrationService
                 'status' => $status,
             ];
 
+            $alreadyEmailed = [];
+
             if ($existing) {
+                $alreadyEmailed = $existing->attendees()->whereNotNull('notified_at')->whereNotNull('email')->pluck('email')->map(fn ($e) => strtolower($e))->all();
                 $existing->update($fields);
                 $existing->attendees()->delete();
                 $registration = $existing;
@@ -80,7 +85,8 @@ class EventRegistrationService
             }
 
             foreach ($attendees as $attendee) {
-                $registration->attendees()->create($attendee);
+                $emailed = ! empty($attendee['email']) && in_array(strtolower($attendee['email']), $alreadyEmailed, true);
+                $registration->attendees()->create($attendee + ['notified_at' => $emailed ? now() : null]);
             }
 
             $registration->load('attendees');
@@ -207,6 +213,7 @@ class EventRegistrationService
         $attendees = $existing && $existing->attendees->isNotEmpty()
             ? $existing->attendees->map(fn (EventAttendee $a) => [
                 'name' => $a->name,
+                'email' => $a->email,
                 'is_guest' => $a->is_guest,
                 'ticket_tier_id' => $a->ticket_tier_id,
                 'attending_dining' => $a->attending_dining,
@@ -399,9 +406,12 @@ class EventRegistrationService
                 throw ValidationException::withMessages(["attendees.{$index}.name" => 'Please enter a name for every guest.']);
             }
 
+            $email = $this->guestEmail($person['email'] ?? null, $isGuest || $index > 0, $index);
+
             $row = [
                 'user_id' => $isGuest || $index > 0 ? null : $user?->id,
                 'name' => $name,
+                'email' => $email,
                 'is_guest' => $isGuest || $index > 0,
                 'dietary_requirements' => $this->clean($person['dietary_requirements'] ?? null),
                 'attending_dining' => false,
@@ -523,6 +533,51 @@ class EventRegistrationService
                 ->whereHas('registration', fn ($q) => $q->whereIn('status', EventRegistration::HOLDING_PLACE))
                 ->count()]);
         }
+    }
+
+    /**
+     * A guest's own address, if the booker gave one. Only guests have one; the booker is emailed at their account address.
+     */
+    private function guestEmail(mixed $value, bool $isGuest, int $index): ?string
+    {
+        $value = is_string($value) ? trim($value) : '';
+
+        if ($value === '' || ! $isGuest) {
+            return null;
+        }
+
+        if (! filter_var($value, FILTER_VALIDATE_EMAIL) || mb_strlen($value) > 255) {
+            throw ValidationException::withMessages(["attendees.{$index}.email" => 'Please enter a valid email address, or leave it blank.']);
+        }
+
+        return strtolower($value);
+    }
+
+    /**
+     * Email each guest who has an address and has not been told yet, once, with their own place and meal.
+     * The booker's payment details and private link are never included.
+     */
+    public function sendGuestConfirmations(EventRegistration $registration): int
+    {
+        $registration->loadMissing(['event.club', 'attendees.starter', 'attendees.main', 'attendees.dessert']);
+
+        if (! in_array($registration->status, ['attending', 'tentative', 'waitlisted'], true)) {
+            return 0;
+        }
+
+        $sent = 0;
+
+        foreach ($registration->attendees->where('is_guest', true) as $guest) {
+            if (! $guest->email || $guest->notified_at) {
+                continue;
+            }
+
+            Mail::to($guest->email)->send(new EventGuestBookingMail($registration->event, $registration, $guest));
+            $guest->forceFill(['notified_at' => now()])->save();
+            $sent++;
+        }
+
+        return $sent;
     }
 
     private function clean(?string $value): ?string

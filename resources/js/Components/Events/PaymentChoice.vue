@@ -42,6 +42,8 @@ const adjustmentLabel = (b) => (b.method_adjustment < 0 ? `${b.method_label ?? '
                     </span>
                     <span v-if="option.saving > 0" class="mt-0.5 block font-semibold text-emerald-600">Save {{ formatMoney(option.saving) }} compared with the dearest option</span>
                     <span v-if="option.instructions" :class="['mt-0.5 block', muted]">{{ option.instructions }}</span>
+                    <span v-if="option.type === 'paypal'" :class="['mt-0.5 block', muted]">You'll be taken to PayPal to pay securely, then brought back here.</span>
+                    <span v-if="option.type === 'card_online'" :class="['mt-0.5 block', muted]">You'll be taken to a secure card payment page, then brought back here.</span>
                     <span v-if="option.type === 'bank_transfer'" :class="['mt-0.5 block', muted]">You'll get the bank details and your payment reference once you've booked.</span>
                 </span>
             </label>

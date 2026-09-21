@@ -10,19 +10,7 @@
     <strong>{{ $event->title }}</strong> on {{ $event->starts_at?->format('l j F Y') }}@if ($payment['due_at']), due by <strong>{{ $payment['due_at'] }}</strong>@endif.
   </p>
 
-  @if ($payment['instructions'])<p>{{ $payment['instructions'] }}</p>@endif
-
-  @if ($payment['bank'])
-    <p style="background:#f1f5f9;padding:10px;border-radius:6px;">
-      <strong>Bank transfer</strong><br>
-      @if ($payment['bank']['account_name'])Account name: {{ $payment['bank']['account_name'] }}<br>@endif
-      @if ($payment['bank']['sort_code'])Sort code: {{ $payment['bank']['sort_code'] }}<br>@endif
-      @if ($payment['bank']['account_number'])Account number: {{ $payment['bank']['account_number'] }}<br>@endif
-      <strong>Reference: {{ $payment['reference'] }}</strong>
-    </p>
-  @elseif ($payment['method_type'] === 'cash_on_door')
-    <p>You can pay when you arrive.</p>
-  @endif
+  @include('emails.partials.event-pay-how', ['payment' => $payment, 'showBank' => true])
 
   <p style="color:#64748b"><small>If you have already paid, thank you, and please ignore this reminder; it can take a few days for a payment to be checked.</small></p>
 </body>
