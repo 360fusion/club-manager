@@ -991,7 +991,7 @@ TEXT;
             'status' => CommitteeMeetingStatus::Draft,
         ]);
 
-        ClubCommitteeAttendee::create([
+        $attendee = ClubCommitteeAttendee::create([
             'committee_meeting_id' => $meeting->id,
             'user_id' => $this->member1->id,
             'name' => $this->member1->name,
@@ -1006,7 +1006,7 @@ TEXT;
             'meetingId' => $meeting->id,
         ])
             ->call('openModal')
-            ->set('selectedRecipientIds', [$this->member1->id])
+            ->set('selectedRecipientIds', [$attendee->id])
             ->call('sendAgendaPack')
             ->assertDispatched('pack-dispatched');
 

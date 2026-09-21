@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingWorkspace;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Models\Member;
+use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Mail\ContactFormSubmittedMail;
 use App\Models\Club;
 use App\Models\ClubType;
@@ -474,5 +475,29 @@ class SecurityAuditTest extends TestCase
         $this->actingAs($this->outsider)->get(route('member.events', ['slug' => 'club-a']))->assertRedirect(route('public.site', ['clubSlug' => 'club-a']));
         $this->actingAs($this->outsider)->get(route('member.profile', ['slug' => 'club-a']))->assertForbidden();
         $this->assertStringContainsString('Secret Hall', (string) $this->actingAs($this->member)->get(route('member.events', ['slug' => 'club-a']))->getContent());
+    }
+
+    public function test_member_import_never_changes_existing_members_and_skips_bad_rows(): void
+    {
+        $csv = "name,email,role\nOwner Demoted,{$this->owner->email},member\nBad,not-an-email,member\nFresh Person,Fresh@Example.test,member\n";
+
+        $this->actingAs($this->admin)->post(route('clubs.members.import', ['slug' => 'club-a']), [
+            'csv_file' => UploadedFile::fake()->createWithContent('members.csv', $csv),
+        ])->assertRedirect();
+
+        $this->assertSame('owner', $this->a->users()->where('users.id', $this->owner->id)->first()->pivot->role);
+        $this->assertNotNull(User::where('email', 'fresh@example.test')->first());
+        $this->assertDatabaseMissing('users', ['email' => 'not-an-email']);
+    }
+
+    public function test_agenda_packs_are_only_emailed_to_people_in_the_meetings_club(): void
+    {
+        Mail::fake();
+        $meeting = ClubCommitteeMeeting::create(['club_id' => $this->a->id, 'title' => 'Committee', 'meeting_date' => now()->addWeek()]);
+
+        $sent = app(CommitteePackCompilerService::class)->dispatchPack($meeting, [$this->outsider->id, $this->adminB->id, $this->member->id], 'Pack', '<p>Hi</p><script>x</script>', false);
+
+        $this->assertSame(1, $sent);
+        Mail::assertQueuedCount(1);
     }
 }

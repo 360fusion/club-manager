@@ -29,6 +29,7 @@ class MemberImportExportController extends Controller
         $header = fgetcsv($handle); // First line header
 
         $imported = 0;
+        $skipped = 0;
 
         // Only an owner can hand out the admin role through an import.
         $allowedRoles = ClubAccess::role($request->user(), $club) === 'owner' || $request->user()->is_super_admin
@@ -38,18 +39,29 @@ class MemberImportExportController extends Controller
         while (($row = fgetcsv($handle)) !== false) {
             if (count($row) >= 2) {
                 $name = trim($row[0]);
-                $email = trim($row[1]);
+                $email = strtolower(trim($row[1]));
                 $role = isset($row[2]) ? strtolower(trim($row[2])) : 'member';
                 $memberNumber = isset($row[3]) ? trim($row[3]) : null;
 
-                if (empty($email)) {
+                if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL) || $name === '') {
+                    $skipped++;
+
+                    continue;
+                }
+
+                // Existing members keep their role and status; an import must not demote an owner or reactivate someone.
+                $existingUser = User::where('email', $email)->first();
+
+                if ($existingUser && $club->users()->where('users.id', $existingUser->id)->exists()) {
+                    $skipped++;
+
                     continue;
                 }
 
                 $user = User::firstOrCreate(
                     ['email' => $email],
                     [
-                        'name' => $name,
+                        'name' => mb_substr($name, 0, 255),
                         // Nobody knows this password; new members set their own through "forgot password".
                         'password' => Hash::make(Str::random(40)),
                     ]
@@ -58,7 +70,7 @@ class MemberImportExportController extends Controller
                 $club->users()->syncWithoutDetaching([$user->id]);
                 $club->users()->updateExistingPivot($user->id, [
                     'role' => in_array($role, $allowedRoles, true) ? $role : 'member',
-                    'member_number' => $memberNumber,
+                    'member_number' => $memberNumber !== null ? mb_substr($memberNumber, 0, 50) : null,
                     'status' => 'active',
                 ]);
                 $imported++;
@@ -67,7 +79,7 @@ class MemberImportExportController extends Controller
 
         fclose($handle);
 
-        return redirect()->back()->with('success', "Successfully imported {$imported} new members!");
+        return redirect()->back()->with('success', "Successfully imported {$imported} new members!".($skipped ? " {$skipped} rows were skipped (invalid, or already in the club)." : ''));
     }
 
     /**

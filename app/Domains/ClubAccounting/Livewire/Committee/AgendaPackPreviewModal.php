@@ -132,10 +132,6 @@ class AgendaPackPreviewModal extends Component
         $selectedAttendees = $meeting->attendees->whereIn('id', $this->selectedRecipientIds);
         $userMemberIds = $selectedAttendees->pluck('user_id')->filter()->map(fn ($id) => (int) $id)->values()->all();
 
-        if (empty($userMemberIds)) {
-            $userMemberIds = $this->selectedRecipientIds;
-        }
-
         $sentCount = $compiler->dispatchPack(
             meeting: $meeting,
             recipientMemberIds: $userMemberIds,

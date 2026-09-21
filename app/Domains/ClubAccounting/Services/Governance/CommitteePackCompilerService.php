@@ -11,6 +11,7 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\User;
+use App\Support\RichTextSanitizer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -183,7 +184,11 @@ class CommitteePackCompilerService
             $pdfFilename = 'Agenda-Pack-'.Str::slug($meeting->title).'-'.($meeting->meeting_date ? $meeting->meeting_date->format('Y-m-d') : 'meeting').'.pdf';
         }
 
-        $recipients = User::whereIn('id', $recipientMemberIds)->get();
+        // Only people who belong to this meeting's club may receive the pack.
+        $recipients = User::whereIn('id', $recipientMemberIds)
+            ->whereHas('clubs', fn ($q) => $q->where('clubs.id', $meeting->club_id))
+            ->get();
+        $customEmailBody = RichTextSanitizer::sanitize($customEmailBody) ?? '';
         $dispatchedCount = 0;
 
         foreach ($recipients as $recipient) {
