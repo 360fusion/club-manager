@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Mail\EventBookingMail;
 use App\Models\Club;
+use App\Models\ClubPaymentMethod;
 use App\Models\Event;
 use App\Models\EventRegistration;
+use App\Services\Events\EventOnlinePayment;
 use App\Services\Events\EventPayload;
 use App\Services\Events\EventRegistrationService;
 use Illuminate\Http\RedirectResponse;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
  * An event's public page, booking for outside guests, and the private link they manage a booking with.
@@ -34,7 +37,7 @@ class PublicEventController extends Controller
         ]);
     }
 
-    public function register(Request $request, string $clubSlug, string $eventSlug, EventRegistrationService $registrations): RedirectResponse
+    public function register(Request $request, string $clubSlug, string $eventSlug, EventRegistrationService $registrations, EventOnlinePayment $online): RedirectResponse|SymfonyResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $event = $this->findEvent($club, $eventSlug);
@@ -83,7 +86,13 @@ class PublicEventController extends Controller
             'attendees' => collect($validated['attendees'])->values()->map(fn (array $person, int $index) => [...$person, 'is_guest' => $index > 0])->all(),
         ]);
 
-        Mail::to($email)->send(new EventBookingMail($event, $registration, $this->manageUrl($club, (string) $registration->plainToken)));
+        $manageUrl = $this->manageUrl($club, (string) $registration->plainToken);
+        Mail::to($email)->send(new EventBookingMail($event, $registration, $manageUrl));
+
+        // Chose to pay by card: straight on to Stripe, coming back to their private booking page.
+        if ($registration->status === 'attending' && $registration->paymentMethod?->type === ClubPaymentMethod::CARD && $online->canPay($registration)) {
+            return Inertia::location($online->start($registration, $manageUrl.'?payment=success', $manageUrl.'?payment=cancelled'));
+        }
 
         return $this->thanks($club, $event);
     }

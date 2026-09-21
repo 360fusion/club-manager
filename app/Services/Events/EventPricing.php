@@ -130,6 +130,7 @@ class EventPricing
             ->whereHas('method', fn ($q) => $q->where('is_active', true)->when(! config('events.online_payments'), fn ($q) => $q->where('type', '!=', ClubPaymentMethod::CARD)))
             ->with('method')
             ->get()
+            ->filter(fn (EventPaymentMethod $m) => $m->method->type !== ClubPaymentMethod::CARD || $m->method->isReadyForCards())
             ->sortBy(fn (EventPaymentMethod $m) => $m->method->sort_order)
             ->values();
     }

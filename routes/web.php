@@ -32,6 +32,7 @@ use App\Http\Controllers\ClubSettingsController;
 use App\Http\Controllers\ClubShortLinkController;
 use App\Http\Controllers\EventAdminController;
 use App\Http\Controllers\EventGuestListController;
+use App\Http\Controllers\EventOnlinePaymentController;
 use App\Http\Controllers\EventPaymentController;
 use App\Http\Controllers\EventQuoteController;
 use App\Http\Controllers\GoCardlessWebhookController;
@@ -56,6 +57,7 @@ use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\QuickRsvpController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UpdateAdminController;
 use App\Http\Controllers\UserAdminController;
@@ -112,6 +114,7 @@ Route::get('/site/{clubSlug}/events/{eventSlug}', [PublicEventController::class,
 Route::post('/site/{clubSlug}/events/{eventSlug}/quote', [EventQuoteController::class, 'guest'])->name('public.event.quote')->middleware('throttle:public-forms');
 Route::post('/site/{clubSlug}/events/{eventSlug}/register', [PublicEventController::class, 'register'])->name('public.event.register')->middleware('throttle:public-forms');
 Route::get('/site/{clubSlug}/booking/{token}', [PublicEventController::class, 'booking'])->name('public.event.booking')->middleware('throttle:auth-forms');
+Route::post('/site/{clubSlug}/booking/{token}/pay', [EventOnlinePaymentController::class, 'guest'])->name('public.event.booking.pay')->middleware('throttle:auth-forms');
 Route::post('/site/{clubSlug}/booking/{token}/cancel', [PublicEventController::class, 'cancel'])->name('public.event.booking.cancel')->middleware('throttle:auth-forms');
 Route::get('/site/{clubSlug}/{pageSlug?}', [PublicSiteController::class, 'showPage'])->name('public.site');
 Route::post('/site/{clubSlug}/contact-form', [PublicSiteController::class, 'submitContactForm'])->name('public.site.contact_form')->middleware('throttle:public-forms');
@@ -128,6 +131,7 @@ if (app()->isLocal()) {
 
 // GoCardless posts here unauthenticated; the request is authenticated by its
 // HMAC signature instead. Must stay outside the auth group and exempt from CSRF.
+Route::post('/webhooks/stripe/{clubId}', [StripeWebhookController::class, 'handle'])->name('webhooks.stripe.club');
 Route::post('/webhooks/gocardless/{clubId}', [GoCardlessWebhookController::class, 'handle'])
     ->name('webhooks.gocardless');
 
@@ -411,6 +415,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/news', [MemberListController::class, 'news'])->name('member.news');
     Route::get('/members/{slug}/meetings', [MemberListController::class, 'meetings'])->name('member.meetings');
     Route::post('/members/{slug}/meetings/{id}/quick-rsvp', [QuickRsvpController::class, 'meeting'])->name('member.meetings.quick_rsvp');
+    Route::post('/members/{slug}/events/{id}/pay', [EventOnlinePaymentController::class, 'member'])->name('member.events.pay');
     Route::post('/members/{slug}/events/{id}/quote', [EventQuoteController::class, 'member'])->name('member.events.quote');
     Route::post('/members/{slug}/events/{id}/quick-rsvp', [QuickRsvpController::class, 'event'])->name('member.events.quick_rsvp');
     Route::get('/members/{slug}/events', [MemberPortalController::class, 'events'])->name('member.events');

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { router, useForm, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Ui/Modal.vue';
 import PaymentChoice from '@/Components/Events/PaymentChoice.vue';
 import PaymentSummary from '@/Components/Events/PaymentSummary.vue';
@@ -95,6 +95,12 @@ watch(quote, (value) => {
         form.payment_method = options[0].id;
     }
 });
+
+const paying = ref(false);
+const payNow = () => {
+    paying.value = true;
+    router.post(route('member.events.pay', { slug: props.clubSlug, id: props.event.id }), {}, { onFinish: () => { paying.value = false; } });
+};
 
 const addGuest = () => {
     if (canAddGuest.value) {
@@ -199,7 +205,7 @@ const generalError = computed(() => form.errors.capacity || form.errors.registra
                     </div>
                 </div>
 
-                <PaymentSummary v-if="event.user_rsvp?.payment && Number(event.user_rsvp.payment.total) > 0" :payment="event.user_rsvp.payment" />
+                <PaymentSummary v-if="event.user_rsvp?.payment && Number(event.user_rsvp.payment.total) > 0" :payment="event.user_rsvp.payment" :paying="paying" @pay="payNow" />
 
                 <button v-if="event.max_guests > 0" type="button" :disabled="!canAddGuest" class="text-xs font-semibold text-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-blue-400" @click="addGuest">
                     + Add a guest <span class="font-normal text-slate-500">({{ guestCount }} of {{ event.max_guests }})</span>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
+use App\Models\ClubPaymentMethod;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Invoice;
@@ -12,6 +13,7 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Newsletter;
 use App\Models\Post;
+use App\Services\Events\EventOnlinePayment;
 use App\Services\Events\EventPayload;
 use App\Services\Events\EventRegistrationService;
 use App\Support\ClubAccess;
@@ -26,6 +28,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class MemberPortalController extends Controller
 {
@@ -349,7 +352,7 @@ class MemberPortalController extends Controller
     /**
      * Submit or update event RSVP and 3-course dining selections.
      */
-    public function updateRsvp(Request $request, string $slug, int $eventId, EventRegistrationService $registrations): RedirectResponse
+    public function updateRsvp(Request $request, string $slug, int $eventId, EventRegistrationService $registrations, EventOnlinePayment $online): RedirectResponse|SymfonyResponse
     {
         $user = Auth::user();
         $club = Club::where('slug', $slug)->firstOrFail();
@@ -373,13 +376,20 @@ class MemberPortalController extends Controller
             'attendees.*.dietary_requirements' => 'nullable|string|max:1000',
         ]);
 
-        $registrations->register($event, $user, [
+        $registration = $registrations->register($event, $user, [
             'status' => $validated['attendance_status'],
             'notes' => $validated['notes'] ?? null,
             'payment_method' => $validated['payment_method'] ?? null,
             'promo_code' => $validated['promo_code'] ?? null,
             'attendees' => $validated['attendees'] ?? [],
         ]);
+
+        // Chose to pay by card: straight on to Stripe for what they owe.
+        if ($registration->status === 'attending' && $registration->paymentMethod?->type === ClubPaymentMethod::CARD && $online->canPay($registration)) {
+            $back = route('member.events', ['slug' => $club->slug]);
+
+            return Inertia::location($online->start($registration, $back.'?payment=success', $back.'?payment=cancelled'));
+        }
 
         return redirect()->back()->with('success', $validated['attendance_status'] === 'declined' ? 'Your reply has been saved.' : 'Your booking has been saved.');
     }

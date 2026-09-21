@@ -25,6 +25,7 @@ class EventPaymentLog extends Model
         'user_id',
         'source',
         'received_at',
+        'external_id',
     ];
 
     protected function casts(): array

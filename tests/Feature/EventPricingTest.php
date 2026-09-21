@@ -38,7 +38,7 @@ class EventPricingTest extends TestCase
 
     private function method(string $type, string $label, array $adjustment = [], bool $enable = true, ?array $override = null): EventPaymentMethod
     {
-        $method = ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => $type, 'label' => $label, 'sort_order' => ClubPaymentMethod::count()] + array_filter([
+        $method = ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => $type, 'label' => $label, 'sort_order' => ClubPaymentMethod::count()] + ($type === 'card_online' ? ['config' => ['stripe_secret_key' => 'sk_test_x', 'stripe_webhook_secret' => 'whsec_x']] : []) + array_filter([
             'default_adjustment_kind' => $adjustment['kind'] ?? null, 'default_adjustment_mode' => $adjustment['mode'] ?? null,
             'default_adjustment_amount' => $adjustment['amount'] ?? null, 'default_adjustment_scope' => $adjustment['scope'] ?? null,
         ], fn ($v) => $v !== null));

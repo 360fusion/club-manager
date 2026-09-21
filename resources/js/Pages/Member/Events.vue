@@ -14,6 +14,9 @@ const props = defineProps({
 
 const activeFilter = ref('all'); // 'all', 'meetings', 'events'
 
+// Stripe sends people back here with ?payment=success or ?payment=cancelled.
+const returned = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('payment') : null;
+
 // Social Event RSVP Modal State
 const selectedEvent = ref(null);
 const showDinnerModal = ref(false);
@@ -105,6 +108,9 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
   <MembersLayout title="My Events & RSVPs" :club="club" :member-role="memberRole" active-tab="events">
     
     <div class="space-y-6">
+      <div v-if="returned === 'success'" class="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-200" role="status">Thank you. Your payment is being confirmed and will show on your booking in a moment.</div>
+      <div v-else-if="returned === 'cancelled'" class="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-200" role="status">Payment cancelled. You have not been charged, and you can pay any time from your booking.</div>
+
       
       <!-- Top Action & Summary Header -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">

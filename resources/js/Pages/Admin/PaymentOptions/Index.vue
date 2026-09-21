@@ -7,6 +7,8 @@ const props = defineProps({
   club: Object,
   methods: { type: Array, default: () => [] },
   bankDefaults: { type: Object, default: () => ({}) },
+  stripeWebhookUrl: { type: String, default: '' },
+  onlinePaymentsLive: { type: Boolean, default: false },
 });
 
 const TYPES = [
@@ -109,7 +111,7 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
             <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {{ summary(m) }}
               <span v-if="m.type === 'pay_later' && m.due_days !== null"> · due {{ m.due_days }} days {{ m.due_basis === 'before_event' ? 'before the event' : 'after booking' }}</span>
-              <span v-if="m.type === 'card_online'"> · {{ m.has_stripe_secret_key ? 'Stripe connected' : 'Stripe keys needed' }}</span>
+              <span v-if="m.type === 'card_online'"> · {{ m.ready_for_cards ? 'Ready for card payments' : 'Needs the Stripe keys and webhook secret' }}</span>
             </div>
           </div>
           <div class="flex gap-3 text-xs font-semibold">
@@ -160,7 +162,14 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
           <div class="sm:col-span-2"><label :class="label">Stripe publishable key</label><input v-model="form.config.stripe_publishable_key" type="text" maxlength="255" :class="input" placeholder="pk_live_..." /></div>
           <div><label :class="label">Stripe secret key</label><input v-model="form.config.stripe_secret_key" type="password" maxlength="500" autocomplete="off" :class="input" :placeholder="current?.has_stripe_secret_key ? 'Saved - leave blank to keep' : 'sk_live_...'" /></div>
           <div><label :class="label">Stripe webhook secret</label><input v-model="form.config.stripe_webhook_secret" type="password" maxlength="500" autocomplete="off" :class="input" :placeholder="current?.has_stripe_webhook_secret ? 'Saved - leave blank to keep' : 'whsec_...'" /></div>
-          <p class="sm:col-span-2 text-[11px] text-slate-500 dark:text-slate-400">Keys are stored encrypted and never shown again. Card payments go live once the payment step is switched on in the next release.</p>
+          <div class="sm:col-span-2 space-y-1 rounded-lg bg-slate-50 dark:bg-slate-800/50 p-3 text-[11px] text-slate-600 dark:text-slate-300">
+            <p class="font-bold text-slate-900 dark:text-white">Set this up in your Stripe dashboard</p>
+            <p>Add a webhook endpoint pointing to:</p>
+            <p class="break-all font-mono text-[11px] text-slate-900 dark:text-white">{{ stripeWebhookUrl }}</p>
+            <p>Send it these events: <span class="font-mono">checkout.session.completed</span> and <span class="font-mono">checkout.session.async_payment_succeeded</span>. Then paste its signing secret (starts <span class="font-mono">whsec_</span>) above. People are only offered card payment once both keys are saved.</p>
+            <p v-if="!onlinePaymentsLive" class="font-semibold text-amber-700 dark:text-amber-300">Card payments are not switched on for this site yet, so this option won't be offered to people until they are.</p>
+          </div>
+          <p class="sm:col-span-2 text-[11px] text-slate-500 dark:text-slate-400">Keys are stored encrypted and never shown again.</p>
         </div>
 
         <!-- Pay later -->

@@ -194,7 +194,21 @@ class EventPayload
             'due_at' => $registration->due_at?->format('j M Y'),
             'instructions' => $method?->instructions,
             'bank' => $bankMethod ? $bankMethod->bankDetails() : null,
+            'online' => self::online($registration),
             'selected_option_id' => $method ? $registration->event->paymentMethods()->where('payment_method_id', $method->id)->value('id') : null,
         ];
+    }
+
+    /**
+     * Whether this booking can be paid by card now, and what that would cost.
+     *
+     * @return array{can_pay: bool, total: ?float, saving: float}
+     */
+    private static function online(EventRegistration $registration): array
+    {
+        $registration->loadMissing('attendees');
+        $offer = app(EventOnlinePayment::class)->onlineOffer($registration);
+
+        return ['can_pay' => $offer !== null, 'total' => $offer['total'] ?? null, 'saving' => $offer['saving'] ?? 0.0];
     }
 }

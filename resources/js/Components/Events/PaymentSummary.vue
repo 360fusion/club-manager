@@ -5,7 +5,10 @@ import { formatMoney } from '@/Utils/currency';
 const props = defineProps({
     payment: { type: Object, required: true },
     tone: { type: String, default: 'light' },
+    paying: { type: Boolean, default: false },
 });
+
+const emit = defineEmits(['pay']);
 
 const dark = computed(() => props.tone === 'dark');
 const owes = computed(() => Number(props.payment.balance) > 0);
@@ -46,6 +49,11 @@ const STATUS = {
                 <p :class="['mt-1', muted]">Please use the reference exactly, so we can match your payment.</p>
             </div>
             <p v-else-if="payment.method_type === 'cash_on_door'" :class="muted">Pay when you arrive.</p>
+
+            <button v-if="payment.online?.can_pay" type="button" :disabled="paying" class="w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-60" @click="emit('pay')">
+                {{ paying ? 'Taking you to the payment page...' : `Pay ${formatMoney(payment.online.total)} now by card` }}
+                <span v-if="payment.online.saving > 0" class="ml-1 font-normal opacity-90">(save {{ formatMoney(payment.online.saving) }})</span>
+            </button>
         </template>
     </div>
 </template>

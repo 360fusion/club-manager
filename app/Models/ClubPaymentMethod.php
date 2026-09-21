@@ -95,4 +95,12 @@ class ClubPaymentMethod extends Model
     {
         return ! empty($this->config['stripe_secret_key']);
     }
+
+    /**
+     * A card option can only be offered once it can both take a payment and hear back that it was made.
+     */
+    public function isReadyForCards(): bool
+    {
+        return $this->type === self::CARD && $this->hasStripeKeys() && ! empty($this->config['stripe_webhook_secret']);
+    }
 }

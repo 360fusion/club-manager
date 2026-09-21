@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import PaymentSummary from '@/Components/Events/PaymentSummary.vue';
 
@@ -13,10 +13,19 @@ const props = defineProps({
 
 const page = usePage();
 const flash = computed(() => page.props.flash?.success);
-const error = computed(() => page.props.errors?.registration);
+const error = computed(() => page.props.errors?.registration || page.props.errors?.payment);
 const booking = computed(() => props.event?.user_rsvp);
 const cancelled = computed(() => booking.value?.attendance_status === 'cancelled');
 const waiting = computed(() => booking.value?.attendance_status === 'waitlisted');
+
+const paying = ref(false);
+const payNow = () => {
+  paying.value = true;
+  router.post(route('public.event.booking.pay', { clubSlug: props.club.slug, token: props.token }), {}, { onFinish: () => { paying.value = false; } });
+};
+
+// Stripe sends people back here with ?payment=success or ?payment=cancelled.
+const returned = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('payment') : null;
 
 const cancelBooking = () => {
   if (confirm('Cancel this booking? This cannot be undone.')) {
@@ -39,6 +48,8 @@ const cancelBooking = () => {
 
       <template v-else>
         <div v-if="flash" class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200" role="status">{{ flash }}</div>
+        <div v-if="returned === 'success'" class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200" role="status">Thank you. Your payment is being confirmed and will show here in a moment. Refresh if it hasn't yet.</div>
+        <div v-else-if="returned === 'cancelled'" class="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200" role="status">Payment cancelled. You have not been charged, and you can pay any time from this page.</div>
         <div v-if="error" class="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-300" role="alert">{{ error }}</div>
 
         <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 space-y-4">
@@ -68,7 +79,7 @@ const cancelBooking = () => {
             </ul>
           </div>
 
-          <PaymentSummary v-if="booking.payment && !cancelled" :payment="booking.payment" tone="dark" />
+          <PaymentSummary v-if="booking.payment && !cancelled" :payment="booking.payment" tone="dark" :paying="paying" @pay="payNow" />
 
           <p v-if="event.cancellation_policy" class="border-t border-slate-800 pt-4 text-xs text-slate-400">{{ event.cancellation_policy }}</p>
 

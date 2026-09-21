@@ -9,6 +9,7 @@ use App\Models\EventPaymentLog;
 use App\Models\EventRegistration;
 use App\Models\User;
 use App\Services\AccountingService;
+use App\Services\Payment\StripeGateway;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -24,9 +25,9 @@ class EventPaymentService
     /**
      * Record money received. Defaults to the whole balance; a smaller amount records a part payment.
      */
-    public function markPaid(EventRegistration $registration, ?User $actor, ?float $amount = null, ?string $method = null, ?Carbon $receivedAt = null, ?string $comment = null, string $source = 'admin'): EventRegistration
+    public function markPaid(EventRegistration $registration, ?User $actor, ?float $amount = null, ?string $method = null, ?Carbon $receivedAt = null, ?string $comment = null, string $source = 'admin', ?string $externalId = null, ?string $paymentIntent = null): EventRegistration
     {
-        return DB::transaction(function () use ($registration, $actor, $amount, $method, $receivedAt, $comment, $source) {
+        return DB::transaction(function () use ($registration, $actor, $amount, $method, $receivedAt, $comment, $source, $externalId, $paymentIntent) {
             $registration = $this->lock($registration);
             $balance = $registration->balanceDue();
 
@@ -44,9 +45,10 @@ class EventPaymentService
             $registration->amount_paid = round((float) $registration->amount_paid + $amount, 2);
             $registration->payment_status = $registration->statusFromAmounts();
             $registration->paid_at = $registration->payment_status === 'paid' ? ($receivedAt ?? now()) : $registration->paid_at;
+            $registration->stripe_payment_intent = $paymentIntent ?? $registration->stripe_payment_intent;
             $registration->save();
 
-            $this->log($registration, $registration->payment_status === 'paid' ? 'marked_paid' : 'marked_part_paid', $amount, $method, $comment, $actor, $source, $receivedAt);
+            $this->log($registration, $source === 'stripe_webhook' ? 'stripe_paid' : ($registration->payment_status === 'paid' ? 'marked_paid' : 'marked_part_paid'), $amount, $method, $comment, $actor, $source, $receivedAt, $externalId);
             $this->postIncome($registration, $amount, $actor);
 
             return $registration;
@@ -120,6 +122,14 @@ class EventPaymentService
                 throw ValidationException::withMessages(['amount' => 'There is nothing to refund, or the amount is more than was paid.']);
             }
 
+            // A card payment is refunded through Stripe first; if Stripe refuses, nothing is recorded.
+            $method = $registration->paymentMethod;
+            $viaStripe = $method?->type === ClubPaymentMethod::CARD && $registration->stripe_payment_intent && $method->hasStripeKeys();
+
+            if ($viaStripe) {
+                app(StripeGateway::class)->refund($method, $registration->stripe_payment_intent, (int) round($amount * 100));
+            }
+
             $registration->amount_refunded = round((float) $registration->amount_refunded + $amount, 2);
 
             if ($registration->amount_refunded + 0.001 >= (float) $registration->amount_paid) {
@@ -128,7 +138,7 @@ class EventPaymentService
 
             $registration->save();
 
-            $this->log($registration, 'refunded', $amount, null, $comment, $actor, 'admin');
+            $this->log($registration, 'refunded', $amount, $viaStripe ? 'Stripe refund' : null, $comment, $actor, 'admin');
             $this->postReversal($registration, $amount, $actor, 'Refund');
 
             return $registration;
@@ -169,7 +179,7 @@ class EventPaymentService
         }
     }
 
-    private function log(EventRegistration $registration, string $action, float $amount, ?string $method, ?string $comment, ?User $actor, string $source, ?Carbon $receivedAt = null): void
+    private function log(EventRegistration $registration, string $action, float $amount, ?string $method, ?string $comment, ?User $actor, string $source, ?Carbon $receivedAt = null, ?string $externalId = null): void
     {
         EventPaymentLog::create([
             'registration_id' => $registration->id,
@@ -180,6 +190,7 @@ class EventPaymentService
             'user_id' => $actor?->id,
             'source' => $source,
             'received_at' => $receivedAt ?? now(),
+            'external_id' => $externalId,
         ]);
     }
 

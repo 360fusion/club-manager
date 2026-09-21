@@ -42,7 +42,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Both Cashier packages register a `stripe/webhook` route, and the Paddle one answers it with a controller
+        // meant for a different provider. Lodges take card payments on their own Stripe account through
+        // /webhooks/stripe/{club}, so neither package's routes are used.
+        \Laravel\Cashier\Cashier::ignoreRoutes();
+        Cashier::ignoreRoutes();
     }
 
     /**

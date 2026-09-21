@@ -25,6 +25,8 @@ class PaymentOptionsController extends Controller
             'club' => ['name' => $club->name, 'slug' => $club->slug],
             'methods' => ClubPaymentMethod::where('club_id', $club->id)->orderBy('sort_order')->orderBy('id')->get()->map(fn (ClubPaymentMethod $m) => $this->present($m))->values(),
             // Pre-fill a first bank transfer option from the details the club already keeps.
+            'stripeWebhookUrl' => route('webhooks.stripe.club', ['clubId' => $club->id]),
+            'onlinePaymentsLive' => (bool) config('events.online_payments'),
             'bankDefaults' => [
                 'account_name' => $club->name,
                 'sort_code' => $club->settings['bank_sort_code'] ?? '',
@@ -173,6 +175,7 @@ class PaymentOptionsController extends Controller
             ],
             'has_stripe_secret_key' => ! empty($config['stripe_secret_key']),
             'has_stripe_webhook_secret' => ! empty($config['stripe_webhook_secret']),
+            'ready_for_cards' => $m->isReadyForCards(),
         ];
     }
 }

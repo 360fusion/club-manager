@@ -153,6 +153,39 @@ class EventRegistrationService
         $registration->save();
     }
 
+    /**
+     * Change how an unpaid booking will be paid, at that option's price. Used when someone chooses to pay online
+     * after booking, so paying early still earns the discount. Nothing changes once money has been paid.
+     */
+    public function reprice(EventRegistration $registration, EventPaymentMethod $option): EventRegistration
+    {
+        if ((float) $registration->amount_paid > 0) {
+            throw ValidationException::withMessages(['payment' => 'This booking already has a payment on it, so the way of paying cannot be changed.']);
+        }
+
+        $registration->loadMissing(['attendees', 'event']);
+        $people = $registration->attendees->map(fn ($a) => ['is_guest' => $a->is_guest, 'ticket_tier_id' => $a->ticket_tier_id, 'attending_dining' => $a->attending_dining])->all();
+        $quote = app(EventPricing::class)->quote($registration->event, $people, $registration->promo_code, $option, true);
+
+        foreach ($registration->attendees as $index => $attendee) {
+            $attendee->update(['price' => $quote['people'][$index]['price'] ?? 0]);
+        }
+
+        $registration->fill([
+            'subtotal' => $quote['subtotal'],
+            'promo_discount' => $quote['promo_discount'],
+            'method_adjustment' => $quote['method_adjustment'],
+            'booking_fee' => $quote['booking_fee'],
+            'total' => $quote['total'],
+            'payment_method_id' => $option->method->id,
+            'due_at' => null,
+        ]);
+        $registration->payment_status = $registration->statusFromAmounts();
+        $registration->save();
+
+        return $registration;
+    }
+
     private function dueAt(Event $event, EventPaymentMethod $method): ?Carbon
     {
         ['days' => $days, 'basis' => $basis] = $method->due();

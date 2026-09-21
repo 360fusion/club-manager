@@ -213,7 +213,7 @@ class EventAdminFormTest extends TestCase
 
     private function method(string $type, string $label, ?Club $club = null): ClubPaymentMethod
     {
-        return ClubPaymentMethod::create(['club_id' => ($club ?? $this->club)->id, 'type' => $type, 'label' => $label]);
+        return ClubPaymentMethod::create(['club_id' => ($club ?? $this->club)->id, 'type' => $type, 'label' => $label] + ($type === 'card_online' ? ['config' => ['stripe_secret_key' => 'sk_test_x', 'stripe_webhook_secret' => 'whsec_x']] : []));
     }
 
     public function test_payment_options_fees_and_the_advertised_price_are_saved_with_the_event(): void
