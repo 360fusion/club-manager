@@ -1,3 +1,48 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+```bash
+composer setup                                  # install, .env, key, migrate, npm build
+composer dev                                    # runs the dev processes (`php artisan dev`, see `dev:list`)
+npm run build                                   # Vite build; needed after any Vue/CSS change if `composer dev` isn't running
+php artisan test --compact                      # full suite (in-memory SQLite, ~8s)
+php artisan test --compact tests/Feature/SecurityAuditTest.php --filter=test_name
+vendor/bin/pint --dirty --format agent          # required after touching PHP
+composer analyse                                # PHPStan/Larastan, held at level 1 (higher levels report hundreds of model-type errors)
+```
+
+Herd serves the app at `club-manager.test`. The CLI PHP memory limit (128M) is low: tests that decode large images set `memory_limit` themselves.
+
+## Architecture
+
+Multi-tenant club manager (Masonic lodges and rowing clubs) on Laravel 13 / Inertia v3 / Vue 3 / Tailwind v4, with Livewire 4 for the accounting and committee screens.
+
+**Tenancy and URLs.** A user belongs to clubs through the `club_user` pivot (`role`: owner/admin/treasurer/coach/member, `status`: active/pending/past). Club slugs sit at the top level of the URL space, so `App\Support\ReservedClubSlugs` keeps them from shadowing fixed paths. Areas:
+- `/members/...`: the unified member area (dashboard, calendar, inbox, per-club pages at `/members/{slug}/...`). Queries come from `App\Support\MemberScope`, which limits every page to the user's active clubs (all of them, or one).
+- `/{slug}/admin/...`: club admin. `/site/{clubSlug}`: public website. `/{slug}` and old `/clubs/...` URLs are redirects.
+
+**Authorization is keyed on the URL shape, not per controller.** `EnsureUserCanAdministerClub` is appended to the web group and self-activates on any route with a `{clubSlug}`/`{slug}` segment followed by `/admin`. It maps the first segment after `/admin` to a capability via `config/club_permissions.php` (`route_map`), and each club can override roles per capability in `settings.permission_matrix`. Consequences:
+- A new admin section must be added to `route_map`, otherwise it falls back to "any staff role".
+- Club actions that live outside `/admin` (member approve/import/export, domain) need `->middleware('club.admin:manage_members')` (the alias takes a capability).
+- Inside code, use `App\Support\ClubAccess` (`can`, `authorize`, `canAssignRole`); only owners may grant, change or remove `owner`.
+- Livewire updates hit `/livewire/update`, not the page URL, so the admin middleware is registered as persistent and every public identifier (`clubSlug`, `meetingId`, ...) is `#[Locked]`. Look records up with `where('club_id', ...)`, never bare `find($id)` from client input, and load users through `$club->users()`.
+- `tests/Feature/AdminRouteSweepTest.php` requests every admin route as a member, another club's admin and each staff role; it fails when a route is left unprotected or unmapped.
+
+**Code layout.** `app/Models`, `app/Http/Controllers` and `resources/js/Pages` hold most of the app (Inertia pages, controllers often over 500 lines; `AccountingAdminController` and `Accounting/Index.vue` are very large). `app/Domains/ClubAccounting` is a second, Livewire-based layer (models on `club_acc_*` tables, services, Blade views in `resources/views/livewire`) for banking, reconciliation, subscriptions, members roster, charity, candidates and committee governance. Shared UI kit: `resources/js/Components/Ui`; dark mode is the `.dark` class and the members layout has an optional side nav (`Utils/navMode`).
+
+**Cross-cutting helpers in `app/Support`** that new code should reuse:
+- `UploadRules` / `ImageDownscaler`: every upload uses them (no SVG or HTML, 6000px max side, photos shrunk to 1920px). Rules on nested keys make `validated()` drop the sibling keys, so validate block files in a separate call.
+- `RichTextSanitizer` and the `SanitizedHtml`/`SanitizedHtmlBlocks` casts sanitise on write for posts, pages and newsletters (those fields are rendered with `v-html`); block URL fields are also scheme-checked there.
+- `Csv::safe()/line()` for any CSV output (formula injection, quoting).
+- `EmailVerification::required()`: sign-up confirmation is only enforced once a real mail driver is set (`log`/`array` skip it); `REQUIRE_EMAIL_VERIFICATION` overrides.
+
+**Files.** Media goes through Spatie MediaLibrary on the public disk. Accounting invoice/bill attachments are the exception: they are stored on the private `local` disk and served only by `admin.accounting.attachments.show` (needs `manage_billing`). Gateway secrets in club settings are encrypted and never sent back to the browser.
+
+**Environment.** The "dev" site is a staging server (`APP_ENV=development`, `APP_DEBUG=false`); production password checks (`uncompromised`) only run when `APP_ENV=production`. `SESSION_SECURE_COOKIE` and `TRUSTED_PROXIES` are set per server.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
