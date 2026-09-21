@@ -5,10 +5,12 @@ namespace App\Domains\ClubAccounting\Livewire\Banking;
 use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Models\Accounting\Account;
 use App\Models\Club;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class BankAccountsIndex extends Component
 {
+    #[Locked]
     public string $clubSlug;
 
     // Modal state for adding a bank account

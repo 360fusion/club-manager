@@ -8,12 +8,16 @@ use App\Domains\ClubAccounting\Models\Candidate;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAgendaItem;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\User;
+use App\Support\ClubAccess;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class CandidateVettingModal extends Component
 {
+    #[Locked]
     public int $meetingId;
 
+    #[Locked]
     public ?int $candidateId = null;
 
     public bool $isOpen = false;
@@ -41,7 +45,8 @@ class CandidateVettingModal extends Component
     public function signOffCandidate(): void
     {
         $meeting = ClubCommitteeMeeting::findOrFail($this->meetingId);
-        $candidateRecord = Candidate::find($this->candidateId);
+        ClubAccess::authorize(auth()->user(), $meeting->club, 'manage_meetings');
+        $candidateRecord = Candidate::where('club_id', $meeting->club_id)->find($this->candidateId);
 
         if ($candidateRecord) {
             $name = $candidateRecord->full_name;
@@ -88,7 +93,10 @@ class CandidateVettingModal extends Component
     {
         $candidate = null;
         if ($this->candidateId) {
-            $domainCand = Candidate::find($this->candidateId);
+            $meeting = ClubCommitteeMeeting::find($this->meetingId);
+            $domainCand = $meeting && ClubAccess::can(auth()->user(), $meeting->club, 'manage_meetings')
+                ? Candidate::where('club_id', $meeting->club_id)->find($this->candidateId)
+                : null;
             if ($domainCand) {
                 $candidate = (object) [
                     'id' => $domainCand->id,

@@ -129,16 +129,29 @@ class PublicSiteController extends Controller
             'success_message' => 'nullable|string',
         ]);
 
-        $recipientEmail = $validated['recipient_email']
-            ?: ($club->settings['contact_email'] ?? $club->email);
+        // Recipients are never taken on trust from the request. A form may only send to the
+        // club's own contact addresses, to addresses on the club's own email domain, or to an
+        // active member. Free-mail domains are never treated as "the club's domain".
+        $clubEmails = collect([$club->settings['contact_email'] ?? null, $club->email])->filter()->map(fn ($email) => strtolower((string) $email));
+        $freeMail = ['gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'hotmail.co.uk', 'live.com', 'yahoo.com', 'yahoo.co.uk', 'icloud.com', 'me.com', 'aol.com', 'btinternet.com', 'sky.com', 'proton.me', 'protonmail.com'];
+        $clubDomains = $clubEmails->map(fn ($email) => substr((string) strrchr($email, '@'), 1))->filter()->reject(fn ($domain) => in_array($domain, $freeMail, true))->unique();
+        $memberEmails = $club->users()->wherePivot('status', 'active')->pluck('users.email')->map(fn ($email) => strtolower((string) $email));
+
+        $isAllowed = fn (string $email) => $clubEmails->contains(strtolower($email))
+            || $memberEmails->contains(strtolower($email))
+            || $clubDomains->contains(substr((string) strrchr(strtolower($email), '@'), 1));
+
+        $recipientEmail = $club->settings['contact_email'] ?? $club->email;
+        if (! empty($validated['recipient_email']) && $isAllowed($validated['recipient_email'])) {
+            $recipientEmail = $validated['recipient_email'];
+        }
 
         $ccEmails = [];
         if (! empty($validated['cc_emails'])) {
-            $rawCcs = preg_split('/[\s,]+/', $validated['cc_emails']);
-            foreach ($rawCcs as $emailCandidate) {
-                $trimmed = trim($emailCandidate);
-                if (filter_var($trimmed, FILTER_VALIDATE_EMAIL)) {
-                    $ccEmails[] = $trimmed;
+            foreach (preg_split('/[\s,]+/', $validated['cc_emails']) as $candidate) {
+                $candidate = trim($candidate);
+                if (filter_var($candidate, FILTER_VALIDATE_EMAIL) && $isAllowed($candidate)) {
+                    $ccEmails[] = $candidate;
                 }
             }
         }

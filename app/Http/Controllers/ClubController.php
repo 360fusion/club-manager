@@ -7,6 +7,7 @@ use App\Models\ClubType;
 use App\Models\User;
 use App\Notifications\ClubNotification;
 use App\Services\ClubNotifier;
+use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -138,7 +139,7 @@ class ClubController extends Controller
                 'enabled_modules' => $enabledModules,
                 'tagline' => $club->settings['tagline'] ?? '',
                 'primary_color' => $club->settings['primary_color'] ?? '#3b82f6',
-                'members' => $club->users->map(fn ($u) => [
+                'members' => ! ClubAccess::can($viewer, $club, 'manage_members') ? [] : $club->users->map(fn ($u) => [
                     'id' => $u->id,
                     'name' => $u->name,
                     'email' => $u->email,

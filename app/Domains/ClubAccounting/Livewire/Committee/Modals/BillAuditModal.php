@@ -6,12 +6,16 @@ use App\Domains\ClubAccounting\Enums\CommitteeItemType;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAgendaItem;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Accounting\Bill;
+use App\Support\ClubAccess;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class BillAuditModal extends Component
 {
+    #[Locked]
     public int $meetingId;
 
+    #[Locked]
     public ?int $billId = null;
 
     public bool $isOpen = false;
@@ -38,8 +42,9 @@ class BillAuditModal extends Component
 
     public function signOffBill(): void
     {
-        $bill = Bill::with('media')->findOrFail($this->billId);
         $meeting = ClubCommitteeMeeting::findOrFail($this->meetingId);
+        ClubAccess::authorize(auth()->user(), $meeting->club, 'manage_meetings');
+        $bill = Bill::with('media')->where('club_id', $meeting->club_id)->findOrFail($this->billId);
 
         ClubCommitteeAgendaItem::create([
             'committee_meeting_id' => $meeting->id,
@@ -63,7 +68,13 @@ class BillAuditModal extends Component
 
     public function render()
     {
-        $bill = $this->billId ? Bill::with('media')->find($this->billId) : null;
+        $bill = null;
+        if ($this->billId) {
+            $meeting = ClubCommitteeMeeting::find($this->meetingId);
+            $bill = $meeting && ClubAccess::can(auth()->user(), $meeting->club, 'manage_meetings')
+                ? Bill::with('media')->where('club_id', $meeting->club_id)->find($this->billId)
+                : null;
+        }
 
         return view('livewire.committee.bill-audit-modal', [
             'bill' => $bill,

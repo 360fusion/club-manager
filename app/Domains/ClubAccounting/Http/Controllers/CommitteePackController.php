@@ -5,6 +5,7 @@ namespace App\Domains\ClubAccounting\Http\Controllers;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Http\Controllers\Controller;
+use App\Support\ClubAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -30,6 +31,11 @@ class CommitteePackController extends Controller
             'tasks.assignedTo',
             'noticesOfMotion',
         ])->findOrFail($id);
+
+        // The meeting must belong to the club in the URL (when there is one), and the
+        // caller must be allowed to manage that club's meetings.
+        abort_if($request->route('clubSlug') && $meeting->club->slug !== $request->route('clubSlug'), 404);
+        ClubAccess::authorize($request->user(), $meeting->club, 'manage_meetings');
 
         $compiler = app(CommitteePackCompilerService::class);
         $pdfOutput = $compiler->compilePdf($meeting);

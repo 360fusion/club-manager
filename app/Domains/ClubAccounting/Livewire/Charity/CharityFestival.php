@@ -7,10 +7,12 @@ use App\Domains\ClubAccounting\Models\FestivalTarget;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberFestivalGiving;
 use App\Models\Club;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class CharityFestival extends Component
 {
+    #[Locked]
     public string $clubSlug;
 
     // Modals Visibility

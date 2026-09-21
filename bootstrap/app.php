@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserCanAdministerClub;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,7 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias(['club.admin' => EnsureUserCanAdministerClub::class]);
+
         $middleware->web(append: [
+            SecurityHeaders::class,
             HandleInertiaRequests::class,
             // Self-activates on routes with a {clubSlug} parameter, so new
             // club routes are covered without having to remember this.

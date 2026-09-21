@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\Invoice;
+use App\Support\ClubAccess;
 use Illuminate\Http\Request;
 use Spatie\LaravelPdf\Facades\Pdf;
 
@@ -16,6 +17,12 @@ class InvoiceController extends Controller
     {
         $club = Club::where('slug', $slug)->firstOrFail();
         $invoice = Invoice::where('club_id', $club->id)->with('user')->findOrFail($id);
+
+        abort_unless(
+            $invoice->user_id === $request->user()->id || ClubAccess::can($request->user(), $club, 'manage_billing'),
+            403,
+            'You cannot download this invoice.',
+        );
 
         if ($request->query('format') === 'html') {
             return view('pdf.invoice', compact('club', 'invoice'));

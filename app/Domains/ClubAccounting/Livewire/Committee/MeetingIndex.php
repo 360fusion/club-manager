@@ -7,10 +7,12 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Club;
 use App\Models\Meeting;
 use Carbon\Carbon;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class MeetingIndex extends Component
 {
+    #[Locked]
     public string $clubSlug;
 
     public string $statusFilter = 'all';

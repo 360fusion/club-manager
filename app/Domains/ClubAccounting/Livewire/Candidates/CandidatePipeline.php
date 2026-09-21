@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\CandidateTransitionService;
 use App\Models\Club;
 use Carbon\Carbon;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -15,6 +16,7 @@ class CandidatePipeline extends Component
 {
     use WithPagination;
 
+    #[Locked]
     public string $clubSlug;
 
     public string $search = '';
@@ -31,6 +33,7 @@ class CandidatePipeline extends Component
     public bool $showInitiationModal = false;
 
     // Selected Candidate ID
+    #[Locked]
     public ?int $candidateId = null;
 
     // Candidate Form Fields

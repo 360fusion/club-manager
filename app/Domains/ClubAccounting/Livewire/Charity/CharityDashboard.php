@@ -13,10 +13,12 @@ use App\Domains\ClubAccounting\Models\MemberFestivalGiving;
 use App\Domains\ClubAccounting\Services\ReliefChestExportService;
 use App\Domains\ClubAccounting\Services\ReliefChestReconciliationService;
 use App\Models\Club;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class CharityDashboard extends Component
 {
+    #[Locked]
     public string $clubSlug;
 
     // Modals Visibility

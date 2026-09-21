@@ -13,16 +13,21 @@ use App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal;
 use App\Domains\ClubAccounting\Livewire\Members\MemberIndex;
 use App\Domains\ClubAccounting\Livewire\Members\MemberProfile;
 use App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex;
+use App\Http\Middleware\EnsureUserCanAdministerClub;
 use App\Models\Club;
 use App\Models\DefaultEmailTemplate;
 use App\Models\PaddleSubscription;
 use App\Models\PaddleSubscriptionItem;
 use App\Support\ReservedClubSlugs;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Laravel\Paddle\Cashier;
 use Laravel\Pennant\Feature;
 use Livewire\Livewire;
@@ -46,6 +51,15 @@ class AppServiceProvider extends ServiceProvider
         // shadow fixed paths such as /login or /members.
         Route::pattern('slug', ReservedClubSlugs::routeRegex());
         Route::pattern('clubSlug', ReservedClubSlugs::routeRegex());
+
+        // Livewire updates post to /livewire/update, so repeat the club gate for them.
+        Livewire::addPersistentMiddleware([EnsureUserCanAdministerClub::class]);
+
+        // Sign-in and public forms are open to the world, so each has its own limit.
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(Str::lower((string) $request->input('email')).'|'.$request->ip()));
+        RateLimiter::for('api-token', fn (Request $request) => Limit::perMinute(5)->by(Str::lower((string) $request->input('email')).'|'.$request->ip()));
+        RateLimiter::for('auth-forms', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+        RateLimiter::for('public-forms', fn (Request $request) => Limit::perMinute(6)->by($request->ip()));
 
         if (class_exists(Livewire::class)) {
             Livewire::component(

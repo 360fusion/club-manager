@@ -7,12 +7,15 @@ use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Accounting\AccountingContact;
 use App\Models\Club;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class MemberProfile extends Component
 {
+    #[Locked]
     public string $clubSlug;
 
+    #[Locked]
     public int $memberId;
 
     public string $activeTab = 'details'; // details, finances

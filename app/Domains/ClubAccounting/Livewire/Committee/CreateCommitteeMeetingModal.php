@@ -7,11 +7,13 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Club;
 use App\Models\Meeting;
 use Carbon\Carbon;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 class CreateCommitteeMeetingModal extends Component
 {
+    #[Locked]
     public ?string $clubSlug = null;
 
     public bool $isOpen = false;

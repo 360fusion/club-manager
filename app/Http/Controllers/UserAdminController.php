@@ -9,6 +9,7 @@ use App\Mail\MemberInvitationMail;
 use App\Models\Club;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Support\ClubAccess;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,7 +42,7 @@ class UserAdminController extends Controller
                     'committee_role' => $u->pivot->committee_role ?? null,
                     'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
                     'status' => $u->pivot->status ?? 'active',
-                    'invitation_token' => $u->pivot->invitation_token ?? null,
+                    'invitation_token' => ! empty($u->pivot->invitation_token),
                     'invited_at' => $u->pivot->invited_at ? Carbon::parse($u->pivot->invited_at)->format('M d, Y') : null,
                     'invitation_accepted_at' => $u->pivot->invitation_accepted_at ? Carbon::parse($u->pivot->invitation_accepted_at)->format('M d, Y') : null,
                     'joined_at' => $u->pivot->created_at ? Carbon::parse($u->pivot->created_at)->format('M d, Y') : 'Recent',
@@ -139,7 +140,7 @@ class UserAdminController extends Controller
             'phone' => $memberPivot->phone ?? '',
             'emergency_contact' => $memberPivot->emergency_contact ?? '',
             'dietary_notes' => $memberPivot->dietary_notes ?? '',
-            'invitation_token' => $memberPivot->invitation_token ?? null,
+            'invitation_token' => ! empty($memberPivot->invitation_token),
             'invited_at' => $memberPivot->invited_at ? Carbon::parse($memberPivot->invited_at)->format('M d, Y') : null,
             'invitation_accepted_at' => $memberPivot->invitation_accepted_at ? Carbon::parse($memberPivot->invitation_accepted_at)->format('M d, Y') : null,
             'joined_at' => $memberPivot->created_at ? Carbon::parse($memberPivot->created_at)->format('M d, Y') : 'Recent',
@@ -182,6 +183,8 @@ class UserAdminController extends Controller
             'member_number' => 'nullable|string|max:100',
             'send_invite' => 'nullable|boolean',
         ]);
+
+        abort_unless(ClubAccess::canAssignRole($request->user(), $club, $validated['role'], null), 403, 'Only a club owner can grant the owner role.');
 
         $sendInvite = $request->boolean('send_invite', true);
         $token = $sendInvite ? Str::random(40) : null;
@@ -282,6 +285,9 @@ class UserAdminController extends Controller
             'role' => 'required|in:owner,admin,coach,member,treasurer',
         ]);
 
+        $targetRole = $club->users()->where('users.id', $userId)->first()?->pivot->role;
+        abort_unless(ClubAccess::canAssignRole($request->user(), $club, $validated['role'], $targetRole), 403, 'Only a club owner can grant or change the owner role.');
+
         $club->users()->updateExistingPivot($userId, ['role' => $validated['role']]);
 
         return redirect()->back()->with('success', 'Member role updated to '.strtoupper($validated['role']));
@@ -350,6 +356,7 @@ class UserAdminController extends Controller
     public function updateStatus(Request $request, string $clubSlug, int $userId): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $this->guardOwner($club, $userId);
         $user = User::findOrFail($userId);
 
         $validated = $request->validate([
@@ -375,6 +382,7 @@ class UserAdminController extends Controller
     public function removeMember(string $clubSlug, int $userId): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $this->guardOwner($club, $userId);
         $user = User::findOrFail($userId);
 
         $club->users()->updateExistingPivot($userId, ['status' => 'past']);
@@ -388,6 +396,7 @@ class UserAdminController extends Controller
     public function forceDeleteMember(string $clubSlug, int $userId): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $this->guardOwner($club, $userId);
         $user = User::findOrFail($userId);
 
         // Soft hide member by setting pivot status to 'deleted'
@@ -395,5 +404,20 @@ class UserAdminController extends Controller
 
         return redirect()->route('admin.users.index', ['clubSlug' => $clubSlug])
             ->with('success', "{$user->name} has been deleted from the member directory. Historical records remain preserved.");
+    }
+
+    /**
+     * Only an owner (or a platform super admin) may suspend or remove a club owner.
+     */
+    private function guardOwner(Club $club, int $userId): void
+    {
+        $actor = request()->user();
+        $targetRole = $club->users()->where('users.id', $userId)->first()?->pivot->role;
+
+        abort_if(
+            $targetRole === 'owner' && ! $actor->is_super_admin && ClubAccess::role($actor, $club) !== 'owner',
+            403,
+            'Only a club owner can change or remove another owner.',
+        );
     }
 }

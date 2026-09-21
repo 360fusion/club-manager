@@ -100,7 +100,7 @@ class UpdateAdminController extends Controller
             'cover_image_url' => 'nullable|string',
             'cover_image_file' => 'nullable|image|max:10240',
             'attachments' => 'nullable|array',
-            'attachment_files.*' => 'nullable|file|max:20480',
+            'attachment_files.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,csv,txt,png,jpg,jpeg,gif,webp|max:20480',
             'status' => 'required|string|in:draft,approved,sent,archived',
             'is_important' => 'nullable|boolean',
             'clean_text' => 'nullable|boolean',

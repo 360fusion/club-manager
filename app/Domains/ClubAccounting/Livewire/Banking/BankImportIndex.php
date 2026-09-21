@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Services\BankStatementParserService;
 use App\Models\Club;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -15,6 +16,7 @@ class BankImportIndex extends Component
 {
     use WithFileUploads, WithPagination;
 
+    #[Locked]
     public string $clubSlug;
 
     public string $search = '';

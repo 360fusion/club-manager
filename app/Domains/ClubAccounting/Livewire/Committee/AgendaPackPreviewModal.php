@@ -8,13 +8,16 @@ use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Models\Club;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 class AgendaPackPreviewModal extends Component
 {
+    #[Locked]
     public string $clubSlug;
 
+    #[Locked]
     public int $meetingId;
 
     public bool $isOpen = false;

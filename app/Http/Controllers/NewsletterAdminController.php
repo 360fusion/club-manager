@@ -150,7 +150,7 @@ class NewsletterAdminController extends Controller
             'target_roles' => 'required|array',
             'status' => 'required|in:draft,sent',
             'existing_attachments' => 'nullable|array',
-            'new_attachments.*' => 'nullable|file|max:10240', // max 10MB per file
+            'new_attachments.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,csv,txt,png,jpg,jpeg,gif,webp|max:10240', // max 10MB per file
         ]);
 
         $rawAttachments = $validated['existing_attachments'] ?? [];

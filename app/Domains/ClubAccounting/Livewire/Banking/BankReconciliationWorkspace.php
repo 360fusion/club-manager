@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,6 +15,7 @@ class BankReconciliationWorkspace extends Component
 {
     use WithPagination;
 
+    #[Locked]
     public string $clubSlug;
 
     public ?int $selectedTransactionId = null;

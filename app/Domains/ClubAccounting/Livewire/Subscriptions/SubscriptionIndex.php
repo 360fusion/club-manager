@@ -9,6 +9,7 @@ use App\Domains\ClubAccounting\Models\SubscriptionTier;
 use App\Domains\ClubAccounting\Services\SubscriptionBillingService;
 use App\Models\Club;
 use Carbon\Carbon;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,6 +17,7 @@ class SubscriptionIndex extends Component
 {
     use WithPagination;
 
+    #[Locked]
     public string $clubSlug;
 
     public string $search = '';

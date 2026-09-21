@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\User;
+use App\Support\ClubAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MemberImportExportController extends Controller
@@ -27,6 +29,11 @@ class MemberImportExportController extends Controller
 
         $imported = 0;
 
+        // Only an owner can hand out the admin role through an import.
+        $allowedRoles = ClubAccess::role($request->user(), $club) === 'owner' || $request->user()->is_super_admin
+            ? ['admin', 'coach', 'member', 'treasurer']
+            : ['coach', 'member', 'treasurer'];
+
         while (($row = fgetcsv($handle)) !== false) {
             if (count($row) >= 2) {
                 $name = trim($row[0]);
@@ -42,13 +49,14 @@ class MemberImportExportController extends Controller
                     ['email' => $email],
                     [
                         'name' => $name,
-                        'password' => Hash::make('password123'),
+                        // Nobody knows this password; new members set their own through "forgot password".
+                        'password' => Hash::make(Str::random(40)),
                     ]
                 );
 
                 $club->users()->syncWithoutDetaching([$user->id]);
                 $club->users()->updateExistingPivot($user->id, [
-                    'role' => in_array($role, ['admin', 'coach', 'member', 'treasurer']) ? $role : 'member',
+                    'role' => in_array($role, $allowedRoles, true) ? $role : 'member',
                     'member_number' => $memberNumber,
                     'status' => 'active',
                 ]);

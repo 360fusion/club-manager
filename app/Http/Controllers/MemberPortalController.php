@@ -11,6 +11,7 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Newsletter;
 use App\Models\Post;
+use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -266,6 +267,8 @@ class MemberPortalController extends Controller
             ->with('membershipPlans')
             ->firstOrFail();
 
+        abort_unless(ClubAccess::isActiveMember(Auth::user(), $club), 403, 'You are not a member of this club.');
+
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 
         $invoices = $user ? Invoice::where('club_id', $club->id)
@@ -432,7 +435,10 @@ class MemberPortalController extends Controller
     {
         $user = Auth::user();
         $club = Club::where('slug', $slug)->firstOrFail();
+
+        abort_unless(ClubAccess::isActiveMember($user, $club), 403, 'You are not a member of this club.');
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+        abort_if($meeting->status !== 'published' && ! ClubAccess::can($user, $club, 'manage_meetings'), 404);
 
         if ($meeting->rsvp_cutoff_at && Carbon::now()->isAfter($meeting->rsvp_cutoff_at)) {
             return redirect()->back()->withErrors(['cutoff' => 'The dining deadline for this meeting has passed. Please contact the Secretary directly.']);
@@ -490,10 +496,13 @@ class MemberPortalController extends Controller
     {
         $user = Auth::user();
         $club = Club::where('slug', $slug)->firstOrFail();
+
+        abort_unless(ClubAccess::isActiveMember($user, $club), 403, 'You are not a member of this club.');
         $meeting = Meeting::where('club_id', $club->id)
             ->where('id', $id)
             ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user', 'fraternalVisits'])
             ->firstOrFail();
+        abort_if($meeting->status !== 'published' && ! ClubAccess::can($user, $club, 'manage_meetings'), 404);
 
         $members = $club->users()->wherePivot('role', '!=', 'visitor')->get()->map(function ($u) {
             return [
@@ -537,6 +546,13 @@ class MemberPortalController extends Controller
      */
     public function downloadMeetingPdf(string $slug, int $id)
     {
+        $user = Auth::user();
+        $club = Club::where('slug', $slug)->firstOrFail();
+        abort_unless(ClubAccess::isActiveMember($user, $club), 403, 'You are not a member of this club.');
+
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+        abort_if($meeting->status !== 'published' && ! ClubAccess::can($user, $club, 'manage_meetings'), 404);
+
         $adminController = app(MeetingAdminController::class);
         request()->merge(['download' => 1]);
 

@@ -17,13 +17,16 @@ use App\Models\Club;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 class MeetingWorkspace extends Component
 {
+    #[Locked]
     public string $clubSlug;
 
+    #[Locked]
     public int $meetingId;
 
     #[On('pack-dispatched')]

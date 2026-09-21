@@ -12,15 +12,19 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Models\ClubCommitteeTask;
 use App\Domains\ClubAccounting\Models\ClubNoticeOfMotion;
 use App\Domains\ClubAccounting\Notifications\CommitteeTaskAssignedNotification;
+use App\Domains\ClubAccounting\Services\CommitteeNotesParserService;
 use App\Domains\ClubAccounting\Services\Integration\MemberMentionSearchService;
 use App\Models\Club;
 use Carbon\Carbon;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class LiveMinuteTaker extends Component
 {
+    #[Locked]
     public string $clubSlug;
 
+    #[Locked]
     public int $meetingId;
 
     public ?ClubCommitteeMeeting $meeting = null;
@@ -95,7 +99,7 @@ class LiveMinuteTaker extends Component
     public function updateParsedPreview(): void
     {
         $meeting = $this->meeting ?: $this->getMeeting();
-        $parser = app(\App\Domains\ClubAccounting\Services\CommitteeNotesParserService::class);
+        $parser = app(CommitteeNotesParserService::class);
         $this->parsedPreview = $parser->parse($this->content ?? $this->notesRaw, $meeting->club_id, $meeting);
     }
 
@@ -117,7 +121,7 @@ class LiveMinuteTaker extends Component
             }
         }
 
-        $parser = app(\App\Domains\ClubAccounting\Services\CommitteeNotesParserService::class);
+        $parser = app(CommitteeNotesParserService::class);
         $results = $parser->extractEntities($this->meeting, $this->content);
 
         // Switch to the 'tasks' tab so the user visually sees the committed action items immediately

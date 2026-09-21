@@ -188,7 +188,7 @@ class MeetingAdminController extends Controller
             'officers_year_label' => 'nullable|string|max:255',
             'officers_roster' => 'nullable|array',
             'front_page_logo' => 'nullable|string|max:1000',
-            'front_page_logo_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'front_page_logo_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'front_page_title' => 'nullable|string|max:255',
             'provincial_grand_master' => 'nullable|string|max:255',
             'deputy_provincial_grand_master' => 'nullable|string|max:255',

@@ -29,7 +29,7 @@ class ApiController extends Controller
             return response()->json(['message' => 'Invalid credentials provided.'], 401);
         }
 
-        $token = $user->createToken($request->device_name)->plainTextToken;
+        $token = $user->createToken($request->device_name, ['profile:read'])->plainTextToken;
 
         return response()->json([
             'token' => $token,

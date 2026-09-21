@@ -61,7 +61,7 @@ use Illuminate\Support\Facades\Route;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'create'])->name('login');
-Route::post('/login', [LoginController::class, 'store']);
+Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:login');
 // Unnamed: Fortify already registers a route named 'logout'. Two routes sharing a
 // name is fatal to route:cache in production. Layouts post to the /logout URL
 // directly, so this route needs no name of its own.
@@ -69,21 +69,21 @@ Route::match(['get', 'post'], '/logout', [LoginController::class, 'destroy']);
 
 // Public Member Registration Routes
 Route::get('/register', [RegisterController::class, 'create'])->name('register');
-Route::post('/register', [RegisterController::class, 'store']);
+Route::post('/register', [RegisterController::class, 'store'])->middleware('throttle:auth-forms');
 
 // Password Reset Routes
 Route::get('/forgot-password', [ForgotPasswordController::class, 'create'])->name('password.request');
-Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email')->middleware('throttle:auth-forms');
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
-Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
+Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update')->middleware('throttle:auth-forms');
 
 // Member Email Invitation Setup Routes
 Route::get('/{slug}/invite/{token}', [InvitationController::class, 'showForm'])->name('invitation.accept');
-Route::post('/{slug}/invite/{token}', [InvitationController::class, 'accept'])->name('invitation.submit');
+Route::post('/{slug}/invite/{token}', [InvitationController::class, 'accept'])->name('invitation.submit')->middleware('throttle:auth-forms');
 
 // Passwordless Summons Email RSVP Routes
 Route::get('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'show'])->name('summons.rsvp.show');
-Route::post('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'store'])->name('summons.rsvp.store');
+Route::post('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'store'])->name('summons.rsvp.store')->middleware('throttle:public-forms');
 
 // Multi-Tenant Public Admin & Workspace Landing Routes
 Route::get('/', [ClubController::class, 'index'])->name('home');
@@ -100,11 +100,11 @@ Route::get('/site/oxford-boating', function () {
 });
 
 Route::get('/site/{clubSlug}/{pageSlug?}', [PublicSiteController::class, 'showPage'])->name('public.site');
-Route::post('/site/{clubSlug}/contact-form', [PublicSiteController::class, 'submitContactForm'])->name('public.site.contact_form');
+Route::post('/site/{clubSlug}/contact-form', [PublicSiteController::class, 'submitContactForm'])->name('public.site.contact_form')->middleware('throttle:public-forms');
 
 Route::get('/{slug}/overview', [ClubController::class, 'show'])->name('clubs.show');
 Route::get('/{slug}/visitor-register', [VisitorRegistrationController::class, 'create'])->name('clubs.visitor.register');
-Route::post('/{slug}/visitor-register', [VisitorRegistrationController::class, 'store'])->name('clubs.visitor.store');
+Route::post('/{slug}/visitor-register', [VisitorRegistrationController::class, 'store'])->name('clubs.visitor.store')->middleware('throttle:public-forms');
 
 // Protected Authenticated Routes
 // Local-only preview of the shared UI primitives.
@@ -127,7 +127,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/clubs', [ClubController::class, 'myClubs'])->name('admin.clubs.index');
     Route::get('/{clubSlug}/admin/settings', [ClubSettingsController::class, 'show'])->name('admin.settings.show');
     Route::put('/{clubSlug}/admin/settings', [ClubSettingsController::class, 'update'])->name('admin.settings.update');
-    Route::post('/{slug}/domain', [ClubController::class, 'updateDomain'])->name('clubs.domain.update');
+    Route::post('/{slug}/domain', [ClubController::class, 'updateDomain'])->name('clubs.domain.update')->middleware('club.admin:manage_settings');
 
     // Central Spatie Media Library Routes
     Route::get('/{clubSlug}/admin/media-manager', [MediaAdminController::class, 'page'])->name('admin.media.page');
@@ -146,8 +146,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/{clubSlug}/admin/media/{id}', [MediaAdminController::class, 'destroy'])->name('admin.media.destroy');
 
     // CSV Member Import & Export Routes
-    Route::post('/{slug}/members/import', [MemberImportExportController::class, 'import'])->name('clubs.members.import');
-    Route::get('/{slug}/members/export', [MemberImportExportController::class, 'export'])->name('clubs.members.export');
+    Route::post('/{slug}/members/import', [MemberImportExportController::class, 'import'])->name('clubs.members.import')->middleware('club.admin:manage_members');
+    Route::get('/{slug}/members/export', [MemberImportExportController::class, 'export'])->name('clubs.members.export')->middleware('club.admin:manage_members');
 
     // Executive Analytics Route
     Route::get('/{slug}/admin/analytics', [AnalyticsController::class, 'show'])->name('admin.analytics');
@@ -398,8 +398,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/meetings/{id}/pdf', [MemberPortalController::class, 'downloadMeetingPdf'])->name('member.meetings.pdf');
 
     // Invite-Only Member Approval & Rejection Routes
-    Route::post('/{slug}/members/{userId}/approve', [ClubController::class, 'approveMember'])->name('clubs.members.approve');
-    Route::post('/{slug}/members/{userId}/reject', [ClubController::class, 'rejectMember'])->name('clubs.members.reject');
+    Route::post('/{slug}/members/{userId}/approve', [ClubController::class, 'approveMember'])->name('clubs.members.approve')->middleware('club.admin:manage_members');
+    Route::post('/{slug}/members/{userId}/reject', [ClubController::class, 'rejectMember'])->name('clubs.members.reject')->middleware('club.admin:manage_members');
 
     // Admin Attendance Check-In Routes
     Route::get('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'show'])->name('admin.events.checkin');
@@ -408,7 +408,7 @@ Route::middleware(['auth'])->group(function () {
 
 // Sanctum API Token & Pennant Feature Routes
 Route::prefix('api/v1')->group(function () {
-    Route::post('/tokens/create', [ApiController::class, 'issueToken'])->name('api.tokens.create');
+    Route::post('/tokens/create', [ApiController::class, 'issueToken'])->name('api.tokens.create')->middleware('throttle:api-token');
     Route::get('/clubs/{slug}/info', [ApiController::class, 'getClubInfo'])->name('api.clubs.info');
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

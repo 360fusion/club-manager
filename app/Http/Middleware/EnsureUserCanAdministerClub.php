@@ -23,12 +23,16 @@ class EnsureUserCanAdministerClub
      */
     private const MEMBER_ONLY_ROLE = 'member';
 
-    public function handle(Request $request, Closure $next): Response
+    /**
+     * @param  string|null  $capability  when given (`club.admin:manage_members`) the check is applied
+     *                                   even though the URL is not under /{club}/admin
+     */
+    public function handle(Request $request, Closure $next, ?string $capability = null): Response
     {
         // Only club admin routes are gated. Public and member-facing club routes
         // (the public site, the directory subscribe form, the member portal)
         // are reachable by non-members by design.
-        if (! $this->isClubAdminRoute($request)) {
+        if ($capability === null && ! $this->isClubAdminRoute($request)) {
             return $next($request);
         }
 
@@ -74,7 +78,7 @@ class EnsureUserCanAdministerClub
         // Mapped areas are further restricted by the club's permission matrix.
         // Unmapped areas fall back to "any staff role", which is what the
         // membership check above already established.
-        $capability = ClubPermissions::capabilityForPath($request->path());
+        $capability ??= ClubPermissions::capabilityForPath($request->path());
 
         if ($capability !== null) {
             abort_unless(

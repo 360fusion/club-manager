@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Accounting\AccountingContact;
 use App\Models\Club;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,6 +15,7 @@ class MemberIndex extends Component
 {
     use WithPagination;
 
+    #[Locked]
     public string $clubSlug;
 
     // Filters & Search
