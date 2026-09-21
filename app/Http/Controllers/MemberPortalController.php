@@ -12,6 +12,7 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Newsletter;
 use App\Models\Post;
+use App\Services\Events\EventMailer;
 use App\Services\Events\EventOnlinePayment;
 use App\Services\Events\EventPayload;
 use App\Services\Events\EventRegistrationService;
@@ -385,6 +386,10 @@ class MemberPortalController extends Controller
         ]);
 
         $registrations->sendGuestConfirmations($registration);
+
+        if ($registration->wasRecentlyCreated && in_array($registration->status, ['attending', 'waitlisted'], true)) {
+            app(EventMailer::class)->memberBooked($registration);
+        }
 
         // Chose to pay online (card or PayPal): straight on to the payment page for what they owe.
         if ($registration->status === 'attending' && $registration->paymentMethod?->isOnline() && $online->canPay($registration)) {

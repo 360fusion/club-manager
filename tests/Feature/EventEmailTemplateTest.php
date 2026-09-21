@@ -4,7 +4,10 @@ namespace Tests\Feature;
 
 use App\Enums\Visibility;
 use App\Mail\EventGuestBookingMail;
+use App\Mail\EventPaymentReceivedMail;
 use App\Mail\EventPaymentReminderMail;
+use App\Mail\EventPlaceAvailableMail;
+use App\Mail\EventRefundMail;
 use App\Models\Club;
 use App\Models\ClubPaymentMethod;
 use App\Models\ClubType;
@@ -13,6 +16,7 @@ use App\Models\Event;
 use App\Models\EventPaymentMethod;
 use App\Models\EventRegistration;
 use App\Models\User;
+use App\Services\Events\EventPaymentService;
 use App\Services\Events\EventRegistrationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -102,5 +106,55 @@ class EventEmailTemplateTest extends TestCase
 
         $admin = User::factory()->create(['is_super_admin' => true]);
         $this->actingAs($admin)->post(route('superadmin.email_templates.test', $template->id), $payload)->assertSessionHas('success');
+    }
+
+    public function test_a_payment_sends_the_booker_a_receipt_and_a_refund_tells_them_it_is_coming_back(): void
+    {
+        Mail::fake();
+        $payments = app(EventPaymentService::class);
+
+        $payments->markPaid($this->registration, null, 30.0);
+        Mail::assertSent(EventPaymentReceivedMail::class, fn ($mail) => $mail->hasTo($this->registration->contact_email) && str_contains($mail->render(), '£30.00') && str_contains($mail->render(), 'Part paid'));
+
+        $payments->markPaid($this->registration->fresh(), null);
+        Mail::assertSent(EventPaymentReceivedMail::class, fn ($mail) => str_contains($mail->render(), 'Paid in full'));
+
+        $payments->refund($this->registration->fresh(), null, 'Cannot attend', 20.0);
+        Mail::assertSent(EventRefundMail::class, fn ($mail) => $mail->hasTo($this->registration->contact_email) && str_contains($mail->render(), '£20.00'));
+    }
+
+    public function test_the_waiting_list_is_told_when_a_place_opens_but_only_the_booking_that_moved_up(): void
+    {
+        $this->event->update(['capacity' => 2, 'waitlist_enabled' => true]);
+        $waiting = User::factory()->create();
+        $this->event->club->users()->attach($waiting->id, ['role' => 'member', 'status' => 'active']);
+        $second = app(EventRegistrationService::class)->register($this->event, $waiting, ['payment_method' => $this->event->paymentMethods()->value('id'), 'attendees' => [['name' => 'Wendy Waiting'], ['name' => 'Guest Two', 'is_guest' => true]]]);
+        $this->assertSame('waitlisted', $second->status);
+
+        Mail::fake();
+        app(EventRegistrationService::class)->cancel($this->registration);
+
+        Mail::assertSent(EventPlaceAvailableMail::class, 1);
+        Mail::assertSent(EventPlaceAvailableMail::class, fn ($mail) => $mail->hasTo($waiting->email) && str_contains($mail->render(), 'now confirmed'));
+    }
+
+    public function test_the_new_event_emails_fall_back_to_built_in_wording_when_their_templates_are_removed_and_a_broken_mailer_never_blocks_a_payment(): void
+    {
+        DefaultEmailTemplate::whereIn('template_key', ['event_payment_received', 'event_refund', 'event_place_available'])->delete();
+
+        $this->assertSame('Payment received: Dinner', (new EventPaymentReceivedMail($this->registration, 10.0))->envelope()->subject);
+        $this->assertStringContainsString('Refund', (new EventRefundMail($this->registration, 10.0))->render());
+        $this->assertSame('A place is available: Dinner', (new EventPlaceAvailableMail($this->registration))->envelope()->subject);
+
+        Mail::shouldReceive('to')->andThrow(new \RuntimeException('mail server down'));
+        app(EventPaymentService::class)->markPaid($this->registration, null, 10.0);
+        $this->assertSame('10.00', $this->registration->fresh()->amount_paid);
+    }
+
+    public function test_the_reminder_links_a_member_to_pay_online_but_a_guest_gets_no_link(): void
+    {
+        $mail = new EventPaymentReminderMail($this->registration->fresh());
+        $this->assertStringNotContainsString('Pay online now', $mail->render(), 'no online option is set up on this event');
+        $this->assertStringContainsString('{{pay_link}}', DefaultEmailTemplate::where('template_key', 'event_payment_reminder')->value('body_html'));
     }
 }

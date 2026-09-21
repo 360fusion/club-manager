@@ -40,6 +40,9 @@ class EventPaymentReminderMail extends Mailable
             'amount_due' => Currencies::symbolFor($event->club).number_format((float) $payment['balance'], 2),
             'due_text' => $payment['due_at'] ? ', due by '.$payment['due_at'] : '',
         ], [
+            'pay_link' => $this->registration->user_id && $payment['online']['can_pay']
+                ? '<p><a href="'.e(route('member.events', ['slug' => $event->club->slug])).'">Pay online now</a></p>'
+                : '',
             'payment_how' => view('emails.partials.event-pay-how', ['payment' => $payment, 'showBank' => true])->render(),
         ]);
     }

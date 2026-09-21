@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\Visibility;
+use App\Mail\EventBookingMail;
 use App\Mail\EventGuestBookingMail;
 use App\Models\Club;
 use App\Models\ClubType;
@@ -180,7 +181,7 @@ class EventBookingHttpTest extends TestCase
         $this->assertSame(0, $this->event->registrations()->count());
 
         $this->book([$this->person('Mia Member'), $this->person('No Email', true)])->assertSessionHasNoErrors();
-        Mail::assertNothingSent();
+        Mail::assertNotSent(EventGuestBookingMail::class);
     }
 
     public function test_a_waitlisted_guest_is_told_they_are_waiting_and_the_organiser_sees_the_guests_own_email(): void
@@ -199,5 +200,19 @@ class EventBookingHttpTest extends TestCase
         $this->actingAs($admin)->get(route('admin.events.subscribers', ['clubSlug' => 'club-a', 'id' => $this->event->id]))->assertInertia(fn ($page) => $page
             ->where('subscribers.1.name', 'Gary Guest')
             ->where('subscribers.1.email', 'gary@example.test'));
+    }
+
+    public function test_a_member_gets_one_booking_confirmation_and_editing_the_booking_does_not_send_another(): void
+    {
+        Mail::fake();
+
+        $this->book([$this->person('Mia Member')])->assertSessionHasNoErrors();
+        Mail::assertSent(EventBookingMail::class, fn ($mail) => $mail->hasTo($this->member->email) && str_contains($mail->render(), route('member.events', ['slug' => 'club-a'])));
+
+        $this->book([$this->person('Mia Member'), $this->person('Gary', true)])->assertSessionHasNoErrors();
+        Mail::assertSent(EventBookingMail::class, 1);
+
+        $this->book([], 'declined')->assertSessionHasNoErrors();
+        Mail::assertSent(EventBookingMail::class, 1);
     }
 }

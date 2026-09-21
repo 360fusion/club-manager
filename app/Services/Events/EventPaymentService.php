@@ -28,7 +28,9 @@ class EventPaymentService
      */
     public function markPaid(EventRegistration $registration, ?User $actor, ?float $amount = null, ?string $method = null, ?Carbon $receivedAt = null, ?string $comment = null, string $source = 'admin', ?string $externalId = null, ?string $paymentIntent = null): EventRegistration
     {
-        return DB::transaction(function () use ($registration, $actor, $amount, $method, $receivedAt, $comment, $source, $externalId, $paymentIntent) {
+        $received = 0.0;
+
+        $registration = DB::transaction(function () use ($registration, $actor, &$amount, $method, $receivedAt, $comment, $source, $externalId, $paymentIntent, &$received) {
             $registration = $this->lock($registration);
             $balance = $registration->balanceDue();
 
@@ -55,9 +57,14 @@ class EventPaymentService
                 default => null,
             } ?? ($registration->payment_status === 'paid' ? 'marked_paid' : 'marked_part_paid'), $amount, $method, $comment, $actor, $source, $receivedAt, $externalId);
             $this->postIncome($registration, $amount, $actor);
+            $received = $amount;
 
             return $registration;
         });
+
+        app(EventMailer::class)->paymentReceived($registration, $received);
+
+        return $registration;
     }
 
     /**
@@ -116,7 +123,9 @@ class EventPaymentService
      */
     public function refund(EventRegistration $registration, ?User $actor, string $comment, ?float $amount = null): EventRegistration
     {
-        return DB::transaction(function () use ($registration, $actor, $comment, $amount) {
+        $refunded = 0.0;
+
+        $registration = DB::transaction(function () use ($registration, $actor, $comment, $amount, &$refunded) {
             $registration = $this->lock($registration);
             $this->requireReason($comment);
 
@@ -151,9 +160,14 @@ class EventPaymentService
 
             $this->log($registration, 'refunded', $amount, $viaStripe ? 'Stripe refund' : ($viaPayPal ? 'PayPal refund' : null), $comment, $actor, 'admin');
             $this->postReversal($registration, $amount, $actor, 'Refund');
+            $refunded = $amount;
 
             return $registration;
         });
+
+        app(EventMailer::class)->refunded($registration, $refunded);
+
+        return $registration;
     }
 
     /**

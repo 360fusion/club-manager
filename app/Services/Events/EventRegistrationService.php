@@ -281,6 +281,7 @@ class EventRegistrationService
     {
         $registration->update(['status' => 'attending']);
         $this->syncTierCounts($registration->event);
+        DB::afterCommit(fn () => app(EventMailer::class)->placeOpened($registration));
 
         return $registration;
     }
@@ -323,6 +324,7 @@ class EventRegistrationService
 
             $registration->update(['status' => 'attending']);
             $promoted->push($registration);
+            DB::afterCommit(fn () => app(EventMailer::class)->placeOpened($registration));
         }
 
         if ($promoted->isNotEmpty()) {
