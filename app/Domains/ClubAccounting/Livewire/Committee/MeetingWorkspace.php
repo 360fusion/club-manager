@@ -389,7 +389,7 @@ class MeetingWorkspace extends Component
             $candidate = $candidates->get($key);
 
             if (! $candidate && is_numeric($rawId)) {
-                $u = User::find($rawId);
+                $u = $meeting->club->users()->where('users.id', $rawId)->first();
                 if ($u) {
                     $commRole = $u->clubs()->where('clubs.id', $meeting->club_id)->first()?->pivot->committee_role;
                     $candidate = (object) [
@@ -449,7 +449,7 @@ class MeetingWorkspace extends Component
     public function addAttendee(): void
     {
         $meeting = $this->getMeeting();
-        $user = User::findOrFail($this->selectedUserId);
+        $user = $meeting->club->users()->where('users.id', $this->selectedUserId)->firstOrFail();
 
         ClubCommitteeAttendee::firstOrCreate([
             'committee_meeting_id' => $meeting->id,

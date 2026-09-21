@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Domains\ClubAccounting\Livewire\Committee\MeetingWorkspace;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Mail\ContactFormSubmittedMail;
 use App\Models\Club;
 use App\Models\ClubType;
@@ -12,12 +14,14 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Page;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
+use Livewire\Livewire;
 use ReflectionClass;
 use Tests\TestCase;
 
@@ -338,5 +342,44 @@ class SecurityAuditTest extends TestCase
         $this->assertSame('', $blocks[1]['url']);
         $this->assertSame('https://example.org/ok', $blocks[2]['url']);
         $this->assertSame('/site/club-a/join-us', $blocks[3]['url']);
+    }
+
+    public function test_roll_call_only_accepts_members_of_the_meetings_club(): void
+    {
+        $meeting = ClubCommitteeMeeting::create(['club_id' => $this->a->id, 'title' => 'Committee', 'meeting_date' => now()->addWeek()]);
+
+        $this->expectException(ModelNotFoundException::class);
+
+        Livewire::actingAs($this->admin)
+            ->test(MeetingWorkspace::class, ['clubSlug' => 'club-a', 'meetingId' => $meeting->id])
+            ->set('selectedUserId', $this->outsider->id)
+            ->set('attendeeRole', 'Guest')
+            ->call('addAttendee');
+    }
+
+    public function test_admins_cannot_read_or_touch_users_outside_their_club(): void
+    {
+        $this->actingAs($this->admin)->get(route('admin.users.show', ['clubSlug' => 'club-a', 'userId' => $this->outsider->id]))->assertNotFound();
+        $this->actingAs($this->admin)->get(route('admin.users.show', ['clubSlug' => 'club-a', 'userId' => $this->adminB->id]))->assertNotFound();
+        $this->actingAs($this->admin)->get(route('admin.users.show', ['clubSlug' => 'club-a', 'userId' => $this->member->id]))->assertOk();
+
+        $meeting = Meeting::create(['club_id' => $this->a->id, 'title' => 'Regular', 'meeting_date' => now()->addDays(9)->toDateString(), 'starts_at' => '19:00:00', 'venue' => 'Hall', 'dress_code' => 'Suit', 'status' => 'published']);
+        $this->actingAs($this->admin)->post(route('admin.meetings.rsvp.update', ['clubSlug' => 'club-a', 'id' => $meeting->id]), [
+            'user_id' => $this->outsider->id, 'attendance_status' => 'apologies',
+        ])->assertNotFound();
+        $this->assertDatabaseMissing('meeting_rsvps', ['meeting_id' => $meeting->id, 'user_id' => $this->outsider->id]);
+    }
+
+    public function test_officer_rosters_cannot_name_members_of_another_club(): void
+    {
+        $foreign = Member::create(['club_id' => $this->b->id, 'first_name' => 'Other', 'last_name' => 'Club', 'membership_status' => 'active', 'current_office' => 'member']);
+
+        $response = $this->actingAs($this->admin)->postJson(route('admin.officers.store', ['clubSlug' => 'club-a']), [
+            'masonic_year' => '2026-2027',
+            'assignments' => [['member_id' => $foreign->id, 'office' => 'wm']],
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseMissing('club_acc_annual_officer_rosters', ['club_id' => $this->a->id, 'masonic_year' => '2026-2027']);
     }
 }

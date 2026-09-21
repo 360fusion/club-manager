@@ -250,9 +250,9 @@ class ClubController extends Controller
     public function approveMember(string $slug, int $userId)
     {
         $club = Club::where('slug', $slug)->firstOrFail();
-        $club->users()->updateExistingPivot($userId, ['status' => 'active']);
+        $approved = $club->users()->updateExistingPivot($userId, ['status' => 'active']);
 
-        if ($member = User::find($userId)) {
+        if ($approved && $member = User::find($userId)) {
             app(ClubNotifier::class)->toUser($member, ClubNotification::membershipApproved($club));
         }
 

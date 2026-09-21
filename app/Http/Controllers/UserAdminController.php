@@ -88,9 +88,9 @@ class UserAdminController extends Controller
     public function show(string $clubSlug, int $userId): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $user = User::findOrFail($userId);
+        $user = $club->users()->where('users.id', $userId)->firstOrFail();
 
-        $memberPivot = $user->clubs()->where('clubs.id', $club->id)->first()?->pivot;
+        $memberPivot = $user->pivot;
 
         $invoices = Invoice::where('club_id', $club->id)
             ->where('user_id', $userId)
@@ -340,7 +340,7 @@ class UserAdminController extends Controller
     public function revokeInvite(string $clubSlug, int $userId): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $user = User::findOrFail($userId);
+        $user = $club->users()->where('users.id', $userId)->firstOrFail();
 
         $club->users()->updateExistingPivot($userId, [
             'invitation_token' => null,
@@ -383,7 +383,7 @@ class UserAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $this->guardOwner($club, $userId);
-        $user = User::findOrFail($userId);
+        $user = $club->users()->where('users.id', $userId)->firstOrFail();
 
         $club->users()->updateExistingPivot($userId, ['status' => 'past']);
 

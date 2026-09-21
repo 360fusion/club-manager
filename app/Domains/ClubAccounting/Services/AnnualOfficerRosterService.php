@@ -45,11 +45,26 @@ class AnnualOfficerRosterService
     }
 
     /**
+     * Every member on the roster must belong to this club.
+     *
+     * @param  array<int, array<string, mixed>>  $assignments
+     */
+    private function assertMembersBelongToClub(Club $club, array $assignments): void
+    {
+        $ids = collect($assignments)->pluck('member_id')->map(fn ($id) => (int) $id)->filter()->unique();
+
+        if ($ids->isNotEmpty() && Member::where('club_id', $club->id)->whereIn('id', $ids)->count() !== $ids->count()) {
+            throw new InvalidArgumentException('Every officer must be a member of this club.');
+        }
+    }
+
+    /**
      * Save or update an annual officer roster draft/proposal.
      */
     public function saveRoster(Club $club, string $masonicYear, array $assignments, ?int $meetingId = null, string $status = 'draft', ?string $notes = null): AnnualOfficerRoster
     {
         $this->validateAssignments($assignments);
+        $this->assertMembersBelongToClub($club, $assignments);
 
         $startYear = null;
         $endYear = null;
@@ -162,7 +177,7 @@ class AnnualOfficerRosterService
             $memberAssignments = $roster->assignments()->get()->groupBy('member_id');
 
             foreach ($memberAssignments as $memberId => $assignments) {
-                $member = Member::find($memberId);
+                $member = Member::where('club_id', $roster->club_id)->find($memberId);
                 if (! $member) {
                     continue;
                 }

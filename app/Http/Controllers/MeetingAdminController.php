@@ -621,7 +621,8 @@ class MeetingAdminController extends Controller
             'guests.*.attending_dining' => 'nullable|boolean',
         ]);
 
-        $user = User::find($validated['user_id']);
+        $user = $this->rsvpUser($club, $meeting, (int) $validated['user_id']);
+        abort_if($user === null, 404);
         $surname = $user ? strtoupper(last(explode(' ', $user->name))) : 'MEMBER';
         $defaultRef = ($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname;
 
@@ -681,7 +682,8 @@ class MeetingAdminController extends Controller
             'payment_reference' => 'nullable|string',
         ]);
 
-        $user = User::findOrFail($validated['user_id']);
+        $user = $this->rsvpUser($club, $meeting, (int) $validated['user_id']);
+        abort_if($user === null, 404);
         $surname = strtoupper(last(explode(' ', $user->name)));
         $paymentRef = $validated['payment_reference'] ?? (($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname);
 
@@ -899,5 +901,17 @@ class MeetingAdminController extends Controller
             'message' => "Annual officer roster for {$masonicYear} confirmed and applied to active members!",
             'roster' => $confirmedRoster,
         ]);
+    }
+
+    /**
+     * A user an admin may record an RSVP for: a member of the club, or someone
+     * who already has an RSVP on this meeting (a visitor).
+     */
+    private function rsvpUser(Club $club, Meeting $meeting, int $userId): ?User
+    {
+        $isMember = $club->users()->where('users.id', $userId)->exists();
+        $isVisitor = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $userId)->exists();
+
+        return $isMember || $isVisitor ? User::find($userId) : null;
     }
 }

@@ -61,7 +61,7 @@ class CandidateVettingModal extends Component
                 ]);
             }
         } else {
-            $user = User::findOrFail($this->candidateId);
+            $user = $meeting->club->users()->where('users.id', $this->candidateId)->firstOrFail();
             $name = $user->name;
             $email = $user->email;
             $refId = $user->id;
@@ -103,8 +103,8 @@ class CandidateVettingModal extends Component
                     'name' => $domainCand->full_name,
                     'email' => $domainCand->email,
                 ];
-            } else {
-                $candidate = User::find($this->candidateId);
+            } elseif ($meeting && ClubAccess::can(auth()->user(), $meeting->club, 'manage_meetings')) {
+                $candidate = $meeting->club->users()->where('users.id', $this->candidateId)->first();
             }
         }
 
