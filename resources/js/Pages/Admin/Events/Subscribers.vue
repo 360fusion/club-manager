@@ -40,6 +40,27 @@ const stats = computed(() => {
   return { total, paidCount, unpaidCount, diningCount };
 });
 
+const newName = ref('');
+const newEmail = ref('');
+
+const addBooking = () => {
+  if (!newName.value.trim()) return;
+  router.post(route('admin.events.registrations.store', { clubSlug: props.club.slug, id: props.event.id }), { name: newName.value, email: newEmail.value || null }, {
+    preserveScroll: true,
+    onSuccess: () => { newName.value = ''; newEmail.value = ''; },
+  });
+};
+
+const cancelBooking = (sub) => {
+  if (confirm(`Cancel ${sub.is_guest ? sub.booked_by + "'s" : sub.name + "'s"} booking (${sub.is_guest ? 'including guests' : 'and any guests'})?`)) {
+    router.post(route('admin.events.registrations.cancel', { clubSlug: props.club.slug, id: props.event.id, registrationId: sub.registration_id }), {}, { preserveScroll: true });
+  }
+};
+
+const promoteBooking = (sub) => {
+  router.post(route('admin.events.registrations.promote', { clubSlug: props.club.slug, id: props.event.id, registrationId: sub.registration_id }), {}, { preserveScroll: true });
+};
+
 const setPaymentStatus = (subscriberId, status) => {
   router.post(
     route('admin.events.subscribers.payment_status', {
@@ -81,7 +102,15 @@ const setPaymentStatus = (subscriberId, status) => {
             </span>
           </div>
         </div>
+<!-- Add a booking by hand -->
+      <form class="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80" @submit.prevent="addBooking">
+        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Add a booking:</span>
+        <input v-model="newName" type="text" maxlength="150" placeholder="Name" class="min-w-[10rem] flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
+        <input v-model="newEmail" type="email" maxlength="255" placeholder="Email (optional)" class="min-w-[10rem] flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
+        <button type="submit" class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold">Add</button>
+      </form>
 
+      
         <div class="flex flex-wrap items-center gap-2">
           <a :href="route('admin.events.guest_list', { clubSlug: club.slug, id: event.id })" target="_blank" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all">🖨️ Guest list</a>
           <a v-if="event.has_dining" :href="route('admin.events.catering', { clubSlug: club.slug, id: event.id })" target="_blank" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all">🍽️ Catering summary</a>
@@ -182,6 +211,7 @@ const setPaymentStatus = (subscriberId, status) => {
                 <th class="p-3">Food Choices & Menu</th>
                 <th class="p-3">Dietary Notes</th>
                 <th class="p-3">Payment Status</th>
+                <th class="p-3 text-right">Booking</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -267,10 +297,16 @@ const setPaymentStatus = (subscriberId, status) => {
                     <span v-else>💳 Unpaid</span>
                   </button>
                 </td>
+
+                <!-- Booking actions (act on the whole booking, guests included) -->
+                <td class="p-3 text-right whitespace-nowrap">
+                  <button v-if="sub.attendance_status === 'waitlisted' && !sub.is_guest" type="button" class="mr-2 text-[11px] font-bold text-blue-600 hover:underline dark:text-blue-400" @click="promoteBooking(sub)">Move up</button>
+                  <button v-if="!['cancelled', 'declined'].includes(sub.attendance_status) && !sub.is_guest" type="button" class="text-[11px] font-bold text-rose-600 hover:underline dark:text-rose-400" @click="cancelBooking(sub)">Cancel</button>
+                </td>
               </tr>
 
               <tr v-if="filteredSubscribers.length === 0">
-                <td colspan="7" class="p-8 text-center text-slate-500 dark:text-slate-400 font-medium">
+                <td colspan="8" class="p-8 text-center text-slate-500 dark:text-slate-400 font-medium">
                   No subscribers found matching your filter criteria.
                 </td>
               </tr>

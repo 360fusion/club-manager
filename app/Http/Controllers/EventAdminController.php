@@ -12,6 +12,7 @@ use App\Models\EventRegistration;
 use App\Models\EventTicketTier;
 use App\Notifications\ClubNotification;
 use App\Services\ClubNotifier;
+use App\Services\Events\EventRegistrationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -145,7 +146,7 @@ class EventAdminController extends Controller
                 'starts_at' => now()->addDays(7)->format('Y-m-d\TH:i'),
                 'requires_payment' => true,
                 'has_dining' => false,
-                'status' => 'upcoming',
+                'status' => 'draft',
                 'visibility' => Visibility::Club,
                 'rsvp_audience' => Visibility::Club,
             ]);
@@ -154,7 +155,27 @@ class EventAdminController extends Controller
             'club' => $club,
             'event' => $event,
             'visibilityOptions' => Visibility::options(),
+            // Ticket types and dishes in use cannot be removed without losing people's choices.
+            'tiersInUse' => $id ? EventAttendee::whereIn('ticket_tier_id', $event->ticketTiers->pluck('id'))->pluck('ticket_tier_id')->unique()->values() : [],
+            'dishesInUse' => $id ? $this->dishesInUse($event) : [],
+            'registrationCount' => $id ? $event->registrations()->whereIn('status', EventRegistration::HOLDING_PLACE)->count() : 0,
         ]);
+    }
+
+    /**
+     * Ids of dishes someone has already chosen.
+     *
+     * @return list<int>
+     */
+    private function dishesInUse(Event $event): array
+    {
+        $ids = $event->menuItems->pluck('id');
+
+        return EventAttendee::query()
+            ->where(fn ($q) => $q->whereIn('starter_item_id', $ids)->orWhereIn('main_item_id', $ids)->orWhereIn('dessert_item_id', $ids))
+            ->get(['starter_item_id', 'main_item_id', 'dessert_item_id'])
+            ->flatMap(fn ($a) => [$a->starter_item_id, $a->main_item_id, $a->dessert_item_id])
+            ->filter()->unique()->values()->all();
     }
 
     /**
@@ -181,12 +202,36 @@ class EventAdminController extends Controller
             'has_dining' => 'boolean',
             'dining_price' => 'nullable|numeric|min:0|max:99999999.99',
             'booking_cutoff_days' => 'nullable|integer|min:0|max:1000000',
-            'status' => 'required|in:upcoming,completed,cancelled',
+            'status' => 'required|in:draft,upcoming,completed,cancelled',
+            'ends_at' => 'nullable|date|after:starts_at',
+            'capacity' => 'nullable|integer|min:1|max:100000',
+            'waitlist_enabled' => 'boolean',
+            'registration_opens_at' => 'nullable|date',
+            'rsvp_deadline' => 'nullable|date',
+            'allow_public_registration' => 'boolean',
+            'max_guests_per_booking' => 'nullable|integer|min:0|max:50',
+            'cancellation_policy' => 'nullable|string|max:5000',
             'visibility' => ['nullable', Rule::enum(Visibility::class)],
             'rsvp_audience' => ['nullable', Rule::enum(Visibility::class)],
             'ticket_tiers' => 'array|max:100',
             'promos' => 'array|max:100',
             'menu_items' => 'array|max:100',
+        ]);
+
+        $request->validate([
+            'ticket_tiers.*.id' => 'nullable|integer',
+            'ticket_tiers.*.name' => 'nullable|string|max:150',
+            'ticket_tiers.*.price' => 'nullable|numeric|min:0|max:99999999.99',
+            'ticket_tiers.*.max_quantity' => 'nullable|integer|min:0|max:100000',
+            'ticket_tiers.*.audience' => 'nullable|in:all,member,guest,public',
+            'menu_items.*.id' => 'nullable|integer',
+            'menu_items.*.category' => 'nullable|in:starter,main,dessert',
+            'menu_items.*.name' => 'nullable|string|max:150',
+            'menu_items.*.description' => 'nullable|string|max:500',
+            'menu_items.*.allergens' => 'nullable|string|max:255',
+            'menu_items.*.is_vegetarian' => 'nullable|boolean',
+            'menu_items.*.is_vegan' => 'nullable|boolean',
+            'menu_items.*.is_gf' => 'nullable|boolean',
         ]);
 
         $existing = ! empty($validated['id']) ? Event::where('club_id', $club->id)->find($validated['id']) : null;
@@ -196,6 +241,12 @@ class EventAdminController extends Controller
         if (! $rsvpAudience->isNoBroaderThan($visibility)) {
             throw ValidationException::withMessages([
                 'rsvp_audience' => 'People who cannot see this event cannot RSVP to it. Choose an RSVP audience that is no wider than who can see the event.',
+            ]);
+        }
+
+        if (! empty($validated['allow_public_registration']) && $visibility !== Visibility::Public) {
+            throw ValidationException::withMessages([
+                'allow_public_registration' => 'Outside guests can only register for events that everyone can see. Set "Who can see this event" to Public first.',
             ]);
         }
 
@@ -230,27 +281,25 @@ class EventAdminController extends Controller
                 'status' => $validated['status'] ?? 'upcoming',
                 'visibility' => $visibility,
                 'rsvp_audience' => $rsvpAudience,
+                'ends_at' => $validated['ends_at'] ?? null,
+                'capacity' => $validated['capacity'] ?? null,
+                'waitlist_enabled' => $validated['waitlist_enabled'] ?? false,
+                'registration_opens_at' => $validated['registration_opens_at'] ?? null,
+                'rsvp_deadline' => $validated['rsvp_deadline'] ?? null,
+                'allow_public_registration' => $validated['allow_public_registration'] ?? false,
+                'max_guests_per_booking' => $validated['max_guests_per_booking'] ?? null,
+                'cancellation_policy' => $validated['cancellation_policy'] ?? null,
             ]
         );
 
-        if ($event->wasRecentlyCreated && $event->status === 'upcoming') {
+        $justPublished = $event->status === 'upcoming' && ($event->wasRecentlyCreated || $existing?->status === 'draft');
+
+        if ($justPublished) {
             app(ClubNotifier::class)->toMembers($club, ClubNotification::event($event, $club), $request->user());
         }
 
-        // Sync Ticket Tiers
         if (isset($validated['ticket_tiers'])) {
-            $event->ticketTiers()->delete();
-            foreach ($validated['ticket_tiers'] as $tier) {
-                if (! empty($tier['name'])) {
-                    EventTicketTier::create([
-                        'event_id' => $event->id,
-                        'name' => $tier['name'],
-                        'price' => $tier['price'] ?? 0,
-                        'max_quantity' => $tier['max_quantity'] ?? 100,
-                        'sold_quantity' => $tier['sold_quantity'] ?? 0,
-                    ]);
-                }
-            }
+            $this->syncTiers($event, $request->input('ticket_tiers', []));
         }
 
         // Sync Promos
@@ -269,20 +318,12 @@ class EventAdminController extends Controller
             }
         }
 
-        // Sync Menu Items
         if (isset($validated['menu_items']) && $event->has_dining) {
-            $event->menuItems()->delete();
-            foreach ($validated['menu_items'] as $item) {
-                if (! empty($item['name'])) {
-                    EventMenuItem::create([
-                        'event_id' => $event->id,
-                        'category' => $item['category'] ?? 'main',
-                        'name' => $item['name'],
-                        'description' => $item['description'] ?? '',
-                    ]);
-                }
-            }
+            $this->syncMenu($event, $request->input('menu_items', []));
         }
+
+        // Someone waiting may now fit if the capacity was raised.
+        app(EventRegistrationService::class)->promoteFromWaitlist($event);
 
         return redirect()->route('admin.events.index', ['clubSlug' => $club->slug])
             ->with('success', 'Event saved successfully.');
@@ -298,5 +339,179 @@ class EventAdminController extends Controller
         $event->delete();
 
         return redirect()->back()->with('success', 'Event deleted successfully.');
+    }
+
+    /**
+     * Update ticket types in place so the people who chose them keep their choice.
+     *
+     * @param  list<array<string, mixed>>  $incoming
+     */
+    private function syncTiers(Event $event, array $incoming): void
+    {
+        $existing = $event->ticketTiers()->get()->keyBy('id');
+        $keep = [];
+
+        foreach ($incoming as $tier) {
+            if (empty($tier['name'])) {
+                continue;
+            }
+
+            $fields = [
+                'name' => $tier['name'],
+                'price' => $tier['price'] ?? 0,
+                'max_quantity' => $tier['max_quantity'] ?? 0,
+                'audience' => $tier['audience'] ?? 'all',
+            ];
+
+            if (! empty($tier['id']) && $existing->has((int) $tier['id'])) {
+                $existing[(int) $tier['id']]->update($fields);
+                $keep[] = (int) $tier['id'];
+            } else {
+                $keep[] = EventTicketTier::create($fields + ['event_id' => $event->id, 'sold_quantity' => 0])->id;
+            }
+        }
+
+        $removed = $existing->keys()->diff($keep);
+        $inUse = EventAttendee::whereIn('ticket_tier_id', $removed)->exists();
+
+        if ($inUse) {
+            throw ValidationException::withMessages(['ticket_tiers' => 'A ticket type that people have already booked cannot be removed. Rename it or set its capacity instead.']);
+        }
+
+        EventTicketTier::whereIn('id', $removed)->delete();
+    }
+
+    /**
+     * Update dishes in place, in the order shown, so bookings keep pointing at the same dish.
+     *
+     * @param  list<array<string, mixed>>  $incoming
+     */
+    private function syncMenu(Event $event, array $incoming): void
+    {
+        $existing = $event->menuItems()->get()->keyBy('id');
+        $keep = [];
+
+        foreach (array_values($incoming) as $order => $item) {
+            if (empty($item['name'])) {
+                continue;
+            }
+
+            $fields = [
+                'category' => $item['category'] ?? 'main',
+                'name' => $item['name'],
+                'description' => $item['description'] ?? '',
+                'allergens' => $item['allergens'] ?? null,
+                'is_vegetarian' => (bool) ($item['is_vegetarian'] ?? false),
+                'is_vegan' => (bool) ($item['is_vegan'] ?? false),
+                'is_gf' => (bool) ($item['is_gf'] ?? false),
+                'sort_order' => $order,
+            ];
+
+            if (! empty($item['id']) && $existing->has((int) $item['id'])) {
+                $existing[(int) $item['id']]->update($fields);
+                $keep[] = (int) $item['id'];
+            } else {
+                $keep[] = EventMenuItem::create($fields + ['event_id' => $event->id])->id;
+            }
+        }
+
+        $removed = $existing->keys()->diff($keep);
+
+        if ($removed->isNotEmpty() && collect($this->dishesInUse($event))->intersect($removed)->isNotEmpty()) {
+            throw ValidationException::withMessages(['menu_items' => 'A dish that guests have already chosen cannot be removed. Change its name or description instead.']);
+        }
+
+        EventMenuItem::whereIn('id', $removed)->delete();
+    }
+
+    /**
+     * Copy an event as a new draft, without its bookings.
+     */
+    public function duplicate(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $event = Event::where('club_id', $club->id)->with(['ticketTiers', 'promos', 'menuItems'])->findOrFail($id);
+
+        $copy = DB::transaction(function () use ($event) {
+            $copy = $event->replicate(['slug']);
+            $copy->title = 'Copy of '.$event->title;
+            $copy->slug = Str::slug($copy->title).'-'.Str::lower(Str::random(5));
+            $copy->status = 'draft';
+            $copy->save();
+
+            foreach ($event->ticketTiers as $tier) {
+                $copy->ticketTiers()->create($tier->only(['name', 'price', 'max_quantity', 'audience']) + ['sold_quantity' => 0]);
+            }
+
+            foreach ($event->promos as $promo) {
+                $copy->promos()->create($promo->only(['code', 'discount_type', 'discount_amount', 'max_uses']) + ['uses_count' => 0]);
+            }
+
+            foreach ($event->menuItems as $item) {
+                $copy->menuItems()->create($item->only(['category', 'name', 'description', 'is_vegetarian', 'is_vegan', 'is_gf', 'allergens', 'sort_order']));
+            }
+
+            return $copy;
+        });
+
+        return redirect()->route('admin.events.edit', ['clubSlug' => $club->slug, 'id' => $copy->id])
+            ->with('success', 'Event copied as a draft. Check the date and details, then publish it.');
+    }
+
+    /**
+     * Cancel an event. Bookings are kept so people can be told.
+     */
+    public function cancel(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $event = Event::where('club_id', $club->id)->findOrFail($id);
+        $event->update(['status' => 'cancelled']);
+
+        return redirect()->back()->with('success', 'Event cancelled. Existing bookings have been kept.');
+    }
+
+    /**
+     * Add a booking by hand.
+     */
+    public function addRegistration(Request $request, string $clubSlug, int $id, EventRegistrationService $registrations): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $event = Event::where('club_id', $club->id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:150',
+            'email' => 'nullable|email|max:255',
+            'dietary_requirements' => 'nullable|string|max:1000',
+        ]);
+
+        $registrations->addManual($event, $validated['name'], $validated['email'] ?? null, $validated['dietary_requirements'] ?? null);
+
+        return redirect()->back()->with('success', $validated['name'].' added.');
+    }
+
+    /**
+     * Cancel someone's booking; the waiting list moves up.
+     */
+    public function cancelRegistration(string $clubSlug, int $id, int $registrationId, EventRegistrationService $registrations): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $event = Event::where('club_id', $club->id)->findOrFail($id);
+
+        $registrations->cancel(EventRegistration::where('event_id', $event->id)->findOrFail($registrationId));
+
+        return redirect()->back()->with('success', 'Booking cancelled.');
+    }
+
+    /**
+     * Move a waiting booking onto the list now.
+     */
+    public function promoteRegistration(string $clubSlug, int $id, int $registrationId, EventRegistrationService $registrations): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $event = Event::where('club_id', $club->id)->findOrFail($id);
+
+        $registrations->promote(EventRegistration::where('event_id', $event->id)->where('status', 'waitlisted')->findOrFail($registrationId));
+
+        return redirect()->back()->with('success', 'Moved off the waiting list.');
     }
 }

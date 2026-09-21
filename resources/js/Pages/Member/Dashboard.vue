@@ -1,4 +1,5 @@
 <script setup>
+import EventBookingModal from '@/Components/Events/EventBookingModal.vue';
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
@@ -23,12 +24,10 @@ const selectedNewsletter = ref(null);
 const selectedMeeting = ref(null);
 const showMeetingRsvpModal = ref(false);
 
-const rsvpForm = useForm({
-  attendance_status: 'attending',
-  attending_dining: false,
-  menu_selections: { starter: '', main: '', dessert: '' },
-  dietary_requirements: '',
-});
+const openRsvpModal = (event) => {
+  selectedEvent.value = event;
+  showDinnerModal.value = true;
+};
 
 const meetingRsvpForm = useForm({
   attendance_status: 'attending_dining',
@@ -36,24 +35,6 @@ const meetingRsvpForm = useForm({
   apology_reason: '',
   guests: [],
 });
-
-const openRsvpModal = (event) => {
-  selectedEvent.value = event;
-  rsvpForm.attendance_status = event.user_rsvp?.attendance_status || 'attending';
-  rsvpForm.attending_dining = event.user_rsvp?.attending_dining || false;
-  rsvpForm.menu_selections = event.user_rsvp?.menu_selections || { starter: '', main: '', dessert: '' };
-  rsvpForm.dietary_requirements = event.user_rsvp?.dietary_requirements || '';
-  showDinnerModal.value = true;
-};
-
-const submitRsvp = () => {
-  if (!selectedEvent.value) return;
-  rsvpForm.post(route('member.rsvp', { slug: props.club.slug, id: selectedEvent.value.id }), {
-    onSuccess: () => {
-      showDinnerModal.value = false;
-    }
-  });
-};
 
 const openMeetingRsvpModal = (meeting) => {
   selectedMeeting.value = meeting;
@@ -331,65 +312,7 @@ const submitMeetingRsvp = () => {
     </div>
 
     <!-- Social Event RSVP Modal -->
-    <div v-if="showDinnerModal && selectedEvent" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 shadow-2xl border border-slate-200 dark:border-slate-800">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-          <div>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white">RSVP & Meal Selection</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ selectedEvent.title }}</p>
-          </div>
-          <button @click="showDinnerModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-bold text-lg">&times;</button>
-        </div>
-
-        <form @submit.prevent="submitRsvp" class="space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Attendance Status</label>
-            <select v-model="rsvpForm.attendance_status" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
-              <option value="attending">I will attend</option>
-              <option value="declined">Unable to attend</option>
-              <option value="tentative">Tentative</option>
-            </select>
-          </div>
-
-          <!-- Dining options if event has dining -->
-          <div v-if="selectedEvent.has_dining" class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div class="flex items-center gap-3">
-              <input v-model="rsvpForm.attending_dining" type="checkbox" id="attending_dining" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 border-slate-300 dark:border-slate-700" />
-              <label for="attending_dining" class="font-bold text-slate-900 dark:text-white text-xs">Attending Formal 3-Course Dinner</label>
-            </div>
-
-            <div v-if="rsvpForm.attending_dining" class="space-y-3 pl-2">
-              <div>
-                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Starter Choice</label>
-                <input v-model="rsvpForm.menu_selections.starter" type="text" placeholder="e.g. Smoked Salmon" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Main Course Choice</label>
-                <input v-model="rsvpForm.menu_selections.main" type="text" placeholder="e.g. Roast Beef / Vegetarian" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dessert Choice</label>
-                <input v-model="rsvpForm.menu_selections.dessert" type="text" placeholder="e.g. Dark Chocolate Fondant" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Dietary Requirements</label>
-            <textarea v-model="rsvpForm.dietary_requirements" rows="2" placeholder="Gluten-free, Nut allergy, Vegetarian..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"></textarea>
-          </div>
-
-          <div class="flex items-center gap-3 pt-4">
-            <button type="submit" :disabled="rsvpForm.processing" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all">
-              Confirm RSVP
-            </button>
-            <button type="button" @click="showDinnerModal = false" class="px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-800">
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <EventBookingModal v-if="showDinnerModal && selectedEvent" :key="selectedEvent.id" :event="selectedEvent" :club-slug="club.slug" @close="showDinnerModal = false" />
 
     <!-- Member Meeting Summons RSVP Modal -->
     <div v-if="showMeetingRsvpModal && selectedMeeting" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">

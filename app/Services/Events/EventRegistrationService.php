@@ -142,6 +142,38 @@ class EventRegistrationService
     }
 
     /**
+     * A booking the organiser adds by hand (a phone call, a late request). Closing dates and
+     * capacity do not stop them; the organiser decides.
+     */
+    public function addManual(Event $event, string $name, ?string $email = null, ?string $dietary = null): EventRegistration
+    {
+        return DB::transaction(function () use ($event, $name, $email, $dietary) {
+            $registration = EventRegistration::create([
+                'event_id' => $event->id,
+                'contact_name' => $name,
+                'contact_email' => $email,
+                'status' => 'attending',
+            ]);
+
+            $registration->attendees()->create(['name' => $name, 'is_guest' => false, 'dietary_requirements' => $this->clean($dietary)]);
+            $this->syncTierCounts($event);
+
+            return $registration->load('attendees');
+        });
+    }
+
+    /**
+     * Give a waiting booking its place now, even if that goes over capacity.
+     */
+    public function promote(EventRegistration $registration): EventRegistration
+    {
+        $registration->update(['status' => 'attending']);
+        $this->syncTierCounts($registration->event);
+
+        return $registration;
+    }
+
+    /**
      * Cancel a booking and offer the freed places to the waitlist.
      */
     public function cancel(EventRegistration $registration): EventRegistration

@@ -50,6 +50,7 @@ use App\Http\Controllers\OfficerRosterAdminController;
 use App\Http\Controllers\PageAdminController;
 use App\Http\Controllers\PasswordlessRsvpController;
 use App\Http\Controllers\PostAdminController;
+use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\QuickRsvpController;
 use App\Http\Controllers\SuperAdminController;
@@ -104,6 +105,10 @@ Route::get('/site/oxford-boating', function () {
     return redirect('/site/'.$activeSlug, 301);
 });
 
+Route::get('/site/{clubSlug}/events/{eventSlug}', [PublicEventController::class, 'show'])->name('public.event');
+Route::post('/site/{clubSlug}/events/{eventSlug}/register', [PublicEventController::class, 'register'])->name('public.event.register')->middleware('throttle:public-forms');
+Route::get('/site/{clubSlug}/booking/{token}', [PublicEventController::class, 'booking'])->name('public.event.booking')->middleware('throttle:auth-forms');
+Route::post('/site/{clubSlug}/booking/{token}/cancel', [PublicEventController::class, 'cancel'])->name('public.event.booking.cancel')->middleware('throttle:auth-forms');
 Route::get('/site/{clubSlug}/{pageSlug?}', [PublicSiteController::class, 'showPage'])->name('public.site');
 Route::post('/site/{clubSlug}/contact-form', [PublicSiteController::class, 'submitContactForm'])->name('public.site.contact_form')->middleware('throttle:public-forms');
 
@@ -181,6 +186,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/events/{id}/subscribers/{registrationId}/payment-status', [EventAdminController::class, 'updateSubscriberPaymentStatus'])->name('admin.events.subscribers.payment_status');
     Route::post('/{clubSlug}/admin/events', [EventAdminController::class, 'store'])->name('admin.events.store');
     Route::delete('/{clubSlug}/admin/events/{id}', [EventAdminController::class, 'destroy'])->name('admin.events.destroy');
+    Route::post('/{clubSlug}/admin/events/{id}/registrations', [EventAdminController::class, 'addRegistration'])->name('admin.events.registrations.store');
+    Route::post('/{clubSlug}/admin/events/{id}/registrations/{registrationId}/cancel', [EventAdminController::class, 'cancelRegistration'])->name('admin.events.registrations.cancel');
+    Route::post('/{clubSlug}/admin/events/{id}/registrations/{registrationId}/promote', [EventAdminController::class, 'promoteRegistration'])->name('admin.events.registrations.promote');
+    Route::post('/{clubSlug}/admin/events/{id}/duplicate', [EventAdminController::class, 'duplicate'])->name('admin.events.duplicate');
+    Route::post('/{clubSlug}/admin/events/{id}/cancel', [EventAdminController::class, 'cancel'])->name('admin.events.cancel');
 
     // Admin Meeting & Summons Management Routes
     Route::get('/{clubSlug}/admin/meetings', [MeetingAdminController::class, 'index'])->name('admin.meetings.index');

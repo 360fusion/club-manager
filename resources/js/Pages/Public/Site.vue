@@ -585,8 +585,8 @@ const getSiteUrl = (urlPath) => {
                         <div v-for="e in upcomingEvents" :key="e.id" class="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-4">
                             <h3 class="text-lg font-bold text-white">{{ e.title }}</h3>
                             <p class="text-xs text-slate-400">📍 {{ e.location }} • 🕒 {{ e.starts_at }}</p>
-                            <Link :href="`/${club.slug}/overview`" class="block w-full py-2.5 px-4 rounded-xl bg-slate-800 text-center font-bold text-xs text-slate-200">
-                                RSVP & Book Ticket →
+                            <Link :href="`/site/${club.slug}/events/${e.slug}`" class="block w-full py-2.5 px-4 rounded-xl bg-slate-800 text-center font-bold text-xs text-slate-200">
+                                Event details & booking →
                             </Link>
                         </div>
                     </div>
