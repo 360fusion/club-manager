@@ -18,6 +18,8 @@ class EventMenuItem extends Model
         'is_vegetarian',
         'is_vegan',
         'is_gf',
+        'sort_order',
+        'allergens',
     ];
 
     protected function casts(): array

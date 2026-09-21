@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Visibility;
 use App\Models\Concerns\HasVisibility;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,6 +44,17 @@ class Event extends Model
         'status',
         'visibility',
         'rsvp_audience',
+        'capacity',
+        'waitlist_enabled',
+        'registration_opens_at',
+        'allow_public_registration',
+        'max_guests_per_booking',
+        'booking_fee_type',
+        'booking_fee_amount',
+        'booking_fee_scope',
+        'booking_fee_label',
+        'price_display',
+        'cancellation_policy',
     ];
 
     protected function casts(): array
@@ -58,6 +70,12 @@ class Event extends Model
             'has_dining' => 'boolean',
             'price' => 'decimal:2',
             'dining_price' => 'decimal:2',
+            'capacity' => 'integer',
+            'waitlist_enabled' => 'boolean',
+            'registration_opens_at' => 'datetime',
+            'allow_public_registration' => 'boolean',
+            'max_guests_per_booking' => 'integer',
+            'booking_fee_amount' => 'decimal:2',
         ];
     }
 
@@ -144,6 +162,45 @@ class Event extends Model
     public function promos(): HasMany
     {
         return $this->hasMany(EventPromo::class);
+    }
+
+    /**
+     * @return HasMany<EventRegistration, $this>
+     */
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(EventRegistration::class);
+    }
+
+    /**
+     * People (not bookings) holding a place: everyone on an attending or tentative booking.
+     */
+    public function placesTaken(): int
+    {
+        return (int) EventAttendee::query()
+            ->whereHas('registration', fn ($q) => $q->where('event_id', $this->id)->whereIn('status', EventRegistration::HOLDING_PLACE))
+            ->count();
+    }
+
+    public function placesLeft(): ?int
+    {
+        return $this->capacity === null ? null : max(0, $this->capacity - $this->placesTaken());
+    }
+
+    public function isFull(): bool
+    {
+        return $this->capacity !== null && $this->placesTaken() >= $this->capacity;
+    }
+
+    /**
+     * Events people can see and book: drafts are only for the organisers.
+     *
+     * @param  Builder<Event>  $query
+     * @return Builder<Event>
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('status', '!=', 'draft');
     }
 
     /**

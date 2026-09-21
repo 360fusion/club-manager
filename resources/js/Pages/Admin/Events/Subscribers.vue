@@ -45,7 +45,7 @@ const setPaymentStatus = (subscriberId, status) => {
     route('admin.events.subscribers.payment_status', {
       clubSlug: props.club.slug,
       id: props.event.id,
-      userId: subscriberId,
+      registrationId: subscriberId,
     }),
     { payment_status: status },
     { preserveScroll: true }
@@ -82,7 +82,16 @@ const setPaymentStatus = (subscriberId, status) => {
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <a :href="route('admin.events.guest_list', { clubSlug: club.slug, id: event.id })" target="_blank" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all">🖨️ Guest list</a>
+          <a v-if="event.has_dining" :href="route('admin.events.catering', { clubSlug: club.slug, id: event.id })" target="_blank" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all">🍽️ Catering summary</a>
+          <a :href="route('admin.events.export', { clubSlug: club.slug, id: event.id })" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all">⬇ CSV</a>
+          <Link
+            :href="route('admin.events.checkin', { clubSlug: club.slug, id: event.id })"
+            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-all"
+          >
+            ✓ Check-in
+          </Link>
           <Link
             :href="route('admin.events.edit', { clubSlug: club.slug, id: event.id })"
             class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1"
@@ -178,7 +187,7 @@ const setPaymentStatus = (subscriberId, status) => {
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
               <tr
                 v-for="sub in filteredSubscribers"
-                :key="sub.user_id"
+                :key="sub.attendee_id"
                 class="hover:bg-blue-50/30 dark:hover:bg-blue-950/30 transition-all"
               >
                 <!-- Subscriber Name & Rank -->
@@ -186,7 +195,11 @@ const setPaymentStatus = (subscriberId, status) => {
                   <div class="font-bold text-slate-900 dark:text-white">
                     <span v-if="sub.rank" class="text-slate-500 dark:text-slate-400 font-normal mr-1">{{ sub.rank }}</span>
                     {{ sub.name }}
+                    <span v-if="sub.is_guest" class="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Guest</span>
+                    <span v-if="sub.attendance_status === 'waitlisted'" class="ml-1 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">Waitlist</span>
+                    <span v-else-if="sub.attendance_status === 'cancelled' || sub.attendance_status === 'declined'" class="ml-1 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">{{ sub.attendance_status === 'declined' ? 'Declined' : 'Cancelled' }}</span>
                   </div>
+                  <div v-if="sub.booked_by" class="text-[10px] text-slate-400 mt-0.5">Guest of {{ sub.booked_by }}</div>
                   <div v-if="sub.member_number" class="text-[10px] text-slate-400 font-mono mt-0.5">
                     Mem #: {{ sub.member_number }}
                   </div>
@@ -240,7 +253,7 @@ const setPaymentStatus = (subscriberId, status) => {
                 <!-- Payment Status Action -->
                 <td class="p-3">
                   <button 
-                    @click="setPaymentStatus(sub.user_id, sub.payment_status === 'paid' ? 'unpaid' : 'paid')"
+                    @click="setPaymentStatus(sub.registration_id, sub.payment_status === 'paid' ? 'unpaid' : 'paid')"
                     :class="['px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border cursor-pointer transition-all flex items-center gap-1 w-fit', 
                       sub.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40' :
                       sub.payment_status === 'waived' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60 hover:bg-blue-100 dark:hover:bg-blue-900/40' :

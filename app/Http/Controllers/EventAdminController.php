@@ -5,14 +5,15 @@ namespace App\Http\Controllers;
 use App\Enums\Visibility;
 use App\Models\Club;
 use App\Models\Event;
+use App\Models\EventAttendee;
 use App\Models\EventMenuItem;
 use App\Models\EventPromo;
+use App\Models\EventRegistration;
 use App\Models\EventTicketTier;
 use App\Notifications\ClubNotification;
 use App\Services\ClubNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -41,7 +42,7 @@ class EventAdminController extends Controller
     }
 
     /**
-     * Display subscribers/RSVPs for a specific event.
+     * Everyone booked on an event: one row per person, guests included.
      */
     public function subscribers(string $clubSlug, int $id): Response
     {
@@ -50,60 +51,47 @@ class EventAdminController extends Controller
             ->with(['ticketTiers', 'menuItems'])
             ->findOrFail($id);
 
-        $subscribers = DB::table('event_user')
-            ->join('users', 'users.id', '=', 'event_user.user_id')
-            ->leftJoin('club_user', function ($join) use ($club) {
-                $join->on('club_user.user_id', '=', 'users.id')
-                    ->where('club_user.club_id', '=', $club->id);
-            })
-            ->leftJoin('event_ticket_tiers', 'event_ticket_tiers.id', '=', 'event_user.ticket_tier_id')
-            ->where('event_user.event_id', '=', $event->id)
-            ->select([
-                'users.id as user_id',
-                'users.name',
-                'users.email',
-                'club_user.rank',
-                'club_user.role as member_role',
-                'club_user.home_club_name as home_club_lodge',
-                'club_user.member_number',
-                'event_user.attendance_status',
-                'event_user.attending_dining',
-                'event_user.menu_selections',
-                'event_user.dietary_requirements',
-                'event_user.payment_status',
-                'event_user.amount_paid',
-                'event_user.checked_in_at',
-                'event_user.updated_at as registered_at',
-                'event_ticket_tiers.name as ticket_tier_name',
-                'event_ticket_tiers.price as ticket_tier_price',
-            ])
-            ->orderBy('users.name', 'asc')
-            ->get()
-            ->map(function ($sub) {
-                $menuSelections = json_decode($sub->menu_selections ?? '{}', true);
+        $registrations = EventRegistration::with(['attendees.ticketTier', 'attendees.starter', 'attendees.main', 'attendees.dessert', 'user'])
+            ->where('event_id', $event->id)
+            ->orderBy('contact_name')
+            ->get();
 
-                return [
-                    'user_id' => $sub->user_id,
-                    'name' => $sub->name,
-                    'email' => $sub->email,
-                    'rank' => $sub->rank ?? '',
-                    'role' => $sub->member_role ?? 'member',
-                    'home_club_lodge' => $sub->home_club_lodge ?? '',
-                    'member_number' => $sub->member_number ?? '',
-                    'attendance_status' => $sub->attendance_status,
-                    'attending_dining' => (bool) $sub->attending_dining,
-                    'menu_selections' => is_array($menuSelections) ? $menuSelections : [],
-                    'dietary_requirements' => $sub->dietary_requirements ?? '',
-                    'payment_status' => $sub->payment_status ?? 'unpaid',
-                    'amount_paid' => number_format((float) $sub->amount_paid, 2),
-                    'checked_in_at' => $sub->checked_in_at ? Carbon::parse($sub->checked_in_at)->format('M d, Y @ H:i') : null,
-                    'registered_at' => $sub->registered_at ? Carbon::parse($sub->registered_at)->format('M d, Y @ H:i') : '',
-                    'ticket_tier' => $sub->ticket_tier_name ? [
-                        'name' => $sub->ticket_tier_name,
-                        'price' => number_format((float) $sub->ticket_tier_price, 2),
-                    ] : null,
-                ];
-            });
+        $memberRows = DB::table('club_user')
+            ->where('club_id', $club->id)
+            ->whereIn('user_id', $registrations->pluck('user_id')->filter()->all())
+            ->get()
+            ->keyBy('user_id');
+
+        $subscribers = $registrations->flatMap(function (EventRegistration $registration) use ($memberRows) {
+            $member = $registration->user_id ? $memberRows->get($registration->user_id) : null;
+
+            return $registration->attendees->map(fn (EventAttendee $attendee) => [
+                'attendee_id' => $attendee->id,
+                'registration_id' => $registration->id,
+                'user_id' => $attendee->user_id,
+                'name' => $attendee->name,
+                'is_guest' => $attendee->is_guest,
+                'booked_by' => $attendee->is_guest ? $registration->contact_name : null,
+                'email' => $registration->contact_email ?? $registration->user?->email,
+                'rank' => $member?->rank ?? '',
+                'role' => $member?->role ?? ($registration->user_id ? 'member' : 'guest'),
+                'home_club_lodge' => $member?->home_club_name ?? '',
+                'member_number' => $member?->member_number ?? '',
+                'attendance_status' => $registration->status,
+                'attending_dining' => $attendee->attending_dining,
+                'menu_selections' => $attendee->mealSummary(),
+                'dietary_requirements' => $attendee->dietary_requirements ?? '',
+                'payment_status' => $registration->payment_status ?? 'unpaid',
+                'amount_paid' => number_format((float) $registration->amount_paid, 2),
+                'checked_in_at' => $attendee->checked_in_at?->format('M d, Y @ H:i'),
+                'registered_at' => $registration->updated_at?->format('M d, Y @ H:i') ?? '',
+                'table_label' => $attendee->table_label,
+                'ticket_tier' => $attendee->ticketTier ? [
+                    'name' => $attendee->ticketTier->name,
+                    'price' => number_format((float) $attendee->ticketTier->price, 2),
+                ] : null,
+            ]);
+        })->values();
 
         return Inertia::render('Admin/Events/Subscribers', [
             'club' => $club,
@@ -116,15 +104,18 @@ class EventAdminController extends Controller
                 'dining_price' => number_format((float) $event->dining_price, 2),
                 'price' => number_format((float) $event->price, 2),
                 'requires_payment' => $event->requires_payment,
+                'capacity' => $event->capacity,
+                'places_taken' => $event->placesTaken(),
+                'waitlisted' => $registrations->where('status', 'waitlisted')->sum(fn ($r) => $r->attendees->count()),
             ],
             'subscribers' => $subscribers,
         ]);
     }
 
     /**
-     * Update payment status of a specific event subscriber.
+     * Update the payment status of a booking.
      */
-    public function updateSubscriberPaymentStatus(Request $request, string $clubSlug, int $id, int $userId): RedirectResponse
+    public function updateSubscriberPaymentStatus(Request $request, string $clubSlug, int $id, int $registrationId): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $event = Event::where('club_id', $club->id)->findOrFail($id);
@@ -133,15 +124,11 @@ class EventAdminController extends Controller
             'payment_status' => 'required|in:paid,unpaid,waived,refunded',
         ]);
 
-        DB::table('event_user')
-            ->where('event_id', $event->id)
-            ->where('user_id', $userId)
-            ->update([
-                'payment_status' => $validated['payment_status'],
-                'updated_at' => now(),
-            ]);
+        EventRegistration::where('event_id', $event->id)->findOrFail($registrationId)->update([
+            'payment_status' => $validated['payment_status'],
+        ]);
 
-        return redirect()->back()->with('success', 'Subscriber payment status updated successfully.');
+        return redirect()->back()->with('success', 'Payment status updated successfully.');
     }
 
     /**

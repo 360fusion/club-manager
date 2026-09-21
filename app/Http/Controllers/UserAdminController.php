@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Mail\MemberInvitationMail;
 use App\Models\Club;
+use App\Models\EventRegistration;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Support\ClubAccess;
@@ -14,7 +15,6 @@ use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -105,19 +105,18 @@ class UserAdminController extends Controller
                 'due_date' => $i->due_date?->format('M d, Y') ?? 'Immediate',
             ]);
 
-        $rsvps = DB::table('event_user')
-            ->join('events', 'events.id', '=', 'event_user.event_id')
-            ->where('events.club_id', $club->id)
-            ->where('event_user.user_id', $userId)
-            ->select('events.title', 'events.starts_at', 'events.location', 'event_user.*')
-            ->orderByDesc('events.starts_at')
+        $rsvps = EventRegistration::with(['event', 'attendees'])
+            ->where('user_id', $userId)
+            ->whereHas('event', fn ($q) => $q->where('club_id', $club->id))
             ->get()
-            ->map(fn ($r) => [
-                'event_title' => $r->title,
-                'event_date' => $r->starts_at ? Carbon::parse($r->starts_at)->format('M d, Y @ H:i') : 'TBD',
-                'location' => $r->location,
-                'rsvp_status' => $r->attendance_status ?? 'attending',
-                'attended' => ! empty($r->checked_in_at),
+            ->sortByDesc(fn ($r) => $r->event->starts_at)
+            ->values()
+            ->map(fn (EventRegistration $r) => [
+                'event_title' => $r->event->title,
+                'event_date' => $r->event->starts_at ? $r->event->starts_at->format('M d, Y @ H:i') : 'TBD',
+                'location' => $r->event->location,
+                'rsvp_status' => $r->status ?? 'attending',
+                'attended' => $r->booker()?->checked_in_at !== null,
             ]);
 
         $totalRsvps = $rsvps->count();

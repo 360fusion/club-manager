@@ -121,7 +121,8 @@ class ClubController extends Controller
             ->firstOrFail();
 
         $viewer = Auth::user();
-        $visibleEvents = $club->events()->visibleTo($viewer)->get();
+        $isEventStaff = ClubAccess::can($viewer, $club, 'manage_events');
+        $visibleEvents = $club->events()->published()->visibleTo($viewer)->with('registrations.attendees')->get();
 
         $enabledModules = $club->settings['enabled_modules'] ?? $club->clubType->available_modules;
 
@@ -206,17 +207,20 @@ class ClubController extends Controller
                         'is_vegetarian' => $m->is_vegetarian,
                         'is_gf' => $m->is_gf,
                     ]),
-                    'attendees' => $event->attendees->map(fn ($u) => [
-                        'id' => $u->id,
-                        'name' => $u->name,
-                        'attendance_status' => $u->pivot->attendance_status,
-                        'attending_dining' => $u->pivot->attending_dining,
-                        'menu_selections' => json_decode($u->pivot->menu_selections, true),
-                        'dietary_requirements' => $u->pivot->dietary_requirements,
-                        'payment_status' => $u->pivot->payment_status,
-                        'amount_paid' => number_format($u->pivot->amount_paid, 2),
-                        'ticket_qr_code' => $u->pivot->ticket_qr_code ?? 'TICKET-'.strtoupper($club->slug).'-'.$u->id,
-                    ]),
+                    // Names, dietary needs and payment status are for the people running the event only.
+                    'attendees' => $isEventStaff
+                        ? $event->registrations->where('status', 'attending')->flatMap(fn ($registration) => $registration->attendees->map(fn ($attendee) => [
+                            'id' => $attendee->id,
+                            'name' => $attendee->name,
+                            'attendance_status' => $registration->status,
+                            'attending_dining' => $attendee->attending_dining,
+                            'menu_selections' => $attendee->mealSummary(),
+                            'dietary_requirements' => $attendee->dietary_requirements,
+                            'payment_status' => $registration->payment_status,
+                            'amount_paid' => number_format((float) $registration->amount_paid, 2),
+                            'ticket_qr_code' => 'TICKET-'.strtoupper($club->slug).'-'.$attendee->id,
+                        ]))->values()
+                        : [],
                 ]),
             ],
         ]);

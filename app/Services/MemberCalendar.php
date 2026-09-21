@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Support\MemberScope;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Meetings and events across a member's clubs, as one list of dated items.
@@ -40,15 +40,15 @@ class MemberCalendar
             ->pluck('attendance_status', 'meeting_id');
 
         $events = Event::whereIn('club_id', $clubIds)
+            ->published()
             ->visibleTo($user)
             ->where('status', '!=', 'cancelled')
             ->whereBetween('starts_at', [$from, $to])
             ->get();
 
-        $eventReplies = DB::table('event_user')
-            ->whereIn('event_id', $events->pluck('id'))
+        $eventReplies = EventRegistration::whereIn('event_id', $events->pluck('id'))
             ->where('user_id', $user->id)
-            ->pluck('attendance_status', 'event_id');
+            ->pluck('status', 'event_id');
 
         $items = $meetings->map(function (Meeting $meeting) use ($scope, $meetingReplies) {
             $club = $scope->clubFor($meeting->club_id);

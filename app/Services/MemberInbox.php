@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Domains\ClubAccounting\Enums\SubscriptionStatus;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Support\Currencies;
@@ -116,8 +117,7 @@ class MemberInbox
             ->whereBetween('rsvp_deadline', [now(), now()->addDays(self::EVENT_DEADLINE_DAYS)])
             ->get();
 
-        $answered = DB::table('event_user')
-            ->whereIn('event_id', $events->pluck('id'))
+        $answered = EventRegistration::whereIn('event_id', $events->pluck('id'))
             ->where('user_id', $scope->user->id)
             ->pluck('event_id');
 

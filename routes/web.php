@@ -31,6 +31,7 @@ use App\Http\Controllers\ClubDirectoryController;
 use App\Http\Controllers\ClubSettingsController;
 use App\Http\Controllers\ClubShortLinkController;
 use App\Http\Controllers\EventAdminController;
+use App\Http\Controllers\EventGuestListController;
 use App\Http\Controllers\GoCardlessWebhookController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LegacyClubUrlController;
@@ -177,7 +178,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/events/create', [EventAdminController::class, 'edit'])->name('admin.events.create');
     Route::get('/{clubSlug}/admin/events/{id}/edit', [EventAdminController::class, 'edit'])->name('admin.events.edit');
     Route::get('/{clubSlug}/admin/events/{id}/subscribers', [EventAdminController::class, 'subscribers'])->name('admin.events.subscribers');
-    Route::post('/{clubSlug}/admin/events/{id}/subscribers/{userId}/payment-status', [EventAdminController::class, 'updateSubscriberPaymentStatus'])->name('admin.events.subscribers.payment_status');
+    Route::post('/{clubSlug}/admin/events/{id}/subscribers/{registrationId}/payment-status', [EventAdminController::class, 'updateSubscriberPaymentStatus'])->name('admin.events.subscribers.payment_status');
     Route::post('/{clubSlug}/admin/events', [EventAdminController::class, 'store'])->name('admin.events.store');
     Route::delete('/{clubSlug}/admin/events/{id}', [EventAdminController::class, 'destroy'])->name('admin.events.destroy');
 
@@ -409,6 +410,10 @@ Route::middleware(['auth'])->group(function () {
     // Admin Attendance Check-In Routes
     Route::get('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'show'])->name('admin.events.checkin');
     Route::post('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'checkIn'])->name('admin.events.checkin.store');
+    Route::get('/{clubSlug}/admin/events/{id}/guest-list', [EventGuestListController::class, 'guestList'])->name('admin.events.guest_list');
+    Route::get('/{clubSlug}/admin/events/{id}/catering', [EventGuestListController::class, 'catering'])->name('admin.events.catering');
+    Route::get('/{clubSlug}/admin/events/{id}/export', [EventGuestListController::class, 'export'])->name('admin.events.export');
+    Route::post('/{clubSlug}/admin/events/{id}/walk-in', [AttendanceController::class, 'walkIn'])->name('admin.events.checkin.walk_in');
 });
 
 // Sanctum API Token & Pennant Feature Routes

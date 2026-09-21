@@ -6,11 +6,14 @@ use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Invoice;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Newsletter;
 use App\Models\Post;
+use App\Services\Events\EventPayload;
+use App\Services\Events\EventRegistrationService;
 use App\Support\ClubAccess;
 use App\Support\EmailVerification;
 use App\Support\ImageDownscaler;
@@ -19,7 +22,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -47,14 +49,13 @@ class MemberPortalController extends Controller
         }
 
         // Attendance stats
-        $userRsvps = DB::table('event_user')
-            ->join('events', 'events.id', '=', 'event_user.event_id')
-            ->where('events.club_id', $club->id)
-            ->where('event_user.user_id', $user?->id ?? 0)
+        $userRsvps = EventRegistration::with('attendees')
+            ->where('user_id', $user?->id ?? 0)
+            ->whereHas('event', fn ($q) => $q->where('club_id', $club->id))
             ->get();
 
         $totalRsvps = $userRsvps->count();
-        $attendedCount = $userRsvps->where('attendance_status', 'attending')->count() + $userRsvps->whereNotNull('checked_in_at')->count();
+        $attendedCount = $userRsvps->where('status', 'attending')->count() + $userRsvps->filter(fn ($r) => $r->booker()?->checked_in_at !== null)->count();
         $attendanceRate = $totalRsvps > 0 ? round(($attendedCount / $totalRsvps) * 100, 1) : 100.0;
 
         // Published Meetings & Summons for the member
@@ -92,38 +93,14 @@ class MemberPortalController extends Controller
             });
 
         // Upcoming Events
-        $events = Event::where('club_id', $club->id)
+        $eventModels = Event::where('club_id', $club->id)
+            ->published()
             ->visibleTo($user)
-            ->with(['menuItems', 'ticketTiers'])
+            ->with(['menuItems', 'ticketTiers', 'club'])
             ->orderBy('starts_at', 'asc')
-            ->get()
-            ->map(function ($event) use ($user) {
-                $userPivot = $user ? DB::table('event_user')
-                    ->where('event_id', $event->id)
-                    ->where('user_id', $user->id)
-                    ->first() : null;
-
-                return [
-                    'id' => $event->id,
-                    'title' => $event->title,
-                    'slug' => $event->slug,
-                    'description' => $event->description,
-                    'location' => $event->location,
-                    'starts_at' => $event->starts_at?->format('M d, Y @ H:i'),
-                    'has_dining' => $event->has_dining,
-                    'dining_price' => number_format($event->dining_price, 2),
-                    'price' => number_format($event->price, 2),
-                    'menu_items' => $event->menuItems,
-                    'user_rsvp' => $userPivot ? [
-                        'attendance_status' => $userPivot->attendance_status,
-                        'attending_dining' => (bool) $userPivot->attending_dining,
-                        'menu_selections' => json_decode($userPivot->menu_selections ?? '{}', true),
-                        'dietary_requirements' => $userPivot->dietary_requirements,
-                        'payment_status' => $userPivot->payment_status,
-                        'checked_in_at' => $userPivot->checked_in_at,
-                    ] : null,
-                ];
-            });
+            ->get();
+        $eventRegistrations = EventPayload::registrationsFor($user, $eventModels->pluck('id'));
+        $events = $eventModels->map(fn (Event $event) => EventPayload::forMember($event, $eventRegistrations->get($event->id)));
 
         // Published Newsletters for member role
         $role = $memberPivot->role ?? 'member';
@@ -208,53 +185,14 @@ class MemberPortalController extends Controller
                 ];
             });
 
-        $events = Event::where('club_id', $club->id)
+        $eventModels = Event::where('club_id', $club->id)
+            ->published()
             ->visibleTo($user)
-            ->with(['menuItems', 'ticketTiers'])
+            ->with(['menuItems', 'ticketTiers', 'club'])
             ->orderBy('starts_at', 'asc')
-            ->get()
-            ->map(function ($event) use ($user) {
-                $userPivot = $user ? DB::table('event_user')
-                    ->where('event_id', $event->id)
-                    ->where('user_id', $user->id)
-                    ->first() : null;
-
-                $cutoffAt = $event->booking_cutoff_at;
-
-                return [
-                    'id' => $event->id,
-                    'title' => $event->title,
-                    'slug' => $event->slug,
-                    'description' => $event->description,
-                    'location' => $event->formatted_location ?: $event->location,
-                    'address_line_1' => $event->address_line_1,
-                    'address_line_2' => $event->address_line_2,
-                    'city' => $event->city,
-                    'county' => $event->county,
-                    'postcode' => $event->postcode,
-                    'starts_at' => $event->starts_at?->format('M d, Y @ H:i'),
-                    'booking_cutoff_days' => $event->booking_cutoff_days,
-                    'booking_cutoff_at' => $cutoffAt ? $cutoffAt->format('M d, Y @ H:i') : null,
-                    'is_booking_closed' => $event->is_booking_closed,
-                    'has_dining' => $event->has_dining,
-                    'dining_price' => number_format($event->dining_price, 2),
-                    'price' => number_format($event->price, 2),
-                    'menu_items' => $event->menuItems,
-                    'ticket_tiers' => $event->ticketTiers->map(fn ($t) => [
-                        'id' => $t->id,
-                        'name' => $t->name,
-                        'price' => number_format($t->price, 2),
-                    ]),
-                    'user_rsvp' => $userPivot ? [
-                        'attendance_status' => $userPivot->attendance_status,
-                        'attending_dining' => (bool) $userPivot->attending_dining,
-                        'menu_selections' => json_decode($userPivot->menu_selections ?? '{}', true),
-                        'dietary_requirements' => $userPivot->dietary_requirements,
-                        'payment_status' => $userPivot->payment_status,
-                        'checked_in_at' => $userPivot->checked_in_at,
-                    ] : null,
-                ];
-            });
+            ->get();
+        $eventRegistrations = EventPayload::registrationsFor($user, $eventModels->pluck('id'));
+        $events = $eventModels->map(fn (Event $event) => EventPayload::forMember($event, $eventRegistrations->get($event->id)));
 
         return Inertia::render('Member/Events', [
             'club' => $club,
@@ -411,39 +349,35 @@ class MemberPortalController extends Controller
     /**
      * Submit or update event RSVP and 3-course dining selections.
      */
-    public function updateRsvp(Request $request, string $slug, int $eventId): RedirectResponse
+    public function updateRsvp(Request $request, string $slug, int $eventId, EventRegistrationService $registrations): RedirectResponse
     {
         $user = Auth::user();
         $club = Club::where('slug', $slug)->firstOrFail();
-        $event = Event::where('club_id', $club->id)->findOrFail($eventId);
+        $event = Event::where('club_id', $club->id)->published()->findOrFail($eventId);
 
         abort_unless($event->canBeRsvpedBy($user), 403, 'This event is not open to your account.');
 
-        if ($event->is_booking_closed) {
-            return redirect()->back()->withErrors([
-                'booking_closed' => 'Bookings for this event closed '.($event->booking_cutoff_days ? $event->booking_cutoff_days.' days' : '').' before the event date.',
-            ]);
-        }
-
         $validated = $request->validate([
             'attendance_status' => 'required|in:attending,declined,tentative',
-            'attending_dining' => 'boolean',
-            'menu_selections' => 'array|max:50',
-            'dietary_requirements' => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:1000',
+            'attendees' => 'nullable|array|max:50',
+            'attendees.*.name' => 'nullable|string|max:150',
+            'attendees.*.is_guest' => 'nullable|boolean',
+            'attendees.*.ticket_tier_id' => 'nullable|integer',
+            'attendees.*.attending_dining' => 'nullable|boolean',
+            'attendees.*.starter_item_id' => 'nullable|integer',
+            'attendees.*.main_item_id' => 'nullable|integer',
+            'attendees.*.dessert_item_id' => 'nullable|integer',
+            'attendees.*.dietary_requirements' => 'nullable|string|max:1000',
         ]);
 
-        DB::table('event_user')->updateOrInsert(
-            ['event_id' => $event->id, 'user_id' => $user->id],
-            [
-                'attendance_status' => $validated['attendance_status'],
-                'attending_dining' => $validated['attending_dining'] ?? false,
-                'menu_selections' => json_encode($validated['menu_selections'] ?? []),
-                'dietary_requirements' => $validated['dietary_requirements'] ?? '',
-                'updated_at' => now(),
-            ]
-        );
+        $registrations->register($event, $user, [
+            'status' => $validated['attendance_status'],
+            'notes' => $validated['notes'] ?? null,
+            'attendees' => $validated['attendees'] ?? [],
+        ]);
 
-        return redirect()->back()->with('success', 'RSVP and menu choices updated.');
+        return redirect()->back()->with('success', $validated['attendance_status'] === 'declined' ? 'Your reply has been saved.' : 'Your booking has been saved.');
     }
 
     /**

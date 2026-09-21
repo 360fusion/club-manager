@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Models\SubscriptionTier;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
+use App\Models\EventRegistration;
 use App\Models\Invoice;
 use App\Models\Meeting;
 use Illuminate\Support\Carbon;
@@ -42,11 +43,9 @@ class AnalyticsController extends Controller
         $totalOpenInvoices = $openInvoicesCount + $openBillsCount;
 
         // 4. Event & RSVP Revenue
-        $totalEventRevenue = DB::table('event_user')
-            ->join('events', 'events.id', '=', 'event_user.event_id')
-            ->where('events.club_id', $club->id)
-            ->where('event_user.payment_status', 'paid')
-            ->sum('event_user.amount_paid');
+        $totalEventRevenue = EventRegistration::whereHas('event', fn ($q) => $q->where('club_id', $club->id))
+            ->whereIn('payment_status', ['paid', 'part_paid'])
+            ->sum(DB::raw('amount_paid - amount_refunded'));
 
         // 5. Total Sales / Revenue Projection
         $paidInvoicesSum = (float) Invoice::where('club_id', $club->id)->where('status', 'paid')->sum('amount');
@@ -60,15 +59,10 @@ class AnalyticsController extends Controller
         }
 
         // 6. RSVP Attendance Metrics
-        $totalRSVPs = DB::table('event_user')
-            ->join('events', 'events.id', '=', 'event_user.event_id')
-            ->where('events.club_id', $club->id)
-            ->count();
+        $totalRSVPs = EventRegistration::whereHas('event', fn ($q) => $q->where('club_id', $club->id))->count();
 
-        $attendingRSVPs = DB::table('event_user')
-            ->join('events', 'events.id', '=', 'event_user.event_id')
-            ->where('events.club_id', $club->id)
-            ->where('event_user.attendance_status', 'attending')
+        $attendingRSVPs = EventRegistration::whereHas('event', fn ($q) => $q->where('club_id', $club->id))
+            ->where('status', 'attending')
             ->count();
 
         $attendanceRate = $totalRSVPs > 0 ? round(($attendingRSVPs / $totalRSVPs) * 100, 1) : 0;

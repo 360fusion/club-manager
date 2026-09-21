@@ -16,6 +16,7 @@ class EventTicketTier extends Model
         'price',
         'max_quantity',
         'sold_quantity',
+        'audience',
     ];
 
     protected function casts(): array

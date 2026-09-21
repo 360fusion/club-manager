@@ -5,10 +5,10 @@ namespace Tests\Feature;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\EventTicketTier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class EventSubscribersTest extends TestCase
@@ -65,16 +65,21 @@ class EventSubscribersTest extends TestCase
             'price' => 45.00,
         ]);
 
-        DB::table('event_user')->insert([
+        $registration = EventRegistration::create([
             'event_id' => $event->id,
             'user_id' => $attendee->id,
-            'ticket_tier_id' => $tier->id,
+            'contact_name' => $attendee->name,
+            'contact_email' => $attendee->email,
+            'status' => 'attending',
             'payment_status' => 'paid',
+        ]);
+        $registration->attendees()->create([
+            'user_id' => $attendee->id,
+            'name' => $attendee->name,
+            'ticket_tier_id' => $tier->id,
             'attending_dining' => true,
-            'menu_selections' => json_encode(['starter' => 'Soup', 'main' => 'Roast Beef', 'dessert' => 'Cheesecake']),
+            'legacy_menu' => ['starter' => 'Soup', 'main' => 'Roast Beef', 'dessert' => 'Cheesecake'],
             'dietary_requirements' => 'Nut allergy',
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $response = $this->actingAs($admin)
@@ -116,28 +121,26 @@ class EventSubscribersTest extends TestCase
             'price' => 30.00,
         ]);
 
-        DB::table('event_user')->insert([
+        $registration = EventRegistration::create([
             'event_id' => $event->id,
             'user_id' => $attendee->id,
-            'ticket_tier_id' => $tier->id,
+            'contact_name' => $attendee->name,
+            'status' => 'attending',
             'payment_status' => 'unpaid',
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $response = $this->actingAs($admin)
             ->post(route('admin.events.subscribers.payment_status', [
                 'clubSlug' => $club->slug,
                 'id' => $event->id,
-                'userId' => $attendee->id,
+                'registrationId' => $registration->id,
             ]), [
                 'payment_status' => 'paid',
             ]);
 
         $response->assertRedirect();
-        $this->assertDatabaseHas('event_user', [
-            'event_id' => $event->id,
-            'user_id' => $attendee->id,
+        $this->assertDatabaseHas('event_registrations', [
+            'id' => $registration->id,
             'payment_status' => 'paid',
         ]);
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Club;
 use App\Models\ClubUpdate;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Newsletter;
@@ -14,7 +15,6 @@ use App\Services\MemberInbox;
 use App\Support\MemberScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -101,10 +101,9 @@ class MemberHomeController extends Controller
             ->limit(self::UP_NEXT_LIMIT)
             ->get();
 
-        $eventReplies = DB::table('event_user')
-            ->whereIn('event_id', $events->pluck('id'))
+        $eventReplies = EventRegistration::whereIn('event_id', $events->pluck('id'))
             ->where('user_id', $user->id)
-            ->pluck('attendance_status', 'event_id');
+            ->pluck('status', 'event_id');
 
         return $meetings->map(fn (Meeting $meeting) => [
             'type' => 'meeting',

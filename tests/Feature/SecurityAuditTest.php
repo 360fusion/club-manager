@@ -6,10 +6,12 @@ use App\Domains\ClubAccounting\Livewire\Committee\MeetingWorkspace;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
+use App\Enums\Visibility;
 use App\Mail\ContactFormSubmittedMail;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Invoice;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
@@ -322,12 +324,37 @@ class SecurityAuditTest extends TestCase
         $this->assertNotEmpty($this->a->fresh()->settings['stripe_secret_key']);
     }
 
-    public function test_check_in_only_accepts_members_of_the_club(): void
+    public function test_check_in_only_accepts_people_booked_on_that_event(): void
     {
         $event = Event::create(['club_id' => $this->a->id, 'title' => 'Dinner', 'slug' => 'dinner', 'starts_at' => now()->addDay(), 'status' => 'upcoming']);
+        $other = Event::create(['club_id' => $this->a->id, 'title' => 'Other', 'slug' => 'other', 'starts_at' => now()->addDay(), 'status' => 'upcoming']);
+        $registration = EventRegistration::create(['event_id' => $other->id, 'user_id' => $this->member->id, 'contact_name' => 'Member', 'status' => 'attending']);
+        $attendee = $registration->attendees()->create(['user_id' => $this->member->id, 'name' => 'Member']);
 
-        $this->actingAs($this->admin)->post(route('admin.events.checkin.store', ['clubSlug' => 'club-a', 'id' => $event->id]), ['user_id' => $this->outsider->id, 'action' => 'checkin'])->assertStatus(422);
-        $this->assertDatabaseMissing('event_user', ['event_id' => $event->id, 'user_id' => $this->outsider->id]);
+        $url = route('admin.events.checkin.store', ['clubSlug' => 'club-a', 'id' => $event->id]);
+
+        $this->actingAs($this->admin)->post($url, ['attendee_id' => $attendee->id, 'action' => 'checkin'])->assertNotFound();
+        $this->assertNull($attendee->fresh()->checked_in_at);
+
+        $this->actingAs($this->admin)->post(route('admin.events.checkin.store', ['clubSlug' => 'club-a', 'id' => $other->id]), ['attendee_id' => $attendee->id, 'action' => 'checkin'])->assertRedirect();
+        $this->assertNotNull($attendee->fresh()->checked_in_at);
+    }
+
+    public function test_the_public_club_overview_never_lists_who_is_attending(): void
+    {
+        $event = Event::create(['club_id' => $this->a->id, 'title' => 'Dinner', 'slug' => 'dinner', 'starts_at' => now()->addDay(), 'status' => 'upcoming', 'visibility' => Visibility::Public]);
+        $registration = EventRegistration::create(['event_id' => $event->id, 'user_id' => $this->member->id, 'contact_name' => 'Secret Person', 'status' => 'attending']);
+        $registration->attendees()->create(['user_id' => $this->member->id, 'name' => 'Secret Person', 'dietary_requirements' => 'Coeliac']);
+
+        foreach ([null, $this->member, $this->treasurer] as $viewer) {
+            $response = $viewer ? $this->actingAs($viewer)->get(route('clubs.show', ['slug' => 'club-a'])) : $this->get(route('clubs.show', ['slug' => 'club-a']));
+            $content = (string) $response->getContent();
+
+            $this->assertStringNotContainsString('Secret Person', $content);
+            $this->assertStringNotContainsString('Coeliac', $content);
+        }
+
+        $this->actingAs($this->admin)->get(route('clubs.show', ['slug' => 'club-a']))->assertSee('Secret Person', false);
     }
 
     public function test_page_block_links_cannot_use_script_schemes(): void

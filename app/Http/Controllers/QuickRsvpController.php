@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Services\Events\EventRegistrationService;
 use App\Support\MemberScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -49,34 +49,24 @@ class QuickRsvpController extends Controller
         return back()->with('success', 'Your reply to '.$meeting->title.' has been saved.');
     }
 
-    public function event(Request $request, string $slug, int $id): RedirectResponse
+    public function event(Request $request, string $slug, int $id, EventRegistrationService $registrations): RedirectResponse
     {
         $validated = $request->validate(['attendance_status' => 'required|in:attending,declined,tentative']);
 
         $scope = MemberScope::for($request->user(), $slug);
-        $event = Event::where('club_id', $scope->club->id)->visibleTo($request->user())->findOrFail($id);
+        $event = Event::where('club_id', $scope->club->id)->published()->visibleTo($request->user())->findOrFail($id);
 
         abort_unless($event->canBeRsvpedBy($request->user()), 403, 'This event is not open to your account.');
-
-        if ($event->is_booking_closed) {
-            return back()->withErrors(['booking_closed' => 'Bookings for this event have closed.']);
-        }
 
         if ($validated['attendance_status'] !== 'declined' && ! $event->allowsQuickReply()) {
             return back()->withErrors(['rsvp' => 'This event needs a few choices first. Open it to finish your reply.']);
         }
 
-        $existing = DB::table('event_user')->where('event_id', $event->id)->where('user_id', $request->user()->id)->first();
-
-        DB::table('event_user')->updateOrInsert(
-            ['event_id' => $event->id, 'user_id' => $request->user()->id],
-            [
-                'attendance_status' => $validated['attendance_status'],
-                'attending_dining' => $existing->attending_dining ?? false,
-                'menu_selections' => $existing->menu_selections ?? json_encode([]),
-                'dietary_requirements' => $existing->dietary_requirements ?? ($scope->memberClubs->firstWhere('id', $scope->club->id)?->pivot?->dietary_notes ?? ''),
-                'updated_at' => now(),
-            ],
+        $registrations->quickReply(
+            $event,
+            $request->user(),
+            $validated['attendance_status'],
+            $scope->memberClubs->firstWhere('id', $scope->club->id)?->pivot?->dietary_notes,
         );
 
         return back()->with('success', 'Your reply to '.$event->title.' has been saved.');

@@ -350,7 +350,7 @@ class MemberAreaTest extends TestCase
         $this->actingAs($this->member)->post(route('member.events.quick_rsvp', ['slug' => 'oxford-lodge', 'id' => $event->id]), ['attendance_status' => 'attending'])
             ->assertSessionHasNoErrors();
 
-        $this->assertDatabaseHas('event_user', ['event_id' => $event->id, 'user_id' => $this->member->id, 'attendance_status' => 'attending']);
+        $this->assertDatabaseHas('event_registrations', ['event_id' => $event->id, 'user_id' => $this->member->id, 'status' => 'attending']);
     }
 
     public function test_an_event_that_needs_choices_only_allows_a_one_tap_decline(): void
@@ -359,10 +359,10 @@ class MemberAreaTest extends TestCase
         $url = route('member.events.quick_rsvp', ['slug' => 'oxford-lodge', 'id' => $event->id]);
 
         $this->actingAs($this->member)->post($url, ['attendance_status' => 'attending'])->assertSessionHasErrors('rsvp');
-        $this->assertDatabaseCount('event_user', 0);
+        $this->assertDatabaseCount('event_registrations', 0);
 
         $this->post($url, ['attendance_status' => 'declined'])->assertSessionHasNoErrors();
-        $this->assertDatabaseHas('event_user', ['event_id' => $event->id, 'attendance_status' => 'declined']);
+        $this->assertDatabaseHas('event_registrations', ['event_id' => $event->id, 'status' => 'declined']);
     }
 
     // ---- notifications -------------------------------------------------------------
