@@ -50,7 +50,7 @@ class EventBookingPaymentTest extends TestCase
 
     private function enable(string $key, string $type, array $extra = []): void
     {
-        $method = ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => $type, 'label' => ucfirst($key), 'sort_order' => count($this->methods)] + ($type === 'card_online' ? ['config' => ['stripe_secret_key' => 'sk_test_x', 'stripe_webhook_secret' => 'whsec_x']] : []) + $extra);
+        $method = ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => $type, 'label' => ucfirst($key), 'sort_order' => count($this->methods)] + ($type === 'card_online' ? ['config' => ['stripe_secret_key' => 'sk_test_x', 'stripe_webhook_secret' => 'whsec_x']] : ($type === 'bank_transfer' && ! isset($extra['config']) ? ['config' => ['account_number' => '12345678']] : [])) + $extra);
         $this->methods[$key] = EventPaymentMethod::create(['event_id' => $this->event->id, 'payment_method_id' => $method->id, 'is_enabled' => true]);
     }
 

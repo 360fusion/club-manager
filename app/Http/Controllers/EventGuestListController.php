@@ -49,7 +49,7 @@ class EventGuestListController extends Controller
         $filename = 'guest-list-'.Str::slug($event->title).'-'.now()->format('Y-m-d').'.csv';
 
         return response()->streamDownload(function () use ($people) {
-            echo Csv::line(['Name', 'Guest of', 'Type', 'Email', 'Ticket', 'Dining', 'Starter', 'Main', 'Dessert', 'Dietary requirements', 'Table', 'Payment status', 'Amount paid', 'Checked in']);
+            echo Csv::line(['Name', 'Guest of', 'Type', 'Email', 'Lodge / organisation', 'Ticket', 'Dining', 'Starter', 'Main', 'Dessert', 'Dietary requirements', 'Table', 'Payment status', 'Amount paid', 'Checked in']);
 
             foreach ($people as $person) {
                 echo Csv::line([
@@ -57,6 +57,7 @@ class EventGuestListController extends Controller
                     $person['guest_of'],
                     $person['is_guest'] ? 'Guest' : 'Member',
                     $person['email'],
+                    $person['organisation'],
                     $person['ticket'],
                     $person['dining'] ? 'Yes' : 'No',
                     $person['meal']['starter'],

@@ -5,6 +5,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { currencySymbol } from '@/Utils/currency';
 import Select from '@/Components/Ui/Select.vue';
 import Card from '@/Components/Ui/Card.vue';
+import { useDraft } from '@/Composables/useDraft';
 
 const props = defineProps({
   club: Object,
@@ -78,7 +79,8 @@ const form = useForm({
 
     return {
       payment_method_id: method.id,
-      is_enabled: saved ? !!saved.is_enabled : false,
+      // A new event offers every option the lodge uses; an event that already exists keeps its own choice.
+      is_enabled: saved ? !!saved.is_enabled : !props.event.id,
       adjustment_kind: saved?.adjustment_kind ?? null, // null = use the option's own default
       adjustment_mode: saved?.adjustment_mode ?? method.default_adjustment_mode ?? 'fixed',
       adjustment_amount: saved?.adjustment_amount ?? method.default_adjustment_amount ?? 0,
@@ -158,6 +160,20 @@ const removeDish = (course, index) => {
   }
 };
 
+// Everything typed here is kept on this device until the event is saved, so opening the payment options (or a refresh) loses nothing.
+const draft = useDraft({
+  key: `event-draft:${props.club.slug}:${props.event.id ?? 'new'}`,
+  version: String(props.event.updated_at ?? 'new'),
+  snapshot: () => ({ form: form.data(), menu: JSON.parse(JSON.stringify(menu)) }),
+  restore: (saved) => {
+    Object.assign(form, saved.form);
+    Object.keys(saved.menu || {}).forEach((course) => { menu[course] = saved.menu[course]; });
+  },
+});
+
+// Payment options are edited once for the whole lodge; open them in a new tab and come back to this page afterwards.
+const paymentOptionsUrl = computed(() => `${route('admin.payment_options.index', { clubSlug: props.club.slug })}?return=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '')}`);
+
 const submit = () => {
   form
     .transform((data) => ({
@@ -166,7 +182,7 @@ const submit = () => {
         ? COURSES.flatMap(({ key }) => menu[key].map((dish) => ({ ...dish, category: key })))
         : [],
     }))
-    .post(route('admin.events.store', { clubSlug: props.club.slug }));
+    .post(route('admin.events.store', { clubSlug: props.club.slug }), { onSuccess: () => draft.clear() });
 };
 
 const duplicate = () => router.post(route('admin.events.duplicate', { clubSlug: props.club.slug, id: props.event.id }));
@@ -203,6 +219,11 @@ const cardTitle = 'text-base font-bold text-slate-900 dark:text-white border-b b
             &larr; Back to Events
           </Link>
         </div>
+      </div>
+
+      <div v-if="draft.restored.value" class="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-amber-300 bg-amber-50 p-3 text-xs dark:border-amber-800/60 dark:bg-amber-950/30">
+        <span class="font-semibold text-amber-800 dark:text-amber-200">Restored the changes you had not saved yet.</span>
+        <button type="button" class="font-bold text-amber-800 underline dark:text-amber-200" @click="draft.discard">Discard them</button>
       </div>
 
       <!-- Form -->
@@ -417,23 +438,24 @@ const cardTitle = 'text-base font-bold text-slate-900 dark:text-white border-b b
           </div>
         </div>
 
-        <!-- Payment options, discounts and fees -->
+        <!-- Payment options: which are offered here, and any discount or fee -->
         <div v-if="form.requires_payment" :class="cardClass">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div class="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
             <div>
-              <h3 class="text-base font-bold text-slate-900 dark:text-white">💳 How people can pay</h3>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400">Switch on the options for this event. Encourage early payment with a discount online or a fee later.</p>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">💳 Discounts and fees by payment method</h3>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">Every payment option your lodge uses is offered on this event. Untick one to hide it here, or add a discount to encourage early payment or a fee for paying later.</p>
             </div>
-            <Link :href="route('admin.payment_options.index', { clubSlug: club.slug })" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">Manage options</Link>
+            <a :href="paymentOptionsUrl" target="_blank" rel="noopener" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">Edit payment options &nearr;</a>
           </div>
 
-          <p v-if="!form.payment_methods.length" class="text-xs text-slate-500 dark:text-slate-400">You haven't set up any payment options yet. <Link :href="route('admin.payment_options.index', { clubSlug: club.slug })" class="font-semibold text-blue-600 hover:underline">Set them up</Link> first, then come back to switch them on.</p>
+          <p v-if="!form.payment_methods.length" class="text-xs text-slate-500 dark:text-slate-400">No payment options are switched on yet. <a :href="paymentOptionsUrl" target="_blank" rel="noopener" class="font-semibold text-blue-600 hover:underline">Switch some on</a> (it opens in a new tab), then refresh this page. What you have typed here is kept.</p>
 
           <div v-for="row in form.payment_methods" :key="row.payment_method_id" class="rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-3">
-            <label class="flex items-center gap-3 text-sm">
+            <label class="flex flex-wrap items-center gap-3 text-sm">
               <input v-model="row.is_enabled" type="checkbox" class="h-4 w-4 rounded text-blue-600" />
               <span class="font-bold text-slate-900 dark:text-white">{{ methodInfo(row.payment_method_id).label }}</span>
-              <span class="text-[11px] text-slate-500 dark:text-slate-400">Default: {{ defaultSummary(methodInfo(row.payment_method_id)) }}</span>
+              <span class="text-[11px] text-slate-500 dark:text-slate-400">Lodge default: {{ defaultSummary(methodInfo(row.payment_method_id)) }}</span>
+              <span v-if="methodInfo(row.payment_method_id).complete === false" class="text-[11px] font-semibold text-amber-700 dark:text-amber-300">Its details are not complete, so it is not offered yet.</span>
             </label>
 
             <div v-if="row.is_enabled" class="grid gap-3 sm:grid-cols-4 items-end">
@@ -460,6 +482,18 @@ const cardTitle = 'text-base font-bold text-slate-900 dark:text-white border-b b
                   <select v-model="row.adjustment_scope" :class="smallInput + ' w-full'"><option value="per_person">per person</option><option value="per_booking">per booking</option></select>
                 </div>
               </template>
+            </div>
+
+            <div v-if="row.is_enabled && methodInfo(row.payment_method_id).type === 'pay_later'" class="grid gap-3 sm:grid-cols-4 items-end">
+              <div>
+                <label :class="labelClass">Payment due (days)</label>
+                <input v-model="row.due_days" type="number" min="0" max="365" :placeholder="methodInfo(row.payment_method_id).due_days ?? ''" :class="smallInput + ' w-full'" />
+              </div>
+              <div>
+                <label :class="labelClass">Counted from</label>
+                <select v-model="row.due_basis" :class="smallInput + ' w-full'"><option :value="null">Lodge default</option><option value="before_event">before the event</option><option value="after_booking">after booking</option></select>
+              </div>
+              <p class="sm:col-span-2 text-[11px] text-slate-500 dark:text-slate-400">Leave blank to use the lodge's default due date for this event.</p>
             </div>
           </div>
           <p v-if="form.errors.payment_methods" class="text-[11px] font-semibold text-rose-600">{{ form.errors.payment_methods }}</p>

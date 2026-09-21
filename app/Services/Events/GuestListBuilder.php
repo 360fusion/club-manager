@@ -119,6 +119,7 @@ class GuestListBuilder
         return [
             'name' => $attendee->name,
             'is_guest' => $attendee->is_guest,
+            'organisation' => $attendee->organisation,
             'guest_of' => $attendee->is_guest ? $registration->contact_name : null,
             'email' => $attendee->email ?? $registration->contact_email ?? $registration->user?->email,
             'ticket' => $attendee->ticketTier?->name,

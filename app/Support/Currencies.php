@@ -123,6 +123,23 @@ final class Currencies
         return null;
     }
 
+    /**
+     * What the bank's routing code is called where the currency is used, for the bank details a lodge gives payers.
+     */
+    public static function bankCodeLabel(?string $code): string
+    {
+        return match (strtoupper((string) $code)) {
+            'AUD' => 'BSB',
+            'USD' => 'Routing number',
+            'CAD' => 'Transit and institution number',
+            'ZAR' => 'Branch code',
+            'INR' => 'IFSC code',
+            'EUR', 'CHF' => 'BIC / SWIFT',
+            'BRL' => 'Bank and branch code',
+            default => 'Sort code',
+        };
+    }
+
     public static function symbol(?string $code): string
     {
         return self::describe($code ?? self::DEFAULT)['symbol'];

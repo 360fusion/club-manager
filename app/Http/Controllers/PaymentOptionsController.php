@@ -6,8 +6,10 @@ use App\Models\Club;
 use App\Models\ClubPaymentMethod;
 use App\Services\Events\EventPricing;
 use App\Services\Payment\PlatformFees;
+use App\Support\Currencies;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -18,7 +20,7 @@ use Inertia\Response;
  */
 class PaymentOptionsController extends Controller
 {
-    public function index(string $clubSlug): Response
+    public function index(Request $request, string $clubSlug): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
@@ -30,6 +32,8 @@ class PaymentOptionsController extends Controller
             'paypalWebhookUrl' => route('webhooks.paypal.club', ['clubId' => $club->id]),
             'onlinePaymentsLive' => (bool) config('events.online_payments'),
             'platform' => $this->platform($club),
+            'returnTo' => $this->returnTo($request, $club),
+            'bankCodeLabel' => Currencies::bankCodeLabel($club->currencyCode()),
             'bankDefaults' => [
                 'account_name' => $club->name,
                 'sort_code' => $club->settings['bank_sort_code'] ?? '',
@@ -43,9 +47,9 @@ class PaymentOptionsController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $method = new ClubPaymentMethod(['club_id' => $club->id, 'sort_order' => ClubPaymentMethod::where('club_id', $club->id)->count()]);
 
-        $this->save($request, $method, $pricing);
+        $note = $this->save($request, $method, $pricing);
 
-        return redirect()->back()->with('success', 'Payment option added.');
+        return redirect()->back()->with('success', $note ?? 'Payment option added.');
     }
 
     public function update(Request $request, string $clubSlug, int $id, EventPricing $pricing): RedirectResponse
@@ -53,9 +57,49 @@ class PaymentOptionsController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $method = ClubPaymentMethod::where('club_id', $club->id)->findOrFail($id);
 
-        $this->save($request, $method, $pricing);
+        $note = $this->save($request, $method, $pricing);
 
-        return redirect()->back()->with('success', 'Payment option saved.');
+        return redirect()->back()->with('success', $note ?? 'Payment option saved.');
+    }
+
+    /**
+     * Switch an option on or off for the whole lodge. Switching on adds it to every upcoming event that does not have it yet.
+     */
+    public function toggle(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $method = ClubPaymentMethod::where('club_id', $club->id)->findOrFail($id);
+        $on = (bool) $request->validate(['is_active' => 'required|boolean'])['is_active'];
+
+        if ($on && ! $method->hasCompleteDetails()) {
+            throw ValidationException::withMessages(['option_'.$method->id => $method->missingDetailsMessage()]);
+        }
+
+        $method->update(['is_active' => $on]);
+        $added = $on ? $method->offerOnUpcomingEvents() : 0;
+
+        return redirect()->back()->with('success', $on
+            ? $method->label.' is on'.($added > 0 ? " and now offered on {$added} upcoming ".Str::plural('event', $added) : '').'.'
+            : $method->label.' is off. It is no longer offered on any event.');
+    }
+
+    /**
+     * The order options are shown to people booking.
+     */
+    public function reorder(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $validated = $request->validate(['ids' => 'required|array|min:1|max:50', 'ids.*' => 'integer|min:1|max:4294967295']);
+
+        $owned = ClubPaymentMethod::where('club_id', $club->id)->whereIn('id', $validated['ids'])->pluck('id')->all();
+
+        foreach (array_values(array_unique($validated['ids'])) as $position => $methodId) {
+            if (in_array($methodId, $owned, true)) {
+                ClubPaymentMethod::where('club_id', $club->id)->whereKey($methodId)->update(['sort_order' => $position]);
+            }
+        }
+
+        return redirect()->back();
     }
 
     public function destroy(string $clubSlug, int $id): RedirectResponse
@@ -75,7 +119,10 @@ class PaymentOptionsController extends Controller
         return redirect()->back()->with('success', 'Payment option removed.');
     }
 
-    private function save(Request $request, ClubPaymentMethod $method, EventPricing $pricing): void
+    /**
+     * @return string|null a message to show instead of the usual one
+     */
+    private function save(Request $request, ClubPaymentMethod $method, EventPricing $pricing): ?string
     {
         $type = $method->exists ? $method->type : $request->input('type');
 
@@ -95,7 +142,9 @@ class PaymentOptionsController extends Controller
 
         $request->validate([
             'config.account_name' => 'nullable|string|max:150',
+            'config.bank_name' => 'nullable|string|max:150',
             'config.sort_code' => 'nullable|string|max:20',
+            'config.iban' => 'nullable|string|max:40',
             'config.account_number' => 'nullable|string|max:34',
             'config.reference_prefix' => 'nullable|string|max:20|regex:/^[A-Za-z0-9-]*$/',
             'config.stripe_publishable_key' => 'nullable|string|max:255',
@@ -127,6 +176,31 @@ class PaymentOptionsController extends Controller
             'is_active' => $validated['is_active'] ?? true,
             'config' => $this->config($method, (array) $request->input('config', [])),
         ])->save();
+
+        // An option that cannot work yet stays off, so people are never offered a way to pay that is not set up.
+        if ($method->is_active && ! $method->hasCompleteDetails()) {
+            $method->update(['is_active' => false]);
+
+            return "Saved, but {$method->label} stays off until it is complete. ".$method->missingDetailsMessage();
+        }
+
+        $added = $method->is_active ? $method->offerOnUpcomingEvents() : 0;
+
+        return $added > 0 ? "Saved. {$method->label} is now offered on {$added} upcoming ".Str::plural('event', $added).'.' : null;
+    }
+
+    /**
+     * Where the "back" button goes: only a page inside this club's own admin, never another site.
+     */
+    private function returnTo(Request $request, Club $club): ?string
+    {
+        $path = $request->query('return');
+
+        if (! is_string($path) || strlen($path) > 300 || ! preg_match('#^/'.preg_quote($club->slug, '#').'/admin/[A-Za-z0-9/_\-.?=&%]*$#', $path) || str_contains($path, '..')) {
+            return null;
+        }
+
+        return $path;
     }
 
     /**
@@ -168,7 +242,7 @@ class PaymentOptionsController extends Controller
         $current = $method->config ?? [];
 
         if ($method->type === ClubPaymentMethod::BANK) {
-            return array_filter(array_intersect_key($input, array_flip(['account_name', 'sort_code', 'account_number', 'reference_prefix'])), fn ($v) => filled($v)) ?: null;
+            return array_filter(array_intersect_key($input, array_flip(['account_name', 'bank_name', 'sort_code', 'account_number', 'iban', 'reference_prefix'])), fn ($v) => filled($v)) ?: null;
         }
 
         if ($method->type === ClubPaymentMethod::CARD) {
@@ -236,6 +310,7 @@ class PaymentOptionsController extends Controller
             'has_stripe_secret_key' => ! empty($config['stripe_secret_key']),
             'has_stripe_webhook_secret' => ! empty($config['stripe_webhook_secret']),
             'ready_for_cards' => $m->isReadyForCards(),
+            'complete' => $m->hasCompleteDetails(),
         ];
     }
 }

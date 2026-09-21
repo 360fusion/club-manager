@@ -42,8 +42,10 @@ const STATUS = {
                 <div class="font-bold">Pay by bank transfer</div>
                 <dl class="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
                     <template v-if="payment.bank.account_name"><dt :class="muted">Account name</dt><dd class="font-semibold">{{ payment.bank.account_name }}</dd></template>
-                    <template v-if="payment.bank.sort_code"><dt :class="muted">Sort code</dt><dd class="font-mono font-semibold">{{ payment.bank.sort_code }}</dd></template>
+                    <template v-if="payment.bank.bank_name"><dt :class="muted">Bank</dt><dd class="font-semibold">{{ payment.bank.bank_name }}</dd></template>
+                    <template v-if="payment.bank.sort_code"><dt :class="muted">{{ payment.bank.code_label || 'Sort code' }}</dt><dd class="font-mono font-semibold">{{ payment.bank.sort_code }}</dd></template>
                     <template v-if="payment.bank.account_number"><dt :class="muted">Account number</dt><dd class="font-mono font-semibold">{{ payment.bank.account_number }}</dd></template>
+                    <template v-if="payment.bank.iban"><dt :class="muted">IBAN</dt><dd class="font-mono font-semibold">{{ payment.bank.iban }}</dd></template>
                     <dt :class="muted">Reference</dt><dd class="font-mono font-bold">{{ payment.reference }}</dd>
                 </dl>
                 <p :class="['mt-1', muted]">Please use the reference exactly, so we can match your payment.</p>

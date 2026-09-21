@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
@@ -11,14 +11,16 @@ const props = defineProps({
   paypalWebhookUrl: { type: String, default: '' },
   platform: { type: Object, default: () => ({ enabled: false, account: null }) },
   onlinePaymentsLive: { type: Boolean, default: false },
+  returnTo: { type: String, default: null },
+  bankCodeLabel: { type: String, default: 'Sort code' },
 });
 
 const TYPES = [
-  { value: 'bank_transfer', label: 'Bank transfer', help: 'People pay into your bank account using a reference. You mark them paid once you have checked the account.', fee: false },
-  { value: 'card_online', label: 'Pay online by card', help: 'People pay on Stripe\'s secure page with your own Stripe account, and the money goes straight to you.', fee: false },
-  { value: 'paypal', label: 'Pay online with PayPal', help: 'People pay on PayPal\'s secure page with your own PayPal business account, and the money goes straight to you.', fee: false },
-  { value: 'pay_later', label: 'Pay later', help: 'People book now and pay before a due date you set. They can pay any time before then.', fee: true },
-  { value: 'cash_on_door', label: 'Pay on the night', help: 'People pay when they arrive.', fee: true },
+  { value: 'bank_transfer', icon: '🏦', label: 'Bank transfer', help: 'People pay into your bank account using a reference. You mark them paid once you have checked the account.', fee: false },
+  { value: 'card_online', icon: '💳', label: 'Pay online by card', help: 'People pay on Stripe\'s secure page with your own Stripe account, and the money goes straight to you.', fee: false },
+  { value: 'paypal', icon: '🅿️', label: 'Pay online with PayPal', help: 'People pay on PayPal\'s secure page with your own PayPal business account, and the money goes straight to you.', fee: false },
+  { value: 'pay_later', icon: '🗓️', label: 'Pay later', help: 'People book now and pay before a due date you set. They can pay any time before then.', fee: true },
+  { value: 'cash_on_door', icon: '🚪', label: 'Pay on the night', help: 'People pay when they arrive.', fee: true },
 ];
 
 // A new card option starts on "Connect with Stripe" when the platform offers it, otherwise on pasted keys.
@@ -58,6 +60,58 @@ const open = (method = null) => {
   editing.value = method ? method.id : 0;
 };
 
+const panelRef = ref(null);
+const showPanel = () => nextTick(() => panelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+
+// One card per kind of option: the lodge's own row(s), or a "not set up" card for a kind it has not started.
+const cards = computed(() => TYPES.flatMap((type) => {
+  const rows = props.methods.filter((m) => m.type === type.value);
+  return rows.length ? rows.map((m) => ({ key: `m${m.id}`, type, method: m })) : [{ key: `t${type.value}`, type, method: null }];
+}));
+
+const openNew = (type) => {
+  form.clearErrors();
+  const data = blank(type);
+  form.defaults(data).reset();
+  Object.assign(form, data);
+  editing.value = 0;
+  showPanel();
+};
+
+const edit = (card) => {
+  if (card.method) open(card.method); else openNew(card.type.value);
+  showPanel();
+};
+
+// Pay later and pay on the night need nothing more, so they switch on straight away; the others ask for their details first.
+const toggle = (card) => {
+  if (!card.method) {
+    if (['pay_later', 'cash_on_door'].includes(card.type.value)) {
+      router.post(route('admin.payment_options.store', { clubSlug: props.club.slug }), blank(card.type.value), { preserveScroll: true });
+    } else {
+      openNew(card.type.value);
+    }
+    return;
+  }
+
+  router.put(route('admin.payment_options.toggle', { clubSlug: props.club.slug, id: card.method.id }), { is_active: !card.method.is_active }, { preserveScroll: true });
+};
+
+const page = usePage();
+const toggleError = (card) => (card.method ? page.props.errors?.[`option_${card.method.id}`] : null);
+
+// The order people booking see the options in.
+const move = (card, offset) => {
+  const ids = props.methods.map((m) => m.id);
+  const from = ids.indexOf(card.method.id);
+  const to = from + offset;
+  if (to < 0 || to >= ids.length) return;
+  ids.splice(to, 0, ids.splice(from, 1)[0]);
+  router.post(route('admin.payment_options.order', { clubSlug: props.club.slug }), { ids }, { preserveScroll: true });
+};
+
+const backLabel = computed(() => (props.returnTo?.includes('/admin/events') ? 'Back to event' : props.returnTo?.includes('/admin/settings') ? 'Back to settings' : 'Back'));
+
 const chooseType = (value) => {
   form.type = value;
   form.label = typeInfo(value).label;
@@ -65,7 +119,6 @@ const chooseType = (value) => {
   if (!typeInfo(value).fee && form.default_adjustment_kind === 'fee') form.default_adjustment_kind = 'none';
 };
 
-const page = usePage();
 const stripeError = computed(() => page.props.errors?.stripe);
 const agreeTerms = ref(false);
 const stripeAction = (name, data = {}) => {
@@ -85,8 +138,8 @@ const submit = () => {
 };
 
 const remove = (method) => {
-  if (confirm(`Remove "${method.label}"?`)) {
-    router.delete(route('admin.payment_options.destroy', { clubSlug: props.club.slug, id: method.id }), { preserveScroll: true });
+  if (confirm(`Remove "${method.label}"? If bookings used it, it is switched off instead.`)) {
+    router.delete(route('admin.payment_options.destroy', { clubSlug: props.club.slug, id: method.id }), { preserveScroll: true, onSuccess: () => { editing.value = null; } });
   }
 };
 
@@ -95,6 +148,14 @@ const summary = (m) => {
   const amount = m.default_adjustment_mode === 'percent' ? `${Number(m.default_adjustment_amount)}%` : `${Number(m.default_adjustment_amount).toFixed(2)}`;
   const scope = m.default_adjustment_mode === 'percent' ? '' : (m.default_adjustment_scope === 'per_person' ? ' per person' : ' per booking');
   return m.default_adjustment_kind === 'discount' ? `${amount} off${scope}` : `+ ${amount} fee${scope}`;
+};
+
+const statusLine = (card) => {
+  const m = card.method;
+  if (!m) return card.type.help;
+  const parts = [summary(m)];
+  if (m.type === 'pay_later' && m.due_days !== null) parts.push(`due ${m.due_days} days ${m.due_basis === 'before_event' ? 'before the event' : 'after booking'}`);
+  return parts.join(' · ');
 };
 
 const input = 'w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500';
@@ -106,52 +167,49 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
     <Head title="Payment options" />
 
     <div class="max-w-4xl mx-auto space-y-6">
-      <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Payment options</h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Set up how people can pay once, then switch options on for each event. Give a discount to encourage early payment, or add a fee for paying later or on the night.</p>
-        </div>
-        <div class="flex gap-2">
-          <Link :href="route('admin.events.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">&larr; Events</Link>
-          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl" @click="open()">+ Add option</button>
-        </div>
-      </div>
-
-      <div v-if="!methods.length && editing === null" class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center text-sm text-slate-500 dark:text-slate-400">
-        No payment options yet. Add bank transfer, pay later, pay on the night or online card payments.
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <p class="max-w-2xl text-xs text-slate-500 dark:text-slate-400">Switch on the ways people can pay. Details are set here once and every event offers the options you switch on. Each event can then add a discount or fee to an option.</p>
+        <Link :href="returnTo ?? route('admin.events.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">&larr; {{ returnTo ? backLabel : 'Events' }}</Link>
       </div>
 
       <ul class="space-y-3">
-        <li v-for="m in methods" :key="m.id" class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80">
-          <div>
+        <li v-for="card in cards" :key="card.key" class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="text-2xl" aria-hidden="true">{{ card.type.icon }}</span>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-bold text-slate-900 dark:text-white text-sm">{{ card.method?.label ?? card.type.label }}</span>
+                <span v-if="!card.method" class="text-[10px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500">Not set up</span>
+                <span v-else-if="!card.method.complete" class="text-[10px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 bg-amber-100 text-amber-800">Needs details</span>
+                <span v-else-if="card.method.is_active" class="text-[10px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 bg-emerald-100 text-emerald-800">In use</span>
+              </div>
+              <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ statusLine(card) }}</div>
+              <p v-if="toggleError(card)" class="mt-1 text-[11px] font-semibold text-rose-600" role="alert">{{ toggleError(card) }}</p>
+            </div>
+
             <div class="flex items-center gap-2">
-              <span class="font-bold text-slate-900 dark:text-white text-sm">{{ m.label }}</span>
-              <span class="text-[10px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">{{ typeInfo(m.type).label }}</span>
-              <span v-if="!m.is_active" class="text-[10px] font-bold uppercase rounded px-1.5 py-0.5 bg-amber-100 text-amber-800">Off</span>
+              <template v-if="card.method && methods.length > 1">
+                <button type="button" class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" :aria-label="`Move ${card.method.label} up`" @click="move(card, -1)">&uarr;</button>
+                <button type="button" class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" :aria-label="`Move ${card.method.label} down`" @click="move(card, 1)">&darr;</button>
+              </template>
+              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" :aria-label="`Edit ${card.method?.label ?? card.type.label}`" title="Edit details" @click="edit(card)">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>
+              </button>
+              <label class="flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <span>Use this option</span>
+                <button type="button" role="switch" :aria-checked="!!card.method?.is_active" :aria-label="`Use ${card.method?.label ?? card.type.label}`" :class="['relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors', card.method?.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700']" @click="toggle(card)">
+                  <span :class="['inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform', card.method?.is_active ? 'translate-x-5' : 'translate-x-0.5']"></span>
+                </button>
+              </label>
             </div>
-            <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {{ summary(m) }}
-              <span v-if="m.type === 'pay_later' && m.due_days !== null"> · due {{ m.due_days }} days {{ m.due_basis === 'before_event' ? 'before the event' : 'after booking' }}</span>
-              <span v-if="m.type === 'card_online'"> · {{ m.ready_for_cards ? 'Ready for card payments' : 'Needs the Stripe keys and webhook secret' }}</span>
-            </div>
-          </div>
-          <div class="flex gap-3 text-xs font-semibold">
-            <button type="button" class="text-blue-600 dark:text-blue-400 hover:underline" @click="open(m)">Edit</button>
-            <button type="button" class="text-rose-600 dark:text-rose-400 hover:underline" @click="remove(m)">Remove</button>
           </div>
         </li>
       </ul>
 
-      <form v-if="editing !== null" class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-5" @submit.prevent="submit">
+      <form v-if="editing !== null" ref="panelRef" class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-5" @submit.prevent="submit">
         <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ editing ? 'Edit payment option' : 'New payment option' }}</h3>
 
-        <div v-if="!editing" class="grid gap-2 sm:grid-cols-2">
-          <button v-for="t in TYPES" :key="t.value" type="button" :class="['text-left rounded-xl border p-3 text-xs transition-all', form.type === t.value ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40' : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50']" @click="chooseType(t.value)">
-            <span class="font-bold text-slate-900 dark:text-white block">{{ t.label }}</span>
-            <span class="text-slate-500 dark:text-slate-400">{{ t.help }}</span>
-          </button>
-        </div>
-        <p v-else class="text-xs text-slate-500 dark:text-slate-400">{{ typeInfo(form.type).help }}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ typeInfo(form.type).help }}</p>
         <p v-if="form.errors.type" class="text-[11px] font-semibold text-rose-600">{{ form.errors.type }}</p>
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -160,9 +218,6 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
             <input v-model="form.label" type="text" maxlength="100" required :class="input" />
             <p v-if="form.errors.label" class="mt-1 text-[11px] font-semibold text-rose-600">{{ form.errors.label }}</p>
           </div>
-          <label class="flex items-center gap-2 text-xs sm:pt-6">
-            <input v-model="form.is_active" type="checkbox" class="h-4 w-4 rounded" /> <span class="font-bold text-slate-900 dark:text-white">Available to use</span>
-          </label>
         </div>
 
         <div>
@@ -173,8 +228,10 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
         <!-- Bank transfer -->
         <div v-if="form.type === 'bank_transfer'" class="grid gap-4 sm:grid-cols-2">
           <div><label :class="label">Account name</label><input v-model="form.config.account_name" type="text" maxlength="150" :class="input" /></div>
-          <div><label :class="label">Sort code</label><input v-model="form.config.sort_code" type="text" maxlength="20" :class="input" placeholder="00-00-00" /></div>
+          <div><label :class="label">Bank name (optional)</label><input v-model="form.config.bank_name" type="text" maxlength="150" :class="input" /></div>
+          <div><label :class="label">{{ bankCodeLabel }}</label><input v-model="form.config.sort_code" type="text" maxlength="20" :class="input" /></div>
           <div><label :class="label">Account number</label><input v-model="form.config.account_number" type="text" maxlength="34" :class="input" /></div>
+          <div><label :class="label">IBAN (optional)</label><input v-model="form.config.iban" type="text" maxlength="40" :class="input" /></div>
           <div><label :class="label">Reference prefix</label><input v-model="form.config.reference_prefix" type="text" maxlength="20" :class="input" placeholder="e.g. DINNER" /><p v-if="form.errors['config.reference_prefix']" class="mt-1 text-[11px] font-semibold text-rose-600">{{ form.errors['config.reference_prefix'] }}</p></div>
         </div>
 
@@ -301,6 +358,7 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
         <div class="flex gap-3">
           <button type="submit" :disabled="form.processing" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl">{{ form.processing ? 'Saving...' : 'Save' }}</button>
           <button type="button" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800" @click="editing = null">Cancel</button>
+          <button v-if="current" type="button" class="ml-auto px-3 py-2.5 text-xs font-bold text-rose-600 hover:underline dark:text-rose-400" @click="remove(current)">Remove this option</button>
         </div>
       </form>
     </div>

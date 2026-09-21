@@ -64,6 +64,7 @@
           @if ($person['is_guest'])<span class="guest">GUEST</span>@endif
           @if ($person['status'] === 'tentative')<span class="of">(maybe)</span>@endif
           @if ($person['guest_of'])<div class="of">of {{ $person['guest_of'] }}</div>@endif
+          @if ($person['organisation'])<div class="of">{{ $person['organisation'] }}</div>@endif
         </td>
         @if ($sort === 'table' || $people->contains(fn ($p) => $p['table_label']))<td>{{ $person['table_label'] }}</td>@endif
         @if ($event->has_dining)

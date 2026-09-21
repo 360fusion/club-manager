@@ -71,6 +71,9 @@ const validTabs = [
   'communications', 'website', 'bookings', 'performance'
 ];
 
+// Event and booking payment options are set up once for the lodge on their own page, which comes back here.
+const paymentOptionsUrl = (tab) => `${route('admin.payment_options.index', { clubSlug: props.club.slug })}?return=${encodeURIComponent(`/${props.club.slug}/admin/settings?tab=${tab}`)}`;
+
 const getTabFromUrl = () => {
   const hash = typeof window !== 'undefined' ? window.location.hash.replace('#', '').trim() : '';
   if (hash && validTabs.includes(hash)) {
@@ -1554,6 +1557,14 @@ const moveOfficerDown = (index) => {
 
       <!-- TAB: PAYMENT GATEWAYS & PROVIDERS -->
       <div v-if="activeTab === 'payments'" class="space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-800/60 dark:bg-blue-950/30">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">💳 Payment options for events and bookings</h3>
+            <p class="mt-1 text-xs text-slate-600 dark:text-slate-300">Bank transfer, card, PayPal, pay later and pay on the night. Set them up and switch them on once here, and every event offers them.</p>
+          </div>
+          <a :href="paymentOptionsUrl('payments')" class="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700">Manage payment options</a>
+        </div>
+
         <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
             <div>
@@ -1561,7 +1572,7 @@ const moveOfficerDown = (index) => {
                 <span>💳 Active Payment Gateway Provider</span>
               </h2>
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Select which payment gateway handles member subscription checkouts, card payments, and recurring dues for this club.
+                Select which payment gateway handles member subscription checkouts and recurring dues for this club. Payments for events and bookings are set up separately, in Payment options above.
               </p>
             </div>
 
@@ -1635,6 +1646,14 @@ const moveOfficerDown = (index) => {
 
       <!-- TAB 5: EVENTS & CHECK-INS -->
       <div v-if="activeTab === 'events'" class="space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-800/60 dark:bg-blue-950/30">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">💳 Payment options for events and bookings</h3>
+            <p class="mt-1 text-xs text-slate-600 dark:text-slate-300">Bank transfer, card, PayPal, pay later and pay on the night. Set them up and switch them on once here, and every event offers them.</p>
+          </div>
+          <a :href="paymentOptionsUrl('events')" class="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700">Manage payment options</a>
+        </div>
+
         <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
           <div>
             <h2 class="text-lg font-bold text-slate-900 dark:text-white">📅 Events & Attendance Policy</h2>

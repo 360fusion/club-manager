@@ -191,7 +191,7 @@ class EventAdminFormTest extends TestCase
 
         $base = ['clubSlug' => 'club-a', 'id' => $event->id];
 
-        $this->actingAs($this->admin)->post(route('admin.events.registrations.store', $base), ['name' => 'Phoned In', 'email' => 'phone@example.test'])->assertSessionHasNoErrors();
+        $this->actingAs($this->admin)->post(route('admin.events.registrations.store', $base), ['attendees' => [['name' => 'Phoned In']], 'contact_email' => 'phone@example.test', 'over_capacity' => true])->assertSessionHasNoErrors();
         $manual = $event->registrations()->where('contact_name', 'Phoned In')->sole();
         $this->assertSame('attending', $manual->status, 'the organiser can go over capacity');
         $this->assertNull($manual->user_id);
@@ -213,7 +213,7 @@ class EventAdminFormTest extends TestCase
 
     private function method(string $type, string $label, ?Club $club = null): ClubPaymentMethod
     {
-        return ClubPaymentMethod::create(['club_id' => ($club ?? $this->club)->id, 'type' => $type, 'label' => $label] + ($type === 'card_online' ? ['config' => ['stripe_secret_key' => 'sk_test_x', 'stripe_webhook_secret' => 'whsec_x']] : []));
+        return ClubPaymentMethod::create(['club_id' => ($club ?? $this->club)->id, 'type' => $type, 'label' => $label] + ($type === 'card_online' ? ['config' => ['stripe_secret_key' => 'sk_test_x', 'stripe_webhook_secret' => 'whsec_x']] : ($type === 'bank_transfer' ? ['config' => ['account_number' => '12345678']] : [])));
     }
 
     public function test_payment_options_fees_and_the_advertised_price_are_saved_with_the_event(): void

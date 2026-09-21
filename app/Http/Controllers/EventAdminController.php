@@ -79,7 +79,9 @@ class EventAdminController extends Controller
                 'email' => $attendee->email ?? $registration->contact_email ?? $registration->user?->email,
                 'rank' => $member?->rank ?? '',
                 'role' => $member?->role ?? ($registration->user_id ? 'member' : 'guest'),
-                'home_club_lodge' => $member?->home_club_name ?? '',
+                'home_club_lodge' => $member?->home_club_name ?: ($attendee->organisation ?? ''),
+                'internal_note' => $registration->internal_note,
+                'added_by_organiser' => $registration->created_by !== null,
                 'member_number' => $member?->member_number ?? '',
                 'attendance_status' => $registration->status,
                 'attending_dining' => $attendee->attending_dining,
@@ -116,6 +118,10 @@ class EventAdminController extends Controller
                 'capacity' => $event->capacity,
                 'places_taken' => $event->placesTaken(),
                 'menu' => $event->menuItems()->orderBy('sort_order')->get(['id', 'category', 'name'])->groupBy('category'),
+                'tiers' => $event->ticketTiers->map(fn ($tier) => ['id' => $tier->id, 'name' => $tier->name, 'price' => number_format((float) $tier->price, 2, '.', ''), 'audience' => $tier->audience ?: 'all'])->values(),
+                'payment_options' => app(EventPricing::class)->enabledMethods($event)->reject(fn ($option) => $option->method->isOnline())->map(fn ($option) => ['id' => $option->id, 'label' => $option->method->label, 'type' => $option->method->type])->values(),
+                'is_full' => $event->capacity !== null && $event->placesTaken() >= $event->capacity,
+                'waitlist_enabled' => (bool) $event->waitlist_enabled,
                 'waitlisted' => $registrations->where('status', 'waitlisted')->sum(fn ($r) => $r->attendees->count()),
             ],
             'subscribers' => $subscribers,
@@ -150,7 +156,7 @@ class EventAdminController extends Controller
             'tiersInUse' => $id ? EventAttendee::whereIn('ticket_tier_id', $event->ticketTiers->pluck('id'))->pluck('ticket_tier_id')->unique()->values() : [],
             'dishesInUse' => $id ? $this->dishesInUse($event) : [],
             'registrationCount' => $id ? $event->registrations()->whereIn('status', EventRegistration::HOLDING_PLACE)->count() : 0,
-            'clubPaymentMethods' => ClubPaymentMethod::where('club_id', $club->id)->where('is_active', true)->orderBy('sort_order')->get(['id', 'type', 'label', 'default_adjustment_kind', 'default_adjustment_mode', 'default_adjustment_amount', 'default_adjustment_scope', 'due_days', 'due_basis']),
+            'clubPaymentMethods' => ClubPaymentMethod::where('club_id', $club->id)->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get()->map(fn (ClubPaymentMethod $m) => $m->only(['id', 'type', 'label', 'default_adjustment_kind', 'default_adjustment_mode', 'default_adjustment_amount', 'default_adjustment_scope', 'due_days', 'due_basis']) + ['complete' => $m->hasCompleteDetails()])->values(),
             'enabledMethods' => $id ? $event->paymentMethods()->get(['payment_method_id', 'is_enabled', 'adjustment_kind', 'adjustment_mode', 'adjustment_amount', 'adjustment_scope', 'due_days', 'due_basis']) : [],
             'pricePreview' => $id ? $this->pricePreview($event, $pricing) : null,
         ]);
@@ -458,7 +464,7 @@ class EventAdminController extends Controller
     public function duplicate(string $clubSlug, int $id): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $event = Event::where('club_id', $club->id)->with(['ticketTiers', 'promos', 'menuItems'])->findOrFail($id);
+        $event = Event::where('club_id', $club->id)->with(['ticketTiers', 'promos', 'menuItems', 'paymentMethods'])->findOrFail($id);
 
         $copy = DB::transaction(function () use ($event) {
             $copy = $event->replicate(['slug']);
@@ -479,6 +485,10 @@ class EventAdminController extends Controller
                 $copy->menuItems()->create($item->only(['category', 'name', 'description', 'is_vegetarian', 'is_vegan', 'is_gf', 'allergens', 'sort_order']));
             }
 
+            foreach ($event->paymentMethods as $option) {
+                $copy->paymentMethods()->create($option->only(['payment_method_id', 'is_enabled', 'adjustment_kind', 'adjustment_mode', 'adjustment_amount', 'adjustment_scope', 'due_days', 'due_basis']));
+            }
+
             return $copy;
         });
 
@@ -496,25 +506,6 @@ class EventAdminController extends Controller
         $event->update(['status' => 'cancelled']);
 
         return redirect()->back()->with('success', 'Event cancelled. Existing bookings have been kept.');
-    }
-
-    /**
-     * Add a booking by hand.
-     */
-    public function addRegistration(Request $request, string $clubSlug, int $id, EventRegistrationService $registrations): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $event = Event::where('club_id', $club->id)->findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:150',
-            'email' => 'nullable|email|max:255',
-            'dietary_requirements' => 'nullable|string|max:1000',
-        ]);
-
-        $registrations->addManual($event, $validated['name'], $validated['email'] ?? null, $validated['dietary_requirements'] ?? null);
-
-        return redirect()->back()->with('success', $validated['name'].' added.');
     }
 
     /**
@@ -598,7 +589,8 @@ class EventAdminController extends Controller
             $keep[] = $method->id;
         }
 
-        $event->paymentMethods()->whereNotIn('payment_method_id', $keep)->delete();
+        // Options a lodge has switched off are not in the form, so their settings on this event are kept for when they come back.
+        $event->paymentMethods()->whereNotIn('payment_method_id', $keep)->whereHas('method', fn ($q) => $q->where('is_active', true))->delete();
     }
 
     /**

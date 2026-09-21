@@ -44,7 +44,7 @@ class EventBankReconciliationTest extends TestCase
         $this->club->users()->attach($this->treasurer->id, ['role' => 'treasurer', 'status' => 'active']);
 
         $event = Event::create(['club_id' => $this->club->id, 'title' => 'Dinner', 'slug' => 'dinner', 'starts_at' => now()->addDays(10), 'status' => 'upcoming', 'visibility' => Visibility::Club, 'requires_payment' => true, 'price' => 50, 'booking_fee_type' => 'fixed', 'booking_fee_amount' => 2]);
-        $method = ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => 'bank_transfer', 'label' => 'Bank', 'config' => ['reference_prefix' => 'GALA']]);
+        $method = ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => 'bank_transfer', 'label' => 'Bank', 'config' => ['reference_prefix' => 'GALA', 'account_number' => '12345678']]);
         $option = EventPaymentMethod::create(['event_id' => $event->id, 'payment_method_id' => $method->id, 'is_enabled' => true]);
         $member = User::factory()->create(['name' => 'Mia Smithson']);
         $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);

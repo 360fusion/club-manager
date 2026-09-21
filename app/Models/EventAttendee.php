@@ -15,6 +15,7 @@ class EventAttendee extends Model
         'user_id',
         'name',
         'email',
+        'organisation',
         'notified_at',
         'is_guest',
         'ticket_tier_id',

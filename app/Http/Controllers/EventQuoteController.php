@@ -27,6 +27,17 @@ class EventQuoteController extends Controller
         return $this->respond($request, $event, $pricing);
     }
 
+    /**
+     * The same price, for an organiser building a booking on the registrations page.
+     */
+    public function organiser(Request $request, string $clubSlug, int $id, EventPricing $pricing): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $event = Event::where('club_id', $club->id)->findOrFail($id);
+
+        return $this->respond($request, $event, $pricing);
+    }
+
     public function guest(Request $request, string $clubSlug, string $eventSlug, EventPricing $pricing): JsonResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();

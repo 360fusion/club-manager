@@ -47,64 +47,106 @@ class EventRegistrationService
                 ? EventRegistration::where('event_id', $event->id)->where('user_id', $user->id)->first()
                 : null;
 
-            if ($existing && $existing->attendees()->whereNotNull('checked_in_at')->exists()) {
-                throw ValidationException::withMessages(['registration' => 'You have already been checked in, so this booking can no longer be changed.']);
-            }
+            return $this->persist($event, $existing, $user, $data);
+        });
+    }
 
-            $status = $data['status'] ?? 'attending';
-            $attendees = $this->prepareAttendees($event, $user, $status, $data['attendees'] ?? [], $data['contact_name'] ?? $user?->name ?? '');
-            $going = in_array($status, EventRegistration::HOLDING_PLACE, true);
-
-            if ($going) {
-                $status = $this->statusWithCapacity($event, $existing, $status, count($attendees));
-            }
-
-            $plainToken = null;
-            $fields = [
-                'contact_name' => $data['contact_name'] ?? $user?->name ?? '',
-                'contact_email' => $data['contact_email'] ?? $user?->email,
-                'contact_phone' => $data['contact_phone'] ?? null,
-                'notes' => $data['notes'] ?? null,
-                'status' => $status,
-            ];
-
-            $alreadyEmailed = [];
+    /**
+     * An organiser adds or changes a booking for someone: a member (linked to their account) or a visitor. Closing dates,
+     * who the event is open to and the guest limit do not apply to the organiser, and a full event can be overridden.
+     * Changing the people on a booking that already has a payment is refused if it would change the price.
+     *
+     * @param  array<string, mixed>  $data  see persist()
+     */
+    public function saveByOrganiser(Event $event, ?EventRegistration $existing, ?User $member, array $data, User $actor, bool $overCapacity = false): EventRegistration
+    {
+        return DB::transaction(function () use ($event, $existing, $member, $data, $actor, $overCapacity) {
+            $event = Event::whereKey($event->id)->lockForUpdate()->firstOrFail();
 
             if ($existing) {
-                $alreadyEmailed = $existing->attendees()->whereNotNull('notified_at')->whereNotNull('email')->pluck('email')->map(fn ($e) => strtolower($e))->all();
-                $existing->update($fields);
-                $existing->attendees()->delete();
-                $registration = $existing;
-            } else {
-                if (! $user) {
-                    $plainToken = Str::random(40);
-                    $fields['token_hash'] = hash('sha256', $plainToken);
-                }
-
-                $registration = EventRegistration::create($fields + ['event_id' => $event->id, 'user_id' => $user?->id]);
+                $existing = EventRegistration::where('event_id', $event->id)->lockForUpdate()->findOrFail($existing->id);
+                $member = $existing->user;
+            } elseif ($member && EventRegistration::where('event_id', $event->id)->where('user_id', $member->id)->exists()) {
+                throw ValidationException::withMessages(['member_id' => $member->name.' already has a booking for this event. Edit that booking instead.']);
             }
 
-            foreach ($attendees as $attendee) {
-                $emailed = ! empty($attendee['email']) && in_array(strtolower($attendee['email']), $alreadyEmailed, true);
-                $registration->attendees()->create($attendee + ['notified_at' => $emailed ? now() : null]);
-            }
-
-            $registration->load('attendees');
-
-            if ($going) {
-                $this->applyPricing($event, $registration, $attendees, $data, $existing);
-            }
-
-            $registration->plainToken = $plainToken;
-
-            $this->syncTierCounts($event);
-
-            if (! $going || $status === 'waitlisted') {
-                $this->promoteFromWaitlist($event);
-            }
-
-            return $registration;
+            return $this->persist($event, $existing, $member, $data, $actor, $overCapacity);
         });
+    }
+
+    /**
+     * Create or replace a booking's people and price. The event row is already locked.
+     *
+     * @param  array{status?: string, contact_name?: string, contact_email?: string|null, contact_phone?: string|null, notes?: string|null, internal_note?: string|null, attendees?: list<AttendeeInput>, payment_method?: mixed, promo_code?: mixed}  $data
+     */
+    private function persist(Event $event, ?EventRegistration $existing, ?User $user, array $data, ?User $organiser = null, bool $overCapacity = false): EventRegistration
+    {
+        if ($existing && $existing->attendees()->whereNotNull('checked_in_at')->exists()) {
+            throw ValidationException::withMessages(['registration' => $organiser ? 'Someone on this booking has been checked in, so it can no longer be changed.' : 'You have already been checked in, so this booking can no longer be changed.']);
+        }
+
+        $status = $data['status'] ?? 'attending';
+        $attendees = $this->prepareAttendees($event, $user, $status, $data['attendees'] ?? [], $data['contact_name'] ?? $user?->name ?? '', $organiser !== null);
+        $going = in_array($status, EventRegistration::HOLDING_PLACE, true);
+
+        if ($going && ! $overCapacity) {
+            $status = $this->statusWithCapacity($event, $existing, $status, count($attendees));
+        }
+
+        $plainToken = null;
+        $previousTotal = $existing?->total;
+        $fields = [
+            'contact_name' => $data['contact_name'] ?? $user?->name ?? '',
+            'contact_email' => $data['contact_email'] ?? $user?->email,
+            'contact_phone' => $data['contact_phone'] ?? null,
+            'notes' => $data['notes'] ?? null,
+            'status' => $status,
+        ];
+
+        if ($organiser) {
+            $fields['internal_note'] = $this->clean($data['internal_note'] ?? null);
+        }
+
+        $alreadyEmailed = [];
+
+        if ($existing) {
+            $alreadyEmailed = $existing->attendees()->whereNotNull('notified_at')->whereNotNull('email')->pluck('email')->map(fn ($e) => strtolower($e))->all();
+            $existing->update($fields);
+            $existing->attendees()->delete();
+            $registration = $existing;
+        } else {
+            if (! $user) {
+                $plainToken = Str::random(40);
+                $fields['token_hash'] = hash('sha256', $plainToken);
+            }
+
+            $registration = EventRegistration::create($fields + ['event_id' => $event->id, 'user_id' => $user?->id, 'created_by' => $organiser?->id]);
+        }
+
+        foreach ($attendees as $attendee) {
+            $emailed = ! empty($attendee['email']) && in_array(strtolower($attendee['email']), $alreadyEmailed, true);
+            $registration->attendees()->create($attendee + ['notified_at' => $emailed ? now() : null]);
+        }
+
+        $registration->load('attendees');
+
+        if ($going) {
+            $this->applyPricing($event, $registration, $attendees, $data, $existing, $organiser !== null);
+
+            if ($organiser && $existing && (float) $registration->amount_paid > 0 && (float) $registration->total !== (float) $previousTotal) {
+                throw ValidationException::withMessages(['registration' => 'This booking already has a payment on it, so a change that alters the price is not allowed. Adjust the payment first.']);
+            }
+        }
+
+        $registration->plainToken = $plainToken;
+
+        $this->syncTierCounts($event);
+
+        if (! $going || $status === 'waitlisted') {
+            $this->promoteFromWaitlist($event);
+        }
+
+        return $registration;
     }
 
     /**
@@ -113,7 +155,7 @@ class EventRegistrationService
      * @param  list<array<string, mixed>>  $people
      * @param  array<string, mixed>  $data
      */
-    private function applyPricing(Event $event, EventRegistration $registration, array $people, array $data, ?EventRegistration $before): void
+    private function applyPricing(Event $event, EventRegistration $registration, array $people, array $data, ?EventRegistration $before, bool $byOrganiser = false): void
     {
         $pricing = app(EventPricing::class);
         $enabled = $pricing->enabledMethods($event);
@@ -124,6 +166,10 @@ class EventRegistrationService
 
             if (! $chosen) {
                 throw ValidationException::withMessages(['payment_method' => 'That way of paying is not available for this event.']);
+            }
+
+            if ($byOrganiser && $chosen->method->isOnline()) {
+                throw ValidationException::withMessages(['payment_method' => 'Online payments are made by the person paying. Choose pay later or another way, and they can pay online from their booking link.']);
             }
         }
 
@@ -288,24 +334,14 @@ class EventRegistrationService
     }
 
     /**
-     * A booking the organiser adds by hand (a phone call, a late request). Closing dates and
-     * capacity do not stop them; the organiser decides.
+     * A fresh private link for a visitor's booking (the old one stops working), for when their confirmation is sent again.
      */
-    public function addManual(Event $event, string $name, ?string $email = null, ?string $dietary = null): EventRegistration
+    public function renewToken(EventRegistration $registration): string
     {
-        return DB::transaction(function () use ($event, $name, $email, $dietary) {
-            $registration = EventRegistration::create([
-                'event_id' => $event->id,
-                'contact_name' => $name,
-                'contact_email' => $email,
-                'status' => 'attending',
-            ]);
+        $token = Str::random(40);
+        $registration->update(['token_hash' => hash('sha256', $token)]);
 
-            $registration->attendees()->create(['name' => $name, 'is_guest' => false, 'dietary_requirements' => $this->clean($dietary)]);
-            $this->syncTierCounts($event);
-
-            return $registration->load('attendees');
-        });
+        return $token;
     }
 
     /**
@@ -408,7 +444,7 @@ class EventRegistrationService
      * @param  list<AttendeeInput>  $people
      * @return list<array<string, mixed>>
      */
-    private function prepareAttendees(Event $event, ?User $user, string $status, array $people, string $bookerName): array
+    private function prepareAttendees(Event $event, ?User $user, string $status, array $people, string $bookerName, bool $ignoreGuestLimit = false): array
     {
         // A reply that isn't "going" still records the booker, so the roll stays complete.
         if (! in_array($status, EventRegistration::HOLDING_PLACE, true)) {
@@ -421,7 +457,7 @@ class EventRegistrationService
 
         $guests = collect($people)->where('is_guest', true)->count();
 
-        if ($guests > $this->maxGuests($event)) {
+        if (! $ignoreGuestLimit && $guests > $this->maxGuests($event)) {
             throw ValidationException::withMessages(['attendees' => 'You can bring at most '.$this->maxGuests($event).' guests.']);
         }
 
@@ -448,6 +484,7 @@ class EventRegistrationService
                 'user_id' => $isGuest || $index > 0 ? null : $user?->id,
                 'name' => $name,
                 'email' => $email,
+                'organisation' => $this->clean($person['organisation'] ?? null),
                 'is_guest' => $isGuest || $index > 0,
                 'dietary_requirements' => $this->clean($person['dietary_requirements'] ?? null),
                 'attending_dining' => false,

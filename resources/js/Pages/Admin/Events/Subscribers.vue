@@ -3,6 +3,8 @@ import { ref, computed } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import PaymentPanel from '@/Components/Events/PaymentPanel.vue';
+import OrganiserBookingModal from '@/Components/Events/OrganiserBookingModal.vue';
+import DropdownMenu from '@/Components/Ui/DropdownMenu.vue';
 import { formatMoney } from '@/Utils/currency';
 
 // Editing one person's meal
@@ -62,19 +64,24 @@ const stats = computed(() => {
   const unpaidCount = (props.subscribers || []).filter(s => s.payment_status === 'unpaid' || s.payment_status === 'pending').length;
   const diningCount = (props.subscribers || []).filter(s => s.has_food_choice).length;
 
-  return { total, paidCount, unpaidCount, diningCount };
+  const waitingCount = (props.subscribers || []).filter(s => s.attendance_status === 'waitlisted').length;
+
+  return { total, paidCount, unpaidCount, diningCount, waitingCount };
 });
 
-const newName = ref('');
-const newEmail = ref('');
+// The add / edit booking popup
+const bookingOpen = ref(false);
+const editingId = ref(null);
+const openAdd = () => { editingId.value = null; bookingOpen.value = true; };
+const openEdit = (registrationId) => { editingId.value = registrationId; bookingOpen.value = true; };
 
-const addBooking = () => {
-  if (!newName.value.trim()) return;
-  router.post(route('admin.events.registrations.store', { clubSlug: props.club.slug, id: props.event.id }), { name: newName.value, email: newEmail.value || null }, {
-    preserveScroll: true,
-    onSuccess: () => { newName.value = ''; newEmail.value = ''; },
-  });
+const resendConfirmation = (sub) => {
+  router.post(route('admin.events.registrations.resend', { clubSlug: props.club.slug, id: props.event.id, registrationId: sub.registration_id }), {}, { preserveScroll: true });
 };
+
+const buttonBase = 'inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all';
+const secondaryButton = `${buttonBase} border border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700`;
+const menuItem = 'block w-full px-3.5 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800';
 
 const cancelBooking = (sub) => {
   if (confirm(`Cancel ${sub.is_guest ? sub.booked_by + "'s" : sub.name + "'s"} booking (${sub.is_guest ? 'including guests' : 'and any guests'})?`)) {
@@ -111,34 +118,44 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
 
     <div class="space-y-6">
       
-      <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <div class="flex items-center gap-2 mb-1">
-            <Link
-              :href="route('admin.events.index', club.slug)"
-              class="inline-flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              ← Back to Events
-            </Link>
+      <!-- Header: title and details, then the actions -->
+      <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+        <Link :href="route('admin.events.index', club.slug)" class="inline-flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          ← Back to Events
+        </Link>
+
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div class="min-w-0">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">👥 {{ event.title }}</h2>
+            <div class="flex items-center gap-3 text-xs mt-1.5 flex-wrap text-slate-500 dark:text-slate-400 font-medium">
+              <span>📅 {{ event.starts_at || 'Date TBD' }}</span>
+              <span v-if="event.location">📍 {{ event.location }}</span>
+              <span v-if="event.has_dining" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
+                🍽️ 3-Course Dining ({{ $cs }}{{ event.dining_price }})
+              </span>
+            </div>
           </div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">
-            👥 {{ event.title }} — Subscriptions & RSVPs
-          </h2>
-          <div class="flex items-center gap-3 text-xs mt-1.5 flex-wrap text-slate-500 dark:text-slate-400 font-medium">
-            <span>📅 {{ event.starts_at || 'Date TBD' }}</span>
-            <span v-if="event.location">📍 {{ event.location }}</span>
-            <span v-if="event.has_dining" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-              🍽️ 3-Course Dining ({{ $cs }}{{ event.dining_price }})
-            </span>
+
+          <div class="flex flex-wrap items-center gap-2 lg:justify-end">
+            <button type="button" :class="`${buttonBase} bg-blue-600 text-white shadow-md shadow-blue-600/20 hover:bg-blue-700`" @click="openAdd">+ Add booking</button>
+            <Link :href="route('admin.events.checkin', { clubSlug: club.slug, id: event.id })" :class="`${buttonBase} bg-emerald-600 text-white hover:bg-emerald-700`">✓ Check-in</Link>
+            <DropdownMenu label="Print & export" :button-class="secondaryButton">
+              <a :href="route('admin.events.guest_list', { clubSlug: club.slug, id: event.id })" target="_blank" :class="menuItem" role="menuitem">🖨️ Guest list</a>
+              <a v-if="event.has_dining" :href="route('admin.events.catering', { clubSlug: club.slug, id: event.id })" target="_blank" :class="menuItem" role="menuitem">🍽️ Catering summary</a>
+              <a :href="route('admin.events.export', { clubSlug: club.slug, id: event.id })" :class="menuItem" role="menuitem">⬇ Download CSV</a>
+            </DropdownMenu>
+            <Link :href="route('admin.events.edit', { clubSlug: club.slug, id: event.id })" :class="secondaryButton">✏️ Edit event</Link>
           </div>
         </div>
-<!-- Bulk mark as paid -->
+      </div>
+
+      <!-- Bulk mark as paid -->
       <div v-if="selected.length" class="flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 p-3 text-xs dark:border-emerald-800/60 dark:bg-emerald-950/30">
         <span class="font-bold text-emerald-800 dark:text-emerald-200">{{ selected.length }} selected</span>
         <button type="button" class="rounded-lg bg-emerald-600 px-3.5 py-2 font-bold text-white hover:bg-emerald-700" @click="bulkPaid">Mark selected as paid</button>
         <button type="button" class="font-semibold text-slate-600 dark:text-slate-300" @click="selected = []">Clear</button>
       </div>
+
 
       <div v-if="mealFor" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" role="dialog" aria-modal="true" @click.self="mealFor = null">
         <form class="w-full max-w-md space-y-3 rounded-2xl bg-white p-5 text-xs shadow-xl dark:bg-slate-900" @submit.prevent="saveMeal">
@@ -170,36 +187,10 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
 
       <PaymentPanel v-if="panel" :key="panel.id" :club-slug="club.slug" :event-id="event.id" :registration-id="panel.id" :name="panel.name" @close="panel = null" @changed="reload" />
 
-      <!-- Add a booking by hand -->
-      <form class="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80" @submit.prevent="addBooking">
-        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Add a booking:</span>
-        <input v-model="newName" type="text" maxlength="150" placeholder="Name" class="min-w-[10rem] flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
-        <input v-model="newEmail" type="email" maxlength="255" placeholder="Email (optional)" class="min-w-[10rem] flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
-        <button type="submit" class="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold">Add</button>
-      </form>
-
-      
-        <div class="flex flex-wrap items-center gap-2">
-          <a :href="route('admin.events.guest_list', { clubSlug: club.slug, id: event.id })" target="_blank" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all">🖨️ Guest list</a>
-          <a v-if="event.has_dining" :href="route('admin.events.catering', { clubSlug: club.slug, id: event.id })" target="_blank" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all">🍽️ Catering summary</a>
-          <a :href="route('admin.events.export', { clubSlug: club.slug, id: event.id })" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all">⬇ CSV</a>
-          <Link
-            :href="route('admin.events.checkin', { clubSlug: club.slug, id: event.id })"
-            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-all"
-          >
-            ✓ Check-in
-          </Link>
-          <Link
-            :href="route('admin.events.edit', { clubSlug: club.slug, id: event.id })"
-            class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1"
-          >
-            ✏️ Edit Event Details
-          </Link>
-        </div>
-      </div>
+      <OrganiserBookingModal :open="bookingOpen" :event="event" :club-slug="club.slug" :can-mark-paid="canManagePayments" :registration-id="editingId" @close="bookingOpen = false" @edit="openEdit" />
 
       <!-- Live KPI Cards Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Subscribed</div>
           <div class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ stats.total }}</div>
@@ -222,6 +213,12 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Awaiting Payment</div>
           <div class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ stats.unpaidCount }}</div>
           <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Unpaid Subscriptions</div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Waiting List</div>
+          <div class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ stats.waitingCount }}</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">People waiting for a place</div>
         </div>
       </div>
 
@@ -298,6 +295,8 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
                     <span v-else-if="sub.attendance_status === 'cancelled' || sub.attendance_status === 'declined'" class="ml-1 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">{{ sub.attendance_status === 'declined' ? 'Declined' : 'Cancelled' }}</span>
                   </div>
                   <div v-if="sub.booked_by" class="text-[10px] text-slate-400 mt-0.5">Guest of {{ sub.booked_by }}</div>
+                  <div v-else-if="sub.added_by_organiser" class="text-[10px] text-slate-400 mt-0.5">Added by an organiser</div>
+                  <div v-if="sub.internal_note && !sub.is_guest" class="mt-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300" :title="sub.internal_note">📝 {{ sub.internal_note }}</div>
                   <div v-if="sub.member_number" class="text-[10px] text-slate-400 font-mono mt-0.5">
                     Mem #: {{ sub.member_number }}
                   </div>
@@ -376,8 +375,14 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
 
                 <!-- Booking actions (act on the whole booking, guests included) -->
                 <td class="p-3 text-right whitespace-nowrap">
-                  <button v-if="sub.attendance_status === 'waitlisted' && !sub.is_guest" type="button" class="mr-2 text-[11px] font-bold text-blue-600 hover:underline dark:text-blue-400" @click="promoteBooking(sub)">Move up</button>
-                  <button v-if="!['cancelled', 'declined'].includes(sub.attendance_status) && !sub.is_guest" type="button" class="text-[11px] font-bold text-rose-600 hover:underline dark:text-rose-400" @click="cancelBooking(sub)">Cancel</button>
+                  <DropdownMenu v-if="!sub.is_guest" :aria-label="`Actions for ${sub.name}`" button-class="rounded-lg border border-slate-300 px-2.5 py-1 text-base leading-none text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <template #trigger><span aria-hidden="true">⋯</span></template>
+                    <button v-if="!['cancelled', 'declined'].includes(sub.attendance_status)" type="button" :class="menuItem" role="menuitem" @click="openEdit(sub.registration_id)">✏️ Edit booking</button>
+                    <button v-if="canManagePayments && Number(sub.total) > 0" type="button" :class="menuItem" role="menuitem" @click="panel = { id: sub.registration_id, name: sub.name }">💳 Payment and history</button>
+                    <button v-if="sub.email && !['cancelled', 'declined'].includes(sub.attendance_status)" type="button" :class="menuItem" role="menuitem" @click="resendConfirmation(sub)">✉️ Resend confirmation</button>
+                    <button v-if="sub.attendance_status === 'waitlisted'" type="button" :class="menuItem" role="menuitem" @click="promoteBooking(sub)">⬆ Move up from waiting list</button>
+                    <button v-if="!['cancelled', 'declined'].includes(sub.attendance_status)" type="button" :class="`${menuItem} !text-rose-600 dark:!text-rose-400`" role="menuitem" @click="cancelBooking(sub)">✕ Cancel booking</button>
+                  </DropdownMenu>
                 </td>
               </tr>
 

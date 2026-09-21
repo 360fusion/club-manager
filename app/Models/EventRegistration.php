@@ -43,6 +43,8 @@ class EventRegistration extends Model
         'paypal_capture_id',
         'summons_sent_at',
         'reminder_sent_at',
+        'internal_note',
+        'created_by',
     ];
 
     protected $hidden = ['token_hash', 'stripe_session_id', 'stripe_payment_intent', 'paypal_order_id', 'paypal_capture_id'];

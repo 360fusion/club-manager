@@ -45,6 +45,26 @@ class EventMailer
     }
 
     /**
+     * The booking confirmation an organiser sends: members get a link to their bookings page, visitors their private link
+     * (a new one if the original is not to hand, since only its hash is kept).
+     */
+    public function bookingConfirmation(EventRegistration $registration, ?string $plainToken): void
+    {
+        if ($registration->user_id) {
+            $this->memberBooked($registration);
+
+            return;
+        }
+
+        $this->send($registration, function () use ($registration, $plainToken) {
+            $registration = $registration->fresh(['event.club', 'attendees']);
+            $token = $plainToken ?? app(EventRegistrationService::class)->renewToken($registration);
+
+            return new EventBookingMail($registration->event, $registration, route('public.event.booking', ['clubSlug' => $registration->event->club->slug, 'token' => $token]));
+        });
+    }
+
+    /**
      * @param  callable(): Mailable  $mail
      */
     private function send(EventRegistration $registration, callable $mail): void
