@@ -1,6 +1,9 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import PaymentChoice from '@/Components/Events/PaymentChoice.vue';
+import { useEventQuote } from '@/Composables/useEventQuote';
+import { formatMoney } from '@/Utils/currency';
 
 const props = defineProps({
   club: Object,
@@ -25,7 +28,26 @@ const form = useForm({
   contact_name: '',
   contact_email: '',
   contact_phone: '',
+  payment_method: null,
+  promo_code: '',
   attendees: [blankPerson()],
+});
+
+// Live price from the server, so what is shown is what is charged.
+const showPromo = ref(false);
+const { quote, error: quoteError, refresh } = useEventQuote(
+  route('public.event.quote', { clubSlug: props.club.slug, eventSlug: props.event.slug }),
+  () => ({
+    promo_code: form.promo_code || null,
+    attendees: form.attendees.map((a, index) => ({ is_guest: index > 0, ticket_tier_id: a.ticket_tier_id, attending_dining: a.attending_dining })),
+  }),
+);
+
+watch(() => [form.attendees, form.promo_code], () => { if (props.canBookAsGuest && props.event.requires_payment) refresh(); }, { deep: true, immediate: true });
+
+watch(quote, (value) => {
+  const options = value?.options ?? [];
+  if (options.length && !options.some((o) => o.id === form.payment_method)) form.payment_method = options[0].id;
 });
 
 const hasMenu = computed(() => props.event.has_dining && COURSES.some((c) => (props.event.menu?.[c.key] ?? []).length));
@@ -76,8 +98,11 @@ const label = 'block text-[11px] font-semibold text-slate-400 uppercase tracking
         <div class="grid gap-2 text-sm text-slate-300 sm:grid-cols-2">
           <div>📅 {{ event.starts_at }}<span v-if="event.ends_at"> to {{ event.ends_at }}</span></div>
           <div v-if="event.location">📍 {{ event.location }}</div>
-          <div v-if="Number(event.price) > 0 || tiers.length">🎟️
-            <template v-if="tiers.length">{{ tiers.map((t) => `${t.name} ${$cs}${t.price}`).join(' · ') }}</template>
+          <div v-if="event.requires_payment && (Number(event.price) > 0 || tiers.length)">🎟️
+            <template v-if="event.advertised && event.advertised.mode === 'all_in' && !tiers.length">
+              {{ formatMoney(event.advertised.headline) }}<span v-if="event.advertised.has_saving" class="text-emerald-400"> (or {{ formatMoney(event.advertised.lowest) }} if you pay online)</span>
+            </template>
+            <template v-else-if="tiers.length">{{ tiers.map((t) => `${t.name} ${$cs}${t.price}`).join(' · ') }}</template>
             <template v-else>{{ $cs }}{{ event.price }}</template>
           </div>
           <div v-if="event.places_left !== null">👥 {{ event.places_left > 0 ? `${event.places_left} places left` : 'Fully booked' }}</div>
@@ -180,6 +205,19 @@ const label = 'block text-[11px] font-semibold text-slate-400 uppercase tracking
         <button v-if="event.max_guests > 0" type="button" :disabled="!canAddGuest" class="text-sm font-semibold text-blue-400 hover:underline disabled:opacity-50" @click="addGuest">
           + Add a guest <span class="font-normal text-slate-500">({{ form.attendees.length - 1 }} of {{ event.max_guests }})</span>
         </button>
+
+        <div v-if="event.requires_payment" class="space-y-3">
+          <div>
+            <button v-if="!showPromo" type="button" class="text-sm font-semibold text-blue-400 hover:underline" @click="showPromo = true">Have a promo code?</button>
+            <div v-else class="max-w-xs">
+              <label :class="label">Promo code</label>
+              <input v-model="form.promo_code" type="text" maxlength="40" :class="[field, 'font-mono uppercase']" />
+              <p v-if="form.errors.promo_code" class="mt-1 text-xs text-rose-400">{{ form.errors.promo_code }}</p>
+            </div>
+          </div>
+          <PaymentChoice v-model="form.payment_method" :quote="quote" :error="quoteError" tone="dark" />
+          <p v-if="form.errors.payment_method" class="text-xs text-rose-400">{{ form.errors.payment_method }}</p>
+        </div>
 
         <button type="submit" :disabled="form.processing" class="w-full rounded-xl bg-blue-600 py-3 text-sm font-bold text-white hover:bg-blue-500 disabled:opacity-60">
           {{ full ? 'Join the waiting list' : 'Book now' }}

@@ -1,5 +1,6 @@
 <script setup>
 import EventBookingModal from '@/Components/Events/EventBookingModal.vue';
+import { formatMoney } from '@/Utils/currency';
 import { ref, computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
@@ -254,6 +255,11 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
                 </div>
                 <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ event.title }}</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400">📍 {{ event.location }} • 🕒 {{ event.starts_at }}</p>
+                <p v-if="event.requires_payment && event.advertised && Number(event.advertised.headline) > 0" class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                  {{ formatMoney(event.advertised.headline) }}
+                  <span v-if="event.advertised.has_saving" class="font-normal text-emerald-600 dark:text-emerald-400">or {{ formatMoney(event.advertised.lowest) }} if you pay online</span>
+                  <span v-if="event.places_left !== null" class="ml-2 font-normal text-slate-500 dark:text-slate-400">· {{ event.places_left > 0 ? `${event.places_left} places left` : 'full' }}</span>
+                </p>
                 <p v-if="event.description" class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{{ event.description }}</p>
               </div>
 

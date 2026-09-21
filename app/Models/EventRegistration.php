@@ -32,6 +32,9 @@ class EventRegistration extends Model
         'amount_paid',
         'amount_refunded',
         'payment_reference',
+        'method_adjustment',
+        'promo_code',
+        'promo_discount',
         'due_at',
         'paid_at',
         'stripe_session_id',
@@ -54,6 +57,8 @@ class EventRegistration extends Model
             'total' => 'decimal:2',
             'amount_paid' => 'decimal:2',
             'amount_refunded' => 'decimal:2',
+            'method_adjustment' => 'decimal:2',
+            'promo_discount' => 'decimal:2',
             'due_at' => 'datetime',
             'paid_at' => 'datetime',
             'summons_sent_at' => 'datetime',
@@ -91,6 +96,59 @@ class EventRegistration extends Model
     public function booker(): ?EventAttendee
     {
         return $this->attendees->firstWhere('is_guest', false) ?? $this->attendees->first();
+    }
+
+    /**
+     * @return BelongsTo<ClubPaymentMethod, $this>
+     */
+    public function paymentMethod(): BelongsTo
+    {
+        return $this->belongsTo(ClubPaymentMethod::class, 'payment_method_id');
+    }
+
+    /**
+     * @return HasMany<EventPaymentLog, $this>
+     */
+    public function paymentLog(): HasMany
+    {
+        return $this->hasMany(EventPaymentLog::class, 'registration_id')->orderBy('created_at')->orderBy('id');
+    }
+
+    /**
+     * What is still owed.
+     */
+    public function balanceDue(): float
+    {
+        return max(0.0, round((float) $this->total - (float) $this->amount_paid, 2));
+    }
+
+    /**
+     * The status the money says: paid in full, part paid, or unpaid. Waived and refunded are decisions
+     * a person made, so they stay until someone changes them.
+     */
+    public function statusFromAmounts(): string
+    {
+        if (in_array($this->payment_status, ['waived', 'refunded'], true)) {
+            return $this->payment_status;
+        }
+
+        if ((float) $this->total <= 0) {
+            return 'paid';
+        }
+
+        $paid = (float) $this->amount_paid;
+
+        return $paid + 0.001 >= (float) $this->total ? 'paid' : ($paid > 0 ? 'part_paid' : 'unpaid');
+    }
+
+    /**
+     * The reference someone quotes when paying by bank, unique to this booking.
+     */
+    public function makeReference(?ClubPaymentMethod $method = null): string
+    {
+        $prefix = strtoupper($method?->bankDetails()['reference_prefix'] ?? '') ?: 'EVT';
+
+        return sprintf('%s-%d-%05d', $prefix, $this->event_id, $this->id);
     }
 
     public function headcount(): int

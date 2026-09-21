@@ -32,6 +32,8 @@ use App\Http\Controllers\ClubSettingsController;
 use App\Http\Controllers\ClubShortLinkController;
 use App\Http\Controllers\EventAdminController;
 use App\Http\Controllers\EventGuestListController;
+use App\Http\Controllers\EventPaymentController;
+use App\Http\Controllers\EventQuoteController;
 use App\Http\Controllers\GoCardlessWebhookController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LegacyClubUrlController;
@@ -49,6 +51,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficerRosterAdminController;
 use App\Http\Controllers\PageAdminController;
 use App\Http\Controllers\PasswordlessRsvpController;
+use App\Http\Controllers\PaymentOptionsController;
 use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicSiteController;
@@ -106,6 +109,7 @@ Route::get('/site/oxford-boating', function () {
 });
 
 Route::get('/site/{clubSlug}/events/{eventSlug}', [PublicEventController::class, 'show'])->name('public.event');
+Route::post('/site/{clubSlug}/events/{eventSlug}/quote', [EventQuoteController::class, 'guest'])->name('public.event.quote')->middleware('throttle:public-forms');
 Route::post('/site/{clubSlug}/events/{eventSlug}/register', [PublicEventController::class, 'register'])->name('public.event.register')->middleware('throttle:public-forms');
 Route::get('/site/{clubSlug}/booking/{token}', [PublicEventController::class, 'booking'])->name('public.event.booking')->middleware('throttle:auth-forms');
 Route::post('/site/{clubSlug}/booking/{token}/cancel', [PublicEventController::class, 'cancel'])->name('public.event.booking.cancel')->middleware('throttle:auth-forms');
@@ -183,7 +187,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/events/create', [EventAdminController::class, 'edit'])->name('admin.events.create');
     Route::get('/{clubSlug}/admin/events/{id}/edit', [EventAdminController::class, 'edit'])->name('admin.events.edit');
     Route::get('/{clubSlug}/admin/events/{id}/subscribers', [EventAdminController::class, 'subscribers'])->name('admin.events.subscribers');
-    Route::post('/{clubSlug}/admin/events/{id}/subscribers/{registrationId}/payment-status', [EventAdminController::class, 'updateSubscriberPaymentStatus'])->name('admin.events.subscribers.payment_status');
+    Route::get('/{clubSlug}/admin/events/{id}/registrations/{registrationId}/payment', [EventPaymentController::class, 'history'])->name('admin.events.payment.history')->middleware('club.admin:manage_billing');
+    Route::post('/{clubSlug}/admin/events/{id}/registrations/{registrationId}/paid', [EventPaymentController::class, 'markPaid'])->name('admin.events.payment.paid')->middleware('club.admin:manage_billing');
+    Route::post('/{clubSlug}/admin/events/{id}/registrations/{registrationId}/unpaid', [EventPaymentController::class, 'markUnpaid'])->name('admin.events.payment.unpaid')->middleware('club.admin:manage_billing');
+    Route::post('/{clubSlug}/admin/events/{id}/registrations/{registrationId}/waive', [EventPaymentController::class, 'waive'])->name('admin.events.payment.waive')->middleware('club.admin:manage_billing');
+    Route::post('/{clubSlug}/admin/events/{id}/registrations/{registrationId}/refund', [EventPaymentController::class, 'refund'])->name('admin.events.payment.refund')->middleware('club.admin:manage_billing');
+    Route::post('/{clubSlug}/admin/events/{id}/bulk-paid', [EventPaymentController::class, 'bulkPaid'])->name('admin.events.payment.bulk_paid')->middleware('club.admin:manage_billing');
     Route::post('/{clubSlug}/admin/events', [EventAdminController::class, 'store'])->name('admin.events.store');
     Route::delete('/{clubSlug}/admin/events/{id}', [EventAdminController::class, 'destroy'])->name('admin.events.destroy');
     Route::post('/{clubSlug}/admin/events/{id}/registrations', [EventAdminController::class, 'addRegistration'])->name('admin.events.registrations.store');
@@ -402,6 +411,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/news', [MemberListController::class, 'news'])->name('member.news');
     Route::get('/members/{slug}/meetings', [MemberListController::class, 'meetings'])->name('member.meetings');
     Route::post('/members/{slug}/meetings/{id}/quick-rsvp', [QuickRsvpController::class, 'meeting'])->name('member.meetings.quick_rsvp');
+    Route::post('/members/{slug}/events/{id}/quote', [EventQuoteController::class, 'member'])->name('member.events.quote');
     Route::post('/members/{slug}/events/{id}/quick-rsvp', [QuickRsvpController::class, 'event'])->name('member.events.quick_rsvp');
     Route::get('/members/{slug}/events', [MemberPortalController::class, 'events'])->name('member.events');
     Route::get('/members/{slug}/news/{id}', [MemberPortalController::class, 'showPost'])->name('member.posts.show');
@@ -420,6 +430,10 @@ Route::middleware(['auth'])->group(function () {
     // Admin Attendance Check-In Routes
     Route::get('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'show'])->name('admin.events.checkin');
     Route::post('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'checkIn'])->name('admin.events.checkin.store');
+    Route::get('/{clubSlug}/admin/payment-options', [PaymentOptionsController::class, 'index'])->name('admin.payment_options.index');
+    Route::post('/{clubSlug}/admin/payment-options', [PaymentOptionsController::class, 'store'])->name('admin.payment_options.store');
+    Route::put('/{clubSlug}/admin/payment-options/{id}', [PaymentOptionsController::class, 'update'])->name('admin.payment_options.update');
+    Route::delete('/{clubSlug}/admin/payment-options/{id}', [PaymentOptionsController::class, 'destroy'])->name('admin.payment_options.destroy');
     Route::get('/{clubSlug}/admin/events/{id}/guest-list', [EventGuestListController::class, 'guestList'])->name('admin.events.guest_list');
     Route::get('/{clubSlug}/admin/events/{id}/catering', [EventGuestListController::class, 'catering'])->name('admin.events.catering');
     Route::get('/{clubSlug}/admin/events/{id}/export', [EventGuestListController::class, 'export'])->name('admin.events.export');

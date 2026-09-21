@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\Club;
+use App\Models\ClubPaymentMethod;
 use App\Models\ClubType;
 use App\Models\Event;
 use App\Models\EventMenuItem;
 use App\Models\User;
+use App\Services\Events\EventPricing;
 use App\Services\Events\EventRegistrationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -207,5 +209,81 @@ class EventAdminFormTest extends TestCase
 
         $otherEvent = Event::create(['club_id' => $this->club->id, 'title' => 'Other', 'slug' => 'other', 'starts_at' => now()->addWeek(), 'status' => 'upcoming']);
         $this->actingAs($this->admin)->post(route('admin.events.registrations.cancel', ['clubSlug' => 'club-a', 'id' => $otherEvent->id, 'registrationId' => $waiting->id]))->assertNotFound();
+    }
+
+    private function method(string $type, string $label, ?Club $club = null): ClubPaymentMethod
+    {
+        return ClubPaymentMethod::create(['club_id' => ($club ?? $this->club)->id, 'type' => $type, 'label' => $label]);
+    }
+
+    public function test_payment_options_fees_and_the_advertised_price_are_saved_with_the_event(): void
+    {
+        config(['events.online_payments' => true]);
+        $online = $this->method('card_online', 'Pay online');
+        $door = $this->method('cash_on_door', 'On the night');
+
+        $this->store(['price' => 50, 'requires_payment' => true, 'booking_fee_type' => 'fixed', 'booking_fee_amount' => 2, 'booking_fee_scope' => 'per_booking', 'booking_fee_label' => 'Admin fee', 'price_display' => 'all_in', 'ticket_tiers' => [], 'payment_methods' => [
+            ['payment_method_id' => $online->id, 'is_enabled' => true, 'adjustment_kind' => 'discount', 'adjustment_mode' => 'fixed', 'adjustment_amount' => 3, 'adjustment_scope' => 'per_person'],
+            ['payment_method_id' => $door->id, 'is_enabled' => true, 'adjustment_kind' => 'fee', 'adjustment_mode' => 'fixed', 'adjustment_amount' => 5, 'adjustment_scope' => 'per_person'],
+        ]])->assertSessionHasNoErrors();
+
+        $event = Event::sole();
+        $this->assertSame('all_in', $event->price_display);
+        $this->assertSame('Admin fee', $event->booking_fee_label);
+        $this->assertSame(2, $event->paymentMethods()->count());
+
+        $this->actingAs($this->admin)->get(route('admin.events.edit', ['clubSlug' => 'club-a', 'id' => $event->id]))->assertInertia(fn ($page) => $page
+            ->has('clubPaymentMethods', 2)
+            ->has('enabledMethods', 2)
+            ->where('pricePreview.advertised.headline', 57)
+            ->where('pricePreview.advertised.lowest', 49)
+            ->where('pricePreview.scenarios.0.label', '1 member')
+            ->where('pricePreview.scenarios.0.options.0.total', 49));
+    }
+
+    public function test_a_fee_on_online_or_bank_and_another_clubs_option_are_refused(): void
+    {
+        $online = $this->method('card_online', 'Pay online');
+        $bank = $this->method('bank_transfer', 'Bank');
+        $otherClub = Club::create(['club_type_id' => $this->club->club_type_id, 'name' => 'Club B', 'slug' => 'club-b', 'status' => 'active']);
+        $foreign = $this->method('pay_later', 'Foreign', $otherClub);
+
+        foreach ([$online, $bank] as $method) {
+            $this->store(['payment_methods' => [['payment_method_id' => $method->id, 'is_enabled' => true, 'adjustment_kind' => 'fee', 'adjustment_mode' => 'fixed', 'adjustment_amount' => 2]]])->assertSessionHasErrors('payment_methods');
+        }
+
+        $this->store(['payment_methods' => [['payment_method_id' => $foreign->id, 'is_enabled' => true]]])->assertSessionHasErrors('payment_methods');
+        $this->assertSame(0, Event::count());
+    }
+
+    public function test_turning_an_option_off_or_removing_it_from_the_event_keeps_the_club_option(): void
+    {
+        $bank = $this->method('bank_transfer', 'Bank');
+        $this->store(['payment_methods' => [['payment_method_id' => $bank->id, 'is_enabled' => true]]]);
+        $event = Event::sole();
+
+        $this->actingAs($this->admin)->post(route('admin.events.store', ['clubSlug' => 'club-a']), $this->payload(['id' => $event->id, 'payment_methods' => []]))->assertSessionHasNoErrors();
+
+        $this->assertSame(0, $event->paymentMethods()->count());
+        $this->assertSame(1, ClubPaymentMethod::count());
+    }
+
+    public function test_online_card_payment_is_not_offered_until_it_is_switched_on(): void
+    {
+        $online = $this->method('card_online', 'Pay online');
+        $bank = $this->method('bank_transfer', 'Bank');
+        $this->store(['price' => 50, 'requires_payment' => true, 'ticket_tiers' => [], 'payment_methods' => [
+            ['payment_method_id' => $online->id, 'is_enabled' => true],
+            ['payment_method_id' => $bank->id, 'is_enabled' => true],
+        ]]);
+        $event = Event::sole();
+        $member = $this->join('member');
+        $pricing = app(EventPricing::class);
+
+        config(['events.online_payments' => false]);
+        $this->assertSame(['Bank'], $pricing->enabledMethods($event)->map(fn ($o) => $o->method->label)->all());
+
+        config(['events.online_payments' => true]);
+        $this->assertEqualsCanonicalizing(['Bank', 'Pay online'], $pricing->enabledMethods($event)->map(fn ($o) => $o->method->label)->all());
     }
 }

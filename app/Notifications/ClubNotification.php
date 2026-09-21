@@ -5,8 +5,10 @@ namespace App\Notifications;
 use App\Models\Club;
 use App\Models\ClubUpdate;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\Post;
+use App\Support\Currencies;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -25,6 +27,8 @@ class ClubNotification extends Notification
     public const NOTICE = 'notice';
 
     public const MEMBERSHIP = 'membership';
+
+    public const PAYMENT = 'payment';
 
     /**
      * @param  array<string, mixed>  $params  route parameters for the link
@@ -66,6 +70,21 @@ class ClubNotification extends Notification
             $club,
             'member.events',
             ['slug' => $club->slug],
+        );
+    }
+
+    public static function payment(EventRegistration $registration, Club $club): self
+    {
+        $due = $registration->due_at;
+
+        return new self(
+            self::PAYMENT,
+            'Payment due: '.$registration->event->title,
+            Currencies::format($registration->balanceDue(), $club).($due ? ' to pay by '.$due->format('j M Y') : ' still to pay'),
+            $club,
+            'member.events',
+            ['slug' => $club->slug],
+            true,
         );
     }
 

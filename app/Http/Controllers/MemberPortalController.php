@@ -360,6 +360,8 @@ class MemberPortalController extends Controller
         $validated = $request->validate([
             'attendance_status' => 'required|in:attending,declined,tentative',
             'notes' => 'nullable|string|max:1000',
+            'payment_method' => 'nullable|integer|max:4294967295',
+            'promo_code' => 'nullable|string|max:40',
             'attendees' => 'nullable|array|max:50',
             'attendees.*.name' => 'nullable|string|max:150',
             'attendees.*.is_guest' => 'nullable|boolean',
@@ -374,6 +376,8 @@ class MemberPortalController extends Controller
         $registrations->register($event, $user, [
             'status' => $validated['attendance_status'],
             'notes' => $validated['notes'] ?? null,
+            'payment_method' => $validated['payment_method'] ?? null,
+            'promo_code' => $validated['promo_code'] ?? null,
             'attendees' => $validated['attendees'] ?? [],
         ]);
 

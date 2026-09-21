@@ -2,11 +2,14 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import PaymentPanel from '@/Components/Events/PaymentPanel.vue';
+import { formatMoney } from '@/Utils/currency';
 
 const props = defineProps({
   club: Object,
   event: Object,
   subscribers: Array,
+  canManagePayments: { type: Boolean, default: false },
 });
 
 const activeTab = ref('all'); // all, paid, unpaid, dining
@@ -61,17 +64,23 @@ const promoteBooking = (sub) => {
   router.post(route('admin.events.registrations.promote', { clubSlug: props.club.slug, id: props.event.id, registrationId: sub.registration_id }), {}, { preserveScroll: true });
 };
 
-const setPaymentStatus = (subscriberId, status) => {
-  router.post(
-    route('admin.events.subscribers.payment_status', {
-      clubSlug: props.club.slug,
-      id: props.event.id,
-      registrationId: subscriberId,
-    }),
-    { payment_status: status },
-    { preserveScroll: true }
-  );
+const panel = ref(null); // the booking whose payment panel is open
+const selected = ref([]); // booking ids ticked for a bulk "mark as paid"
+
+const toggleSelected = (id) => {
+  selected.value = selected.value.includes(id) ? selected.value.filter((x) => x !== id) : [...selected.value, id];
 };
+
+const bulkPaid = () => {
+  const comment = window.prompt(`Mark ${selected.value.length} booking(s) as paid. Add a comment for the history (optional):`, '');
+  if (comment === null) return;
+  router.post(route('admin.events.payment.bulk_paid', { clubSlug: props.club.slug, id: props.event.id }), { registration_ids: selected.value, comment: comment || null }, {
+    preserveScroll: true,
+    onSuccess: () => { selected.value = []; },
+  });
+};
+
+const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true });
 </script>
 
 <template>
@@ -102,7 +111,16 @@ const setPaymentStatus = (subscriberId, status) => {
             </span>
           </div>
         </div>
-<!-- Add a booking by hand -->
+<!-- Bulk mark as paid -->
+      <div v-if="selected.length" class="flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 p-3 text-xs dark:border-emerald-800/60 dark:bg-emerald-950/30">
+        <span class="font-bold text-emerald-800 dark:text-emerald-200">{{ selected.length }} selected</span>
+        <button type="button" class="rounded-lg bg-emerald-600 px-3.5 py-2 font-bold text-white hover:bg-emerald-700" @click="bulkPaid">Mark selected as paid</button>
+        <button type="button" class="font-semibold text-slate-600 dark:text-slate-300" @click="selected = []">Clear</button>
+      </div>
+
+      <PaymentPanel v-if="panel" :key="panel.id" :club-slug="club.slug" :event-id="event.id" :registration-id="panel.id" :name="panel.name" @close="panel = null" @changed="reload" />
+
+      <!-- Add a booking by hand -->
       <form class="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80" @submit.prevent="addBooking">
         <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Add a booking:</span>
         <input v-model="newName" type="text" maxlength="150" placeholder="Name" class="min-w-[10rem] flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
@@ -280,22 +298,29 @@ const setPaymentStatus = (subscriberId, status) => {
                   <span v-else class="text-slate-400 italic text-[11px]">Standard</span>
                 </td>
 
-                <!-- Payment Status Action -->
+                <!-- Payment: green tick when paid; click for the history and to change it -->
                 <td class="p-3">
-                  <button 
-                    @click="setPaymentStatus(sub.registration_id, sub.payment_status === 'paid' ? 'unpaid' : 'paid')"
-                    :class="['px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border cursor-pointer transition-all flex items-center gap-1 w-fit', 
-                      sub.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40' :
-                      sub.payment_status === 'waived' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60 hover:bg-blue-100 dark:hover:bg-blue-900/40' :
-                      sub.payment_status === 'refunded' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700/60 hover:bg-rose-100 dark:hover:bg-rose-900/40' :
-                      'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/40']"
-                    :title="'Click to toggle paid/unpaid status'"
-                  >
-                    <span v-if="sub.payment_status === 'paid'">✅ Paid</span>
-                    <span v-else-if="sub.payment_status === 'waived'">🎁 Waived</span>
-                    <span v-else-if="sub.payment_status === 'refunded'">↩️ Refunded</span>
-                    <span v-else>💳 Unpaid</span>
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <input v-if="canManagePayments && !sub.is_guest && Number(sub.balance) > 0" type="checkbox" :checked="selected.includes(sub.registration_id)" class="h-3.5 w-3.5 rounded" :aria-label="`Select ${sub.name}`" @change="toggleSelected(sub.registration_id)" />
+                    <span v-if="sub.is_guest" class="text-[10px] text-slate-400">with booker</span>
+                    <span v-else-if="Number(sub.total) <= 0" class="text-[11px] font-semibold text-slate-400">Free</span>
+                    <component :is="canManagePayments ? 'button' : 'span'" v-else type="button" :class="['flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-bold', canManagePayments ? 'cursor-pointer hover:brightness-95' : '',
+                        sub.payment_status === 'paid' ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700/60 dark:bg-emerald-950/40 dark:text-emerald-300' :
+                        sub.payment_status === 'part_paid' ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200' :
+                        sub.payment_status === 'waived' ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700/60 dark:bg-blue-950/40 dark:text-blue-300' :
+                        sub.payment_status === 'refunded' ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-700/60 dark:bg-rose-950/40 dark:text-rose-300' :
+                        'border-slate-300 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400']"
+                      :title="canManagePayments ? 'Click to see who marked this and when, or to change it' : 'Payment status'"
+                      @click="canManagePayments && (panel = { id: sub.registration_id, name: sub.is_guest ? sub.booked_by : sub.name })">
+                      <span v-if="sub.payment_status === 'paid'" class="text-base leading-none">✓</span>
+                      <span v-else class="text-base leading-none">○</span>
+                      <span v-if="sub.payment_status === 'paid'">Paid {{ formatMoney(sub.total) }}</span>
+                      <span v-else-if="sub.payment_status === 'part_paid'">{{ formatMoney(sub.amount_paid) }} of {{ formatMoney(sub.total) }}</span>
+                      <span v-else-if="sub.payment_status === 'waived'">Waived</span>
+                      <span v-else-if="sub.payment_status === 'refunded'">Refunded</span>
+                      <span v-else>Owes {{ formatMoney(sub.balance) }}</span>
+                    </component>
+                  </div>
                 </td>
 
                 <!-- Booking actions (act on the whole booking, guests included) -->

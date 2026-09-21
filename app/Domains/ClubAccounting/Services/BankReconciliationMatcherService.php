@@ -9,7 +9,9 @@ use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
+use App\Models\EventRegistration;
 use App\Services\AccountingService;
+use App\Services\Events\EventPaymentService;
 use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -110,6 +112,41 @@ class BankReconciliationMatcherService
                     ];
                 }
             }
+
+            // Event bookings paid by bank: the reference someone quotes identifies the booking.
+            foreach (EventRegistration::with('event')->where('status', 'attending')->whereIn('payment_status', ['unpaid', 'part_paid'])
+                ->where('total', '>', 0)->whereHas('event', fn ($q) => $q->where('club_id', $clubId))->get() as $registration) {
+                $balance = $registration->balanceDue();
+
+                if ($balance <= 0 || $amount > $balance + 0.01) {
+                    continue;
+                }
+
+                $reference = strtolower((string) $registration->payment_reference);
+                $surname = strtolower(last(explode(' ', trim($registration->contact_name))));
+                $exact = abs($balance - $amount) < 0.01;
+
+                if ($reference !== '' && (str_contains($desc, $reference) || str_contains($ref, $reference))) {
+                    $score = $exact ? 100 : 90;
+                    $reason = "Booking reference {$registration->payment_reference}".($exact ? ' & amount match' : ' (part payment)');
+                } elseif ($exact && $surname !== '' && str_contains($desc, $surname)) {
+                    $score = 80;
+                    $reason = "Name ({$surname}) & amount match the balance";
+                } else {
+                    continue;
+                }
+
+                $matches[] = [
+                    'match_type' => 'event_registration',
+                    'target_id' => $registration->id,
+                    'target_title' => "Event booking: {$registration->event->title} — {$registration->contact_name} ({$registration->payment_reference})",
+                    'target_amount' => $balance,
+                    'confidence_score' => $score,
+                    'confidence_level' => $score >= 90 ? 'high' : 'medium',
+                    'match_reason' => $reason,
+                    'record' => $registration,
+                ];
+            }
         }
 
         // 2. Outgoing Debits (- amount) -> Match against Unpaid Supplier Bills in Accounts Payable
@@ -182,6 +219,7 @@ class BankReconciliationMatcherService
 
             $note = 'Reconciled via Bank Statement Match on '.Carbon::now()->format('Y-m-d H:i');
             $targetCode = '4000'; // Default Revenue
+            $ledgerAlreadyPosted = false;
             $memo = $transaction->raw_description ?: 'Bank Statement Match';
 
             if ($matchType === 'member_subscription') {
@@ -196,6 +234,25 @@ class BankReconciliationMatcherService
                     $note .= " [Member Subscription Invoice: {$sub->invoice_reference}]";
                 }
                 $targetCode = '4000'; // Membership Dues Income
+            } elseif ($matchType === 'event_registration') {
+                $registration = EventRegistration::whereHas('event', fn ($q) => $q->where('club_id', $transaction->club_id))->find((int) $targetId);
+
+                if (! $registration) {
+                    return false;
+                }
+
+                // The payment service records who confirmed it and posts the income (ticket revenue and any fee) itself.
+                app(EventPaymentService::class)->markPaid(
+                    $registration,
+                    auth()->user(),
+                    min(abs($amount), $registration->balanceDue()),
+                    'Bank transfer',
+                    $transaction->transaction_date ? Carbon::parse($transaction->transaction_date) : null,
+                    'Matched to bank line: '.($transaction->raw_description ?: 'bank statement'),
+                    'bank_reconciliation',
+                );
+                $ledgerAlreadyPosted = true;
+                $note .= " [Event booking: {$registration->payment_reference}]";
             } elseif ($matchType === 'supplier_bill') {
                 $bill = Bill::where('club_id', $transaction->club_id)->find((int) $targetId);
                 if ($bill) {
@@ -235,7 +292,7 @@ class BankReconciliationMatcherService
                 ->where('source_id', $transaction->id)
                 ->exists();
 
-            if ($bankAcc && $offsetAcc && ! $alreadyPosted) {
+            if ($bankAcc && $offsetAcc && ! $alreadyPosted && ! $ledgerAlreadyPosted) {
                 $absAmount = abs($amount);
                 $txDate = $transaction->transaction_date ? Carbon::parse($transaction->transaction_date)->format('Y-m-d') : date('Y-m-d');
                 if ($amount > 0) {

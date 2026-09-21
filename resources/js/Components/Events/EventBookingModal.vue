@@ -1,7 +1,10 @@
 <script setup>
-import { computed, reactive } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Ui/Modal.vue';
+import PaymentChoice from '@/Components/Events/PaymentChoice.vue';
+import PaymentSummary from '@/Components/Events/PaymentSummary.vue';
+import { useEventQuote } from '@/Composables/useEventQuote';
 
 const props = defineProps({
     // An event payload from EventPayload::forMember, with the member's own booking in user_rsvp.
@@ -34,6 +37,8 @@ const blankPerson = (isGuest = false) => ({
 const saved = props.event.user_rsvp?.attendees ?? [];
 
 const form = useForm({
+    payment_method: props.event.user_rsvp?.payment?.selected_option_id ?? null,
+    promo_code: props.event.user_rsvp?.payment?.promo_code ?? '',
     attendance_status: props.event.user_rsvp?.attendance_status && props.event.user_rsvp.attendance_status !== 'cancelled' && props.event.user_rsvp.attendance_status !== 'waitlisted'
         ? props.event.user_rsvp.attendance_status
         : 'attending',
@@ -69,6 +74,27 @@ const overCapacity = computed(() => going.value && props.event.places_left !== n
 const wasHolding = computed(() => ['attending', 'tentative'].includes(props.event.user_rsvp?.attendance_status));
 const willWait = computed(() => overCapacity.value && props.event.waitlist_enabled);
 const blocked = computed(() => overCapacity.value && !props.event.waitlist_enabled);
+
+// Live price from the server, so what is shown is what is charged.
+const showPromo = ref(!!form.promo_code);
+const { quote, error: quoteError, refresh } = useEventQuote(
+    route('member.events.quote', { slug: props.clubSlug, id: props.event.id }),
+    () => ({
+        promo_code: form.promo_code || null,
+        attendees: form.attendees.map((a) => ({ is_guest: a.is_guest, ticket_tier_id: a.ticket_tier_id, attending_dining: a.attending_dining })),
+    }),
+);
+
+watch(() => [form.attendees, form.promo_code], () => { if (going.value && props.event.requires_payment) refresh(); }, { deep: true, immediate: true });
+
+// Choose the first option automatically, and re-choose if the one picked is no longer offered.
+watch(quote, (value) => {
+    const options = value?.options ?? [];
+
+    if (options.length && !options.some((o) => o.id === form.payment_method)) {
+        form.payment_method = options[0].id;
+    }
+});
 
 const addGuest = () => {
     if (canAddGuest.value) {
@@ -173,9 +199,25 @@ const generalError = computed(() => form.errors.capacity || form.errors.registra
                     </div>
                 </div>
 
+                <PaymentSummary v-if="event.user_rsvp?.payment && Number(event.user_rsvp.payment.total) > 0" :payment="event.user_rsvp.payment" />
+
                 <button v-if="event.max_guests > 0" type="button" :disabled="!canAddGuest" class="text-xs font-semibold text-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-blue-400" @click="addGuest">
                     + Add a guest <span class="font-normal text-slate-500">({{ guestCount }} of {{ event.max_guests }})</span>
                 </button>
+
+                <div v-if="event.requires_payment" class="space-y-3">
+                    <div>
+                        <button v-if="!showPromo" type="button" class="text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400" @click="showPromo = true">Have a promo code?</button>
+                        <div v-else class="max-w-xs">
+                            <label :class="labelClass">Promo code</label>
+                            <input v-model="form.promo_code" type="text" maxlength="40" :class="[fieldClass, 'font-mono uppercase']" />
+                            <p v-if="form.errors.promo_code" class="mt-1 text-[11px] font-semibold text-rose-600">{{ form.errors.promo_code }}</p>
+                        </div>
+                    </div>
+
+                    <PaymentChoice v-model="form.payment_method" :quote="quote" :error="quoteError" />
+                    <p v-if="form.errors.payment_method" class="text-[11px] font-semibold text-rose-600">{{ form.errors.payment_method }}</p>
+                </div>
             </template>
 
             <div class="flex items-center gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">

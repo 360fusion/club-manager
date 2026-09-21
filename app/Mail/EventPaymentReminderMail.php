@@ -2,7 +2,6 @@
 
 namespace App\Mail;
 
-use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Services\Events\EventPayload;
 use App\Support\Currencies;
@@ -14,25 +13,20 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Sent to an outside guest after they book: the details and a private link to view or cancel.
+ * A reminder that a booking still has something to pay, with how to pay it.
  */
-class EventBookingMail extends Mailable
+class EventPaymentReminderMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(
-        public Event $event,
-        public EventRegistration $registration,
-        public string $manageUrl,
-    ) {}
+    public function __construct(public EventRegistration $registration) {}
 
     public function envelope(): Envelope
     {
-        $waiting = $this->registration->status === 'waitlisted';
-        $club = $this->event->club;
+        $club = $this->registration->event->club;
 
         return new Envelope(
-            subject: ($waiting ? 'You are on the waiting list: ' : 'Your booking: ').$this->event->title,
+            subject: 'Payment reminder: '.$this->registration->event->title,
             from: new Address(config('mail.from.address'), $club->settings['email_from_name'] ?? $club->name),
             replyTo: ! empty($club->settings['email_reply_to']) ? [new Address($club->settings['email_reply_to'], $club->name)] : [],
         );
@@ -40,15 +34,16 @@ class EventBookingMail extends Mailable
 
     public function content(): Content
     {
+        $event = $this->registration->event;
+
         return new Content(
-            html: 'emails.event-booking',
+            html: 'emails.event-payment-reminder',
             with: [
-                'event' => $this->event,
-                'club' => $this->event->club,
-                'registration' => $this->registration->loadMissing(['attendees.starter', 'attendees.main', 'attendees.dessert']),
-                'manageUrl' => $this->manageUrl,
+                'event' => $event,
+                'club' => $event->club,
+                'registration' => $this->registration,
                 'payment' => EventPayload::payment($this->registration),
-                'symbol' => Currencies::symbolFor($this->event->club),
+                'symbol' => Currencies::symbolFor($event->club),
             ],
         );
     }

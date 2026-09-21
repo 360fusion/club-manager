@@ -25,9 +25,14 @@ const deleteEvent = (eventId) => {
           <h2 class="text-xl font-bold text-slate-900 dark:text-white">Manage Club Events & Ticketing</h2>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Create and manage event ticketing tiers, promo codes, and 3-course dining menus.</p>
         </div>
-        <Link :href="route('admin.events.create', { clubSlug: club.slug })" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all text-center">
-          + Create New Event
-        </Link>
+        <div class="flex flex-wrap gap-2">
+          <Link :href="route('admin.payment_options.index', { clubSlug: club.slug })" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all text-center">
+            💳 Payment options
+          </Link>
+          <Link :href="route('admin.events.create', { clubSlug: club.slug })" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all text-center">
+            + Create New Event
+          </Link>
+        </div>
       </div>
 
       <!-- Events List Grid -->

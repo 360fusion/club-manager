@@ -2,12 +2,16 @@
 
 namespace App\Services\Events;
 
+use App\Models\ClubPaymentMethod;
 use App\Models\Event;
 use App\Models\EventAttendee;
 use App\Models\EventMenuItem;
+use App\Models\EventPaymentMethod;
+use App\Models\EventPromo;
 use App\Models\EventRegistration;
 use App\Models\EventTicketTier;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -80,6 +84,11 @@ class EventRegistrationService
             }
 
             $registration->load('attendees');
+
+            if ($going) {
+                $this->applyPricing($event, $registration, $attendees, $data, $existing);
+            }
+
             $registration->plainToken = $plainToken;
 
             $this->syncTierCounts($event);
@@ -90,6 +99,69 @@ class EventRegistrationService
 
             return $registration;
         });
+    }
+
+    /**
+     * Work out what this booking costs and store it, with the payment method chosen, its reference and due date.
+     *
+     * @param  list<array<string, mixed>>  $people
+     * @param  array<string, mixed>  $data
+     */
+    private function applyPricing(Event $event, EventRegistration $registration, array $people, array $data, ?EventRegistration $before): void
+    {
+        $pricing = app(EventPricing::class);
+        $enabled = $pricing->enabledMethods($event);
+        $chosen = null;
+
+        if (! empty($data['payment_method'])) {
+            $chosen = $enabled->firstWhere('id', (int) $data['payment_method']);
+
+            if (! $chosen) {
+                throw ValidationException::withMessages(['payment_method' => 'That way of paying is not available for this event.']);
+            }
+        }
+
+        $code = isset($data['promo_code']) && trim((string) $data['promo_code']) !== '' ? trim((string) $data['promo_code']) : null;
+        $sameCode = $code !== null && $before && strcasecmp((string) $before->promo_code, $code) === 0;
+        $quote = $pricing->quote($event, $people, $code, $chosen, $sameCode);
+
+        if ($quote['total'] > 0 && $enabled->isNotEmpty() && ! $chosen) {
+            throw ValidationException::withMessages(['payment_method' => 'Please choose how you will pay.']);
+        }
+
+        if ($quote['promo_code'] !== null && ! $sameCode) {
+            EventPromo::where('event_id', $event->id)->whereRaw('UPPER(code) = ?', [strtoupper($quote['promo_code'])])->increment('uses_count');
+        }
+
+        foreach ($registration->attendees as $index => $attendee) {
+            $attendee->update(['price' => $quote['people'][$index]['price'] ?? 0]);
+        }
+
+        $method = $chosen?->method;
+        $registration->fill([
+            'subtotal' => $quote['subtotal'],
+            'promo_code' => $quote['promo_code'],
+            'promo_discount' => $quote['promo_discount'],
+            'method_adjustment' => $quote['method_adjustment'],
+            'booking_fee' => $quote['booking_fee'],
+            'total' => $quote['total'],
+            'payment_method_id' => $method?->id,
+            'payment_reference' => $registration->payment_reference ?? $registration->makeReference($method),
+            'due_at' => $method?->type === ClubPaymentMethod::LATER ? $this->dueAt($event, $chosen) : null,
+        ]);
+        $registration->payment_status = $registration->statusFromAmounts();
+        $registration->save();
+    }
+
+    private function dueAt(Event $event, EventPaymentMethod $method): ?Carbon
+    {
+        ['days' => $days, 'basis' => $basis] = $method->due();
+
+        if ($days === null) {
+            return null;
+        }
+
+        return $basis === 'after_booking' ? now()->addDays($days) : $event->starts_at?->copy()->subDays($days);
     }
 
     /**

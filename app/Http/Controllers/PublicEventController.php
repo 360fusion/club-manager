@@ -46,6 +46,8 @@ class PublicEventController extends Controller
             'contact_email' => 'required|email|max:255',
             'contact_phone' => 'nullable|string|max:50',
             'attendance_status' => 'nullable|in:attending,tentative',
+            'payment_method' => 'nullable|integer|max:4294967295',
+            'promo_code' => 'nullable|string|max:40',
             'attendees' => 'required|array|min:1|max:50',
             'attendees.*.name' => 'nullable|string|max:150',
             'attendees.*.is_guest' => 'nullable|boolean',
@@ -76,6 +78,8 @@ class PublicEventController extends Controller
             'contact_name' => $validated['contact_name'],
             'contact_email' => $email,
             'contact_phone' => $validated['contact_phone'] ?? null,
+            'payment_method' => $validated['payment_method'] ?? null,
+            'promo_code' => $validated['promo_code'] ?? null,
             'attendees' => collect($validated['attendees'])->values()->map(fn (array $person, int $index) => [...$person, 'is_guest' => $index > 0])->all(),
         ]);
 

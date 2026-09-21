@@ -23,6 +23,7 @@ const CATEGORIES = {
     event: { label: 'Event', classes: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' },
     notice: { label: 'Notice', classes: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300' },
     membership: { label: 'Membership', classes: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
+    payment: { label: 'Payment', classes: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300' },
 };
 
 const rtf = new Intl.RelativeTimeFormat('en-GB', { numeric: 'auto' });

@@ -346,7 +346,7 @@ class SecurityAuditTest extends TestCase
         $registration = EventRegistration::create(['event_id' => $event->id, 'user_id' => $this->member->id, 'contact_name' => 'Secret Person', 'status' => 'attending']);
         $registration->attendees()->create(['user_id' => $this->member->id, 'name' => 'Secret Person', 'dietary_requirements' => 'Coeliac']);
 
-        foreach ([null, $this->member, $this->treasurer] as $viewer) {
+        foreach ([null, $this->member] as $viewer) {
             $response = $viewer ? $this->actingAs($viewer)->get(route('clubs.show', ['slug' => 'club-a'])) : $this->get(route('clubs.show', ['slug' => 'club-a']));
             $content = (string) $response->getContent();
 
@@ -354,7 +354,9 @@ class SecurityAuditTest extends TestCase
             $this->assertStringNotContainsString('Coeliac', $content);
         }
 
-        $this->actingAs($this->admin)->get(route('clubs.show', ['slug' => 'club-a']))->assertSee('Secret Person', false);
+        foreach ([$this->admin, $this->treasurer] as $organiser) {
+            $this->actingAs($organiser)->get(route('clubs.show', ['slug' => 'club-a']))->assertSee('Secret Person', false);
+        }
     }
 
     public function test_page_block_links_cannot_use_script_schemes(): void

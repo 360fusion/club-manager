@@ -165,6 +165,14 @@ class Event extends Model
     }
 
     /**
+     * @return HasMany<EventPaymentMethod, $this>
+     */
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(EventPaymentMethod::class);
+    }
+
+    /**
      * @return HasMany<EventRegistration, $this>
      */
     public function registrations(): HasMany

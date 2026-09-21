@@ -2,6 +2,7 @@
 import { computed, reactive, watch } from 'vue';
 import { useForm, Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { currencySymbol } from '@/Utils/currency';
 import Select from '@/Components/Ui/Select.vue';
 import Card from '@/Components/Ui/Card.vue';
 
@@ -12,6 +13,9 @@ const props = defineProps({
   tiersInUse: { type: Array, default: () => [] },
   dishesInUse: { type: Array, default: () => [] },
   registrationCount: { type: Number, default: 0 },
+  clubPaymentMethods: { type: Array, default: () => [] },
+  enabledMethods: { type: Array, default: () => [] },
+  pricePreview: { type: Object, default: null },
 });
 
 // The server sends dates as ISO strings; date-time inputs want YYYY-MM-DDTHH:mm.
@@ -63,6 +67,26 @@ const form = useForm({
   status: props.event.status || 'draft',
   visibility: props.event.visibility || 'club',
   rsvp_audience: props.event.rsvp_audience || 'club',
+  booking_fee_type: props.event.booking_fee_type || 'none',
+  booking_fee_amount: props.event.booking_fee_amount || 0,
+  booking_fee_scope: props.event.booking_fee_scope || 'per_booking',
+  booking_fee_label: props.event.booking_fee_label || '',
+  price_display: props.event.price_display || 'standard',
+  // One row per payment option the club has set up: switched on or off, with this event's own discount or fee.
+  payment_methods: props.clubPaymentMethods.map((method) => {
+    const saved = props.enabledMethods.find((row) => row.payment_method_id === method.id);
+
+    return {
+      payment_method_id: method.id,
+      is_enabled: saved ? !!saved.is_enabled : false,
+      adjustment_kind: saved?.adjustment_kind ?? null, // null = use the option's own default
+      adjustment_mode: saved?.adjustment_mode ?? method.default_adjustment_mode ?? 'fixed',
+      adjustment_amount: saved?.adjustment_amount ?? method.default_adjustment_amount ?? 0,
+      adjustment_scope: saved?.adjustment_scope ?? method.default_adjustment_scope ?? 'per_person',
+      due_days: saved?.due_days ?? null,
+      due_basis: saved?.due_basis ?? null,
+    };
+  }),
   ticket_tiers: (props.event.ticket_tiers || []).map((tier) => ({ ...tier, audience: tier.audience || 'all' })),
   promos: props.event.promos || [],
 });
@@ -85,6 +109,25 @@ watch(() => form.visibility, () => {
     form.allow_public_registration = false;
   }
 });
+
+const methodInfo = (id) => props.clubPaymentMethods.find((m) => m.id === id) ?? {};
+const canFee = (row) => ['pay_later', 'cash_on_door'].includes(methodInfo(row.payment_method_id).type);
+
+// "" = use the option's default; the rest is this event's own adjustment.
+const adjustmentChoice = (row) => row.adjustment_kind ?? '';
+const setAdjustmentChoice = (row, value) => {
+  row.adjustment_kind = value === '' ? null : value;
+};
+
+const defaultSummary = (method) => {
+  if (!method || method.default_adjustment_kind === 'none' || !Number(method.default_adjustment_amount)) return 'no discount or fee';
+  const amount = method.default_adjustment_mode === 'percent' ? `${Number(method.default_adjustment_amount)}%` : Number(method.default_adjustment_amount).toFixed(2);
+  const scope = method.default_adjustment_mode === 'percent' ? '' : (method.default_adjustment_scope === 'per_person' ? ' per person' : ' per booking');
+
+  return method.default_adjustment_kind === 'discount' ? `${amount} off${scope}` : `${amount} fee${scope}`;
+};
+
+const money = (value) => `${currencySymbol()}${Number(value).toFixed(2)}`;
 
 const addTier = () => {
   form.ticket_tiers.push({ id: null, name: '', price: 0, max_quantity: 0, audience: 'all' });
@@ -371,6 +414,109 @@ const cardTitle = 'text-base font-bold text-slate-900 dark:text-white border-b b
             <input v-model="promo.discount_amount" type="number" min="0" max="100" placeholder="Discount %" :class="smallInput" />
             <input v-model="promo.max_uses" type="number" min="0" placeholder="Max uses" :class="smallInput" />
             <button type="button" @click="removePromo(index)" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 text-xs font-semibold">Remove</button>
+          </div>
+        </div>
+
+        <!-- Payment options, discounts and fees -->
+        <div v-if="form.requires_payment" :class="cardClass">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">💳 How people can pay</h3>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">Switch on the options for this event. Encourage early payment with a discount online or a fee later.</p>
+            </div>
+            <Link :href="route('admin.payment_options.index', { clubSlug: club.slug })" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">Manage options</Link>
+          </div>
+
+          <p v-if="!form.payment_methods.length" class="text-xs text-slate-500 dark:text-slate-400">You haven't set up any payment options yet. <Link :href="route('admin.payment_options.index', { clubSlug: club.slug })" class="font-semibold text-blue-600 hover:underline">Set them up</Link> first, then come back to switch them on.</p>
+
+          <div v-for="row in form.payment_methods" :key="row.payment_method_id" class="rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-3">
+            <label class="flex items-center gap-3 text-sm">
+              <input v-model="row.is_enabled" type="checkbox" class="h-4 w-4 rounded text-blue-600" />
+              <span class="font-bold text-slate-900 dark:text-white">{{ methodInfo(row.payment_method_id).label }}</span>
+              <span class="text-[11px] text-slate-500 dark:text-slate-400">Default: {{ defaultSummary(methodInfo(row.payment_method_id)) }}</span>
+            </label>
+
+            <div v-if="row.is_enabled" class="grid gap-3 sm:grid-cols-4 items-end">
+              <div>
+                <label :class="labelClass">For this event</label>
+                <select :value="adjustmentChoice(row)" :class="smallInput + ' w-full'" @change="setAdjustmentChoice(row, $event.target.value)">
+                  <option value="">Use the default</option>
+                  <option value="none">No discount or fee</option>
+                  <option value="discount">Discount</option>
+                  <option v-if="canFee(row)" value="fee">Fee</option>
+                </select>
+              </div>
+              <template v-if="row.adjustment_kind === 'discount' || row.adjustment_kind === 'fee'">
+                <div>
+                  <label :class="labelClass">How</label>
+                  <select v-model="row.adjustment_mode" :class="smallInput + ' w-full'"><option value="fixed">Fixed amount</option><option value="percent">Percentage</option></select>
+                </div>
+                <div>
+                  <label :class="labelClass">{{ row.adjustment_mode === 'percent' ? 'Percent' : 'Amount' }}</label>
+                  <input v-model="row.adjustment_amount" type="number" step="0.01" min="0" :class="smallInput + ' w-full'" />
+                </div>
+                <div v-if="row.adjustment_mode === 'fixed'">
+                  <label :class="labelClass">Applies</label>
+                  <select v-model="row.adjustment_scope" :class="smallInput + ' w-full'"><option value="per_person">per person</option><option value="per_booking">per booking</option></select>
+                </div>
+              </template>
+            </div>
+          </div>
+          <p v-if="form.errors.payment_methods" class="text-[11px] font-semibold text-rose-600">{{ form.errors.payment_methods }}</p>
+
+          <!-- Booking fee -->
+          <div class="rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-3">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white">Booking fee (goes to the lodge)</h4>
+            <div class="grid gap-3 sm:grid-cols-4 items-end">
+              <div>
+                <label :class="labelClass">Fee</label>
+                <select v-model="form.booking_fee_type" :class="smallInput + ' w-full'"><option value="none">None</option><option value="fixed">Fixed amount</option><option value="percent">Percentage</option></select>
+              </div>
+              <template v-if="form.booking_fee_type !== 'none'">
+                <div>
+                  <label :class="labelClass">{{ form.booking_fee_type === 'percent' ? 'Percent' : 'Amount' }}</label>
+                  <input v-model="form.booking_fee_amount" type="number" step="0.01" min="0" :class="smallInput + ' w-full'" />
+                </div>
+                <div v-if="form.booking_fee_type === 'fixed'">
+                  <label :class="labelClass">Charged</label>
+                  <select v-model="form.booking_fee_scope" :class="smallInput + ' w-full'"><option value="per_booking">once per booking</option><option value="per_ticket">per person</option></select>
+                </div>
+                <div>
+                  <label :class="labelClass">Called</label>
+                  <input v-model="form.booking_fee_label" type="text" maxlength="60" placeholder="Booking fee" :class="smallInput + ' w-full'" />
+                </div>
+              </template>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">The same for every payment option, and always shown in the price before anyone pays.</p>
+          </div>
+
+          <!-- Advertised price -->
+          <div>
+            <label :class="labelClass">Advertise the price as</label>
+            <select v-model="form.price_display" :class="inputClass">
+              <option value="standard">The ticket price (extras shown when people choose how to pay)</option>
+              <option value="all_in">All-in: the highest price, with cheaper options shown as savings</option>
+            </select>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">All-in is the safest choice when any option carries a fee: nothing is added late. Under UK rules, fees that can't be avoided must be included in the price you advertise.</p>
+          </div>
+
+          <!-- Preview from the pricing engine -->
+          <div v-if="pricePreview && pricePreview.scenarios.some((s) => s.options.length)" class="rounded-xl bg-slate-50 dark:bg-slate-800/40 p-4 space-y-3">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <h4 class="text-sm font-bold text-slate-900 dark:text-white">What each option costs</h4>
+              <span class="text-xs text-slate-500 dark:text-slate-400">Advertised as {{ money(pricePreview.advertised.headline) }}<template v-if="pricePreview.advertised.has_saving"> (from {{ money(pricePreview.advertised.lowest) }})</template>. Updates when you save.</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead><tr class="text-left text-slate-500 dark:text-slate-400"><th class="py-1 pr-3 font-semibold">Booking</th><th v-for="option in pricePreview.scenarios[0].options" :key="option.label" class="py-1 pr-3 font-semibold">{{ option.label }}</th></tr></thead>
+                <tbody>
+                  <tr v-for="scenario in pricePreview.scenarios" :key="scenario.label" class="border-t border-slate-200 dark:border-slate-700">
+                    <td class="py-1.5 pr-3 text-slate-600 dark:text-slate-300">{{ scenario.label }}</td>
+                    <td v-for="option in scenario.options" :key="option.label" class="py-1.5 pr-3 font-mono font-semibold text-slate-900 dark:text-white">{{ money(option.total) }}<span v-if="option.saving > 0" class="ml-1 font-sans text-[10px] text-emerald-600">save {{ money(option.saving) }}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 

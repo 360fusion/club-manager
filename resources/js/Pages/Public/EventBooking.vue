@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import PaymentSummary from '@/Components/Events/PaymentSummary.vue';
 
 const props = defineProps({
   club: Object,
@@ -66,6 +67,8 @@ const cancelBooking = () => {
               </li>
             </ul>
           </div>
+
+          <PaymentSummary v-if="booking.payment && !cancelled" :payment="booking.payment" tone="dark" />
 
           <p v-if="event.cancellation_policy" class="border-t border-slate-800 pt-4 text-xs text-slate-400">{{ event.cancellation_policy }}</p>
 

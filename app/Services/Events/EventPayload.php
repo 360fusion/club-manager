@@ -2,6 +2,7 @@
 
 namespace App\Services\Events;
 
+use App\Models\ClubPaymentMethod;
 use App\Models\Event;
 use App\Models\EventAttendee;
 use App\Models\EventMenuItem;
@@ -68,6 +69,15 @@ class EventPayload
             'waitlist_enabled' => $event->waitlist_enabled,
             'max_guests' => $event->max_guests_per_booking ?? $event->club->maxGuestsPerMember(),
             'cancellation_policy' => $event->cancellation_policy,
+            'requires_payment' => (bool) $event->requires_payment,
+            'booking_fee_label' => $event->booking_fee_type !== 'none' ? ($event->booking_fee_label ?: 'Booking fee') : null,
+            'advertised' => $event->requires_payment ? app(EventPricing::class)->advertised($event) : null,
+            'payment_options' => app(EventPricing::class)->enabledMethods($event)->map(fn ($option) => [
+                'id' => $option->id,
+                'type' => $option->method->type,
+                'label' => $option->method->label,
+                'instructions' => $option->method->instructions,
+            ])->values(),
             'menu' => self::menu($event),
             // Still sent flat for pages written before dishes were grouped by course.
             'menu_items' => $event->menuItems,
@@ -132,6 +142,7 @@ class EventPayload
             'payment_status' => $registration->payment_status,
             'amount_paid' => $registration->amount_paid,
             'total' => $registration->total,
+            'payment' => self::payment($registration),
             'checked_in_at' => $booker?->checked_in_at?->toIso8601String(),
             'attendees' => $registration->attendees->map(fn (EventAttendee $a) => [
                 'id' => $a->id,
@@ -148,6 +159,42 @@ class EventPayload
             'attending_dining' => (bool) $booker?->attending_dining,
             'menu_selections' => $booker?->mealSummary() ?? [],
             'dietary_requirements' => $booker?->dietary_requirements,
+        ];
+    }
+
+    /**
+     * What someone needs to know about paying: the amount, what has been paid, and how to pay the rest.
+     *
+     * @return array<string, mixed>
+     */
+    public static function payment(EventRegistration $registration): array
+    {
+        $registration->loadMissing(['paymentMethod', 'event']);
+        $method = $registration->paymentMethod;
+        $bankMethod = $method?->type === ClubPaymentMethod::BANK
+            ? $method
+            : ($method?->type === ClubPaymentMethod::LATER
+                ? ClubPaymentMethod::where('club_id', $registration->event->club_id)->where('type', ClubPaymentMethod::BANK)->where('is_active', true)->first()
+                : null);
+
+        return [
+            'status' => $registration->payment_status,
+            'total' => $registration->total,
+            'amount_paid' => $registration->amount_paid,
+            'balance' => number_format($registration->balanceDue(), 2, '.', ''),
+            'subtotal' => $registration->subtotal,
+            'promo_code' => $registration->promo_code,
+            'promo_discount' => $registration->promo_discount,
+            'method_adjustment' => $registration->method_adjustment,
+            'method_label' => $method?->label,
+            'method_type' => $method?->type,
+            'booking_fee' => $registration->booking_fee,
+            'booking_fee_label' => (float) $registration->booking_fee > 0 ? ($registration->event->booking_fee_label ?: 'Booking fee') : null,
+            'reference' => $registration->payment_reference,
+            'due_at' => $registration->due_at?->format('j M Y'),
+            'instructions' => $method?->instructions,
+            'bank' => $bankMethod ? $bankMethod->bankDetails() : null,
+            'selected_option_id' => $method ? $registration->event->paymentMethods()->where('payment_method_id', $method->id)->value('id') : null,
         ];
     }
 }

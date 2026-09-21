@@ -59,7 +59,7 @@ const currentActiveTab = computed(() => {
     const path = window.location.pathname;
     if (path.includes('/admin/meetings')) return 'meetings';
     if (path.includes('/admin/committee')) return 'committee';
-    if (path.includes('/admin/events')) return 'events';
+    if (path.includes('/admin/events') || path.includes('/admin/payment-options')) return 'events';
     if (path.includes('/admin/accounting')) return 'accounting';
     if (path.includes('/admin/members') || path.includes('/admin/users') || path.includes('/admin/candidates') || path.includes('/admin/subscriptions')) return 'members';
     if (path.includes('/admin/posts')) return 'posts';

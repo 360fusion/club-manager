@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use App\Enums\Visibility;
 use App\Mail\EventBookingMail;
 use App\Models\Club;
+use App\Models\ClubPaymentMethod;
 use App\Models\ClubType;
 use App\Models\Event;
 use App\Models\EventMenuItem;
+use App\Models\EventPaymentMethod;
 use App\Models\EventRegistration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -190,5 +192,24 @@ class PublicEventBookingTest extends TestCase
         });
 
         return $link;
+    }
+
+    public function test_the_confirmation_email_carries_the_price_bank_details_and_reference(): void
+    {
+        Mail::fake();
+        $this->event->update(['requires_payment' => true, 'price' => 40, 'has_dining' => false, 'booking_fee_type' => 'fixed', 'booking_fee_amount' => 2, 'booking_fee_label' => 'Admin fee']);
+        $method = ClubPaymentMethod::create(['club_id' => $this->club->id, 'type' => 'bank_transfer', 'label' => 'Bank transfer', 'config' => ['account_name' => 'Club A', 'sort_code' => '20-00-00', 'account_number' => '12345678', 'reference_prefix' => 'OPEN']]);
+        $option = EventPaymentMethod::create(['event_id' => $this->event->id, 'payment_method_id' => $method->id, 'is_enabled' => true]);
+
+        $this->register(['payment_method' => $option->id, 'attendees' => [['name' => '']]])->assertSessionHasNoErrors();
+
+        $registration = EventRegistration::sole();
+        $this->assertSame('42.00', $registration->total);
+
+        Mail::assertSent(EventBookingMail::class, function (EventBookingMail $mail) use ($registration) {
+            $html = $mail->render();
+
+            return str_contains($html, '42.00') && str_contains($html, '12345678') && str_contains($html, $registration->payment_reference) && str_contains($html, 'admin fee');
+        });
     }
 }

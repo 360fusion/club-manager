@@ -26,8 +26,8 @@ return [
         ],
         'manage_events' => [
             'label' => 'Events',
-            'description' => 'Create, edit, and publish social events, ticketing tiers, and dining options',
-            'roles' => ['owner', 'admin', 'coach'],
+            'description' => 'Create, edit, and publish social events, ticketing tiers, dining options, and see who has booked and paid',
+            'roles' => ['owner', 'admin', 'coach', 'treasurer'],
         ],
         'manage_subscriptions' => [
             'label' => 'Subscriptions',
@@ -76,6 +76,7 @@ return [
         'bank-reconciliation' => 'manage_billing',
         'reconciliation-workspace' => 'manage_billing',
         'billing' => 'manage_billing',
+        'payment-options' => 'manage_billing',
         'charity' => 'manage_billing',
 
         'subscriptions' => 'manage_subscriptions',
