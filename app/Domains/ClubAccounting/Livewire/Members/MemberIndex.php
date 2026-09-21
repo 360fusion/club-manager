@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Accounting\AccountingContact;
 use App\Models\Club;
+use App\Support\Csv;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -371,7 +372,7 @@ class MemberIndex extends Component
             ]);
 
             foreach ($members as $m) {
-                fputcsv($file, [
+                fputcsv($file, Csv::safe([
                     $m->grand_lodge_number,
                     $m->title,
                     $m->first_name,
@@ -389,7 +390,7 @@ class MemberIndex extends Component
                     $m->postcode,
                     $m->date_of_joining?->format('Y-m-d'),
                     $m->date_of_initiation?->format('Y-m-d'),
-                ]);
+                ]));
             }
 
             fclose($file);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Club;
 use App\Models\User;
 use App\Support\ClubAccess;
+use App\Support\Csv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -86,7 +87,7 @@ class MemberImportExportController extends Controller
             fputcsv($handle, ['Member ID', 'Full Name', 'Email Address', 'Club Role', 'Member Number', 'Status', 'Join Date']);
 
             foreach ($club->users as $user) {
-                fputcsv($handle, [
+                fputcsv($handle, Csv::safe([
                     $user->id,
                     $user->name,
                     $user->email,
@@ -94,7 +95,7 @@ class MemberImportExportController extends Controller
                     $user->pivot->member_number,
                     $user->pivot->status,
                     $user->pivot->created_at?->format('Y-m-d'),
-                ]);
+                ]));
             }
 
             fclose($handle);

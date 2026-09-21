@@ -12,6 +12,7 @@ use App\Models\Accounting\Account;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
 use App\Services\AccountingService;
+use App\Support\Csv;
 use Carbon\Carbon;
 
 class ReliefChestReconciliationService
@@ -186,7 +187,7 @@ class ReliefChestReconciliationService
             $counter = $col->countedBy?->full_name ?? 'Charity Steward';
             $witness = $col->witnessedBy?->full_name ?? 'Assistant DC';
 
-            $csv .= "\"{$chestRef}\",\"{$date}\",\"{$type}\",{$donation},{$giftAid},\"{$status}\",\"{$counter}\",\"{$witness}\"\n";
+            $csv .= Csv::line([$chestRef, $date, $type, $donation, $giftAid, $status, $counter, $witness]);
         }
 
         return $csv;

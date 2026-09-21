@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Models\CharityCollection;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\FestivalTarget;
 use App\Models\Club;
+use App\Support\Csv;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -36,7 +37,7 @@ class ReliefChestExportService
             $counter = $col->countedBy?->full_name ?? 'Charity Steward';
             $witness = $col->witnessedBy?->full_name ?? 'Assistant DC';
 
-            $csv .= "\"{$chestRef}\",\"{$provincialRef}\",\"{$date}\",\"{$type}\",{$cash},{$cheque},{$total},\"{$counter}\",\"{$witness}\"\n";
+            $csv .= Csv::line([$chestRef, $provincialRef, $date, $type, $cash, $cheque, $total, $counter, $witness]);
         }
 
         return $csv;
@@ -59,12 +60,12 @@ class ReliefChestExportService
             $bacsRef = $g->bacs_reference ?: 'BACS-'.($g->id ?: '001');
             $recipient = $g->recipient_name;
             $chestNo = $g->relief_chest_number ?: 'N/A';
-            $purpose = str_replace('"', '""', $g->purpose);
+            $purpose = $g->purpose;
             $amount = number_format((float) $g->amount, 2, '.', '');
             $status = $g->approval_status?->label() ?? 'Proposed';
             $date = $g->updated_at ? $g->updated_at->format('Y-m-d') : Carbon::now()->format('Y-m-d');
 
-            $csv .= "\"{$bacsRef}\",\"{$recipient}\",\"{$chestNo}\",\"{$purpose}\",{$amount},\"{$status}\",\"{$date}\"\n";
+            $csv .= Csv::line([$bacsRef, $recipient, $chestNo, $purpose, $amount, $status, $date]);
         }
 
         return $csv;
