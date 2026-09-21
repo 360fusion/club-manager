@@ -6,8 +6,11 @@ use App\Models\Accounting\Bill;
 use App\Models\Club;
 use App\Models\Invoice;
 use App\Models\Post;
+use App\Support\ImageDownscaler;
+use App\Support\UploadRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -142,7 +145,7 @@ class MediaAdminController extends Controller
         $folder = $request->input('folder', 'images');
 
         // Master allowed extensions & MIME types
-        $imageExtensions = 'jpg,jpeg,png,gif,webp,svg';
+        $imageExtensions = UploadRules::IMAGE_TYPES;
         $docExtensions = 'pdf,doc,docx,xls,xlsx,csv,ppt,pptx,txt,rtf,zip';
         $allAllowedExtensions = "{$imageExtensions},{$docExtensions}";
 
@@ -157,12 +160,19 @@ class MediaAdminController extends Controller
                 'file',
                 'max:10240', // 10MB limit (10240 KB)
                 "mimes:{$allowedRule}",
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $size = $value instanceof UploadedFile && str_starts_with((string) $value->getMimeType(), 'image/') ? @getimagesize($value->getRealPath()) : null;
+
+                    if ($size && max($size[0], $size[1]) > UploadRules::MAX_IMAGE_SIDE) {
+                        $fail('Images may be at most '.UploadRules::MAX_IMAGE_SIDE.' pixels wide or tall.');
+                    }
+                },
             ],
         ], [
             'file.max' => 'The uploaded file exceeds the 10MB size limit.',
             'file.mimes' => in_array($folder, $imageOnlyFolders)
-                ? 'Invalid file format for this folder. Only image files (JPG, PNG, GIF, WEBP, SVG) are allowed.'
-                : 'Invalid file format. Allowed file types: JPG, PNG, GIF, WEBP, SVG, PDF, DOC, DOCX, XLS, XLSX, CSV, PPT, PPTX, TXT, RTF, ZIP.',
+                ? 'Invalid file format for this folder. Only image files (JPG, PNG, GIF, WEBP) are allowed.'
+                : 'Invalid file format. Allowed file types: JPG, PNG, GIF, WEBP, PDF, DOC, DOCX, XLS, XLSX, CSV, PPT, PPTX, TXT, RTF, ZIP.',
         ]);
 
         $uploadedFile = $request->file('file');
@@ -196,7 +206,7 @@ class MediaAdminController extends Controller
         $safeName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
 
         // Downscale large camera photos > 1920px max dimension before storing
-        $this->downscaleImageIfNeeded($uploadedFile);
+        ImageDownscaler::apply($uploadedFile);
 
         $media = $club->addMediaFromRequest('file')
             ->usingName($safeName)
@@ -250,7 +260,7 @@ class MediaAdminController extends Controller
         $media = $club->media()->findOrFail($id);
 
         $request->validate([
-            'file' => 'required|file|mimes:jpg,jpeg,png,webp,gif|max:10240',
+            'file' => UploadRules::image(10240, required: true),
             'save_mode' => 'nullable|string|in:replace,variant',
         ]);
 
@@ -663,61 +673,6 @@ class MediaAdminController extends Controller
         $clean = preg_replace('/[_\-\.]+/', ' ', $nameWithoutExt);
 
         return ucwords(trim($clean));
-    }
-
-    private function downscaleImageIfNeeded($uploadedFile): void
-    {
-        $mime = $uploadedFile->getMimeType();
-        if (! in_array($mime, ['image/jpeg', 'image/png', 'image/webp'])) {
-            return;
-        }
-
-        $path = $uploadedFile->getRealPath();
-        [$width, $height] = @getimagesize($path);
-        if (! $width || ! $height) {
-            return;
-        }
-
-        $maxDimension = 1920;
-        if ($width <= $maxDimension && $height <= $maxDimension) {
-            return;
-        }
-
-        if ($width >= $height) {
-            $newWidth = $maxDimension;
-            $newHeight = (int) round(($height / $width) * $maxDimension);
-        } else {
-            $newHeight = $maxDimension;
-            $newWidth = (int) round(($width / $height) * $maxDimension);
-        }
-
-        $srcImage = match ($mime) {
-            'image/jpeg' => @imagecreatefromjpeg($path),
-            'image/png' => @imagecreatefrompng($path),
-            'image/webp' => @imagecreatefromwebp($path),
-            default => null,
-        };
-
-        if (! $srcImage) {
-            return;
-        }
-
-        $dstImage = imagecreatetruecolor($newWidth, $newHeight);
-        if ($mime === 'image/png' || $mime === 'image/webp') {
-            imagealphablending($dstImage, false);
-            imagesavealpha($dstImage, true);
-        }
-
-        imagecopyresampled($dstImage, $srcImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-
-        match ($mime) {
-            'image/jpeg' => imagejpeg($dstImage, $path, 85),
-            'image/png' => imagepng($dstImage, $path, 8),
-            'image/webp' => imagewebp($dstImage, $path, 85),
-        };
-
-        imagedestroy($srcImage);
-        imagedestroy($dstImage);
     }
 
     private function privateUrl($media): string

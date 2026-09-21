@@ -10,6 +10,8 @@ use App\Models\Post;
 use App\Notifications\ClubNotification;
 use App\Services\ClubNotifier;
 use App\Services\WeeklyUpdateDigestService;
+use App\Support\ImageDownscaler;
+use App\Support\UploadRules;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -98,9 +100,9 @@ class UpdateAdminController extends Controller
             'category' => 'required|string|in:summons,provincial,event_notice,general,charity',
             'summary' => 'nullable|string',
             'cover_image_url' => 'nullable|string',
-            'cover_image_file' => 'nullable|image|max:10240',
+            'cover_image_file' => UploadRules::image(8192),
             'attachments' => 'nullable|array',
-            'attachment_files.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,csv,txt,png,jpg,jpeg,gif,webp|max:20480',
+            'attachment_files.*' => UploadRules::attachment(20480),
             'status' => 'required|string|in:draft,approved,sent,archived',
             'is_important' => 'nullable|boolean',
             'clean_text' => 'nullable|boolean',
@@ -108,6 +110,7 @@ class UpdateAdminController extends Controller
 
         $coverImageUrl = $validated['cover_image_url'] ?? null;
         if ($request->hasFile('cover_image_file') && $request->file('cover_image_file')->isValid()) {
+            ImageDownscaler::apply($request->file('cover_image_file'));
             $media = $club->addMediaFromRequest('cover_image_file')->toMediaCollection('updates');
             $coverImageUrl = "/storage/{$media->id}/{$media->file_name}";
         }

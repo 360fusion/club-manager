@@ -68,6 +68,7 @@ return [
 
     'route_map' => [
         '' => 'view_dashboard',
+        'analytics' => 'view_dashboard',
 
         'accounting' => 'manage_billing',
         'bank-accounts' => 'manage_billing',

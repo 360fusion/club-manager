@@ -17,6 +17,8 @@ use App\Services\AccountingService;
 use App\Services\ClubNotifier;
 use App\Services\MeetingScheduleService;
 use App\Services\RsvpTokenService;
+use App\Support\ImageDownscaler;
+use App\Support\UploadRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -188,7 +190,7 @@ class MeetingAdminController extends Controller
             'officers_year_label' => 'nullable|string|max:255',
             'officers_roster' => 'nullable|array',
             'front_page_logo' => 'nullable|string|max:1000',
-            'front_page_logo_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'front_page_logo_file' => UploadRules::image(5120),
             'front_page_title' => 'nullable|string|max:255',
             'provincial_grand_master' => 'nullable|string|max:255',
             'deputy_provincial_grand_master' => 'nullable|string|max:255',
@@ -202,6 +204,7 @@ class MeetingAdminController extends Controller
         ]);
 
         if ($request->hasFile('front_page_logo_file')) {
+            ImageDownscaler::apply($request->file('front_page_logo_file'));
             $path = $request->file('front_page_logo_file')->store('summons_logos', 'public');
             $validated['front_page_logo'] = asset('storage/'.$path);
         }

@@ -7,6 +7,8 @@ use App\Models\Club;
 use App\Models\Post;
 use App\Notifications\ClubNotification;
 use App\Services\ClubNotifier;
+use App\Support\ImageDownscaler;
+use App\Support\UploadRules;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -109,15 +111,23 @@ class PostAdminController extends Controller
             'published_at' => 'nullable|date',
             'expires_at' => 'nullable|date',
             'cover_image_url' => 'nullable|string|max:1000',
-            'cover_image' => 'nullable|image|max:4096',
+            'cover_image' => UploadRules::image(4096),
             'blocks' => 'nullable|array',
             'existing_attachments' => 'nullable|array',
-            'new_attachments.*' => 'nullable|file|max:10240',
+            'new_attachments.*' => UploadRules::attachment(10240),
             'action_type' => 'nullable|string',
+        ]);
+
+        // Checked separately: rules on nested block keys would make validated() drop the rest of each block.
+        $request->validate([
+            'block_files.*' => UploadRules::image(8192),
+            'blocks.*.file' => UploadRules::image(8192),
+            'blocks.*.items.*.file' => UploadRules::image(8192),
         ]);
 
         $coverImageUrl = $validated['cover_image_url'] ?? null;
         if ($request->hasFile('cover_image') && $request->file('cover_image')->isValid()) {
+            ImageDownscaler::apply($request->file('cover_image'));
             $media = $club->addMediaFromRequest('cover_image')->toMediaCollection('news');
             $coverImageUrl = "/storage/{$media->id}/{$media->file_name}";
         }
@@ -165,6 +175,7 @@ class PostAdminController extends Controller
         if ($request->hasFile('block_files')) {
             foreach ($request->file('block_files') as $blockKey => $file) {
                 if ($file && $file->isValid()) {
+                    ImageDownscaler::apply($file);
                     $path = $file->store("post_images/{$club->id}", 'public');
                     $url = "/storage/{$path}";
 
@@ -189,6 +200,7 @@ class PostAdminController extends Controller
             $blockFiles = $request->file('blocks');
             foreach ($blockFiles as $i => $blockFileData) {
                 if (isset($blockFileData['file']) && $blockFileData['file']->isValid()) {
+                    ImageDownscaler::apply($blockFileData['file']);
                     $path = $blockFileData['file']->store("post_images/{$club->id}", 'public');
                     if (isset($blocks[$i])) {
                         $blocks[$i]['url'] = "/storage/{$path}";
@@ -197,6 +209,7 @@ class PostAdminController extends Controller
                 if (isset($blockFileData['items']) && is_array($blockFileData['items'])) {
                     foreach ($blockFileData['items'] as $j => $gFileData) {
                         if (isset($gFileData['file']) && $gFileData['file']->isValid()) {
+                            ImageDownscaler::apply($gFileData['file']);
                             $path = $gFileData['file']->store("post_images/{$club->id}", 'public');
                             if (isset($blocks[$i]['items'][$j])) {
                                 $blocks[$i]['items'][$j]['url'] = "/storage/{$path}";

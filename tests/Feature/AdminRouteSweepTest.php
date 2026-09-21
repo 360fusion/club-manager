@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\User;
+use App\Support\ClubPermissions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
@@ -139,5 +140,39 @@ class AdminRouteSweepTest extends TestCase
         }
 
         $this->assertSame([], $leaks, "Member pages open to non-members:\n".implode("\n", $leaks));
+    }
+
+    public function test_staff_roles_only_reach_admin_pages_their_capability_allows(): void
+    {
+        $type = ClubType::create(['name' => 'Masonic Lodge', 'code' => 'masonic', 'available_modules' => [], 'default_settings' => []]);
+        $club = Club::create(['club_type_id' => $type->id, 'name' => 'Club A', 'slug' => 'club-a', 'status' => 'active']);
+
+        $unmapped = [];
+        $leaks = [];
+
+        foreach (['treasurer', 'coach', 'admin'] as $role) {
+            $user = User::factory()->create();
+            $club->users()->attach($user->id, ['role' => $role, 'status' => 'active']);
+
+            foreach ($this->adminGetUris() as $uri) {
+                $path = $this->fill($uri);
+                $capability = ClubPermissions::capabilityForPath($path);
+
+                if ($capability === null) {
+                    $unmapped[$uri] = true;
+
+                    continue;
+                }
+
+                $status = $this->actingAs($user)->get('/'.$path)->getStatusCode();
+
+                if ($status === 200 && ! ClubPermissions::allows($club, $role, $capability)) {
+                    $leaks[] = $role.' '.$uri.' ('.$capability.')';
+                }
+            }
+        }
+
+        $this->assertSame([], array_keys(array_filter($unmapped, fn ($u, $k) => ! str_contains($k, 'members/export'), ARRAY_FILTER_USE_BOTH)), 'Admin routes with no capability mapping fall back to any staff role.');
+        $this->assertSame([], $leaks, "Pages reachable without the capability:\n".implode("\n", $leaks));
     }
 }

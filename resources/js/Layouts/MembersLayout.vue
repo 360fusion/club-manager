@@ -22,6 +22,8 @@ const side = computed(() => navMode.value === 'side');
 
 const currentRole = computed(() => (page.props.auth?.clubs ?? []).find((club) => club.slug === slug.value)?.role ?? 'member');
 const isStaff = computed(() => Boolean(props.club) && currentRole.value !== 'member');
+// Coaches are not allowed the analytics dashboard, so send them to events instead.
+const adminHome = computed(() => (currentRole.value === 'coach' ? route('admin.events.index', { slug: slug.value }) : route('admin.analytics', { slug: slug.value })));
 
 const flash = computed(() => page.props.flash ?? {});
 // Only the notices that no form field shows itself; field errors stay next to their fields.
@@ -95,7 +97,7 @@ const nav = computed(() => (slug.value
                 </ul>
             </nav>
 
-            <Link v-if="isStaff" :href="route('admin.analytics', { slug })" class="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-600/20 hover:bg-blue-500">
+            <Link v-if="isStaff" :href="adminHome" class="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-600/20 hover:bg-blue-500">
                 Open club admin
             </Link>
         </aside>
@@ -112,7 +114,7 @@ const nav = computed(() => (slug.value
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <Link v-if="isStaff" :href="route('admin.analytics', { slug })" class="hidden rounded-xl border border-blue-400/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-200 hover:bg-blue-500/20 sm:block">Admin</Link>
+                        <Link v-if="isStaff" :href="adminHome" class="hidden rounded-xl border border-blue-400/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-200 hover:bg-blue-500/20 sm:block">Admin</Link>
                         <NotificationBell tone="onDark" />
                         <AccountMenu tone="onDark" />
                     </div>

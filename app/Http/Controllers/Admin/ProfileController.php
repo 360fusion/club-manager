@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\EmailVerification;
+use App\Support\ImageDownscaler;
+use App\Support\UploadRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -38,12 +40,13 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'avatar_url' => ['nullable', 'string', 'max:1000', 'regex:#^(https?://|avatars/)#i'],
-            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:4096'],
+            'avatar' => UploadRules::image(4096),
         ]);
 
         $user->fill($request->only('name', 'email'));
 
         if ($request->hasFile('avatar')) {
+            ImageDownscaler::apply($request->file('avatar'), 800);
             $path = $request->file('avatar')->store('avatars', 'public');
             $user->avatar_url = $path;
         } elseif ($request->filled('avatar_url')) {
