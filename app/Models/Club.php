@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Laravel\Cashier\Billable as StripeBillable;
@@ -348,6 +349,14 @@ class Club extends Model implements HasMedia
     /**
      * @return HasMany<Event, $this>
      */
+    /**
+     * @return HasOne<ClubPlatformAccount, $this>
+     */
+    public function platformAccount(): HasOne
+    {
+        return $this->hasOne(ClubPlatformAccount::class);
+    }
+
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);

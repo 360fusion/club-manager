@@ -7,6 +7,7 @@ use App\Models\Club;
 use App\Models\ClubPaymentMethod;
 use App\Models\EventPaymentLog;
 use App\Models\EventRegistration;
+use App\Models\PlatformPayment;
 use App\Models\User;
 use App\Services\AccountingService;
 use App\Services\Payment\PayPalGateway;
@@ -138,10 +139,15 @@ class EventPaymentService
 
             // A card payment is refunded through Stripe first; if Stripe refuses, nothing is recorded.
             $method = $registration->paymentMethod;
-            $viaStripe = $method?->type === ClubPaymentMethod::CARD && $registration->stripe_payment_intent && $method->hasStripeKeys();
+            $connected = $method?->usesConnect() ? $method->club->platformAccount : null;
+            $viaStripe = $method?->type === ClubPaymentMethod::CARD && $registration->stripe_payment_intent && ($connected !== null || $method->hasStripeKeys());
 
             if ($viaStripe) {
-                app(StripeGateway::class)->refund($method, $registration->stripe_payment_intent, (int) round($amount * 100));
+                app(StripeGateway::class)->refund($method, $registration->stripe_payment_intent, (int) round($amount * 100), $connected?->stripe_account_id);
+
+                if ($connected) {
+                    PlatformPayment::where('payment_intent', $registration->stripe_payment_intent)->increment('refunded', $amount);
+                }
             }
 
             $viaPayPal = ! $viaStripe && $registration->paypal_capture_id && $method?->type === ClubPaymentMethod::PAYPAL && $method->isReadyForPayPal();

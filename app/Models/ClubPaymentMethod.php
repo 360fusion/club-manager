@@ -109,7 +109,23 @@ class ClubPaymentMethod extends Model
      */
     public function isReadyForCards(): bool
     {
-        return $this->type === self::CARD && $this->hasStripeKeys() && ! empty($this->config['stripe_webhook_secret']);
+        if ($this->type !== self::CARD) {
+            return false;
+        }
+
+        if ($this->usesConnect()) {
+            return (bool) config('platform_payments.enabled') && ! empty(config('platform_payments.stripe_secret')) && $this->club?->platformAccount?->canTakePayments() === true;
+        }
+
+        return $this->hasStripeKeys() && ! empty($this->config['stripe_webhook_secret']);
+    }
+
+    /**
+     * Whether card payments go through the lodge's Stripe account connected to the platform, rather than keys the lodge pasted in.
+     */
+    public function usesConnect(): bool
+    {
+        return $this->type === self::CARD && ($this->config['stripe_mode'] ?? 'keys') === 'connect';
     }
 
     /**

@@ -94,6 +94,7 @@ return [
 
         'newsletters' => 'send_newsletters',
 
+        'email-templates' => 'manage_communications',
         'posts' => 'manage_communications',
         'updates' => 'manage_communications',
 

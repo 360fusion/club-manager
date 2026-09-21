@@ -42,7 +42,7 @@ abstract class EventTemplatedMail extends Mailable
     {
         $values = $this->values();
 
-        return EmailTemplate::render($this->templateKey(), $values['text'], $values['html'])
+        return EmailTemplate::render($this->templateKey(), $values['text'], $values['html'], $this->club())
             ?? ['subject' => $this->fallbackSubject(), 'body' => $this->fallbackBody()];
     }
 

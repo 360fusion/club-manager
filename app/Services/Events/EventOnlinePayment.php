@@ -4,10 +4,14 @@ namespace App\Services\Events;
 
 use App\Models\Club;
 use App\Models\ClubPaymentMethod;
+use App\Models\ClubPlatformAccount;
 use App\Models\EventPaymentLog;
 use App\Models\EventPaymentMethod;
 use App\Models\EventRegistration;
+use App\Models\PlatformPayment;
 use App\Services\Payment\PayPalGateway;
+use App\Services\Payment\PlatformFees;
+use App\Services\Payment\StripeConnectGateway;
 use App\Services\Payment\StripeGateway;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
@@ -23,7 +27,7 @@ use UnexpectedValueException;
  */
 class EventOnlinePayment
 {
-    public function __construct(private StripeGateway $stripe, private PayPalGateway $paypal, private EventRegistrationService $registrations, private EventPaymentService $payments, private EventPricing $pricing) {}
+    public function __construct(private StripeGateway $stripe, private PayPalGateway $paypal, private PlatformFees $fees, private EventRegistrationService $registrations, private EventPaymentService $payments, private EventPricing $pricing) {}
 
     /**
      * The online options (card, PayPal) this booking's event offers and that are ready to take a payment.
@@ -155,6 +159,11 @@ class EventOnlinePayment
             return $order['url'];
         }
 
+        // With a connected Stripe account the payment goes to the lodge's own account and the commission is taken from it.
+        $connected = $option->method->usesConnect() ? $club->platformAccount : null;
+        $amountMinor = (int) round($balance * 100);
+        $commission = $connected ? $this->fees->commissionMinor($amountMinor, $connected) : 0;
+
         $session = $this->stripe->createCheckoutSession($option->method, [
             'mode' => 'payment',
             'client_reference_id' => (string) $registration->id,
@@ -163,15 +172,15 @@ class EventOnlinePayment
                 'quantity' => 1,
                 'price_data' => [
                     'currency' => strtolower($club->currencyCode()),
-                    'unit_amount' => (int) round($balance * 100),
+                    'unit_amount' => $amountMinor,
                     'product_data' => ['name' => 'Booking: '.$registration->event->title, 'description' => $club->name.' · reference '.$registration->payment_reference],
                 ],
             ]],
-            'metadata' => ['registration_id' => (string) $registration->id, 'event_id' => (string) $registration->event_id, 'club_id' => (string) $club->id],
-            'payment_intent_data' => ['metadata' => ['registration_id' => (string) $registration->id, 'reference' => (string) $registration->payment_reference]],
+            'metadata' => ['registration_id' => (string) $registration->id, 'event_id' => (string) $registration->event_id, 'club_id' => (string) $club->id] + ($connected ? ['platform_fee' => (string) $commission] : []),
+            'payment_intent_data' => ['metadata' => ['registration_id' => (string) $registration->id, 'reference' => (string) $registration->payment_reference]] + ($commission > 0 ? ['application_fee_amount' => $commission] : []),
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
-        ]);
+        ], $connected?->stripe_account_id);
 
         $registration->update(['stripe_session_id' => $session['id']]);
 
@@ -214,7 +223,56 @@ class EventOnlinePayment
             return 'ignored event type';
         }
 
-        $session = $event->data->object;
+        return $this->recordCheckoutSession($club, $event->data->object, null);
+    }
+
+    /**
+     * Handle a notification about a lodge's connected Stripe account, signed with the platform's Connect secret.
+     * Returns a short reason when nothing was done, null when a payment was recorded.
+     *
+     * @throws SignatureVerificationException
+     * @throws UnexpectedValueException
+     */
+    public function handleConnectWebhook(string $payload, string $signature): ?string
+    {
+        $secret = config('platform_payments.connect_webhook_secret');
+
+        if (empty($secret) || ! config('platform_payments.enabled')) {
+            throw new UnexpectedValueException('Platform payments are not set up.');
+        }
+
+        $event = Webhook::constructEvent($payload, $signature, $secret);
+        $account = isset($event->account) ? ClubPlatformAccount::with('club')->where('stripe_account_id', (string) $event->account)->first() : null;
+
+        if (! $account) {
+            return 'no matching account';
+        }
+
+        switch ($event->type) {
+            case 'account.updated':
+                $account->update(StripeConnectGateway::statusFrom($event->data->object));
+
+                return 'account updated';
+
+            case 'account.application.deauthorized':
+                $account->update(['disconnected_at' => now(), 'charges_enabled' => false, 'payouts_enabled' => false]);
+
+                return 'account disconnected';
+
+            case 'checkout.session.completed':
+            case 'checkout.session.async_payment_succeeded':
+                return $account->disconnected_at ? 'account disconnected' : $this->recordCheckoutSession($account->club, $event->data->object, $account);
+
+            default:
+                return 'ignored event type';
+        }
+    }
+
+    /**
+     * Record a paid Checkout session once, if it is for this lodge's booking and the amount fits what is owed.
+     */
+    private function recordCheckoutSession(Club $club, object $session, ?ClubPlatformAccount $account): ?string
+    {
 
         if (($session->payment_status ?? null) !== 'paid') {
             return 'not paid yet';
@@ -244,6 +302,18 @@ class EventOnlinePayment
         }
 
         $this->payments->markPaid($registration, null, $paid, 'Card (Stripe)', now(), 'Paid online through Stripe', 'stripe_webhook', $externalId, $session->payment_intent ? (string) $session->payment_intent : null);
+
+        if ($account) {
+            $commission = min((int) ($session->metadata->platform_fee ?? 0), (int) $session->amount_total);
+
+            PlatformPayment::updateOrCreate(['payment_intent' => $externalId], [
+                'club_id' => $club->id,
+                'registration_id' => $registration->id,
+                'currency' => strtoupper((string) ($session->currency ?? $club->currencyCode())),
+                'gross' => $paid,
+                'commission' => round($commission / 100, 2),
+            ]);
+        }
 
         return null;
     }

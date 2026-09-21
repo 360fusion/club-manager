@@ -84,6 +84,9 @@ class EventAdminController extends Controller
                 'attendance_status' => $registration->status,
                 'attending_dining' => $attendee->attending_dining,
                 'menu_selections' => $attendee->mealSummary(),
+                'starter_item_id' => $attendee->starter_item_id,
+                'main_item_id' => $attendee->main_item_id,
+                'dessert_item_id' => $attendee->dessert_item_id,
                 'dietary_requirements' => $attendee->dietary_requirements ?? '',
                 'payment_status' => $registration->payment_status ?? 'unpaid',
                 'total' => number_format((float) $registration->total, 2, '.', ''),
@@ -112,6 +115,7 @@ class EventAdminController extends Controller
                 'requires_payment' => $event->requires_payment,
                 'capacity' => $event->capacity,
                 'places_taken' => $event->placesTaken(),
+                'menu' => $event->menuItems()->orderBy('sort_order')->get(['id', 'category', 'name'])->groupBy('category'),
                 'waitlisted' => $registrations->where('status', 'waitlisted')->sum(fn ($r) => $r->attendees->count()),
             ],
             'subscribers' => $subscribers,
@@ -524,6 +528,28 @@ class EventAdminController extends Controller
         $registrations->cancel(EventRegistration::where('event_id', $event->id)->findOrFail($registrationId));
 
         return redirect()->back()->with('success', 'Booking cancelled.');
+    }
+
+    /**
+     * An organiser changes one person's meal choices and dietary notes.
+     */
+    public function updateAttendeeMeal(Request $request, string $clubSlug, int $id, int $attendeeId, EventRegistrationService $registrations): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $event = Event::where('club_id', $club->id)->findOrFail($id);
+        $attendee = EventAttendee::whereHas('registration', fn ($q) => $q->where('event_id', $event->id))->findOrFail($attendeeId);
+
+        $validated = $request->validate([
+            'attending_dining' => 'nullable|boolean',
+            'starter_item_id' => 'nullable|integer|min:1|max:4294967295',
+            'main_item_id' => 'nullable|integer|min:1|max:4294967295',
+            'dessert_item_id' => 'nullable|integer|min:1|max:4294967295',
+            'dietary_requirements' => 'nullable|string|max:1000',
+        ]);
+
+        $registrations->updateAttendeeMeal($attendee, $validated);
+
+        return redirect()->back()->with('success', 'Meal updated.');
     }
 
     /**

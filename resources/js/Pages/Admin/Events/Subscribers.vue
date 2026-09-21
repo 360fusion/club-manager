@@ -1,9 +1,31 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import PaymentPanel from '@/Components/Events/PaymentPanel.vue';
 import { formatMoney } from '@/Utils/currency';
+
+// Editing one person's meal
+const mealFor = ref(null);
+const mealForm = useForm({ attending_dining: true, starter_item_id: null, main_item_id: null, dessert_item_id: null, dietary_requirements: '' });
+const COURSES = [['starter', 'starter_item_id', 'Starter'], ['main', 'main_item_id', 'Main'], ['dessert', 'dessert_item_id', 'Dessert']];
+const canEditMeal = (sub) => props.event.has_dining && !['cancelled', 'declined'].includes(sub.attendance_status);
+const openMeal = (sub) => {
+  mealForm.clearErrors();
+  mealForm.attending_dining = !!sub.attending_dining;
+  mealForm.starter_item_id = sub.starter_item_id;
+  mealForm.main_item_id = sub.main_item_id;
+  mealForm.dessert_item_id = sub.dessert_item_id;
+  mealForm.dietary_requirements = sub.dietary_requirements || '';
+  mealFor.value = sub;
+};
+const saveMeal = () => {
+  mealForm.put(route('admin.events.attendees.meal', { clubSlug: props.club.slug, id: props.event.id, attendeeId: mealFor.value.attendee_id }), {
+    preserveScroll: true,
+    onSuccess: () => { mealFor.value = null; },
+  });
+};
+const mealError = (column) => mealForm.errors[`attendees.0.${column}`];
 
 const props = defineProps({
   club: Object,
@@ -116,6 +138,34 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
         <span class="font-bold text-emerald-800 dark:text-emerald-200">{{ selected.length }} selected</span>
         <button type="button" class="rounded-lg bg-emerald-600 px-3.5 py-2 font-bold text-white hover:bg-emerald-700" @click="bulkPaid">Mark selected as paid</button>
         <button type="button" class="font-semibold text-slate-600 dark:text-slate-300" @click="selected = []">Clear</button>
+      </div>
+
+      <div v-if="mealFor" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" role="dialog" aria-modal="true" @click.self="mealFor = null">
+        <form class="w-full max-w-md space-y-3 rounded-2xl bg-white p-5 text-xs shadow-xl dark:bg-slate-900" @submit.prevent="saveMeal">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white">Meal for {{ mealFor.name }}</h3>
+          <p v-if="mealForm.errors.meal || mealForm.errors.attending_dining" class="rounded-lg bg-rose-500/10 p-2 font-semibold text-rose-600" role="alert">{{ mealForm.errors.meal || mealForm.errors.attending_dining }}</p>
+          <label class="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200"><input v-model="mealForm.attending_dining" type="checkbox" class="rounded" /> Having dinner</label>
+          <template v-if="mealForm.attending_dining">
+            <div v-for="[course, column, title] in COURSES" :key="column">
+              <template v-if="event.menu?.[course]?.length">
+                <label class="mb-1 block font-semibold text-slate-600 dark:text-slate-300">{{ title }}</label>
+                <select v-model="mealForm[column]" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                  <option :value="null">Choose...</option>
+                  <option v-for="item in event.menu[course]" :key="item.id" :value="item.id">{{ item.name }}</option>
+                </select>
+                <p v-if="mealError(column)" class="mt-1 font-semibold text-rose-600">{{ mealError(column) }}</p>
+              </template>
+            </div>
+          </template>
+          <div>
+            <label class="mb-1 block font-semibold text-slate-600 dark:text-slate-300">Dietary needs</label>
+            <input v-model="mealForm.dietary_requirements" type="text" maxlength="1000" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
+          </div>
+          <div class="flex justify-end gap-2 pt-1">
+            <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200" @click="mealFor = null">Cancel</button>
+            <button type="submit" :disabled="mealForm.processing" class="rounded-lg bg-blue-600 px-3 py-2 font-bold text-white hover:bg-blue-500 disabled:opacity-60">Save meal</button>
+          </div>
+        </form>
       </div>
 
       <PaymentPanel v-if="panel" :key="panel.id" :club-slug="club.slug" :event-id="event.id" :registration-id="panel.id" :name="panel.name" @close="panel = null" @changed="reload" />
@@ -288,6 +338,7 @@ const reload = () => router.reload({ only: ['subscribers'], preserveScroll: true
                     </div>
                   </div>
                   <span v-else class="text-slate-400 italic text-[11px]">No Dining</span>
+                  <button v-if="canEditMeal(sub)" type="button" class="mt-1 block text-[11px] font-bold text-blue-600 hover:underline dark:text-blue-400" @click="openMeal(sub)">Edit meal</button>
                 </td>
 
                 <!-- Dietary Notes -->

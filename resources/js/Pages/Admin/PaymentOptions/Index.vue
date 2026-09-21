@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -9,6 +9,7 @@ const props = defineProps({
   bankDefaults: { type: Object, default: () => ({}) },
   stripeWebhookUrl: { type: String, default: '' },
   paypalWebhookUrl: { type: String, default: '' },
+  platform: { type: Object, default: () => ({ enabled: false, account: null }) },
   onlinePaymentsLive: { type: Boolean, default: false },
 });
 
@@ -19,6 +20,14 @@ const TYPES = [
   { value: 'pay_later', label: 'Pay later', help: 'People book now and pay before a due date you set. They can pay any time before then.', fee: true },
   { value: 'cash_on_door', label: 'Pay on the night', help: 'People pay when they arrive.', fee: true },
 ];
+
+// A new card option starts on "Connect with Stripe" when the platform offers it, otherwise on pasted keys.
+const configFor = (type) => {
+  if (type === 'bank_transfer') return { ...props.bankDefaults, reference_prefix: '' };
+  if (type === 'card_online') return { stripe_mode: props.platform?.enabled ? 'connect' : 'keys' };
+  if (type === 'paypal') return { paypal_mode: 'live' };
+  return {};
+};
 
 const typeInfo = (value) => TYPES.find((t) => t.value === value) ?? TYPES[0];
 
@@ -34,7 +43,7 @@ const blank = (type = 'bank_transfer') => ({
   due_days: 7,
   due_basis: 'before_event',
   is_active: true,
-  config: type === 'bank_transfer' ? { ...props.bankDefaults, reference_prefix: '' } : {},
+  config: configFor(type),
 });
 
 const form = useForm(blank());
@@ -52,8 +61,18 @@ const open = (method = null) => {
 const chooseType = (value) => {
   form.type = value;
   form.label = typeInfo(value).label;
-  form.config = value === 'bank_transfer' ? { ...props.bankDefaults, reference_prefix: '' } : (value === 'paypal' ? { paypal_mode: 'live' } : {});
+  form.config = configFor(value);
   if (!typeInfo(value).fee && form.default_adjustment_kind === 'fee') form.default_adjustment_kind = 'none';
+};
+
+const page = usePage();
+const stripeError = computed(() => page.props.errors?.stripe);
+const agreeTerms = ref(false);
+const stripeAction = (name, data = {}) => {
+  router.post(route(`admin.payment_options.stripe.${name}`, { clubSlug: props.club.slug }), data, { preserveScroll: true });
+};
+const disconnectStripe = () => {
+  if (confirm('Disconnect Stripe? Card payments through the platform will stop until you connect again.')) stripeAction('disconnect');
 };
 
 const canFee = computed(() => typeInfo(form.type).fee);
@@ -159,8 +178,53 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
           <div><label :class="label">Reference prefix</label><input v-model="form.config.reference_prefix" type="text" maxlength="20" :class="input" placeholder="e.g. DINNER" /><p v-if="form.errors['config.reference_prefix']" class="mt-1 text-[11px] font-semibold text-rose-600">{{ form.errors['config.reference_prefix'] }}</p></div>
         </div>
 
-        <!-- Stripe -->
-        <div v-if="form.type === 'card_online'" class="grid gap-4 sm:grid-cols-2">
+        <!-- Stripe: connect an account, or use pasted keys -->
+        <div v-if="form.type === 'card_online' && platform.enabled" class="space-y-2">
+          <label :class="label">How do you want to take card payments?</label>
+          <div class="grid gap-2 sm:grid-cols-2">
+            <button type="button" :class="['rounded-xl border p-3 text-left text-xs', form.config.stripe_mode === 'connect' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40' : 'border-slate-200 dark:border-slate-800']" @click="form.config.stripe_mode = 'connect'">
+              <span class="font-bold text-slate-900 dark:text-white">Connect with Stripe (recommended)</span>
+              <span class="mt-0.5 block text-slate-500 dark:text-slate-400">No keys to copy. Connect a Stripe account you already have, or have one created for you. A small platform fee is taken from each payment.</span>
+            </button>
+            <button type="button" :class="['rounded-xl border p-3 text-left text-xs', form.config.stripe_mode !== 'connect' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40' : 'border-slate-200 dark:border-slate-800']" @click="form.config.stripe_mode = 'keys'">
+              <span class="font-bold text-slate-900 dark:text-white">Use my own Stripe keys</span>
+              <span class="mt-0.5 block text-slate-500 dark:text-slate-400">Paste your Stripe keys and set up your own webhook. No platform fee.</span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="form.type === 'card_online' && platform.enabled && form.config.stripe_mode === 'connect'" class="space-y-3 rounded-xl border border-slate-200 p-4 text-xs dark:border-slate-800">
+          <p v-if="stripeError" class="rounded-lg bg-rose-500/10 p-2 font-semibold text-rose-600" role="alert">{{ stripeError }}</p>
+          <template v-if="!platform.account">
+            <p class="text-slate-600 dark:text-slate-300">Payments go straight to your own Stripe account and Stripe pays you out. The platform takes <span class="font-semibold">{{ platform.fee }}</span>.</p>
+            <div class="flex flex-wrap gap-2">
+              <button v-if="platform.can_connect_existing" type="button" class="rounded-lg bg-indigo-600 px-3 py-2 font-bold text-white hover:bg-indigo-500" @click="stripeAction('connect')">Connect my Stripe account</button>
+              <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200" @click="stripeAction('express')">I don't have one, create one for me</button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-bold text-slate-900 dark:text-white">Stripe {{ platform.account.type === 'express' ? '(created for you)' : '(your account)' }}</span>
+              <span :class="['rounded px-2 py-0.5 text-[10px] font-bold uppercase', platform.account.charges_enabled ? 'bg-emerald-500/15 text-emerald-600' : 'bg-amber-500/15 text-amber-600']">{{ platform.account.charges_enabled ? 'Can take payments' : 'Setup not finished' }}</span>
+              <span :class="['rounded px-2 py-0.5 text-[10px] font-bold uppercase', platform.account.payouts_enabled ? 'bg-emerald-500/15 text-emerald-600' : 'bg-amber-500/15 text-amber-600']">{{ platform.account.payouts_enabled ? 'Payouts on' : 'Payouts not on yet' }}</span>
+            </div>
+            <div v-if="!platform.account.charges_enabled && platform.account.type === 'express'">
+              <p class="mb-2 text-slate-600 dark:text-slate-300">Stripe needs a few more details (identity and bank account) before it can take payments.</p>
+              <button type="button" class="rounded-lg bg-indigo-600 px-3 py-2 font-bold text-white hover:bg-indigo-500" @click="stripeAction('express')">Continue setup on Stripe</button>
+            </div>
+            <p v-else-if="!platform.account.charges_enabled" class="text-slate-600 dark:text-slate-300">Stripe hasn't enabled payments on this account yet. Finish any steps in your Stripe dashboard.</p>
+            <div v-if="!platform.account.terms_accepted" class="space-y-2 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
+              <label class="flex items-start gap-2 font-semibold text-slate-700 dark:text-slate-200"><input v-model="agreeTerms" type="checkbox" class="mt-0.5 rounded" /> I agree that the platform takes {{ platform.fee }}, and to the platform payment terms<template v-if="platform.terms_url"> (<a :href="platform.terms_url" target="_blank" rel="noopener" class="text-blue-600 underline">read them</a>)</template>.</label>
+              <button type="button" :disabled="!agreeTerms" class="rounded-lg bg-blue-600 px-3 py-2 font-bold text-white hover:bg-blue-500 disabled:opacity-50" @click="stripeAction('terms', { agree: true })">Accept</button>
+            </div>
+            <p v-else-if="platform.account.ready" class="font-semibold text-emerald-600">Card payments are ready. The platform takes {{ platform.fee }}.</p>
+            <button type="button" class="font-semibold text-rose-600 hover:underline" @click="disconnectStripe">Disconnect Stripe</button>
+          </template>
+          <p v-if="!onlinePaymentsLive" class="font-semibold text-amber-700 dark:text-amber-300">Online payments are not switched on for this site yet, so this option won't be offered to people until they are.</p>
+        </div>
+
+        <!-- Stripe with the lodge's own keys -->
+        <div v-if="form.type === 'card_online' && (!platform.enabled || form.config.stripe_mode !== 'connect')" class="grid gap-4 sm:grid-cols-2">
           <div class="sm:col-span-2"><label :class="label">Stripe publishable key</label><input v-model="form.config.stripe_publishable_key" type="text" maxlength="255" :class="input" placeholder="pk_live_..." /></div>
           <div><label :class="label">Stripe secret key</label><input v-model="form.config.stripe_secret_key" type="password" maxlength="500" autocomplete="off" :class="input" :placeholder="current?.has_stripe_secret_key ? 'Saved - leave blank to keep' : 'sk_live_...'" /></div>
           <div><label :class="label">Stripe webhook secret</label><input v-model="form.config.stripe_webhook_secret" type="password" maxlength="500" autocomplete="off" :class="input" :placeholder="current?.has_stripe_webhook_secret ? 'Saved - leave blank to keep' : 'whsec_...'" /></div>

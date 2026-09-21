@@ -163,7 +163,7 @@ class EventRegistrationService
      * Change how an unpaid booking will be paid, at that option's price. Used when someone chooses to pay online
      * after booking, so paying early still earns the discount. Nothing changes once money has been paid.
      */
-    public function reprice(EventRegistration $registration, EventPaymentMethod $option): EventRegistration
+    public function reprice(EventRegistration $registration, ?EventPaymentMethod $option, bool $keepDueDate = false): EventRegistration
     {
         if ((float) $registration->amount_paid > 0) {
             throw ValidationException::withMessages(['payment' => 'This booking already has a payment on it, so the way of paying cannot be changed.']);
@@ -183,13 +183,47 @@ class EventRegistrationService
             'method_adjustment' => $quote['method_adjustment'],
             'booking_fee' => $quote['booking_fee'],
             'total' => $quote['total'],
-            'payment_method_id' => $option->method->id,
-            'due_at' => null,
+            'payment_method_id' => $option?->method->id ?? $registration->payment_method_id,
+            'due_at' => $keepDueDate ? $registration->due_at : null,
         ]);
         $registration->payment_status = $registration->statusFromAmounts();
         $registration->save();
 
         return $registration;
+    }
+
+    /**
+     * An organiser changes what one person eats. Dishes and dietary notes can change at any time; turning dinner on or off
+     * changes the price, so that is only allowed while nothing has been paid.
+     *
+     * @param  array{attending_dining?: mixed, starter_item_id?: mixed, main_item_id?: mixed, dessert_item_id?: mixed, dietary_requirements?: ?string}  $data
+     */
+    public function updateAttendeeMeal(EventAttendee $attendee, array $data): EventAttendee
+    {
+        return DB::transaction(function () use ($attendee, $data) {
+            $registration = EventRegistration::with('event')->whereKey($attendee->registration_id)->lockForUpdate()->firstOrFail();
+            $event = $registration->event;
+
+            if (in_array($registration->status, ['cancelled', 'declined'], true)) {
+                throw ValidationException::withMessages(['meal' => 'This booking is cancelled, so the meal cannot be changed.']);
+            }
+
+            $meal = $this->resolveMeal($event, $event->menuItems()->get()->keyBy('id'), $data, 0);
+            $diningChanged = $meal['attending_dining'] !== (bool) $attendee->attending_dining;
+
+            if ($diningChanged && (float) $registration->amount_paid > 0) {
+                throw ValidationException::withMessages(['attending_dining' => 'This booking already has a payment on it. Adjust the payment first, then change whether they are having dinner.']);
+            }
+
+            $attendee->update($meal + ['dietary_requirements' => $this->clean($data['dietary_requirements'] ?? null)]);
+
+            if ($diningChanged && (float) $registration->total > 0) {
+                $option = $registration->payment_method_id ? $event->paymentMethods()->where('payment_method_id', $registration->payment_method_id)->first() : null;
+                $this->reprice($registration->load('attendees'), $option, true);
+            }
+
+            return $attendee->fresh();
+        });
     }
 
     private function dueAt(Event $event, EventPaymentMethod $method): ?Carbon

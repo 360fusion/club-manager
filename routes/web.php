@@ -28,6 +28,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CharityAdminController;
 use App\Http\Controllers\ClubController;
 use App\Http\Controllers\ClubDirectoryController;
+use App\Http\Controllers\ClubEmailTemplateController;
 use App\Http\Controllers\ClubSettingsController;
 use App\Http\Controllers\ClubShortLinkController;
 use App\Http\Controllers\EventAdminController;
@@ -54,10 +55,13 @@ use App\Http\Controllers\PageAdminController;
 use App\Http\Controllers\PasswordlessRsvpController;
 use App\Http\Controllers\PaymentOptionsController;
 use App\Http\Controllers\PayPalWebhookController;
+use App\Http\Controllers\PlatformPaymentsAdminController;
 use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\QuickRsvpController;
+use App\Http\Controllers\StripeConnectController;
+use App\Http\Controllers\StripeConnectWebhookController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UpdateAdminController;
@@ -135,10 +139,14 @@ if (app()->isLocal()) {
 // HMAC signature instead. Must stay outside the auth group and exempt from CSRF.
 Route::post('/webhooks/stripe/{clubId}', [StripeWebhookController::class, 'handle'])->name('webhooks.stripe.club');
 Route::post('/webhooks/paypal/{clubId}', [PayPalWebhookController::class, 'handle'])->name('webhooks.paypal.club');
+Route::post('/webhooks/stripe-connect', [StripeConnectWebhookController::class, 'handle'])->name('webhooks.stripe.connect');
 Route::post('/webhooks/gocardless/{clubId}', [GoCardlessWebhookController::class, 'handle'])
     ->name('webhooks.gocardless');
 
 Route::middleware(['auth'])->group(function () {
+    // Where Stripe sends a lodge officer back after they approve connecting their Stripe account
+    Route::get('/members/payments/stripe-callback', [StripeConnectController::class, 'callback'])->name('stripe.connect.callback');
+
     // Profile & Password Management Routes
     Route::get('/members/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/members/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -204,6 +212,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/{clubSlug}/admin/events/{id}', [EventAdminController::class, 'destroy'])->name('admin.events.destroy');
     Route::post('/{clubSlug}/admin/events/{id}/registrations', [EventAdminController::class, 'addRegistration'])->name('admin.events.registrations.store');
     Route::post('/{clubSlug}/admin/events/{id}/registrations/{registrationId}/cancel', [EventAdminController::class, 'cancelRegistration'])->name('admin.events.registrations.cancel');
+    Route::put('/{clubSlug}/admin/events/{id}/attendees/{attendeeId}/meal', [EventAdminController::class, 'updateAttendeeMeal'])->name('admin.events.attendees.meal');
     Route::post('/{clubSlug}/admin/events/{id}/registrations/{registrationId}/promote', [EventAdminController::class, 'promoteRegistration'])->name('admin.events.registrations.promote');
     Route::post('/{clubSlug}/admin/events/{id}/duplicate', [EventAdminController::class, 'duplicate'])->name('admin.events.duplicate');
     Route::post('/{clubSlug}/admin/events/{id}/cancel', [EventAdminController::class, 'cancel'])->name('admin.events.cancel');
@@ -439,6 +448,16 @@ Route::middleware(['auth'])->group(function () {
     // Admin Attendance Check-In Routes
     Route::get('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'show'])->name('admin.events.checkin');
     Route::post('/{clubSlug}/admin/events/{id}/checkin', [AttendanceController::class, 'checkIn'])->name('admin.events.checkin.store');
+    Route::get('/{clubSlug}/admin/email-templates', [ClubEmailTemplateController::class, 'index'])->name('admin.email_templates.index');
+    Route::put('/{clubSlug}/admin/email-templates/{key}', [ClubEmailTemplateController::class, 'update'])->name('admin.email_templates.update');
+    Route::delete('/{clubSlug}/admin/email-templates/{key}', [ClubEmailTemplateController::class, 'destroy'])->name('admin.email_templates.destroy');
+    Route::post('/{clubSlug}/admin/email-templates/{key}/test', [ClubEmailTemplateController::class, 'test'])->middleware('throttle:10,1')->name('admin.email_templates.test');
+    Route::post('/{clubSlug}/admin/payment-options/stripe/connect', [StripeConnectController::class, 'connect'])->name('admin.payment_options.stripe.connect');
+    Route::post('/{clubSlug}/admin/payment-options/stripe/express', [StripeConnectController::class, 'express'])->name('admin.payment_options.stripe.express');
+    Route::get('/{clubSlug}/admin/payment-options/stripe/refresh', [StripeConnectController::class, 'refresh'])->name('admin.payment_options.stripe.refresh');
+    Route::get('/{clubSlug}/admin/payment-options/stripe/return', [StripeConnectController::class, 'done'])->name('admin.payment_options.stripe.return');
+    Route::post('/{clubSlug}/admin/payment-options/stripe/terms', [StripeConnectController::class, 'acceptTerms'])->name('admin.payment_options.stripe.terms');
+    Route::post('/{clubSlug}/admin/payment-options/stripe/disconnect', [StripeConnectController::class, 'disconnect'])->name('admin.payment_options.stripe.disconnect');
     Route::get('/{clubSlug}/admin/payment-options', [PaymentOptionsController::class, 'index'])->name('admin.payment_options.index');
     Route::post('/{clubSlug}/admin/payment-options', [PaymentOptionsController::class, 'store'])->name('admin.payment_options.store');
     Route::put('/{clubSlug}/admin/payment-options/{id}', [PaymentOptionsController::class, 'update'])->name('admin.payment_options.update');
@@ -469,6 +488,9 @@ Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
     Route::get('/superadmin/email-templates', [SuperAdminController::class, 'emailTemplatesIndex'])->name('superadmin.email_templates.index');
     Route::put('/superadmin/email-templates/{id}', [SuperAdminController::class, 'updateEmailTemplate'])->name('superadmin.email_templates.update');
     Route::post('/superadmin/email-templates/{id}/test', [SuperAdminController::class, 'sendTestEmailTemplate'])->middleware('throttle:10,1')->name('superadmin.email_templates.test');
+    Route::get('/superadmin/platform-payments', [PlatformPaymentsAdminController::class, 'index'])->name('superadmin.platform_payments.index');
+    Route::get('/superadmin/platform-payments/export', [PlatformPaymentsAdminController::class, 'export'])->name('superadmin.platform_payments.export');
+    Route::put('/superadmin/platform-payments/{id}', [PlatformPaymentsAdminController::class, 'update'])->name('superadmin.platform_payments.update');
     Route::get('/superadmin/grand-lodges', [SuperAdminController::class, 'grandLodgesIndex'])->name('superadmin.grand_lodges.index');
     Route::post('/superadmin/grand-lodges', [SuperAdminController::class, 'storeGrandLodge'])->name('superadmin.grand_lodges.store');
     Route::put('/superadmin/grand-lodges/{id}', [SuperAdminController::class, 'updateGrandLodge'])->name('superadmin.grand_lodges.update');

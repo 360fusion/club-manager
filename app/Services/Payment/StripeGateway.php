@@ -17,13 +17,15 @@ class StripeGateway
     /**
      * Start a hosted Stripe Checkout page.
      *
+     * With a connected account, the page is created on that lodge's own Stripe account using the platform's key.
+     *
      * @param  array<string, mixed>  $params
      * @return array{id: string, url: string}
      */
-    public function createCheckoutSession(ClubPaymentMethod $method, array $params): array
+    public function createCheckoutSession(ClubPaymentMethod $method, array $params, ?string $connectedAccount = null): array
     {
         try {
-            $session = $this->client($method)->checkout->sessions->create($params);
+            $session = $this->client($method, $connectedAccount)->checkout->sessions->create($params, $connectedAccount ? ['stripe_account' => $connectedAccount] : []);
         } catch (ApiErrorException $e) {
             Log::warning('Stripe checkout could not be created', ['club' => $method->club_id, 'error' => $e->getMessage()]);
 
@@ -36,10 +38,14 @@ class StripeGateway
     /**
      * Refund some or all of a card payment. Amounts are in the smallest currency unit.
      */
-    public function refund(ClubPaymentMethod $method, string $paymentIntent, int $amountMinor): string
+    public function refund(ClubPaymentMethod $method, string $paymentIntent, int $amountMinor, ?string $connectedAccount = null): string
     {
         try {
-            $refund = $this->client($method)->refunds->create(['payment_intent' => $paymentIntent, 'amount' => $amountMinor]);
+            // On a connected account the platform's commission is returned in proportion to what is refunded.
+            $refund = $this->client($method, $connectedAccount)->refunds->create(
+                ['payment_intent' => $paymentIntent, 'amount' => $amountMinor] + ($connectedAccount ? ['refund_application_fee' => true] : []),
+                $connectedAccount ? ['stripe_account' => $connectedAccount] : [],
+            );
         } catch (ApiErrorException $e) {
             Log::warning('Stripe refund failed', ['club' => $method->club_id, 'error' => $e->getMessage()]);
 
@@ -49,8 +55,8 @@ class StripeGateway
         return (string) $refund->id;
     }
 
-    private function client(ClubPaymentMethod $method): StripeClient
+    private function client(ClubPaymentMethod $method, ?string $connectedAccount = null): StripeClient
     {
-        return new StripeClient((string) ($method->config['stripe_secret_key'] ?? ''));
+        return new StripeClient((string) ($connectedAccount ? config('platform_payments.stripe_secret') : ($method->config['stripe_secret_key'] ?? '')));
     }
 }

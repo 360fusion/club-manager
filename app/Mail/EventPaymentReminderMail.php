@@ -44,7 +44,7 @@ class EventPaymentReminderMail extends Mailable
                 ? '<p><a href="'.e(route('member.events', ['slug' => $event->club->slug])).'">Pay online now</a></p>'
                 : '',
             'payment_how' => view('emails.partials.event-pay-how', ['payment' => $payment, 'showBank' => true])->render(),
-        ]);
+        ], $event->club);
     }
 
     public function envelope(): Envelope

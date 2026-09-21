@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Club;
 use App\Models\ClubPaymentMethod;
 use App\Services\Events\EventPricing;
+use App\Services\Payment\PlatformFees;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -28,6 +29,7 @@ class PaymentOptionsController extends Controller
             'stripeWebhookUrl' => route('webhooks.stripe.club', ['clubId' => $club->id]),
             'paypalWebhookUrl' => route('webhooks.paypal.club', ['clubId' => $club->id]),
             'onlinePaymentsLive' => (bool) config('events.online_payments'),
+            'platform' => $this->platform($club),
             'bankDefaults' => [
                 'account_name' => $club->name,
                 'sort_code' => $club->settings['bank_sort_code'] ?? '',
@@ -99,6 +101,7 @@ class PaymentOptionsController extends Controller
             'config.stripe_publishable_key' => 'nullable|string|max:255',
             'config.stripe_secret_key' => 'nullable|string|max:500',
             'config.stripe_webhook_secret' => 'nullable|string|max:500',
+            'config.stripe_mode' => 'nullable|in:keys,connect',
             'config.paypal_client_id' => 'nullable|string|max:255',
             'config.paypal_client_secret' => 'nullable|string|max:500',
             'config.paypal_webhook_id' => 'nullable|string|max:100',
@@ -127,6 +130,34 @@ class PaymentOptionsController extends Controller
     }
 
     /**
+     * Whether this lodge can connect Stripe to the platform, where its account stands, and the fee it would agree to.
+     *
+     * @return array<string, mixed>
+     */
+    private function platform(Club $club): array
+    {
+        $enabled = (bool) config('platform_payments.enabled') && ! empty(config('platform_payments.stripe_secret'));
+        $account = $club->platformAccount;
+        $active = $account && $account->disconnected_at === null ? $account : null;
+
+        return [
+            'enabled' => $enabled,
+            'can_connect_existing' => $enabled && ! empty(config('platform_payments.connect_client_id')),
+            'fee' => app(PlatformFees::class)->describe($active, $club->currencySymbol()),
+            'terms_url' => config('platform_payments.terms_url'),
+            'account' => $active ? [
+                'type' => $active->type,
+                'details_submitted' => $active->details_submitted,
+                'charges_enabled' => $active->charges_enabled,
+                'payouts_enabled' => $active->payouts_enabled,
+                'requirements' => $active->requirements ?? [],
+                'terms_accepted' => $active->terms_accepted_at !== null,
+                'ready' => $active->canTakePayments(),
+            ] : null,
+        ];
+    }
+
+    /**
      * Keep only the settings each type uses. Secrets are write-only: leaving one blank keeps the saved value.
      *
      * @param  array<string, mixed>  $input
@@ -141,7 +172,14 @@ class PaymentOptionsController extends Controller
         }
 
         if ($method->type === ClubPaymentMethod::CARD) {
-            $config = ['stripe_publishable_key' => $input['stripe_publishable_key'] ?? ($current['stripe_publishable_key'] ?? null)];
+            $mode = ($input['stripe_mode'] ?? ($current['stripe_mode'] ?? 'keys')) === 'connect' ? 'connect' : 'keys';
+
+            // Through the platform there are no keys to keep: the connected account takes their place.
+            if ($mode === 'connect') {
+                return ['stripe_mode' => 'connect'];
+            }
+
+            $config = ['stripe_mode' => 'keys', 'stripe_publishable_key' => $input['stripe_publishable_key'] ?? ($current['stripe_publishable_key'] ?? null)];
 
             foreach (['stripe_secret_key', 'stripe_webhook_secret'] as $secret) {
                 $config[$secret] = filled($input[$secret] ?? null) ? $input[$secret] : ($current[$secret] ?? null);
@@ -188,6 +226,7 @@ class PaymentOptionsController extends Controller
             'config' => [
                 ...$m->bankDetails(),
                 'stripe_publishable_key' => $config['stripe_publishable_key'] ?? null,
+                'stripe_mode' => $config['stripe_mode'] ?? 'keys',
                 'paypal_client_id' => $config['paypal_client_id'] ?? null,
                 'paypal_webhook_id' => $config['paypal_webhook_id'] ?? null,
                 'paypal_mode' => $config['paypal_mode'] ?? 'live',

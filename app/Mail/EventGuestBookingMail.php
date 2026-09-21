@@ -50,7 +50,7 @@ class EventGuestBookingMail extends Mailable
             'meal_choices' => $meal ? '<p style="margin-bottom:4px;"><strong>Your meal</strong></p><p style="margin-top:0;">'.e(implode(' · ', $meal)).'</p>' : '',
             'dietary_note' => $this->guest->dietary_requirements ? '<p><strong>Dietary needs noted:</strong> '.e($this->guest->dietary_requirements).'</p>' : '',
             'cancellation_policy' => $event->cancellation_policy ? '<p style="color:#475569"><small>'.e($event->cancellation_policy).'</small></p>' : '',
-        ]);
+        ], $event->club);
     }
 
     public function envelope(): Envelope

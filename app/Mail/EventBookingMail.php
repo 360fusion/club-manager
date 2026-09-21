@@ -54,7 +54,7 @@ class EventBookingMail extends Mailable
             'booked_for' => view('emails.partials.event-attendees', ['registration' => $registration])->render(),
             'payment_details' => view('emails.partials.event-payment-summary', ['registration' => $registration, 'payment' => $payment, 'symbol' => Currencies::symbolFor($club)])->render(),
             'cancellation_policy' => $event->cancellation_policy ? '<p style="color:#475569"><small>'.e($event->cancellation_policy).'</small></p>' : '',
-        ]);
+        ], $club);
     }
 
     public function envelope(): Envelope
