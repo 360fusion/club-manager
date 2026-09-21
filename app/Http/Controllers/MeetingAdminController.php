@@ -165,42 +165,42 @@ class MeetingAdminController extends Controller
         $validated = $request->validate([
             'id' => 'nullable|exists:meetings,id',
             'title' => 'required|string|max:255',
-            'meeting_number' => 'nullable|integer',
+            'meeting_number' => 'nullable|integer|max:1000000',
             'meeting_date' => 'required|date',
-            'starts_at' => 'required|string',
-            'rehearsal_starts_at' => 'nullable|string',
+            'starts_at' => 'required|string|max:20',
+            'rehearsal_starts_at' => 'nullable|string|max:20',
             'venue' => 'required|string|max:255',
             'dress_code' => 'required|string|max:255',
             'salutation' => 'nullable|string|max:255',
-            'intro_text' => 'nullable|string',
-            'rehearsal_text' => 'nullable|string',
-            'festive_board_theme' => 'nullable|string',
-            'festive_board_menu' => 'nullable|string',
-            'dining_cost_member' => 'required|numeric|min:0',
-            'dining_cost_guest' => 'required|numeric|min:0',
+            'intro_text' => 'nullable|string|max:10000',
+            'rehearsal_text' => 'nullable|string|max:10000',
+            'festive_board_theme' => 'nullable|string|max:255',
+            'festive_board_menu' => 'nullable|string|max:10000',
+            'dining_cost_member' => 'required|numeric|min:0|max:99999999.99',
+            'dining_cost_guest' => 'required|numeric|min:0|max:99999999.99',
             'bank_sort_code' => 'nullable|string|max:20',
             'bank_account_number' => 'nullable|string|max:30',
             'payment_reference_prefix' => 'nullable|string|max:50',
             'payment_link' => 'nullable|string|max:500',
-            'almoner_notice' => 'nullable|string',
-            'sick_distressed_notes' => 'nullable|string',
-            'honorary_members_text' => 'nullable|string',
-            'provincial_header_text' => 'nullable|string',
-            'fraternal_visits_text' => 'nullable|string',
+            'almoner_notice' => 'nullable|string|max:10000',
+            'sick_distressed_notes' => 'nullable|string|max:10000',
+            'honorary_members_text' => 'nullable|string|max:10000',
+            'provincial_header_text' => 'nullable|string|max:10000',
+            'fraternal_visits_text' => 'nullable|string|max:10000',
             'officers_year_label' => 'nullable|string|max:255',
-            'officers_roster' => 'nullable|array',
+            'officers_roster' => 'nullable|array|max:100',
             'front_page_logo' => 'nullable|string|max:1000',
             'front_page_logo_file' => UploadRules::image(5120),
             'front_page_title' => 'nullable|string|max:255',
             'provincial_grand_master' => 'nullable|string|max:255',
             'deputy_provincial_grand_master' => 'nullable|string|max:255',
-            'assistant_provincial_grand_masters' => 'nullable|string',
+            'assistant_provincial_grand_masters' => 'nullable|string|max:10000',
             'cover_club_name' => 'nullable|string|max:255',
             'cover_club_number' => 'nullable|string|max:100',
             'cover_motto' => 'nullable|string|max:255',
             'cover_worshipful_master' => 'nullable|string|max:255',
             'status' => 'required|in:draft,published,completed,cancelled',
-            'agenda_items' => 'nullable|array',
+            'agenda_items' => 'nullable|array|max:100',
         ]);
 
         if ($request->hasFile('front_page_logo_file')) {
@@ -458,9 +458,9 @@ class MeetingAdminController extends Controller
             'year' => 'required|integer|min:2025|max:2035',
             'occurrence' => 'required|in:1st,2nd,3rd,4th,last',
             'day_of_week' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            'starts_at' => 'nullable|string',
-            'rehearsal_starts_at' => 'nullable|string',
-            'active_months' => 'required|array|min:1',
+            'starts_at' => 'nullable|string|max:20',
+            'rehearsal_starts_at' => 'nullable|string|max:20',
+            'active_months' => 'required|array|min:1|max:100',
         ]);
 
         $startTime = $request->starts_at ?: '18:30';
@@ -614,13 +614,13 @@ class MeetingAdminController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'attendance_status' => 'required|in:attending_dining,attending_meeting_only,apologies',
-            'apology_reason' => 'nullable|string',
-            'dietary_requirements' => 'nullable|string',
+            'apology_reason' => 'nullable|string|max:1000',
+            'dietary_requirements' => 'nullable|string|max:1000',
             'payment_status' => 'nullable|in:unpaid,paid,waived,refunded',
-            'payment_reference' => 'nullable|string',
-            'guests' => 'nullable|array',
-            'guests.*.guest_name' => 'nullable|string',
-            'guests.*.dietary_requirements' => 'nullable|string',
+            'payment_reference' => 'nullable|string|max:100',
+            'guests' => 'nullable|array|max:50',
+            'guests.*.guest_name' => 'nullable|string|max:150',
+            'guests.*.dietary_requirements' => 'nullable|string|max:1000',
             'guests.*.attending_dining' => 'nullable|boolean',
         ]);
 
@@ -682,7 +682,7 @@ class MeetingAdminController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'payment_status' => 'required|in:unpaid,paid,waived,refunded',
-            'payment_reference' => 'nullable|string',
+            'payment_reference' => 'nullable|string|max:255',
         ]);
 
         $user = $this->rsvpUser($club, $meeting, (int) $validated['user_id']);
@@ -760,17 +760,17 @@ class MeetingAdminController extends Controller
         if ($isDraft) {
             $validated = $request->validate([
                 'return_date' => 'nullable|date',
-                'dining_fee_per_head' => 'nullable|numeric|min:0',
-                'paid_diners_count' => 'nullable|integer|min:0',
-                'waived_diners_count' => 'nullable|integer|min:0',
-                'waived_reason' => 'nullable|string',
-                'kitchen_cost_per_head' => 'nullable|numeric|min:0',
+                'dining_fee_per_head' => 'nullable|numeric|min:0|max:99999999.99',
+                'paid_diners_count' => 'nullable|integer|min:0|max:1000000',
+                'waived_diners_count' => 'nullable|integer|min:0|max:1000000',
+                'waived_reason' => 'nullable|string|max:10000',
+                'kitchen_cost_per_head' => 'nullable|numeric|min:0|max:99999999.99',
                 'kitchen_vendor_name' => 'nullable|string|max:255',
-                'raffle_amount' => 'nullable|numeric|min:0',
-                'alms_amount' => 'nullable|numeric|min:0',
-                'donations_amount' => 'nullable|numeric|min:0',
-                'bequest_amount' => 'nullable|numeric|min:0',
-                'notes' => 'nullable|string',
+                'raffle_amount' => 'nullable|numeric|min:0|max:99999999.99',
+                'alms_amount' => 'nullable|numeric|min:0|max:99999999.99',
+                'donations_amount' => 'nullable|numeric|min:0|max:99999999.99',
+                'bequest_amount' => 'nullable|numeric|min:0|max:99999999.99',
+                'notes' => 'nullable|string|max:10000',
             ]);
 
             $accountingService->saveMeetingFinancialReturnDraft($club, $meeting, $validated);
@@ -781,17 +781,17 @@ class MeetingAdminController extends Controller
 
         $validated = $request->validate([
             'return_date' => 'required|date',
-            'dining_fee_per_head' => 'required|numeric|min:0',
-            'paid_diners_count' => 'required|integer|min:0',
-            'waived_diners_count' => 'nullable|integer|min:0',
-            'waived_reason' => 'nullable|string',
-            'kitchen_cost_per_head' => 'required|numeric|min:0',
+            'dining_fee_per_head' => 'required|numeric|min:0|max:99999999.99',
+            'paid_diners_count' => 'required|integer|min:0|max:1000000',
+            'waived_diners_count' => 'nullable|integer|min:0|max:1000000',
+            'waived_reason' => 'nullable|string|max:10000',
+            'kitchen_cost_per_head' => 'required|numeric|min:0|max:99999999.99',
             'kitchen_vendor_name' => 'nullable|string|max:255',
-            'raffle_amount' => 'nullable|numeric|min:0',
-            'alms_amount' => 'nullable|numeric|min:0',
-            'donations_amount' => 'nullable|numeric|min:0',
-            'bequest_amount' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
+            'raffle_amount' => 'nullable|numeric|min:0|max:99999999.99',
+            'alms_amount' => 'nullable|numeric|min:0|max:99999999.99',
+            'donations_amount' => 'nullable|numeric|min:0|max:99999999.99',
+            'bequest_amount' => 'nullable|numeric|min:0|max:99999999.99',
+            'notes' => 'nullable|string|max:10000',
         ]);
 
         $accountingService->postMeetingFinancialReturn($club, $meeting, $validated);
@@ -852,12 +852,12 @@ class MeetingAdminController extends Controller
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
         $validated = $request->validate([
-            'masonic_year' => 'required|string',
-            'assignments' => 'present|array',
+            'masonic_year' => 'required|string|max:20',
+            'assignments' => 'present|array|max:100',
             'assignments.*.member_id' => 'required|integer',
-            'assignments.*.office' => 'required|string',
-            'notes' => 'nullable|string',
-            'status' => 'nullable|string',
+            'assignments.*.office' => 'required|string|max:50',
+            'notes' => 'nullable|string|max:10000',
+            'status' => 'nullable|string|max:50',
         ]);
 
         try {

@@ -124,9 +124,9 @@ class PublicSiteController extends Controller
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:50',
             'message' => 'nullable|string|max:5000',
-            'recipient_email' => 'nullable|email',
-            'cc_emails' => 'nullable|string',
-            'success_message' => 'nullable|string',
+            'recipient_email' => 'nullable|email|max:255',
+            'cc_emails' => 'nullable|string|max:1000',
+            'success_message' => 'nullable|string|max:1000',
         ]);
 
         // Recipients are never taken on trust from the request. A form may only send to the

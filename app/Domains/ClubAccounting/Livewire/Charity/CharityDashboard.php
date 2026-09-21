@@ -127,12 +127,12 @@ class CharityDashboard extends Component
         $club = $this->getClub();
 
         $this->validate([
-            'collection_type' => 'required|string',
-            'cash_amount' => 'required|numeric|min:0',
-            'cheque_amount' => 'required|numeric|min:0',
+            'collection_type' => 'required|string|max:50',
+            'cash_amount' => 'required|numeric|min:0|max:99999999.99',
+            'cheque_amount' => 'required|numeric|min:0|max:99999999.99',
             'counted_by_member_id' => 'required|exists:club_acc_members,id',
             'witnessed_by_member_id' => 'required|exists:club_acc_members,id|different:counted_by_member_id',
-            'collection_notes' => 'nullable|string',
+            'collection_notes' => 'nullable|string|max:10000',
         ], [
             'witnessed_by_member_id.different' => 'Witness must be a different brother than the Counter for dual-custody verification.',
         ]);
@@ -179,9 +179,9 @@ class CharityDashboard extends Component
 
         $this->validate([
             'recipient_name' => 'required|string|max:150',
-            'purpose' => 'required|string',
-            'grant_amount' => 'required|numeric|min:0.01',
-            'approval_status' => 'required|string',
+            'purpose' => 'required|string|max:10000',
+            'grant_amount' => 'required|numeric|min:0.01|max:99999999.99',
+            'approval_status' => 'required|string|max:50',
             'proposer_member_id' => 'nullable|exists:club_acc_members,id',
             'seconder_member_id' => 'nullable|exists:club_acc_members,id|different:proposer_member_id',
             'committee_meeting_id' => 'nullable|exists:club_acc_committee_meetings,id',
@@ -232,11 +232,11 @@ class CharityDashboard extends Component
         $this->validate([
             'festival_name' => 'required|string|max:150',
             'relief_chest_ref' => 'required|string|max:50',
-            'target_amount' => 'required|numeric|min:0',
-            'bronze_tier' => 'required|numeric|min:0',
-            'silver_tier' => 'required|numeric|min:0',
-            'gold_tier' => 'required|numeric|min:0',
-            'platinum_tier' => 'required|numeric|min:0',
+            'target_amount' => 'required|numeric|min:0|max:99999999.99',
+            'bronze_tier' => 'required|numeric|min:0|max:99999999.99',
+            'silver_tier' => 'required|numeric|min:0|max:99999999.99',
+            'gold_tier' => 'required|numeric|min:0|max:99999999.99',
+            'platinum_tier' => 'required|numeric|min:0|max:99999999.99',
         ]);
 
         FestivalTarget::updateOrCreate(
@@ -277,8 +277,8 @@ class CharityDashboard extends Component
     public function saveMemberGiving(): void
     {
         $this->validate([
-            'regular_giving_amount' => 'required|numeric|min:0',
-            'total_donated_to_date' => 'required|numeric|min:0',
+            'regular_giving_amount' => 'required|numeric|min:0|max:99999999.99',
+            'total_donated_to_date' => 'required|numeric|min:0|max:99999999.99',
             'qualifies_for_jewel' => 'boolean',
             'qualifies_for_bar' => 'boolean',
         ]);

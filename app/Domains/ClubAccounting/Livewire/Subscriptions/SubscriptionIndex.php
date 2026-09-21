@@ -132,8 +132,8 @@ class SubscriptionIndex extends Component
 
         $this->validate([
             'tier_name' => 'required|string|max:100',
-            'tier_amount' => 'required|numeric|min:0',
-            'tier_description' => 'nullable|string',
+            'tier_amount' => 'required|numeric|min:0|max:99999999.99',
+            'tier_description' => 'nullable|string|max:10000',
             'tier_active' => 'boolean',
         ]);
 
@@ -185,9 +185,9 @@ class SubscriptionIndex extends Component
         $sub = MemberSubscription::where('club_id', $club->id)->findOrFail($this->selectedSubscriptionId);
 
         $this->validate([
-            'payment_amount' => 'required|numeric|min:0.01',
+            'payment_amount' => 'required|numeric|min:0.01|max:99999999.99',
             'payment_reference' => 'nullable|string|max:100',
-            'payment_notes' => 'nullable|string',
+            'payment_notes' => 'nullable|string|max:10000',
         ]);
 
         $billingService->recordPayment(

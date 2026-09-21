@@ -65,8 +65,8 @@ class MembershipAdminController extends Controller
         $validated = $request->validate([
             'id' => 'nullable|integer',
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string|max:10000',
+            'price' => 'required|numeric|min:0|max:99999999.99',
             'billing_period' => 'required|in:monthly,yearly,one_time',
         ]);
 

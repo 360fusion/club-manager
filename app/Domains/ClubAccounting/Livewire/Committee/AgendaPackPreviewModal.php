@@ -118,8 +118,8 @@ class AgendaPackPreviewModal extends Component
     {
         $this->validate([
             'emailSubject' => 'required|string|max:255',
-            'emailBody' => 'required|string',
-            'selectedRecipientIds' => 'required|array|min:1',
+            'emailBody' => 'required|string|max:10000',
+            'selectedRecipientIds' => 'required|array|min:1|max:100',
         ], [
             'selectedRecipientIds.min' => 'Please select at least one brethren recipient to dispatch the pack to.',
         ]);

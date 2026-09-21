@@ -500,4 +500,16 @@ class SecurityAuditTest extends TestCase
         $this->assertSame(1, $sent);
         Mail::assertQueuedCount(1);
     }
+
+    public function test_rsvp_guest_numbers_follow_the_clubs_setting_and_text_is_length_limited(): void
+    {
+        $this->a->update(['settings' => ['max_guests_per_member' => 1]]);
+        $meeting = Meeting::create(['club_id' => $this->a->id, 'title' => 'Regular', 'meeting_date' => now()->addDays(9)->toDateString(), 'starts_at' => '19:00:00', 'venue' => 'Hall', 'dress_code' => 'Suit', 'status' => 'published']);
+        $url = route('member.meetings.rsvp', ['slug' => 'club-a', 'id' => $meeting->id]);
+        $guest = fn (string $name) => ['guest_name' => $name, 'attending_dining' => true];
+
+        $this->actingAs($this->member)->post($url, ['attendance_status' => 'attending_dining', 'guests' => [$guest('A'), $guest('B')]])->assertSessionHasErrors('guests');
+        $this->actingAs($this->member)->post($url, ['attendance_status' => 'apologies', 'apology_reason' => str_repeat('x', 1001)])->assertSessionHasErrors('apology_reason');
+        $this->actingAs($this->member)->post($url, ['attendance_status' => 'attending_dining', 'guests' => [$guest('A')]])->assertSessionHasNoErrors();
+    }
 }

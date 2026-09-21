@@ -62,7 +62,7 @@ class TwoFactorAuthController extends Controller
     public function confirm(Request $request, ConfirmTwoFactorAuthentication $confirm): RedirectResponse
     {
         $request->validate([
-            'code' => 'required|string',
+            'code' => 'required|string|max:32',
         ]);
 
         $confirm($request->user(), $request->code);

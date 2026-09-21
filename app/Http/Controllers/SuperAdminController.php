@@ -124,11 +124,11 @@ class SuperAdminController extends Controller
             'name' => 'required|string|max:100',
             'code' => 'required|string|max:50|unique:club_types,code',
             'colour' => ['nullable', Rule::in(OrderColours::KEYS)],
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
             'website_url' => 'nullable|url|max:255',
-            'available_modules' => 'nullable|array',
-            'terminology' => 'nullable|array',
-            'rulers_schema' => 'nullable|array',
+            'available_modules' => 'nullable|array|max:50',
+            'terminology' => 'nullable|array|max:100',
+            'rulers_schema' => 'nullable|array|max:100',
         ]);
 
         $ct = ClubType::create([
@@ -156,11 +156,11 @@ class SuperAdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'colour' => ['nullable', Rule::in(OrderColours::KEYS)],
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
             'website_url' => 'nullable|url|max:255',
-            'available_modules' => 'nullable|array',
-            'terminology' => 'nullable|array',
-            'rulers_schema' => 'nullable|array',
+            'available_modules' => 'nullable|array|max:50',
+            'terminology' => 'nullable|array|max:100',
+            'rulers_schema' => 'nullable|array|max:100',
         ]);
 
         $clubType->update([
@@ -202,7 +202,7 @@ class SuperAdminController extends Controller
 
         $validated = $request->validate([
             'subject' => 'required|string|max:255',
-            'body_html' => 'required|string',
+            'body_html' => 'required|string|max:200000',
         ]);
 
         $template->update($validated);
@@ -233,7 +233,7 @@ class SuperAdminController extends Controller
             'short_name' => 'nullable|string|max:50',
             'country' => 'required|string|max:100',
             'website_url' => 'nullable|url|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
         ]);
 
         $grandLodge = GrandLodge::create($validated);
@@ -253,7 +253,7 @@ class SuperAdminController extends Controller
             'short_name' => 'nullable|string|max:50',
             'country' => 'required|string|max:100',
             'website_url' => 'nullable|url|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
         ]);
 
         $grandLodge->update($validated);
@@ -343,7 +343,7 @@ class SuperAdminController extends Controller
             'email' => 'nullable|email|max:150',
             'twitter_url' => 'nullable|url|max:255',
             'facebook_url' => 'nullable|url|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
         ]);
 
         $province = Province::create($validated);
@@ -375,7 +375,7 @@ class SuperAdminController extends Controller
             'email' => 'nullable|email|max:150',
             'twitter_url' => 'nullable|url|max:255',
             'facebook_url' => 'nullable|url|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
         ]);
 
         $province->update($validated);
@@ -483,7 +483,7 @@ class SuperAdminController extends Controller
             'email' => 'nullable|email|max:150',
             'twitter_url' => 'nullable|url|max:255',
             'facebook_url' => 'nullable|url|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
         ]);
 
         $district = District::create($validated);
@@ -516,7 +516,7 @@ class SuperAdminController extends Controller
             'email' => 'nullable|email|max:150',
             'twitter_url' => 'nullable|url|max:255',
             'facebook_url' => 'nullable|url|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
         ]);
 
         $district->update($validated);

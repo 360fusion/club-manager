@@ -147,10 +147,10 @@ class NewsletterAdminController extends Controller
             'id' => 'nullable|integer',
             'newsletter_type_id' => 'nullable|exists:newsletter_types,id',
             'subject' => 'required|string|max:255',
-            'content' => 'required|string',
-            'target_roles' => 'required|array',
+            'content' => 'required|string|max:200000',
+            'target_roles' => 'required|array|max:10',
             'status' => 'required|in:draft,sent',
-            'existing_attachments' => 'nullable|array',
+            'existing_attachments' => 'nullable|array|max:50',
             'new_attachments.*' => UploadRules::attachment(10240),
         ]);
 

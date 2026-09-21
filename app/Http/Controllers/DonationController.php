@@ -20,7 +20,7 @@ class DonationController extends Controller
         $validated = $request->validate([
             'donor_name' => 'required|string|max:255',
             'donor_email' => 'required|email|max:255',
-            'amount' => 'required|numeric|min:1',
+            'amount' => 'required|numeric|min:1|max:99999999.99',
         ]);
 
         $amount = (float) $validated['amount'];

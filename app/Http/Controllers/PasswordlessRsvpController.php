@@ -71,14 +71,14 @@ class PasswordlessRsvpController extends Controller
 
         $validated = $request->validate([
             'attendance_status' => 'required|'.$allowedStatuses,
-            'apology_reason' => 'nullable|string',
-            'dietary_requirements' => 'nullable|string',
-            'guests' => 'nullable|array',
+            'apology_reason' => 'nullable|string|max:1000',
+            'dietary_requirements' => 'nullable|string|max:1000',
+            'guests' => 'nullable|array|max:'.$club->maxGuestsPerMember(),
             'guests.*.guest_name' => 'required|string|max:150',
             'guests.*.guest_title_rank' => 'nullable|string|max:100',
             'guests.*.home_club_lodge' => 'nullable|string|max:150',
             'guests.*.attending_dining' => 'required|boolean',
-            'guests.*.dietary_requirements' => 'nullable|string',
+            'guests.*.dietary_requirements' => 'nullable|string|max:1000',
         ]);
 
         $surname = strtoupper(last(explode(' ', $rsvp->user->name)));

@@ -39,7 +39,7 @@ class VisitorRegistrationController extends Controller
             'home_club_name' => 'required|string|max:255',
             'home_club_number' => 'nullable|string|max:100',
             'phone' => 'nullable|string|max:50',
-            'dietary_notes' => 'nullable|string',
+            'dietary_notes' => 'nullable|string|max:1000',
         ]);
 
         // Find or create user account

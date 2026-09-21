@@ -447,9 +447,9 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $validated = $request->validate([
             'transaction_id' => 'required|integer',
-            'match_type' => 'required|string',
+            'match_type' => 'required|string|max:50',
             'target_id' => 'required',
-            'nominal_code' => 'nullable|string',
+            'nominal_code' => 'nullable|string|max:255',
         ]);
 
         $tx = BankTransaction::where('club_id', $club->id)
@@ -554,7 +554,7 @@ class AccountingAdminController extends Controller
             'code' => ['required', 'string', 'max:30', 'unique:accounting_accounts,code,NULL,id,club_id,'.$club->id],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:asset,liability,equity,revenue,expense'],
-            'opening_balance' => ['nullable', 'numeric'],
+            'opening_balance' => ['nullable', 'numeric', 'max:99999999.99'],
             'as_of_date' => ['nullable', 'date'],
         ]);
 
@@ -580,7 +580,7 @@ class AccountingAdminController extends Controller
 
         $validated = $request->validate([
             'account_id' => ['required', 'exists:accounting_accounts,id'],
-            'opening_balance' => ['required', 'numeric'],
+            'opening_balance' => ['required', 'numeric', 'max:99999999.99'],
             'as_of_date' => ['nullable', 'date'],
         ]);
 
@@ -622,7 +622,7 @@ class AccountingAdminController extends Controller
         $validated = $request->validate([
             'description' => ['required', 'string', 'max:255'],
             'entry_date' => ['required', 'date'],
-            'items' => ['required', 'array', 'min:2'],
+            'items' => ['required', 'array', 'min:2', 'max:100'],
             'items.*.account_id' => ['required', 'exists:accounting_accounts,id'],
             'items.*.debit' => ['numeric', 'min:0'],
             'items.*.credit' => ['numeric', 'min:0'],
@@ -777,7 +777,7 @@ class AccountingAdminController extends Controller
         $validated = $request->validate([
             'vendor_name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
-            'amount' => ['required', 'numeric', 'min:0.01'],
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:99999999.99'],
             'due_date' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:500'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
@@ -891,7 +891,7 @@ class AccountingAdminController extends Controller
         $validated = $request->validate([
             'user_id' => ['required', 'exists:users,id'],
             'title' => ['required', 'string', 'max:255'],
-            'amount' => ['required', 'numeric', 'min:0'],
+            'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'status' => ['required', 'string', 'in:draft,unpaid,paid'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
         ]);
@@ -969,7 +969,7 @@ class AccountingAdminController extends Controller
         $validated = $request->validate([
             'vendor_name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
-            'amount' => ['required', 'numeric', 'min:0'],
+            'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'due_date' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:500'],
             'status' => ['required', 'string', 'in:draft,unpaid,paid'],
@@ -1132,7 +1132,7 @@ class AccountingAdminController extends Controller
         $validated = $request->validate([
             'description' => ['required', 'string', 'max:255'],
             'entry_date' => ['required', 'date'],
-            'items' => ['required', 'array', 'min:2'],
+            'items' => ['required', 'array', 'min:2', 'max:100'],
             'items.*.account_id' => ['required', 'exists:accounting_accounts,id'],
             'items.*.debit' => ['numeric', 'min:0'],
             'items.*.credit' => ['numeric', 'min:0'],
@@ -1526,7 +1526,7 @@ class AccountingAdminController extends Controller
             'account_number' => 'nullable|string|max:50',
             'sort_code' => 'nullable|string|max:20',
             'currency' => 'required|string|size:3',
-            'opening_balance' => 'required|numeric',
+            'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
         $existingCodes = Account::where('club_id', $club->id)
@@ -1580,10 +1580,10 @@ class AccountingAdminController extends Controller
         $validated = $request->validate([
             'account_name' => 'required|string|max:150',
             'paypal_client_id' => 'required|string',
-            'paypal_client_secret' => 'required|string',
+            'paypal_client_secret' => 'required|string|max:500',
             'paypal_environment' => 'required|string|in:live,sandbox',
             'currency' => 'required|string|size:3',
-            'opening_balance' => 'required|numeric',
+            'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
         $syncService = new PayPalSyncService;
@@ -1688,9 +1688,9 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $validated = $request->validate([
             'account_name' => 'required|string|max:150',
-            'stripe_secret_key' => 'required|string',
+            'stripe_secret_key' => 'required|string|max:500',
             'currency' => 'required|string|size:3',
-            'opening_balance' => 'required|numeric',
+            'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
         $syncService = new StripeSyncService;
@@ -1770,9 +1770,9 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $validated = $request->validate([
             'account_name' => 'required|string|max:150',
-            'sumup_api_key' => 'required|string',
+            'sumup_api_key' => 'required|string|max:500',
             'currency' => 'required|string|size:3',
-            'opening_balance' => 'required|numeric',
+            'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
         $syncService = new SumUpSyncService;
@@ -1853,11 +1853,11 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $validated = $request->validate([
             'account_name' => 'required|string|max:150',
-            'gocardless_access_token' => 'required|string',
+            'gocardless_access_token' => 'required|string|max:500',
             'gocardless_environment' => 'required|string|in:sandbox,live',
-            'gocardless_webhook_secret' => 'nullable|string',
+            'gocardless_webhook_secret' => 'nullable|string|max:500',
             'currency' => 'required|string|size:3',
-            'opening_balance' => 'required|numeric',
+            'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
         $syncService = new GoCardlessSyncService;

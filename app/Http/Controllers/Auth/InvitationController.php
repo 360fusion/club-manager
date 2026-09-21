@@ -91,7 +91,7 @@ class InvitationController extends Controller
 
         if ($isExistingUser) {
             $request->validate([
-                'password' => 'required|string',
+                'password' => 'required|string|max:255',
             ]);
 
             if (! Hash::check($request->password, $user->password)) {

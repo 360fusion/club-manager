@@ -155,7 +155,7 @@ class PageAdminController extends Controller
             'is_published' => 'boolean',
             'is_homepage' => 'boolean',
             'show_in_navigation' => 'boolean',
-            'blocks' => 'array',
+            'blocks' => 'array|max:200',
         ]);
 
         $isHome = ($validated['slug'] === 'home');
@@ -196,7 +196,7 @@ class PageAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
         $validated = $request->validate([
-            'order' => 'required|array',
+            'order' => 'required|array|max:500',
             'order.*' => 'integer',
         ]);
 

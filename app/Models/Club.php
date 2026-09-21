@@ -389,4 +389,14 @@ class Club extends Model implements HasMedia
 
         return in_array($moduleCode, $typeModules, true);
     }
+
+    /**
+     * How many guests one member may bring to a meeting: the club's own setting, else a sensible ceiling.
+     */
+    public function maxGuestsPerMember(): int
+    {
+        $setting = $this->settings['max_guests_per_member'] ?? null;
+
+        return is_numeric($setting) ? max(0, (int) $setting) : 10;
+    }
 }

@@ -305,7 +305,7 @@ class ClubSettingsController extends Controller
             'provincial_name' => 'nullable|string|max:255',
             'provincial_grand_master' => 'nullable|string|max:255',
             'deputy_provincial_grand_master' => 'nullable|string|max:255',
-            'assistant_provincial_grand_masters' => 'nullable|string',
+            'assistant_provincial_grand_masters' => 'nullable|string|max:10000',
             'officers_year_label' => 'nullable|string|max:255',
             'officers_roster' => 'nullable|array|max:100',
             'officers_roster.*.role' => 'nullable|string|max:255',
@@ -313,7 +313,7 @@ class ClubSettingsController extends Controller
             'custom_domain' => ['nullable', 'string', 'max:255', 'regex:/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i', Rule::unique('clubs', 'custom_domain')->ignore($club->id)],
             'enabled_modules' => 'nullable|array|max:50',
             'enabled_modules.*' => 'string|max:100',
-            'permission_matrix' => 'nullable|array',
+            'permission_matrix' => 'nullable|array|max:100',
             'permission_matrix.*.roles' => 'nullable|array|max:10',
             'permission_matrix.*.roles.*' => ['string', Rule::in(['owner', 'admin', 'coach', 'treasurer', 'member'])],
 

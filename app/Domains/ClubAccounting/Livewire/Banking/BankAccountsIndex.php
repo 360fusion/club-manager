@@ -71,7 +71,7 @@ class BankAccountsIndex extends Component
             'account_number' => 'nullable|string|max:50',
             'sort_code' => 'nullable|string|max:20',
             'currency' => 'required|string|size:3',
-            'opening_balance' => 'required|numeric',
+            'opening_balance' => 'required|numeric|max:99999999.99',
         ]);
 
         $club = $this->getClub();

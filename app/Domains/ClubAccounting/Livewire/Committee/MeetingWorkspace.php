@@ -93,8 +93,8 @@ class MeetingWorkspace extends Component
         $meeting = $this->getMeeting();
         $this->validate([
             'grantRecipient' => 'required|string|max:150',
-            'grantPurpose' => 'required|string',
-            'grantAmount' => 'required|numeric|min:0.01',
+            'grantPurpose' => 'required|string|max:10000',
+            'grantAmount' => 'required|numeric|min:0.01|max:99999999.99',
             'grantProposerId' => 'nullable|exists:club_acc_members,id',
             'grantSeconderId' => 'nullable|exists:club_acc_members,id|different:grantProposerId',
         ], [
@@ -225,8 +225,8 @@ class MeetingWorkspace extends Component
     {
         $this->validate([
             'agendaTitle' => 'required|string|max:255',
-            'agendaItemType' => 'required|string',
-            'agendaDescription' => 'nullable|string',
+            'agendaItemType' => 'required|string|max:50',
+            'agendaDescription' => 'nullable|string|max:10000',
         ]);
 
         $meeting = $this->getMeeting();

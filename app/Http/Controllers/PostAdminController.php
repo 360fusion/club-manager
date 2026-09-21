@@ -105,17 +105,17 @@ class PostAdminController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
             'excerpt' => 'nullable|string|max:500',
-            'content' => 'nullable|string',
+            'content' => 'nullable|string|max:200000',
             'status' => 'required|in:draft,published',
             'visibility' => ['nullable', Rule::enum(Visibility::class)],
             'published_at' => 'nullable|date',
             'expires_at' => 'nullable|date',
             'cover_image_url' => 'nullable|string|max:1000',
             'cover_image' => UploadRules::image(4096),
-            'blocks' => 'nullable|array',
-            'existing_attachments' => 'nullable|array',
+            'blocks' => 'nullable|array|max:200',
+            'existing_attachments' => 'nullable|array|max:50',
             'new_attachments.*' => UploadRules::attachment(10240),
-            'action_type' => 'nullable|string',
+            'action_type' => 'nullable|string|max:50',
         ]);
 
         // Checked separately: rules on nested block keys would make validated() drop the rest of each block.

@@ -77,10 +77,10 @@ class OfficerRosterAdminController extends Controller
 
         $validated = $request->validate([
             'masonic_year' => 'required|string|max:20',
-            'assignments' => 'present|array',
+            'assignments' => 'present|array|max:100',
             'assignments.*.member_id' => 'required|integer',
-            'assignments.*.office' => 'required|string',
-            'notes' => 'nullable|string',
+            'assignments.*.office' => 'required|string|max:50',
+            'notes' => 'nullable|string|max:10000',
             'status' => 'nullable|string|in:draft,proposed,confirmed,installed',
         ]);
 
@@ -160,7 +160,7 @@ class OfficerRosterAdminController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
-            'membership_status' => 'nullable|string',
+            'membership_status' => 'nullable|string|max:50',
             'masonic_rank' => 'nullable|string|max:50',
             'grand_rank' => 'nullable|string|max:100',
             'provincial_rank' => 'nullable|string|max:100',

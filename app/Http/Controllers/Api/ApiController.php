@@ -18,9 +18,9 @@ class ApiController extends Controller
     public function issueToken(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-            'device_name' => 'required|string',
+            'email' => 'required|email|max:255',
+            'password' => 'required|string|max:255',
+            'device_name' => 'required|string|max:100',
         ]);
 
         $user = User::where('email', $request->email)->first();

@@ -428,7 +428,7 @@ class MemberPortalController extends Controller
         $validated = $request->validate([
             'attendance_status' => 'required|in:attending,declined,tentative',
             'attending_dining' => 'boolean',
-            'menu_selections' => 'array',
+            'menu_selections' => 'array|max:50',
             'dietary_requirements' => 'nullable|string|max:500',
         ]);
 
@@ -464,11 +464,11 @@ class MemberPortalController extends Controller
 
         $validated = $request->validate([
             'attendance_status' => 'required|in:attending_dining,attending_meeting_only,apologies',
-            'apology_reason' => 'nullable|string',
-            'dietary_requirements' => 'nullable|string',
-            'guests' => 'nullable|array',
-            'guests.*.guest_name' => 'nullable|string',
-            'guests.*.dietary_requirements' => 'nullable|string',
+            'apology_reason' => 'nullable|string|max:1000',
+            'dietary_requirements' => 'nullable|string|max:1000',
+            'guests' => 'nullable|array|max:'.$club->maxGuestsPerMember(),
+            'guests.*.guest_name' => 'nullable|string|max:150',
+            'guests.*.dietary_requirements' => 'nullable|string|max:1000',
             'guests.*.attending_dining' => 'nullable|boolean',
         ]);
 

@@ -128,10 +128,10 @@ class CandidatePipeline extends Component
             'phone' => 'nullable|string|max:50',
             'date_of_birth' => 'nullable|date',
             'occupation' => 'nullable|string|max:150',
-            'address' => 'nullable|string',
+            'address' => 'nullable|string|max:10000',
             'postcode' => 'nullable|string|max:20',
-            'stage' => 'required|string',
-            'notes' => 'nullable|string',
+            'stage' => 'required|string|max:50',
+            'notes' => 'nullable|string|max:10000',
         ]);
 
         $data = [

@@ -380,7 +380,7 @@ class MediaAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $request->validate([
-            'ids' => 'required|array',
+            'ids' => 'required|array|max:500',
             'ids.*' => 'integer',
         ]);
 
@@ -424,7 +424,7 @@ class MediaAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $request->validate([
-            'ids' => 'required|array',
+            'ids' => 'required|array|max:500',
             'ids.*' => 'integer',
             'folder' => 'required|string|in:logos,news,events,updates,newsletters,pages,images,galleries,documents,accounting,summons',
         ]);
@@ -584,7 +584,7 @@ class MediaAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $request->validate([
-            'ids' => 'required|array',
+            'ids' => 'required|array|max:500',
             'ids.*' => 'integer',
         ]);
 
@@ -610,7 +610,7 @@ class MediaAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $request->validate([
-            'ids' => 'required|array',
+            'ids' => 'required|array|max:500',
             'ids.*' => 'integer',
         ]);
 

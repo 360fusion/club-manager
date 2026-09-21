@@ -79,11 +79,11 @@ class CharityFestival extends Component
         $this->validate([
             'festival_name' => 'required|string|max:150',
             'relief_chest_ref' => 'required|string|max:50',
-            'target_amount' => 'required|numeric|min:0',
-            'bronze_tier' => 'required|numeric|min:0',
-            'silver_tier' => 'required|numeric|min:0',
-            'gold_tier' => 'required|numeric|min:0',
-            'platinum_tier' => 'required|numeric|min:0',
+            'target_amount' => 'required|numeric|min:0|max:99999999.99',
+            'bronze_tier' => 'required|numeric|min:0|max:99999999.99',
+            'silver_tier' => 'required|numeric|min:0|max:99999999.99',
+            'gold_tier' => 'required|numeric|min:0|max:99999999.99',
+            'platinum_tier' => 'required|numeric|min:0|max:99999999.99',
         ]);
 
         FestivalTarget::updateOrCreate(
@@ -124,8 +124,8 @@ class CharityFestival extends Component
     public function saveMemberGiving(): void
     {
         $this->validate([
-            'regular_giving_amount' => 'required|numeric|min:0',
-            'total_donated_to_date' => 'required|numeric|min:0',
+            'regular_giving_amount' => 'required|numeric|min:0|max:99999999.99',
+            'total_donated_to_date' => 'required|numeric|min:0|max:99999999.99',
             'qualifies_for_jewel' => 'boolean',
             'qualifies_for_bar' => 'boolean',
         ]);
