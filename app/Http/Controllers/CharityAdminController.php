@@ -276,8 +276,8 @@ class CharityAdminController extends Controller
             $meeting = Meeting::where('club_id', $club->id)->find($validated['meeting_id']);
             if ($meeting) {
                 $nextNum = ($meeting->agendaItems()->max('item_number') ?? 0) + 1;
-                $proposer = ! empty($validated['proposer_member_id']) ? Member::find($validated['proposer_member_id'])?->full_name : null;
-                $seconder = ! empty($validated['seconder_member_id']) ? Member::find($validated['seconder_member_id'])?->full_name : null;
+                $proposer = ! empty($validated['proposer_member_id']) ? Member::where('club_id', $club->id)->find($validated['proposer_member_id'])?->full_name : null;
+                $seconder = ! empty($validated['seconder_member_id']) ? Member::where('club_id', $club->id)->find($validated['seconder_member_id'])?->full_name : null;
 
                 $desc = 'To consider and, if approved, pass a resolution proposing a Charity Grant of £'.number_format((float) $validated['amount'], 2).' from the Relief Chest to '.$validated['recipient_name'].' ('.$validated['purpose'].').';
                 if ($proposer) {

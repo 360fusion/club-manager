@@ -70,6 +70,8 @@ class AttendanceController extends Controller
             'action' => 'required|in:checkin,undo',
         ]);
 
+        abort_unless($club->users()->where('users.id', $validated['user_id'])->exists(), 422, 'That person is not a member of this club.');
+
         if ($validated['action'] === 'checkin') {
             DB::table('event_user')->updateOrInsert(
                 ['event_id' => $event->id, 'user_id' => $validated['user_id']],

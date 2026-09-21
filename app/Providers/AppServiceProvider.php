@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Laravel\Paddle\Cashier;
 use Laravel\Pennant\Feature;
 use Livewire\Livewire;
@@ -47,6 +48,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Longer passwords that have not appeared in known breaches (needs outbound access, so production only).
+        Password::defaults(fn () => $this->app->isProduction() ? Password::min(10)->uncompromised() : Password::min(8));
+
         // Club slugs sit at the top level of the URL space, so they may not
         // shadow fixed paths such as /login or /members.
         Route::pattern('slug', ReservedClubSlugs::routeRegex());

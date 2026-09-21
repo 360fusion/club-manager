@@ -6,9 +6,11 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Mail\ContactFormSubmittedMail;
 use App\Models\Club;
 use App\Models\ClubType;
+use App\Models\Event;
 use App\Models\Invoice;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Models\Page;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -291,5 +293,50 @@ class SecurityAuditTest extends TestCase
 
         $otherClubUrl = route('admin.accounting.attachments.show', ['clubSlug' => 'club-b', 'mediaId' => $media->id]);
         $this->actingAs($this->adminB)->get($otherClubUrl)->assertNotFound();
+    }
+
+    public function test_gateway_secrets_are_encrypted_and_never_sent_back(): void
+    {
+        $this->actingAs($this->treasurer)->post(route('billing.business.update', ['clubSlug' => 'club-a']), [
+            'business_name' => 'Club A',
+            'billing_contact_email' => 'bill@club-a.test',
+            'stripe_secret_key' => 'sk_live_SUPERSECRET',
+            'stripe_webhook_secret' => 'whsec_SUPERSECRET',
+        ]);
+
+        $this->assertStringNotContainsString('SUPERSECRET', json_encode($this->a->fresh()->settings));
+        $this->assertStringNotContainsString('SUPERSECRET', (string) $this->actingAs($this->treasurer)->get(route('billing.index', ['clubSlug' => 'club-a']))->getContent());
+
+        $this->actingAs($this->treasurer)->post(route('billing.business.update', ['clubSlug' => 'club-a']), [
+            'business_name' => 'Club A', 'billing_contact_email' => 'bill@club-a.test', 'stripe_secret_key' => '',
+        ]);
+        $this->assertNotEmpty($this->a->fresh()->settings['stripe_secret_key']);
+    }
+
+    public function test_check_in_only_accepts_members_of_the_club(): void
+    {
+        $event = Event::create(['club_id' => $this->a->id, 'title' => 'Dinner', 'slug' => 'dinner', 'starts_at' => now()->addDay(), 'status' => 'upcoming']);
+
+        $this->actingAs($this->admin)->post(route('admin.events.checkin.store', ['clubSlug' => 'club-a', 'id' => $event->id]), ['user_id' => $this->outsider->id, 'action' => 'checkin'])->assertStatus(422);
+        $this->assertDatabaseMissing('event_user', ['event_id' => $event->id, 'user_id' => $this->outsider->id]);
+    }
+
+    public function test_page_block_links_cannot_use_script_schemes(): void
+    {
+        $page = Page::create([
+            'club_id' => $this->a->id, 'title' => 'Links', 'slug' => 'links-test', 'status' => 'published',
+            'blocks' => [
+                ['type' => 'hero', 'cta_link' => 'javascript:alert(1)'],
+                ['type' => 'image', 'url' => ' JaVaScRiPt:alert(1)'],
+                ['type' => 'button', 'url' => 'https://example.org/ok'],
+                ['type' => 'button', 'url' => '/site/club-a/join-us'],
+            ],
+        ]);
+
+        $blocks = $page->fresh()->blocks;
+        $this->assertSame('', $blocks[0]['cta_link']);
+        $this->assertSame('', $blocks[1]['url']);
+        $this->assertSame('https://example.org/ok', $blocks[2]['url']);
+        $this->assertSame('/site/club-a/join-us', $blocks[3]['url']);
     }
 }

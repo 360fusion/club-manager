@@ -206,7 +206,7 @@ const saveBusinessAccount = () => {
                 <input
                   v-model="businessForm.stripe_secret_key"
                   :type="showSecretKeys ? 'text' : 'password'"
-                  placeholder="sk_live_..."
+                  :placeholder="businessDetails?.has_stripe_secret_key ? 'Saved - leave blank to keep' : 'sk_live_...'"
                   class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-mono text-[11px] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -216,7 +216,7 @@ const saveBusinessAccount = () => {
                 <input
                   v-model="businessForm.stripe_webhook_secret"
                   :type="showSecretKeys ? 'text' : 'password'"
-                  placeholder="whsec_..."
+                  :placeholder="businessDetails?.has_stripe_webhook_secret ? 'Saved - leave blank to keep' : 'whsec_...'"
                   class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-mono text-[11px] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
               </div>

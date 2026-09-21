@@ -21,6 +21,11 @@ class SanitizedHtmlBlocks implements CastsAttributes
      */
     private const HTML_KEYS = ['content', 'html', 'body'];
 
+    /**
+     * Block fields rendered into href/src attributes; only safe URL schemes are kept.
+     */
+    private const URL_KEYS = ['url', 'cta_link', 'link', 'href', 'src', 'image_url', 'cta_url'];
+
     public function get(Model $model, string $key, mixed $value, array $attributes): ?array
     {
         if ($value === null) {
@@ -65,8 +70,24 @@ class SanitizedHtmlBlocks implements CastsAttributes
             if (is_string($value) && in_array($key, self::HTML_KEYS, true)) {
                 $blocks[$key] = RichTextSanitizer::sanitize($value);
             }
+
+            if (is_string($value) && in_array($key, self::URL_KEYS, true) && ! $this->isSafeUrl($value)) {
+                $blocks[$key] = '';
+            }
         }
 
         return $blocks;
+    }
+
+    private function isSafeUrl(string $url): bool
+    {
+        $url = trim($url);
+
+        if ($url === '' || str_starts_with($url, '/') || str_starts_with($url, '#')) {
+            return ! str_starts_with($url, '//') || preg_match('#^//[a-z0-9]#i', $url) === 1;
+        }
+
+        return preg_match('#^(https?://|mailto:|tel:)#i', $url) === 1
+            || preg_match('#^[a-z0-9][a-z0-9/_\-.?=&\#%]*$#i', $url) === 1;
     }
 }

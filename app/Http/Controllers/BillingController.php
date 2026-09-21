@@ -6,11 +6,18 @@ use App\Models\Club;
 use App\Services\Payment\PaymentManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Crypt;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class BillingController extends Controller
 {
+    /**
+     * Gateway secrets are stored encrypted and never sent back to the browser.
+     */
+    private const SECRET_KEYS = ['stripe_secret_key', 'stripe_webhook_secret'];
+
     public function index(Request $request, string $clubSlug): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
@@ -26,8 +33,10 @@ class BillingController extends Controller
             'billing_phone' => $settings['billing_phone'] ?? ($settings['phone'] ?? '+44 20 7946 0912'),
             'address' => $settings['address'] ?? '100 Boathouse Way, Oxford, OX1 1AA, UK',
             'stripe_publishable_key' => $settings['stripe_publishable_key'] ?? '',
-            'stripe_secret_key' => $settings['stripe_secret_key'] ?? '',
-            'stripe_webhook_secret' => $settings['stripe_webhook_secret'] ?? '',
+            'stripe_secret_key' => '',
+            'stripe_webhook_secret' => '',
+            'has_stripe_secret_key' => ! empty($settings['stripe_secret_key']),
+            'has_stripe_webhook_secret' => ! empty($settings['stripe_webhook_secret']),
         ];
 
         $currentPlan = [
@@ -64,7 +73,7 @@ class BillingController extends Controller
         ];
 
         return Inertia::render('Admin/Billing/Index', [
-            'club' => $club,
+            'club' => tap($club, fn (Club $c) => $c->settings = Arr::except($settings, self::SECRET_KEYS)),
             'businessDetails' => $businessDetails,
             'currentProvider' => $currentProvider,
             'currentPlan' => $currentPlan,
@@ -88,6 +97,14 @@ class BillingController extends Controller
         ]);
 
         $club = Club::where('slug', $clubSlug)->firstOrFail();
+        foreach (self::SECRET_KEYS as $key) {
+            if (empty($validated[$key])) {
+                unset($validated[$key]);
+            } else {
+                $validated[$key] = Crypt::encryptString($validated[$key]);
+            }
+        }
+
         $settings = array_merge($club->settings ?? [], $validated);
         $club->settings = $settings;
         $club->save();

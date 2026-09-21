@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -98,7 +99,7 @@ class InvitationController extends Controller
             }
         } else {
             $request->validate([
-                'password' => 'required|string|min:8|confirmed',
+                'password' => ['required', 'string', Password::defaults(), 'confirmed'],
             ]);
 
             $user->password = Hash::make($request->password);
