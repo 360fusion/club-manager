@@ -86,7 +86,7 @@ class PublicEventBookingTest extends TestCase
         $this->assertSame('Pat Guest', $registration->attendees->sole()->name, 'a blank name falls back to the booker');
         $this->assertSame(0, User::count(), 'no account is created for the guest');
 
-        Mail::assertSent(EventBookingMail::class, fn (EventBookingMail $mail) => $mail->hasTo('pat@example.test') && str_contains($mail->manageUrl, '/site/club-a/booking/'));
+        Mail::assertQueued(EventBookingMail::class, fn (EventBookingMail $mail) => $mail->hasTo('pat@example.test') && str_contains($mail->manageUrl, '/site/club-a/booking/'));
     }
 
     public function test_bots_that_fill_the_hidden_field_and_oversized_bookings_are_refused(): void
@@ -100,7 +100,7 @@ class PublicEventBookingTest extends TestCase
         $this->register($tooMany)->assertSessionHasErrors('attendees');
 
         $this->assertSame(0, EventRegistration::count());
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_booking_the_same_email_again_resends_a_fresh_link_instead_of_a_second_booking(): void
@@ -109,7 +109,7 @@ class PublicEventBookingTest extends TestCase
 
         $this->register();
         $first = null;
-        Mail::assertSent(EventBookingMail::class, function (EventBookingMail $mail) use (&$first) {
+        Mail::assertQueued(EventBookingMail::class, function (EventBookingMail $mail) use (&$first) {
             $first = $mail->manageUrl;
 
             return true;
@@ -118,10 +118,10 @@ class PublicEventBookingTest extends TestCase
         $this->register(['contact_name' => 'Someone Else']);
 
         $this->assertSame(1, EventRegistration::count());
-        Mail::assertSent(EventBookingMail::class, 2);
+        Mail::assertQueued(EventBookingMail::class, 2);
 
         $second = null;
-        Mail::assertSent(EventBookingMail::class, function (EventBookingMail $mail) use (&$second, $first) {
+        Mail::assertQueued(EventBookingMail::class, function (EventBookingMail $mail) use (&$second, $first) {
             $second = $mail->manageUrl !== $first ? $mail->manageUrl : $second;
 
             return true;
@@ -137,7 +137,7 @@ class PublicEventBookingTest extends TestCase
         Mail::fake();
         $this->register();
         $link = null;
-        Mail::assertSent(EventBookingMail::class, function (EventBookingMail $mail) use (&$link) {
+        Mail::assertQueued(EventBookingMail::class, function (EventBookingMail $mail) use (&$link) {
             $link = $mail->manageUrl;
 
             return true;
@@ -185,7 +185,7 @@ class PublicEventBookingTest extends TestCase
     private function tokenLink(): string
     {
         $link = '';
-        Mail::assertSent(EventBookingMail::class, function (EventBookingMail $mail) use (&$link) {
+        Mail::assertQueued(EventBookingMail::class, function (EventBookingMail $mail) use (&$link) {
             $link = $mail->manageUrl;
 
             return true;
@@ -206,7 +206,7 @@ class PublicEventBookingTest extends TestCase
         $registration = EventRegistration::sole();
         $this->assertSame('42.00', $registration->total);
 
-        Mail::assertSent(EventBookingMail::class, function (EventBookingMail $mail) use ($registration) {
+        Mail::assertQueued(EventBookingMail::class, function (EventBookingMail $mail) use ($registration) {
             $html = $mail->render();
 
             return str_contains($html, '42.00') && str_contains($html, '12345678') && str_contains($html, $registration->payment_reference) && str_contains($html, 'admin fee');

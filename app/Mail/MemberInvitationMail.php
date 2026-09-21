@@ -6,13 +6,14 @@ use App\Models\Club;
 use App\Models\DefaultEmailTemplate;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class MemberInvitationMail extends Mailable
+class MemberInvitationMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -21,7 +22,9 @@ class MemberInvitationMail extends Mailable
         public User $user,
         public string $invitationToken,
         public string $acceptUrl
-    ) {}
+    ) {
+        $this->onQueue('transactional');
+    }
 
     public function envelope(): Envelope
     {

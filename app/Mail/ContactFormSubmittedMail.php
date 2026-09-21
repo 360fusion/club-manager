@@ -4,13 +4,14 @@ namespace App\Mail;
 
 use App\Models\Club;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ContactFormSubmittedMail extends Mailable
+class ContactFormSubmittedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -20,7 +21,9 @@ class ContactFormSubmittedMail extends Mailable
         public string $senderEmail,
         public ?string $senderPhone,
         public string $messageContent
-    ) {}
+    ) {
+        $this->onQueue('transactional');
+    }
 
     public function envelope(): Envelope
     {

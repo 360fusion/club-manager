@@ -7,6 +7,7 @@ use App\Models\EventAttendee;
 use App\Models\EventRegistration;
 use App\Support\EmailTemplate;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -17,11 +18,14 @@ use Illuminate\Queue\SerializesModels;
  * Sent to a guest whose address the booker gave: their place, their meal and who booked them. It never
  * carries the booker's payment details or their private booking link.
  */
-class EventGuestBookingMail extends Mailable
+class EventGuestBookingMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Event $event, public EventRegistration $registration, public EventAttendee $guest) {}
+    public function __construct(public Event $event, public EventRegistration $registration, public EventAttendee $guest)
+    {
+        $this->onQueue('transactional');
+    }
 
     /**
      * The editable superadmin template. It is only ever given what a guest may see: no payment details and no private booking link.

@@ -64,7 +64,7 @@ class MemberInvitationTest extends TestCase
         $this->assertNotNull($pivot->invitation_token);
         $this->assertNotNull($pivot->invited_at);
 
-        Mail::assertSent(MemberInvitationMail::class, function ($mail) use ($user) {
+        Mail::assertQueued(MemberInvitationMail::class, function ($mail) use ($user) {
             return $mail->hasTo($user->email);
         });
     }

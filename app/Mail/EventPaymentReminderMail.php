@@ -7,6 +7,7 @@ use App\Services\Events\EventPayload;
 use App\Support\Currencies;
 use App\Support\EmailTemplate;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -16,11 +17,14 @@ use Illuminate\Queue\SerializesModels;
 /**
  * A reminder that a booking still has something to pay, with how to pay it.
  */
-class EventPaymentReminderMail extends Mailable
+class EventPaymentReminderMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public EventRegistration $registration) {}
+    public function __construct(public EventRegistration $registration)
+    {
+        $this->onQueue('transactional');
+    }
 
     /**
      * The editable superadmin template, filled in for this booking; null if it has been removed.

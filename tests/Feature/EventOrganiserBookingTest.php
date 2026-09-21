@@ -192,13 +192,13 @@ class EventOrganiserBookingTest extends TestCase
         Mail::fake();
 
         $this->add(['contact_email' => 'quiet@example.test', 'attendees' => [$this->person('Quiet')]])->assertSessionHasNoErrors();
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
 
         $this->add(['contact_email' => 'vic@example.test', 'send_confirmation' => true, 'attendees' => [$this->person('Vic')]])->assertSessionHasNoErrors();
-        Mail::assertSent(EventBookingMail::class, fn ($mail) => $mail->hasTo('vic@example.test') && str_contains($mail->render(), '/booking/'));
+        Mail::assertQueued(EventBookingMail::class, fn ($mail) => $mail->hasTo('vic@example.test') && str_contains($mail->render(), '/booking/'));
 
         $this->add(['member_id' => $this->member->id, 'send_confirmation' => true, 'attendees' => [$this->person('Alan Archer')]])->assertSessionHasNoErrors();
-        Mail::assertSent(EventBookingMail::class, fn ($mail) => $mail->hasTo('alan@example.test') && str_contains($mail->render(), route('member.events', ['slug' => 'club-a'])));
+        Mail::assertQueued(EventBookingMail::class, fn ($mail) => $mail->hasTo('alan@example.test') && str_contains($mail->render(), route('member.events', ['slug' => 'club-a'])));
     }
 
     public function test_editing_a_booking_changes_people_and_meals_and_reprices_until_it_is_paid(): void
@@ -247,7 +247,7 @@ class EventOrganiserBookingTest extends TestCase
 
         $this->actingAs($this->admin)->post(route('admin.events.registrations.resend', ['clubSlug' => 'club-a', 'id' => $this->event->id, 'registrationId' => $registration->id]))->assertSessionHas('success');
 
-        Mail::assertSent(EventBookingMail::class, 1);
+        Mail::assertQueued(EventBookingMail::class, 1);
         $this->assertNotSame($oldHash, $registration->fresh()->token_hash);
 
         $registration->update(['contact_email' => null]);

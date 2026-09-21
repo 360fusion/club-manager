@@ -66,11 +66,14 @@ const filteredNewsletters = computed(() => {
   });
 });
 
-const sendBroadcast = (id) => {
-  if (confirm('Send this newsletter broadcast to all targeted member roles and external subscribers now?')) {
-    router.post(route('admin.newsletters.send', { clubSlug: props.club.slug, id }));
+const sendBroadcast = (item) => {
+  if (confirm(`Email "${item.subject}" to ${item.recipient_count} ${item.recipient_count === 1 ? 'person' : 'people'} now? It cannot be changed or sent again afterwards.`)) {
+    router.post(route('admin.newsletters.send', { clubSlug: props.club.slug, id: item.id }));
   }
 };
+
+const duplicateNewsletter = (id) => router.post(route('admin.newsletters.duplicate', { clubSlug: props.club.slug, id }));
+const retryFailed = (id) => router.post(route('admin.newsletters.retry', { clubSlug: props.club.slug, id }), {}, { preserveScroll: true });
 
 const deleteNewsletter = (id) => {
   if (confirm('Are you sure you want to delete this newsletter?')) {
@@ -210,8 +213,15 @@ const deleteNewsletter = (id) => {
 
                 <!-- Audience Badge -->
                 <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-center gap-1">
-                  <span>Audience: <strong class="text-slate-900 dark:text-white">{{ item.recipient_count }} contacts</strong></span>
+                  <span>Audience: <strong class="text-slate-900 dark:text-white">{{ item.recipient_count }} {{ item.recipient_count === 1 ? 'person' : 'people' }}</strong></span>
                   <span v-if="item.external_recipient_count > 0" class="text-blue-600 dark:text-blue-400 font-bold">({{ item.external_recipient_count }} visiting)</span>
+                </span>
+
+                <!-- Delivery progress once sent -->
+                <span v-if="item.status === 'sent'" class="flex items-center gap-1.5 rounded border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold dark:border-slate-800 dark:bg-slate-900">
+                  <span class="text-emerald-600">✓ {{ item.deliveries.sent }} delivered</span>
+                  <span v-if="item.deliveries.queued" class="text-slate-500">· {{ item.deliveries.queued }} waiting</span>
+                  <span v-if="item.deliveries.failed" class="text-rose-600">· {{ item.deliveries.failed }} failed</span>
                 </span>
 
                 <!-- Attachments Count Badge -->
@@ -239,10 +249,16 @@ const deleteNewsletter = (id) => {
             </div>
 
             <div class="flex items-center gap-3 self-start md:self-auto">
-              <button v-if="item.status === 'draft'" @click="sendBroadcast(item.id)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
+              <button v-if="item.status === 'draft'" @click="sendBroadcast(item)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
                 🚀 Send Broadcast
               </button>
-              <Link :href="route('admin.newsletters.edit', { clubSlug: club.slug, id: item.id })" class="px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 transition-all">
+              <button v-if="item.status === 'sent' && item.deliveries.failed" @click="retryFailed(item.id)" class="px-4 py-2 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-800 dark:text-amber-200 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800/60 transition-all cursor-pointer">
+                ↻ Retry {{ item.deliveries.failed }} failed
+              </button>
+              <button v-if="item.status === 'sent'" @click="duplicateNewsletter(item.id)" class="px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 transition-all cursor-pointer">
+                ⧉ Duplicate
+              </button>
+              <Link v-if="item.status === 'draft'" :href="route('admin.newsletters.edit', { clubSlug: club.slug, id: item.id })" class="px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 transition-all">
                 ✏️ Edit Draft
               </Link>
               <button @click="deleteNewsletter(item.id)" class="px-3 py-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer">

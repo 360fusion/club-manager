@@ -150,7 +150,7 @@ class EventBookingHttpTest extends TestCase
 
         $this->book([$this->person('Mia Member'), $guest])->assertSessionHasNoErrors();
 
-        Mail::assertSent(EventGuestBookingMail::class, function (EventGuestBookingMail $mail) {
+        Mail::assertQueued(EventGuestBookingMail::class, function (EventGuestBookingMail $mail) {
             $html = $mail->render();
 
             return $mail->hasTo('gary@example.test')
@@ -167,8 +167,8 @@ class EventBookingHttpTest extends TestCase
         $this->event->update(['max_guests_per_booking' => 3]);
         $this->book([$this->person('Mia Member'), $guest, $second])->assertSessionHasNoErrors();
 
-        Mail::assertSent(EventGuestBookingMail::class, 2);
-        Mail::assertSent(EventGuestBookingMail::class, fn ($mail) => $mail->hasTo('sue@example.test'));
+        Mail::assertQueued(EventGuestBookingMail::class, 2);
+        Mail::assertQueued(EventGuestBookingMail::class, fn ($mail) => $mail->hasTo('sue@example.test'));
     }
 
     public function test_a_bad_guest_email_is_refused_and_a_guest_without_one_is_simply_not_emailed(): void
@@ -181,7 +181,7 @@ class EventBookingHttpTest extends TestCase
         $this->assertSame(0, $this->event->registrations()->count());
 
         $this->book([$this->person('Mia Member'), $this->person('No Email', true)])->assertSessionHasNoErrors();
-        Mail::assertNotSent(EventGuestBookingMail::class);
+        Mail::assertNotQueued(EventGuestBookingMail::class);
     }
 
     public function test_a_waitlisted_guest_is_told_they_are_waiting_and_the_organiser_sees_the_guests_own_email(): void
@@ -193,7 +193,7 @@ class EventBookingHttpTest extends TestCase
 
         $this->book([$this->person('Mia Member'), $guest])->assertSessionHasNoErrors();
 
-        Mail::assertSent(EventGuestBookingMail::class, fn ($mail) => str_contains($mail->render(), 'waiting list'));
+        Mail::assertQueued(EventGuestBookingMail::class, fn ($mail) => str_contains($mail->render(), 'waiting list'));
 
         $admin = User::factory()->create();
         $this->club->users()->attach($admin->id, ['role' => 'admin', 'status' => 'active']);
@@ -207,12 +207,12 @@ class EventBookingHttpTest extends TestCase
         Mail::fake();
 
         $this->book([$this->person('Mia Member')])->assertSessionHasNoErrors();
-        Mail::assertSent(EventBookingMail::class, fn ($mail) => $mail->hasTo($this->member->email) && str_contains($mail->render(), route('member.events', ['slug' => 'club-a'])));
+        Mail::assertQueued(EventBookingMail::class, fn ($mail) => $mail->hasTo($this->member->email) && str_contains($mail->render(), route('member.events', ['slug' => 'club-a'])));
 
         $this->book([$this->person('Mia Member'), $this->person('Gary', true)])->assertSessionHasNoErrors();
-        Mail::assertSent(EventBookingMail::class, 1);
+        Mail::assertQueued(EventBookingMail::class, 1);
 
         $this->book([], 'declined')->assertSessionHasNoErrors();
-        Mail::assertSent(EventBookingMail::class, 1);
+        Mail::assertQueued(EventBookingMail::class, 1);
     }
 }

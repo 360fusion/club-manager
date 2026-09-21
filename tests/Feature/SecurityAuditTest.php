@@ -205,7 +205,7 @@ class SecurityAuditTest extends TestCase
             'email' => 'visitor@example.test', 'message' => 'Hello', 'recipient_email' => 'attacker@evil.test', 'cc_emails' => 'cc@evil.test',
         ]);
 
-        Mail::assertNotSent(ContactFormSubmittedMail::class, fn ($mail) => $mail->hasTo('attacker@evil.test') || $mail->hasCc('cc@evil.test'));
+        Mail::assertNotQueued(ContactFormSubmittedMail::class, fn ($mail) => $mail->hasTo('attacker@evil.test') || $mail->hasCc('cc@evil.test'));
     }
 
     public function test_login_and_api_token_attempts_are_rate_limited(): void

@@ -275,7 +275,7 @@ class EventOnlinePaymentTest extends TestCase
         ], ['X-Inertia' => 'true'])->assertStatus(409)->assertHeader('X-Inertia-Location');
 
         $this->assertMatchesRegularExpression('#/site/club-a/booking/[A-Za-z0-9]{40}\?payment=success$#', $captured['success_url']);
-        Mail::assertSent(EventBookingMail::class);
+        Mail::assertQueued(EventBookingMail::class);
     }
 
     public function test_if_stripe_cannot_start_the_booking_is_kept_and_the_person_told(): void

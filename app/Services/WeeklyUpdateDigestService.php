@@ -9,6 +9,7 @@ use App\Models\Event;
 use App\Models\Newsletter;
 use App\Models\NewsletterType;
 use App\Models\Post;
+use App\Services\Newsletters\NewsletterSender;
 use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -47,6 +48,30 @@ class WeeklyUpdateDigestService
         ];
 
         return 'https://calendar.google.com/calendar/render?'.http_build_query($params);
+    }
+
+    /**
+     * Whether an automated digest channel is due to go out at this moment: its day and hour have come and its
+     * frequency has passed since the last one.
+     */
+    public function isDue(NewsletterType $type, Carbon $now): bool
+    {
+        if (! $type->is_automated_digest || strtolower($now->format('l')) !== strtolower((string) $type->digest_send_day)) {
+            return false;
+        }
+
+        if ((int) substr((string) $type->digest_send_time, 0, 2) !== (int) $now->format('H')) {
+            return false;
+        }
+
+        $last = Newsletter::where('newsletter_type_id', $type->id)->where('status', 'sent')->max('sent_at');
+        $minimumDays = match ($type->digest_frequency) {
+            'biweekly' => 13,
+            'monthly' => 27,
+            default => 6,
+        };
+
+        return $last === null || Carbon::parse($last)->diffInDays($now) >= $minimumDays;
     }
 
     /**
@@ -285,8 +310,7 @@ class WeeklyUpdateDigestService
             'content' => $htmlContent,
             'attachments' => $newsletterAttachments,
             'target_roles' => $recipientRoles ?? $digestType->default_roles ?? ['member', 'admin'],
-            'status' => 'sent',
-            'sent_at' => Carbon::now(),
+            'status' => 'draft',
         ]);
 
         // 5. Update used ClubUpdate records from 'approved' to 'sent'
@@ -298,6 +322,9 @@ class WeeklyUpdateDigestService
             ]);
         }
 
-        return $newsletter;
+        // 6. Email it to the channel's audience (queued, once per person)
+        app(NewsletterSender::class)->send($newsletter);
+
+        return $newsletter->refresh();
     }
 }

@@ -60,7 +60,7 @@ class EventPaymentReminderTest extends TestCase
 
         $this->assertCount(1, $this->member->fresh()->notifications);
         $this->assertSame('payment', $this->member->notifications->first()->data['category']);
-        Mail::assertSent(EventPaymentReminderMail::class, fn (EventPaymentReminderMail $mail) => $mail->hasTo($this->member->email) && str_contains($mail->render(), '12345678') && str_contains($mail->render(), '40.00'));
+        Mail::assertQueued(EventPaymentReminderMail::class, fn (EventPaymentReminderMail $mail) => $mail->hasTo($this->member->email) && str_contains($mail->render(), '12345678') && str_contains($mail->render(), '40.00'));
         $this->assertNotNull(EventRegistration::sole()->reminder_sent_at);
     }
 
@@ -71,21 +71,21 @@ class EventPaymentReminderTest extends TestCase
 
         EventRegistration::query()->update(['due_at' => now()->addDays(20)]);
         $this->artisan('app:send-event-payment-reminders');
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
 
         EventRegistration::query()->update(['due_at' => now()->addDay()]);
         $this->artisan('app:send-event-payment-reminders');
         $this->artisan('app:send-event-payment-reminders');
-        Mail::assertSent(EventPaymentReminderMail::class, 1);
+        Mail::assertQueued(EventPaymentReminderMail::class, 1);
 
         EventRegistration::query()->update(['reminder_sent_at' => now()->subDays(8)]);
         app(EventPaymentService::class)->markPaid($registration->fresh(), null);
         $this->artisan('app:send-event-payment-reminders');
-        Mail::assertSent(EventPaymentReminderMail::class, 1);
+        Mail::assertQueued(EventPaymentReminderMail::class, 1);
 
         EventRegistration::query()->update(['payment_status' => 'unpaid', 'amount_paid' => 0, 'reminder_sent_at' => null]);
         $this->event->update(['status' => 'cancelled']);
         $this->artisan('app:send-event-payment-reminders');
-        Mail::assertSent(EventPaymentReminderMail::class, 1);
+        Mail::assertQueued(EventPaymentReminderMail::class, 1);
     }
 }

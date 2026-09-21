@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Club;
 use App\Support\EmailTemplate;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -15,7 +16,7 @@ use Illuminate\Queue\SerializesModels;
  * An event email whose wording the superadmin edits as a template, sent from the lodge's own name.
  * If the template has been removed, the plain built-in wording is used instead.
  */
-abstract class EventTemplatedMail extends Mailable
+abstract class EventTemplatedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

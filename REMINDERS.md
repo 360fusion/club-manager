@@ -9,6 +9,18 @@ Things to do outside the code, to tick off later. Update this file when somethin
 - [ ] Run `php artisan migrate` (adds guest emails, PayPal columns and the editable event email templates).
 - [ ] After migrating, open Superadmin, Email templates, and check the event templates read the way you want.
 
+## Email sending (needed for newsletters and all emails now)
+
+Emails are now sent from a **queue**, so a worker must be running or nothing is delivered (booking confirmations, invitations, newsletters, receipts).
+
+- [ ] Run a queue worker on the server, kept alive by Forge (Daemons) or Supervisor: `php artisan queue:work --queue=transactional,default,bulk --tries=3 --max-time=3600`. Restart it after each deploy (`php artisan queue:restart`). Without it, emails just wait in the `jobs` table.
+- [ ] Choose the mail provider (SendGrid, SES, Postmark or Mailgun) and set `MAIL_MAILER`, its credentials, `MAIL_FROM_ADDRESS` (an address on your sending domain) and `MAIL_FROM_NAME` in `.env`. SendGrid works over SMTP (`MAIL_MAILER=smtp`, host `smtp.sendgrid.net`, user `apikey`, password = the API key).
+- [ ] Authenticate the sending domain with the provider once (SPF, DKIM and a DMARC record). Lodges then appear as the display name with their own reply-to, so lodges need no DNS work.
+- [ ] Optional: if the provider limits sending speed, set `NEWSLETTER_PER_SECOND` (0 = no limit).
+- [ ] Test: send a newsletter to yourself with "Send test to me", then a real one to yourself and a second address, click Unsubscribe in one, and send again to confirm it is skipped.
+- [ ] Later: SendGrid's event webhook (bounces, complaints, opens, clicks) can feed a suppression list and reports; not built yet.
+- [ ] Consider a policy for visitors' consent: they must actively subscribe, and every newsletter carries an unsubscribe link.
+
 ## Card payments (Stripe, lodge's own keys)
 
 - [ ] In Stripe test mode: save the test secret key and webhook secret on a card option (Payment options page).

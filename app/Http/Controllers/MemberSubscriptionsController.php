@@ -43,15 +43,21 @@ class MemberSubscriptionsController extends Controller
             ->get()
             ->keyBy(fn ($item) => $item->club_id.'_'.$item->newsletter_type_id);
 
-        $clubMatrix = $allClubs->map(function ($club) use ($user, $userSubscriptions) {
+        // Members are signed up to their club's channels unless they have switched one off.
+        $optedOut = NewsletterSubscription::where('user_id', $user->id)
+            ->where('status', 'unsubscribed')
+            ->get()
+            ->keyBy(fn ($item) => $item->club_id.'_'.$item->newsletter_type_id);
+
+        $clubMatrix = $allClubs->map(function ($club) use ($user, $userSubscriptions, $optedOut) {
             $isMember = $user->clubs()->where('clubs.id', $club->id)->exists();
 
-            $channels = $club->newsletterTypes->map(function ($type) use ($club, $isMember, $userSubscriptions) {
+            $channels = $club->newsletterTypes->map(function ($type) use ($club, $isMember, $userSubscriptions, $optedOut) {
                 $key = $club->id.'_'.$type->id;
                 $hasExplicitSub = isset($userSubscriptions[$key]);
 
                 // Active status: mandatory channels for internal members are active by default, or if explicitly subscribed
-                $isActive = ($isMember && $type->is_mandatory) || $hasExplicitSub;
+                $isActive = $isMember ? ($type->is_mandatory || ! isset($optedOut[$key])) : $hasExplicitSub;
 
                 return [
                     'id' => $type->id,
@@ -110,6 +116,11 @@ class MemberSubscriptionsController extends Controller
         $user = Auth::user();
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $type = NewsletterType::where('club_id', $club->id)->findOrFail($typeId);
+        $isMember = $user->clubs()->where('clubs.id', $club->id)->exists();
+
+        if ($isMember && $type->is_mandatory) {
+            return redirect()->back()->withErrors(['channel' => 'Official notices cannot be switched off.']);
+        }
 
         $existing = NewsletterSubscription::where('club_id', $club->id)
             ->where('newsletter_type_id', $type->id)
@@ -124,6 +135,9 @@ class MemberSubscriptionsController extends Controller
                 'unsubscribed_at' => $newStatus === 'unsubscribed' ? now() : null,
             ]);
         } else {
+            // A member with no record is signed up already, so their first change switches the channel off.
+            $status = $isMember ? 'unsubscribed' : 'active';
+
             NewsletterSubscription::create([
                 'club_id' => $club->id,
                 'newsletter_type_id' => $type->id,
@@ -131,8 +145,9 @@ class MemberSubscriptionsController extends Controller
                 'email' => $user->email,
                 'name' => $user->name,
                 'rank' => $user->rank ?? null,
-                'status' => 'active',
-                'subscribed_at' => now(),
+                'status' => $status,
+                'subscribed_at' => $status === 'active' ? now() : null,
+                'unsubscribed_at' => $status === 'unsubscribed' ? now() : null,
             ]);
         }
 

@@ -10,7 +10,10 @@ use App\Models\EventRegistration;
  */
 class EventPlaceAvailableMail extends EventTemplatedMail
 {
-    public function __construct(public EventRegistration $registration) {}
+    public function __construct(public EventRegistration $registration)
+    {
+        $this->onQueue('transactional');
+    }
 
     protected function club(): Club
     {

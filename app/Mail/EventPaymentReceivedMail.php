@@ -11,7 +11,10 @@ use App\Support\Currencies;
  */
 class EventPaymentReceivedMail extends EventTemplatedMail
 {
-    public function __construct(public EventRegistration $registration, public float $amount) {}
+    public function __construct(public EventRegistration $registration, public float $amount)
+    {
+        $this->onQueue('transactional');
+    }
 
     protected function club(): Club
     {

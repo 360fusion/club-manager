@@ -6,6 +6,7 @@ use App\Casts\SanitizedHtml;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -40,6 +41,14 @@ class Newsletter extends Model implements HasMedia
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    /**
+     * @return HasMany<NewsletterDelivery, $this>
+     */
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(NewsletterDelivery::class);
     }
 
     /**

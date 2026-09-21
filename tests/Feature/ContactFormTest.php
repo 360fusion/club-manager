@@ -41,7 +41,7 @@ class ContactFormTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('success', 'Thank you! Your inquiry has been sent.');
 
-        Mail::assertSent(ContactFormSubmittedMail::class, function ($mail) {
+        Mail::assertQueued(ContactFormSubmittedMail::class, function ($mail) {
             return $mail->hasTo('secretary@lodgeoffraternity.org.uk')
                 && $mail->hasCc('treasurer@lodgeoffraternity.org.uk')
                 && $mail->hasCc('assistant@lodgeoffraternity.org.uk')
@@ -69,6 +69,6 @@ class ContactFormTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['email']);
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 }

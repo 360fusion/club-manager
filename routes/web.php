@@ -49,6 +49,7 @@ use App\Http\Controllers\MemberListController;
 use App\Http\Controllers\MemberPortalController;
 use App\Http\Controllers\MemberSubscriptionsController;
 use App\Http\Controllers\NewsletterAdminController;
+use App\Http\Controllers\NewsletterPublicController;
 use App\Http\Controllers\NewsletterTypeAdminController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficerRosterAdminController;
@@ -110,6 +111,8 @@ Route::any('/clubs/{legacySlug}/{path?}', LegacyClubUrlController::class)
     ->where('legacySlug', '[A-Za-z0-9_-]+')
     ->where('path', '.*');
 
+// A private copy of a newsletter, opened from "view in your browser" (before the /site/{club} routes so "newsletter" is never read as a club).
+Route::get('/site/newsletter/{token}', [NewsletterPublicController::class, 'view'])->middleware('throttle:60,1')->name('newsletters.view');
 Route::get('/site/oxford-boating', function () {
     $activeSlug = Club::first()?->slug ?? 'lodge-of-fraternity';
 
@@ -139,6 +142,8 @@ if (app()->isLocal()) {
 // GoCardless posts here unauthenticated; the request is authenticated by its
 // HMAC signature instead. Must stay outside the auth group and exempt from CSRF.
 Route::post('/webhooks/stripe/{clubId}', [StripeWebhookController::class, 'handle'])->name('webhooks.stripe.club');
+Route::get('/webhooks/newsletters/unsubscribe/{token}', [NewsletterPublicController::class, 'unsubscribeForm'])->middleware('throttle:60,1')->name('newsletters.unsubscribe.form');
+Route::post('/webhooks/newsletters/unsubscribe/{token}', [NewsletterPublicController::class, 'unsubscribe'])->middleware('throttle:60,1')->name('newsletters.unsubscribe');
 Route::post('/webhooks/paypal/{clubId}', [PayPalWebhookController::class, 'handle'])->name('webhooks.paypal.club');
 Route::post('/webhooks/stripe-connect', [StripeConnectWebhookController::class, 'handle'])->name('webhooks.stripe.connect');
 Route::post('/webhooks/gocardless/{clubId}', [GoCardlessWebhookController::class, 'handle'])
@@ -268,6 +273,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/newsletters/subscribers/{id}/status', [NewsletterTypeAdminController::class, 'updateSubscriberStatus'])->name('admin.newsletters.subscribers.status');
     Route::get('/{clubSlug}/admin/newsletters/{id}/edit', [NewsletterAdminController::class, 'edit'])->name('admin.newsletters.edit');
     Route::post('/{clubSlug}/admin/newsletters', [NewsletterAdminController::class, 'store'])->name('admin.newsletters.store');
+    Route::post('/{clubSlug}/admin/newsletters/preview', [NewsletterAdminController::class, 'preview'])->middleware('throttle:60,1')->name('admin.newsletters.preview');
+    Route::post('/{clubSlug}/admin/newsletters/test', [NewsletterAdminController::class, 'test'])->middleware('throttle:10,1')->name('admin.newsletters.test');
+    Route::post('/{clubSlug}/admin/newsletters/{id}/retry', [NewsletterAdminController::class, 'retry'])->name('admin.newsletters.retry');
+    Route::post('/{clubSlug}/admin/newsletters/{id}/duplicate', [NewsletterAdminController::class, 'duplicate'])->name('admin.newsletters.duplicate');
     Route::post('/{clubSlug}/admin/newsletters/{id}/send', [NewsletterAdminController::class, 'send'])->name('admin.newsletters.send');
     Route::delete('/{clubSlug}/admin/newsletters/{id}', [NewsletterAdminController::class, 'destroy'])->name('admin.newsletters.destroy');
 

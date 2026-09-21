@@ -114,13 +114,13 @@ class EventEmailTemplateTest extends TestCase
         $payments = app(EventPaymentService::class);
 
         $payments->markPaid($this->registration, null, 30.0);
-        Mail::assertSent(EventPaymentReceivedMail::class, fn ($mail) => $mail->hasTo($this->registration->contact_email) && str_contains($mail->render(), '£30.00') && str_contains($mail->render(), 'Part paid'));
+        Mail::assertQueued(EventPaymentReceivedMail::class, fn ($mail) => $mail->hasTo($this->registration->contact_email) && str_contains($mail->render(), '£30.00') && str_contains($mail->render(), 'Part paid'));
 
         $payments->markPaid($this->registration->fresh(), null);
-        Mail::assertSent(EventPaymentReceivedMail::class, fn ($mail) => str_contains($mail->render(), 'Paid in full'));
+        Mail::assertQueued(EventPaymentReceivedMail::class, fn ($mail) => str_contains($mail->render(), 'Paid in full'));
 
         $payments->refund($this->registration->fresh(), null, 'Cannot attend', 20.0);
-        Mail::assertSent(EventRefundMail::class, fn ($mail) => $mail->hasTo($this->registration->contact_email) && str_contains($mail->render(), '£20.00'));
+        Mail::assertQueued(EventRefundMail::class, fn ($mail) => $mail->hasTo($this->registration->contact_email) && str_contains($mail->render(), '£20.00'));
     }
 
     public function test_the_waiting_list_is_told_when_a_place_opens_but_only_the_booking_that_moved_up(): void
@@ -134,8 +134,8 @@ class EventEmailTemplateTest extends TestCase
         Mail::fake();
         app(EventRegistrationService::class)->cancel($this->registration);
 
-        Mail::assertSent(EventPlaceAvailableMail::class, 1);
-        Mail::assertSent(EventPlaceAvailableMail::class, fn ($mail) => $mail->hasTo($waiting->email) && str_contains($mail->render(), 'now confirmed'));
+        Mail::assertQueued(EventPlaceAvailableMail::class, 1);
+        Mail::assertQueued(EventPlaceAvailableMail::class, fn ($mail) => $mail->hasTo($waiting->email) && str_contains($mail->render(), 'now confirmed'));
     }
 
     public function test_the_new_event_emails_fall_back_to_built_in_wording_when_their_templates_are_removed_and_a_broken_mailer_never_blocks_a_payment(): void

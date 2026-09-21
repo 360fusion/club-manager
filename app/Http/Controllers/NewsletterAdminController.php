@@ -3,17 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
+use App\Mail\NewsletterMail;
 use App\Models\Club;
 use App\Models\ClubUpdate;
 use App\Models\Event;
 use App\Models\Newsletter;
 use App\Models\NewsletterType;
 use App\Models\Post;
+use App\Services\Newsletters\NewsletterAudience;
+use App\Services\Newsletters\NewsletterSender;
 use App\Support\Currencies;
+use App\Support\RichTextSanitizer;
 use App\Support\UploadRules;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,30 +30,19 @@ class NewsletterAdminController extends Controller
     /**
      * Display listing of newsletters for a club.
      */
-    public function index(string $clubSlug): Response
+    public function index(string $clubSlug, NewsletterSender $sender, NewsletterAudience $audience): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         NewsletterTypeAdminController::ensureDefaultTypes($club);
 
         $newsletters = Newsletter::where('club_id', $club->id)
-            ->with('newsletterType')
+            ->with(['newsletterType', 'club'])
             ->orderByDesc('created_at')
             ->get()
-            ->map(function ($newsletter) use ($club) {
-                $targetRoles = $newsletter->target_roles ?? ['member'];
-                $internalCount = $club->users()
-                    ->whereIn('club_user.role', $targetRoles)
-                    ->where('club_user.status', 'active')
-                    ->count();
-
-                $externalCount = 0;
-                if ($newsletter->newsletter_type_id) {
-                    $externalCount = $club->newsletterSubscriptions()
-                        ->where('newsletter_type_id', $newsletter->newsletter_type_id)
-                        ->whereNull('user_id')
-                        ->where('status', 'active')
-                        ->count();
-                }
+            ->map(function ($newsletter) use ($sender, $audience) {
+                $stats = $sender->stats($newsletter);
+                $counts = $newsletter->status === 'sent' ? null : $audience->counts($newsletter);
+                $total = $counts['total'] ?? ($stats['queued'] + $stats['sent'] + $stats['failed']);
 
                 return [
                     'id' => $newsletter->id,
@@ -59,8 +56,9 @@ class NewsletterAdminController extends Controller
                     'target_roles' => $newsletter->target_roles ?? [],
                     'status' => $newsletter->status ?? 'draft',
                     'sent_at' => $newsletter->sent_at?->format('M d, Y @ H:i'),
-                    'recipient_count' => $internalCount + $externalCount,
-                    'external_recipient_count' => $externalCount,
+                    'recipient_count' => $total,
+                    'external_recipient_count' => $counts['visitors'] ?? 0,
+                    'deliveries' => $stats,
                 ];
             });
 
@@ -140,7 +138,7 @@ class NewsletterAdminController extends Controller
     /**
      * Store or update a newsletter draft.
      */
-    public function store(Request $request, string $clubSlug): RedirectResponse
+    public function store(Request $request, string $clubSlug, NewsletterSender $sender): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
@@ -194,7 +192,11 @@ class NewsletterAdminController extends Controller
 
         $isSending = $validated['status'] === 'sent';
 
-        Newsletter::updateOrCreate(
+        if (! empty($validated['id']) && Newsletter::where('club_id', $club->id)->whereKey($validated['id'])->where('status', 'sent')->exists()) {
+            throw ValidationException::withMessages(['status' => 'A newsletter that has been sent cannot be changed. Duplicate it to send something new.']);
+        }
+
+        $newsletter = Newsletter::updateOrCreate(
             ['id' => $validated['id'] ?? null, 'club_id' => $club->id],
             [
                 'newsletter_type_id' => $validated['newsletter_type_id'] ?? null,
@@ -202,12 +204,16 @@ class NewsletterAdminController extends Controller
                 'content' => $validated['content'],
                 'attachments' => $attachments,
                 'target_roles' => $validated['target_roles'],
-                'status' => $validated['status'],
-                'sent_at' => $isSending ? now() : null,
+                'status' => 'draft',
+                'sent_at' => null,
             ]
         );
 
-        $msg = $isSending ? 'Newsletter broadcast sent successfully.' : 'Newsletter draft saved.';
+        if ($isSending) {
+            $sender->send($newsletter);
+        }
+
+        $msg = $isSending ? 'Newsletter is being sent. Delivery is shown on the list.' : 'Newsletter draft saved.';
 
         return redirect()->route('admin.newsletters.index', ['clubSlug' => $club->slug])
             ->with('success', $msg);
@@ -216,17 +222,89 @@ class NewsletterAdminController extends Controller
     /**
      * Broadcast an existing newsletter.
      */
-    public function send(string $clubSlug, int $id): RedirectResponse
+    public function send(string $clubSlug, int $id, NewsletterSender $sender): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $newsletter = Newsletter::where('club_id', $club->id)->findOrFail($id);
 
-        $newsletter->update([
-            'status' => 'sent',
-            'sent_at' => now(),
+        $sender->send($newsletter);
+
+        return redirect()->back()->with('success', 'Newsletter is being sent. Delivery is shown on the list.');
+    }
+
+    /**
+     * Send again to the people whose email failed.
+     */
+    public function retry(string $clubSlug, int $id, NewsletterSender $sender): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $newsletter = Newsletter::where('club_id', $club->id)->where('status', 'sent')->findOrFail($id);
+
+        $count = $sender->retryFailed($newsletter);
+
+        return redirect()->back()->with('success', $count === 0 ? 'Nothing had failed.' : "Retrying {$count} failed ".Str::plural('email', $count).'.');
+    }
+
+    /**
+     * A copy of a newsletter as a new draft, for sending something similar again.
+     */
+    public function duplicate(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $newsletter = Newsletter::where('club_id', $club->id)->findOrFail($id);
+
+        $copy = Newsletter::create([
+            'club_id' => $club->id,
+            'newsletter_type_id' => $newsletter->newsletter_type_id,
+            'subject' => Str::limit('Copy of '.$newsletter->subject, 255, ''),
+            'content' => $newsletter->content,
+            'attachments' => $newsletter->attachments,
+            'target_roles' => $newsletter->target_roles,
+            'status' => 'draft',
         ]);
 
-        return redirect()->back()->with('success', 'Newsletter broadcast sent.');
+        return redirect()->route('admin.newsletters.edit', ['clubSlug' => $club->slug, 'id' => $copy->id])->with('success', 'Copied as a new draft.');
+    }
+
+    /**
+     * Email the newsletter as it is being written (unsaved) to the person testing it.
+     */
+    public function test(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $mail = $this->draftMail($request, $club, $request->user()->name, isTest: true);
+
+        Mail::to($request->user()->email)->send($mail);
+
+        return redirect()->back()->with('success', 'A test has been sent to '.$request->user()->email.'.');
+    }
+
+    /**
+     * The newsletter as it will look in an email, for the preview pane.
+     */
+    public function preview(Request $request, string $clubSlug): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $mail = $this->draftMail($request, $club, 'Alex Sample', unsubscribeUrl: '#');
+
+        return response()->json(['html' => view('emails.newsletter', $mail->viewData())->render()]);
+    }
+
+    private function draftMail(Request $request, Club $club, string $recipientName, bool $isTest = false, ?string $unsubscribeUrl = null): NewsletterMail
+    {
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'content' => 'required|string|max:200000',
+            'newsletter_type_id' => 'nullable|integer|max:4294967295',
+        ]);
+
+        $type = ! empty($validated['newsletter_type_id']) ? NewsletterType::where('club_id', $club->id)->find($validated['newsletter_type_id']) : null;
+
+        $newsletter = new Newsletter(['club_id' => $club->id, 'newsletter_type_id' => $type?->id, 'subject' => $validated['subject'], 'attachments' => []]);
+        $newsletter->setRelation('club', $club);
+        $newsletter->setRelation('newsletterType', $type);
+
+        return new NewsletterMail($newsletter, $recipientName, $unsubscribeUrl, null, $isTest, null, RichTextSanitizer::sanitize($validated['content']));
     }
 
     /**

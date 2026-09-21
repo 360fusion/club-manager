@@ -88,6 +88,7 @@ class AppServiceProvider extends ServiceProvider
         Livewire::addPersistentMiddleware([EnsureUserCanAdministerClub::class]);
 
         // Sign-in and public forms are open to the world, so each has its own limit.
+        RateLimiter::for('newsletter', fn () => Limit::perSecond(max(1, (int) config('newsletters.per_second'))));
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(Str::lower((string) $request->input('email')).'|'.$request->ip()));
         RateLimiter::for('api-token', fn (Request $request) => Limit::perMinute(5)->by(Str::lower((string) $request->input('email')).'|'.$request->ip()));
         RateLimiter::for('auth-forms', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));

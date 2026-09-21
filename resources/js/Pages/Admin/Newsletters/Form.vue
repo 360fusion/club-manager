@@ -1,6 +1,8 @@
 <script setup>
+import Modal from '@/Components/Ui/Modal.vue';
+import { postJson } from '@/Utils/postJson';
 import { ref, computed } from 'vue';
-import { useForm, Head, Link } from '@inertiajs/vue3';
+import { useForm, Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 import ContentPickerModal from '@/Components/ContentPickerModal.vue';
@@ -172,6 +174,31 @@ const form = useForm({
   existing_attachments: existingAttachments.value,
   new_attachments: [],
 });
+
+const isSent = props.newsletter.status === 'sent';
+
+// Merge tags fill in each person's own name when the email goes out.
+const MERGE_TAGS = [['{{first_name}}', 'First name'], ['{{name}}', 'Full name'], ['{{club_name}}', 'Club name']];
+const insertTag = (tag) => {
+  form.content = /<\/p>\s*$/.test(form.content) ? form.content.replace(/<\/p>\s*$/, ` ${tag}</p>`) : `${form.content}<p>${tag}</p>`;
+};
+
+// Preview the email as it will look, and send a test to yourself. Neither saves anything.
+const previewOpen = ref(false);
+const previewHtml = ref('');
+const previewMobile = ref(false);
+const previewError = ref('');
+const draftPayload = () => ({ subject: form.subject, content: form.content, newsletter_type_id: form.newsletter_type_id });
+
+const openPreview = async () => {
+  previewError.value = '';
+  previewOpen.value = true;
+  const result = await postJson(route('admin.newsletters.preview', { clubSlug: props.club.slug }), draftPayload());
+  if (result.ok) previewHtml.value = result.data.html;
+  else previewError.value = result.data?.message || 'Add a subject and some content to preview it.';
+};
+
+const sendTest = () => router.post(route('admin.newsletters.test', { clubSlug: props.club.slug }), draftPayload(), { preserveScroll: true });
 
 const availableRoles = [
   { id: 'member', label: 'Members / Brethren' },
@@ -527,6 +554,10 @@ const sendBroadcast = () => {
         <!-- Newsletter Content -->
         <div>
           <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Newsletter Content (WYSIWYG)</label>
+          <div class="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+            <span>Personalise:</span>
+            <button v-for="[tag, name] in MERGE_TAGS" :key="tag" type="button" class="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 font-mono text-blue-700 hover:bg-blue-100 dark:border-blue-800/60 dark:bg-blue-950/60 dark:text-blue-300" :title="`Adds ${name}`" @click="insertTag(tag)">{{ tag }}</button>
+          </div>
           <RichTextEditor v-model="form.content" placeholder="Write rich email newsletter content here..." />
         </div>
 
@@ -623,7 +654,18 @@ const sendBroadcast = () => {
           </div>
         </div>
 
-        <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <p v-if="isSent" class="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">This newsletter has been sent, so it can no longer be changed. Go back and use Duplicate to send something similar.</p>
+
+        <div v-if="!isSent" class="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" @click="openPreview" class="px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
+            👁 Preview
+          </button>
+          <button type="button" @click="sendTest" class="px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
+            ✉️ Send test to me
+          </button>
+        </div>
+
+        <div v-if="!isSent" class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <button type="button" @click="saveDraft" :disabled="form.processing" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
             💾 Save as Draft
           </button>
@@ -635,6 +677,18 @@ const sendBroadcast = () => {
       </form>
 
     </div>
+
+    <!-- Email preview -->
+    <Modal :open="previewOpen" size="xl" title="Email preview" subtitle="How it will look in an inbox, with a sample name filled in" @close="previewOpen = false">
+      <div class="mb-3 flex gap-2 text-xs">
+        <button type="button" :class="['rounded-lg px-3 py-1.5 font-bold', !previewMobile ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-300']" @click="previewMobile = false">Desktop</button>
+        <button type="button" :class="['rounded-lg px-3 py-1.5 font-bold', previewMobile ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-300']" @click="previewMobile = true">Mobile</button>
+      </div>
+      <p v-if="previewError" class="rounded-lg bg-rose-500/10 p-3 text-xs font-semibold text-rose-600">{{ previewError }}</p>
+      <div v-else class="flex justify-center rounded-xl bg-slate-100 p-3 dark:bg-slate-800">
+        <iframe sandbox="" :srcdoc="previewHtml" title="Email preview" :class="['h-[60vh] rounded-lg border-0 bg-white', previewMobile ? 'w-[375px]' : 'w-full']"></iframe>
+      </div>
+    </Modal>
 
     <!-- Interactive Content Picker Modal -->
     <ContentPickerModal

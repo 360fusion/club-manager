@@ -8,6 +8,7 @@ use App\Services\Events\EventPayload;
 use App\Support\Currencies;
 use App\Support\EmailTemplate;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -17,7 +18,7 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Sent to an outside guest after they book: the details and a private link to view or cancel.
  */
-class EventBookingMail extends Mailable
+class EventBookingMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -25,7 +26,9 @@ class EventBookingMail extends Mailable
         public Event $event,
         public EventRegistration $registration,
         public string $manageUrl,
-    ) {}
+    ) {
+        $this->onQueue('transactional');
+    }
 
     /**
      * The editable superadmin template, filled in for this booking; null if it has been removed.
