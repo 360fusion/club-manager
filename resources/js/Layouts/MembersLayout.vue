@@ -73,6 +73,10 @@ const nav = computed(() => (slug.value
 <template>
     <Head :title="`${title} - ClubManager`" />
 
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-blue-600 focus:text-white focus:font-bold focus:text-sm focus:shadow-lg">
+        Skip to main content
+    </a>
+
     <div class="min-h-screen bg-slate-100 font-sans text-slate-800 dark:bg-slate-950 dark:text-slate-200 lg:flex">
         <aside v-if="side" class="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-6 overflow-y-auto bg-[#1e293b] p-4 text-slate-300 lg:flex">
             <Link :href="route('members.dashboard')" class="flex items-center gap-2.5 px-2 pt-1" aria-label="ClubManager home">
@@ -146,7 +150,8 @@ const nav = computed(() => (slug.value
                 </div>
             </div>
 
-            <main class="mx-auto max-w-6xl space-y-4 px-4 py-8 sm:px-6">
+            <main id="main-content" class="mx-auto max-w-6xl space-y-4 px-4 py-8 sm:px-6">
+                <h1 class="sr-only">{{ title }}</h1>
                 <Alert v-if="flash.success" variant="success">{{ flash.success }}</Alert>
                 <Alert v-if="flash.error" variant="danger">{{ flash.error }}</Alert>
                 <Alert v-if="errors.length" variant="danger" title="That didn't work"><ul class="list-disc pl-4"><li v-for="message in errors" :key="message">{{ message }}</li></ul></Alert>

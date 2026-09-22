@@ -13,6 +13,12 @@ const props = defineProps({
     type: String,
     default: 'Write content here...',
   },
+  // Id of an external <label>/heading this editor is the field for. Threaded onto the actual
+  // contenteditable element (not just this component's root) so it reaches Tiptap's own div.
+  ariaLabelledby: {
+    type: String,
+    default: null,
+  },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -37,6 +43,9 @@ const editor = useEditor({
   editorProps: {
     attributes: {
       class: 'focus:outline-none min-h-[180px] p-4 text-slate-800 dark:text-slate-100 text-xs leading-relaxed font-sans bg-slate-50 dark:bg-slate-800/50 rounded-b-xl border border-t-0 border-slate-300 dark:border-slate-700',
+      role: 'textbox',
+      'aria-multiline': 'true',
+      ...(props.ariaLabelledby ? { 'aria-labelledby': props.ariaLabelledby } : {}),
     },
   },
   onUpdate: () => {

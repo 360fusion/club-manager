@@ -37,11 +37,19 @@ const displayEmail = computed(() => {
     return props.email.replace('@', ' [at] ').replace(/\./g, ' [dot] ');
 });
 
+// A real mailto: href, but only once mounted — so a static HTML scrape still only ever sees the
+// base64 attribute, while a real browser (and anything reading the link's actual href — a screen
+// reader's link list, "copy link address", opening in a new tab) gets a working destination
+// instead of a bare "#".
+const href = computed(() => (isMounted.value && props.email ? `mailto:${props.email}` : '#'));
+
 const handleClick = (e) => {
-    if (!props.email) return;
+    if (!props.email || !isMounted.value) return;
     if (props.asLink) {
+        // The href is already a real mailto: link now, so the browser's default action is
+        // correct — this just stops it also being treated as an in-app navigation.
         e.preventDefault();
-        window.location.href = `mailto:${props.email}`;
+        window.location.href = href.value;
     }
 };
 
@@ -53,7 +61,7 @@ onMounted(() => {
 <template>
     <a
         v-if="asLink && email"
-        href="#"
+        :href="href"
         @click="handleClick"
         :class="customClass"
         :data-email-b64="b64Email"

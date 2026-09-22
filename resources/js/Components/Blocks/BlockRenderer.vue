@@ -99,7 +99,7 @@ const submitContactForm = (block) => {
             <section v-if="block.type === 'hero'" :class="['relative p-10 sm:p-16 rounded-3xl text-center overflow-hidden border transition-colors', theme.heroBg]">
                 <div class="relative z-10 max-w-3xl mx-auto space-y-6">
                     <div :class="['inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border', theme.heroPill]">Official Club Website</div>
-                    <h1 class="text-4xl sm:text-6xl font-black leading-tight">{{ block.title || 'Welcome' }}</h1>
+                    <h2 class="text-4xl sm:text-6xl font-black leading-tight">{{ block.title || 'Welcome' }}</h2>
                     <p v-if="block.subtitle" class="text-lg sm:text-xl opacity-90">{{ block.subtitle }}</p>
                     <div v-if="block.cta_text" class="pt-2">
                         <component :is="interactive && block.cta_link ? 'a' : 'span'" :href="interactive ? resolveUrl(block.cta_link) : undefined" :class="['inline-block py-3.5 px-7 rounded-2xl font-bold text-sm shadow-xl hover:scale-105 transition-transform', theme.heroCta]">
@@ -193,13 +193,13 @@ const submitContactForm = (block) => {
                     </div>
                     <div class="space-y-2">
                         <div class="flex items-center justify-between text-sm opacity-90">
-                            <span>Raised: <strong class="text-emerald-500 dark:text-emerald-400 font-bold">{{ $cs }}{{ d.current_amount }}</strong></span>
+                            <span>Raised: <strong :class="['font-bold', theme.accentText]">{{ $cs }}{{ d.current_amount }}</strong></span>
                             <span>Target: <strong>{{ $cs }}{{ d.target_amount }}</strong></span>
                         </div>
                         <div class="w-full h-4 rounded-full bg-black/20 border border-black/10 overflow-hidden p-0.5">
                             <div class="h-full rounded-full bg-gradient-to-r from-amber-500 via-emerald-400 to-blue-400 transition-all duration-500" :style="{ width: `${d.percentage}%` }"></div>
                         </div>
-                        <div class="text-right text-xs font-bold text-amber-600 dark:text-amber-400">{{ d.percentage }}% Funded ({{ d.contributions_count }} Donors)</div>
+                        <div :class="['text-right text-xs font-bold', theme.accentText]">{{ d.percentage }}% Funded ({{ d.contributions_count }} Donors)</div>
                     </div>
                 </div>
             </section>
@@ -311,25 +311,25 @@ const submitContactForm = (block) => {
                 <form @submit.prevent="submitContactForm(block)" :class="['p-6 sm:p-10 rounded-3xl shadow-2xl space-y-6 text-sm', theme.cardBg]">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Your Name <span v-if="block.name_required" class="text-rose-500">*</span></label>
-                            <input v-model="contactForm.name" type="text" :disabled="!interactive" :required="interactive && block.name_required !== false" placeholder="e.g. John Doe" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3.5 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed" />
-                            <span v-if="contactForm.errors.name" class="text-xs text-rose-500 mt-1 block">{{ contactForm.errors.name }}</span>
+                            <label :for="`contact-name-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Your Name <span v-if="block.name_required" class="text-rose-500">*</span></label>
+                            <input :id="`contact-name-${block.id}`" v-model="contactForm.name" type="text" :disabled="!interactive" :required="interactive && block.name_required !== false" placeholder="e.g. John Doe" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3.5 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed" />
+                            <span v-if="contactForm.errors.name" class="text-xs text-rose-500 mt-1 block" role="alert">{{ contactForm.errors.name }}</span>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Email Address <span v-if="block.email_required !== false" class="text-rose-500">*</span></label>
-                            <input v-model="contactForm.email" type="email" :disabled="!interactive" :required="interactive && block.email_required !== false" placeholder="e.g. john@example.org" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3.5 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed" />
-                            <span v-if="contactForm.errors.email" class="text-xs text-rose-500 mt-1 block">{{ contactForm.errors.email }}</span>
+                            <label :for="`contact-email-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Email Address <span v-if="block.email_required !== false" class="text-rose-500">*</span></label>
+                            <input :id="`contact-email-${block.id}`" v-model="contactForm.email" type="email" :disabled="!interactive" :required="interactive && block.email_required !== false" placeholder="e.g. john@example.org" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3.5 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed" />
+                            <span v-if="contactForm.errors.email" class="text-xs text-rose-500 mt-1 block" role="alert">{{ contactForm.errors.email }}</span>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Phone Number <span v-if="block.phone_required" class="text-rose-500">*</span></label>
-                        <input v-model="contactForm.phone" type="tel" :disabled="!interactive" :required="interactive && !!block.phone_required" placeholder="e.g. +44 7123 456789" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3.5 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed" />
-                        <span v-if="contactForm.errors.phone" class="text-xs text-rose-500 mt-1 block">{{ contactForm.errors.phone }}</span>
+                        <label :for="`contact-phone-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Phone Number <span v-if="block.phone_required" class="text-rose-500">*</span></label>
+                        <input :id="`contact-phone-${block.id}`" v-model="contactForm.phone" type="tel" :disabled="!interactive" :required="interactive && !!block.phone_required" placeholder="e.g. +44 7123 456789" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3.5 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed" />
+                        <span v-if="contactForm.errors.phone" class="text-xs text-rose-500 mt-1 block" role="alert">{{ contactForm.errors.phone }}</span>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Message <span v-if="block.message_required !== false" class="text-rose-500">*</span></label>
-                        <textarea v-model="contactForm.message" rows="5" :disabled="!interactive" :required="interactive && block.message_required !== false" placeholder="Write your message or inquiry here..." class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3.5 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"></textarea>
-                        <span v-if="contactForm.errors.message" class="text-xs text-rose-500 mt-1 block">{{ contactForm.errors.message }}</span>
+                        <label :for="`contact-message-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Message <span v-if="block.message_required !== false" class="text-rose-500">*</span></label>
+                        <textarea :id="`contact-message-${block.id}`" v-model="contactForm.message" rows="5" :disabled="!interactive" :required="interactive && block.message_required !== false" placeholder="Write your message or inquiry here..." class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3.5 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"></textarea>
+                        <span v-if="contactForm.errors.message" class="text-xs text-rose-500 mt-1 block" role="alert">{{ contactForm.errors.message }}</span>
                     </div>
                     <button type="submit" :disabled="!interactive || contactForm.processing" :class="['w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed', theme.heroCta]">
                         <span>{{ contactForm.processing ? 'Sending Message...' : (block.button_text || 'Send Message') }}</span><span>→</span>
@@ -341,26 +341,32 @@ const submitContactForm = (block) => {
 
         <!-- Donation modal (live pages only) -->
         <div v-if="interactive && showDonationModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="donation-modal-title"
+                v-focus-trap="() => { showDonationModal = false; }"
+                class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl"
+            >
                 <div class="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                     <div>
-                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Make a Donation</h3>
+                        <h3 id="donation-modal-title" class="text-xl font-bold text-slate-900 dark:text-white">Make a Donation</h3>
                         <p class="text-xs text-amber-600 dark:text-amber-400">{{ activeDonation?.campaign_name }}</p>
                     </div>
                     <button type="button" @click="showDonationModal = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-white font-bold" aria-label="Close">✕</button>
                 </div>
                 <form @submit.prevent="submitDonation" class="space-y-4 text-sm">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Your Full Name</label>
-                        <input v-model="donationForm.donor_name" type="text" required placeholder="e.g. Jane Smith" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-slate-900 dark:text-white" />
+                        <label for="donation-donor-name" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Your Full Name</label>
+                        <input id="donation-donor-name" v-model="donationForm.donor_name" type="text" required placeholder="e.g. Jane Smith" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-slate-900 dark:text-white" />
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
-                        <input v-model="donationForm.donor_email" type="email" required placeholder="e.g. jane@example.com" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-slate-900 dark:text-white" />
+                        <label for="donation-donor-email" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
+                        <input id="donation-donor-email" v-model="donationForm.donor_email" type="email" required placeholder="e.g. jane@example.com" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-slate-900 dark:text-white" />
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Donation Amount ({{ $cs }})</label>
-                        <input v-model="donationForm.amount" type="number" min="1" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-slate-900 dark:text-white font-bold text-lg" />
+                        <label for="donation-amount" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Donation Amount ({{ $cs }})</label>
+                        <input id="donation-amount" v-model="donationForm.amount" type="number" min="1" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-slate-900 dark:text-white font-bold text-lg" />
                     </div>
                     <button type="submit" :disabled="donationForm.processing" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-sm shadow-lg shadow-amber-500/20 disabled:opacity-60">Confirm & Process Donation</button>
                 </form>

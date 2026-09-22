@@ -52,25 +52,33 @@ const submit = () => {
 
             <form @submit.prevent="submit" class="space-y-4 text-sm">
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Email Address</label>
-                    <input 
-                        v-model="form.email" 
-                        type="email" 
-                        required 
+                    <label for="login-email" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Email Address</label>
+                    <input
+                        id="login-email"
+                        v-model="form.email"
+                        type="email"
+                        required
+                        autocomplete="username"
+                        :aria-invalid="!!form.errors.email"
+                        :aria-describedby="form.errors.email ? 'login-email-error' : undefined"
                         class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none"
                     />
-                    <div v-if="form.errors.email" class="text-xs text-rose-400 mt-1 font-semibold">{{ form.errors.email }}</div>
+                    <div v-if="form.errors.email" id="login-email-error" class="text-xs text-rose-400 mt-1 font-semibold" role="alert">{{ form.errors.email }}</div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Password</label>
-                    <input 
-                        v-model="form.password" 
-                        type="password" 
-                        required 
+                    <label for="login-password" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Password</label>
+                    <input
+                        id="login-password"
+                        v-model="form.password"
+                        type="password"
+                        required
+                        autocomplete="current-password"
+                        :aria-invalid="!!form.errors.password"
+                        :aria-describedby="form.errors.password ? 'login-password-error' : undefined"
                         class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none"
                     />
-                    <div v-if="form.errors.password" class="text-xs text-rose-400 mt-1 font-semibold">{{ form.errors.password }}</div>
+                    <div v-if="form.errors.password" id="login-password-error" class="text-xs text-rose-400 mt-1 font-semibold" role="alert">{{ form.errors.password }}</div>
                 </div>
 
                 <div class="flex items-center justify-between text-xs">
