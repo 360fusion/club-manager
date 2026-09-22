@@ -13,7 +13,14 @@ Things to do outside the code, to tick off later. Update this file when somethin
 
 Emails are now sent from a **queue**, so a worker must be running or nothing is delivered (booking confirmations, invitations, newsletters, receipts).
 
-- [ ] Run a queue worker on the server, kept alive by Forge (Daemons) or Supervisor: `php artisan queue:work --queue=transactional,default,bulk --tries=3 --max-time=3600`. Restart it after each deploy (`php artisan queue:restart`). Without it, emails just wait in the `jobs` table.
+- [ ] **Create the queue worker** (a background process that stays running and sends the queued emails). Nothing is delivered without it.
+  - [ ] On Forge: Server, Daemons, New Daemon. Command: `php artisan queue:work --queue=transactional,default,bulk --tries=3 --max-time=3600`. Directory: the site's root (the folder containing `artisan`). User: the site user. Processes: 1 to start (add more if newsletters are slow).
+  - [ ] Without Forge: create a Supervisor program with the same command (`autostart=true`, `autorestart=true`, `stopwaitsecs=3600`), then `supervisorctl reread && supervisorctl update`.
+  - [ ] Add `php artisan queue:restart` to the deploy script, so the worker picks up new code after every deploy.
+  - [ ] Confirm `QUEUE_CONNECTION=database` in the server's `.env` (or `redis` if you move to Redis later).
+  - [ ] Check it is running: send a booking confirmation or a "Send test to me" newsletter and see it arrive within a minute. If it does not, run `php artisan queue:work --once` on the server and check `storage/logs/laravel.log`, and look at the `failed_jobs` table.
+  - [ ] Keep an eye on failures: `php artisan queue:failed` lists them and `php artisan queue:retry all` retries them.
+  - [ ] Do the same for **every environment** that sends email: staging as well as production.
 - [ ] Choose the mail provider (SendGrid, SES, Postmark or Mailgun) and set `MAIL_MAILER`, its credentials, `MAIL_FROM_ADDRESS` (an address on your sending domain) and `MAIL_FROM_NAME` in `.env`. SendGrid works over SMTP (`MAIL_MAILER=smtp`, host `smtp.sendgrid.net`, user `apikey`, password = the API key).
 - [ ] Authenticate the sending domain with the provider once (SPF, DKIM and a DMARC record). Lodges then appear as the display name with their own reply-to, so lodges need no DNS work.
 - [ ] Optional: if the provider limits sending speed, set `NEWSLETTER_PER_SECOND` (0 = no limit).

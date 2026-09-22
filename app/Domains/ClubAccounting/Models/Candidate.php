@@ -4,11 +4,13 @@ namespace App\Domains\ClubAccounting\Models;
 
 use App\Domains\ClubAccounting\Enums\CandidateStage;
 use App\Models\Club;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Candidate extends Model
@@ -40,6 +42,27 @@ class Candidate extends Model
         'notes',
         'initiation_date',
         'converted_member_id',
+        'candidate_type',
+        'grand_lodge_number',
+        'mother_lodge_info',
+        'source',
+        'source_note',
+        'owner_user_id',
+        'stage_entered_at',
+        'on_hold_at',
+        'on_hold_until',
+        'outcome',
+        'outcome_reason',
+        'outcome_note',
+        'outcome_at',
+        'outcome_by',
+        'outcome_from_stage',
+        'committee_recommended_at',
+        'proposed_at',
+        'ballot_at',
+        'ballot_result',
+        'accepted_at',
+        'initiate_by',
     ];
 
     protected $casts = [
@@ -53,6 +76,15 @@ class Candidate extends Model
         'no_bankruptcies' => 'boolean',
         'interview_notes' => 'array',
         'initiation_date' => 'date',
+        'stage_entered_at' => 'datetime',
+        'on_hold_at' => 'datetime',
+        'on_hold_until' => 'date',
+        'outcome_at' => 'datetime',
+        'committee_recommended_at' => 'datetime',
+        'proposed_at' => 'date',
+        'ballot_at' => 'date',
+        'accepted_at' => 'datetime',
+        'initiate_by' => 'date',
     ];
 
     /* =========================================================================
@@ -66,14 +98,34 @@ class Candidate extends Model
         );
     }
 
+    /**
+     * Form P is signed and there is a proposer and a different seconder. (A candidate's declarations are dealt with
+     * by the Province and the Grand Secretary, not ticked off here.)
+     */
     public function isFormPComplete(): bool
     {
         return $this->form_p_signed_at !== null
-            && $this->belief_in_supreme_being
-            && $this->no_criminal_record
-            && $this->no_bankruptcies
             && $this->proposer_member_id !== null
-            && $this->seconder_member_id !== null;
+            && $this->seconder_member_id !== null
+            && $this->proposer_member_id !== $this->seconder_member_id;
+    }
+
+    /**
+     * Still moving through the process: not initiated, rejected or closed.
+     */
+    public function isActive(): bool
+    {
+        return $this->stage->isActive() && $this->outcome === null;
+    }
+
+    public function isOnHold(): bool
+    {
+        return $this->on_hold_at !== null;
+    }
+
+    public function daysInStage(): int
+    {
+        return (int) floor(($this->stage_entered_at ?? $this->updated_at ?? now())->diffInDays(now(), true));
     }
 
     /* =========================================================================
@@ -104,6 +156,22 @@ class Candidate extends Model
     /**
      * @return BelongsTo<Member, $this>
      */
+    /**
+     * @return HasMany<CandidateEvent, $this>
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(CandidateEvent::class)->orderByDesc('occurred_at')->orderByDesc('id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_user_id');
+    }
+
     public function convertedMember(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'converted_member_id');

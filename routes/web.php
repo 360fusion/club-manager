@@ -4,6 +4,7 @@ use App\Domains\ClubAccounting\Http\Controllers\CommitteePackController;
 use App\Domains\ClubAccounting\Livewire\Banking\BankAccountsIndex;
 use App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex;
 use App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace;
+use App\Domains\ClubAccounting\Livewire\Candidates\CandidateDetail;
 use App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline;
 use App\Domains\ClubAccounting\Livewire\Committee\LiveMinuteTaker;
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingIndex;
@@ -398,6 +399,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/members', MemberIndex::class)->name('admin.club_acc.members.index');
     Route::get('/{clubSlug}/admin/members/{memberId}', MemberProfile::class)->name('admin.club_acc.members.show');
     Route::get('/{clubSlug}/admin/candidates', CandidatePipeline::class)->name('admin.club_acc.candidates.index');
+    Route::get('/{clubSlug}/admin/candidates/{candidateId}', CandidateDetail::class)->whereNumber('candidateId')->name('admin.club_acc.candidates.show');
     Route::get('/{clubSlug}/admin/dues-subscriptions', SubscriptionIndex::class)->name('admin.club_acc.subscriptions.index');
     Route::get('/{clubSlug}/admin/bank-accounts', BankAccountsIndex::class)->name('admin.club_acc.bank_accounts.index');
     Route::get('/{clubSlug}/admin/bank-imports', BankImportIndex::class)->name('admin.club_acc.bank_imports.index');

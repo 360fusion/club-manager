@@ -2,11 +2,11 @@
 
 namespace App\Domains\ClubAccounting\Livewire\Committee\Modals;
 
-use App\Domains\ClubAccounting\Enums\CandidateStage;
 use App\Domains\ClubAccounting\Enums\CommitteeItemType;
 use App\Domains\ClubAccounting\Models\Candidate;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAgendaItem;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
+use App\Domains\ClubAccounting\Services\CandidateTransitionService;
 use App\Models\User;
 use App\Support\ClubAccess;
 use Livewire\Attributes\Locked;
@@ -54,12 +54,7 @@ class CandidateVettingModal extends Component
             $refId = $candidateRecord->id;
             $refType = Candidate::class;
 
-            if ($this->isRecommended) {
-                $candidateRecord->update([
-                    'rule_159_cleared' => true,
-                    'stage' => CandidateStage::BallotApproved,
-                ]);
-            }
+            app(CandidateTransitionService::class)->recordCommitteeDecision($candidateRecord, auth()->user(), $this->isRecommended, $this->vettingNotes);
         } else {
             $user = $meeting->club->users()->where('users.id', $this->candidateId)->firstOrFail();
             $name = $user->name;
