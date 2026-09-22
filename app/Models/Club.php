@@ -262,14 +262,26 @@ class Club extends Model implements HasMedia
             ],
         ];
 
+        // Only ever seeded once: after that, a missing slug means an admin renamed or removed that page on
+        // purpose, not that it needs putting back. Without this flag, renaming "About" away would leave a
+        // fresh blank "About" reappearing every time the site is visited.
+        if (! empty($settings['default_pages_seeded'])) {
+            $home = $this->pages()->where('slug', 'home')->first();
+
+            if ($home && $home->title !== 'Home') {
+                $home->update(['title' => 'Home']);
+            }
+
+            return;
+        }
+
         foreach ($defaultPages as $def) {
-            $existingPage = $this->pages()->where('slug', $def['slug'])->first();
-            if (! $existingPage) {
+            if (! $this->pages()->where('slug', $def['slug'])->exists()) {
                 $this->pages()->create($def);
-            } elseif ($def['slug'] === 'home' && $existingPage->title !== 'Home') {
-                $existingPage->update(['title' => 'Home']);
             }
         }
+
+        $this->update(['settings' => array_merge($this->settings ?? [], ['default_pages_seeded' => true])]);
     }
 
     /**

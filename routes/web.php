@@ -202,6 +202,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/pages', [PageAdminController::class, 'store'])->name('admin.pages.store');
     Route::post('/{clubSlug}/admin/pages/reorder', [PageAdminController::class, 'reorder'])->name('admin.pages.reorder');
     Route::post('/{clubSlug}/admin/pages/{id}/toggle-publish', [PageAdminController::class, 'togglePublish'])->name('admin.pages.toggle_publish');
+    Route::post('/{clubSlug}/admin/pages/{id}/duplicate', [PageAdminController::class, 'duplicate'])->name('admin.pages.duplicate');
+    Route::post('/{clubSlug}/admin/pages/settings/verify-domain', [PageAdminController::class, 'verifyDomain'])->name('admin.pages.settings.verify_domain');
+    Route::post('/{clubSlug}/admin/pages/trash/{id}/restore', [PageAdminController::class, 'restore'])->name('admin.pages.restore');
+    Route::delete('/{clubSlug}/admin/pages/trash/{id}', [PageAdminController::class, 'forceDelete'])->name('admin.pages.force_delete');
     Route::delete('/{clubSlug}/admin/pages/{id}', [PageAdminController::class, 'destroy'])->name('admin.pages.destroy');
 
     // Admin Event Management Routes

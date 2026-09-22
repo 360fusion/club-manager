@@ -4,7 +4,8 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
-import ObfuscatedEmail from '@/Components/ObfuscatedEmail.vue';
+import BlockRenderer from '@/Components/Blocks/BlockRenderer.vue';
+import { SITE_THEMES, themeClasses } from '@/Support/siteThemes';
 
 const props = defineProps({
     club: {
@@ -36,6 +37,10 @@ const props = defineProps({
         default: () => [],
     },
     donations: {
+        type: Array,
+        default: () => [],
+    },
+    trashedPages: {
         type: Array,
         default: () => [],
     },
@@ -77,6 +82,16 @@ const submitWebsiteSettings = () => {
         },
     });
 };
+
+const checkingDomain = ref(false);
+
+const checkDomainNow = () => {
+    checkingDomain.value = true;
+    router.post(route('admin.pages.settings.verify_domain', { clubSlug: props.club.slug }), {}, {
+        preserveScroll: true,
+        onFinish: () => { checkingDomain.value = false; },
+    });
+};
 const showDeleteConfirmModal = ref(false);
 const pageToDelete = ref(null);
 
@@ -101,98 +116,7 @@ const onMediaSelect = (mediaItem) => {
     }
 };
 
-const THEMES = [
-    {
-        id: 'light_navy',
-        name: 'Pure White & Oxford Navy',
-        badge: 'White Canvas / Navy',
-        isLight: true,
-        description: 'Pristine pure white background with Oxford Navy typography, crisp card borders, and subtle sky blue accents.',
-        previewBg: 'bg-gradient-to-br from-white via-slate-50 to-slate-100 border border-slate-200 dark:border-slate-800 shadow-inner',
-        palette: ['#ffffff', '#0f172a', '#0284c7', '#38bdf8'],
-        features: ['100% White background', 'Oxford Navy typography', 'Crisp card borders', 'Clean corporate header'],
-    },
-    {
-        id: 'executive_light',
-        name: 'Executive Slate & Indigo',
-        badge: 'Executive Light',
-        isLight: true,
-        description: 'Off-white light background with elevated white cards, deep slate headings, and royal indigo highlights.',
-        previewBg: 'bg-gradient-to-br from-slate-100 via-blue-50/50 dark:via-blue-950/50 to-slate-200 border border-slate-200 dark:border-slate-800 shadow-inner',
-        palette: ['#f8fafc', '#1e1b4b', '#4f46e5', '#6366f1'],
-        features: ['Soft off-white background', 'Indigo accent bar', 'Elevated white cards', 'Modern floating header'],
-    },
-    {
-        id: 'masonic_light',
-        name: 'White Gold Masonic Lodge',
-        badge: 'White & Royal Gold',
-        isLight: true,
-        description: 'Traditional fraternal lodge layout set on a pure white background with gold foil borders and dark navy serif typography.',
-        previewBg: 'bg-gradient-to-br from-white via-amber-50/30 dark:via-amber-950/30 to-slate-100 border border-amber-300 dark:border-amber-700/60 shadow-inner',
-        palette: ['#ffffff', '#0c1938', '#d97706', '#fbbf24'],
-        features: ['Pure white background', 'Gold foil card borders', 'Dark navy serif typography', 'Regal gold badges'],
-    },
-    {
-        id: 'minimal',
-        name: 'Minimalist Emerald Light',
-        badge: 'Clean & Flat Light',
-        isLight: true,
-        description: 'Bright, airy, contemporary design with generous whitespace, crisp emerald green accents, high-contrast typography, and flat white cards.',
-        previewBg: 'bg-gradient-to-br from-white via-emerald-50/30 dark:via-emerald-950/30 to-slate-100 border border-emerald-200 dark:border-emerald-800/60 shadow-inner',
-        palette: ['#ffffff', '#059669', '#10b981', '#1e293b'],
-        features: ['Airy whitespace layout', 'Emerald green highlights', 'Flat modern borders', 'High-contrast typography'],
-    },
-    {
-        id: 'warm_light',
-        name: 'Warm Cream & Bronze',
-        badge: 'Warm Light',
-        isLight: true,
-        description: 'Soft warm ivory background with rich bronze accents, rounded white cards, and inviting warm tones.',
-        previewBg: 'bg-gradient-to-br from-amber-50/50 dark:from-amber-950/50 via-orange-50/30 dark:via-orange-950/30 to-amber-100/50 dark:to-amber-900/50 border border-amber-200 dark:border-amber-800/60 shadow-inner',
-        palette: ['#fffbe6', '#78350f', '#b45309', '#f59e0b'],
-        features: ['Warm ivory backdrop', 'Bronze & Amber accents', 'Rounded white cards', 'Inviting layout'],
-    },
-    {
-        id: 'classic',
-        name: 'Classic Dark Heritage',
-        badge: 'Classic Dark',
-        isLight: false,
-        description: 'Clean, timeless corporate and club layout featuring crisp white cards on dark slate, rich navy accents, gold highlights, and subtle shadows.',
-        previewBg: 'bg-gradient-to-br from-slate-900 via-blue-900 to-blue-950 shadow-inner',
-        palette: ['#0f172a', '#0284c7', '#d97706', '#f8fafc'],
-        features: ['Navy & Amber accents', 'Classic serif headings', 'Subtle card elevations', 'Centered footer navigation'],
-    },
-    {
-        id: 'obsidian',
-        name: 'Obsidian Dark',
-        badge: 'Modern Dark Mode',
-        isLight: false,
-        description: 'Sleek, high-tech dark mode aesthetic with midnight background, glassmorphism panel surfaces, and glowing cyan/indigo accents.',
-        previewBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 shadow-inner',
-        palette: ['#020617', '#38bdf8', '#818cf8', '#1e293b'],
-        features: ['Midnight dark backdrop', 'Glassmorphism panels', 'Neon accent glows', 'Compact dark header bar'],
-    },
-    {
-        id: 'masonic',
-        name: 'Royal Masonic Dark & Gold',
-        badge: 'Regal Dark',
-        isLight: false,
-        description: 'Traditional Masonic & fraternal lodge aesthetic featuring deep royal navy, rich gold foil borders, crest embellishments, and classic serif typography.',
-        previewBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-blue-950 shadow-inner',
-        palette: ['#0c1938', '#f59e0b', '#d97706', '#1e1b4b'],
-        features: ['Royal Navy & Gold palette', 'Lodge crest detailing', 'Regal badge styling', 'Ornate section dividers'],
-    },
-    {
-        id: 'vibrant',
-        name: 'Vibrant Sunset Dark',
-        badge: 'High Impact Banners',
-        isLight: false,
-        description: 'Dynamic, high-energy theme with bold gradient hero banners, warm coral and amber tones, rounded cards, and prominent action buttons.',
-        previewBg: 'bg-gradient-to-br from-amber-900 via-rose-950 to-blue-950 shadow-inner',
-        palette: ['#f43f5e', '#fb923c', '#4c1d95', '#fff1f2'],
-        features: ['Sunset gradient headers', 'Warm coral & amber tones', 'Rounded card borders', 'Prominent action CTAs'],
-    },
-];
+const THEMES = SITE_THEMES;
 
 const currentThemeKey = computed(() => props.club?.settings?.website_theme || 'classic');
 const activePreviewThemeId = ref(null);
@@ -210,144 +134,7 @@ const previewThemeInBuilder = (theme) => {
 };
 
 const effectivePreviewThemeKey = computed(() => activePreviewThemeId.value || currentThemeKey.value);
-
-const previewThemeClasses = computed(() => {
-    const key = effectivePreviewThemeKey.value;
-    if (key === 'light_navy') {
-        return {
-            container: 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 shadow-xl',
-            nav: 'bg-white/95 dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
-            navActive: 'bg-slate-900 dark:bg-slate-700 text-white font-bold',
-            navInactive: 'text-slate-600 dark:text-slate-300',
-            heroBg: 'bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-white border-slate-800',
-            heroPill: 'bg-blue-500/20 border-blue-400/30 text-blue-300',
-            heroCta: 'bg-blue-500 text-white font-bold',
-            cardBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
-            headingText: 'text-slate-900 dark:text-white',
-            bodyText: 'text-slate-700 dark:text-slate-200',
-            accentText: 'text-blue-600 dark:text-blue-400',
-        };
-    }
-    if (key === 'executive_light') {
-        return {
-            container: 'bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 shadow-xl',
-            nav: 'bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
-            navActive: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60 font-bold',
-            navInactive: 'text-slate-600 dark:text-slate-300',
-            heroBg: 'bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 text-slate-900 dark:text-white shadow-md',
-            heroPill: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/60 text-blue-700 dark:text-blue-300',
-            heroCta: 'bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold',
-            cardBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
-            headingText: 'text-slate-900 dark:text-white',
-            bodyText: 'text-slate-700 dark:text-slate-200',
-            accentText: 'text-blue-600 dark:text-blue-400',
-        };
-    }
-    if (key === 'masonic_light') {
-        return {
-            container: 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-serif border-amber-300 dark:border-amber-700/60 shadow-xl',
-            nav: 'bg-white/95 dark:bg-slate-900/95 border-amber-500/40 text-slate-900 dark:text-white shadow-sm',
-            navActive: 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 font-sans font-bold',
-            navInactive: 'text-slate-700 dark:text-slate-200 font-sans',
-            heroBg: 'bg-gradient-to-br from-blue-950 via-blue-950 to-slate-950 text-white border-amber-500/40 shadow-xl',
-            heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300 font-sans',
-            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 dark:text-white font-sans font-black',
-            cardBg: 'bg-white dark:bg-slate-900 border border-amber-500/30 text-slate-900 dark:text-white shadow-sm',
-            headingText: 'text-slate-900 dark:text-white',
-            bodyText: 'text-slate-700 dark:text-slate-200',
-            accentText: 'text-amber-700 dark:text-amber-300',
-        };
-    }
-    if (key === 'minimal') {
-        return {
-            container: 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-emerald-200 dark:border-emerald-800/60 shadow-xl',
-            nav: 'bg-white/95 dark:bg-slate-900/95 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
-            navActive: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 font-bold',
-            navInactive: 'text-slate-600 dark:text-slate-300',
-            heroBg: 'bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
-            heroPill: 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300',
-            heroCta: 'bg-emerald-600 text-white font-bold',
-            cardBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
-            headingText: 'text-slate-900 dark:text-white',
-            bodyText: 'text-slate-700 dark:text-slate-200',
-            accentText: 'text-emerald-600 dark:text-emerald-400',
-        };
-    }
-    if (key === 'warm_light') {
-        return {
-            container: 'bg-amber-50/30 dark:bg-amber-950/30 text-slate-900 dark:text-white border-amber-200 dark:border-amber-800/60 shadow-xl',
-            nav: 'bg-white/95 dark:bg-slate-900/95 border-amber-200/60 dark:border-amber-800/60 text-slate-900 dark:text-white shadow-sm',
-            navActive: 'bg-amber-100/70 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 font-bold',
-            navInactive: 'text-slate-600 dark:text-slate-300',
-            heroBg: 'bg-gradient-to-br from-amber-900 via-amber-950 to-orange-950 text-amber-50 border border-amber-700/50 shadow-xl',
-            heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300',
-            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-amber-950 dark:text-amber-100 font-bold',
-            cardBg: 'bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60 text-slate-900 dark:text-white shadow-sm',
-            headingText: 'text-slate-900 dark:text-white',
-            bodyText: 'text-slate-700 dark:text-slate-200',
-            accentText: 'text-amber-700 dark:text-amber-300',
-        };
-    }
-    if (key === 'obsidian') {
-        return {
-            container: 'bg-slate-950 text-slate-100 border-slate-800 shadow-2xl',
-            nav: 'bg-slate-900/80 border-slate-800 text-white shadow-inner',
-            navActive: 'bg-blue-500/20 text-blue-300 font-bold border-blue-500/30',
-            navInactive: 'text-slate-400',
-            heroBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 text-white',
-            heroPill: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-            heroCta: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold',
-            cardBg: 'bg-slate-900 dark:bg-slate-700 border border-slate-800 text-slate-100 shadow-md',
-            headingText: 'text-white',
-            bodyText: 'text-slate-300',
-            accentText: 'text-blue-400',
-        };
-    }
-    if (key === 'masonic') {
-        return {
-            container: 'bg-slate-950 text-slate-100 border-amber-500/40 shadow-2xl font-serif',
-            nav: 'bg-blue-950/90 border-amber-500/40 text-amber-100 shadow-md',
-            navActive: 'bg-amber-500/20 text-amber-300 font-sans font-bold border-amber-500/40',
-            navInactive: 'text-slate-300 font-sans',
-            heroBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-blue-950 border border-amber-500/40 text-white',
-            heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300 font-sans',
-            heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 dark:text-white font-sans font-black',
-            cardBg: 'bg-blue-950/50 border border-amber-500/30 text-amber-50 shadow-md',
-            headingText: 'text-amber-100',
-            bodyText: 'text-slate-300',
-            accentText: 'text-amber-400',
-        };
-    }
-    if (key === 'vibrant') {
-        return {
-            container: 'bg-slate-950 text-slate-100 border-rose-900/50 shadow-2xl',
-            nav: 'bg-slate-900/90 border-rose-900/40 text-white shadow-md',
-            navActive: 'bg-rose-500/20 text-rose-300 font-bold border-rose-500/40',
-            navInactive: 'text-slate-400',
-            heroBg: 'bg-gradient-to-br from-amber-900 via-rose-950 to-blue-950 border border-rose-800/50 text-white',
-            heroPill: 'bg-rose-500/20 border-rose-400/30 text-rose-300',
-            heroCta: 'bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold',
-            cardBg: 'bg-slate-900/90 border border-rose-900/30 text-slate-100 shadow-md',
-            headingText: 'text-white',
-            bodyText: 'text-slate-300',
-            accentText: 'text-rose-400',
-        };
-    }
-    // Default 'classic'
-    return {
-        container: 'bg-slate-950 text-slate-100 border-slate-800 shadow-2xl',
-        nav: 'bg-slate-900/80 border-slate-800 text-white shadow-inner',
-        navActive: 'bg-blue-500/20 text-blue-300 font-bold border-blue-500/30',
-        navInactive: 'text-slate-400',
-        heroBg: 'bg-gradient-to-r from-slate-900 via-blue-950/40 to-slate-900 border border-slate-800 text-white',
-        heroPill: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-        heroCta: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold',
-        cardBg: 'bg-slate-900 dark:bg-slate-700 border border-slate-800 text-slate-100 shadow-md',
-        headingText: 'text-white',
-        bodyText: 'text-slate-300',
-        accentText: 'text-blue-400',
-    };
-});
+const previewThemeClasses = computed(() => themeClasses(effectivePreviewThemeKey.value));
 
 const applyPreviewTheme = (themeId = null) => {
     const targetThemeId = themeId || effectivePreviewThemeKey.value;
@@ -388,6 +175,9 @@ const form = useForm({
     is_published: true,
     is_homepage: false,
     show_in_navigation: true,
+    is_members_only: false,
+    meta_title: '',
+    meta_description: '',
     blocks: [],
 });
 
@@ -404,6 +194,9 @@ const getFormStateString = () => {
         is_published: form.is_published,
         is_homepage: form.is_homepage,
         show_in_navigation: form.show_in_navigation,
+        is_members_only: form.is_members_only,
+        meta_title: form.meta_title,
+        meta_description: form.meta_description,
         blocks: form.blocks,
     });
 };
@@ -427,6 +220,9 @@ const loadPageIntoForm = (page) => {
         form.is_published = page.is_published ?? true;
         form.is_homepage = page.is_homepage ?? false;
         form.show_in_navigation = page.show_in_navigation ?? true;
+        form.is_members_only = page.is_members_only ?? false;
+        form.meta_title = page.meta_title || '';
+        form.meta_description = page.meta_description || '';
         form.blocks = page.blocks ? JSON.parse(JSON.stringify(page.blocks)) : [];
     } else {
         form.id = null;
@@ -435,6 +231,9 @@ const loadPageIntoForm = (page) => {
         form.is_published = true;
         form.is_homepage = false;
         form.show_in_navigation = true;
+        form.is_members_only = false;
+        form.meta_title = '';
+        form.meta_description = '';
         form.blocks = [
             {
                 id: 'block-' + Date.now(),
@@ -822,6 +621,24 @@ const togglePublishPage = (p) => {
     router.post(`/${props.club.slug}/admin/pages/${p.id}/toggle-publish`, {}, { preserveScroll: true });
 };
 
+const duplicatePage = (p) => {
+    router.post(`/${props.club.slug}/admin/pages/${p.id}/duplicate`, {}, { preserveScroll: true });
+};
+
+const duplicateActivePage = () => {
+    if (!form.id) return;
+    duplicatePage({ id: form.id });
+};
+
+const restorePage = (p) => {
+    router.post(`/${props.club.slug}/admin/pages/trash/${p.id}/restore`, {}, { preserveScroll: true });
+};
+
+const forceDeletePage = (p) => {
+    if (!confirm(`Permanently delete "${p.title}"? This cannot be undone.`)) return;
+    router.delete(`/${props.club.slug}/admin/pages/trash/${p.id}`, { preserveScroll: true });
+};
+
 const movePageUp = (index) => {
     if (index <= 1) return;
     const newPages = [...props.pages];
@@ -863,47 +680,6 @@ const confirmDeleteActivePage = () => {
     });
 };
 
-const newsBlockPages = ref({});
-
-const getNewsCurrentPage = (blockId) => {
-    return newsBlockPages.value[blockId] || 1;
-};
-
-const setNewsPage = (blockId, pageNum) => {
-    newsBlockPages.value[blockId] = pageNum;
-};
-
-const getNewsTotalPages = (block) => {
-    if (!props.latestPosts || !props.latestPosts.length) return 1;
-    const perPage = parseInt(block.limit) || 999;
-    return Math.ceil(props.latestPosts.length / perPage);
-};
-
-const getNewsGridClass = (block) => {
-    const cols = String(block.columns || '3');
-    if (cols === '1') return 'grid grid-cols-1 gap-6';
-    if (cols === '2') return 'grid grid-cols-1 md:grid-cols-2 gap-6';
-    if (cols === '3') return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
-    if (cols === '4') return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6';
-    if (cols === 'masonry') return 'columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6';
-    return 'grid grid-cols-1 md:grid-cols-3 gap-6';
-};
-
-const getPostImagePos = (block, idx) => {
-    const pos = String(block.image_position || 'above');
-    if (pos === 'alternate') {
-        return idx % 2 === 0 ? 'left' : 'right';
-    }
-    return pos;
-};
-
-const getFilteredPosts = (block) => {
-    if (!props.latestPosts) return [];
-    const perPage = parseInt(block.limit) || 999;
-    const page = getNewsCurrentPage(block.id);
-    const start = (page - 1) * perPage;
-    return props.latestPosts.slice(start, start + perPage);
-};
 </script>
 
 <template>
@@ -1113,6 +889,10 @@ const getFilteredPosts = (block) => {
                                         <a v-if="form.id && form.slug" :href="form.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${form.slug}`" target="_blank" class="py-2 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold text-xs border border-blue-200 dark:border-blue-800/60 transition-colors flex items-center gap-1.5">
                                             <span>🔗 Preview Link</span>
                                         </a>
+
+                                        <button v-if="form.id" type="button" @click="duplicateActivePage" class="py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-300 dark:border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer">
+                                            <span>📄 Duplicate</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -1144,6 +924,29 @@ const getFilteredPosts = (block) => {
                                         <input type="checkbox" v-model="form.show_in_navigation" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 accent-blue-600 cursor-pointer" />
                                         <span>Show in Top Header Menu</span>
                                     </label>
+
+                                    <label v-if="!form.is_homepage" class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
+                                        <input type="checkbox" v-model="form.is_members_only" class="w-4 h-4 rounded text-amber-600 dark:text-amber-400 focus:ring-amber-500 accent-amber-600 cursor-pointer" />
+                                        <span>🔒 Members Only</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- SEO Card -->
+                            <div class="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Search Engine Optimization (this page)</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Overrides the site-wide SEO defaults for just this page. Leave blank to use the site defaults.</p>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page SEO Title</label>
+                                        <input v-model="form.meta_title" type="text" maxlength="255" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-blue-500/20" :placeholder="form.title || 'Page title'" />
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page Meta Description</label>
+                                        <input v-model="form.meta_description" type="text" maxlength="500" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="Site-wide default description" />
+                                    </div>
                                 </div>
                             </div>
 
@@ -1903,365 +1706,25 @@ const getFilteredPosts = (block) => {
                                     </div>
                                 </div>
 
-                                <!-- Dynamic Blocks Render Engine -->
-                                <div class="space-y-12">
-                                    <div v-for="(block, index) in form.blocks" :key="index" class="w-full">
-                                        
-                                        <!-- 1. Hero Block -->
-                                        <section v-if="block.type === 'hero'" :class="['relative p-8 sm:p-12 rounded-3xl text-center overflow-hidden border transition-colors', previewThemeClasses.heroBg]">
-                                            <div class="relative z-10 max-w-2xl mx-auto space-y-4">
-                                                <div :class="['inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border', previewThemeClasses.heroPill]">
-                                                    Official Website
-                                                </div>
-                                                <h1 class="text-3xl sm:text-5xl font-black leading-tight">
-                                                    {{ block.title || 'Welcome' }}
-                                                </h1>
-                                                <p v-if="block.subtitle" class="opacity-90 text-base sm:text-lg">
-                                                    {{ block.subtitle }}
-                                                </p>
-                                                <div v-if="block.cta_text" class="pt-2">
-                                                    <span :class="['inline-block py-3 px-6 rounded-xl text-xs shadow-lg transition-transform hover:scale-105', previewThemeClasses.heroCta]">
-                                                        {{ block.cta_text }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </section>
+                                <BlockRenderer
+                                    :blocks="form.blocks"
+                                    :theme="previewThemeClasses"
+                                    :club="club"
+                                    :latest-posts="latestPosts"
+                                    :upcoming-events="upcomingEvents"
+                                    :membership-plans="membershipPlans"
+                                    :donations="donations"
+                                    :interactive="false"
+                                />
 
-                                        <!-- 2. Text / Rich Text Block -->
-                                        <section v-else-if="block.type === 'text' || block.type === 'rich_text'" class="prose max-w-4xl mx-auto">
-                                            <h2 v-if="block.heading" :class="['text-2xl font-bold mb-3', previewThemeClasses.headingText]">{{ block.heading }}</h2>
-                                            <div :class="previewThemeClasses.bodyText" v-html="block.content"></div>
-                                        </section>
-
-                                    <!-- 3. Single Image Block -->
-                                    <section v-else-if="block.type === 'image' && block.url" class="max-w-4xl mx-auto">
-                                        <div :class="['flex', block.position === 'left' ? 'justify-start' : block.position === 'right' ? 'justify-end' : 'justify-center']">
-                                            <figure :class="[
-                                                'space-y-2',
-                                                block.size === 'small' ? 'w-1/3' : block.size === 'medium' ? 'w-1/2' : block.size === 'large' ? 'w-3/4' : 'w-full'
-                                            ]">
-                                                <img :src="block.url" :alt="block.caption || 'Image'" class="w-full h-auto rounded-2xl border border-slate-800 shadow-xl object-cover" />
-                                                <figcaption v-if="block.caption" class="text-xs text-center text-slate-400 italic">
-                                                    {{ block.caption }}
-                                                </figcaption>
-                                            </figure>
-                                        </div>
-                                    </section>
-
-                                    <!-- 4. Image Gallery Block -->
-                                    <section v-else-if="block.type === 'images' && block.items && block.items.length" class="max-w-5xl mx-auto space-y-3">
-                                        <div :class="[
-                                            'grid gap-4',
-                                            block.columns === 2 ? 'grid-cols-2' : block.columns === 4 ? 'grid-cols-4' : 'grid-cols-3'
-                                        ]">
-                                            <div v-for="(item, iIdx) in block.items" :key="iIdx" class="space-y-1.5">
-                                                <img v-if="item.url" :src="item.url" class="w-full h-40 object-cover rounded-xl border border-slate-800" />
-                                                <p v-if="item.caption" class="text-[11px] text-center text-slate-400 italic">{{ item.caption }}</p>
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    <!-- 5. Callout Box / Notice Block -->
-                                    <section v-else-if="block.type === 'notice'" class="max-w-3xl mx-auto">
-                                        <div :class="[
-                                            'p-5 rounded-2xl border space-y-1.5',
-                                            block.style === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' :
-                                            block.style === 'important' ? 'bg-rose-500/10 border-rose-500/30 text-rose-200' :
-                                            block.style === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' :
-                                            'bg-blue-500/10 border-blue-500/30 text-blue-200'
-                                        ]">
-                                            <h4 v-if="block.title" class="font-extrabold text-sm flex items-center gap-2">
-                                                <span>📢</span> {{ block.title }}
-                                            </h4>
-                                            <p class="text-xs font-medium leading-relaxed">{{ block.text }}</p>
-                                        </div>
-                                    </section>
-
-                                    <!-- 6. Button Link Block -->
-                                    <section v-else-if="block.type === 'button'" class="max-w-3xl mx-auto">
-                                        <div :class="['flex', block.align === 'left' ? 'justify-start' : block.align === 'right' ? 'justify-end' : 'justify-center']">
-                                            <span class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-xs shadow-md">
-                                                {{ block.label || 'Learn More →' }}
-                                            </span>
-                                        </div>
-                                    </section>
-
-                                    <!-- 7. Dynamic Membership Pricing Cards Block -->
-                                    <section v-else-if="block.type === 'pricing_cards'" class="max-w-5xl mx-auto space-y-4">
-                                        <h3 class="text-xl font-bold text-white text-center">{{ block.heading || 'Membership Options & Dues' }}</h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div v-for="plan in membershipPlans" :key="plan.id" class="p-5 rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 space-y-3">
-                                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
-                                                    {{ plan.billing_period }}
-                                                </span>
-                                                <h4 class="text-base font-bold text-white">{{ plan.name }}</h4>
-                                                <p class="text-xs text-slate-400">{{ plan.description }}</p>
-                                                <div class="pt-2 border-t border-slate-800 flex items-baseline justify-between">
-                                                    <span class="text-lg font-black text-white">{{ $cs }}{{ plan.price }}</span>
-                                                    <span class="text-xs text-blue-400 font-bold">Subscribe →</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    <!-- 8. Dynamic Donation Campaign Block -->
-                                    <section v-else-if="block.type === 'donation_campaign'" class="space-y-4">
-                                        <div v-for="d in donations" :key="d.id" class="p-6 rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 space-y-4">
-                                            <div class="flex justify-between items-start">
-                                                <div>
-                                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
-                                                        🎁 Active Fundraising Campaign
-                                                    </span>
-                                                    <h3 class="text-xl font-black text-white mt-1">{{ d.campaign_name }}</h3>
-                                                </div>
-                                                <span class="py-2 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs">
-                                                    💖 Contribute
-                                                </span>
-                                            </div>
-                                            <div class="space-y-1">
-                                                <div class="w-full h-3 rounded-full bg-slate-950 border border-slate-800 overflow-hidden">
-                                                    <div class="h-full bg-gradient-to-r from-amber-500 to-emerald-400" :style="{ width: `${d.percentage}%` }"></div>
-                                                </div>
-                                                <div class="flex justify-between text-xs text-slate-400 font-medium">
-                                                    <span>Raised: {{ $cs }}{{ d.current_amount }}</span>
-                                                    <span class="text-amber-400 font-bold">{{ d.percentage }}% Funded</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    <!-- 9. Dynamic News Feed & News List Block -->
-                                    <section v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="space-y-4">
-                                        <h3 class="text-xl font-bold text-white">{{ block.heading || 'Latest Club News' }}</h3>
-                                        <div :class="getNewsGridClass(block)">
-                                            <template v-for="(post, pIdx) in getFilteredPosts(block)" :key="post.id">
-                                                
-                                                <!-- No Image Layout (Text-only card, no placeholder) -->
-                                                <div v-if="!post.cover_image_url" :class="['rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 p-4 space-y-1.5 flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
-                                                    <div class="space-y-1.5">
-                                                        <div class="flex items-center justify-between text-[10px] text-slate-400">
-                                                            <span v-if="post.author_name">By {{ post.author_name }}</span>
-                                                            <span>{{ post.published_at }}</span>
-                                                        </div>
-                                                        <h4 class="text-sm font-bold text-white leading-snug">{{ post.title }}</h4>
-                                                        <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ post.excerpt || post.content }}</p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Image Left Layout -->
-                                                <div v-else-if="getPostImagePos(block, pIdx) === 'left'" :class="['rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 overflow-hidden grid grid-cols-1 sm:grid-cols-3 gap-0 transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
-                                                    <div class="sm:col-span-1 min-h-[140px] bg-slate-800 overflow-hidden relative">
-                                                        <img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" />
-                                                    </div>
-                                                    <div class="sm:col-span-2 p-4 space-y-2 flex flex-col justify-between">
-                                                        <div class="space-y-1.5">
-                                                            <div class="flex items-center justify-between text-[10px] text-slate-400">
-                                                                <span v-if="post.author_name">By {{ post.author_name }}</span>
-                                                                <span>{{ post.published_at }}</span>
-                                                            </div>
-                                                            <h4 class="text-sm font-bold text-white leading-snug">{{ post.title }}</h4>
-                                                            <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ post.excerpt || post.content }}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Image Right Layout -->
-                                                <div v-else-if="getPostImagePos(block, pIdx) === 'right'" :class="['rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 overflow-hidden grid grid-cols-1 sm:grid-cols-3 gap-0 transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
-                                                    <div class="sm:col-span-2 p-4 space-y-2 flex flex-col justify-between order-2 sm:order-1">
-                                                        <div class="space-y-1.5">
-                                                            <div class="flex items-center justify-between text-[10px] text-slate-400">
-                                                                <span v-if="post.author_name">By {{ post.author_name }}</span>
-                                                                <span>{{ post.published_at }}</span>
-                                                            </div>
-                                                            <h4 class="text-sm font-bold text-white leading-snug">{{ post.title }}</h4>
-                                                            <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ post.excerpt || post.content }}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="sm:col-span-1 min-h-[140px] bg-slate-800 overflow-hidden relative order-1 sm:order-2">
-                                                        <img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" />
-                                                    </div>
-                                                </div>
-
-                                                <!-- Image Below Layout -->
-                                                <div v-else-if="getPostImagePos(block, pIdx) === 'below'" :class="['rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 overflow-hidden flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
-                                                    <div class="p-4 space-y-1.5">
-                                                        <div class="flex items-center justify-between text-[10px] text-slate-400">
-                                                            <span v-if="post.author_name">By {{ post.author_name }}</span>
-                                                            <span>{{ post.published_at }}</span>
-                                                        </div>
-                                                        <h4 class="text-sm font-bold text-white leading-snug">{{ post.title }}</h4>
-                                                        <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ post.excerpt || post.content }}</p>
-                                                    </div>
-                                                    <div class="h-36 w-full bg-slate-800 overflow-hidden relative border-t border-slate-800">
-                                                        <img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" />
-                                                    </div>
-                                                </div>
-
-                                                <!-- Image Above Layout (Default) -->
-                                                <div v-else :class="['rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 overflow-hidden flex flex-col justify-between transition-all hover:border-slate-700', String(block.columns) === 'masonry' ? 'break-inside-avoid inline-block w-full mb-4' : '']">
-                                                    <div class="h-36 w-full bg-slate-800 overflow-hidden relative border-b border-slate-800">
-                                                        <img :src="post.cover_image_url" :alt="post.title" class="w-full h-full object-cover" />
-                                                    </div>
-                                                    <div class="p-4 space-y-1.5">
-                                                        <div class="flex items-center justify-between text-[10px] text-slate-400">
-                                                            <span v-if="post.author_name">By {{ post.author_name }}</span>
-                                                            <span>{{ post.published_at }}</span>
-                                                        </div>
-                                                        <h4 class="text-sm font-bold text-white leading-snug">{{ post.title }}</h4>
-                                                        <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ post.excerpt || post.content }}</p>
-                                                    </div>
-                                                </div>
-
-                                            </template>
-                                        </div>
-
-                                        <!-- Pagination Bar -->
-                                        <div v-if="getNewsTotalPages(block) > 1" class="flex items-center justify-between pt-4 border-t border-slate-800">
-                                            <button
-                                                type="button"
-                                                @click="setNewsPage(block.id, getNewsCurrentPage(block.id) - 1)"
-                                                :disabled="getNewsCurrentPage(block.id) <= 1"
-                                                class="py-1.5 px-3 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 disabled:opacity-40 text-xs font-bold text-slate-300 border border-slate-800 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
-                                            >
-                                                ← Previous
-                                            </button>
-
-                                            <span class="text-xs font-bold text-slate-400">
-                                                Page <span class="text-white font-black">{{ getNewsCurrentPage(block.id) }}</span> of {{ getNewsTotalPages(block) }}
-                                            </span>
-
-                                            <button
-                                                type="button"
-                                                @click="setNewsPage(block.id, getNewsCurrentPage(block.id) + 1)"
-                                                :disabled="getNewsCurrentPage(block.id) >= getNewsTotalPages(block)"
-                                                class="py-1.5 px-3 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 disabled:opacity-40 text-xs font-bold text-slate-300 border border-slate-800 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
-                                            >
-                                                Next →
-                                            </button>
-                                        </div>
-                                    </section>
-
-                                    <!-- 10. Dynamic Events Calendar Block -->
-                                    <section v-else-if="block.type === 'events_calendar'" class="space-y-4">
-                                        <h3 class="text-xl font-bold text-white">{{ block.heading || 'Upcoming Events & Dinners' }}</h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div v-for="e in upcomingEvents" :key="e.id" class="p-4 rounded-2xl bg-slate-900 dark:bg-slate-700 border border-slate-800 space-y-2">
-                                                <h4 class="text-sm font-bold text-white">{{ e.title }}</h4>
-                                                <p class="text-[11px] text-slate-400">📍 {{ e.location }} • 🕒 {{ e.starts_at }}</p>
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    <!-- 11. Contact Details Block -->
-                                    <section v-else-if="block.type === 'contact_details'" class="py-6 space-y-8 text-center">
-                                        <div class="max-w-3xl mx-auto space-y-2">
-                                            <span v-if="block.eyebrow" class="text-xs font-bold text-amber-500 uppercase tracking-widest block">{{ block.eyebrow }}</span>
-                                            <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">{{ block.title || 'Get in Touch' }}</h2>
-                                            <div class="w-12 h-1 bg-amber-500/80 mx-auto my-3 rounded-full"></div>
-                                            <p v-if="block.description" class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl mx-auto">{{ block.description }}</p>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                                            <!-- Email Card -->
-                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 dark:bg-amber-950/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
-                                                <div class="w-12 h-12 rounded-full bg-slate-900 dark:bg-slate-700 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
-                                                    ✉️
-                                                </div>
-                                                <h3 class="font-bold text-white text-base">{{ block.email_heading || 'Email' }}</h3>
-                                                <ObfuscatedEmail
-                                                    v-if="block.email || club.contact_email"
-                                                    :email="block.email || club.contact_email"
-                                                    custom-class="text-amber-400 hover:text-amber-300 font-semibold text-xs sm:text-sm break-all cursor-pointer transition-colors"
-                                                />
-                                                <span v-else class="text-slate-500 dark:text-slate-400 text-xs italic">No email address configured</span>
-                                            </div>
-
-                                            <!-- Meeting Times Card -->
-                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 dark:bg-amber-950/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
-                                                <div class="w-12 h-12 rounded-full bg-slate-900 dark:bg-slate-700 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
-                                                    📅
-                                                </div>
-                                                <h3 class="font-bold text-white text-base">{{ block.times_heading || 'Meeting Times' }}</h3>
-                                                <p v-if="block.times || club.meeting_formula" class="text-slate-300 text-xs sm:text-sm whitespace-pre-line leading-relaxed">
-                                                    {{ block.times || club.meeting_formula }}
-                                                </p>
-                                                <span v-else class="text-slate-500 dark:text-slate-400 text-xs italic">No meeting schedule configured</span>
-                                            </div>
-
-                                            <!-- Location Card -->
-                                            <div class="p-6 sm:p-8 rounded-2xl bg-amber-50/10 dark:bg-amber-950/10 border border-amber-500/20 text-center space-y-3 hover:border-amber-500/40 transition-all">
-                                                <div class="w-12 h-12 rounded-full bg-slate-900 dark:bg-slate-700 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-lg shadow-lg">
-                                                    📍
-                                                </div>
-                                                <h3 class="font-bold text-white text-base">{{ block.location_heading || 'Location' }}</h3>
-                                                <p v-if="block.location || club.address" class="text-slate-300 text-xs sm:text-sm whitespace-pre-line leading-relaxed">
-                                                    {{ block.location || club.address }}
-                                                </p>
-                                                <span v-else class="text-slate-500 dark:text-slate-400 text-xs italic">No location address configured</span>
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    <!-- 12. Contact Form Preview -->
-                                    <section v-else-if="block.type === 'contact_form'" class="py-6 space-y-6 max-w-2xl mx-auto">
-                                        <div class="text-center space-y-2">
-                                            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">{{ block.heading || 'Send Us a Message' }}</h2>
-                                            <p v-if="block.subtitle" class="text-xs sm:text-sm text-slate-300">{{ block.subtitle }}</p>
-                                        </div>
-
-                                        <div class="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4 text-xs">
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label class="block text-slate-300 font-bold mb-1">
-                                                        Your Name <span v-if="block.name_required" class="text-rose-400">*</span>
-                                                    </label>
-                                                    <input type="text" disabled placeholder="e.g. John Doe" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-400 opacity-80 cursor-not-allowed" />
-                                                </div>
-                                                <div>
-                                                    <label class="block text-slate-300 font-bold mb-1">
-                                                        Email Address <span v-if="block.email_required" class="text-rose-400">*</span>
-                                                    </label>
-                                                    <input type="email" disabled placeholder="e.g. john@example.org" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-400 opacity-80 cursor-not-allowed" />
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-slate-300 font-bold mb-1">
-                                                    Phone Number <span v-if="block.phone_required" class="text-rose-400">*</span>
-                                                </label>
-                                                <input type="tel" disabled placeholder="e.g. +44 7123 456789" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-400 opacity-80 cursor-not-allowed" />
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-slate-300 font-bold mb-1">
-                                                    Message <span v-if="block.message_required" class="text-rose-400">*</span>
-                                                </label>
-                                                <textarea rows="4" disabled placeholder="Write your message here..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-400 opacity-80 cursor-not-allowed"></textarea>
-                                            </div>
-
-                                            <button type="button" disabled class="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 text-white font-extrabold shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 cursor-not-allowed opacity-90">
-                                                <span>✉️ {{ block.button_text || 'Send Message' }}</span>
-                                            </button>
-
-                                            <div class="text-[11px] text-slate-500 dark:text-slate-400 text-center flex items-center justify-center gap-1">
-                                                <span>🔒 Submissions will route to:</span>
-                                                <strong class="text-slate-300">{{ block.recipient_email || settingsForm.contact_email || club.contact_email || club.email }}</strong>
-                                                <span v-if="block.cc_emails" class="text-slate-400">(CC: {{ block.cc_emails }})</span>
-                                            </div>
-                                        </div>
-                                    </section>
-
+                                <!-- Website Footer Mockup -->
+                                <div class="border-t border-slate-800 pt-8 text-center text-xs text-slate-500 dark:text-slate-400 space-y-1">
+                                    <p>{{ websiteSettings.footer_copyright || `© ${new Date().getFullYear()} ${club.name}. All rights reserved.` }}</p>
+                                    <p>Powered by ClubManager Multi-Tenant Platform</p>
                                 </div>
-                            </div>
-
-                            <!-- Website Footer Mockup -->
-                            <div class="border-t border-slate-800 pt-8 text-center text-xs text-slate-500 dark:text-slate-400 space-y-1">
-                                <p>© 2026 {{ club.name }}. All rights reserved.</p>
-                                <p>Powered by ClubManager Multi-Tenant Platform</p>
                             </div>
                         </div>
                     </div>
-                </div>
 
                     <!-- View Mode: Global Website & SEO Settings -->
                     <div v-else-if="activeNavSelection === 'settings'" class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-6">
@@ -2297,12 +1760,32 @@ const getFilteredPosts = (block) => {
                                         <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Connect your custom domain (e.g. <code class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-1 py-0.5 rounded font-bold">members.oxfordboating.org</code>) to your club portal.</p>
                                     </div>
 
-                                    <div class="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl space-y-2 text-amber-900 dark:text-amber-200">
-                                        <div class="font-bold text-xs">DNS Configuration Instructions:</div>
+                                    <div v-if="settingsForm.custom_domain" class="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl space-y-2 text-amber-900 dark:text-amber-200">
+                                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                                            <div class="font-bold text-xs">DNS Configuration Instructions:</div>
+                                            <span
+                                                :class="[
+                                                    'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border',
+                                                    websiteSettings.domain_status === 'active'
+                                                        ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/60'
+                                                        : 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800/60'
+                                                ]"
+                                            >
+                                                {{ websiteSettings.domain_status === 'active' ? `✅ Active${websiteSettings.domain_verified_at ? ' since ' + websiteSettings.domain_verified_at : ''}` : '⏳ Pending verification' }}
+                                            </span>
+                                        </div>
                                         <p class="text-[11px]">Add a CNAME record at your DNS provider pointing your subdomain/domain to this server's target hostname.</p>
                                         <div class="font-mono text-[11px] bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-amber-200 dark:border-amber-800/60 font-bold">
-                                            Host: @ or members • Type: CNAME • Target: manager.360fusionhosting.co.uk
+                                            Host: {{ websiteSettings.domain_instructions?.host }} • Type: {{ websiteSettings.domain_instructions?.type }} • Target: {{ websiteSettings.domain_instructions?.target }}
                                         </div>
+                                        <button
+                                            type="button"
+                                            @click="checkDomainNow"
+                                            :disabled="checkingDomain"
+                                            class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-sm transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+                                        >
+                                            {{ checkingDomain ? 'Checking…' : '🔄 Check Now' }}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -2625,6 +2108,14 @@ const getFilteredPosts = (block) => {
                                                 </a>
 
                                                 <button
+                                                    @click="duplicatePage(p)"
+                                                    class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+                                                    title="Duplicate Page"
+                                                >
+                                                    📄
+                                                </button>
+
+                                                <button
                                                     v-if="!isDefaultPage(p)"
                                                     @click="triggerDeleteModal(p)"
                                                     class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
@@ -2645,6 +2136,30 @@ const getFilteredPosts = (block) => {
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- Trash: recently deleted custom pages -->
+                    <div v-if="trashedPages.length" class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">🗑️ Trash</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Deleted pages stay here until restored or removed permanently.</p>
+                        </div>
+                        <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <div v-for="tp in trashedPages" :key="tp.id" class="p-4 flex items-center justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ tp.title }}</p>
+                                    <p class="text-[11px] text-slate-400 font-mono truncate">/site/{{ club.slug }}/{{ tp.slug }}</p>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button @click="restorePage(tp)" class="py-1.5 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold text-[11px] cursor-pointer transition-colors">
+                                        ↩️ Restore
+                                    </button>
+                                    <button @click="forceDeletePage(tp)" class="py-1.5 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold text-[11px] cursor-pointer transition-colors">
+                                        Delete Forever
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

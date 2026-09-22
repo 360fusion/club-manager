@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\Page;
+use App\Models\PageRedirect;
+use App\Support\ClubDomain;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,6 +33,7 @@ class PageAdminController extends Controller
             'pages' => $pages,
             'selectedId' => $selectedId,
             'websiteSettings' => $this->getWebsiteSettings($club),
+            'trashedPages' => $this->trashedPages($club),
         ], $this->getPreviewData($club)));
     }
 
@@ -60,7 +65,7 @@ class PageAdminController extends Controller
         $validated = $request->validate([
             'seo_title_suffix' => 'nullable|string|max:255',
             'seo_meta_description' => 'nullable|string|max:1000',
-            'custom_domain' => ['nullable', 'string', 'max:255', 'regex:/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,}$/i', Rule::unique('clubs', 'custom_domain')->ignore($club->id)],
+            'custom_domain' => ClubDomain::rule($club),
             'primary_color' => 'nullable|string|max:50',
             'contact_email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:100',
@@ -73,14 +78,11 @@ class PageAdminController extends Controller
             'footer_copyright' => 'nullable|string|max:255',
         ]);
 
-        if (isset($validated['custom_domain']) && $validated['custom_domain'] !== $club->custom_domain) {
-            $club->custom_domain = strtolower(trim($validated['custom_domain']));
-            $club->domain_status = 'pending';
-            $club->domain_verified_at = null;
-        }
+        ClubDomain::apply($club, $validated['custom_domain'] ?? null);
 
+        // The domain lives on the club's own column (ClubDomain owns it); everything else is a website setting.
         $existingSettings = $club->settings ?? [];
-        $club->settings = array_merge($existingSettings, $validated);
+        $club->settings = array_merge($existingSettings, collect($validated)->except('custom_domain')->all());
         $club->save();
 
         return redirect()->back()->with('success', 'Website settings saved successfully.');
@@ -138,11 +140,13 @@ class PageAdminController extends Controller
             'pages' => $pages,
             'selectedId' => $id,
             'websiteSettings' => $this->getWebsiteSettings($club),
+            'trashedPages' => $this->trashedPages($club),
         ], $this->getPreviewData($club)));
     }
 
     /**
-     * Store or update a page with block layout.
+     * Store or update a page with block layout. Renaming a page's slug keeps the old address working as a
+     * redirect, so a bookmark or a link from elsewhere never suddenly 404s.
      */
     public function store(Request $request, string $clubSlug)
     {
@@ -151,9 +155,12 @@ class PageAdminController extends Controller
         $validated = $request->validate([
             'id' => 'nullable|integer',
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|alpha_dash',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
             'is_published' => 'boolean',
             'is_homepage' => 'boolean',
+            'is_members_only' => 'boolean',
             'show_in_navigation' => 'boolean',
             'blocks' => 'array|max:200',
         ]);
@@ -164,13 +171,17 @@ class PageAdminController extends Controller
         }
 
         $isNew = empty($validated['id']);
+        $existing = $isNew ? null : Page::where('club_id', $club->id)->find($validated['id']);
         $maxSortOrder = (int) (Page::where('club_id', $club->id)->max('sort_order') ?? 0);
 
         $data = [
             'title' => $validated['title'],
             'slug' => $validated['slug'],
+            'meta_title' => $validated['meta_title'] ?? null,
+            'meta_description' => $validated['meta_description'] ?? null,
             'is_published' => $isHome ? true : ($validated['is_published'] ?? true),
             'is_homepage' => $isHome,
+            'is_members_only' => $isHome ? false : ($validated['is_members_only'] ?? false),
             'show_in_navigation' => $validated['show_in_navigation'] ?? true,
             'blocks' => $validated['blocks'] ?? [],
         ];
@@ -184,8 +195,110 @@ class PageAdminController extends Controller
             $data
         );
 
+        if ($existing && $existing->slug !== $page->slug) {
+            $this->keepOldSlugWorking($club, $page, $existing->slug);
+        }
+
         return redirect()->route('admin.pages.edit', ['clubSlug' => $club->slug, 'id' => $page->id])
             ->with('success', 'Page saved successfully.');
+    }
+
+    /**
+     * A copy of a page as a new draft, for reusing a layout without starting from scratch.
+     */
+    public function duplicate(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $page = Page::where('club_id', $club->id)->findOrFail($id);
+
+        $slug = Str::slug($page->title.'-copy');
+        $unique = $slug;
+        $n = 2;
+
+        while (Page::where('club_id', $club->id)->where('slug', $unique)->exists()) {
+            $unique = $slug.'-'.$n++;
+        }
+
+        $copy = Page::create([
+            'club_id' => $club->id,
+            'title' => 'Copy of '.$page->title,
+            'slug' => $unique,
+            'meta_title' => $page->meta_title,
+            'meta_description' => $page->meta_description,
+            'blocks' => $page->blocks,
+            'is_published' => false,
+            'is_homepage' => false,
+            'is_members_only' => $page->is_members_only,
+            'show_in_navigation' => false,
+            'sort_order' => (int) (Page::where('club_id', $club->id)->max('sort_order') ?? 0) + 1,
+        ]);
+
+        return redirect()->route('admin.pages.edit', ['clubSlug' => $club->slug, 'id' => $copy->id])
+            ->with('success', 'Page duplicated as a new draft.');
+    }
+
+    /**
+     * Ask Stripe... no, ask DNS: check whether the saved custom domain now points here.
+     */
+    public function verifyDomain(string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        if (! $club->custom_domain) {
+            return redirect()->back()->with('error', 'Save a custom domain first.');
+        }
+
+        $verified = ClubDomain::verify($club);
+
+        return redirect()->back()->with($verified ? 'success' : 'error', $verified
+            ? 'The domain is verified and live.'
+            : "The DNS record wasn't found yet. It can take a while to update \u{2014} try again shortly.");
+    }
+
+    /**
+     * Restore a page from the trash.
+     */
+    public function restore(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $page = Page::onlyTrashed()->where('club_id', $club->id)->findOrFail($id);
+        $page->restore();
+
+        return redirect()->back()->with('success', "'{$page->title}' restored.");
+    }
+
+    /**
+     * Remove a trashed page for good.
+     */
+    public function forceDelete(string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $page = Page::onlyTrashed()->where('club_id', $club->id)->findOrFail($id);
+        $page->forceDelete();
+
+        return redirect()->back()->with('success', 'Page removed for good.');
+    }
+
+    /**
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function trashedPages(Club $club)
+    {
+        return Page::onlyTrashed()->where('club_id', $club->id)->orderByDesc('deleted_at')->get()
+            ->map(fn (Page $page) => ['id' => $page->id, 'title' => $page->title, 'deleted_at' => $page->deleted_at?->format('j M Y')]);
+    }
+
+    /**
+     * Points the page's previous slug at it as a redirect. Every slug this page has ever had keeps working,
+     * because a redirect always resolves to wherever the page lives right now, however many times it is
+     * renamed again after this. Clears any redirect that already pointed at the slug the page is taking
+     * over, so a slug can always be reclaimed by a real page instead of staying shadowed by an old redirect.
+     */
+    private function keepOldSlugWorking(Club $club, Page $page, string $oldSlug): void
+    {
+        PageRedirect::where('club_id', $club->id)->where('old_slug', $page->slug)->delete();
+
+        PageRedirect::updateOrCreate(['club_id' => $club->id, 'old_slug' => $oldSlug], ['page_id' => $page->id]);
     }
 
     /**
@@ -326,6 +439,13 @@ class PageAdminController extends Controller
             'footer_copyright' => '© '.date('Y').' '.$club->name.'. All rights reserved.',
         ];
 
-        return array_merge($defaults, $club->settings ?? []);
+        return array_merge($defaults, $club->settings ?? [], [
+            // The domain always comes from the club's own column, never from the settings blob (which may
+            // still hold a stale copy from before that was the single source of truth).
+            'custom_domain' => $club->custom_domain ?? '',
+            'domain_status' => $club->domain_status,
+            'domain_verified_at' => $club->domain_verified_at?->format('j M Y, H:i'),
+            'domain_instructions' => ClubDomain::instructions(),
+        ]);
     }
 }

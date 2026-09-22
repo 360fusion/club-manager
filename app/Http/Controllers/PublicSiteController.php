@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Mail\ContactFormSubmittedMail;
 use App\Models\Club;
 use App\Models\Page;
+use App\Models\PageRedirect;
+use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +19,7 @@ class PublicSiteController extends Controller
     /**
      * Render a club's public website page.
      */
-    public function showPage(string $clubSlug, ?string $pageSlug = null): Response
+    public function showPage(string $clubSlug, ?string $pageSlug = null): Response|RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)
             ->with(['clubType', 'membershipPlans', 'donations.contributions'])
@@ -31,10 +33,27 @@ class PublicSiteController extends Controller
         $query = Page::where('club_id', $club->id)->where('is_published', true);
 
         if ($pageSlug) {
-            $page = $query->where('slug', $pageSlug)->firstOrFail();
+            $page = $query->where('slug', $pageSlug)->first();
+
+            if (! $page) {
+                // The page may just have been renamed: an old address keeps working as a redirect rather
+                // than 404ing a bookmark or a link from somewhere else.
+                $redirect = PageRedirect::where('club_id', $club->id)->where('old_slug', $pageSlug)->first();
+                $target = $redirect ? Page::where('club_id', $club->id)->where('is_published', true)->find($redirect->page_id) : null;
+
+                abort_unless($target, 404);
+
+                return redirect()->to(route('public.site', $target->is_homepage ? ['clubSlug' => $club->slug] : ['clubSlug' => $club->slug, 'pageSlug' => $target->slug]), 301);
+            }
         } else {
             $page = $query->where('is_homepage', true)->first()
                 ?? $query->orderBy('sort_order')->firstOrFail();
+        }
+
+        // A page kept for members only is not shown to a visitor who isn't an active member of this club
+        // (being logged in as a member elsewhere doesn't count): they are sent to log in.
+        if ($page->is_members_only && ! ClubAccess::isActiveMember($viewer, $club)) {
+            return redirect()->guest(route('login'))->with('error', 'That page is for members only.');
         }
 
         // Navigation links (All published pages marked show_in_navigation)
@@ -61,10 +80,17 @@ class PublicSiteController extends Controller
                 'meeting_formula' => $club->settings['meeting_formula'] ?? '',
                 'address' => $club->settings['address'] ?? '',
             ],
+            'site' => [
+                'meta_description' => $club->settings['seo_meta_description'] ?? null,
+                'title_suffix' => $club->settings['seo_title_suffix'] ?? ('| '.$club->name),
+                'footer_copyright' => $club->settings['footer_copyright'] ?? ('© '.date('Y').' '.$club->name.'. All rights reserved.'),
+            ],
             'page' => [
                 'id' => $page->id,
                 'title' => $page->title,
                 'slug' => $page->slug,
+                'meta_title' => $page->meta_title,
+                'meta_description' => $page->meta_description,
                 'blocks' => $page->blocks ?? [],
                 'is_homepage' => $page->is_homepage,
                 'is_members_only' => $page->is_members_only,

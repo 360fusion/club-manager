@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
 use App\Models\Province;
 use App\Support\ClubAccess;
+use App\Support\ClubDomain;
 use App\Support\Currencies;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -317,7 +318,7 @@ class ClubSettingsController extends Controller
             'officers_roster' => 'nullable|array|max:100',
             'officers_roster.*.role' => 'nullable|string|max:255',
             'officers_roster.*.name' => 'nullable|string|max:255',
-            'custom_domain' => ['nullable', 'string', 'max:255', 'regex:/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i', Rule::unique('clubs', 'custom_domain')->ignore($club->id)],
+            'custom_domain' => ClubDomain::rule($club),
             'enabled_modules' => 'nullable|array|max:50',
             'enabled_modules.*' => 'string|max:100',
             'permission_matrix' => 'nullable|array|max:100',
@@ -408,10 +409,8 @@ class ClubSettingsController extends Controller
             $club->lodge_number = $validated['lodge_number'];
         }
 
-        if (isset($validated['custom_domain']) && $validated['custom_domain'] !== $club->custom_domain) {
-            $club->custom_domain = strtolower(trim($validated['custom_domain']));
-            $club->domain_status = 'pending';
-            $club->domain_verified_at = null;
+        if (array_key_exists('custom_domain', $validated)) {
+            ClubDomain::apply($club, $validated['custom_domain']);
         }
 
         $addressParts = array_filter([
