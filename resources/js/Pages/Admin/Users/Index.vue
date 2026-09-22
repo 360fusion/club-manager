@@ -465,9 +465,9 @@ const submitImportCsv = () => {
           >
             <option value="">All Roles</option>
             <option value="admin">Admin / Owner</option>
-            <option value="coach">Coach</option>
+            <option value="coach">Secretary</option>
             <option value="treasurer">Treasurer</option>
-            <option value="member">Member</option>
+            <option value="member">Media Manager</option>
           </select>
 
           <select
@@ -500,7 +500,7 @@ const submitImportCsv = () => {
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
-              <tr class="bg-slate-50/80 dark:bg-slate-800/50/80 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <tr class="bg-slate-50/80 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <th class="py-3.5 px-6">Member Name & Email</th>
                 <th class="py-3.5 px-4">Member ID #</th>
                 <th v-if="enableMemberRanks" class="py-3.5 px-4">Rank</th>
@@ -515,7 +515,7 @@ const submitImportCsv = () => {
               <tr
                 v-for="m in filteredMembers"
                 :key="m.id"
-                class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50 transition-colors"
+                class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <!-- Name & Email -->
                 <td class="py-4 px-6">
@@ -565,8 +565,8 @@ const submitImportCsv = () => {
                       roleBadgeClass(m.role)
                     ]"
                   >
-                    <option value="member">Member</option>
-                    <option value="coach">Coach</option>
+                    <option value="member">Media Manager</option>
+                    <option value="coach">Secretary</option>
                     <option value="treasurer">Treasurer</option>
                     <option value="admin">Admin</option>
                   </select>
@@ -761,8 +761,8 @@ const submitImportCsv = () => {
                 v-model="addForm.role"
                 class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="member">Member</option>
-                <option value="coach">Coach</option>
+                <option value="member">Media Manager</option>
+                <option value="coach">Secretary</option>
                 <option value="treasurer">Treasurer</option>
                 <option value="admin">Admin</option>
               </select>

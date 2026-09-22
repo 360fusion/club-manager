@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
+use App\Models\Invoice;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -146,6 +147,14 @@ class BankReconciliationWorkspace extends Component
                     $billQuery->where(fn ($q) => $q->where('vendor_name', 'like', $term)->orWhere('bill_number', 'like', $term));
                 }
                 $manualCandidates = $billQuery->take(15)->get();
+            } elseif ($this->manualAllocationType === 'invoice') {
+                $invoiceQuery = Invoice::where('club_id', $club->id)->where('status', 'unpaid')->with('user');
+                if (! empty($this->manualSearch)) {
+                    $term = '%'.trim($this->manualSearch).'%';
+                    $invoiceQuery->where(fn ($q) => $q->where('title', 'like', $term)->orWhere('invoice_number', 'like', $term)
+                        ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', $term)));
+                }
+                $manualCandidates = $invoiceQuery->take(15)->get();
             }
         }
 

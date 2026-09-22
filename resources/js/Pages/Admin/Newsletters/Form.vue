@@ -647,7 +647,7 @@ const sendBroadcast = () => {
 
           </div>
 
-          <div v-else @click="triggerFileInput" class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center hover:border-blue-300 dark:hover:border-blue-700/60 transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-800/50/50">
+          <div v-else @click="triggerFileInput" class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center hover:border-blue-300 dark:hover:border-blue-700/60 transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-800/50">
             <span class="text-2xl block mb-1">📁</span>
             <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Click to upload attachments</span>
             <span class="text-[11px] text-slate-400">PDFs, Word Documents, Excel sheets, Images, or Zip files (up to 10MB per file)</span>

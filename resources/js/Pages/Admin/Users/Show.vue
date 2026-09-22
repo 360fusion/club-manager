@@ -204,8 +204,8 @@ const statusBadgeClass = (status) => {
                 roleBadgeClass(member.role)
               ]"
             >
-              <option value="member">Member</option>
-              <option value="coach">Coach</option>
+              <option value="member">Media Manager</option>
+              <option value="coach">Secretary</option>
               <option value="treasurer">Treasurer</option>
               <option value="admin">Admin</option>
             </select>

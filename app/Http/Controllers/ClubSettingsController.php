@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
 use App\Models\Province;
@@ -63,6 +64,7 @@ class ClubSettingsController extends Controller
             'sidebar_theme' => 'dark_slate',
             'currency' => $club->currencyCode(),
             'timezone' => 'Europe/London',
+            'storage_quota_mb' => null,
             'contact_email' => 'admin@'.$club->slug.'.org',
             'phone' => '+44 20 7946 0912',
             'address' => '100 Boathouse Way, Oxford, Oxfordshire, OX1 1AA, United Kingdom',
@@ -223,6 +225,12 @@ class ClubSettingsController extends Controller
                 'rank' => $m->masonic_rank ?: ($user?->pivot->rank ?? ''),
                 'member_number' => $user?->pivot->member_number ?? '',
                 'status' => $m->membership_status?->value ?? ($user?->pivot->status ?? 'active'),
+                // The lodge office (Worshipful Master, Secretary, ...) is owned by the annual
+                // officer roster (see admin.officers.*), never editable from here.
+                'current_office_label' => $m->current_office && $m->current_office !== LodgeOffice::Member
+                    ? $m->current_office->label()
+                    : null,
+                'current_office_badge_class' => $m->current_office?->badgeClass(),
             ];
         });
 
@@ -240,6 +248,8 @@ class ClubSettingsController extends Controller
                     'rank' => $user->pivot->rank ?? '',
                     'member_number' => $user->pivot->member_number ?? '',
                     'status' => $user->pivot->status ?? 'active',
+                    'current_office_label' => null,
+                    'current_office_badge_class' => null,
                 ]);
             }
         }
@@ -254,12 +264,14 @@ class ClubSettingsController extends Controller
             'provinces' => $provinces,
             'currencies' => array_values(Currencies::available()),
             'currencyLocked' => $club->currencyIsLocked(),
+            'storage' => $club->storageSummary(),
+            'platformDefaultStorageQuotaMb' => config('club_media.default_storage_quota_mb'),
             'availableRoles' => [
                 ['code' => 'owner', 'name' => 'Owner', 'badge' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60'],
                 ['code' => 'admin', 'name' => 'Admin', 'badge' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60'],
-                ['code' => 'coach', 'name' => 'Coach', 'badge' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60'],
+                ['code' => 'coach', 'name' => 'Secretary', 'badge' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60'],
                 ['code' => 'treasurer', 'name' => 'Treasurer', 'badge' => 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800/60'],
-                ['code' => 'member', 'name' => 'Member', 'badge' => 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-800'],
+                ['code' => 'member', 'name' => 'Media Manager', 'badge' => 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-800'],
             ],
         ]);
     }
@@ -290,6 +302,7 @@ class ClubSettingsController extends Controller
             'sidebar_theme' => 'nullable|string|max:50',
             'currency' => ['nullable', 'string', 'size:3', Rule::in(array_keys(Currencies::available()))],
             'timezone' => 'nullable|string|max:100',
+            'storage_quota_mb' => 'nullable|integer|min:0',
             'contact_email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:100',
             'address' => 'nullable|string|max:500',
@@ -391,6 +404,11 @@ class ClubSettingsController extends Controller
             if ($validated['currency'] !== $club->currencyCode() && $club->currencyIsLocked() && ! $request->user()->is_super_admin) {
                 throw ValidationException::withMessages(['currency' => 'This club already has financial records, so its currency can no longer be changed. Contact support if it was set by mistake.']);
             }
+        }
+
+        // Storage quota is a platform-level limit; only super admins may change it.
+        if (array_key_exists('storage_quota_mb', $validated) && ! $request->user()->is_super_admin) {
+            unset($validated['storage_quota_mb']);
         }
 
         if (isset($validated['name'])) {

@@ -4,8 +4,12 @@ namespace App\Domains\ClubAccounting\Livewire\Candidates\Concerns;
 
 use App\Domains\ClubAccounting\Enums\CandidateStage;
 use App\Domains\ClubAccounting\Models\Candidate;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\CandidateTransitionService;
+use App\Enums\SignatureRequestStatus;
 use App\Models\Club;
+use App\Models\SignatureRequest;
+use App\Services\Signatures\SignatureRequestService;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
@@ -219,7 +223,6 @@ trait HandlesCandidateActions
         $this->validate([
             'proposer_member_id' => ['nullable', $member],
             'seconder_member_id' => ['nullable', $member, 'different:proposer_member_id'],
-            'form_p_signed_at' => 'nullable|date',
             'proposed_at' => 'nullable|date',
             'hermes_clearance_date' => 'nullable|date',
         ], ['seconder_member_id.different' => 'The seconder must be a different member from the proposer.']);
@@ -227,7 +230,6 @@ trait HandlesCandidateActions
         $service->updateFormPVetting($candidate, [
             'proposer_member_id' => $this->proposer_member_id,
             'seconder_member_id' => $this->seconder_member_id,
-            'form_p_signed_at' => $this->form_p_signed_at ?: null,
             'proposed_at' => $this->proposed_at ?: null,
             'belief_in_supreme_being' => $this->belief_in_supreme_being,
             'no_criminal_record' => $this->no_criminal_record,
@@ -242,6 +244,87 @@ trait HandlesCandidateActions
 
         session()->flash('success', "Form P and proposal details saved for {$candidate->full_name}.");
         $this->showFormPModal = false;
+    }
+
+    /**
+     * Every open or completed request for this Form P, keyed by 'form_p_proposer'/'form_p_seconder', for the modal.
+     *
+     * @return array<string, array{status: string, label: string, signer_name: string}>
+     */
+    public function formPSignatureRequests(): array
+    {
+        if (! $this->candidateId) {
+            return [];
+        }
+
+        return app(SignatureRequestService::class)->forSignable($this->candidateFor((int) $this->candidateId))
+            ->whereIn('purpose', ['form_p_proposer', 'form_p_seconder'])
+            ->unique('purpose')
+            ->keyBy('purpose')
+            ->map(fn (SignatureRequest $r) => [
+                'status' => $r->status->value,
+                'label' => $r->status->label(),
+                'signer_name' => $r->signer_name,
+            ])
+            ->all();
+    }
+
+    /**
+     * Email the proposer and seconder their private links to sign Form P.
+     */
+    public function requestFormPSignatures(SignatureRequestService $signatures): void
+    {
+        $candidate = $this->candidateFor((int) $this->candidateId);
+
+        if (! $candidate->proposer_member_id || ! $candidate->seconder_member_id) {
+            session()->flash('error', 'Choose a proposer and seconder before requesting signatures.');
+
+            return;
+        }
+
+        $members = Member::where('club_id', $this->getClub()->id)
+            ->whereIn('id', [$candidate->proposer_member_id, $candidate->seconder_member_id])
+            ->get()
+            ->keyBy('id');
+
+        $sent = 0;
+
+        foreach (['form_p_proposer' => $candidate->proposer_member_id, 'form_p_seconder' => $candidate->seconder_member_id] as $purpose => $memberId) {
+            $signerMember = $members->get($memberId);
+
+            if (! $signerMember?->email) {
+                session()->flash('error', ($signerMember?->full_name ?? 'The member').' has no email address on file, so cannot be sent a signature request.');
+
+                continue;
+            }
+
+            $signatures->request($candidate, $purpose, $signerMember, $signerMember->full_name, $signerMember->email, auth()->user());
+            $sent++;
+        }
+
+        if ($sent > 0) {
+            session()->flash('success', 'Signature request'.($sent > 1 ? 's' : '').' sent.');
+        }
+    }
+
+    /**
+     * A fresh link for a signer who has not yet actioned their request.
+     */
+    public function resendFormPSignature(string $purpose, SignatureRequestService $signatures): void
+    {
+        $candidate = $this->candidateFor((int) $this->candidateId);
+
+        $request = $signatures->forSignable($candidate)
+            ->where('purpose', $purpose)
+            ->where('status', SignatureRequestStatus::Pending)
+            ->first();
+
+        if (! $request) {
+            return;
+        }
+
+        $signatures->resend($request);
+        session()->flash('success', 'Signature request resent.');
     }
 
     public function openInitiationModal(int $id): void

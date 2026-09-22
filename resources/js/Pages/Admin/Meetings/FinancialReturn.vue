@@ -172,7 +172,7 @@ const formatCurrency = (val) => {
             <span>🗓️ Return Date & Catering Supplier</span>
           </h3>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 bg-slate-50/80 dark:bg-slate-800/50/80 p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-800">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 bg-slate-50/80 dark:bg-slate-800/80 p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-800">
             <div class="space-y-1.5">
               <label for="return_date" class="block text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                 Accounting Return Date <span class="text-rose-600 dark:text-rose-400">*</span>

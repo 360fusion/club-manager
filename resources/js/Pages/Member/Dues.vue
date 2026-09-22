@@ -72,7 +72,7 @@ const props = defineProps({
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-50/80 dark:bg-slate-800/50/80 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <tr class="bg-slate-50/80 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <th class="py-3.5 px-6">Invoice #</th>
                   <th class="py-3.5 px-4">Title / Description</th>
                   <th class="py-3.5 px-4">Amount</th>
@@ -82,7 +82,7 @@ const props = defineProps({
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200">
-                <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50 transition-colors">
+                <tr v-for="inv in invoices" :key="inv.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                   <td class="py-4 px-6 font-mono font-bold text-slate-900 dark:text-white">{{ inv.invoice_number }}</td>
                   <td class="py-4 px-4 font-semibold text-slate-800 dark:text-slate-100">{{ inv.title }}</td>
                   <td class="py-4 px-4 font-black text-slate-900 dark:text-white">{{ $cs }}{{ inv.amount }}</td>

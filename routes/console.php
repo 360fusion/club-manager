@@ -12,3 +12,5 @@ Artisan::command('inspire', function () {
 Schedule::command('app:send-event-payment-reminders')->dailyAt('09:00');
 // Sends each club's automated digest when its channel's day and hour come round.
 Schedule::command('app:send-weekly-digest --scheduled')->hourly()->withoutOverlapping();
+// Turns due recurring bill templates (insurance, hall hire, etc.) into real vendor bills.
+Schedule::command('app:generate-recurring-bills')->dailyAt('06:00')->withoutOverlapping();

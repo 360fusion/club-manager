@@ -115,7 +115,7 @@
                             $hasJewel = $giving ? $giving->qualifies_for_jewel : false;
                             $hasBar = $giving ? $giving->qualifies_for_bar : false;
                         @endphp
-                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                             <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">
                                 {{ $m->formatted_rank_name }}
                             </td>

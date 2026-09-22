@@ -77,7 +77,7 @@ const dayParts = (iso) => {
     };
 };
 
-const KIND_LABELS = { meeting_rsvp: 'Summons', dining_payment: 'Payment', dues: 'Dues', event_rsvp: 'Event', approvals: 'Admin' };
+const KIND_LABELS = { meeting_rsvp: 'Summons', dining_payment: 'Payment', dues: 'Dues', event_rsvp: 'Event', approvals: 'Admin', signature: 'Sign' };
 const severityVariant = (severity) => (severity >= 3 ? 'danger' : severity === 2 ? 'warning' : 'info');
 
 const roleLabel = (role) => role.charAt(0).toUpperCase() + role.slice(1);

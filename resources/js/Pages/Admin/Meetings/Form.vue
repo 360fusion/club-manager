@@ -679,7 +679,7 @@ const submit = () => {
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                    <tr v-for="(item, idx) in form.officers_roster" :key="idx" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50">
+                    <tr v-for="(item, idx) in form.officers_roster" :key="idx" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                       <td class="py-2.5 px-3 text-center font-bold text-slate-400">
                         {{ idx + 1 }}
                       </td>

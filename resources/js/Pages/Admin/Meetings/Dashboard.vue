@@ -367,7 +367,7 @@ const isPastMeeting = computed(() => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr v-for="r in filteredRsvps" :key="r.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-all">
+              <tr v-for="r in filteredRsvps" :key="r.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-all">
                 <td class="p-3 font-bold text-slate-900 dark:text-white">
                   {{ r.user ? r.user.name : 'Member' }}
                 </td>

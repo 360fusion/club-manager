@@ -31,12 +31,21 @@ const filterDate = ref('all');
 const sortBy = ref('newest');
 const isSavingDetails = ref(false);
 const saveSuccessMsg = ref('');
+const previewError = ref('');
 
 const availableExtensions = ref([]);
 const availableMonths = ref([]);
 const trashCount = ref(0);
+const customFolders = ref([]); // [{ id, name, slug }], from the server
 
-const folders = computed(() => [
+const showNewFolderForm = ref(false);
+const newFolderName = ref('');
+const isCreatingFolder = ref(false);
+const newFolderError = ref('');
+
+// The 11 fixed folders. Custom folders are never listed here directly — each one
+// lives one level inside a fixed folder (see subfoldersOf / activeCustomFolder).
+const fixedFolders = [
   { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-200' },
   { id: 'summons', label: 'Summonses', icon: '📜', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
   { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
@@ -45,18 +54,29 @@ const folders = computed(() => [
   { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
   { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
   { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
+];
+
+const folders = computed(() => [
+  ...fixedFolders,
   { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50 dark:bg-rose-950/40', text: 'text-rose-700 dark:text-rose-300' },
 ]);
 
-const selectableFolders = [
-  { id: 'summons', label: 'Summonses' },
-  { id: 'logos', label: 'Logos' },
-  { id: 'news', label: 'News Items' },
-  { id: 'newsletters', label: 'Newsletters' },
-  { id: 'images', label: 'Single Images' },
-  { id: 'galleries', label: 'Galleries' },
-  { id: 'documents', label: 'Documents' },
-];
+// Direct custom-folder children of a fixed folder id, for the subfolder strip.
+const subfoldersOf = (fixedId) => customFolders.value.filter(f => f.parent_slug === fixedId);
+
+// If activeFolder is itself a custom folder's slug, its record (for the breadcrumb).
+const activeCustomFolder = computed(() => customFolders.value.find(f => f.slug === activeFolder.value) || null);
+
+const fixedFolderById = (id) => fixedFolders.find(f => f.id === id);
+
+const activeFolderLabel = computed(() => activeCustomFolder.value?.name || fixedFolderById(activeFolder.value)?.label || activeFolder.value);
+
+const selectableFolders = computed(() => fixedFolders
+  .filter(f => f.id !== 'all')
+  .flatMap(f => [
+    { id: f.id, label: f.label },
+    ...subfoldersOf(f.id).map(c => ({ id: c.slug, label: `— ${c.name}` })),
+  ]));
 
 const getCsrfToken = () => {
   const meta = document.querySelector('meta[name="csrf-token"]');
@@ -89,6 +109,8 @@ const fetchMedia = async () => {
       trashCount.value = data.trash_count || 0;
       availableExtensions.value = data.available_extensions || [];
       availableMonths.value = data.available_months || [];
+      if (data.storage) storage.value = data.storage;
+      customFolders.value = data.custom_folders || [];
     }
   } catch (err) {
     console.error('Failed to load media library items:', err);
@@ -103,6 +125,71 @@ const resetFilters = () => {
   filterExtension.value = 'all';
   filterDate.value = 'all';
   sortBy.value = 'newest';
+};
+
+// Only callable while viewing a fixed folder — that folder becomes the new folder's parent.
+const createFolder = async () => {
+  const name = newFolderName.value.trim();
+  if (!name || isCreatingFolder.value || activeFolder.value === 'all' || activeFolder.value === 'trash') return;
+
+  isCreatingFolder.value = true;
+  newFolderError.value = '';
+
+  try {
+    const res = await fetch(`/${props.club.slug}/admin/media/folders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ name, parent: activeFolder.value }),
+    });
+    const data = await res.json();
+
+    if (res.ok && data.folder) {
+      customFolders.value.push(data.folder);
+      customFolders.value.sort((a, b) => a.name.localeCompare(b.name));
+      newFolderName.value = '';
+      showNewFolderForm.value = false;
+      activeFolder.value = data.folder.slug;
+    } else {
+      newFolderError.value = data.message || 'Failed to create folder.';
+    }
+  } catch (err) {
+    console.error('Failed to create folder:', err);
+    newFolderError.value = 'Failed to create folder.';
+  } finally {
+    isCreatingFolder.value = false;
+  }
+};
+
+// folder is a raw custom-folder record: { id, name, slug, parent_slug }.
+const deleteFolder = async (folder) => {
+  if (!confirm(`Delete the "${folder.name}" folder? This only works if it's empty.`)) return;
+
+  try {
+    const res = await fetch(`/${props.club.slug}/admin/media/folders/${folder.id}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      customFolders.value = customFolders.value.filter(f => f.id !== folder.id);
+      if (activeFolder.value === folder.slug) {
+        activeFolder.value = folder.parent_slug;
+      }
+    } else {
+      copyToast.value = data.message || 'Failed to delete folder.';
+      setTimeout(() => { copyToast.value = ''; }, 4000);
+    }
+  } catch (err) {
+    console.error('Failed to delete folder:', err);
+  }
 };
 
 onMounted(() => {
@@ -230,6 +317,14 @@ const targetBulkFolder = ref('images');
 const assetUsages = ref([]);
 const isLoadingUsages = ref(false);
 
+const mediaVersions = ref([]);
+const isLoadingVersions = ref(false);
+const restoringVersionId = ref(null);
+const isUploadingVersion = ref(false);
+const versionFileInput = ref(null);
+
+const storage = ref({ used_bytes: 0, quota_bytes: null, used_human: '0 KB', quota_human: null, percent: null });
+
 const showCropModal = ref(false);
 const cropAspect = ref('free'); // 'free', '1:1', '16:9', '4:3'
 const cropRotation = ref(0);
@@ -325,6 +420,22 @@ const fetchUsage = async (id) => {
   }
 };
 
+const fetchVersions = async (id) => {
+  mediaVersions.value = [];
+  isLoadingVersions.value = true;
+  try {
+    const res = await fetch(`/${props.club.slug}/admin/media/${id}/versions`);
+    if (res.ok) {
+      const data = await res.json();
+      mediaVersions.value = data.versions || [];
+    }
+  } catch (err) {
+    console.error('Failed to fetch version history:', err);
+  } finally {
+    isLoadingVersions.value = false;
+  }
+};
+
 const openPreview = (item) => {
   previewItem.value = {
     ...item,
@@ -332,7 +443,19 @@ const openPreview = (item) => {
     caption: item.caption || '',
   };
   saveSuccessMsg.value = '';
+  previewError.value = '';
   fetchUsage(item.id);
+  fetchVersions(item.id);
+};
+
+// Mirrors MediaAdminController::formatTitleFromFilename() so "Generate from filename" matches
+// what a fresh upload gets automatically.
+const regenerateAltTextFromFilename = () => {
+  if (!previewItem.value?.file_name) return;
+  const nameWithoutExt = previewItem.value.file_name.replace(/\.[^.]+$/, '');
+  const clean = nameWithoutExt.replace(/[_\-.]+/g, ' ').trim();
+  // PHP's ucwords() only capitalizes each word's first letter and leaves the rest untouched.
+  previewItem.value.alt_text = clean.replace(/\S+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1));
 };
 
 let cropperInstance = null;
@@ -408,11 +531,10 @@ const rotateCropper = (deg) => {
   cropRotation.value = (cropRotation.value + deg) % 360;
 };
 
-const isReverting = ref(false);
-
 const applyCrop = async (mode = 'replace') => {
   if (!cropperInstance || !previewItem.value) return;
   isCropping.value = true;
+  previewError.value = '';
 
   try {
     const canvas = cropperInstance.getCroppedCanvas({
@@ -445,21 +567,25 @@ const applyCrop = async (mode = 'replace') => {
         body: formData,
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.media) {
-          if (mode === 'variant') {
-            mediaItems.value.unshift(data.media);
-            saveSuccessMsg.value = 'Saved as new cropped variant copy!';
-          } else {
-            const idx = mediaItems.value.findIndex(m => m.id === data.media.id);
-            if (idx !== -1) mediaItems.value[idx] = data.media;
-            previewItem.value = { ...data.media };
-            saveSuccessMsg.value = 'Image updated! Original master preserved for 1-click reverting.';
-          }
-          closeCropper();
-          setTimeout(() => { saveSuccessMsg.value = ''; }, 4000);
+      const data = await res.json();
+
+      if (res.ok && data.media) {
+        if (mode === 'variant') {
+          mediaItems.value.unshift(data.media);
+          saveSuccessMsg.value = 'Saved as new cropped variant copy!';
+        } else {
+          const idx = mediaItems.value.findIndex(m => m.id === data.media.id);
+          if (idx !== -1) mediaItems.value[idx] = data.media;
+          previewItem.value = { ...previewItem.value, ...data.media };
+          saveSuccessMsg.value = 'Image updated! Previous version saved to history.';
+          fetchVersions(data.media.id);
+          fetchMedia();
         }
+        closeCropper();
+        setTimeout(() => { saveSuccessMsg.value = ''; }, 4000);
+      } else {
+        previewError.value = data.message || 'Failed to save the cropped image.';
+        closeCropper();
       }
       isCropping.value = false;
     }, 'image/jpeg', 0.9);
@@ -469,15 +595,63 @@ const applyCrop = async (mode = 'replace') => {
   }
 };
 
-const revertMediaToOriginal = async () => {
-  if (!previewItem.value || isReverting.value) return;
-  if (!confirm(`Revert "${previewItem.value.name}" back to its original uncropped master image?`)) return;
+const triggerVersionUpload = () => {
+  versionFileInput.value?.click();
+};
 
-  isReverting.value = true;
+const uploadNewVersion = async (event) => {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file || !previewItem.value) return;
+
+  isUploadingVersion.value = true;
   saveSuccessMsg.value = '';
+  previewError.value = '';
 
   try {
-    const res = await fetch(`/${props.club.slug}/admin/media/${previewItem.value.id}/revert`, {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`/${props.club.slug}/admin/media/${previewItem.value.id}/replace`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json',
+      },
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.media) {
+      const idx = mediaItems.value.findIndex(m => m.id === data.media.id);
+      if (idx !== -1) mediaItems.value[idx] = data.media;
+      previewItem.value = { ...previewItem.value, ...data.media };
+      saveSuccessMsg.value = 'File replaced. Previous version saved to history.';
+      fetchVersions(data.media.id);
+      fetchMedia();
+      setTimeout(() => { saveSuccessMsg.value = ''; }, 4000);
+    } else {
+      previewError.value = data.message || 'Failed to upload new version.';
+    }
+  } catch (err) {
+    console.error('Failed to upload new version:', err);
+    previewError.value = 'Failed to upload new version.';
+  } finally {
+    isUploadingVersion.value = false;
+  }
+};
+
+const restoreMediaVersion = async (version) => {
+  if (!previewItem.value || restoringVersionId.value) return;
+  if (!confirm(`Restore "${previewItem.value.name}" to the version from ${version.created_at}? The current file will be saved to history first.`)) return;
+
+  restoringVersionId.value = version.id;
+  saveSuccessMsg.value = '';
+  previewError.value = '';
+
+  try {
+    const res = await fetch(`/${props.club.slug}/admin/media/${previewItem.value.id}/versions/${version.id}/restore`, {
       method: 'POST',
       headers: {
         'X-CSRF-TOKEN': getCsrfToken(),
@@ -485,20 +659,24 @@ const revertMediaToOriginal = async () => {
       },
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data.media) {
-        const idx = mediaItems.value.findIndex(m => m.id === data.media.id);
-        if (idx !== -1) mediaItems.value[idx] = data.media;
-        previewItem.value = { ...data.media };
-        saveSuccessMsg.value = 'Reverted image back to original master file!';
-        setTimeout(() => { saveSuccessMsg.value = ''; }, 4000);
-      }
+    const data = await res.json();
+
+    if (res.ok && data.media) {
+      const idx = mediaItems.value.findIndex(m => m.id === data.media.id);
+      if (idx !== -1) mediaItems.value[idx] = data.media;
+      previewItem.value = { ...previewItem.value, ...data.media };
+      saveSuccessMsg.value = 'File restored to the selected version.';
+      fetchVersions(data.media.id);
+      fetchMedia();
+      setTimeout(() => { saveSuccessMsg.value = ''; }, 4000);
+    } else {
+      previewError.value = data.message || 'Failed to restore version.';
     }
   } catch (err) {
-    console.error('Failed to revert image:', err);
+    console.error('Failed to restore version:', err);
+    previewError.value = 'Failed to restore version.';
   } finally {
-    isReverting.value = false;
+    restoringVersionId.value = null;
   }
 };
 
@@ -779,6 +957,24 @@ const isImage = (mimeOrUrl) => {
               </span>
             </button>
           </div>
+
+          <!-- Storage Usage -->
+          <div v-if="storage.quota_bytes !== null" class="px-3 pt-2 pb-1 space-y-1.5">
+            <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <span>Storage Used</span>
+              <span>{{ storage.percent }}%</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all"
+                :class="storage.percent >= 90 ? 'bg-rose-500' : storage.percent >= 70 ? 'bg-amber-500' : 'bg-blue-500'"
+                :style="{ width: Math.min(100, storage.percent || 0) + '%' }"
+              ></div>
+            </div>
+            <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+              {{ storage.used_human }} of {{ storage.quota_human }} used
+            </div>
+          </div>
         </div>
 
         <!-- Right Main Media Grid -->
@@ -797,6 +993,80 @@ const isImage = (mimeOrUrl) => {
             <span class="text-5xl animate-bounce mb-2">📥</span>
             <span class="text-base font-extrabold">Drop files here to upload</span>
             <span class="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1">Target folder: {{ activeFolder !== 'all' ? activeFolder : uploadFolder }}</span>
+          </div>
+
+          <!-- Breadcrumb: viewing a custom folder, inside one of the fixed folders -->
+          <div v-if="activeCustomFolder" class="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 pb-1">
+            <button
+              type="button"
+              @click="activeFolder = activeCustomFolder.parent_slug"
+              class="hover:text-slate-900 dark:hover:text-white hover:underline cursor-pointer flex items-center gap-1"
+            >
+              <span>{{ fixedFolderById(activeCustomFolder.parent_slug)?.icon }}</span>
+              <span>{{ fixedFolderById(activeCustomFolder.parent_slug)?.label }}</span>
+            </button>
+            <span class="text-slate-300 dark:text-slate-600">/</span>
+            <span class="text-slate-900 dark:text-white">🗂️ {{ activeCustomFolder.name }}</span>
+          </div>
+
+          <!-- Subfolders: viewing one of the fixed folders -->
+          <div v-if="activeFolder !== 'all' && activeFolder !== 'trash' && !activeCustomFolder" class="space-y-2 pb-1">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Subfolders</span>
+              <button
+                type="button"
+                @click="showNewFolderForm = !showNewFolderForm; newFolderError = ''; newFolderName = ''"
+                class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+              >
+                + New Folder
+              </button>
+            </div>
+
+            <div v-if="showNewFolderForm" class="flex items-center gap-1.5">
+              <input
+                v-model="newFolderName"
+                type="text"
+                :placeholder="`New folder inside ${fixedFolderById(activeFolder)?.label}...`"
+                maxlength="60"
+                @keyup.enter="createFolder"
+                @keyup.escape="showNewFolderForm = false"
+                class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+              />
+              <button
+                type="button"
+                @click="createFolder"
+                :disabled="isCreatingFolder || !newFolderName.trim()"
+                class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl disabled:opacity-50 cursor-pointer shrink-0"
+              >
+                {{ isCreatingFolder ? '...' : 'Add' }}
+              </button>
+            </div>
+            <p v-if="newFolderError" class="text-[10px] font-semibold text-rose-600 dark:text-rose-400">{{ newFolderError }}</p>
+
+            <div v-if="subfoldersOf(activeFolder).length" class="flex flex-wrap gap-1.5">
+              <div
+                v-for="sub in subfoldersOf(activeFolder)"
+                :key="sub.id"
+                class="group relative"
+              >
+                <button
+                  type="button"
+                  @click="activeFolder = sub.slug"
+                  class="pl-3 pr-7 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>🗂️</span>
+                  <span>{{ sub.name }}</span>
+                </button>
+                <button
+                  type="button"
+                  @click.stop="deleteFolder(sub)"
+                  title="Delete folder"
+                  class="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-slate-400 hover:text-rose-600 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Inline Search & Filter Controls Bar -->
@@ -824,7 +1094,7 @@ const isImage = (mimeOrUrl) => {
 
               <!-- Counter Badge -->
               <div class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
-                Showing {{ mediaItems.length }} {{ mediaItems.length === 1 ? 'file' : 'files' }} in <span class="text-slate-900 dark:text-white font-extrabold capitalize">{{ activeFolder }}</span>
+                Showing {{ mediaItems.length }} {{ mediaItems.length === 1 ? 'file' : 'files' }} in <span class="text-slate-900 dark:text-white font-extrabold">{{ activeFolderLabel }}</span>
               </div>
             </div>
 
@@ -982,7 +1252,7 @@ const isImage = (mimeOrUrl) => {
               <span class="animate-spin text-xl mr-2">🔄</span> Loading Media Library...
             </div>
 
-            <div v-else-if="!mediaItems.length" class="text-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-800/50/50 space-y-3">
+            <div v-else-if="!mediaItems.length" class="text-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-800/50 space-y-3">
               <span class="text-4xl block">📁</span>
               <div>
                 <span class="text-sm font-bold text-slate-800 dark:text-slate-100 block">No media files in this folder</span>
@@ -1044,6 +1314,9 @@ const isImage = (mimeOrUrl) => {
                     </span>
                     <span v-if="item.is_trashed" class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
                       🗑️ Trashed
+                    </span>
+                    <span v-if="item.version_count > 0" class="px-2 py-0.5 rounded-md bg-amber-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
+                      🕓 {{ item.version_count }} {{ item.version_count === 1 ? 'Version' : 'Versions' }}
                     </span>
                   </div>
 
@@ -1150,6 +1423,12 @@ const isImage = (mimeOrUrl) => {
           <span>{{ saveSuccessMsg }}</span>
         </div>
 
+        <!-- Error Toast Alert -->
+        <div v-if="previewError" class="p-2.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 text-xs font-bold rounded-xl flex items-center justify-between gap-2 animate-in fade-in">
+          <span class="flex items-center gap-2"><span>⚠️</span><span>{{ previewError }}</span></span>
+          <button type="button" @click="previewError = ''" class="text-rose-500 hover:text-rose-800 dark:hover:text-rose-200">✕</button>
+        </div>
+
         <!-- Main Inspector Layout: Left Visual Preview + Right Editable Metadata -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
           
@@ -1216,10 +1495,62 @@ const isImage = (mimeOrUrl) => {
                 </div>
               </div>
             </div>
+
+            <!-- Version History Section -->
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
+              <div class="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between">
+                <span>Version History</span>
+                <span v-if="isLoadingVersions" class="animate-spin text-blue-600 dark:text-blue-400">🔄</span>
+                <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="mediaVersions.length ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
+                  {{ mediaVersions.length }} {{ mediaVersions.length === 1 ? 'Version' : 'Versions' }}
+                </span>
+              </div>
+
+              <div v-if="isLoadingVersions" class="py-1.5 text-slate-400 font-semibold text-center">
+                Loading version history...
+              </div>
+
+              <div v-else-if="!mediaVersions.length" class="py-1.5 text-slate-400 font-medium italic text-center text-[11px]">
+                No previous versions. Replacing or cropping this file will save a version here.
+              </div>
+
+              <div v-else class="space-y-1 pt-0.5 max-h-[160px] overflow-y-auto">
+                <div
+                  v-for="version in mediaVersions"
+                  :key="version.id"
+                  class="p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs"
+                >
+                  <div class="truncate pr-2">
+                    <span class="font-bold text-slate-900 dark:text-white block truncate">{{ version.file_name }}</span>
+                    <span class="text-[10px] text-slate-400 font-medium">
+                      {{ version.human_size }} · {{ version.created_at }}<template v-if="version.uploaded_by"> · {{ version.uploaded_by }}</template>
+                      <template v-if="version.note"> · {{ version.note }}</template>
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <a
+                      :href="version.download_url"
+                      target="_blank"
+                      class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold border border-slate-200 dark:border-slate-800"
+                    >
+                      ⬇️
+                    </a>
+                    <button
+                      type="button"
+                      @click="restoreMediaVersion(version)"
+                      :disabled="restoringVersionId === version.id"
+                      class="px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-[10px] font-bold border border-amber-300 dark:border-amber-700/60 disabled:opacity-50 cursor-pointer"
+                    >
+                      {{ restoringVersionId === version.id ? '...' : '↺ Restore' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Right Column: Editable Metadata Form -->
-          <div class="space-y-3 bg-slate-50/50 dark:bg-slate-800/50/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+          <div class="space-y-3 bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
             <div class="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200 dark:border-slate-800">
               Editable Asset Metadata
             </div>
@@ -1239,7 +1570,14 @@ const isImage = (mimeOrUrl) => {
             <div class="space-y-1">
               <label class="block text-xs font-extrabold text-slate-800 dark:text-slate-100 flex items-center justify-between">
                 <span>Alt Text (Accessibility & SEO)</span>
-                <span class="text-[10px] text-blue-600 dark:text-blue-400 font-bold">Auto-generated from filename</span>
+                <button
+                  type="button"
+                  @click="regenerateAltTextFromFilename"
+                  class="text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer"
+                  title="Fill in from the file name"
+                >
+                  ↺ Generate from filename
+                </button>
               </label>
               <input
                 v-model="previewItem.alt_text"
@@ -1331,17 +1669,23 @@ const isImage = (mimeOrUrl) => {
             </template>
             <template v-else>
               <button
-                v-if="previewItem?.has_original_backup"
+                v-if="!previewItem?.is_accounting_protected"
                 type="button"
-                @click="revertMediaToOriginal"
-                :disabled="isReverting"
+                @click="triggerVersionUpload"
+                :disabled="isUploadingVersion"
                 class="px-3.5 py-1.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 font-bold text-xs rounded-xl border border-amber-300 dark:border-amber-700/60 transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
-                title="Revert image back to original uncropped master"
+                title="Upload a new version of this file, saving the current one to history"
               >
-                <span v-if="isReverting" class="animate-spin">🔄</span>
-                <span v-else>↺</span>
-                <span>{{ isReverting ? 'Reverting...' : 'Revert to Original Master' }}</span>
+                <span v-if="isUploadingVersion" class="animate-spin">🔄</span>
+                <span v-else>⤴️</span>
+                <span>{{ isUploadingVersion ? 'Uploading...' : 'Upload New Version' }}</span>
               </button>
+              <input
+                ref="versionFileInput"
+                type="file"
+                class="hidden"
+                @change="uploadNewVersion"
+              />
 
               <button
                 type="button"

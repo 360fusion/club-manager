@@ -248,6 +248,13 @@
                     </button>
                     <button
                         type="button"
+                        wire:click="$set('manualAllocationType', 'invoice')"
+                        class="flex-1 py-1.5 px-3 rounded-lg transition {{ $manualAllocationType === 'invoice' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
+                    >
+                        Invoice
+                    </button>
+                    <button
+                        type="button"
                         wire:click="$set('manualAllocationType', 'ledger_account')"
                         class="flex-1 py-1.5 px-3 rounded-lg transition {{ $manualAllocationType === 'ledger_account' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
@@ -274,6 +281,9 @@
                                     @if($manualAllocationType === 'member_subscription')
                                         <span class="font-black text-slate-900 dark:text-white block">{{ $cand->member->formatted_rank_name }}</span>
                                         <span class="text-[10px] text-slate-500 dark:text-slate-400">Invoice: {{ $cand->invoice_reference }} (Dues: {{ $cs }}{{ number_format($cand->balance_due, 2) }})</span>
+                                    @elseif($manualAllocationType === 'invoice')
+                                        <span class="font-black text-slate-900 dark:text-white block">{{ $cand->user->name ?? 'Member' }} — {{ $cand->title }}</span>
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400">Invoice: {{ $cand->invoice_number }} (Amount: {{ $cs }}{{ number_format($cand->amount, 2) }})</span>
                                     @else
                                         <span class="font-black text-slate-900 dark:text-white block">{{ $cand->vendor_name }} (Bill: {{ $cand->bill_number }})</span>
                                         <span class="text-[10px] text-slate-500 dark:text-slate-400">Bill Amount: {{ $cs }}{{ number_format($cand->amount, 2) }}</span>

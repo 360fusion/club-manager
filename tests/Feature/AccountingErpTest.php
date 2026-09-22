@@ -321,6 +321,39 @@ class AccountingErpTest extends TestCase
         $this->assertEquals('unpaid', $invoice->fresh()->status);
     }
 
+    public function test_visiting_accounting_dashboard_does_not_seed_fabricated_data(): void
+    {
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.index', $this->club->slug));
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseCount('accounting_contacts', 0);
+        $this->assertDatabaseCount('club_acc_bank_accounts', 0);
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('settings.tax_registration_number', '')
+            ->where('bankAccounts', [])
+        );
+    }
+
+    public function test_comparative_income_expenditure_reports_zero_not_fabricated_figures(): void
+    {
+        $data = $this->accountingService->getComparativeIncomeExpenditureData($this->club);
+
+        $this->assertEquals(0.0, $data['current_totals']['income']);
+        $this->assertEquals(0.0, $data['current_totals']['expenditure']);
+        $this->assertEquals(0.0, $data['prior_totals']['income']);
+        $this->assertEquals(0.0, $data['prior_totals']['expenditure']);
+
+        foreach ($data['rows'] as $row) {
+            $this->assertEquals(0.0, $row['current_income']);
+            $this->assertEquals(0.0, $row['current_expenditure']);
+            $this->assertEquals(0.0, $row['prior_income']);
+            $this->assertEquals(0.0, $row['prior_expenditure']);
+        }
+    }
+
     public function test_admin_can_delete_draft_invoice_and_bill(): void
     {
         $this->actingAs($this->adminUser);
@@ -351,5 +384,154 @@ class AccountingErpTest extends TestCase
 
         $this->delete(route('admin.accounting.bills.destroy', ['clubSlug' => $this->club->slug, 'id' => $bill->id]))->assertRedirect();
         $this->assertDatabaseMissing('accounting_bills', ['id' => $bill->id]);
+    }
+
+    public function test_vat_is_off_by_default_and_never_touches_amounts(): void
+    {
+        $this->assertFalse($this->club->vatIsEnabled());
+        $this->assertFalse($this->club->vatSettingsAreLocked());
+
+        $bill = $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Non-VAT Supplier',
+            'category' => 'Supplies',
+            'amount' => 120.00,
+            'due_date' => '2026-10-01',
+        ]);
+
+        $this->assertEquals(120.00, $bill->amount);
+        $this->assertNull($bill->net_amount);
+        $this->assertNull($bill->vat_amount);
+        $this->assertFalse($bill->hasVat());
+        $this->assertFalse($this->club->vatSettingsAreLocked());
+    }
+
+    public function test_enabling_vat_splits_vendor_bill_into_net_and_vat_control_account(): void
+    {
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], [
+            'vat' => ['enabled' => true, 'scheme' => 'standard', 'default_rate' => 20.00],
+        ])]);
+        $this->club->refresh();
+        $this->assertTrue($this->club->vatIsEnabled());
+
+        $bill = $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'VAT Registered Supplier',
+            'category' => 'Supplies',
+            'amount' => 120.00,
+            'due_date' => '2026-10-01',
+        ]);
+
+        $this->assertEquals(120.00, $bill->amount);
+        $this->assertEquals(100.00, $bill->net_amount);
+        $this->assertEquals(20.00, $bill->vat_amount);
+        $this->assertEquals(20.00, $bill->vat_rate);
+        $this->assertTrue($bill->hasVat());
+
+        // Input VAT is a debit against the (liability-typed) VAT control account, so it
+        // nets negative here — it reduces what the club would owe HMRC overall.
+        $vatAcc = Account::where('club_id', $this->club->id)->where('code', '2200')->firstOrFail();
+        $this->assertEquals(-20.00, $vatAcc->fresh()->balance);
+
+        $expenseAcc = Account::where('club_id', $this->club->id)->where('code', '5000')->firstOrFail();
+        $this->assertEquals(100.00, $expenseAcc->fresh()->balance);
+
+        $this->assertTrue($this->club->vatSettingsAreLocked());
+    }
+
+    public function test_enabling_vat_splits_member_invoice_into_net_and_vat_control_account(): void
+    {
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], [
+            'vat' => ['enabled' => true, 'scheme' => 'standard', 'default_rate' => 20.00],
+        ])]);
+        $this->club->refresh();
+
+        $member = User::factory()->create();
+
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.invoices.store', $this->club->slug), [
+                'user_id' => $member->id,
+                'title' => 'VAT-Inclusive Locker Rental',
+                'amount' => 120.00,
+            ]);
+        $response->assertRedirect();
+
+        $invoice = Invoice::where('club_id', $this->club->id)->where('title', 'VAT-Inclusive Locker Rental')->firstOrFail();
+        $this->assertEquals(120.00, $invoice->amount);
+        $this->assertEquals(100.00, $invoice->net_amount);
+        $this->assertEquals(20.00, $invoice->vat_amount);
+
+        $vatAcc = Account::where('club_id', $this->club->id)->where('code', '2200')->firstOrFail();
+        $this->assertEquals(20.00, $vatAcc->fresh()->balance);
+
+        $duesAcc = Account::where('club_id', $this->club->id)->where('code', '4000')->firstOrFail();
+        $this->assertEquals(100.00, $duesAcc->fresh()->balance);
+    }
+
+    public function test_admin_can_enable_vat_and_a_locked_scheme_cannot_be_changed(): void
+    {
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.vat_settings.update', $this->club->slug), [
+                'enabled' => true,
+                'scheme' => 'standard',
+                'default_rate' => 20.00,
+            ]);
+        $response->assertRedirect();
+
+        $this->club->refresh();
+        $this->assertTrue($this->club->vatIsEnabled());
+        $this->assertEquals('standard', $this->club->vatSettings()['scheme']);
+
+        $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Locking Supplier',
+            'category' => 'Supplies',
+            'amount' => 60.00,
+            'due_date' => '2026-10-01',
+        ]);
+        $this->assertTrue($this->club->vatSettingsAreLocked());
+
+        $lockedResponse = $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.vat_settings.update', $this->club->slug), [
+                'enabled' => true,
+                'scheme' => 'flat_rate',
+                'flat_rate_percent' => 16.5,
+                'default_rate' => 20.00,
+            ]);
+        $lockedResponse->assertSessionHasErrors('scheme');
+
+        $this->club->refresh();
+        $this->assertEquals('standard', $this->club->vatSettings()['scheme']);
+    }
+
+    public function test_vat_settings_update_is_forbidden_for_non_billing_roles(): void
+    {
+        $member = User::factory()->create();
+        $member->clubs()->attach($this->club->id, ['role' => 'member']);
+
+        $this->actingAs($member)
+            ->post(route('admin.accounting.vat_settings.update', $this->club->slug), [
+                'enabled' => true,
+                'scheme' => 'standard',
+                'default_rate' => 20.00,
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_export_reports_as_csv(): void
+    {
+        $this->accountingService->recordMemberDuesPayment($this->club, 100.00, 'Dues');
+
+        foreach (['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'budget_vs_actual'] as $report) {
+            $response = $this->actingAs($this->adminUser)
+                ->get(route('admin.accounting.reports.export', ['clubSlug' => $this->club->slug, 'report' => $report]));
+
+            $response->assertOk();
+            $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        }
+    }
+
+    public function test_exporting_an_unknown_report_returns_404(): void
+    {
+        $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.reports.export', ['clubSlug' => $this->club->slug, 'report' => 'not_a_real_report']))
+            ->assertNotFound();
     }
 }

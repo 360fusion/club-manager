@@ -6,10 +6,12 @@ use App\Models\Club;
 use App\Models\Page;
 use App\Models\PageRedirect;
 use App\Support\ClubDomain;
+use App\Support\SiteThemes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -70,12 +72,6 @@ class PageAdminController extends Controller
             'contact_email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:100',
             'address' => 'nullable|string|max:500',
-            'social_facebook' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
-            'social_instagram' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
-            'social_twitter' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
-            'header_cta_text' => 'nullable|string|max:255',
-            'header_cta_link' => ['nullable', 'string', 'max:500', 'regex:#^(https?://|/|\\#|mailto:)#i'],
-            'footer_copyright' => 'nullable|string|max:255',
         ]);
 
         ClubDomain::apply($club, $validated['custom_domain'] ?? null);
@@ -114,7 +110,7 @@ class PageAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
         $validated = $request->validate([
-            'website_theme' => 'required|string|in:classic,obsidian,masonic,minimal,vibrant,light_navy,executive_light,masonic_light,warm_light',
+            'website_theme' => ['required', 'string', Rule::in(SiteThemes::keys())],
         ]);
 
         $existingSettings = $club->settings ?? [];
@@ -123,6 +119,78 @@ class PageAdminController extends Controller
         $club->save();
 
         return redirect()->back()->with('success', 'Website theme updated successfully.');
+    }
+
+    /**
+     * Display header & footer layout settings inside Website Builder.
+     */
+    public function headerFooter(string $clubSlug): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club->ensureDefaultPages();
+
+        $pages = Page::where('club_id', $club->id)->orderBy('sort_order')->orderBy('id')->get();
+
+        return Inertia::render('Admin/PageList', array_merge([
+            'club' => $club,
+            'pages' => $pages,
+            'selectedId' => 'header_footer',
+            'websiteSettings' => $this->getWebsiteSettings($club),
+        ], $this->getPreviewData($club)));
+    }
+
+    /**
+     * Update header & footer layout, visibility and content settings.
+     */
+    public function updateHeaderFooter(Request $request, string $clubSlug)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $urlLikeRule = function (string $attribute, mixed $value, \Closure $fail): void {
+            if ($value !== null && $value !== '' && ! preg_match('#^(https?://|/|\#|mailto:|tel:)#i', $value)) {
+                $fail('The :attribute must start with http://, https://, /, # or mailto:.');
+            }
+        };
+
+        $validated = $request->validate([
+            'header_layout' => 'required|string|in:logo_left,logo_center',
+            'header_show_logo' => 'boolean',
+            'header_show_tagline' => 'boolean',
+            'header_cta_enabled' => 'boolean',
+            'header_cta_text' => 'nullable|string|max:255',
+            'header_cta_link' => ['nullable', 'string', 'max:500', 'regex:#^(https?://|/|\\#|mailto:)#i'],
+            'header_show_account_links' => 'boolean',
+            'footer_layout' => 'required|string|in:simple,columns',
+            'footer_show_social' => 'boolean',
+            'footer_show_nav' => 'boolean',
+            'footer_copyright' => 'nullable|string|max:255',
+            'social_facebook' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
+            'social_instagram' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
+            'social_twitter' => ['nullable', 'string', 'max:500', 'regex:#^https?://#i'],
+            'footer_link_columns' => 'nullable|array|max:4',
+            'footer_link_columns.*.title' => 'nullable|string|max:100',
+            'footer_link_columns.*.links' => 'nullable|array|max:8',
+            'footer_link_columns.*.links.*.label' => 'nullable|string|max:100',
+            'footer_link_columns.*.links.*.url' => ['nullable', 'string', 'max:500', $urlLikeRule],
+        ]);
+
+        // Drop any column/link the admin left half-filled in (no title, or no label+url pair) rather than
+        // failing the whole save over an empty row left over from clicking "Add".
+        $validated['footer_link_columns'] = collect($validated['footer_link_columns'] ?? [])
+            ->map(fn (array $column) => [
+                'title' => $column['title'] ?? '',
+                'links' => collect($column['links'] ?? [])
+                    ->filter(fn (array $link) => ! empty($link['label']) && ! empty($link['url']))
+                    ->values()->all(),
+            ])
+            ->filter(fn (array $column) => $column['title'] !== '' && count($column['links']) > 0)
+            ->values()->all();
+
+        $existingSettings = $club->settings ?? [];
+        $club->settings = array_merge($existingSettings, $validated);
+        $club->save();
+
+        return redirect()->back()->with('success', 'Header & footer settings saved successfully.');
     }
 
     /**
@@ -437,6 +505,15 @@ class PageAdminController extends Controller
             'header_cta_text' => 'Join Our Club',
             'header_cta_link' => '/site/'.$club->slug.'/join-us',
             'footer_copyright' => '© '.date('Y').' '.$club->name.'. All rights reserved.',
+            'header_layout' => 'logo_left',
+            'header_show_logo' => true,
+            'header_show_tagline' => true,
+            'header_cta_enabled' => false,
+            'header_show_account_links' => true,
+            'footer_layout' => 'simple',
+            'footer_show_social' => true,
+            'footer_show_nav' => false,
+            'footer_link_columns' => [],
         ];
 
         return array_merge($defaults, $club->settings ?? [], [

@@ -267,6 +267,16 @@ const duplicateMeeting = (id) => {
             </div>
 
             <div class="relative group">
+              <Link :href="route('admin.meetings.dining', { clubSlug: club.slug, id: meeting.id })" title="Dining List &amp; Payments" aria-label="Dining List and Payments" class="px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-xl border border-emerald-200 dark:border-emerald-800/60 transition-all flex items-center gap-1">
+                🍽️ Dining
+              </Link>
+              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
+                Dining List &amp; Payments
+                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+              </div>
+            </div>
+
+            <div class="relative group">
               <Link :href="route('admin.meetings.show', { clubSlug: club.slug, id: meeting.id })" title="Secretary Dashboard" aria-label="Secretary Dashboard" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1">
                 📊 Secretary Dashboard
               </Link>

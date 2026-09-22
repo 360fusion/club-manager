@@ -728,7 +728,7 @@
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
             <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 text-xs overflow-hidden">
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50/50">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                     <div>
                         <h3 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                             <span>👥</span>
@@ -795,7 +795,7 @@
                                     default => 'Committee Member'
                                 };
                             @endphp
-                            <div class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 {{ $isAlreadyAttendee ? 'bg-slate-50/70 dark:bg-slate-800/50/70 border-slate-200 dark:border-slate-800 opacity-60' : (in_array((string) $member->id, array_map('strval', $selectedMemberIds)) ? 'bg-blue-50/40 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 ring-1 ring-blue-200 dark:ring-blue-800/60' : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700') }}">
+                            <div class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 {{ $isAlreadyAttendee ? 'bg-slate-50/70 dark:bg-slate-800/70 border-slate-200 dark:border-slate-800 opacity-60' : (in_array((string) $member->id, array_map('strval', $selectedMemberIds)) ? 'bg-blue-50/40 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 ring-1 ring-blue-200 dark:ring-blue-800/60' : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700') }}">
                                 <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0 {{ $isAlreadyAttendee ? 'cursor-not-allowed' : '' }}">
                                     <input
                                         type="checkbox"
@@ -857,7 +857,7 @@
                                 $isAlreadyAttendee = ($member->user_id && in_array($member->user_id, $existingAttendeeUserIds))
                                     || in_array($member->name, $existingAttendeeNames ?? []);
                             @endphp
-                            <div class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 {{ $isAlreadyAttendee ? 'bg-slate-50/70 dark:bg-slate-800/50/70 border-slate-200 dark:border-slate-800 opacity-60' : (in_array((string) $member->id, array_map('strval', $selectedMemberIds)) ? 'bg-blue-50/40 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 ring-1 ring-blue-200 dark:ring-blue-800/60' : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700') }}">
+                            <div class="p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 {{ $isAlreadyAttendee ? 'bg-slate-50/70 dark:bg-slate-800/70 border-slate-200 dark:border-slate-800 opacity-60' : (in_array((string) $member->id, array_map('strval', $selectedMemberIds)) ? 'bg-blue-50/40 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 ring-1 ring-blue-200 dark:ring-blue-800/60' : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700') }}">
                                 <label class="flex items-center gap-3 cursor-pointer flex-1 min-w-0 {{ $isAlreadyAttendee ? 'cursor-not-allowed' : '' }}">
                                     <input
                                         type="checkbox"

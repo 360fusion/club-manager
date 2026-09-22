@@ -87,7 +87,7 @@ class ClubEmailTemplateTest extends TestCase
 
         $this->actingAs($this->admin)->get(route('admin.email_templates.index', ['clubSlug' => 'club-a']))->assertInertia(fn ($page) => $page
             ->component('Admin/EmailTemplates/Index')
-            ->has('templates', 6)
+            ->has('templates', 7)
             ->where('templates', fn ($templates) => collect($templates)->firstWhere('key', 'event_refund')['customised'] === true
                 && collect($templates)->firstWhere('key', 'event_refund')['subject'] === 'Money back'
                 && collect($templates)->firstWhere('key', 'event_payment_reminder')['customised'] === false));

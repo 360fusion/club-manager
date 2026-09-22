@@ -169,9 +169,10 @@ const submit = () => {
                 >
                   <option value="draft">Draft</option>
                   <option value="unpaid">Unpaid (Published)</option>
-                  <option value="paid">Paid</option>
+                  <option value="paid" :disabled="invoice.status !== 'paid'">Paid</option>
                 </select>
                 <p v-if="form.errors.status" class="text-xs text-rose-500 font-semibold">{{ form.errors.status }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Use the "Mark Paid" action from the invoices list to record a payment — it posts the settlement to the ledger.</p>
               </div>
             </div>
 

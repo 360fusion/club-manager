@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
 
@@ -51,7 +51,21 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  storage: {
+    type: Object,
+    default: () => ({ used_bytes: 0, quota_bytes: null, used_human: '0 KB', quota_human: null, percent: null }),
+  },
+  platformDefaultStorageQuotaMb: {
+    type: Number,
+    default: null,
+  },
 });
+
+const isSuperAdmin = computed(() => !!usePage().props.auth?.user?.is_super_admin);
+
+// Owner holds every permission implicitly and isn't a club-level choice, so only platform
+// admins see that column in the matrix.
+const visibleRoles = computed(() => props.availableRoles.filter(r => r.code !== 'owner' || isSuperAdmin.value));
 
 const selectedProvider = ref(props.activeProvider || 'stripe');
 const processingProvider = ref(false);
@@ -68,7 +82,7 @@ const switchProvider = (provider) => {
 const validTabs = [
   'general', 'positions', 'officers', 'branding', 'roles', 'modules',
   'accounting', 'subscriptions', 'payments', 'events', 'dining',
-  'communications', 'website', 'bookings', 'performance'
+  'communications', 'website', 'bookings'
 ];
 
 // Event and booking payment options are set up once for the lodge on their own page, which comes back here.
@@ -135,6 +149,7 @@ const form = useForm({
   sidebar_theme: props.settings.sidebar_theme || 'dark_slate',
   currency: props.settings.currency || props.currencies?.[0]?.code || 'GBP',
   timezone: props.settings.timezone || 'Europe/London',
+  storage_quota_mb: props.settings.storage_quota_mb ?? null,
   contact_email: props.settings.contact_email || '',
   phone: props.settings.phone || '',
   address: props.settings.address || '',
@@ -302,6 +317,71 @@ const updateMemberRole = (userId, newRole) => {
     { role: newRole },
     { preserveScroll: true }
   );
+};
+
+// --- Meeting formula builder -------------------------------------------------
+// Same rule picker as "Generate Season Meeting Rules" on the meetings page, but instead of
+// creating meetings it writes the rule back into the Meeting Formula Rule field, e.g.
+// [4th] [Thursday] with Jan–May + Sep–Nov ticked  ->  "4th Thu. 1 To 11 Ex. 6, 7, 8".
+const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const showFormulaBuilder = ref(false);
+const formulaBuilder = ref({ occurrence: '4th', day_of_week: 'Thursday', months: [1, 2, 3, 4, 5, 9, 10, 11] });
+
+// Read an existing rule back into the picker so opening it doesn't discard what's already set.
+const parseFormula = (formula) => {
+  const parsed = { occurrence: '4th', day_of_week: 'Thursday', months: [1, 2, 3, 4, 5, 9, 10, 11] };
+  if (!formula) return parsed;
+
+  const occurrence = formula.match(/^\s*(1st|2nd|3rd|4th|last)/i);
+  if (occurrence) parsed.occurrence = occurrence[1].toLowerCase() === 'last' ? 'last' : occurrence[1];
+
+  const day = DAY_NAMES.find(d => new RegExp(`\\b${d.slice(0, 3)}`, 'i').test(formula));
+  if (day) parsed.day_of_week = day;
+
+  const range = formula.match(/(\d{1,2})\s*to\s*(\d{1,2})/i);
+  if (range) {
+    const from = Number(range[1]);
+    const to = Number(range[2]);
+    const except = (formula.split(/ex\.?/i)[1] || '').match(/\d{1,2}/g)?.map(Number) ?? [];
+    parsed.months = [];
+    for (let m = from; m <= to; m++) {
+      if (!except.includes(m)) parsed.months.push(m);
+    }
+  }
+
+  return parsed;
+};
+
+const openFormulaBuilder = () => {
+  formulaBuilder.value = parseFormula(form.meeting_formula);
+  showFormulaBuilder.value = true;
+};
+
+// Months are expressed as a span with the gaps listed as exceptions, matching how lodges write it.
+const builtFormula = computed(() => {
+  const months = [...formulaBuilder.value.months].sort((a, b) => a - b);
+  const dayShort = formulaBuilder.value.day_of_week.slice(0, 3) + '.';
+  const occurrence = formulaBuilder.value.occurrence === 'last' ? 'Last' : formulaBuilder.value.occurrence;
+
+  if (!months.length) return `${occurrence} ${dayShort}`;
+
+  const from = months[0];
+  const to = months[months.length - 1];
+  const except = [];
+  for (let m = from; m <= to; m++) {
+    if (!months.includes(m)) except.push(m);
+  }
+
+  const span = from === to ? `${from}` : `${from} To ${to}`;
+
+  return except.length ? `${occurrence} ${dayShort} ${span} Ex. ${except.join(', ')}` : `${occurrence} ${dayShort} ${span}`;
+});
+
+const applyFormulaBuilder = () => {
+  form.meeting_formula = builtFormula.value;
+  showFormulaBuilder.value = false;
 };
 
 const newRankInput = ref('');
@@ -544,7 +624,6 @@ const moveOfficerDown = (index) => {
               </optgroup>
               <optgroup label="Module Policies">
                 <option value="bookings">🚣 Pitch & Equipment Bookings</option>
-                <option value="performance">📊 Athletic & Erg Logs</option>
               </optgroup>
             </select>
           </div>
@@ -697,16 +776,6 @@ const moveOfficerDown = (index) => {
                 >
                   <span class="flex items-center gap-2.5"><span>🚣</span> Equipment Bookings</span>
                 </button>
-
-                <button
-                  @click="activeTab = 'performance'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'performance' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>📊</span> Performance Logs</span>
-                </button>
               </div>
             </div>
 
@@ -834,8 +903,18 @@ const moveOfficerDown = (index) => {
               </div>
 
               <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Meeting Formula Rule</label>
-                <input v-model="form.meeting_formula" type="text" placeholder="e.g. 4th Thu. 1 To 11 Ex. 6, 7, 8" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
+                <label for="meeting-formula" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Meeting Formula Rule</label>
+                <div class="flex items-center gap-2">
+                  <input id="meeting-formula" v-model="form.meeting_formula" type="text" placeholder="e.g. 4th Thu. 1 To 11 Ex. 6, 7, 8" class="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
+                  <button
+                    type="button"
+                    @click="openFormulaBuilder"
+                    class="px-3.5 py-2.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer"
+                  >
+                    ⚡ Build rule
+                  </button>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Type it directly, or build it from the same occurrence / weekday / months picker the meetings page uses.</p>
               </div>
             </div>
           </div>
@@ -1164,6 +1243,41 @@ const moveOfficerDown = (index) => {
           </div>
         </div>
 
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">💾 Storage</h2>
+
+          <div v-if="storage.quota_bytes !== null" class="space-y-1.5 text-xs">
+            <div class="flex items-center justify-between font-bold text-slate-600 dark:text-slate-300">
+              <span>{{ storage.used_human }} of {{ storage.quota_human }} used</span>
+              <span>{{ storage.percent }}%</span>
+            </div>
+            <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all"
+                :class="storage.percent >= 90 ? 'bg-rose-500' : storage.percent >= 70 ? 'bg-amber-500' : 'bg-blue-500'"
+                :style="{ width: Math.min(100, storage.percent || 0) + '%' }"
+              ></div>
+            </div>
+          </div>
+          <p v-else class="text-xs font-bold text-slate-600 dark:text-slate-300">{{ storage.used_human }} used · unlimited quota</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-2">Storage Quota (MB)</label>
+              <input
+                v-model.number="form.storage_quota_mb"
+                type="number"
+                min="0"
+                :disabled="!isSuperAdmin"
+                :placeholder="`Platform default (${platformDefaultStorageQuotaMb ?? 'unlimited'} MB)`"
+                class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold disabled:opacity-60"
+              />
+              <p v-if="!isSuperAdmin" class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Only platform admins can change a club's storage quota. Leave a support request if this club needs more room.</p>
+              <p v-else class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Leave blank to use the platform default ({{ platformDefaultStorageQuotaMb ?? 'unlimited' }} MB).</p>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- TAB: PROVINCIAL & OFFICERS ROSTER -->
@@ -1241,7 +1355,7 @@ const moveOfficerDown = (index) => {
               <thead>
                 <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                   <th class="py-3 px-4">Administrative Action</th>
-                  <th v-for="r in availableRoles" :key="r.code" class="py-3 px-3 text-center">
+                  <th v-for="r in visibleRoles" :key="r.code" class="py-3 px-3 text-center">
                     <span :class="['px-2 py-0.5 rounded text-[10px] font-extrabold border', r.badge]">
                       {{ r.name }}
                     </span>
@@ -1249,13 +1363,13 @@ const moveOfficerDown = (index) => {
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                <tr v-for="(perm, permKey) in form.permission_matrix" :key="permKey" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50">
+                <tr v-for="(perm, permKey) in form.permission_matrix" :key="permKey" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                   <td class="py-3.5 px-4">
                     <div class="font-bold text-slate-900 dark:text-white">{{ perm.label }}</div>
                     <div class="text-[11px] text-slate-400">{{ perm.description }}</div>
                   </td>
 
-                  <td v-for="r in availableRoles" :key="r.code" class="py-3.5 px-3 text-center">
+                  <td v-for="r in visibleRoles" :key="r.code" class="py-3.5 px-3 text-center">
                     <input
                       type="checkbox"
                       :checked="perm.roles && perm.roles.includes(r.code)"
@@ -1272,9 +1386,17 @@ const moveOfficerDown = (index) => {
 
         <!-- Role Directory & Quick Assignment -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">👥 Member Administrative Role Directory</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Assign or change role privileges for members in this club roster.</p>
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900 dark:text-white">👥 Member Administrative Role Directory</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Assign or change each member's admin permission level (e.g. who can edit the website or manage billing).</p>
+            </div>
+            <a
+              :href="route('admin.officers.index', { clubSlug: club.slug })"
+              class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
+            >
+              Manage lodge offices →
+            </a>
           </div>
 
           <div class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1285,28 +1407,25 @@ const moveOfficerDown = (index) => {
               </div>
 
               <div class="flex items-center gap-2">
-                <select
-                  v-if="form.enable_member_ranks"
-                  :value="m.rank"
-                  @change="updateMemberRank(m.id, $event.target.value)"
-                  class="px-3 py-1.5 font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs cursor-pointer outline-none focus:ring-2 focus:ring-blue-500"
+                <!-- Office is read-only here: it's owned by the annual officer roster, not this page. -->
+                <span
+                  v-if="m.current_office_label"
+                  :class="['px-2.5 py-1 rounded-xl border text-[11px]', m.current_office_badge_class]"
+                  :title="`${m.current_office_label} — set from the officer roster, not editable here`"
                 >
-                  <option value="">No Rank Assigned</option>
-                  <option v-for="r in form.member_ranks" :key="r" :value="r">
-                    🏅 {{ r }}
-                  </option>
-                </select>
+                  {{ m.current_office_label }}
+                </span>
 
                 <select
                   :value="m.role"
                   @change="updateMemberRole(m.id, $event.target.value)"
                   class="px-3 py-1.5 font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-xs cursor-pointer outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="member">Member</option>
-                  <option value="coach">Coach</option>
+                  <option value="member">Media Manager</option>
+                  <option value="coach">Secretary</option>
                   <option value="treasurer">Treasurer</option>
                   <option value="admin">Admin</option>
-                  <option value="owner">Owner</option>
+                  <option v-if="isSuperAdmin || m.role === 'owner'" value="owner">Owner</option>
                 </select>
               </div>
             </div>
@@ -1796,42 +1915,6 @@ const moveOfficerDown = (index) => {
         </div>
       </div>
 
-      <!-- TAB 10: PERFORMANCE LOGS -->
-      <div v-if="activeTab === 'performance'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">📊 Athletic Performance & Erg Scores</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Configure leaderboard visibility and score verification standards.</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Leaderboard Visibility</label>
-              <select v-model="form.leaderboard_visibility" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                <option value="public">🌐 Public to All Roster Members</option>
-                <option value="private">🔒 Private (Individual Members Only)</option>
-                <option value="coaches_only">🧢 Coaches & Admins Only</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default Distance Metric</label>
-              <input v-model="form.default_distance_unit" type="text" placeholder="meters" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-            </div>
-          </div>
-
-          <div class="pt-2 text-xs">
-            <label class="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" v-model="form.require_score_verification" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-              <div>
-                <div class="font-bold text-slate-900 dark:text-white">Require Coach Score Verification</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">Require a coach or admin to verify erg score submissions before they appear on official rankings.</div>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
-
       <!-- TAB 11: FEATURE MODULES -->
       <div v-if="activeTab === 'modules'" class="space-y-6">
         <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
@@ -2015,6 +2098,67 @@ const moveOfficerDown = (index) => {
       @close="showMediaModal = false"
       @select="(item) => { form.logo_url = item.url; showMediaModal = false; }"
     />
+
+    <!-- Meeting Formula Rule Builder -->
+    <div v-if="showFormulaBuilder" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="formula-builder-title"
+        v-focus-trap="() => { showFormulaBuilder = false; }"
+        class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h3 id="formula-builder-title" class="text-lg font-bold text-slate-900 dark:text-white">Generate Meeting Formula Rule</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Pick the occurrence, weekday and the months the lodge meets.</p>
+          </div>
+          <button type="button" @click="showFormulaBuilder = false" aria-label="Close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold cursor-pointer">✕</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-xs">
+          <div>
+            <label for="formula-occurrence" class="block font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Occurrence</label>
+            <select id="formula-occurrence" v-model="formulaBuilder.occurrence" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs">
+              <option value="1st">1st</option>
+              <option value="2nd">2nd</option>
+              <option value="3rd">3rd</option>
+              <option value="4th">4th</option>
+              <option value="last">Last</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="formula-day" class="block font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Day of Week</label>
+            <select id="formula-day" v-model="formulaBuilder.day_of_week" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs">
+              <option v-for="d in DAY_NAMES" :key="d" :value="d">{{ d }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="text-xs">
+          <span class="block font-semibold text-slate-600 dark:text-slate-300 uppercase mb-2">Meeting Months (Recess Unticked)</span>
+          <div class="grid grid-cols-4 gap-2">
+            <label v-for="(mName, idx) in MONTH_NAMES" :key="idx" class="flex items-center gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer">
+              <input type="checkbox" :value="idx + 1" v-model="formulaBuilder.months" class="rounded text-blue-600 dark:text-blue-400" />
+              <span>{{ mName }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
+          <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Resulting rule</span>
+          <span class="font-mono font-bold text-sm text-slate-900 dark:text-white">{{ builtFormula }}</span>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" @click="showFormulaBuilder = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl cursor-pointer">Cancel</button>
+          <button type="button" @click="applyFormulaBuilder" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer">
+            Use this rule
+          </button>
+        </div>
+      </div>
+    </div>
 
   </AdminLayout>
 </template>

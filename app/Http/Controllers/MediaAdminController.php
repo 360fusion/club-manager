@@ -5,14 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
 use App\Models\Invoice;
+use App\Models\Media;
+use App\Models\MediaVersion;
 use App\Models\Post;
+use App\Support\ClubAccess;
 use App\Support\ImageDownscaler;
+use App\Support\MediaFolders;
 use App\Support\UploadRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class MediaAdminController extends Controller
 {
@@ -41,10 +50,20 @@ class MediaAdminController extends Controller
         $date = $request->query('date', 'all');
         $sort = $request->query('sort', 'newest');
 
-        $trashCount = $club->media()->onlyTrashed()->count();
+        $canViewAccounting = ClubAccess::can(auth()->user(), $club, 'manage_billing');
+
+        if ($folder === 'accounting' && ! $canViewAccounting) {
+            abort(403, 'Your role does not have access to the Accounting area.');
+        }
+
+        $trashCount = $club->media()->onlyTrashed()
+            ->when(! $canViewAccounting, fn ($q) => $q->where('collection_name', '!=', 'accounting'))
+            ->count();
 
         // Fetch all non-trashed club media once to build metadata filters (available extensions & dates)
-        $allClubMedia = $club->media()->get();
+        $allClubMedia = $club->media()
+            ->when(! $canViewAccounting, fn ($q) => $q->where('collection_name', '!=', 'accounting'))
+            ->get();
 
         $availableExtensions = $allClubMedia
             ->map(fn ($m) => strtolower(pathinfo($m->file_name, PATHINFO_EXTENSION)))
@@ -73,6 +92,10 @@ class MediaAdminController extends Controller
             if ($folder && $folder !== 'all') {
                 $query->where('collection_name', $folder);
             }
+        }
+
+        if (! $canViewAccounting) {
+            $query->where('collection_name', '!=', 'accounting');
         }
 
         if ($search) {
@@ -123,7 +146,7 @@ class MediaAdminController extends Controller
                 break;
         }
 
-        $mediaItems = $query->get()->map(function ($media) {
+        $mediaItems = $query->withCount('versions')->get()->map(function ($media) {
             return $this->transformMedia($media);
         });
 
@@ -132,7 +155,116 @@ class MediaAdminController extends Controller
             'trash_count' => $trashCount,
             'available_extensions' => $availableExtensions,
             'available_months' => $availableMonths,
+            'storage' => $club->storageSummary(),
+            'custom_folders' => $club->mediaFolders()->orderBy('name')->get(['id', 'name', 'slug', 'parent_slug']),
         ]);
+    }
+
+    /**
+     * Create a club-defined folder. Its slug becomes the media collection_name once
+     * files are uploaded into it, so every existing folder/listing code works unchanged.
+     */
+    public function storeFolder(string $clubSlug, Request $request): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $request->validate([
+            'name' => 'required|string|max:60',
+            'parent' => ['required', 'string', Rule::in(MediaFolders::NESTABLE)],
+        ]);
+
+        $name = trim($request->input('name'));
+        $slug = Str::slug($name);
+        $parent = $request->input('parent');
+
+        if ($slug === '') {
+            return response()->json([
+                'message' => 'Please use a folder name with at least one letter or number.',
+                'errors' => ['name' => ['Please use a folder name with at least one letter or number.']],
+            ], 422);
+        }
+
+        if (in_array($slug, MediaFolders::RESERVED_WORDS, true)) {
+            return response()->json([
+                'message' => "\"{$name}\" is a reserved folder name.",
+                'errors' => ['name' => ['This name is reserved.']],
+            ], 422);
+        }
+
+        if ($club->mediaFolders()->where('slug', $slug)->exists()) {
+            return response()->json([
+                'message' => 'A folder with this name already exists.',
+                'errors' => ['name' => ['A folder with this name already exists.']],
+            ], 422);
+        }
+
+        $folder = $club->mediaFolders()->create([
+            'name' => $name,
+            'slug' => $slug,
+            'parent_slug' => $parent,
+            'created_by' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'folder' => $folder->only(['id', 'name', 'slug', 'parent_slug']),
+        ]);
+    }
+
+    /**
+     * Rename a club-defined folder. The slug (and therefore existing files'
+     * collection_name) never changes, so nothing needs to be rewritten.
+     */
+    public function updateFolder(string $clubSlug, int $folderId, Request $request): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $folder = $club->mediaFolders()->findOrFail($folderId);
+
+        $request->validate([
+            'name' => 'required|string|max:60',
+        ]);
+
+        $folder->name = trim($request->input('name'));
+        $folder->save();
+
+        return response()->json([
+            'success' => true,
+            'folder' => $folder->only(['id', 'name', 'slug', 'parent_slug']),
+        ]);
+    }
+
+    /**
+     * Delete a club-defined folder. Refuses if any file (including trashed) still
+     * lives in it, so a folder can never be deleted out from under its contents.
+     */
+    public function destroyFolder(string $clubSlug, int $folderId): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $folder = $club->mediaFolders()->findOrFail($folderId);
+
+        $hasFiles = $club->media()->withTrashed()->where('collection_name', $folder->slug)->exists();
+        if ($hasFiles) {
+            return response()->json([
+                'success' => false,
+                'message' => "\"{$folder->name}\" still has files in it. Move or delete them first.",
+            ], 422);
+        }
+
+        $folder->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Folder \"{$folder->name}\" deleted.",
+        ]);
+    }
+
+    /**
+     * The set of folder identifiers a file may be uploaded/moved into: the fixed
+     * system folders plus this club's own custom folders.
+     */
+    private function folderRule(Club $club): In
+    {
+        return Rule::in([...MediaFolders::SYSTEM, ...$club->mediaFolders()->pluck('slug')->all()]);
     }
 
     /**
@@ -144,17 +276,11 @@ class MediaAdminController extends Controller
 
         $folder = $request->input('folder', 'images');
 
-        // Master allowed extensions & MIME types
-        $imageExtensions = UploadRules::IMAGE_TYPES;
-        $docExtensions = 'pdf,doc,docx,xls,xlsx,csv,ppt,pptx,txt,rtf,zip';
-        $allAllowedExtensions = "{$imageExtensions},{$docExtensions}";
-
         // Enforce folder-specific rules: Image-only folders vs General folders
-        $imageOnlyFolders = ['logos', 'images', 'galleries'];
-        $allowedRule = in_array($folder, $imageOnlyFolders) ? $imageExtensions : $allAllowedExtensions;
+        $allowedRule = in_array($folder, MediaFolders::IMAGE_ONLY, true) ? UploadRules::IMAGE_TYPES : UploadRules::IMAGE_TYPES.','.UploadRules::DOCUMENT_TYPES;
 
         $request->validate([
-            'folder' => 'required|string|in:logos,news,events,updates,newsletters,pages,images,galleries,documents,accounting,summons',
+            'folder' => ['required', 'string', $this->folderRule($club)],
             'file' => [
                 'required',
                 'file',
@@ -170,36 +296,23 @@ class MediaAdminController extends Controller
             ],
         ], [
             'file.max' => 'The uploaded file exceeds the 10MB size limit.',
-            'file.mimes' => in_array($folder, $imageOnlyFolders)
+            'file.mimes' => in_array($folder, MediaFolders::IMAGE_ONLY, true)
                 ? 'Invalid file format for this folder. Only image files (JPG, PNG, GIF, WEBP) are allowed.'
                 : 'Invalid file format. Allowed file types: JPG, PNG, GIF, WEBP, PDF, DOC, DOCX, XLS, XLSX, CSV, PPT, PPTX, TXT, RTF, ZIP.',
         ]);
 
         $uploadedFile = $request->file('file');
         $originalName = $uploadedFile->getClientOriginalName();
-        $extension = strtolower($uploadedFile->getClientOriginalExtension());
 
-        // Security Check 1: Block executable / script extensions anywhere in the filename (e.g. avatar.php.png)
-        $dangerousExtensions = ['php', 'phar', 'phtml', 'php3', 'php4', 'php5', 'py', 'pl', 'cgi', 'exe', 'sh', 'bat', 'cmd', 'js', 'html', 'htm', 'vbs', 'jar', 'htaccess'];
-        $filenameSegments = explode('.', strtolower($originalName));
-        foreach ($filenameSegments as $segment) {
-            if (in_array($segment, $dangerousExtensions)) {
-                return response()->json([
-                    'message' => 'Security check failed: Executable or script files are strictly prohibited.',
-                    'errors' => ['file' => ['File contains forbidden file extensions.']],
-                ], 422);
-            }
+        if ($error = UploadRules::assertSafeUpload($uploadedFile)) {
+            return response()->json([
+                'message' => 'Security check failed: '.$error,
+                'errors' => ['file' => [$error]],
+            ], 422);
         }
 
-        // Security Check 2: SVG XSS Content Inspection
-        if ($extension === 'svg') {
-            $svgContent = file_get_contents($uploadedFile->getRealPath());
-            if (preg_match('/<script|javascript:|onload=|onerror=|onclick=/i', $svgContent)) {
-                return response()->json([
-                    'message' => 'Security check failed: Malicious inline scripts detected inside SVG file.',
-                    'errors' => ['file' => ['SVG contains forbidden script execution tags.']],
-                ], 422);
-            }
+        if ($quotaError = $this->assertQuotaAvailable($club, $uploadedFile->getSize())) {
+            return $quotaError;
         }
 
         // Clean filename (strip invalid characters)
@@ -231,6 +344,13 @@ class MediaAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $media = $club->media()->findOrFail($id);
 
+        if ($this->isAccountingProtected($media)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Protected Audit Document: '{$media->file_name}' is attached to an Accounting bill or invoice. It cannot be edited from the file manager; manage or delete it directly from the Accounting page.",
+            ], 422);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'alt_text' => 'nullable|string|max:255',
@@ -252,20 +372,36 @@ class MediaAdminController extends Controller
     /**
      * Crop an image media asset. Supports dual save modes:
      * - 'variant': Creates a separate new copy/variant asset, leaving original untouched.
-     * - 'replace': Overwrites current asset while backing up the uncropped master original file for 1-click reverting.
+     * - 'replace': Overwrites the current asset in place, keeping its id, with the prior
+     *   image saved to version history.
      */
     public function crop(string $clubSlug, int $id, Request $request): JsonResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $media = $club->media()->findOrFail($id);
 
+        if ($this->isAccountingProtected($media)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Protected Audit Document: '{$media->file_name}' is attached to an Accounting bill or invoice. It cannot be edited from the file manager; manage or delete it directly from the Accounting page.",
+            ], 422);
+        }
+
         $request->validate([
             'file' => UploadRules::image(10240, required: true),
             'save_mode' => 'nullable|string|in:replace,variant',
         ]);
 
+        $file = $request->file('file');
         $saveMode = $request->input('save_mode', 'replace');
         $collection = $media->collection_name;
+
+        if ($quotaError = $this->assertQuotaAvailable($club, $file->getSize())) {
+            return $quotaError;
+        }
+
+        // Downscale large camera photos > 1920px max dimension before storing, same as store()/replaceFile().
+        ImageDownscaler::apply($file);
 
         if ($saveMode === 'variant') {
             $variantName = $media->name.' (Cropped)';
@@ -286,90 +422,161 @@ class MediaAdminController extends Controller
             ]);
         }
 
-        // Mode: replace active asset while storing original master backup
-        $originalFilePath = $media->getPath();
-        $backupDir = storage_path("app/media-originals/{$club->id}");
-
-        if (! file_exists($backupDir)) {
-            mkdir($backupDir, 0755, true);
-        }
-
-        $hasBackup = $media->getCustomProperty('has_original_backup', false);
-        $masterBackupPath = $media->getCustomProperty('original_master_path', null);
-
-        if (! $hasBackup || ! $masterBackupPath || ! file_exists($masterBackupPath)) {
-            $ext = pathinfo($media->file_name, PATHINFO_EXTENSION) ?: 'png';
-            $masterBackupPath = "{$backupDir}/{$media->id}_master.{$ext}";
-            if (file_exists($originalFilePath)) {
-                copy($originalFilePath, $masterBackupPath);
-            }
-        }
-
-        $name = $media->name;
-        $altText = $media->getCustomProperty('alt_text', '');
-        $caption = $media->getCustomProperty('caption', '');
-
-        $media->delete();
-
-        $newMedia = $club->addMediaFromRequest('file')
-            ->usingName($name)
-            ->toMediaCollection($collection);
-
-        $newMedia->setCustomProperty('alt_text', $altText);
-        $newMedia->setCustomProperty('caption', $caption);
-        $newMedia->setCustomProperty('has_original_backup', true);
-        $newMedia->setCustomProperty('original_master_path', $masterBackupPath);
-        $newMedia->setCustomProperty('is_cropped', true);
-        $newMedia->setCustomProperty('cropped_at', now()->toIso8601String());
-        $newMedia->save();
+        $updatedMedia = $this->replaceMediaFile($media, $file, 'Cropped', auth()->id());
 
         return response()->json([
             'success' => true,
-            'message' => 'Image updated successfully. Original master backup preserved.',
-            'media' => $this->transformMedia($newMedia),
+            'message' => 'Image updated successfully. Previous version saved to history.',
+            'media' => $this->transformMedia($updatedMedia),
         ]);
     }
 
     /**
-     * Revert a cropped media asset back to its original master image.
+     * Upload a replacement file for an existing media item, of any type — the current
+     * content is saved to version history before being overwritten in place.
      */
-    public function revert(string $clubSlug, int $id): JsonResponse
+    public function replaceFile(string $clubSlug, int $id, Request $request): JsonResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $media = $club->media()->findOrFail($id);
 
-        $masterBackupPath = $media->getCustomProperty('original_master_path');
-
-        if (! $masterBackupPath || ! file_exists($masterBackupPath)) {
+        if ($this->isAccountingProtected($media)) {
             return response()->json([
                 'success' => false,
-                'message' => 'No original master backup found for this image.',
+                'message' => "Protected Audit Document: '{$media->file_name}' is attached to an Accounting bill or invoice. It cannot be replaced from the file manager; manage or delete it directly from the Accounting page.",
             ], 422);
         }
 
-        $collection = $media->collection_name;
-        $name = $media->name;
-        $altText = $media->getCustomProperty('alt_text', '');
-        $caption = $media->getCustomProperty('caption', '');
+        $allowedRule = in_array($media->collection_name, MediaFolders::IMAGE_ONLY, true) ? UploadRules::IMAGE_TYPES : UploadRules::IMAGE_TYPES.','.UploadRules::DOCUMENT_TYPES;
 
-        $media->delete();
+        $request->validate([
+            'file' => [
+                'required',
+                'file',
+                'max:10240',
+                "mimes:{$allowedRule}",
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $size = $value instanceof UploadedFile && str_starts_with((string) $value->getMimeType(), 'image/') ? @getimagesize($value->getRealPath()) : null;
 
-        $restoredMedia = $club->addMedia($masterBackupPath)
-            ->preservingOriginal()
-            ->usingName($name)
-            ->toMediaCollection($collection);
+                    if ($size && max($size[0], $size[1]) > UploadRules::MAX_IMAGE_SIDE) {
+                        $fail('Images may be at most '.UploadRules::MAX_IMAGE_SIDE.' pixels wide or tall.');
+                    }
+                },
+            ],
+        ], [
+            'file.max' => 'The uploaded file exceeds the 10MB size limit.',
+        ]);
 
-        $restoredMedia->setCustomProperty('alt_text', $altText);
-        $restoredMedia->setCustomProperty('caption', $caption);
-        $restoredMedia->setCustomProperty('has_original_backup', true);
-        $restoredMedia->setCustomProperty('original_master_path', $masterBackupPath);
-        $restoredMedia->setCustomProperty('is_cropped', false);
-        $restoredMedia->save();
+        $file = $request->file('file');
+
+        if ($error = UploadRules::assertSafeUpload($file)) {
+            return response()->json([
+                'message' => 'Security check failed: '.$error,
+                'errors' => ['file' => [$error]],
+            ], 422);
+        }
+
+        if ($quotaError = $this->assertQuotaAvailable($club, $file->getSize())) {
+            return $quotaError;
+        }
+
+        if (str_starts_with((string) $file->getMimeType(), 'image/')) {
+            ImageDownscaler::apply($file);
+        }
+
+        $updatedMedia = $this->replaceMediaFile($media, $file, 'Replaced file', auth()->id());
 
         return response()->json([
             'success' => true,
-            'message' => 'Image reverted to original master version successfully.',
-            'media' => $this->transformMedia($restoredMedia),
+            'message' => 'File replaced. Previous version saved to history.',
+            'media' => $this->transformMedia($updatedMedia),
+        ]);
+    }
+
+    /**
+     * List the stored version history of a media item, newest first.
+     */
+    public function versions(string $clubSlug, int $id): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $media = $club->media()->withTrashed()->findOrFail($id);
+
+        if ($this->isAccountingProtected($media)) {
+            return response()->json([
+                'message' => "Protected Audit Document: '{$media->file_name}' is managed from the Accounting page.",
+            ], 403);
+        }
+
+        $versions = $media->versions()->with('uploader:id,name')->get()->map(fn (MediaVersion $version) => $this->transformVersion($media, $version));
+
+        return response()->json([
+            'versions' => $versions,
+        ]);
+    }
+
+    /**
+     * Restore a media item's content to a previous version. The current content is
+     * itself saved to history first, so a restore can always be undone. Because the
+     * current content is kept rather than discarded, a restore always adds the
+     * restored version's size to the club's storage usage — it is never "free".
+     */
+    public function restoreVersion(string $clubSlug, int $id, int $versionId): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $media = $club->media()->findOrFail($id);
+        $version = $media->versions()->findOrFail($versionId);
+
+        if ($this->isAccountingProtected($media)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Protected Audit Document: '{$media->file_name}' is attached to an Accounting bill or invoice. It cannot be edited from the file manager; manage or delete it directly from the Accounting page.",
+            ], 422);
+        }
+
+        if ($quotaError = $this->assertQuotaAvailable($club, $version->size)) {
+            return $quotaError;
+        }
+
+        $this->snapshotVersion($media, 'Before restoring version from '.$version->created_at->format('M d, Y H:i'), auth()->id());
+
+        $liveDisk = Storage::disk($media->disk);
+        $directory = dirname($media->getPathRelativeToRoot());
+        $liveDisk->deleteDirectory($directory);
+        $liveDisk->makeDirectory($directory);
+        $liveDisk->put($directory.'/'.$version->file_name, Storage::disk($version->disk)->get($version->path));
+
+        $media->file_name = $version->file_name;
+        $media->mime_type = $version->mime_type;
+        $media->size = $version->size;
+        $media->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'File restored to the selected version.',
+            'media' => $this->transformMedia($media->fresh()),
+        ]);
+    }
+
+    /**
+     * Stream a historical version's file to a signed-in club admin.
+     */
+    public function downloadVersion(string $clubSlug, int $id, int $versionId): BinaryFileResponse|JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $media = $club->media()->withTrashed()->findOrFail($id);
+
+        if ($this->isAccountingProtected($media)) {
+            return response()->json([
+                'message' => "Protected Audit Document: '{$media->file_name}' is managed from the Accounting page.",
+            ], 403);
+        }
+
+        $version = $media->versions()->findOrFail($versionId);
+
+        return response()->file(Storage::disk($version->disk)->path($version->path), [
+            'Content-Type' => $version->mime_type,
+            'Content-Disposition' => 'inline; filename="'.addslashes($version->file_name).'"',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 
@@ -426,24 +633,35 @@ class MediaAdminController extends Controller
         $request->validate([
             'ids' => 'required|array|max:500',
             'ids.*' => 'integer',
-            'folder' => 'required|string|in:logos,news,events,updates,newsletters,pages,images,galleries,documents,accounting,summons',
+            'folder' => ['required', 'string', $this->folderRule($club)],
         ]);
 
         $targetFolder = $request->input('folder');
         $count = 0;
+        $skippedProtected = 0;
 
         foreach ($request->input('ids') as $mediaId) {
             $media = $club->media()->find($mediaId);
             if ($media) {
+                if ($this->isAccountingProtected($media)) {
+                    $skippedProtected++;
+
+                    continue;
+                }
                 $media->collection_name = $targetFolder;
                 $media->save();
                 $count++;
             }
         }
 
+        $message = "Successfully moved {$count} ".($count === 1 ? 'file' : 'files')." to '{$targetFolder}'.";
+        if ($skippedProtected > 0) {
+            $message .= " ({$skippedProtected} accounting-protected ".($skippedProtected === 1 ? 'file was' : 'files were').' skipped).';
+        }
+
         return response()->json([
-            'success' => true,
-            'message' => "Successfully moved {$count} ".($count === 1 ? 'file' : 'files')." to '{$targetFolder}'.",
+            'success' => $count > 0 || $skippedProtected === 0,
+            'message' => $message,
         ]);
     }
 
@@ -454,6 +672,10 @@ class MediaAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $media = $club->media()->withTrashed()->findOrFail($id);
+
+        if ($this->isAccountingProtected($media) && ! ClubAccess::can(auth()->user(), $club, 'manage_billing')) {
+            abort(403, 'Your role does not have access to the Accounting area.');
+        }
 
         $url = $media->getFullUrl();
         $filename = $media->file_name;
@@ -692,13 +914,12 @@ class MediaAdminController extends Controller
             'file_name' => $media->file_name,
             'mime_type' => $media->mime_type,
             'size' => $media->size,
-            'human_size' => $this->formatBytes($media->size),
+            'human_size' => Club::formatStorageBytes($media->size),
             'collection_name' => $media->collection_name,
             'original_url' => $media->disk === 'public' ? $media->getFullUrl() : $this->privateUrl($media),
             'alt_text' => $media->getCustomProperty('alt_text', ''),
             'caption' => $media->getCustomProperty('caption', ''),
-            'has_original_backup' => (bool) ($media->getCustomProperty('has_original_backup', false) && file_exists($media->getCustomProperty('original_master_path', ''))),
-            'is_cropped' => (bool) $media->getCustomProperty('is_cropped', false),
+            'version_count' => $media->versions_count ?? $media->versions()->count(),
             'is_variant' => (bool) $media->getCustomProperty('is_variant', false),
             'parent_media_id' => $media->getCustomProperty('parent_media_id', null),
             'is_trashed' => $media->trashed(),
@@ -710,12 +931,96 @@ class MediaAdminController extends Controller
         ];
     }
 
-    private function formatBytes(int $bytes): string
+    private function transformVersion(Media $media, MediaVersion $version): array
     {
-        if ($bytes >= 1048576) {
-            return round($bytes / 1048576, 1).' MB';
+        return [
+            'id' => $version->id,
+            'file_name' => $version->file_name,
+            'mime_type' => $version->mime_type,
+            'human_size' => Club::formatStorageBytes($version->size),
+            'note' => $version->note,
+            'uploaded_by' => $version->uploader?->name,
+            'created_at' => $version->created_at->format('M d, Y H:i'),
+            'download_url' => route('admin.media.versions.download', [
+                'clubSlug' => Club::whereKey($media->model_id)->value('slug'),
+                'id' => $media->id,
+                'versionId' => $version->id,
+            ]),
+        ];
+    }
+
+    /**
+     * Copy a media item's current file content into version history before it is overwritten.
+     */
+    private function snapshotVersion(Media $media, ?string $note, ?int $userId): MediaVersion
+    {
+        $versionDisk = Storage::disk('local');
+        $versionDir = "media-versions/{$media->model_id}/{$media->id}";
+        $versionDisk->makeDirectory($versionDir);
+
+        $extension = pathinfo($media->file_name, PATHINFO_EXTENSION);
+        $versionFileName = now()->format('YmdHis').'_'.Str::random(8).($extension ? ".{$extension}" : '');
+        $versionPath = "{$versionDir}/{$versionFileName}";
+
+        $versionDisk->put($versionPath, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+
+        return MediaVersion::create([
+            'media_id' => $media->id,
+            'club_id' => $media->model_id,
+            'disk' => 'local',
+            'path' => $versionPath,
+            'file_name' => $media->file_name,
+            'mime_type' => $media->mime_type,
+            'size' => $media->size,
+            'note' => $note,
+            'created_by' => $userId,
+        ]);
+    }
+
+    /**
+     * Overwrite a media item's file content in place, keeping its id, after saving
+     * the current content to version history.
+     */
+    private function replaceMediaFile(Media $media, UploadedFile $file, string $note, ?int $userId): Media
+    {
+        $this->snapshotVersion($media, $note, $userId);
+
+        $safeName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $file->getClientOriginalName());
+        $liveDisk = Storage::disk($media->disk);
+        $directory = dirname($media->getPathRelativeToRoot());
+
+        $liveDisk->deleteDirectory($directory);
+        $liveDisk->makeDirectory($directory);
+        $liveDisk->putFileAs($directory, $file, $safeName);
+
+        $media->file_name = $safeName;
+        $media->mime_type = $file->getMimeType();
+        $media->size = $file->getSize();
+        $media->save();
+
+        return $media->fresh();
+    }
+
+    /**
+     * Returns a 422 JSON response if storing `$incomingBytes` more would exceed the
+     * club's storage quota, or null if there's room.
+     */
+    private function assertQuotaAvailable(Club $club, int $incomingBytes): ?JsonResponse
+    {
+        $quota = $club->storageQuotaBytes();
+        if ($quota === null) {
+            return null;
         }
 
-        return round($bytes / 1024, 1).' KB';
+        $used = $club->storageUsedBytes();
+        if ($used + $incomingBytes > $quota) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Storage quota exceeded. This club has used '.Club::formatStorageBytes($used).' of '.Club::formatStorageBytes($quota).' available.',
+                'storage' => $club->storageSummary(),
+            ], 422);
+        }
+
+        return null;
     }
 }

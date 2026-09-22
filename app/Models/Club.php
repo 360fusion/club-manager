@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Support\Currencies;
 use App\Support\OrderColours;
 use App\Support\ReservedClubSlugs;
+use App\Support\SiteThemes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -102,6 +103,20 @@ class Club extends Model implements HasMedia
         static::created(function (Club $club) {
             $club->ensureDefaultPages();
         });
+
+        // A summons stores the club name as it was when the meeting was created, so a lodge that
+        // renames itself would keep printing the old name on every existing summons. Anything that
+        // still matches the previous name was an automatic snapshot, not a deliberate override for
+        // that one meeting, so it follows the rename; a hand-edited cover name is left alone.
+        static::updated(function (Club $club) {
+            $previousName = $club->getOriginal('name');
+
+            if ($club->wasChanged('name') && $previousName) {
+                Meeting::where('club_id', $club->id)
+                    ->where('cover_club_name', $previousName)
+                    ->update(['cover_club_name' => $club->name]);
+            }
+        });
     }
 
     /**
@@ -113,7 +128,7 @@ class Club extends Model implements HasMedia
         $settingsUpdated = false;
 
         if (empty($settings['website_theme'])) {
-            $settings['website_theme'] = 'classic';
+            $settings['website_theme'] = SiteThemes::DEFAULT;
             $settingsUpdated = true;
         }
 
@@ -129,6 +144,18 @@ class Club extends Model implements HasMedia
 
         if (empty($settings['footer_copyright'])) {
             $settings['footer_copyright'] = '© '.date('Y').' '.$this->name.'. All rights reserved.';
+            $settingsUpdated = true;
+        }
+
+        if (! array_key_exists('header_layout', $settings)) {
+            $settings['header_layout'] = 'logo_left';
+            $settings['header_show_logo'] = true;
+            $settings['header_show_tagline'] = true;
+            $settings['header_cta_enabled'] = false;
+            $settings['header_show_account_links'] = true;
+            $settings['footer_layout'] = 'simple';
+            $settings['footer_show_social'] = true;
+            $settings['footer_show_nav'] = false;
             $settingsUpdated = true;
         }
 
@@ -399,6 +426,14 @@ class Club extends Model implements HasMedia
     }
 
     /**
+     * @return HasMany<MediaFolder, $this>
+     */
+    public function mediaFolders(): HasMany
+    {
+        return $this->hasMany(MediaFolder::class);
+    }
+
+    /**
      * Check if a module feature is enabled for this club.
      */
     public function hasModule(string $moduleCode): bool
@@ -421,6 +456,58 @@ class Club extends Model implements HasMedia
         $setting = $this->settings['max_guests_per_member'] ?? null;
 
         return is_numeric($setting) ? max(0, (int) $setting) : 10;
+    }
+
+    /**
+     * How many bytes of media this club may store: its own setting, else the
+     * platform default. Null means unlimited.
+     */
+    public function storageQuotaBytes(): ?int
+    {
+        $setting = $this->settings['storage_quota_mb'] ?? null;
+        $quotaMb = is_numeric($setting) ? (int) $setting : config('club_media.default_storage_quota_mb');
+
+        return is_numeric($quotaMb) ? max(0, (int) $quotaMb) * 1024 * 1024 : null;
+    }
+
+    /**
+     * Bytes currently used by this club's media library, including trashed
+     * files (still on disk until force-deleted) and all stored file versions.
+     */
+    public function storageUsedBytes(): int
+    {
+        $mediaBytes = (int) $this->media()->withTrashed()->sum('size');
+        $versionBytes = (int) MediaVersion::where('club_id', $this->id)->sum('size');
+
+        return $mediaBytes + $versionBytes;
+    }
+
+    /**
+     * Storage usage and quota for this club, human-readable for display.
+     *
+     * @return array{used_bytes: int, quota_bytes: ?int, used_human: string, quota_human: ?string, percent: ?float}
+     */
+    public function storageSummary(): array
+    {
+        $used = $this->storageUsedBytes();
+        $quota = $this->storageQuotaBytes();
+
+        return [
+            'used_bytes' => $used,
+            'quota_bytes' => $quota,
+            'used_human' => self::formatStorageBytes($used),
+            'quota_human' => $quota !== null ? self::formatStorageBytes($quota) : null,
+            'percent' => $quota !== null && $quota > 0 ? min(100, round($used / $quota * 100, 1)) : null,
+        ];
+    }
+
+    public static function formatStorageBytes(int $bytes): string
+    {
+        if ($bytes >= 1048576) {
+            return round($bytes / 1048576, 1).' MB';
+        }
+
+        return round($bytes / 1024, 1).' KB';
     }
 
     /**
@@ -459,5 +546,52 @@ class Club extends Model implements HasMedia
             || DB::table('club_acc_charity_collections')->where('club_id', $this->id)->exists()
             || DB::table('club_acc_charity_grants')->where('club_id', $this->id)->exists()
             || DB::table('club_acc_member_subscriptions')->where('club_id', $this->id)->exists();
+    }
+
+    /**
+     * VAT is opt-in per club and off by default — most small lodges/clubs stay under
+     * the UK VAT registration threshold and should never see VAT mechanics.
+     *
+     * @return array{enabled: bool, scheme: string, vat_number: ?string, flat_rate_percent: ?float, default_rate: float, registered_from: ?string}
+     */
+    public function vatSettings(): array
+    {
+        return array_merge([
+            'enabled' => false,
+            'scheme' => 'not_registered',
+            'vat_number' => null,
+            'flat_rate_percent' => null,
+            'default_rate' => 20.00,
+            'registered_from' => null,
+        ], $this->settings['vat'] ?? []);
+    }
+
+    public function vatIsEnabled(): bool
+    {
+        return (bool) $this->vatSettings()['enabled'];
+    }
+
+    /**
+     * Whether the club has posted any VAT-inclusive bills/invoices, once true a
+     * normal admin may no longer change the VAT scheme or turn VAT off — the same
+     * shape as currencyIsLocked().
+     */
+    public function vatSettingsAreLocked(): bool
+    {
+        return DB::table('invoices')->where('club_id', $this->id)->whereNotNull('vat_amount')->exists()
+            || DB::table('accounting_bills')->where('club_id', $this->id)->whereNotNull('vat_amount')->exists();
+    }
+
+    /**
+     * Whether a given financial year's books have been closed (see
+     * AccountingPeriodClose) — new journal entries dated inside a closed year are
+     * blocked for normal admins, mirroring vatSettingsAreLocked()'s shape.
+     */
+    public function financialYearIsClosed(int $year): bool
+    {
+        return DB::table('accounting_period_closes')
+            ->where('club_id', $this->id)
+            ->where('financial_year', $year)
+            ->exists();
     }
 }

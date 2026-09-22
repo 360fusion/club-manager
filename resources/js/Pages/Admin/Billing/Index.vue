@@ -89,7 +89,7 @@ const saveBusinessAccount = () => {
 
       <!-- Main Business Entity Setup Form Card -->
       <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50/50">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
           <div>
             <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <span>🏛️</span> Organization Legal Business Entity Account
@@ -359,7 +359,7 @@ const saveBusinessAccount = () => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr v-for="inv in billingHistory" :key="inv.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+              <tr v-for="inv in billingHistory" :key="inv.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                 <td class="p-3 font-mono font-bold text-slate-900 dark:text-white">{{ inv.id }}</td>
                 <td class="p-3 font-medium text-slate-600 dark:text-slate-300">{{ inv.date }}</td>
                 <td class="p-3 font-medium text-slate-800 dark:text-slate-100">{{ inv.description }}</td>

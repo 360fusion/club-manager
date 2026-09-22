@@ -7,6 +7,7 @@ use App\Models\Club;
 use App\Models\Page;
 use App\Models\PageRedirect;
 use App\Support\ClubAccess;
+use App\Support\SiteThemes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,9 +64,8 @@ class PublicSiteController extends Controller
             ->orderBy('sort_order')
             ->get(['id', 'title', 'slug', 'is_homepage']);
 
-        $validThemes = ['classic', 'obsidian', 'masonic', 'minimal', 'vibrant', 'light_navy', 'executive_light', 'masonic_light', 'warm_light'];
         $rawPreviewTheme = request('preview_theme');
-        $previewTheme = in_array($rawPreviewTheme, $validThemes) ? $rawPreviewTheme : null;
+        $previewTheme = in_array($rawPreviewTheme, SiteThemes::keys(), true) ? $rawPreviewTheme : null;
 
         return Inertia::render('Public/Site', [
             'previewTheme' => $previewTheme,
@@ -79,11 +79,27 @@ class PublicSiteController extends Controller
                 'contact_email' => $club->settings['contact_email'] ?? $club->email,
                 'meeting_formula' => $club->settings['meeting_formula'] ?? '',
                 'address' => $club->settings['address'] ?? '',
+                'logo_url' => $club->logo_url,
+                'website_theme' => $club->settings['website_theme'] ?? SiteThemes::DEFAULT,
             ],
             'site' => [
                 'meta_description' => $club->settings['seo_meta_description'] ?? null,
                 'title_suffix' => $club->settings['seo_title_suffix'] ?? ('| '.$club->name),
                 'footer_copyright' => $club->settings['footer_copyright'] ?? ('© '.date('Y').' '.$club->name.'. All rights reserved.'),
+                'header_layout' => $club->settings['header_layout'] ?? 'logo_left',
+                'header_show_logo' => $club->settings['header_show_logo'] ?? true,
+                'header_show_tagline' => $club->settings['header_show_tagline'] ?? true,
+                'header_cta_enabled' => $club->settings['header_cta_enabled'] ?? false,
+                'header_cta_text' => $club->settings['header_cta_text'] ?? '',
+                'header_cta_link' => $club->settings['header_cta_link'] ?? '',
+                'header_show_account_links' => $club->settings['header_show_account_links'] ?? true,
+                'footer_layout' => $club->settings['footer_layout'] ?? 'simple',
+                'footer_show_social' => $club->settings['footer_show_social'] ?? true,
+                'footer_show_nav' => $club->settings['footer_show_nav'] ?? false,
+                'social_facebook' => $club->settings['social_facebook'] ?? '',
+                'social_instagram' => $club->settings['social_instagram'] ?? '',
+                'social_twitter' => $club->settings['social_twitter'] ?? '',
+                'footer_link_columns' => $club->settings['footer_link_columns'] ?? [],
             ],
             'page' => [
                 'id' => $page->id,

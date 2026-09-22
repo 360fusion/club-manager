@@ -183,11 +183,12 @@
                             Status
                             @if($sortField === 'membership_status') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
+                        <th class="py-3.5 px-4 text-right"><span class="sr-only">Actions</span></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($members as $m)
-                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/50/70 transition-colors">
+                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors">
                             <!-- Member Name -->
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
@@ -238,6 +239,21 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $m->membership_status->badgeClass() }}">
                                     {{ $m->membership_status->label() }}
                                 </span>
+                            </td>
+
+                            <!-- Edit -->
+                            <td class="py-4 px-4 text-right">
+                                <button
+                                    type="button"
+                                    wire:click="openEditModal({{ $m->id }})"
+                                    title="Edit {{ $m->full_name }}"
+                                    aria-label="Edit {{ $m->full_name }}"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700/60 transition-colors cursor-pointer"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.86 4.49a2.1 2.1 0 1 1 2.97 2.97L8.4 18.9l-3.9.93.93-3.9L16.86 4.49Z" />
+                                    </svg>
+                                </button>
                             </td>
                         </tr>
                     @empty

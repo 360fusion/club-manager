@@ -233,7 +233,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
                     @forelse ($subscriptions as $sub)
-                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                             <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">
                                 <a href="{{ route('admin.club_acc.members.show', ['clubSlug' => $club->slug, 'memberId' => $sub->member->id]) }}" class="hover:underline hover:text-amber-600 dark:hover:text-amber-400">
                                     {{ $sub->member->formatted_rank_name }}

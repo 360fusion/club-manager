@@ -119,7 +119,7 @@ const toggleCheckIn = (attendeeId, isCheckedIn) => {
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            <tr v-for="a in filteredAttendees" :key="a.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50 transition-colors">
+            <tr v-for="a in filteredAttendees" :key="a.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
               <td class="p-3 font-bold text-slate-900 dark:text-white">
                 {{ a.name }}
                 <span v-if="a.is_guest" class="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Guest</span>

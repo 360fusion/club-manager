@@ -45,8 +45,8 @@ class Account extends Model
 
     public function getBalanceAttribute(): float
     {
-        $debits = (float) $this->journalItems()->sum('debit');
-        $credits = (float) $this->journalItems()->sum('credit');
+        $debits = (float) $this->journalItems()->whereHas('journalEntry', fn ($q) => $q->where('status', '!=', 'void'))->sum('debit');
+        $credits = (float) $this->journalItems()->whereHas('journalEntry', fn ($q) => $q->where('status', '!=', 'void'))->sum('credit');
 
         // Assets and Expenses have normal Debit balances
         // Liabilities, Equity, and Revenue have normal Credit balances

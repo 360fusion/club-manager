@@ -143,14 +143,13 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="{{ $lbl }}">Form P signed on</label>
-                        <input type="date" wire:model="form_p_signed_at" class="{{ $field }}" />
-                        @error('form_p_signed_at') <span class="text-rose-600 dark:text-rose-400 text-[11px] font-semibold">{{ $message }}</span> @enderror
-                    </div>
-                    <div>
                         <label class="{{ $lbl }}">Proposed in open lodge on</label>
                         <input type="date" wire:model="proposed_at" class="{{ $field }}" />
                         @error('proposed_at') <span class="text-rose-600 dark:text-rose-400 text-[11px] font-semibold">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="{{ $lbl }}">Registered with Grand Lodge on</label>
+                        <input type="date" wire:model="hermes_clearance_date" class="{{ $field }}" />
                     </div>
                 </div>
 
@@ -159,13 +158,7 @@
                     <span class="text-xs font-bold text-blue-900 dark:text-blue-200">The lodge committee recommends proceeding</span>
                 </label>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <label class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200"><input type="checkbox" wire:model="rule_159_cleared" class="rounded" /> Committee vetting complete</label>
-                    <div>
-                        <label class="{{ $lbl }}">Registered with Grand Lodge on</label>
-                        <input type="date" wire:model="hermes_clearance_date" class="{{ $field }}" />
-                    </div>
-                </div>
+                <label class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200"><input type="checkbox" wire:model="rule_159_cleared" class="rounded" /> Committee vetting complete</label>
 
                 <p class="text-[11px] text-slate-500 dark:text-slate-400">Any declaration on the form is dealt with by the Province and the Grand Secretary before the candidate is proposed. The details are not kept here, so nothing needs ticking for a candidate to move on.</p>
 
@@ -174,6 +167,33 @@
                     <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md text-xs">Save</button>
                 </div>
             </form>
+
+            @php($formPSignatures = $this->formPSignatureRequests())
+            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                <div class="flex items-center justify-between">
+                    <h4 class="font-black text-slate-900 dark:text-white text-xs">✍️ Form P signatures</h4>
+                    @if($form_p_signed_at)
+                        <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">Signed {{ \Carbon\Carbon::parse($form_p_signed_at)->format('j M Y') }}</span>
+                    @elseif($proposer_member_id && $seconder_member_id)
+                        <button type="button" wire:click="requestFormPSignatures" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-[11px]">Request signatures</button>
+                    @else
+                        <span class="text-[11px] text-slate-400">Choose a proposer and seconder first</span>
+                    @endif
+                </div>
+                @foreach(['form_p_proposer' => 'Proposer', 'form_p_seconder' => 'Seconder'] as $purpose => $roleLabel)
+                    @if($req = $formPSignatures[$purpose] ?? null)
+                        <div class="flex items-center justify-between text-[11px] bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2">
+                            <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $roleLabel }} — {{ $req['signer_name'] }}</span>
+                            <span class="flex items-center gap-2">
+                                <span class="font-bold {{ $req['status'] === 'signed' ? 'text-emerald-700 dark:text-emerald-300' : ($req['status'] === 'pending' ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500') }}">{{ $req['label'] }}</span>
+                                @if($req['status'] === 'pending')
+                                    <button type="button" wire:click="resendFormPSignature('{{ $purpose }}')" class="text-blue-600 dark:text-blue-400 font-bold underline">Resend</button>
+                                @endif
+                            </span>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
         </div>
     </div>
 @endif

@@ -17,7 +17,7 @@ class ReservedClubSlugs
         'favicon', 'fonts', 'forgot-password', 'help', 'home', 'images', 'index', 'js', 'livewire',
         'login', 'logout', 'meetings', 'members', 'new', 'news', 'notifications', 'portal', 'pricing',
         'privacy', 'profile', 'register', 'reset-password', 'robots', 'sanctum', 'search', 'security',
-        'settings', 'site', 'storage', 'subscriptions', 'summons', 'superadmin', 'support', 'terms',
+        'settings', 'sign', 'site', 'storage', 'subscriptions', 'summons', 'superadmin', 'support', 'terms',
         'two-factor', 'ui-kit', 'up', 'vendor', 'webhooks',
     ];
 

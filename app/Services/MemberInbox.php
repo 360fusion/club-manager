@@ -3,11 +3,15 @@
 namespace App\Services;
 
 use App\Domains\ClubAccounting\Enums\SubscriptionStatus;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
+use App\Enums\SignatureRequestStatus;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Models\SignatureRequest;
+use App\Models\User;
 use App\Support\Currencies;
 use App\Support\MemberScope;
 use Illuminate\Support\Collection;
@@ -30,7 +34,8 @@ class MemberInbox
             ->concat($this->unpaidDining($scope))
             ->concat($this->outstandingDues($scope))
             ->concat($this->eventDeadlines($scope))
-            ->concat($this->pendingApprovals($scope));
+            ->concat($this->pendingApprovals($scope))
+            ->concat($this->pendingSignatures($scope));
 
         return $items
             ->sortBy([fn (array $a, array $b) => $b['severity'] <=> $a['severity'], fn (array $a, array $b) => strcmp((string) $a['due'], (string) $b['due'])])
@@ -147,6 +152,33 @@ class MemberInbox
             })
             ->filter()
             ->values();
+    }
+
+    /**
+     * A signature request waits on this member whether it names them directly (a User, e.g. an auditor) or via
+     * their roster Member record (e.g. a Form P proposer/seconder who has a login linked to it).
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function pendingSignatures(MemberScope $scope): Collection
+    {
+        $memberIds = Member::whereIn('club_id', $scope->clubIds())->where('user_id', $scope->user->id)->pluck('id');
+
+        $requests = SignatureRequest::where('status', SignatureRequestStatus::Pending)
+            ->whereIn('club_id', $scope->clubIds())
+            ->where(function ($query) use ($scope, $memberIds) {
+                $query->where(fn ($q) => $q->where('signer_type', User::class)->where('signer_id', $scope->user->id))
+                    ->orWhere(fn ($q) => $q->where('signer_type', Member::class)->whereIn('signer_id', $memberIds));
+            })
+            ->with('signable')
+            ->get();
+
+        return $requests->filter(fn (SignatureRequest $request) => $request->signable !== null)
+            ->map(function (SignatureRequest $request) use ($scope) {
+                $club = $scope->clubFor($request->club_id);
+
+                return $this->item('signature', 2, 'Sign: '.$request->signable->signatureLabel($request->purpose), $club, 'Requested '.$request->requested_at->diffForHumans(), $request->expires_at, null, route('member.signatures.show', ['slug' => $club->slug, 'id' => $request->id], false));
+            })->values();
     }
 
     /**

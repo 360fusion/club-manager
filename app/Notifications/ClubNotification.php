@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\Post;
+use App\Models\SignatureRequest;
 use App\Support\Currencies;
 use Illuminate\Notifications\Notification;
 
@@ -29,6 +30,8 @@ class ClubNotification extends Notification
     public const MEMBERSHIP = 'membership';
 
     public const PAYMENT = 'payment';
+
+    public const SIGNATURE = 'signature';
 
     /**
      * @param  array<string, mixed>  $params  route parameters for the link
@@ -96,6 +99,21 @@ class ClubNotification extends Notification
     public static function membershipApproved(Club $club): self
     {
         return new self(self::MEMBERSHIP, 'Welcome to '.$club->name, 'Your membership has been approved.', $club, 'member.dashboard', ['slug' => $club->slug]);
+    }
+
+    public static function signature(SignatureRequest $request): self
+    {
+        $club = $request->club;
+
+        return new self(
+            self::SIGNATURE,
+            'Signature needed: '.$request->signable->signatureLabel($request->purpose),
+            'Requested by '.($request->requestedBy?->name ?? $club->name).'.',
+            $club,
+            'member.signatures.show',
+            ['slug' => $club->slug, 'id' => $request->id],
+            true,
+        );
     }
 
     /**

@@ -25,6 +25,7 @@ class EmailTemplate
         'event_payment_received' => null,
         'event_refund' => null,
         'event_place_available' => null,
+        'signature_request' => 'sign_url',
     ];
 
     /**

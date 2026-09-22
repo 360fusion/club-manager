@@ -317,7 +317,7 @@
                     wire:model.live.debounce.1000ms="notesRaw"
                     rows="22"
                     placeholder="Type committee proceedings here... Use [ ] for action items, @Name for delegation, and /motion for notices of motion..."
-                    class="w-full p-4 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 dark:bg-slate-800/50/50 resize-y min-h-[520px]"
+                    class="w-full p-4 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 dark:bg-slate-800/50 resize-y min-h-[520px]"
                 ></textarea>
 
                 <div class="flex items-center justify-between pt-1 text-xs">

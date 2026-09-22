@@ -11,11 +11,14 @@ use App\Domains\ClubAccounting\Models\Candidate;
 use App\Domains\ClubAccounting\Models\CandidateEvent;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\CandidateTransitionService;
+use App\Mail\SignatureRequestMail;
 use App\Models\Club;
 use App\Models\ClubType;
+use App\Models\SignatureRequest;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 use Livewire\Livewire;
 use LogicException;
@@ -360,6 +363,32 @@ class CandidatePipelineDomainTest extends TestCase
 
         $this->assertDatabaseHas('club_acc_candidates', ['id' => $candidate->id, 'occupation' => 'Solicitor', 'stage' => 'first_interview']);
         $this->assertDatabaseHas('club_acc_candidate_events', ['candidate_id' => $candidate->id, 'summary' => 'Had a good chat on the phone']);
+    }
+
+    public function test_form_p_signature_requests_are_emailed_to_the_proposer_and_seconder_and_can_be_resent(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate(['proposer_member_id' => $this->proposer->id, 'seconder_member_id' => $this->seconder->id]);
+        $this->actingAs($this->admin);
+
+        Livewire::test(CandidateDetail::class, ['clubSlug' => $this->club->slug, 'candidateId' => $candidate->id])
+            ->call('openFormPModal', $candidate->id)
+            ->call('requestFormPSignatures')
+            ->assertHasNoErrors();
+
+        $this->assertEquals(2, SignatureRequest::where('signable_id', $candidate->id)->count());
+        Mail::assertQueued(SignatureRequestMail::class, 2);
+
+        $proposerRequest = SignatureRequest::where('signable_id', $candidate->id)->where('purpose', 'form_p_proposer')->sole();
+
+        Livewire::test(CandidateDetail::class, ['clubSlug' => $this->club->slug, 'candidateId' => $candidate->id])
+            ->call('openFormPModal', $candidate->id)
+            ->call('resendFormPSignature', 'form_p_proposer')
+            ->assertHasNoErrors();
+
+        Mail::assertQueued(SignatureRequestMail::class, 3);
+        $this->assertEquals(1, SignatureRequest::where('signable_id', $candidate->id)->where('purpose', 'form_p_proposer')->count());
+        $this->assertNotEquals($proposerRequest->getAttribute('token_hash'), $proposerRequest->fresh()->getAttribute('token_hash'));
     }
 
     public function test_a_member_without_permission_and_another_clubs_admin_cannot_reach_a_candidate(): void

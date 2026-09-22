@@ -150,7 +150,7 @@ const copyInviteLink = () => {
         </div>
 
         <div v-if="upcomingMeetings && upcomingMeetings.length" class="space-y-3">
-          <div v-for="m in upcomingMeetings" :key="m.id" class="p-4 bg-slate-50/70 dark:bg-slate-800/50/70 hover:bg-slate-100/90 dark:hover:bg-slate-800/90 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 transition-all space-y-2.5">
+          <div v-for="m in upcomingMeetings" :key="m.id" class="p-4 bg-slate-50/70 dark:bg-slate-800/70 hover:bg-slate-100/90 dark:hover:bg-slate-800/90 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 transition-all space-y-2.5">
             <div class="flex items-center justify-between gap-2">
               <Link :href="route('admin.meetings.show', { clubSlug: club.slug, id: m.id })" title="Open Secretary Dashboard" aria-label="Open Secretary Dashboard" class="font-bold text-slate-900 dark:text-white text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-2 group">
                 <span class="w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center text-xs border border-blue-200/60 dark:border-blue-800/60 group-hover:bg-blue-600 group-hover:text-white transition-all">

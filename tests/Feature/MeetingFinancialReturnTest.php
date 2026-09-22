@@ -164,9 +164,9 @@ class MeetingFinancialReturnTest extends TestCase
 
         $report = $service->getComparativeIncomeExpenditureData($this->club);
 
-        $this->assertEquals('2024 – 2025', $report['prior_year_label']);
-        $this->assertEquals('2025 – 2026', $report['current_year_label']);
-        $this->assertCount(6, $report['rows']);
+        $this->assertEquals((string) (now()->year - 1), $report['prior_year_label']);
+        $this->assertEquals((string) now()->year, $report['current_year_label']);
+        $this->assertCount(5, $report['rows']);
         $this->assertGreaterThan(0, $report['current_totals']['income']);
         $this->assertGreaterThan(0, $report['current_balance_carried_forward']);
     }

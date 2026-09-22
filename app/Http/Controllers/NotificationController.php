@@ -10,7 +10,7 @@ use Inertia\Response;
 
 class NotificationController extends Controller
 {
-    private const CATEGORIES = ['summons', 'news', 'event', 'notice', 'membership'];
+    private const CATEGORIES = ['summons', 'news', 'event', 'notice', 'membership', 'signature'];
 
     public function index(Request $request): Response
     {

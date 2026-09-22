@@ -192,7 +192,7 @@ const deleteNewsletter = (id) => {
 
         <!-- Newsletters List Grid -->
         <div v-if="filteredNewsletters.length" class="grid grid-cols-1 gap-4 pt-2">
-          <div v-for="item in filteredNewsletters" :key="item.id" class="bg-slate-50/50 dark:bg-slate-800/50/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div v-for="item in filteredNewsletters" :key="item.id" class="bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div class="space-y-3">
               <div class="flex items-center gap-2 flex-wrap">
                 <span :class="['px-2.5 py-0.5 rounded text-xs font-bold border uppercase tracking-wider', item.status === 'sent' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']">

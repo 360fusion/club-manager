@@ -2,6 +2,7 @@
 
 namespace App\Domains\ClubAccounting\Models;
 
+use App\Contracts\Signable;
 use App\Domains\ClubAccounting\Enums\CandidateStage;
 use App\Models\Club;
 use App\Models\User;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Candidate extends Model
+class Candidate extends Model implements Signable
 {
     use HasFactory, SoftDeletes;
 
@@ -108,6 +109,17 @@ class Candidate extends Model
             && $this->proposer_member_id !== null
             && $this->seconder_member_id !== null
             && $this->proposer_member_id !== $this->seconder_member_id;
+    }
+
+    public function signatureLabel(string $purpose): string
+    {
+        $name = trim("{$this->first_name} {$this->last_name}");
+
+        return match ($purpose) {
+            'form_p_proposer' => "Form P — proposing {$name} for membership",
+            'form_p_seconder' => "Form P — seconding {$name} for membership",
+            default => "Form P for {$name}",
+        };
     }
 
     /**

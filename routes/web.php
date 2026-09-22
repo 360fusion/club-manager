@@ -48,6 +48,7 @@ use App\Http\Controllers\MemberHomeController;
 use App\Http\Controllers\MemberImportExportController;
 use App\Http\Controllers\MemberListController;
 use App\Http\Controllers\MemberPortalController;
+use App\Http\Controllers\MemberSignatureController;
 use App\Http\Controllers\MemberSubscriptionsController;
 use App\Http\Controllers\NewsletterAdminController;
 use App\Http\Controllers\NewsletterPublicController;
@@ -63,6 +64,7 @@ use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\QuickRsvpController;
+use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\StripeConnectWebhookController;
 use App\Http\Controllers\StripeWebhookController;
@@ -103,6 +105,11 @@ Route::post('/{slug}/invite/{token}', [InvitationController::class, 'accept'])->
 // Passwordless Summons Email RSVP Routes
 Route::get('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'show'])->name('summons.rsvp.show');
 Route::post('/summons/rsvp/{token}', [PasswordlessRsvpController::class, 'store'])->name('summons.rsvp.store')->middleware('throttle:public-forms');
+
+// Signature requests: no login, the emailed link's token is the credential.
+Route::get('/sign/{token}', [SignatureController::class, 'show'])->name('sign.show')->middleware('throttle:auth-forms');
+Route::post('/sign/{token}', [SignatureController::class, 'store'])->name('sign.store')->middleware('throttle:auth-forms');
+Route::post('/sign/{token}/decline', [SignatureController::class, 'decline'])->name('sign.decline')->middleware('throttle:auth-forms');
 
 // Multi-Tenant Public Admin & Workspace Landing Routes
 Route::get('/', [ClubController::class, 'index'])->name('home');
@@ -169,9 +176,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/media-manager', [MediaAdminController::class, 'page'])->name('admin.media.page');
     Route::get('/{clubSlug}/admin/media', [MediaAdminController::class, 'index'])->name('admin.media.index');
     Route::post('/{clubSlug}/admin/media', [MediaAdminController::class, 'store'])->name('admin.media.store');
+    Route::post('/{clubSlug}/admin/media/folders', [MediaAdminController::class, 'storeFolder'])->name('admin.media.folders.store');
+    Route::put('/{clubSlug}/admin/media/folders/{folderId}', [MediaAdminController::class, 'updateFolder'])->name('admin.media.folders.update');
+    Route::delete('/{clubSlug}/admin/media/folders/{folderId}', [MediaAdminController::class, 'destroyFolder'])->name('admin.media.folders.destroy');
     Route::put('/{clubSlug}/admin/media/{id}', [MediaAdminController::class, 'update'])->name('admin.media.update');
     Route::post('/{clubSlug}/admin/media/{id}/crop', [MediaAdminController::class, 'crop'])->name('admin.media.crop');
-    Route::post('/{clubSlug}/admin/media/{id}/revert', [MediaAdminController::class, 'revert'])->name('admin.media.revert');
+    Route::post('/{clubSlug}/admin/media/{id}/replace', [MediaAdminController::class, 'replaceFile'])->name('admin.media.replace');
+    Route::get('/{clubSlug}/admin/media/{id}/versions', [MediaAdminController::class, 'versions'])->name('admin.media.versions.index');
+    Route::post('/{clubSlug}/admin/media/{id}/versions/{versionId}/restore', [MediaAdminController::class, 'restoreVersion'])->name('admin.media.versions.restore');
+    Route::get('/{clubSlug}/admin/media/{id}/versions/{versionId}/download', [MediaAdminController::class, 'downloadVersion'])->name('admin.media.versions.download');
     Route::post('/{clubSlug}/admin/media/{id}/restore', [MediaAdminController::class, 'restore'])->name('admin.media.restore');
     Route::delete('/{clubSlug}/admin/media/{id}/force', [MediaAdminController::class, 'forceDelete'])->name('admin.media.force_delete');
     Route::get('/{clubSlug}/admin/media/{id}/usage', [MediaAdminController::class, 'usage'])->name('admin.media.usage');
@@ -198,6 +211,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/pages/settings', [PageAdminController::class, 'updateSettings'])->name('admin.pages.settings.update');
     Route::get('/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'themes'])->name('admin.pages.themes');
     Route::post('/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'updateTheme'])->name('admin.pages.themes.update');
+    Route::get('/{clubSlug}/admin/pages/header-footer', [PageAdminController::class, 'headerFooter'])->name('admin.pages.header_footer');
+    Route::post('/{clubSlug}/admin/pages/header-footer', [PageAdminController::class, 'updateHeaderFooter'])->name('admin.pages.header_footer.update');
     Route::get('/{clubSlug}/admin/pages/{id}/edit', [PageAdminController::class, 'edit'])->name('admin.pages.edit');
     Route::post('/{clubSlug}/admin/pages', [PageAdminController::class, 'store'])->name('admin.pages.store');
     Route::post('/{clubSlug}/admin/pages/reorder', [PageAdminController::class, 'reorder'])->name('admin.pages.reorder');
@@ -242,6 +257,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/meetings/{id}', [MeetingAdminController::class, 'show'])->name('admin.meetings.show');
     Route::post('/{clubSlug}/admin/meetings/{id}/rsvp', [MeetingAdminController::class, 'updateRsvp'])->name('admin.meetings.rsvp.update');
     Route::post('/{clubSlug}/admin/meetings/{id}/rsvp-payment-status', [MeetingAdminController::class, 'updatePaymentStatus'])->name('admin.meetings.rsvp.payment_status');
+    Route::get('/{clubSlug}/admin/meetings/{id}/dining', [MeetingAdminController::class, 'dining'])->name('admin.meetings.dining');
+    Route::post('/{clubSlug}/admin/meetings/{id}/dining/payment', [MeetingAdminController::class, 'recordDiningPayment'])->name('admin.meetings.dining.payment');
     Route::get('/{clubSlug}/admin/meetings/{id}/financial-return', [MeetingAdminController::class, 'financialReturn'])->name('admin.meetings.financial_return.show');
     Route::post('/{clubSlug}/admin/meetings/{id}/financial-return', [MeetingAdminController::class, 'storeFinancialReturn'])->name('admin.meetings.financial_return.store');
     Route::get('/{clubSlug}/admin/meetings/{id}/pdf', [MeetingAdminController::class, 'pdf'])->name('admin.meetings.pdf');
@@ -341,6 +358,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/charity/gift-aid-transactions', [CharityAdminController::class, 'giftAidTransactionsPage'])->name('admin.charity.giftaid.transactions_page');
     Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/toggle', [AccountingAdminController::class, 'toggleBankAccount'])->name('admin.accounting.bank_accounts.toggle');
     Route::post('/{clubSlug}/admin/accounting/opening-balance', [AccountingAdminController::class, 'storeOpeningBalance'])->name('admin.accounting.opening_balance.store');
+    Route::post('/{clubSlug}/admin/accounting/vat-settings', [AccountingAdminController::class, 'updateVatSettings'])->name('admin.accounting.vat_settings.update');
+    Route::get('/{clubSlug}/admin/accounting/vat-return/export', [AccountingAdminController::class, 'exportVatReturn'])->name('admin.accounting.vat_return.export');
+    Route::post('/{clubSlug}/admin/accounting/fixed-assets', [AccountingAdminController::class, 'storeFixedAsset'])->name('admin.accounting.fixed_assets.store');
+    Route::post('/{clubSlug}/admin/accounting/fixed-assets/{id}/dispose', [AccountingAdminController::class, 'disposeFixedAsset'])->name('admin.accounting.fixed_assets.dispose');
+    Route::post('/{clubSlug}/admin/accounting/fixed-assets/run-depreciation', [AccountingAdminController::class, 'runFixedAssetDepreciation'])->name('admin.accounting.fixed_assets.run_depreciation');
+    Route::post('/{clubSlug}/admin/accounting/budget', [AccountingAdminController::class, 'updateBudget'])->name('admin.accounting.budget.update');
+    Route::post('/{clubSlug}/admin/accounting/financial-year/close', [AccountingAdminController::class, 'closeFinancialYear'])->name('admin.accounting.financial_year.close');
+    Route::post('/{clubSlug}/admin/accounting/financial-year/reopen', [AccountingAdminController::class, 'reopenFinancialYear'])->name('admin.accounting.financial_year.reopen');
+    Route::post('/{clubSlug}/admin/accounting/financial-year/audit', [AccountingAdminController::class, 'signOffYearAudit'])->name('admin.accounting.financial_year.audit');
+    Route::post('/{clubSlug}/admin/accounting/financial-year/audit/{purpose}/resend', [AccountingAdminController::class, 'resendYearAuditSignature'])->name('admin.accounting.financial_year.audit.resend');
+    Route::get('/{clubSlug}/admin/accounting/reports/{report}/export', [AccountingAdminController::class, 'exportReport'])->name('admin.accounting.reports.export');
+    Route::get('/{clubSlug}/admin/accounting/treasurer-report/export-pdf', [AccountingAdminController::class, 'exportAnnualTreasurerReportPdf'])->name('admin.accounting.treasurer_report.export_pdf');
+    Route::get('/{clubSlug}/admin/accounting/treasurer-report/export-csv', [AccountingAdminController::class, 'exportAnnualTreasurerReportCsv'])->name('admin.accounting.treasurer_report.export_csv');
+    Route::post('/{clubSlug}/admin/accounting/recurring-bills', [AccountingAdminController::class, 'storeRecurringBillTemplate'])->name('admin.accounting.recurring_bills.store');
+    Route::post('/{clubSlug}/admin/accounting/recurring-bills/{id}/toggle', [AccountingAdminController::class, 'toggleRecurringBillTemplate'])->name('admin.accounting.recurring_bills.toggle');
+    Route::delete('/{clubSlug}/admin/accounting/recurring-bills/{id}', [AccountingAdminController::class, 'destroyRecurringBillTemplate'])->name('admin.accounting.recurring_bills.destroy');
     Route::get('/{clubSlug}/admin/accounting/journal-entries/create', [AccountingAdminController::class, 'createJournal'])->name('admin.accounting.journal.create');
     Route::post('/{clubSlug}/admin/accounting/journal-entries', [AccountingAdminController::class, 'storeJournalEntry'])->name('admin.accounting.journal.store');
     Route::get('/{clubSlug}/admin/accounting/journal-entries/{id}/edit', [AccountingAdminController::class, 'editJournalEntry'])->name('admin.accounting.journal.edit');
@@ -461,6 +494,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/meetings/{id}/summons', [MemberPortalController::class, 'summons'])->name('member.meetings.summons');
     Route::post('/members/{slug}/meetings/{id}/rsvp', [MemberPortalController::class, 'updateMeetingRsvp'])->name('member.meetings.rsvp');
     Route::get('/members/{slug}/meetings/{id}/pdf', [MemberPortalController::class, 'downloadMeetingPdf'])->name('member.meetings.pdf');
+    Route::get('/members/{slug}/sign/{id}', [MemberSignatureController::class, 'show'])->name('member.signatures.show');
+    Route::post('/members/{slug}/sign/{id}', [MemberSignatureController::class, 'store'])->name('member.signatures.store');
+    Route::post('/members/{slug}/sign/{id}/decline', [MemberSignatureController::class, 'decline'])->name('member.signatures.decline');
 
     // Invite-Only Member Approval & Rejection Routes
     Route::post('/{slug}/members/{userId}/approve', [ClubController::class, 'approveMember'])->name('clubs.members.approve')->middleware('club.admin:manage_members');

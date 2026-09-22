@@ -129,7 +129,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
                     @forelse ($transactions as $tx)
-                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                             <td class="py-3 px-4 font-bold text-slate-900 dark:text-white whitespace-nowrap">
                                 {{ $tx->transaction_date ? $tx->transaction_date->format('d M Y') : '—' }}
                             </td>

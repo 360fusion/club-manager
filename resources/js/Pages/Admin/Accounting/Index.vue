@@ -66,7 +66,7 @@ const props = defineProps({
     type: Object,
     default: () => ({
       company_name: '',
-      tax_registration_number: 'GB 987 6543 21',
+      tax_registration_number: '',
       contact_email: '',
       phone: '',
       address_line_1: '',
@@ -80,6 +80,46 @@ const props = defineProps({
       dues_grace_period_days: 14,
       auto_invoice_days_before: 7,
     }),
+  },
+  vatSettings: {
+    type: Object,
+    default: () => ({
+      enabled: false,
+      scheme: 'not_registered',
+      vat_number: '',
+      flat_rate_percent: null,
+      default_rate: 20.00,
+      registered_from: null,
+    }),
+  },
+  vatLocked: {
+    type: Boolean,
+    default: false,
+  },
+  fixedAssets: {
+    type: Array,
+    default: () => [],
+  },
+  budgetVsActual: {
+    type: Object,
+    default: () => ({ financial_year: new Date().getFullYear(), rows: [], total_budgeted: 0, total_actual: 0 }),
+  },
+  annualTreasurerReport: {
+    type: Object,
+    default: () => ({
+      financial_year: new Date().getFullYear(),
+      is_closed: false,
+      general_fund: { rows: [], total_income: 0, total_expenditure: 0, net_surplus: 0 },
+      charity_fund: { collections_total: 0, grants_disbursed_total: 0 },
+      bank_accounts: [],
+      membership: { in_arrears_count: 0, in_arrears: [] },
+      vat: null,
+      audit_sign_off: null,
+    }),
+  },
+  recurringBillTemplates: {
+    type: Array,
+    default: () => [],
   },
   initialTab: {
     type: String,
@@ -116,7 +156,8 @@ const props = defineProps({
 });
 
 const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'bank-accounts', 'chart-of-accounts', 'reconciliation', 'contacts', 'settings'];
-const validReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'reconciliation_summary'];
+const validReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'reconciliation_summary', 'vat_return', 'fixed_assets', 'budget_vs_actual', 'treasurer_report', 'recurring_bills'];
+const exportableReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'budget_vs_actual'];
 
 const parseUrlState = () => {
   if (typeof window === 'undefined') {
@@ -183,6 +224,39 @@ const filteredAccountTransactions = computed(() => {
   const list = props.reconciliation?.account_transactions || [];
   if (!activeBankAccount.value) return list;
   return list.filter(tx => !tx.bank_account_id || tx.bank_account_id === activeBankAccount.value.id);
+});
+
+// Real bank-reconciliation-summary figures for the active bank account, built from
+// its actual ledger/statement balances and its actual unmatched transaction lines —
+// never placeholder data.
+const reconciliationSummary = computed(() => {
+  const account = activeBankAccount.value;
+  const allUnmatched = props.reconciliation?.unmatched_transactions || [];
+  const unmatched = account
+    ? allUnmatched.filter(tx => !tx.bank_account_id || tx.bank_account_id === account.id)
+    : allUnmatched;
+
+  const outstandingReceipts = unmatched.filter(tx => tx.amount > 0);
+  const outstandingPayments = unmatched.filter(tx => tx.amount < 0);
+  const receiptsTotal = outstandingReceipts.reduce((sum, tx) => sum + tx.amount, 0);
+  const paymentsTotal = outstandingPayments.reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+
+  const ledgerBalance = account ? account.ledger_balance : 0;
+  const statementBalance = account ? account.statement_balance : 0;
+  const calculatedStatementBalance = ledgerBalance + receiptsTotal - paymentsTotal;
+  const discrepancy = statementBalance - calculatedStatementBalance;
+
+  return {
+    accountLabel: account ? `${account.bank_name} (${account.account_name})` : 'No bank account connected',
+    ledgerBalance,
+    statementBalance,
+    calculatedStatementBalance,
+    discrepancy,
+    outstandingReceipts,
+    receiptsTotal,
+    outstandingPayments,
+    paymentsTotal,
+  };
 });
 
 const navigateTo = (tabName, reportName = null, bankAccountId = null) => {
@@ -1147,6 +1221,147 @@ const submitOpeningBalance = () => {
   });
 };
 
+// VAT Settings Form
+const vatSettingsForm = useForm({
+  enabled: props.vatSettings.enabled,
+  scheme: props.vatSettings.scheme,
+  vat_number: props.vatSettings.vat_number || '',
+  flat_rate_percent: props.vatSettings.flat_rate_percent,
+  default_rate: props.vatSettings.default_rate,
+  registered_from: props.vatSettings.registered_from,
+});
+
+const submitVatSettings = () => {
+  vatSettingsForm.post(route('admin.accounting.vat_settings.update', props.club.slug), {
+    preserveScroll: true,
+  });
+};
+
+// Fixed Asset Register
+const showAddAssetForm = ref(false);
+const fixedAssetForm = useForm({
+  name: '',
+  category: 'Equipment',
+  purchase_date: new Date().toISOString().split('T')[0],
+  purchase_cost: '',
+  depreciation_method: 'straight_line',
+  useful_life_years: 5,
+  salvage_value: 0,
+  notes: '',
+});
+
+const submitFixedAsset = () => {
+  fixedAssetForm.post(route('admin.accounting.fixed_assets.store', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      fixedAssetForm.reset();
+      showAddAssetForm.value = false;
+    },
+  });
+};
+
+const depreciationForm = useForm({ period: String(new Date().getFullYear()) });
+const runDepreciation = () => {
+  if (!confirm(`Run depreciation for period ${depreciationForm.period} across all active assets?`)) return;
+  depreciationForm.post(route('admin.accounting.fixed_assets.run_depreciation', props.club.slug), { preserveScroll: true });
+};
+
+const disposalForm = useForm({ disposal_date: new Date().toISOString().split('T')[0], disposal_proceeds: 0 });
+const disposingAssetId = ref(null);
+const disposeAsset = (assetId) => {
+  disposalForm.post(route('admin.accounting.fixed_assets.dispose', { clubSlug: props.club.slug, id: assetId }), {
+    preserveScroll: true,
+    onSuccess: () => { disposingAssetId.value = null; },
+  });
+};
+
+// Budget vs Actual
+const budgetForm = useForm({
+  financial_year: props.budgetVsActual.financial_year,
+  lines: {},
+});
+watch(() => props.budgetVsActual, (data) => {
+  budgetForm.financial_year = data.financial_year;
+  const lines = {};
+  (data.rows || []).forEach(r => { lines[r.account_id] = r.budgeted; });
+  budgetForm.lines = lines;
+}, { immediate: true });
+
+const budgetableAccounts = computed(() => (props.accounts || []).filter(a => a.type === 'revenue' || a.type === 'expense'));
+
+const changeBudgetYear = (year) => {
+  router.get(route('admin.accounting.index', { clubSlug: props.club.slug, tab: 'reporting', report: 'budget_vs_actual' }), { budget_year: year }, { preserveState: true, preserveScroll: true });
+};
+
+const submitBudget = () => {
+  const lines = Object.entries(budgetForm.lines).map(([account_id, budgeted_amount]) => ({ account_id: Number(account_id), budgeted_amount: Number(budgeted_amount) || 0 }));
+  budgetForm.transform(() => ({ financial_year: budgetForm.financial_year, lines })).post(route('admin.accounting.budget.update', props.club.slug), {
+    preserveScroll: true,
+  });
+};
+
+// Annual Treasurer's Report — financial year close & auditor sign-off
+const changeTreasurerReportYear = (year) => {
+  router.get(route('admin.accounting.index', { clubSlug: props.club.slug, tab: 'reporting', report: 'treasurer_report' }), { treasurer_report_year: year }, { preserveState: true, preserveScroll: true });
+};
+
+const closeYearForm = useForm({ financial_year: props.annualTreasurerReport.financial_year, notes: '' });
+const submitCloseYear = () => {
+  if (!confirm(`Close the books for ${closeYearForm.financial_year}? New entries dated in this year will be blocked.`)) return;
+  closeYearForm.financial_year = props.annualTreasurerReport.financial_year;
+  closeYearForm.post(route('admin.accounting.financial_year.close', props.club.slug), { preserveScroll: true });
+};
+
+const signOffForm = useForm({ financial_year: props.annualTreasurerReport.financial_year, auditor_one_user_id: '', auditor_two_user_id: '', notes: '' });
+const showAuditConfirmModal = ref(false);
+const auditRecipients = computed(() => [signOffForm.auditor_one_user_id, signOffForm.auditor_two_user_id]
+  .map((id) => props.members.find((m) => m.id === Number(id)))
+  .filter(Boolean));
+const submitSignOff = () => {
+  showAuditConfirmModal.value = true;
+};
+const confirmSignOff = () => {
+  signOffForm.financial_year = props.annualTreasurerReport.financial_year;
+  signOffForm.post(route('admin.accounting.financial_year.audit', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      signOffForm.reset('auditor_one_user_id', 'auditor_two_user_id', 'notes');
+      showAuditConfirmModal.value = false;
+    },
+  });
+};
+
+const resendAuditSignature = (purpose) => {
+  router.post(route('admin.accounting.financial_year.audit.resend', { clubSlug: props.club.slug, purpose }), { financial_year: props.annualTreasurerReport.financial_year }, { preserveScroll: true });
+};
+
+// Recurring Vendor Bills
+const showAddRecurringBillForm = ref(false);
+const recurringBillForm = useForm({
+  vendor_name: '',
+  category: 'General Expense',
+  amount: '',
+  frequency: 'monthly',
+  next_run_date: new Date().toISOString().split('T')[0],
+  notes: '',
+});
+const submitRecurringBill = () => {
+  recurringBillForm.post(route('admin.accounting.recurring_bills.store', props.club.slug), {
+    preserveScroll: true,
+    onSuccess: () => {
+      recurringBillForm.reset();
+      showAddRecurringBillForm.value = false;
+    },
+  });
+};
+const toggleRecurringBill = (id) => {
+  router.post(route('admin.accounting.recurring_bills.toggle', { clubSlug: props.club.slug, id }), {}, { preserveScroll: true });
+};
+const deleteRecurringBill = (id) => {
+  if (!confirm('Remove this recurring bill schedule? Bills already generated from it are not affected.')) return;
+  router.delete(route('admin.accounting.recurring_bills.destroy', { clubSlug: props.club.slug, id }), { preserveScroll: true });
+};
+
 // New Account Form
 const accountForm = useForm({
   code: '',
@@ -1957,7 +2172,7 @@ const getTypeBadge = (type) => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
-              <tr v-for="inv in filteredInvoices" :key="inv.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+              <tr v-for="inv in filteredInvoices" :key="inv.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                 <td class="py-3 px-4">
                   <button
                     type="button"
@@ -1993,6 +2208,9 @@ const getTypeBadge = (type) => {
                   <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', inv.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : inv.status === 'draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']">
                     {{ inv.status }}
                   </span>
+                  <span v-if="inv.reconciled_at" title="Confirmed against a bank statement line" class="ml-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/60">
+                    🔗 Reconciled
+                  </span>
                 </td>
                 <td class="py-3 px-4 text-right font-black text-slate-900 dark:text-white font-mono">{{ inv.formatted_amount }}</td>
                 <td class="py-3 px-4 text-center">
@@ -2014,7 +2232,10 @@ const getTypeBadge = (type) => {
                     >
                       ✓ Mark Paid
                     </button>
-                    <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ inv.paid_at }}</span>
+                    <span v-else class="text-[10px] font-bold text-slate-400">
+                      Paid {{ inv.paid_at }}
+                      <span v-if="!inv.reconciled_at" class="block text-slate-400 dark:text-slate-500 normal-case font-semibold">Not yet reconciled</span>
+                    </span>
                   </div>
                 </td>
               </tr>
@@ -2107,7 +2328,7 @@ const getTypeBadge = (type) => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
-              <tr v-for="b in filteredBills" :key="b.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+              <tr v-for="b in filteredBills" :key="b.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                 <td class="py-3 px-4">
                   <button
                     type="button"
@@ -2145,6 +2366,9 @@ const getTypeBadge = (type) => {
                   <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', b.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : b.status === 'draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60']">
                     {{ b.status }}
                   </span>
+                  <span v-if="b.reconciled_at" title="Confirmed against a bank statement line" class="ml-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/60">
+                    🔗 Reconciled
+                  </span>
                 </td>
                 <td class="py-3 px-4 text-right font-black text-slate-900 dark:text-white font-mono">{{ b.formatted_amount }}</td>
                 <td class="py-3 px-4 text-center">
@@ -2166,7 +2390,10 @@ const getTypeBadge = (type) => {
                     >
                       ✓ Pay Bill
                     </button>
-                    <span v-else class="text-[10px] font-bold text-slate-400">Paid {{ b.paid_at }}</span>
+                    <span v-else class="text-[10px] font-bold text-slate-400">
+                      Paid {{ b.paid_at }}
+                      <span v-if="!b.reconciled_at" class="block text-slate-400 dark:text-slate-500 normal-case font-semibold">Not yet reconciled</span>
+                    </span>
                   </div>
                 </td>
               </tr>
@@ -2182,14 +2409,23 @@ const getTypeBadge = (type) => {
             <h3 class="text-lg font-black text-slate-900 dark:text-white">Financial Reports & Statements</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">Official double-entry financial statements and accounting reports.</p>
           </div>
-          <button
-            v-if="selectedReport && selectedReport !== 'reconciliation_summary'"
-            type="button"
-            @click="navigateTo('reporting', null)"
-            class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer self-start sm:self-auto flex items-center gap-1"
-          >
-            ← Back to All Reports
-          </button>
+          <div class="flex items-center gap-2 self-start sm:self-auto">
+            <a
+              v-if="exportableReports.includes(selectedReport)"
+              :href="route('admin.accounting.reports.export', { clubSlug: club.slug, report: selectedReport })"
+              class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
+            >
+              ⬇️ Export CSV
+            </a>
+            <button
+              v-if="selectedReport && selectedReport !== 'reconciliation_summary'"
+              type="button"
+              @click="navigateTo('reporting', null)"
+              class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
+            >
+              ← Back to All Reports
+            </button>
+          </div>
         </div>
 
         <!-- Global Date Range Filter Bar for Reports -->
@@ -2393,7 +2629,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Side-by-side 4-column annual balance statement comparing multi-year totals.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-amber-800 dark:text-amber-200">
-              <span>Comparing 2024–2025 vs 2025–2026</span>
+              <span>Comparing {{ reports.comparative_income_expenditure?.prior_year_label }} vs {{ reports.comparative_income_expenditure?.current_year_label }}</span>
               <span>View Audit Report →</span>
             </div>
           </div>
@@ -2409,8 +2645,88 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Audit verification comparing General Ledger vs actual bank feed balance.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-blue-800 dark:text-blue-200">
-              <span>System {{ $cs }}401.33 vs Feed {{ $cs }}476.49</span>
+              <span>System {{ formatCurrency(reconciliationSummary.ledgerBalance) }} vs Feed {{ formatCurrency(reconciliationSummary.statementBalance) }}</span>
               <span>View Audit Report →</span>
+            </div>
+          </div>
+
+          <!-- 10. VAT Return -->
+          <div v-if="vatSettings.enabled" @click="navigateTo('reporting', 'vat_return')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">🧮</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-900/40 text-purple-900 dark:text-purple-200 px-2 py-0.5 rounded-full">Tax</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">VAT Return</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Output VAT minus input VAT for the current quarter, exportable for HMRC filing.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-purple-800 dark:text-purple-200">
+              <span>{{ reports.vat_return?.quarter_label }}: {{ formatCurrency(reports.vat_return?.net_vat_due) }} due</span>
+              <span>View Return →</span>
+            </div>
+          </div>
+
+          <!-- 11. Fixed Asset Register -->
+          <div @click="navigateTo('reporting', 'fixed_assets')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">🚣</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-teal-100 dark:bg-teal-900/40 text-teal-900 dark:text-teal-200 px-2 py-0.5 rounded-full">Assets</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">Fixed Asset Register</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Boats, equipment, regalia and property — cost, depreciation and net book value.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-teal-800 dark:text-teal-200">
+              <span>{{ fixedAssets.length }} asset{{ fixedAssets.length === 1 ? '' : 's' }} registered</span>
+              <span>View Register →</span>
+            </div>
+          </div>
+
+          <!-- 12. Budget vs Actual -->
+          <div @click="navigateTo('reporting', 'budget_vs_actual')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">🎯</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-indigo-100 dark:bg-indigo-900/40 text-indigo-900 dark:text-indigo-200 px-2 py-0.5 rounded-full">Planning</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">Budget vs Actual</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Set an annual budget per account and track variance against real income/expenditure.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-indigo-800 dark:text-indigo-200">
+              <span>{{ budgetVsActual.financial_year }}: {{ formatCurrency(budgetVsActual.total_actual) }} of {{ formatCurrency(budgetVsActual.total_budgeted) }}</span>
+              <span>View Budget →</span>
+            </div>
+          </div>
+
+          <!-- 13. Annual Treasurer's Report -->
+          <div @click="navigateTo('reporting', 'treasurer_report')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">🏛️</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-full">Annual Report</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">Annual Treasurer's Report</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">General Fund &amp; Charity Fund statement, bank reconciliation, arrears — ready to present at Installation.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-amber-800 dark:text-amber-200">
+              <span>{{ annualTreasurerReport.financial_year }}: {{ annualTreasurerReport.is_closed ? 'Books closed' : 'Books open' }}</span>
+              <span>View Report →</span>
+            </div>
+          </div>
+
+          <!-- 14. Recurring Vendor Bills -->
+          <div @click="navigateTo('reporting', 'recurring_bills')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">🔁</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-rose-100 dark:bg-rose-900/40 text-rose-900 dark:text-rose-200 px-2 py-0.5 rounded-full">Automation</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">Recurring Vendor Bills</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Calendar-driven bills — insurance, hall hire, subscriptions — generated automatically when due.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-rose-800 dark:text-rose-200">
+              <span>{{ recurringBillTemplates.filter(t => t.is_active).length }} active schedule{{ recurringBillTemplates.filter(t => t.is_active).length === 1 ? '' : 's' }}</span>
+              <span>Manage →</span>
             </div>
           </div>
         </div>
@@ -2714,13 +3030,8 @@ const getTypeBadge = (type) => {
                   <span>🏛️ Comparative Annual Income & Expenditure Statement</span>
                 </h4>
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  Audited Lodge & Club accounts comparing {{ reports.comparative_income_expenditure?.prior_year_label || '2024 – 2025' }} and {{ reports.comparative_income_expenditure?.current_year_label || '2025 – 2026' }}.
+                  Lodge & Club accounts comparing {{ reports.comparative_income_expenditure?.prior_year_label }} and {{ reports.comparative_income_expenditure?.current_year_label }}.
                 </p>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 text-xs font-bold rounded-xl border border-emerald-200 dark:border-emerald-800/60">
-                  ✓ Reconciled & Audited
-                </span>
               </div>
             </div>
 
@@ -2729,10 +3040,10 @@ const getTypeBadge = (type) => {
                 <thead>
                   <tr class="bg-slate-900 dark:bg-slate-700 text-white font-extrabold uppercase text-[11px] tracking-wider border-b border-slate-800">
                     <th class="py-3 px-4 font-black">STATEMENT CATEGORY</th>
-                    <th class="py-3 px-4 text-right bg-slate-800 text-amber-300">INCOME<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.prior_year_label || '2024 – 2025' }}</span></th>
-                    <th class="py-3 px-4 text-right bg-slate-800 text-rose-300">EXPENDITURE<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.prior_year_label || '2024 – 2025' }}</span></th>
-                    <th class="py-3 px-4 text-right bg-slate-900 dark:bg-slate-700 text-amber-400 border-l border-slate-800">INCOME<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.current_year_label || '2025 – 2026' }}</span></th>
-                    <th class="py-3 px-4 text-right bg-slate-900 dark:bg-slate-700 text-rose-400">EXPENDITURE<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.current_year_label || '2025 – 2026' }}</span></th>
+                    <th class="py-3 px-4 text-right bg-slate-800 text-amber-300">INCOME<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.prior_year_label }}</span></th>
+                    <th class="py-3 px-4 text-right bg-slate-800 text-rose-300">EXPENDITURE<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.prior_year_label }}</span></th>
+                    <th class="py-3 px-4 text-right bg-slate-900 dark:bg-slate-700 text-amber-400 border-l border-slate-800">INCOME<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.current_year_label }}</span></th>
+                    <th class="py-3 px-4 text-right bg-slate-900 dark:bg-slate-700 text-rose-400">EXPENDITURE<br><span class="text-[10px] font-normal text-slate-300">{{ reports.comparative_income_expenditure?.current_year_label }}</span></th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-800 font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900">
@@ -2747,28 +3058,28 @@ const getTypeBadge = (type) => {
                   <!-- TOTALS -->
                   <tr class="bg-slate-100 dark:bg-slate-800 font-extrabold text-slate-900 dark:text-white border-t-2 border-slate-300 dark:border-slate-700">
                     <td class="py-3 px-4 uppercase font-black">TOTALS</td>
-                    <td class="py-3 px-4 text-right font-mono text-emerald-800 dark:text-emerald-200">{{ formatCurrency(reports.comparative_income_expenditure?.prior_totals?.income || 28364.83) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-rose-800 dark:text-rose-200">{{ formatCurrency(reports.comparative_income_expenditure?.prior_totals?.expenditure || 10461.07) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-emerald-800 dark:text-emerald-200 border-l border-slate-200 dark:border-slate-800">{{ formatCurrency(reports.comparative_income_expenditure?.current_totals?.income || 27840.97) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-rose-800 dark:text-rose-200">{{ formatCurrency(reports.comparative_income_expenditure?.current_totals?.expenditure || 9225.35) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-emerald-800 dark:text-emerald-200">{{ formatCurrency(reports.comparative_income_expenditure?.prior_totals?.income) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-rose-800 dark:text-rose-200">{{ formatCurrency(reports.comparative_income_expenditure?.prior_totals?.expenditure) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-emerald-800 dark:text-emerald-200 border-l border-slate-200 dark:border-slate-800">{{ formatCurrency(reports.comparative_income_expenditure?.current_totals?.income) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-rose-800 dark:text-rose-200">{{ formatCurrency(reports.comparative_income_expenditure?.current_totals?.expenditure) }}</td>
                   </tr>
 
                   <!-- BALANCE CARRIED FORWARD (CASH AT BANK) -->
                   <tr class="bg-amber-50/70 dark:bg-amber-950/70 font-extrabold text-amber-900 dark:text-amber-200">
                     <td class="py-3 px-4 italic font-bold">BALANCE CARRIED FORWARD – i.e. cash at Bank 31/03</td>
                     <td class="py-3 px-4 text-right font-mono text-slate-400">—</td>
-                    <td class="py-3 px-4 text-right font-mono font-black text-amber-900 dark:text-amber-200">{{ formatCurrency(reports.comparative_income_expenditure?.prior_balance_carried_forward || 17903.76) }}</td>
+                    <td class="py-3 px-4 text-right font-mono font-black text-amber-900 dark:text-amber-200">{{ formatCurrency(reports.comparative_income_expenditure?.prior_balance_carried_forward) }}</td>
                     <td class="py-3 px-4 text-right font-mono text-slate-400 border-l border-amber-200 dark:border-amber-800/60">—</td>
-                    <td class="py-3 px-4 text-right font-mono font-black text-amber-900 dark:text-amber-200">{{ formatCurrency(reports.comparative_income_expenditure?.current_balance_carried_forward || 18615.62) }}</td>
+                    <td class="py-3 px-4 text-right font-mono font-black text-amber-900 dark:text-amber-200">{{ formatCurrency(reports.comparative_income_expenditure?.current_balance_carried_forward) }}</td>
                   </tr>
 
                   <!-- CASH AT BANK - PLUS EXPENDITURE (RECONCILED TOTALS) -->
                   <tr class="bg-slate-900 dark:bg-slate-700 text-white font-black text-xs">
                     <td class="py-3 px-4 uppercase font-black tracking-wider">CASH AT BANK – PLUS EXPENDITURE</td>
-                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.prior_reconciled || 28364.83) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.prior_reconciled || 28364.83) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-amber-400 border-l border-slate-800">{{ formatCurrency(reports.comparative_income_expenditure?.current_reconciled || 27840.97) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.current_reconciled || 27840.97) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.prior_reconciled) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.prior_reconciled) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400 border-l border-slate-800">{{ formatCurrency(reports.comparative_income_expenditure?.current_reconciled) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.current_reconciled) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -2784,7 +3095,7 @@ const getTypeBadge = (type) => {
                 </span>
                 <h3 class="text-xl font-black text-slate-900 dark:text-white mt-2">Bank Reconciliation Summary</h3>
                 <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">
-                  AMERICAN EXPRESS (Operating Account) — As at {{ formatDateFormatted(reportEndDate) }} <span class="text-slate-400">|</span> Period: <span class="text-blue-900 dark:text-blue-200 font-extrabold">{{ formatDateFormatted(reportStartDate) }} – {{ formatDateFormatted(reportEndDate) }}</span>
+                  {{ reconciliationSummary.accountLabel }} — As at {{ formatDateFormatted(reportEndDate) }} <span class="text-slate-400">|</span> Period: <span class="text-blue-900 dark:text-blue-200 font-extrabold">{{ formatDateFormatted(reportStartDate) }} – {{ formatDateFormatted(reportEndDate) }}</span>
                 </p>
               </div>
               <div class="flex items-center gap-2">
@@ -2796,12 +3107,12 @@ const getTypeBadge = (type) => {
 
             <!-- Report Cards & Breakdown -->
             <div class="space-y-6 text-xs font-medium text-slate-800 dark:text-slate-100">
-              
+
               <!-- Section 1: System Balance -->
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
                 <div class="flex justify-between items-center text-sm font-extrabold text-slate-900 dark:text-white">
                   <span>Balance in System (General Ledger)</span>
-                  <span class="font-mono text-lg text-slate-900 dark:text-white">{{ $cs }}401.33</span>
+                  <span class="font-mono text-lg text-slate-900 dark:text-white">{{ formatCurrency(reconciliationSummary.ledgerBalance) }}</span>
                 </div>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400">Total cleared balance across all approved transactions in your books.</p>
               </div>
@@ -2810,7 +3121,7 @@ const getTypeBadge = (type) => {
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <div class="flex justify-between items-center text-xs font-black text-emerald-800 dark:text-emerald-200 border-b border-emerald-200 dark:border-emerald-800/60 pb-2">
                   <span class="uppercase tracking-wider">PLUS: Outstanding Receipts (Unreconciled Receive Money)</span>
-                  <span class="font-mono text-sm">+{{ $cs }}190.00</span>
+                  <span class="font-mono text-sm">+{{ formatCurrency(reconciliationSummary.receiptsTotal) }}</span>
                 </div>
                 <div class="overflow-x-auto">
                   <table class="w-full text-left text-xs">
@@ -2822,20 +3133,13 @@ const getTypeBadge = (type) => {
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100">
-                      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td class="py-2 px-3 font-mono">01 Oct 2026</td>
-                        <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">DD 1418 LORD</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ $cs }}20.00</td>
+                      <tr v-for="tx in reconciliationSummary.outstandingReceipts" :key="tx.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <td class="py-2 px-3 font-mono">{{ tx.transaction_date }}</td>
+                        <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">{{ tx.raw_description }}</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ tx.formatted_amount }}</td>
                       </tr>
-                      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td class="py-2 px-3 font-mono">25 Sep 2026</td>
-                        <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">BACS BURNS NIGHT C IRONS</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ $cs }}20.00</td>
-                      </tr>
-                      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td class="py-2 px-3 font-mono">05 Sep 2026</td>
-                        <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">ANNUAL SUBSCRIPTION W BRO J SMITH</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ $cs }}150.00</td>
+                      <tr v-if="!reconciliationSummary.outstandingReceipts.length">
+                        <td colspan="3" class="py-4 px-3 text-center text-slate-400 italic">No outstanding receipts.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -2846,7 +3150,7 @@ const getTypeBadge = (type) => {
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <div class="flex justify-between items-center text-xs font-black text-rose-800 dark:text-rose-200 border-b border-rose-200 dark:border-rose-800/60 pb-2">
                   <span class="uppercase tracking-wider">LESS: Outstanding Payments (Unreconciled Spend Money)</span>
-                  <span class="font-mono text-sm">-{{ $cs }}114.84</span>
+                  <span class="font-mono text-sm">-{{ formatCurrency(reconciliationSummary.paymentsTotal) }}</span>
                 </div>
                 <div class="overflow-x-auto">
                   <table class="w-full text-left text-xs">
@@ -2858,20 +3162,13 @@ const getTypeBadge = (type) => {
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100">
-                      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td class="py-2 px-3 font-mono">14 Sep 2026</td>
-                        <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">STOCKTON MASONIC HALL TRUST</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">{{ $cs }}85.09</td>
+                      <tr v-for="tx in reconciliationSummary.outstandingPayments" :key="tx.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <td class="py-2 px-3 font-mono">{{ tx.transaction_date }}</td>
+                        <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">{{ tx.raw_description }}</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">{{ formatCurrency(Math.abs(tx.amount)) }}</td>
                       </tr>
-                      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td class="py-2 px-3 font-mono">12 Sep 2026</td>
-                        <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">LINKEDINPREC*82482521 LNKD.I</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">{{ $cs }}15.24</td>
-                      </tr>
-                      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td class="py-2 px-3 font-mono">08 Sep 2026</td>
-                        <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">LARAVEL FORGE NEW YORK</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">{{ $cs }}14.51</td>
+                      <tr v-if="!reconciliationSummary.outstandingPayments.length">
+                        <td colspan="3" class="py-4 px-3 text-center text-slate-400 italic">No outstanding payments.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -2882,21 +3179,408 @@ const getTypeBadge = (type) => {
               <div class="bg-gradient-to-br from-blue-50 dark:from-blue-950/40 to-blue-50/50 dark:to-blue-950/50 rounded-2xl p-5 border border-blue-200 dark:border-blue-800/60 shadow-sm space-y-4">
                 <div class="flex justify-between items-center text-sm font-extrabold text-blue-950 dark:text-blue-100">
                   <span>Calculated Bank Statement Balance</span>
-                  <span class="font-mono text-lg text-blue-950 dark:text-blue-100">{{ $cs }}476.49</span>
+                  <span class="font-mono text-lg text-blue-950 dark:text-blue-100">{{ formatCurrency(reconciliationSummary.calculatedStatementBalance) }}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm font-extrabold text-slate-900 dark:text-white border-t border-blue-200 dark:border-blue-800/60 pt-3">
                   <span>Actual Bank Statement Feed Balance</span>
-                  <span class="font-mono text-lg text-slate-900 dark:text-white">{{ $cs }}476.49</span>
+                  <span class="font-mono text-lg text-slate-900 dark:text-white">{{ formatCurrency(reconciliationSummary.statementBalance) }}</span>
                 </div>
-                <div class="flex justify-between items-center text-xs font-black text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-900/40 px-4 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-700/60">
+                <div
+                  :class="['flex justify-between items-center text-xs font-black px-4 py-2.5 rounded-xl border', Math.abs(reconciliationSummary.discrepancy) < 0.01 ? 'text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-900/40 border-emerald-300 dark:border-emerald-700/60' : 'text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-700/60']"
+                >
                   <span class="flex items-center gap-2 text-sm">
-                    <span>✅</span>
+                    <span>{{ Math.abs(reconciliationSummary.discrepancy) < 0.01 ? '✅' : '⚠️' }}</span>
                     <span>Unreconciled Difference / Discrepancy</span>
                   </span>
-                  <span class="font-mono text-sm">{{ $cs }}0.00 (Fully Reconciled)</span>
+                  <span class="font-mono text-sm">{{ formatCurrency(reconciliationSummary.discrepancy) }} {{ Math.abs(reconciliationSummary.discrepancy) < 0.01 ? '(Fully Reconciled)' : '' }}</span>
                 </div>
               </div>
 
+            </div>
+          </div>
+
+          <!-- Report: VAT Return -->
+          <div v-if="selectedReport === 'vat_return'" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white">VAT Return — {{ reports.vat_return?.quarter_label }}</h3>
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">{{ reports.vat_return?.quarter_start }} to {{ reports.vat_return?.quarter_end }}</p>
+              </div>
+              <a :href="route('admin.accounting.vat_return.export', club.slug)" class="px-4 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer shadow-sm flex items-center gap-1.5">
+                ⬇️ Export CSV
+              </a>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Output VAT (on sales)</span>
+                <span class="text-lg font-black text-emerald-700 dark:text-emerald-300">{{ formatCurrency(reports.vat_return?.output_vat) }}</span>
+              </div>
+              <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Input VAT (on purchases)</span>
+                <span class="text-lg font-black text-rose-700 dark:text-rose-300">{{ formatCurrency(reports.vat_return?.input_vat) }}</span>
+              </div>
+              <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Net VAT Due to HMRC</span>
+                <span class="text-lg font-black text-slate-900 dark:text-white">{{ formatCurrency(reports.vat_return?.net_vat_due) }}</span>
+              </div>
+            </div>
+            <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
+                  <tr>
+                    <th class="py-2 px-3">Date</th>
+                    <th class="py-2 px-3">Type</th>
+                    <th class="py-2 px-3">Reference</th>
+                    <th class="py-2 px-3 text-right">Net</th>
+                    <th class="py-2 px-3 text-right">VAT</th>
+                    <th class="py-2 px-3 text-right">Gross</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900">
+                  <tr v-for="(row, idx) in (reports.vat_return?.rows || [])" :key="idx">
+                    <td class="py-2 px-3 font-mono">{{ row.date }}</td>
+                    <td class="py-2 px-3">{{ row.type === 'sale' ? 'Sale' : 'Purchase' }}</td>
+                    <td class="py-2 px-3">{{ row.reference }} — {{ row.description }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(row.net_amount) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(row.vat_amount) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(row.gross_amount) }}</td>
+                  </tr>
+                  <tr v-if="!(reports.vat_return?.rows || []).length">
+                    <td colspan="6" class="py-4 px-3 text-center text-slate-400 italic">No VAT-inclusive transactions this quarter.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Report: Fixed Asset Register -->
+          <div v-if="selectedReport === 'fixed_assets'" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white">Fixed Asset Register</h3>
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">Cost, accumulated depreciation and net book value.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <input v-model="depreciationForm.period" placeholder="Period e.g. 2026" class="w-28 px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl" />
+                <button type="button" @click="runDepreciation" class="px-3 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer">
+                  📉 Run Depreciation
+                </button>
+                <button type="button" @click="showAddAssetForm = !showAddAssetForm" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer">
+                  ➕ Add Asset
+                </button>
+              </div>
+            </div>
+
+            <form v-if="showAddAssetForm" @submit.prevent="submitFixedAsset" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <input v-model="fixedAssetForm.name" placeholder="Asset name (e.g. Racing Eight)" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl sm:col-span-2" />
+              <input v-model="fixedAssetForm.category" placeholder="Category" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+              <input v-model="fixedAssetForm.purchase_date" type="date" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+              <input v-model="fixedAssetForm.purchase_cost" type="number" step="0.01" min="0" placeholder="Purchase cost" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+              <select v-model="fixedAssetForm.depreciation_method" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+                <option value="straight_line">Straight Line</option>
+                <option value="reducing_balance">Reducing Balance</option>
+                <option value="none">No Depreciation</option>
+              </select>
+              <input v-model="fixedAssetForm.useful_life_years" type="number" min="1" placeholder="Useful life (years)" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+              <input v-model="fixedAssetForm.salvage_value" type="number" step="0.01" min="0" placeholder="Salvage value" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+              <button type="submit" :disabled="fixedAssetForm.processing" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50 sm:col-span-3">
+                Register Asset
+              </button>
+            </form>
+
+            <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
+                  <tr>
+                    <th class="py-2 px-3">Asset</th>
+                    <th class="py-2 px-3">Category</th>
+                    <th class="py-2 px-3">Purchased</th>
+                    <th class="py-2 px-3 text-right">Cost</th>
+                    <th class="py-2 px-3 text-right">Acc. Depreciation</th>
+                    <th class="py-2 px-3 text-right">Net Book Value</th>
+                    <th class="py-2 px-3 text-center">Status</th>
+                    <th class="py-2 px-3"></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900">
+                  <template v-for="asset in fixedAssets" :key="asset.id">
+                    <tr>
+                      <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">{{ asset.name }}</td>
+                      <td class="py-2 px-3">{{ asset.category }}</td>
+                      <td class="py-2 px-3 font-mono">{{ asset.purchase_date }}</td>
+                      <td class="py-2 px-3 text-right font-mono">{{ asset.formatted_purchase_cost }}</td>
+                      <td class="py-2 px-3 text-right font-mono">{{ asset.formatted_accumulated_depreciation }}</td>
+                      <td class="py-2 px-3 text-right font-mono font-bold">{{ asset.formatted_net_book_value }}</td>
+                      <td class="py-2 px-3 text-center">
+                        <span v-if="asset.is_disposed" class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] font-black uppercase">Disposed {{ asset.disposal_date }}</span>
+                        <span v-else class="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-black uppercase">Active</span>
+                      </td>
+                      <td class="py-2 px-3 text-right">
+                        <button v-if="!asset.is_disposed" type="button" @click="disposingAssetId = disposingAssetId === asset.id ? null : asset.id" class="text-[10px] font-extrabold text-rose-700 dark:text-rose-300 hover:underline cursor-pointer">
+                          Dispose
+                        </button>
+                      </td>
+                    </tr>
+                    <tr v-if="disposingAssetId === asset.id">
+                      <td colspan="8" class="py-3 px-3 bg-rose-50/50 dark:bg-rose-950/20">
+                        <form @submit.prevent="disposeAsset(asset.id)" class="flex flex-wrap items-end gap-2">
+                          <div>
+                            <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-300">Disposal date</label>
+                            <input v-model="disposalForm.disposal_date" type="date" required class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg" />
+                          </div>
+                          <div>
+                            <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-300">Proceeds</label>
+                            <input v-model="disposalForm.disposal_proceeds" type="number" step="0.01" min="0" class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg" />
+                          </div>
+                          <button type="submit" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-lg cursor-pointer">Confirm Disposal</button>
+                        </form>
+                      </td>
+                    </tr>
+                  </template>
+                  <tr v-if="!fixedAssets.length">
+                    <td colspan="8" class="py-4 px-3 text-center text-slate-400 italic">No fixed assets registered yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Report: Budget vs Actual -->
+          <div v-if="selectedReport === 'budget_vs_actual'" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white">Budget vs Actual — {{ budgetVsActual.financial_year }}</h3>
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">Enter a budget per account, then compare against real ledger activity for the year.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" @click="changeBudgetYear(budgetVsActual.financial_year - 1)" class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-extrabold text-xs rounded-xl cursor-pointer">← {{ budgetVsActual.financial_year - 1 }}</button>
+                <button type="button" @click="changeBudgetYear(budgetVsActual.financial_year + 1)" class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-extrabold text-xs rounded-xl cursor-pointer">{{ budgetVsActual.financial_year + 1 }} →</button>
+              </div>
+            </div>
+
+            <form @submit.prevent="submitBudget" class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
+                  <tr>
+                    <th class="py-2 px-3">Account</th>
+                    <th class="py-2 px-3">Type</th>
+                    <th class="py-2 px-3 text-right">Budgeted</th>
+                    <th class="py-2 px-3 text-right">Actual</th>
+                    <th class="py-2 px-3 text-right">Variance</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900">
+                  <tr v-for="acc in budgetableAccounts" :key="acc.id">
+                    <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">{{ acc.code }} — {{ acc.name }}</td>
+                    <td class="py-2 px-3 capitalize">{{ acc.type }}</td>
+                    <td class="py-2 px-3 text-right">
+                      <input v-model="budgetForm.lines[acc.id]" type="number" step="0.01" min="0" class="w-28 px-2 py-1 text-right bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg" />
+                    </td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).actual || 0) }}</td>
+                    <td
+                      class="py-2 px-3 text-right font-mono"
+                      :class="((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).variance || 0) > 0 ? (acc.type === 'expense' ? 'text-rose-600' : 'text-emerald-600') : 'text-slate-500'"
+                    >
+                      {{ formatCurrency((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).variance || 0) }}
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class="bg-slate-100 dark:bg-slate-800 font-extrabold text-slate-900 dark:text-white">
+                    <td colspan="2" class="py-2 px-3 uppercase">Totals</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(budgetVsActual.total_budgeted) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(budgetVsActual.total_actual) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(budgetVsActual.total_actual - budgetVsActual.total_budgeted) }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+              <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
+                <button type="submit" :disabled="budgetForm.processing" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-50">
+                  Save Budget
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Report: Annual Treasurer's Report -->
+          <div v-if="selectedReport === 'treasurer_report'" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white">Annual Treasurer's Report — {{ annualTreasurerReport.financial_year }}</h3>
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">
+                  <span :class="annualTreasurerReport.is_closed ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'">
+                    {{ annualTreasurerReport.is_closed ? '✓ Books Closed' : '● Books Open — Draft' }}
+                  </span>
+                  <span v-if="annualTreasurerReport.audit_sign_off" class="ml-2 text-slate-500 dark:text-slate-400">
+                    Signed off by {{ annualTreasurerReport.audit_sign_off.auditor_one }} &amp; {{ annualTreasurerReport.audit_sign_off.auditor_two }} on {{ annualTreasurerReport.audit_sign_off.signed_off_at }}
+                  </span>
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" @click="changeTreasurerReportYear(annualTreasurerReport.financial_year - 1)" class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-extrabold text-xs rounded-xl cursor-pointer">← {{ annualTreasurerReport.financial_year - 1 }}</button>
+                <button type="button" @click="changeTreasurerReportYear(annualTreasurerReport.financial_year + 1)" class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-extrabold text-xs rounded-xl cursor-pointer">{{ annualTreasurerReport.financial_year + 1 }} →</button>
+                <a :href="route('admin.accounting.treasurer_report.export_pdf', { clubSlug: club.slug, year: annualTreasurerReport.financial_year })" target="_blank" class="px-3 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl cursor-pointer">📄 PDF</a>
+                <a :href="route('admin.accounting.treasurer_report.export_csv', { clubSlug: club.slug, year: annualTreasurerReport.financial_year })" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl cursor-pointer">⬇️ CSV</a>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">General Fund Net Surplus</span>
+                <span class="text-lg font-black text-slate-900 dark:text-white">{{ formatCurrency(annualTreasurerReport.general_fund.net_surplus) }}</span>
+              </div>
+              <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Charity Fund Movement</span>
+                <span class="text-lg font-black text-slate-900 dark:text-white">{{ formatCurrency(annualTreasurerReport.charity_fund.collections_total - annualTreasurerReport.charity_fund.grants_disbursed_total) }}</span>
+              </div>
+              <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Members in Arrears</span>
+                <span class="text-lg font-black text-slate-900 dark:text-white">{{ annualTreasurerReport.membership.in_arrears_count }}</span>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]"><tr><th class="py-2 px-3">General Fund Account</th><th class="py-2 px-3 text-right">Amount</th></tr></thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900">
+                  <tr v-for="row in annualTreasurerReport.general_fund.rows" :key="row.code">
+                    <td class="py-2 px-3">{{ row.code }} — {{ row.name }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(row.amount) }}</td>
+                  </tr>
+                  <tr v-if="!annualTreasurerReport.general_fund.rows.length"><td colspan="2" class="py-4 px-3 text-center text-slate-400 italic">No General Fund activity this year.</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr class="bg-slate-100 dark:bg-slate-800 font-extrabold text-slate-900 dark:text-white"><td class="py-2 px-3">Net Surplus / (Deficit)</td><td class="py-2 px-3 text-right font-mono">{{ formatCurrency(annualTreasurerReport.general_fund.net_surplus) }}</td></tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]"><tr><th class="py-2 px-3">Bank / Account</th><th class="py-2 px-3 text-right">Opening</th><th class="py-2 px-3 text-right">Closing (Ledger)</th><th class="py-2 px-3 text-right">Closing (Statement)</th></tr></thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900">
+                  <tr v-for="(b, idx) in annualTreasurerReport.bank_accounts" :key="idx">
+                    <td class="py-2 px-3">{{ b.bank_name }} — {{ b.account_name }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(b.opening_balance) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(b.closing_ledger_balance) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(b.closing_statement_balance) }}</td>
+                  </tr>
+                  <tr v-if="!annualTreasurerReport.bank_accounts.length"><td colspan="4" class="py-4 px-3 text-center text-slate-400 italic">No bank accounts connected.</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form @submit.prevent="submitCloseYear" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 space-y-3">
+                <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">Close Financial Year</h4>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Blocks new entries dated in {{ annualTreasurerReport.financial_year }}. A super admin can reopen it later if needed.</p>
+                <input v-model="closeYearForm.notes" placeholder="Notes (optional)" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+                <button type="submit" :disabled="annualTreasurerReport.is_closed || closeYearForm.processing" class="px-3 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-50">
+                  {{ annualTreasurerReport.is_closed ? 'Already Closed' : `Close ${annualTreasurerReport.financial_year}` }}
+                </button>
+              </form>
+
+              <form @submit.prevent="submitSignOff" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 space-y-3">
+                <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">Auditors' Sign-Off</h4>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Two elected members, neither the Treasurer nor Secretary (Rule 153). Each is emailed a private link to sign themselves.</p>
+                <select v-model="signOffForm.auditor_one_user_id" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+                  <option value="">Auditor 1…</option>
+                  <option v-for="m in members" :key="m.id" :value="m.id">{{ m.name }}</option>
+                </select>
+                <select v-model="signOffForm.auditor_two_user_id" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+                  <option value="">Auditor 2…</option>
+                  <option v-for="m in members" :key="m.id" :value="m.id">{{ m.name }}</option>
+                </select>
+                <input v-model="signOffForm.notes" placeholder="Notes (optional)" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+                <button type="submit" :disabled="!signOffForm.auditor_one_user_id || !signOffForm.auditor_two_user_id || signOffForm.processing" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-50">
+                  Request signatures
+                </button>
+
+                <div v-if="Object.keys(annualTreasurerReport.audit_signatures || {}).length" class="pt-2 space-y-1.5 border-t border-slate-100 dark:border-slate-800">
+                  <div v-for="(sig, purpose) in annualTreasurerReport.audit_signatures" :key="purpose" class="flex items-center justify-between text-[11px] bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2">
+                    <span class="font-semibold text-slate-700 dark:text-slate-200">{{ sig.signer_name }}</span>
+                    <span class="flex items-center gap-2">
+                      <span :class="['font-bold', sig.status === 'signed' ? 'text-emerald-700 dark:text-emerald-300' : sig.status === 'pending' ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500']">{{ sig.label }}</span>
+                      <button v-if="sig.status === 'pending'" type="button" @click="resendAuditSignature(purpose)" class="text-blue-600 dark:text-blue-400 font-bold underline cursor-pointer">Resend</button>
+                    </span>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div v-if="showAuditConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showAuditConfirmModal = false">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4" @click.stop>
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-extrabold text-slate-900 dark:text-white text-base">Send signature requests?</h3>
+                <button type="button" @click="showAuditConfirmModal = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold text-sm cursor-pointer">✕</button>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Each person below will be emailed a private link to review and sign the {{ annualTreasurerReport.financial_year }} accounts themselves.</p>
+              <div class="space-y-2">
+                <div v-for="m in auditRecipients" :key="m.id" class="flex items-center justify-between text-xs bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2.5">
+                  <span class="font-bold text-slate-900 dark:text-white">{{ m.name }}</span>
+                  <span class="text-slate-500 dark:text-slate-400">{{ m.email }}</span>
+                </div>
+              </div>
+              <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <button type="button" @click="showAuditConfirmModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs cursor-pointer">Cancel</button>
+                <button type="button" @click="confirmSignOff" :disabled="signOffForm.processing" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md text-xs cursor-pointer disabled:opacity-50">Send signature requests</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Report: Recurring Vendor Bills -->
+          <div v-if="selectedReport === 'recurring_bills'" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white">Recurring Vendor Bills</h3>
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">A daily scheduled task turns a due schedule into a real bill automatically.</p>
+              </div>
+              <button type="button" @click="showAddRecurringBillForm = !showAddRecurringBillForm" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer">
+                ➕ Add Schedule
+              </button>
+            </div>
+
+            <form v-if="showAddRecurringBillForm" @submit.prevent="submitRecurringBill" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <input v-model="recurringBillForm.vendor_name" placeholder="Vendor name" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl sm:col-span-2" />
+              <input v-model="recurringBillForm.category" placeholder="Category" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+              <input v-model="recurringBillForm.amount" type="number" step="0.01" min="0.01" placeholder="Amount" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+              <select v-model="recurringBillForm.frequency" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="annually">Annually</option>
+              </select>
+              <input v-model="recurringBillForm.next_run_date" type="date" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+              <button type="submit" :disabled="recurringBillForm.processing" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50 sm:col-span-3">
+                Schedule Recurring Bill
+              </button>
+            </form>
+
+            <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
+                  <tr><th class="py-2 px-3">Vendor</th><th class="py-2 px-3">Category</th><th class="py-2 px-3 text-right">Amount</th><th class="py-2 px-3">Frequency</th><th class="py-2 px-3">Next Run</th><th class="py-2 px-3 text-center">Status</th><th class="py-2 px-3"></th></tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900">
+                  <tr v-for="t in recurringBillTemplates" :key="t.id">
+                    <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">{{ t.vendor_name }}</td>
+                    <td class="py-2 px-3">{{ t.category }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ t.formatted_amount }}</td>
+                    <td class="py-2 px-3 capitalize">{{ t.frequency }}</td>
+                    <td class="py-2 px-3 font-mono">{{ t.next_run_date }}</td>
+                    <td class="py-2 px-3 text-center">
+                      <span :class="['px-2 py-0.5 rounded-full text-[10px] font-black uppercase', t.is_active ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500']">{{ t.is_active ? 'Active' : 'Paused' }}</span>
+                    </td>
+                    <td class="py-2 px-3 text-right whitespace-nowrap">
+                      <button type="button" @click="toggleRecurringBill(t.id)" class="text-[10px] font-extrabold text-blue-700 dark:text-blue-300 hover:underline cursor-pointer mr-2">{{ t.is_active ? 'Pause' : 'Resume' }}</button>
+                      <button type="button" @click="deleteRecurringBill(t.id)" class="text-[10px] font-extrabold text-rose-700 dark:text-rose-300 hover:underline cursor-pointer">Remove</button>
+                    </td>
+                  </tr>
+                  <tr v-if="!recurringBillTemplates.length">
+                    <td colspan="7" class="py-4 px-3 text-center text-slate-400 italic">No recurring bills scheduled.</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -3002,7 +3686,7 @@ const getTypeBadge = (type) => {
             <div
               v-for="acc in (bankAccounts || [])"
               :key="acc.id"
-              class="bg-slate-50/70 dark:bg-slate-800/50/70 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 p-5 shadow-sm hover:border-blue-300 dark:hover:border-blue-700/60 transition-all flex flex-col justify-between space-y-4"
+              class="bg-slate-50/70 dark:bg-slate-800/70 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 p-5 shadow-sm hover:border-blue-300 dark:hover:border-blue-700/60 transition-all flex flex-col justify-between space-y-4"
             >
               <div>
                 <div class="flex items-start justify-between gap-2">
@@ -3163,7 +3847,7 @@ const getTypeBadge = (type) => {
               <div
                 v-for="entry in journalEntries"
                 :key="entry.id"
-                class="bg-slate-50/80 dark:bg-slate-800/50/80 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-3"
+                class="bg-slate-50/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-3"
               >
                 <div class="flex items-center justify-between text-xs border-b border-slate-200/60 dark:border-slate-800/60 pb-2">
                   <div class="flex items-center gap-3">
@@ -3255,7 +3939,7 @@ const getTypeBadge = (type) => {
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
-                <tr v-for="acc in accounts" :key="acc.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+                <tr v-for="acc in accounts" :key="acc.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                   <td class="py-3 px-6 font-mono text-slate-500 dark:text-slate-400 font-bold">{{ acc.code }}</td>
                   <td class="py-3 px-6 font-bold text-slate-900 dark:text-white">{{ acc.name }}</td>
                   <td class="py-3 px-6">
@@ -3339,7 +4023,7 @@ const getTypeBadge = (type) => {
               <tr v-if="!filteredContacts.length">
                 <td colspan="6" class="py-8 text-center text-slate-400">No contacts match the selected filter. Click "+ Add Contact" to add your first contact.</td>
               </tr>
-              <tr v-for="c in filteredContacts" :key="c.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+              <tr v-for="c in filteredContacts" :key="c.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                 <td class="py-3 px-4">
                   <div class="flex items-center gap-2.5">
                     <span class="text-base p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">👤</span>
@@ -3622,7 +4306,7 @@ const getTypeBadge = (type) => {
               v-for="tx in filteredUnmatchedTx"
               :key="tx.id"
               :class="[
-                'bg-slate-50/50 dark:bg-slate-800/50/50 rounded-xl border border-slate-200/60 dark:border-slate-800/60 transition-all',
+                'bg-slate-50/50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-800/60 transition-all',
                 compactView ? 'p-1.5' : 'p-2.5'
               ]"
             >
@@ -4028,7 +4712,7 @@ const getTypeBadge = (type) => {
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-                <tr v-for="tx in filteredUnmatchedTx" :key="tx.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80">
+                <tr v-for="tx in filteredUnmatchedTx" :key="tx.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80">
                   <td class="py-2 px-3">
                     <input type="checkbox" :value="tx.id" v-model="selectedCashCodingTx" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
                   </td>
@@ -4164,7 +4848,7 @@ const getTypeBadge = (type) => {
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                <tr v-for="line in filteredStatementLines" :key="line.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+                <tr v-for="line in filteredStatementLines" :key="line.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                   <td class="py-2.5 px-3">
                     <input
                       type="checkbox"
@@ -4246,7 +4930,7 @@ const getTypeBadge = (type) => {
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                <tr v-for="tx in filteredAccountTransactions" :key="tx.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+                <tr v-for="tx in filteredAccountTransactions" :key="tx.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                   <td class="py-2.5 px-3">
                     <input
                       type="checkbox"
@@ -4605,14 +5289,15 @@ const getTypeBadge = (type) => {
               </div>
               <div>
                 <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Registered Address</span>
-                <span>{{ settings.address_line_1 || '100 Boathouse Way' }}</span>
+                <span v-if="settings.address_line_1">{{ settings.address_line_1 }}</span>
                 <span v-if="settings.city" class="block">{{ settings.city }}, {{ settings.postcode }}</span>
                 <span class="block text-slate-500 dark:text-slate-400 font-mono text-[10px]">{{ settings.country || 'United Kingdom' }}</span>
+                <span v-if="!settings.address_line_1 && !settings.city" class="text-slate-400 italic">Not set</span>
               </div>
               <div>
                 <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Contact Information</span>
-                <span class="block font-mono">{{ settings.contact_email || 'admin@' + club.slug + '.org' }}</span>
-                <span class="block font-mono text-slate-500 dark:text-slate-400">{{ settings.phone || '+44 20 7946 0912' }}</span>
+                <span class="block font-mono">{{ settings.contact_email || 'Not set' }}</span>
+                <span class="block font-mono text-slate-500 dark:text-slate-400">{{ settings.phone || 'Not set' }}</span>
               </div>
             </div>
           </div>
@@ -4623,21 +5308,76 @@ const getTypeBadge = (type) => {
               <span class="text-lg">📋</span>
               <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">VAT & Tax Configuration</h4>
             </div>
-            <div class="space-y-2 text-slate-600 dark:text-slate-300">
-              <div>
-                <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Tax / VAT Reg Number</span>
-                <span class="font-mono font-bold text-blue-800 dark:text-blue-200 text-sm block">{{ settings.tax_registration_number || 'GB 987 6543 21' }}</span>
-              </div>
-              <div>
-                <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Default Tax Rates</span>
-                <span class="block">• 20.0% Standard UK VAT</span>
-                <span class="block">• 0.0% Exempt Subscriptions</span>
-              </div>
+            <form @submit.prevent="submitVatSettings" class="space-y-3 text-slate-600 dark:text-slate-300">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="vatSettingsForm.enabled"
+                  :disabled="vatLocked"
+                  class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">This club is VAT registered</span>
+              </label>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400">Most small lodges/clubs stay under the UK VAT registration threshold and should leave this off. Enable it only once actually registered with HMRC.</p>
+
+              <template v-if="vatSettingsForm.enabled">
+                <div>
+                  <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">VAT Scheme</span>
+                  <select
+                    v-model="vatSettingsForm.scheme"
+                    :disabled="vatLocked"
+                    class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="standard">Standard VAT Accounting</option>
+                    <option value="flat_rate">Flat Rate Scheme</option>
+                    <option value="cash_accounting">Cash Accounting Scheme</option>
+                    <option value="annual_accounting">Annual Accounting Scheme</option>
+                  </select>
+                </div>
+                <div v-if="vatSettingsForm.scheme === 'flat_rate'">
+                  <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">Flat Rate %</span>
+                  <input
+                    type="number" step="0.01" min="0" max="100"
+                    v-model="vatSettingsForm.flat_rate_percent"
+                    :disabled="vatLocked"
+                    class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">VAT Registration Number</span>
+                  <input
+                    type="text"
+                    v-model="vatSettingsForm.vat_number"
+                    placeholder="GB 123 4567 89"
+                    class="w-full px-3 py-2 text-sm font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">Default VAT Rate %</span>
+                  <input
+                    type="number" step="0.01" min="0" max="100"
+                    v-model="vatSettingsForm.default_rate"
+                    :disabled="vatLocked"
+                    class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </template>
+
+              <p v-if="vatLocked" class="text-[10px] text-amber-700 dark:text-amber-300 font-semibold">This club already has VAT-inclusive bills or invoices on its books, so whether VAT is on and which scheme is used are locked.</p>
+
+              <button
+                type="submit"
+                :disabled="vatSettingsForm.processing"
+                class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-lg transition-all cursor-pointer disabled:opacity-50"
+              >
+                Save VAT Settings
+              </button>
+
               <div>
                 <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Currency</span>
                 <span class="font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ $page.props.currency.code }} ({{ $cs }})</span>
               </div>
-            </div>
+            </form>
           </div>
 
           <!-- Card 3: Invoicing Setup & Footer Notes -->

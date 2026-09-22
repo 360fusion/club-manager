@@ -10,6 +10,7 @@ use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
 use App\Models\EventRegistration;
+use App\Models\Invoice;
 use App\Services\AccountingService;
 use App\Services\Events\EventPaymentService;
 use App\Support\Currencies;
@@ -109,6 +110,57 @@ class BankReconciliationMatcherService
                         'confidence_level' => $score >= 90 ? 'high' : ($score >= 60 ? 'medium' : 'low'),
                         'match_reason' => $reason,
                         'record' => $sub,
+                    ];
+                }
+            }
+
+            // Unpaid member invoices (the Inertia accounting layer's Invoice model — distinct
+            // from MemberSubscription above, e.g. one-off charges like locker rental).
+            $unpaidInvoices = Invoice::where('club_id', $clubId)
+                ->where('status', 'unpaid')
+                ->with('user')
+                ->get();
+
+            foreach ($unpaidInvoices as $invoice) {
+                $invNo = strtolower($invoice->invoice_number ?? '');
+                $invAmount = (float) $invoice->amount;
+                $payerName = $invoice->user ? strtolower($invoice->user->name) : '';
+                $payerEmail = $invoice->user ? strtolower($invoice->user->email ?? '') : '';
+
+                $score = 0;
+                $reason = '';
+
+                // Rule A: Exact invoice number match (100%)
+                if ($invNo && (str_contains($desc, $invNo) || str_contains($ref, $invNo))) {
+                    $score = 100;
+                    $reason = "Exact Invoice Number Match ({$invoice->invoice_number})";
+                }
+                // Rule B: Payer name & exact amount match (95%)
+                elseif ($payerName && str_contains($desc, $payerName) && abs($invAmount - $amount) < 0.01) {
+                    $score = 95;
+                    $reason = "Payer Name ({$invoice->user->name}) & Invoice Amount (".Currencies::format($invAmount, $club).') Match';
+                }
+                // Rule C: Payer name or email in description (75%)
+                elseif (($payerName && str_contains($desc, $payerName)) || ($payerEmail && str_contains($desc, $payerEmail))) {
+                    $score = 75;
+                    $reason = 'Payer Name/Email Match';
+                }
+                // Rule D: Invoice amount match alone (60%)
+                elseif (abs($invAmount - $amount) < 0.01) {
+                    $score = 60;
+                    $reason = 'Invoice Amount Match ('.Currencies::format($invAmount, $club).')';
+                }
+
+                if ($score > 0) {
+                    $matches[] = [
+                        'match_type' => 'invoice',
+                        'target_id' => $invoice->id,
+                        'target_title' => "Invoice {$invoice->invoice_number} — {$invoice->title}",
+                        'target_amount' => $invAmount,
+                        'confidence_score' => $score,
+                        'confidence_level' => $score >= 90 ? 'high' : ($score >= 60 ? 'medium' : 'low'),
+                        'match_reason' => $reason,
+                        'record' => $invoice,
                     ];
                 }
             }
@@ -256,13 +308,25 @@ class BankReconciliationMatcherService
             } elseif ($matchType === 'supplier_bill') {
                 $bill = Bill::where('club_id', $transaction->club_id)->find((int) $targetId);
                 if ($bill) {
-                    $bill->update([
-                        'status' => 'paid',
-                        'paid_at' => Carbon::now(),
-                    ]);
+                    if ($bill->status !== 'paid') {
+                        $accountingService->markBillAsPaid($bill, auth()->user());
+                    }
+                    $accountingService->markBillReconciled($bill, $transaction);
+                    $ledgerAlreadyPosted = true;
                     $note .= " [Audited Vendor Bill: {$bill->bill_number} - {$bill->vendor_name}]";
                 }
                 $targetCode = '5000'; // Facility & Clubhouse Maintenance / Expenses
+            } elseif ($matchType === 'invoice') {
+                $invoice = Invoice::where('club_id', $transaction->club_id)->find((int) $targetId);
+                if ($invoice) {
+                    if ($invoice->status !== 'paid') {
+                        $accountingService->markInvoiceAsPaid($invoice, auth()->user());
+                    }
+                    $accountingService->markInvoiceReconciled($invoice, $transaction);
+                    $ledgerAlreadyPosted = true;
+                    $note .= " [Invoice: {$invoice->invoice_number} - {$invoice->title}]";
+                }
+                $targetCode = '4000'; // Membership Dues Income
             } elseif ($matchType === 'charity_relief') {
                 $note .= ' [Charity Relief Chest / Provincial Contribution]';
                 $targetCode = '4300'; // Raffle & Charity Contributions

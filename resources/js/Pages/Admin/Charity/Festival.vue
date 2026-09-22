@@ -168,7 +168,7 @@ const submitGiving = () => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
-              <tr v-for="m in activeMembers" :key="m.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50/80 transition-colors">
+              <tr v-for="m in activeMembers" :key="m.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                 <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">{{ m.name }} ({{ m.rank }})</td>
                 <td class="py-3 px-4 text-right font-semibold text-slate-800 dark:text-slate-100">
                   {{ m.regular_giving > 0 ? ($cs + '') + m.regular_giving.toFixed(2) : '—' }}

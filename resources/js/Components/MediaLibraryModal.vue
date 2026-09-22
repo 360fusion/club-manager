@@ -27,8 +27,11 @@ const sortBy = ref('newest');
 const availableExtensions = ref([]);
 const availableMonths = ref([]);
 const trashCount = ref(0);
+const customFolders = ref([]); // [{ id, name, slug }], from the server
 
-const folders = computed(() => [
+// The fixed folders. Custom folders are never listed here directly — each one lives
+// one level inside a fixed folder (see subfoldersOf / activeCustomFolder).
+const fixedFolders = [
   { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-200' },
   { id: 'summons', label: 'Summonses', icon: '📜', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
   { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
@@ -40,8 +43,16 @@ const folders = computed(() => [
   { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
   { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
   { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
+];
+
+const folders = computed(() => [
+  ...fixedFolders,
   { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50 dark:bg-rose-950/40', text: 'text-rose-700 dark:text-rose-300' },
 ]);
+
+const subfoldersOf = (fixedId) => customFolders.value.filter(f => f.parent_slug === fixedId);
+const activeCustomFolder = computed(() => customFolders.value.find(f => f.slug === activeFolder.value) || null);
+const fixedFolderById = (id) => fixedFolders.find(f => f.id === id);
 
 const fetchMedia = async () => {
   if (!props.clubSlug) return;
@@ -62,6 +73,7 @@ const fetchMedia = async () => {
       trashCount.value = data.trash_count || 0;
       availableExtensions.value = data.available_extensions || [];
       availableMonths.value = data.available_months || [];
+      customFolders.value = data.custom_folders || [];
     }
   } catch (err) {
     console.error('Failed to load media library items:', err);
@@ -97,7 +109,7 @@ const isDragging = ref(false);
 const uploadStatus = ref('');
 const uploadError = ref('');
 
-const selectableFolders = [
+const selectableFolders = computed(() => [
   { id: 'summons', label: 'Summonses' },
   { id: 'logos', label: 'Logos' },
   { id: 'news', label: 'News Items' },
@@ -105,7 +117,7 @@ const selectableFolders = [
   { id: 'images', label: 'Single Images' },
   { id: 'galleries', label: 'Galleries' },
   { id: 'documents', label: 'Documents' },
-];
+].flatMap(f => [f, ...subfoldersOf(f.id).map(c => ({ id: c.slug, label: `— ${c.name}` }))]));
 
 const getCsrfToken = () => {
   const meta = document.querySelector('meta[name="csrf-token"]');
@@ -308,14 +320,20 @@ const isImage = (mimeOrUrl) => {
 
 <template>
   <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col">
-      
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="media-library-modal-title"
+      v-focus-trap="() => emit('close')"
+      class="bg-white dark:bg-slate-900 rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+    >
+
       <!-- Modal Header -->
-      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/50/80">
+      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/80">
         <div class="flex items-center gap-2.5">
           <span class="text-xl">📁</span>
           <div>
-            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">File Manager</h3>
+            <h3 id="media-library-modal-title" class="text-base font-extrabold text-slate-900 dark:text-white">File Manager</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">Centralized file repository for logos, news, newsletters, galleries, and documents.</p>
           </div>
         </div>
@@ -344,6 +362,7 @@ const isImage = (mimeOrUrl) => {
           <button
             type="button"
             @click="emit('close')"
+            aria-label="Close file manager"
             class="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold rounded-xl transition-colors cursor-pointer text-sm"
           >
             ✕
@@ -390,7 +409,35 @@ const isImage = (mimeOrUrl) => {
 
         <!-- Main Media Grid Area -->
         <div class="flex-1 flex flex-col p-6 space-y-4 overflow-hidden bg-white dark:bg-slate-900">
-          
+
+          <!-- Breadcrumb: viewing a custom folder, inside one of the fixed folders -->
+          <div v-if="activeCustomFolder" class="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
+            <button
+              type="button"
+              @click="activeFolder = activeCustomFolder.parent_slug"
+              class="hover:text-slate-900 dark:hover:text-white hover:underline cursor-pointer flex items-center gap-1"
+            >
+              <span>{{ fixedFolderById(activeCustomFolder.parent_slug)?.icon }}</span>
+              <span>{{ fixedFolderById(activeCustomFolder.parent_slug)?.label }}</span>
+            </button>
+            <span class="text-slate-300 dark:text-slate-600">/</span>
+            <span class="text-slate-900 dark:text-white">🗂️ {{ activeCustomFolder.name }}</span>
+          </div>
+
+          <!-- Subfolders: viewing one of the fixed folders (read-only here — no creation) -->
+          <div v-if="activeFolder !== 'all' && activeFolder !== 'trash' && !activeCustomFolder && subfoldersOf(activeFolder).length" class="flex flex-wrap gap-1.5 shrink-0">
+            <button
+              v-for="sub in subfoldersOf(activeFolder)"
+              :key="sub.id"
+              type="button"
+              @click="activeFolder = sub.slug"
+              class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer flex items-center gap-1.5"
+            >
+              <span>🗂️</span>
+              <span>{{ sub.name }}</span>
+            </button>
+          </div>
+
           <!-- Top Search & Inline Filter Controls Bar -->
           <div class="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-800">
             <div class="flex items-center justify-between gap-3">
@@ -487,7 +534,7 @@ const isImage = (mimeOrUrl) => {
               <span class="animate-spin text-lg mr-2">🔄</span> Loading Media Library...
             </div>
 
-            <div v-else-if="!mediaItems.length" class="text-center py-16 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50/50">
+            <div v-else-if="!mediaItems.length" class="text-center py-16 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50">
               <span class="text-3xl block mb-2">📁</span>
               <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">No media files in this folder</span>
               <span class="text-[11px] text-slate-400">Click "Upload New File" above to add files to the media library.</span>

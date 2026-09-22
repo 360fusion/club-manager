@@ -68,7 +68,7 @@
                 </div>
 
                 <!-- Modal Body (Scrollable) -->
-                <div class="p-4 sm:p-5 overflow-y-auto flex-1 bg-slate-50/50 dark:bg-slate-800/50/50 space-y-4">
+                <div class="p-4 sm:p-5 overflow-y-auto flex-1 bg-slate-50/50 dark:bg-slate-800/50 space-y-4">
 
                     <!-- ========================================================= -->
                     <!-- TAB 1: Formatted PDF Document Preview                     -->

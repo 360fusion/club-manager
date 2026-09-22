@@ -141,7 +141,7 @@ const submit = () => {
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                  <tr v-for="(item, idx) in form.items" :key="idx" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50">
+                  <tr v-for="(item, idx) in form.items" :key="idx" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                     <td class="p-2">
                       <select
                         v-model="item.account_id"

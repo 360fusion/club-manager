@@ -5,7 +5,9 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
 import BlockRenderer from '@/Components/Blocks/BlockRenderer.vue';
-import { SITE_THEMES, themeClasses } from '@/Support/siteThemes';
+import PublicHeader from '@/Components/Site/PublicHeader.vue';
+import PublicFooter from '@/Components/Site/PublicFooter.vue';
+import { SITE_LAYOUTS, SITE_COLOR_SCHEMES, LEGACY_THEME, DEFAULT_THEME_KEY, themeClasses } from '@/Support/siteThemes';
 
 const props = defineProps({
     club: {
@@ -65,12 +67,6 @@ const settingsForm = useForm({
     contact_email: props.websiteSettings?.contact_email || '',
     phone: props.websiteSettings?.phone || '',
     address: props.websiteSettings?.address || '',
-    social_facebook: props.websiteSettings?.social_facebook || '',
-    social_instagram: props.websiteSettings?.social_instagram || '',
-    social_twitter: props.websiteSettings?.social_twitter || '',
-    header_cta_text: props.websiteSettings?.header_cta_text || '',
-    header_cta_link: props.websiteSettings?.header_cta_link || '',
-    footer_copyright: props.websiteSettings?.footer_copyright || '',
 });
 
 const submitWebsiteSettings = () => {
@@ -82,6 +78,88 @@ const submitWebsiteSettings = () => {
         },
     });
 };
+
+const HEADER_LAYOUTS = [
+    { id: 'logo_left', name: 'Logo Left', description: 'Logo & name on the left, navigation and actions on the right — the classic layout.' },
+    { id: 'logo_center', name: 'Logo Centered', description: 'Logo & name centered on top, navigation centered underneath.' },
+];
+
+const FOOTER_LAYOUTS = [
+    { id: 'simple', name: 'Simple', description: 'A single centered line with the copyright notice (and social links, if enabled).' },
+    { id: 'columns', name: 'Columns', description: 'Club info, navigation, custom link columns and social links laid out above the copyright line.' },
+];
+
+const MAX_FOOTER_COLUMNS = 4;
+const MAX_FOOTER_COLUMN_LINKS = 8;
+
+// The server strips any 'id' field it doesn't recognise, so a reloaded column/link may come back without
+// one — assign a fresh id in that case, purely for :key stability in the editor.
+const normalizeFooterLinkColumns = (columns) => (columns || []).map((col, colIdx) => ({
+    id: col.id || `col-${Date.now()}-${colIdx}`,
+    title: col.title || '',
+    links: (col.links || []).map((link, linkIdx) => ({
+        id: link.id || `link-${Date.now()}-${colIdx}-${linkIdx}`,
+        label: link.label || '',
+        url: link.url || '',
+    })),
+}));
+
+const headerFooterForm = useForm({
+    header_layout: props.websiteSettings?.header_layout || 'logo_left',
+    header_show_logo: props.websiteSettings?.header_show_logo ?? true,
+    header_show_tagline: props.websiteSettings?.header_show_tagline ?? true,
+    header_cta_enabled: props.websiteSettings?.header_cta_enabled ?? false,
+    header_cta_text: props.websiteSettings?.header_cta_text || '',
+    header_cta_link: props.websiteSettings?.header_cta_link || '',
+    header_show_account_links: props.websiteSettings?.header_show_account_links ?? true,
+    footer_layout: props.websiteSettings?.footer_layout || 'simple',
+    footer_show_social: props.websiteSettings?.footer_show_social ?? true,
+    footer_show_nav: props.websiteSettings?.footer_show_nav ?? false,
+    footer_copyright: props.websiteSettings?.footer_copyright || '',
+    social_facebook: props.websiteSettings?.social_facebook || '',
+    social_instagram: props.websiteSettings?.social_instagram || '',
+    social_twitter: props.websiteSettings?.social_twitter || '',
+    footer_link_columns: normalizeFooterLinkColumns(props.websiteSettings?.footer_link_columns),
+});
+
+const addFooterColumn = () => {
+    if (headerFooterForm.footer_link_columns.length >= MAX_FOOTER_COLUMNS) return;
+    headerFooterForm.footer_link_columns.push({
+        id: 'col-' + Date.now(),
+        title: 'Useful Links',
+        links: [{ id: 'link-' + Date.now(), label: '', url: '' }],
+    });
+};
+
+const removeFooterColumn = (colIndex) => {
+    headerFooterForm.footer_link_columns.splice(colIndex, 1);
+};
+
+const addFooterLink = (colIndex) => {
+    const column = headerFooterForm.footer_link_columns[colIndex];
+    if (column.links.length >= MAX_FOOTER_COLUMN_LINKS) return;
+    column.links.push({ id: 'link-' + Date.now() + '-' + column.links.length, label: '', url: '' });
+};
+
+const removeFooterLink = (colIndex, linkIndex) => {
+    headerFooterForm.footer_link_columns[colIndex].links.splice(linkIndex, 1);
+};
+
+const submitHeaderFooter = () => {
+    headerFooterForm.post(route('admin.pages.header_footer.update', { clubSlug: props.club.slug }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            isSavedSuccess.value = true;
+            setTimeout(() => { isSavedSuccess.value = false; }, 3000);
+        },
+    });
+};
+
+// Live theme (not the "preview a different theme" one from the Themes tab) — used to preview header/footer
+// changes against whatever the club's site actually looks like right now.
+const liveThemeClasses = computed(() => themeClasses(currentThemeKey.value));
+
+const publishedNavPages = computed(() => props.pages.filter(p => p.show_in_navigation && p.is_published));
 
 const checkingDomain = ref(false);
 
@@ -116,53 +194,82 @@ const onMediaSelect = (mediaItem) => {
     }
 };
 
-const THEMES = SITE_THEMES;
+const LAYOUTS = SITE_LAYOUTS;
+const COLOR_SCHEMES = SITE_COLOR_SCHEMES;
+const LEGACY = LEGACY_THEME;
 
-const currentThemeKey = computed(() => props.club?.settings?.website_theme || 'classic');
-const activePreviewThemeId = ref(null);
+const currentThemeKey = computed(() => props.club?.settings?.website_theme || DEFAULT_THEME_KEY);
+
+// A theme key is either the legacy `masonic` id, or `${layoutId}:${colorSchemeId}` — the layout and
+// colour scheme are picked independently in the gallery below, then combined into that one string.
+const keyFor = (layoutId, colorSchemeId) => (layoutId === LEGACY.id ? LEGACY.id : `${layoutId}:${colorSchemeId}`);
+const parseKey = (key) => {
+    if (key === LEGACY.id) return { layoutId: LEGACY.id, colorSchemeId: null };
+    const [layoutId, colorSchemeId] = String(key || '').split(':');
+    return {
+        layoutId: LAYOUTS.some(l => l.id === layoutId) ? layoutId : DEFAULT_THEME_KEY.split(':')[0],
+        colorSchemeId: COLOR_SCHEMES.some(c => c.id === colorSchemeId) ? colorSchemeId : DEFAULT_THEME_KEY.split(':')[1],
+    };
+};
+
+const initialParsed = parseKey(currentThemeKey.value);
+const selectedLayoutId = ref(initialParsed.layoutId);
+const selectedColorSchemeId = ref(initialParsed.colorSchemeId);
 const selectedThemeForModal = ref(null);
 const showThemeConfirmModal = ref(false);
 
 const themeForm = useForm({
-    website_theme: 'classic',
+    website_theme: currentThemeKey.value,
 });
 
-const previewThemeInBuilder = (theme) => {
-    activePreviewThemeId.value = theme.id;
+const previewThemeInBuilder = (layoutId, colorSchemeId = null) => {
+    selectedLayoutId.value = layoutId;
+    if (layoutId !== LEGACY.id) {
+        selectedColorSchemeId.value = colorSchemeId || selectedColorSchemeId.value || COLOR_SCHEMES[0].id;
+    }
     const targetPageId = props.pages.length > 0 ? props.pages[0].id : 'new';
     requestNavigation(targetPageId, 'preview');
 };
 
-const effectivePreviewThemeKey = computed(() => activePreviewThemeId.value || currentThemeKey.value);
+const effectivePreviewThemeKey = computed(() => keyFor(selectedLayoutId.value, selectedColorSchemeId.value));
 const previewThemeClasses = computed(() => themeClasses(effectivePreviewThemeKey.value));
 
-const applyPreviewTheme = (themeId = null) => {
-    const targetThemeId = themeId || effectivePreviewThemeKey.value;
-    themeForm.website_theme = targetThemeId;
+const applyPreviewTheme = (themeKey = null) => {
+    const targetThemeKey = themeKey || effectivePreviewThemeKey.value;
+    themeForm.website_theme = targetThemeKey;
     themeForm.post(route('admin.pages.themes.update', { clubSlug: props.club.slug }), {
         preserveScroll: true,
         onSuccess: () => {
-            activePreviewThemeId.value = null;
             isSavedSuccess.value = true;
             setTimeout(() => { isSavedSuccess.value = false; }, 3000);
         },
     });
 };
 
-const openApplyThemeModal = (theme) => {
-    selectedThemeForModal.value = theme;
+const openApplyThemeModal = (themeKey, label) => {
+    selectedThemeForModal.value = { key: themeKey, label };
     showThemeConfirmModal.value = true;
 };
 
 const confirmApplyTheme = () => {
     if (!selectedThemeForModal.value) return;
-    applyPreviewTheme(selectedThemeForModal.value.id);
+    applyPreviewTheme(selectedThemeForModal.value.key);
     showThemeConfirmModal.value = false;
     selectedThemeForModal.value = null;
 };
 
+const colorSchemeName = (id) => COLOR_SCHEMES.find(c => c.id === id)?.name || '';
+const layoutName = (id) => (id === LEGACY.id ? LEGACY.name : LAYOUTS.find(l => l.id === id)?.name || '');
+const themeLabel = (key) => {
+    if (key === LEGACY.id) return LEGACY.name;
+    const { layoutId, colorSchemeId } = parseKey(key);
+    return `${layoutName(layoutId)} — ${colorSchemeName(colorSchemeId)}`;
+};
+
+const MANAGEMENT_SELECTIONS = ['overview', 'settings', 'themes', 'header_footer'];
+
 const activePage = computed(() => {
-    if (activeNavSelection.value === 'overview' || activeNavSelection.value === 'new' || activeNavSelection.value === 'settings' || activeNavSelection.value === 'themes') {
+    if (activeNavSelection.value === 'new' || MANAGEMENT_SELECTIONS.includes(activeNavSelection.value)) {
         return null;
     }
     return props.pages.find(p => String(p.id) === String(activeNavSelection.value)) || null;
@@ -206,7 +313,7 @@ const takeFormSnapshot = () => {
 };
 
 const isDirty = computed(() => {
-    if (activeNavSelection.value === 'overview' || activeNavSelection.value === 'settings' || activeNavSelection.value === 'themes') {
+    if (MANAGEMENT_SELECTIONS.includes(activeNavSelection.value)) {
         return false;
     }
     return initialFormSnapshot.value !== '' && getFormStateString() !== initialFormSnapshot.value;
@@ -264,7 +371,7 @@ if (activePage.value) {
 }
 
 watch(activeNavSelection, (newVal) => {
-    if (newVal === 'overview' || newVal === 'settings' || newVal === 'themes') {
+    if (MANAGEMENT_SELECTIONS.includes(newVal)) {
         return;
     }
     if (newVal === 'new') {
@@ -278,7 +385,7 @@ watch(activeNavSelection, (newVal) => {
 });
 
 watch(() => props.pages, (newPages) => {
-    if (activeNavSelection.value !== 'overview' && activeNavSelection.value !== 'new' && activeNavSelection.value !== 'settings' && activeNavSelection.value !== 'themes') {
+    if (activeNavSelection.value !== 'new' && !MANAGEMENT_SELECTIONS.includes(activeNavSelection.value)) {
         const current = newPages.find(p => String(p.id) === String(activeNavSelection.value));
         if (current) {
             loadPageIntoForm(current);
@@ -692,7 +799,7 @@ const confirmDeleteActivePage = () => {
             <div class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-3">
-                        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Website Builder & Navigation</h1>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Website Builder & Navigation</h2>
                         <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
                             {{ club.slug }}
                         </span>
@@ -715,8 +822,8 @@ const confirmDeleteActivePage = () => {
                     
                     <!-- Mobile Page Selector Dropdown -->
                     <div class="lg:hidden bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-2">
-                        <label class="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Website Navigation Page</label>
-                        <select :value="activeNavSelection" @change="e => requestNavigation(e.target.value)" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                        <label for="mobile-page-selector" class="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Website Navigation Page</label>
+                        <select id="mobile-page-selector" :value="activeNavSelection" @change="e => requestNavigation(e.target.value)" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                             <optgroup label="Public Website Pages">
                                 <option v-for="p in pages" :key="p.id" :value="String(p.id)">
                                     {{ getPageIcon(p) }} {{ p.title }} {{ p.is_homepage ? '(Homepage)' : '' }}
@@ -724,6 +831,7 @@ const confirmDeleteActivePage = () => {
                             </optgroup>
                             <optgroup label="Management">
                                 <option value="settings">⚙️ Website & SEO Settings</option>
+                                <option value="header_footer">🧭 Header & Footer</option>
                                 <option value="themes">🎨 Website Themes</option>
                                 <option value="new">➕ Add Custom New Page</option>
                                 <option value="overview">📋 Manage Pages</option>
@@ -786,6 +894,16 @@ const confirmDeleteActivePage = () => {
                                 </button>
 
                                 <button
+                                    @click="requestNavigation('header_footer')"
+                                    :class="[
+                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
+                                        activeNavSelection === 'header_footer' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                                    ]"
+                                >
+                                    <span>🧭</span> Header & Footer
+                                </button>
+
+                                <button
                                     @click="requestNavigation('themes')"
                                     :class="[
                                         'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
@@ -814,7 +932,7 @@ const confirmDeleteActivePage = () => {
                 <div class="lg:col-span-3 space-y-6">
 
                     <!-- View Mode Container (Edit / Live Preview Toggle) -->
-                    <div v-if="activeNavSelection !== 'overview' && activeNavSelection !== 'settings' && activeNavSelection !== 'themes'" class="space-y-6">
+                    <div v-if="!MANAGEMENT_SELECTIONS.includes(activeNavSelection)" class="space-y-6">
 
                         <!-- View Mode Selector Header Card -->
                         <div class="bg-white dark:bg-slate-900 px-6 py-4 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center justify-between gap-4 flex-wrap">
@@ -898,18 +1016,18 @@ const confirmDeleteActivePage = () => {
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                                     <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page Title</label>
-                                        <input v-model="form.title" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="e.g. About Our Club" />
+                                        <label for="page-title" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page Title</label>
+                                        <input id="page-title" v-model="form.title" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="e.g. About Our Club" />
                                     </div>
 
                                     <div>
                                         <div class="flex items-center gap-2 mb-1.5">
-                                            <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px]">URL Slug (Permalink)</label>
+                                            <label for="page-slug" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px]">URL Slug (Permalink)</label>
                                             <span class="text-slate-300">|</span>
                                             <span class="text-slate-400 font-mono text-[11px]">/site/{{ club.slug }}/</span>
                                         </div>
                                         <div>
-                                            <input v-model="form.slug" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-mono font-bold outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="about" />
+                                            <input id="page-slug" v-model="form.slug" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-mono font-bold outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="about" />
                                         </div>
                                     </div>
                                 </div>
@@ -940,12 +1058,12 @@ const confirmDeleteActivePage = () => {
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                                     <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page SEO Title</label>
-                                        <input v-model="form.meta_title" type="text" maxlength="255" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-blue-500/20" :placeholder="form.title || 'Page title'" />
+                                        <label for="page-meta-title" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page SEO Title</label>
+                                        <input id="page-meta-title" v-model="form.meta_title" type="text" maxlength="255" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-blue-500/20" :placeholder="form.title || 'Page title'" />
                                     </div>
                                     <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page Meta Description</label>
-                                        <input v-model="form.meta_description" type="text" maxlength="500" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="Site-wide default description" />
+                                        <label for="page-meta-description" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page Meta Description</label>
+                                        <input id="page-meta-description" v-model="form.meta_description" type="text" maxlength="500" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="Site-wide default description" />
                                     </div>
                                 </div>
                             </div>
@@ -1104,12 +1222,12 @@ const confirmDeleteActivePage = () => {
                                             <!-- 1. Text / Rich Text Block -->
                                             <div v-if="block.type === 'text' || block.type === 'rich_text'" class="space-y-3">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Section Heading (Optional)</label>
-                                                    <input v-model="block.heading" type="text" placeholder="e.g. Our History & Mission" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold" />
+                                                    <label :for="`block-${bIdx}-heading`" class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Section Heading (Optional)</label>
+                                                    <input :id="`block-${bIdx}-heading`" v-model="block.heading" type="text" placeholder="e.g. Our History & Mission" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold" />
                                                 </div>
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Body Text Content</label>
-                                                    <RichTextEditor v-model="block.content" placeholder="Write formatted text content here..." />
+                                                    <label :id="`block-${bIdx}-content-label`" class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Body Text Content</label>
+                                                    <RichTextEditor v-model="block.content" placeholder="Write formatted text content here..." :aria-labelledby="`block-${bIdx}-content-label`" />
                                                 </div>
                                             </div>
 
@@ -1118,7 +1236,7 @@ const confirmDeleteActivePage = () => {
                                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                     <div>
                                                         <div class="flex items-center justify-between mb-1">
-                                                            <label class="block font-bold text-slate-700 dark:text-slate-200">Image URL</label>
+                                                            <label :for="`block-${bIdx}-image-url`" class="block font-bold text-slate-700 dark:text-slate-200">Image URL</label>
                                                             <div class="flex items-center gap-1.5">
                                                                 <button
                                                                     v-if="block.url"
@@ -1137,19 +1255,19 @@ const confirmDeleteActivePage = () => {
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                        <input v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
+                                                        <input :id="`block-${bIdx}-image-url`" v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Caption / Alt Text</label>
-                                                        <input v-model="block.caption" type="text" placeholder="e.g. Annual Dinner at the Lodge" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl" />
+                                                        <label :for="`block-${bIdx}-caption`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Caption / Alt Text</label>
+                                                        <input :id="`block-${bIdx}-caption`" v-model="block.caption" type="text" placeholder="e.g. Annual Dinner at the Lodge" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl" />
                                                     </div>
                                                 </div>
 
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Image Positioning</label>
-                                                        <select v-model="block.position" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
+                                                        <label :for="`block-${bIdx}-position`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Image Positioning</label>
+                                                        <select :id="`block-${bIdx}-position`" v-model="block.position" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                                                             <option value="left">Left Aligned</option>
                                                             <option value="center">Centered</option>
                                                             <option value="right">Right Aligned</option>
@@ -1158,8 +1276,8 @@ const confirmDeleteActivePage = () => {
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Image Sizing</label>
-                                                        <select v-model="block.size" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
+                                                        <label :for="`block-${bIdx}-size`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Image Sizing</label>
+                                                        <select :id="`block-${bIdx}-size`" v-model="block.size" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                                                             <option value="small">Small (25% Width)</option>
                                                             <option value="medium">Medium (50% Width)</option>
                                                             <option value="large">Large (75% Width)</option>
@@ -1186,8 +1304,8 @@ const confirmDeleteActivePage = () => {
                                             <div v-else-if="block.type === 'images'" class="space-y-3 text-xs">
                                                 <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                                                     <div class="flex items-center gap-2">
-                                                        <label class="font-bold text-slate-700 dark:text-slate-200">Grid Columns Layout:</label>
-                                                        <select v-model="block.columns" class="p-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg font-bold">
+                                                        <label :for="`block-${bIdx}-columns`" class="font-bold text-slate-700 dark:text-slate-200">Grid Columns Layout:</label>
+                                                        <select :id="`block-${bIdx}-columns`" v-model="block.columns" class="p-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg font-bold">
                                                             <option :value="2">2 Columns</option>
                                                             <option :value="3">3 Columns</option>
                                                             <option :value="4">4 Columns</option>
@@ -1225,8 +1343,8 @@ const confirmDeleteActivePage = () => {
                                                             </div>
                                                         </div>
 
-                                                        <input v-model="gItem.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg font-mono text-[11px]" />
-                                                        <input v-model="gItem.caption" type="text" placeholder="Caption / Alt Text" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg text-xs" />
+                                                        <input v-model="gItem.url" type="text" :aria-label="`Image ${gIdx + 1} URL`" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg font-mono text-[11px]" />
+                                                        <input v-model="gItem.caption" type="text" :aria-label="`Image ${gIdx + 1} caption / alt text`" placeholder="Caption / Alt Text" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg text-xs" />
 
                                                         <img v-if="gItem.url" :src="gItem.url" class="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-800 mt-1" />
                                                     </div>
@@ -1237,8 +1355,8 @@ const confirmDeleteActivePage = () => {
                                             <div v-else-if="block.type === 'notice'" class="space-y-3 text-xs">
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Callout Style</label>
-                                                        <select v-model="block.style" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
+                                                        <label :for="`block-${bIdx}-style`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Callout Style</label>
+                                                        <select :id="`block-${bIdx}-style`" v-model="block.style" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                                                             <option value="info">💡 Info Box (Sky Blue)</option>
                                                             <option value="warning">⚠️ Warning Box (Amber Gold)</option>
                                                             <option value="important">❗ Important Notice (Rose Red)</option>
@@ -1247,14 +1365,14 @@ const confirmDeleteActivePage = () => {
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Box Header Title</label>
-                                                        <input v-model="block.title" type="text" placeholder="e.g. Important Announcement" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
+                                                        <label :for="`block-${bIdx}-notice-title`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Box Header Title</label>
+                                                        <input :id="`block-${bIdx}-notice-title`" v-model="block.title" type="text" placeholder="e.g. Important Announcement" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
                                                     </div>
                                                 </div>
 
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Notice Body Message</label>
-                                                    <textarea v-model="block.text" rows="3" placeholder="Write callout announcement text here..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-xs"></textarea>
+                                                    <label :for="`block-${bIdx}-notice-text`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Notice Body Message</label>
+                                                    <textarea :id="`block-${bIdx}-notice-text`" v-model="block.text" rows="3" placeholder="Write callout announcement text here..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-xs"></textarea>
                                                 </div>
                                             </div>
 
@@ -1262,18 +1380,18 @@ const confirmDeleteActivePage = () => {
                                             <div v-else-if="block.type === 'button'" class="space-y-3 text-xs">
                                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Label</label>
-                                                        <input v-model="block.label" type="text" placeholder="e.g. Learn More →" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
+                                                        <label :for="`block-${bIdx}-button-label`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Label</label>
+                                                        <input :id="`block-${bIdx}-button-label`" v-model="block.label" type="text" placeholder="e.g. Learn More →" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Link Target URL</label>
-                                                        <input v-model="block.url" type="text" placeholder="https://..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
+                                                        <label :for="`block-${bIdx}-button-url`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Link Target URL</label>
+                                                        <input :id="`block-${bIdx}-button-url`" v-model="block.url" type="text" placeholder="https://..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Alignment</label>
-                                                        <select v-model="block.align" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
+                                                        <label :for="`block-${bIdx}-button-align`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Alignment</label>
+                                                        <select :id="`block-${bIdx}-button-align`" v-model="block.align" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
                                                             <option value="left">Left Aligned</option>
                                                             <option value="center">Centered</option>
                                                             <option value="right">Right Aligned</option>
@@ -1285,21 +1403,21 @@ const confirmDeleteActivePage = () => {
                                             <!-- 6. Hero Banner Block -->
                                             <div v-else-if="block.type === 'hero'" class="space-y-3 text-xs">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Banner Title</label>
-                                                    <input v-model="block.title" placeholder="Hero Title" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
+                                                    <label :for="`block-${bIdx}-hero-title`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Banner Title</label>
+                                                    <input :id="`block-${bIdx}-hero-title`" v-model="block.title" placeholder="Hero Title" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Banner Subtitle</label>
-                                                    <input v-model="block.subtitle" placeholder="Hero Subtitle" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100" />
+                                                    <label :for="`block-${bIdx}-hero-subtitle`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Banner Subtitle</label>
+                                                    <input :id="`block-${bIdx}-hero-subtitle`" v-model="block.subtitle" placeholder="Hero Subtitle" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100" />
                                                 </div>
                                                 <div class="grid grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CTA Button Text</label>
-                                                        <input v-model="block.cta_text" placeholder="e.g. Join Us" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 w-full font-semibold" />
+                                                        <label :for="`block-${bIdx}-hero-cta-text`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CTA Button Text</label>
+                                                        <input :id="`block-${bIdx}-hero-cta-text`" v-model="block.cta_text" placeholder="e.g. Join Us" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 w-full font-semibold" />
                                                     </div>
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CTA Button Target Link</label>
-                                                        <input v-model="block.cta_link" placeholder="e.g. /site/lodge-of-fraternity/join-us" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 w-full font-mono text-[11px]" />
+                                                        <label :for="`block-${bIdx}-hero-cta-link`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CTA Button Target Link</label>
+                                                        <input :id="`block-${bIdx}-hero-cta-link`" v-model="block.cta_link" placeholder="e.g. /site/lodge-of-fraternity/join-us" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 w-full font-mono text-[11px]" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1307,14 +1425,14 @@ const confirmDeleteActivePage = () => {
                                             <!-- 7. Dynamic News Feed & News List Block -->
                                             <div v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="space-y-3 text-xs">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
-                                                    <input v-model="block.heading" placeholder="e.g. Latest Club News & Articles" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
+                                                    <label :for="`block-${bIdx}-news-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
+                                                    <input :id="`block-${bIdx}-news-heading`" v-model="block.heading" placeholder="e.g. Latest Club News & Articles" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
 
                                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">News Layout & Columns</label>
-                                                        <select v-model="block.columns" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                                                        <label :for="`block-${bIdx}-news-columns`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">News Layout & Columns</label>
+                                                        <select :id="`block-${bIdx}-news-columns`" v-model="block.columns" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
                                                             <option value="1">1 Column (Vertical List)</option>
                                                             <option value="2">2 Columns Grid</option>
                                                             <option value="3">3 Columns Grid (Default)</option>
@@ -1324,8 +1442,8 @@ const confirmDeleteActivePage = () => {
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Featured Image Position</label>
-                                                        <select v-model="block.image_position" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                                                        <label :for="`block-${bIdx}-news-image-position`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Featured Image Position</label>
+                                                        <select :id="`block-${bIdx}-news-image-position`" v-model="block.image_position" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
                                                             <option value="above">Image Above Content (Top Banner)</option>
                                                             <option value="below">Image Below Content (Bottom Banner)</option>
                                                             <option value="left">Image on Left (Horizontal Layout)</option>
@@ -1335,8 +1453,8 @@ const confirmDeleteActivePage = () => {
                                                     </div>
 
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Articles Per Page (Pagination)</label>
-                                                        <select v-model="block.limit" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                                                        <label :for="`block-${bIdx}-news-limit`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Articles Per Page (Pagination)</label>
+                                                        <select :id="`block-${bIdx}-news-limit`" v-model="block.limit" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
                                                             <option :value="3">3 Articles per page</option>
                                                             <option :value="6">6 Articles per page</option>
                                                             <option :value="9">9 Articles per page</option>
@@ -1355,8 +1473,8 @@ const confirmDeleteActivePage = () => {
                                             <!-- 8. Dynamic Events Calendar Block -->
                                             <div v-else-if="block.type === 'events_calendar'" class="space-y-3 text-xs">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
-                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
+                                                    <label :for="`block-${bIdx}-events-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
+                                                    <input :id="`block-${bIdx}-events-heading`" v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
                                                 <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 rounded-xl text-emerald-900 dark:text-emerald-200 text-xs">
                                                     ⚡ <strong>Dynamic Events & Summons Feed:</strong> Automatically displays upcoming club events, dinners, and meetings.
@@ -1366,8 +1484,8 @@ const confirmDeleteActivePage = () => {
                                             <!-- 9. Dynamic Pricing Cards Block -->
                                             <div v-else-if="block.type === 'pricing_cards'" class="space-y-3 text-xs">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
-                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
+                                                    <label :for="`block-${bIdx}-pricing-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
+                                                    <input :id="`block-${bIdx}-pricing-heading`" v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
                                                 <div class="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-blue-900 dark:text-blue-200 text-xs">
                                                     ⚡ <strong>Dynamic Membership Dues:</strong> Automatically renders active membership plans and pricing packages configured in Club Settings.
@@ -1377,8 +1495,8 @@ const confirmDeleteActivePage = () => {
                                             <!-- 10. Dynamic Donation Campaign Block -->
                                             <div v-else-if="block.type === 'donation_campaign'" class="space-y-3 text-xs">
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
-                                                    <input v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
+                                                    <label :for="`block-${bIdx}-donation-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
+                                                    <input :id="`block-${bIdx}-donation-heading`" v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
                                                 <div class="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/80 rounded-xl text-rose-900 dark:text-rose-200 text-xs">
                                                     ⚡ <strong>Dynamic Fundraising Feed:</strong> Automatically renders active fundraising campaigns and progress bars.
@@ -1389,18 +1507,18 @@ const confirmDeleteActivePage = () => {
                                             <div v-else-if="block.type === 'contact_details'" class="space-y-4 text-xs">
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Eyebrow Subtitle</label>
-                                                        <input v-model="block.eyebrow" placeholder="e.g. CONTACT" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
+                                                        <label :for="`block-${bIdx}-cd-eyebrow`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Eyebrow Subtitle</label>
+                                                        <input :id="`block-${bIdx}-cd-eyebrow`" v-model="block.eyebrow" placeholder="e.g. CONTACT" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                     </div>
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Main Section Title</label>
-                                                        <input v-model="block.title" placeholder="e.g. Get in Touch" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
+                                                        <label :for="`block-${bIdx}-cd-title`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Main Section Title</label>
+                                                        <input :id="`block-${bIdx}-cd-title`" v-model="block.title" placeholder="e.g. Get in Touch" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                     </div>
                                                 </div>
 
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Introductory Description</label>
-                                                    <textarea v-model="block.description" rows="2" placeholder="Introductory paragraph..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"></textarea>
+                                                    <label :for="`block-${bIdx}-cd-description`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Introductory Description</label>
+                                                    <textarea :id="`block-${bIdx}-cd-description`" v-model="block.description" rows="2" placeholder="Introductory paragraph..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"></textarea>
                                                 </div>
 
                                                 <div class="p-3 bg-amber-50/70 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800/80 rounded-xl space-y-3">
@@ -1412,12 +1530,12 @@ const confirmDeleteActivePage = () => {
                                                     <!-- Email Card -->
                                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         <div>
-                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Email Heading</label>
-                                                            <input v-model="block.email_heading" placeholder="Email" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
+                                                            <label :for="`block-${bIdx}-cd-email-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Email Heading</label>
+                                                            <input :id="`block-${bIdx}-cd-email-heading`" v-model="block.email_heading" placeholder="Email" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
                                                         </div>
                                                         <div class="sm:col-span-2">
-                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Contact Email</label>
-                                                            <input v-model="block.email" :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'Not configured')" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
+                                                            <label :for="`block-${bIdx}-cd-email`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Contact Email</label>
+                                                            <input :id="`block-${bIdx}-cd-email`" v-model="block.email" :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'Not configured')" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
                                                             <span class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">Leave blank to automatically use the Contact Email from Organization Settings.</span>
                                                         </div>
                                                     </div>
@@ -1425,24 +1543,24 @@ const confirmDeleteActivePage = () => {
                                                     <!-- Meeting Times Card -->
                                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         <div>
-                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Times Heading</label>
-                                                            <input v-model="block.times_heading" placeholder="Meeting Times" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
+                                                            <label :for="`block-${bIdx}-cd-times-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Times Heading</label>
+                                                            <input :id="`block-${bIdx}-cd-times-heading`" v-model="block.times_heading" placeholder="Meeting Times" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
                                                         </div>
                                                         <div class="sm:col-span-2">
-                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Meeting Times & Schedule</label>
-                                                            <textarea v-model="block.times" rows="2" placeholder="e.g. 7:00 pm, 4th Thursday..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold"></textarea>
+                                                            <label :for="`block-${bIdx}-cd-times`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Meeting Times & Schedule</label>
+                                                            <textarea :id="`block-${bIdx}-cd-times`" v-model="block.times" rows="2" placeholder="e.g. 7:00 pm, 4th Thursday..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold"></textarea>
                                                         </div>
                                                     </div>
 
                                                     <!-- Location Card -->
                                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                         <div>
-                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Location Heading</label>
-                                                            <input v-model="block.location_heading" placeholder="Location" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
+                                                            <label :for="`block-${bIdx}-cd-location-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Location Heading</label>
+                                                            <input :id="`block-${bIdx}-cd-location-heading`" v-model="block.location_heading" placeholder="Location" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
                                                         </div>
                                                         <div class="sm:col-span-2">
-                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Full Address / Location</label>
-                                                            <textarea v-model="block.location" rows="3" placeholder="e.g. Masonic Hall, Street, Town..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold"></textarea>
+                                                            <label :for="`block-${bIdx}-cd-location`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Full Address / Location</label>
+                                                            <textarea :id="`block-${bIdx}-cd-location`" v-model="block.location" rows="3" placeholder="e.g. Masonic Hall, Street, Town..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold"></textarea>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1452,18 +1570,18 @@ const confirmDeleteActivePage = () => {
                                             <div v-else-if="block.type === 'contact_form'" class="space-y-4 text-xs">
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
-                                                        <input v-model="block.heading" placeholder="e.g. Send Us a Message" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
+                                                        <label :for="`block-${bIdx}-cf-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
+                                                        <input :id="`block-${bIdx}-cf-heading`" v-model="block.heading" placeholder="e.g. Send Us a Message" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                     </div>
                                                     <div>
-                                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Submit Button Label</label>
-                                                        <input v-model="block.button_text" placeholder="e.g. Send Message" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
+                                                        <label :for="`block-${bIdx}-cf-button-text`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Submit Button Label</label>
+                                                        <input :id="`block-${bIdx}-cf-button-text`" v-model="block.button_text" placeholder="e.g. Send Message" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                     </div>
                                                 </div>
 
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Subtitle / Instructions</label>
-                                                    <textarea v-model="block.subtitle" rows="2" placeholder="Subheading or instructions..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"></textarea>
+                                                    <label :for="`block-${bIdx}-cf-subtitle`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Subtitle / Instructions</label>
+                                                    <textarea :id="`block-${bIdx}-cf-subtitle`" v-model="block.subtitle" rows="2" placeholder="Subheading or instructions..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"></textarea>
                                                 </div>
 
                                                 <div class="p-3.5 bg-blue-50/70 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/80 rounded-xl space-y-3">
@@ -1473,13 +1591,14 @@ const confirmDeleteActivePage = () => {
 
                                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                         <div>
-                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Secretary / Recipient Email</label>
+                                                            <label :for="`block-${bIdx}-cf-recipient`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Secretary / Recipient Email</label>
                                                             <div class="space-y-1.5">
-                                                                <input 
-                                                                    v-model="block.recipient_email" 
+                                                                <input
+                                                                    :id="`block-${bIdx}-cf-recipient`"
+                                                                    v-model="block.recipient_email"
                                                                     type="email"
-                                                                    :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'secretary@' + club.slug + '.org.uk')" 
-                                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold text-xs" 
+                                                                    :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'secretary@' + club.slug + '.org.uk')"
+                                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold text-xs"
                                                                 />
                                                                 <div class="flex flex-wrap items-center gap-1.5 text-[10px]">
                                                                     <button 
@@ -1505,8 +1624,8 @@ const confirmDeleteActivePage = () => {
                                                         </div>
 
                                                         <div>
-                                                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CC Email Addresses (Comma-separated)</label>
-                                                            <input v-model="block.cc_emails" placeholder="e.g. treasurer@lodge.org, assistant@lodge.org" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold text-xs" />
+                                                            <label :for="`block-${bIdx}-cf-cc`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CC Email Addresses (Comma-separated)</label>
+                                                            <input :id="`block-${bIdx}-cf-cc`" v-model="block.cc_emails" placeholder="e.g. treasurer@lodge.org, assistant@lodge.org" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold text-xs" />
                                                             <span class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">Copies of form submissions will be sent here.</span>
                                                         </div>
                                                     </div>
@@ -1538,8 +1657,8 @@ const confirmDeleteActivePage = () => {
                                                 </div>
 
                                                 <div>
-                                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Success Message Displayed on Submission</label>
-                                                    <input v-model="block.success_message" placeholder="e.g. Thank you! Your message has been sent successfully." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
+                                                    <label :for="`block-${bIdx}-cf-success-message`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Success Message Displayed on Submission</label>
+                                                    <input :id="`block-${bIdx}-cf-success-message`" v-model="block.success_message" placeholder="e.g. Thank you! Your message has been sent successfully." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
                                                 </div>
                                             </div>
 
@@ -1646,18 +1765,28 @@ const confirmDeleteActivePage = () => {
                             <!-- Theme Preview Control Toolbar -->
                             <div class="bg-slate-900 dark:bg-slate-700 text-white p-4 sm:px-6 rounded-3xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
                                 <div class="flex items-center gap-3 flex-wrap">
-                                    <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                                        <span>🎨 Previewing Theme:</span>
+                                    <span id="theme-preview-select-label" class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                                        <span>🎨 Previewing:</span>
                                     </span>
                                     <select
-                                        :value="effectivePreviewThemeKey"
-                                        @change="e => activePreviewThemeId = e.target.value"
+                                        :value="selectedLayoutId"
+                                        @change="e => selectedLayoutId = e.target.value"
+                                        aria-labelledby="theme-preview-select-label"
                                         class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                                     >
-                                        <option v-for="t in THEMES" :key="t.id" :value="t.id">
-                                            {{ t.name }} {{ currentThemeKey === t.id ? '(Active Live)' : '' }}
-                                        </option>
+                                        <option :value="LEGACY.id">{{ LEGACY.name }}</option>
+                                        <option v-for="l in LAYOUTS" :key="l.id" :value="l.id">{{ l.name }}</option>
                                     </select>
+                                    <select
+                                        v-if="selectedLayoutId !== LEGACY.id"
+                                        :value="selectedColorSchemeId"
+                                        @change="e => selectedColorSchemeId = e.target.value"
+                                        aria-label="Colour scheme"
+                                        class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                    >
+                                        <option v-for="c in COLOR_SCHEMES" :key="c.id" :value="c.id">{{ c.name }}</option>
+                                    </select>
+                                    <span v-if="effectivePreviewThemeKey === currentThemeKey" class="text-[10px] font-bold text-emerald-400">(Active Live)</span>
                                 </div>
 
                                 <div class="flex items-center gap-2 shrink-0 flex-nowrap">
@@ -1680,30 +1809,18 @@ const confirmDeleteActivePage = () => {
                             </div>
 
                             <!-- Preview Canvas Frame -->
-                            <div :class="['font-sans rounded-3xl p-6 sm:p-10 border space-y-12 overflow-hidden relative transition-colors duration-300', previewThemeClasses.container]">
-                                
-                                <!-- Website Nav Bar Mockup -->
-                                <div :class="['rounded-2xl p-4 border flex items-center justify-between transition-colors', previewThemeClasses.nav]">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-500 to-blue-600 flex items-center justify-center font-bold text-white text-xs">
-                                            🏆
-                                        </div>
-                                        <div>
-                                            <div :class="['font-extrabold text-sm', previewThemeClasses.headingText]">{{ club.name }}</div>
-                                            <div v-if="club.tagline" class="text-[10px] opacity-75">{{ club.tagline }}</div>
-                                        </div>
-                                    </div>
+                            <div :class="['font-sans rounded-3xl border overflow-hidden relative transition-colors duration-300', previewThemeClasses.container]" :style="previewThemeClasses.cssVars">
 
-                                    <div class="flex items-center gap-2 text-xs">
-                                        <span 
-                                            v-for="item in pages" 
-                                            :key="item.id"
-                                            :class="item.slug === form.slug || (form.is_homepage && item.is_homepage) ? previewThemeClasses.navActive : previewThemeClasses.navInactive"
-                                            class="px-2.5 py-1 rounded-lg text-xs"
-                                        >
-                                            {{ item.title }}
-                                        </span>
-                                    </div>
+                                <!-- Website Header Preview (same component the real site renders) -->
+                                <div class="[&>header]:!static [&>header]:!z-auto">
+                                    <PublicHeader
+                                        :club="club"
+                                        :theme="previewThemeClasses"
+                                        :navigation="publishedNavPages"
+                                        :current-page="{ slug: form.slug, is_homepage: form.is_homepage }"
+                                        :settings="websiteSettings"
+                                        :interactive="false"
+                                    />
                                 </div>
 
                                 <BlockRenderer
@@ -1717,11 +1834,14 @@ const confirmDeleteActivePage = () => {
                                     :interactive="false"
                                 />
 
-                                <!-- Website Footer Mockup -->
-                                <div class="border-t border-slate-800 pt-8 text-center text-xs text-slate-500 dark:text-slate-400 space-y-1">
-                                    <p>{{ websiteSettings.footer_copyright || `© ${new Date().getFullYear()} ${club.name}. All rights reserved.` }}</p>
-                                    <p>Powered by ClubManager Multi-Tenant Platform</p>
-                                </div>
+                                <!-- Website Footer Preview (same component the real site renders) -->
+                                <PublicFooter
+                                    :club="club"
+                                    :theme="previewThemeClasses"
+                                    :navigation="publishedNavPages"
+                                    :settings="websiteSettings"
+                                    :interactive="false"
+                                />
                             </div>
                         </div>
                     </div>
@@ -1731,7 +1851,7 @@ const confirmDeleteActivePage = () => {
                         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                             <div>
                                 <h2 class="text-xl font-bold text-slate-900 dark:text-white">🌐 Global Website & SEO Settings</h2>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage custom domain, global search engine optimization, social links, and header/footer branding.</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage custom domain, global search engine optimization, and public contact details.</p>
                             </div>
                             <button
                                 type="button"
@@ -1755,8 +1875,8 @@ const confirmDeleteActivePage = () => {
                                 <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Custom Domain Setup</h3>
                                 <div class="p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-4">
                                     <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Custom Domain Name</label>
-                                        <input v-model="settingsForm.custom_domain" type="text" placeholder="e.g. members.oxfordboating.org" class="w-full sm:w-96 px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
+                                        <label for="custom-domain" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Custom Domain Name</label>
+                                        <input id="custom-domain" v-model="settingsForm.custom_domain" type="text" placeholder="e.g. members.oxfordboating.org" class="w-full sm:w-96 px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
                                         <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Connect your custom domain (e.g. <code class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-1 py-0.5 rounded font-bold">members.oxfordboating.org</code>) to your club portal.</p>
                                     </div>
 
@@ -1797,77 +1917,34 @@ const confirmDeleteActivePage = () => {
                                 <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Search Engine Optimization (SEO)</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Page Title Suffix</label>
-                                        <input v-model="settingsForm.seo_title_suffix" type="text" placeholder="| The Lodge of Fraternity" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                        <label for="seo-title-suffix" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Page Title Suffix</label>
+                                        <input id="seo-title-suffix" v-model="settingsForm.seo_title_suffix" type="text" placeholder="| The Lodge of Fraternity" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                         <p class="text-[10px] text-slate-400 mt-1">Appended to page titles in browser tabs and search engines.</p>
                                     </div>
 
                                     <div class="sm:col-span-2">
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default Meta Description</label>
-                                        <textarea v-model="settingsForm.seo_meta_description" rows="3" placeholder="Official homepage for events, membership, news, and history." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800 dark:text-slate-100"></textarea>
+                                        <label for="seo-meta-description" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default Meta Description</label>
+                                        <textarea id="seo-meta-description" v-model="settingsForm.seo_meta_description" rows="3" placeholder="Official homepage for events, membership, news, and history." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium text-slate-800 dark:text-slate-100"></textarea>
                                     </div>
                                 </div>
                             </div>
 
                             <hr class="border-slate-100 dark:border-slate-800" />
 
-                            <!-- Section 2: Header Navigation & Call to Action -->
+                            <!-- Section 3: Public Contact Details -->
                             <div class="space-y-4">
-                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Header Navigation & Action Button</h3>
+                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Public Contact Details</h3>
+                                <p class="text-[10px] text-slate-400 -mt-2">Header CTA, social links and footer branding have moved to the <button type="button" @click="requestNavigation('header_footer')" class="underline font-bold text-blue-600 dark:text-blue-400 cursor-pointer">Header & Footer</button> tab.</p>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Header CTA Button Text</label>
-                                        <input v-model="settingsForm.header_cta_text" type="text" placeholder="e.g. Join Our Club" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                        <label for="public-contact-email" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Public Contact Email</label>
+                                        <input id="public-contact-email" v-model="settingsForm.contact_email" type="email" placeholder="admin@club.org" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
 
                                     <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Header CTA Button Link</label>
-                                        <input v-model="settingsForm.header_cta_link" type="text" placeholder="e.g. /site/oxford-boating/join-us" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                        <label for="public-phone" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Public Phone Number</label>
+                                        <input id="public-phone" v-model="settingsForm.phone" type="text" placeholder="+44 20 7946 0912" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
-                                </div>
-                            </div>
-
-                            <hr class="border-slate-100 dark:border-slate-800" />
-
-                            <!-- Section 3: Public Contact & Social Links -->
-                            <div class="space-y-4">
-                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Public Contact Details & Social Channels</h3>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Public Contact Email</label>
-                                        <input v-model="settingsForm.contact_email" type="email" placeholder="admin@club.org" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
-                                    </div>
-
-                                    <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Public Phone Number</label>
-                                        <input v-model="settingsForm.phone" type="text" placeholder="+44 20 7946 0912" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
-                                    </div>
-
-                                    <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Facebook Page URL</label>
-                                        <input v-model="settingsForm.social_facebook" type="text" placeholder="https://facebook.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
-                                    </div>
-
-                                    <div>
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Instagram Profile URL</label>
-                                        <input v-model="settingsForm.social_instagram" type="text" placeholder="https://instagram.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
-                                    </div>
-
-                                    <div class="sm:col-span-2">
-                                        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Twitter / X Handle URL</label>
-                                        <input v-model="settingsForm.social_twitter" type="text" placeholder="https://x.com/yourclub" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr class="border-slate-100 dark:border-slate-800" />
-
-                            <!-- Section 4: Footer Copyright -->
-                            <div class="space-y-4">
-                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Footer Copyright & Branding</h3>
-                                <div>
-                                    <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Footer Copyright Line</label>
-                                    <input v-model="settingsForm.footer_copyright" type="text" placeholder="© 2026 Lodge of Fraternity. All rights reserved." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                                 </div>
                             </div>
 
@@ -1883,111 +1960,339 @@ const confirmDeleteActivePage = () => {
                         </form>
                     </div>
 
+                    <!-- View Mode: Header & Footer Layout -->
+                    <div v-else-if="activeNavSelection === 'header_footer'" class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-6">
+                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 flex-wrap gap-3">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-900 dark:text-white">🧭 Header & Footer</h2>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Choose a layout and toggle what appears in your public site's header and footer. Colours follow whichever theme is active.</p>
+                            </div>
+                            <button
+                                type="button"
+                                @click="submitHeaderFooter"
+                                :disabled="headerFooterForm.processing"
+                                class="py-2.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                            >
+                                <span>💾 Save Header & Footer</span>
+                            </button>
+                        </div>
+
+                        <!-- Saved Success Alert -->
+                        <div v-if="isSavedSuccess" class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center gap-2">
+                            <span>✅ Header & footer settings saved successfully!</span>
+                        </div>
+
+                        <form @submit.prevent="submitHeaderFooter" class="space-y-8 text-xs">
+
+                            <!-- Header Section -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Header</h3>
+
+                                <!-- Live preview -->
+                                <div :class="['rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden [&>header]:!static [&>header]:!z-auto', liveThemeClasses.wrapper]" :style="liveThemeClasses.cssVars">
+                                    <PublicHeader
+                                        :club="club"
+                                        :theme="liveThemeClasses"
+                                        :navigation="publishedNavPages"
+                                        :current-page="{ is_homepage: true }"
+                                        :settings="headerFooterForm.data()"
+                                        :interactive="false"
+                                    />
+                                </div>
+
+                                <!-- Layout picker -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <button
+                                        v-for="layout in HEADER_LAYOUTS"
+                                        :key="layout.id"
+                                        type="button"
+                                        @click="headerFooterForm.header_layout = layout.id"
+                                        :class="[
+                                            'text-left p-4 rounded-2xl border transition-all cursor-pointer',
+                                            headerFooterForm.header_layout === layout.id ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                                        ]"
+                                    >
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="font-bold text-slate-900 dark:text-white">{{ layout.name }}</span>
+                                            <span v-if="headerFooterForm.header_layout === layout.id" class="text-[10px] font-black text-blue-600 dark:text-blue-400">✓ SELECTED</span>
+                                        </div>
+                                        <p class="text-slate-500 dark:text-slate-400 mt-1">{{ layout.description }}</p>
+                                    </button>
+                                </div>
+
+                                <!-- Visibility toggles -->
+                                <div class="flex flex-wrap items-center gap-6 pt-1">
+                                    <label class="flex items-center gap-2.5 cursor-pointer font-bold text-slate-700 dark:text-slate-200 select-none">
+                                        <input type="checkbox" v-model="headerFooterForm.header_show_logo" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 accent-blue-600 cursor-pointer" />
+                                        <span>Show Logo</span>
+                                    </label>
+                                    <label class="flex items-center gap-2.5 cursor-pointer font-bold text-slate-700 dark:text-slate-200 select-none">
+                                        <input type="checkbox" v-model="headerFooterForm.header_show_tagline" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 accent-blue-600 cursor-pointer" />
+                                        <span>Show Tagline</span>
+                                    </label>
+                                    <label class="flex items-center gap-2.5 cursor-pointer font-bold text-slate-700 dark:text-slate-200 select-none">
+                                        <input type="checkbox" v-model="headerFooterForm.header_show_account_links" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 accent-blue-600 cursor-pointer" />
+                                        <span>Show Log In / Admin Portal Links</span>
+                                    </label>
+                                    <label class="flex items-center gap-2.5 cursor-pointer font-bold text-slate-700 dark:text-slate-200 select-none">
+                                        <input type="checkbox" v-model="headerFooterForm.header_cta_enabled" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 accent-blue-600 cursor-pointer" />
+                                        <span>Show Call-to-Action Button</span>
+                                    </label>
+                                </div>
+
+                                <div v-if="headerFooterForm.header_cta_enabled" class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                                    <div>
+                                        <label for="header-cta-text" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Text</label>
+                                        <input id="header-cta-text" v-model="headerFooterForm.header_cta_text" type="text" placeholder="e.g. Join Our Club" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div>
+                                        <label for="header-cta-link" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Link</label>
+                                        <input id="header-cta-link" v-model="headerFooterForm.header_cta_link" type="text" placeholder="e.g. /site/oxford-boating/join-us" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-100 dark:border-slate-800" />
+
+                            <!-- Footer Section -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Footer</h3>
+
+                                <!-- Live preview -->
+                                <div :class="['rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden', liveThemeClasses.wrapper]" :style="liveThemeClasses.cssVars">
+                                    <PublicFooter
+                                        :club="club"
+                                        :theme="liveThemeClasses"
+                                        :navigation="publishedNavPages"
+                                        :settings="headerFooterForm.data()"
+                                        :interactive="false"
+                                    />
+                                </div>
+
+                                <!-- Layout picker -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <button
+                                        v-for="layout in FOOTER_LAYOUTS"
+                                        :key="layout.id"
+                                        type="button"
+                                        @click="headerFooterForm.footer_layout = layout.id"
+                                        :class="[
+                                            'text-left p-4 rounded-2xl border transition-all cursor-pointer',
+                                            headerFooterForm.footer_layout === layout.id ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                                        ]"
+                                    >
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="font-bold text-slate-900 dark:text-white">{{ layout.name }}</span>
+                                            <span v-if="headerFooterForm.footer_layout === layout.id" class="text-[10px] font-black text-blue-600 dark:text-blue-400">✓ SELECTED</span>
+                                        </div>
+                                        <p class="text-slate-500 dark:text-slate-400 mt-1">{{ layout.description }}</p>
+                                    </button>
+                                </div>
+
+                                <!-- Visibility toggles -->
+                                <div class="flex flex-wrap items-center gap-6 pt-1">
+                                    <label class="flex items-center gap-2.5 cursor-pointer font-bold text-slate-700 dark:text-slate-200 select-none">
+                                        <input type="checkbox" v-model="headerFooterForm.footer_show_social" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 accent-blue-600 cursor-pointer" />
+                                        <span>Show Social Links</span>
+                                    </label>
+                                    <label v-if="headerFooterForm.footer_layout === 'columns'" class="flex items-center gap-2.5 cursor-pointer font-bold text-slate-700 dark:text-slate-200 select-none">
+                                        <input type="checkbox" v-model="headerFooterForm.footer_show_nav" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 accent-blue-600 cursor-pointer" />
+                                        <span>Show Navigation Links</span>
+                                    </label>
+                                </div>
+
+                                <div v-if="headerFooterForm.footer_show_social" class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                                    <div>
+                                        <label for="social-facebook" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Facebook Page URL</label>
+                                        <input id="social-facebook" v-model="headerFooterForm.social_facebook" type="text" placeholder="https://facebook.com/yourclub" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div>
+                                        <label for="social-instagram" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Instagram Profile URL</label>
+                                        <input id="social-instagram" v-model="headerFooterForm.social_instagram" type="text" placeholder="https://instagram.com/yourclub" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label for="social-twitter" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Twitter / X Handle URL</label>
+                                        <input id="social-twitter" v-model="headerFooterForm.social_twitter" type="text" placeholder="https://x.com/yourclub" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                </div>
+
+                                <!-- Custom footer link columns (Columns layout only) -->
+                                <div v-if="headerFooterForm.footer_layout === 'columns'" class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <label class="block font-bold text-slate-700 dark:text-slate-200">Custom Link Columns</label>
+                                        <button
+                                            type="button"
+                                            @click="addFooterColumn"
+                                            :disabled="headerFooterForm.footer_link_columns.length >= MAX_FOOTER_COLUMNS"
+                                            class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            ➕ Add Column
+                                        </button>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400">Add extra footer columns for things like "Useful Links" — e.g. your Grand Lodge, Province, or a Data Protection Notice.</p>
+
+                                    <div v-if="!headerFooterForm.footer_link_columns.length" class="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 text-center">
+                                        No custom columns yet.
+                                    </div>
+
+                                    <div
+                                        v-for="(column, colIndex) in headerFooterForm.footer_link_columns"
+                                        :key="column.id"
+                                        class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <input v-model="column.title" type="text" :aria-label="`Column ${colIndex + 1} heading`" placeholder="Column heading, e.g. Useful Links" class="flex-1 px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                            <button type="button" @click="removeFooterColumn(colIndex)" class="px-3 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-bold text-[11px] transition-colors cursor-pointer" title="Remove column">
+                                                🗑️
+                                            </button>
+                                        </div>
+
+                                        <div v-for="(link, linkIndex) in column.links" :key="link.id" class="flex items-center gap-2">
+                                            <input v-model="link.label" type="text" :aria-label="`Column ${colIndex + 1}, link ${linkIndex + 1} text`" placeholder="Link text" class="w-1/3 px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                            <input v-model="link.url" type="text" :aria-label="`Column ${colIndex + 1}, link ${linkIndex + 1} URL`" placeholder="https://... or /site/your-club/page" class="flex-1 px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                            <button type="button" @click="removeFooterLink(colIndex, linkIndex)" class="px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold text-[11px] transition-colors cursor-pointer" title="Remove link">
+                                                ✕
+                                            </button>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            @click="addFooterLink(colIndex)"
+                                            :disabled="column.links.length >= MAX_FOOTER_COLUMN_LINKS"
+                                            class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[11px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            ➕ Add Link
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="footer-copyright" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Footer Copyright Line</label>
+                                    <input id="footer-copyright" v-model="headerFooterForm.footer_copyright" type="text" placeholder="© 2026 Lodge of Fraternity. All rights reserved." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                                </div>
+                            </div>
+
+                            <div class="pt-4 flex justify-end">
+                                <button
+                                    type="submit"
+                                    :disabled="headerFooterForm.processing"
+                                    class="py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                                >
+                                    <span>💾 Save Header & Footer</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                     <!-- View Mode 3: Website Theme Selection Gallery -->
-                    <div v-else-if="activeNavSelection === 'themes'" class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-6">
+                    <div v-else-if="activeNavSelection === 'themes'" class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-8">
                         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 flex-wrap gap-3">
                             <div>
                                 <div class="flex items-center gap-2.5">
-                                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">🎨 Website Themes & Layout Designs</h2>
+                                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">🎨 Layout & Colour Scheme</h2>
                                     <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                                        Active: {{ THEMES.find(t => t.id === currentThemeKey)?.name || 'Classic Heritage' }}
+                                        Active: {{ themeLabel(currentThemeKey) }}
                                     </span>
                                 </div>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Select a theme layout to transform your public website appearance. All page content, news, events, and forms remain unchanged.</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pick a layout for your site's structure, then a colour scheme to paint it. All page content, news, events, and forms remain unchanged.</p>
                             </div>
                         </div>
 
-                        <!-- Theme Gallery Cards Grid -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div 
-                                v-for="theme in THEMES" 
-                                :key="theme.id"
-                                :class="[
-                                    'rounded-3xl border p-6 space-y-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between',
-                                    currentThemeKey === theme.id ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-lg bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md'
-                                ]"
-                            >
-                                <!-- Card Header & Palette Preview -->
-                                <div class="space-y-4 pt-1">
-                                    <!-- Visual Header Mockup Bar -->
-                                    <div :class="['h-28 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden', theme.previewBg]">
-                                        <div :class="['flex items-center justify-between text-xs font-extrabold', theme.isLight ? 'text-slate-900 dark:text-white' : 'text-white']">
-                                            <span class="flex items-center gap-1.5">
-                                                <span :class="['w-2.5 h-2.5 rounded-full', theme.isLight ? 'bg-blue-600' : 'bg-amber-400']"></span>
-                                                <span class="drop-shadow-sm">{{ theme.name }}</span>
-                                            </span>
-                                            <span :class="['text-[9px] px-2 py-0.5 rounded font-black border', theme.isLight ? 'bg-slate-900/10 text-slate-900 border-slate-300 dark:border-slate-700' : 'bg-white/15 dark:bg-slate-900/15 text-white border-white/30 backdrop-blur-md']">
-                                                Layout Preview
-                                            </span>
-                                        </div>
-
-                                        <div class="space-y-1">
-                                            <div :class="['w-3/4 h-3 rounded-full', theme.isLight ? 'bg-slate-900/70' : 'bg-white/80 dark:bg-slate-900/80']"></div>
-                                            <div :class="['w-1/2 h-2 rounded-full', theme.isLight ? 'bg-slate-900/35' : 'bg-white/40 dark:bg-slate-900/40']"></div>
-                                        </div>
-
-                                        <!-- Color Swatches Bar -->
-                                        <div class="flex items-center gap-1.5 pt-1">
-                                            <span v-for="(color, cIdx) in theme.palette" :key="cIdx" :style="{ backgroundColor: color }" class="w-4 h-4 rounded-full border border-slate-400/40 shadow-sm" :title="color"></span>
-                                        </div>
+                        <!-- Step 1: Layout -->
+                        <div class="space-y-3">
+                            <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">1. Layout</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button
+                                    v-for="opt in [LEGACY, ...LAYOUTS]"
+                                    :key="opt.id"
+                                    type="button"
+                                    @click="selectedLayoutId = opt.id"
+                                    :class="[
+                                        'text-left rounded-2xl border p-5 space-y-3 transition-all duration-200 cursor-pointer',
+                                        selectedLayoutId === opt.id ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-md bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md'
+                                    ]"
+                                >
+                                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                                        <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">{{ opt.name }}</h4>
+                                        <span v-if="selectedLayoutId === opt.id" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white shadow-sm">✓ SELECTED</span>
                                     </div>
-
-                                    <div class="space-y-1.5">
-                                        <div class="flex items-center justify-between gap-2 flex-wrap">
-                                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">{{ theme.name }}</h3>
-                                            <span v-if="currentThemeKey === theme.id" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white shadow-sm flex items-center gap-1">
-                                                ✓ ACTIVE LIVE THEME
-                                            </span>
-                                        </div>
-                                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{{ theme.description }}</p>
+                                    <span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold">{{ opt.badge }}</span>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{{ opt.description }}</p>
+                                    <div v-if="opt.id === LEGACY.id" class="flex items-center gap-1.5 pt-1">
+                                        <span v-for="(color, cIdx) in opt.palette" :key="cIdx" :style="{ backgroundColor: color }" class="w-3.5 h-3.5 rounded-full border border-slate-400/40 shadow-sm" :title="color"></span>
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 ml-1 font-semibold">Fixed colours — no colour scheme</span>
                                     </div>
-
-                                    <!-- Feature Pills -->
-                                    <div class="flex flex-wrap gap-1.5 pt-1">
-                                        <span v-for="(feat, fIdx) in theme.features" :key="fIdx" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-semibold border border-slate-200 dark:border-slate-800">
+                                    <div v-else class="flex flex-wrap gap-1.5 pt-1">
+                                        <span v-for="(feat, fIdx) in opt.features" :key="fIdx" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-semibold border border-slate-200 dark:border-slate-800">
                                             • {{ feat }}
                                         </span>
                                     </div>
-                                </div>
+                                </button>
+                            </div>
+                        </div>
 
-                                <!-- Action Buttons Footer -->
-                                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2.5 mt-4 flex-wrap">
-                                    <div class="flex items-center gap-1.5">
-                                        <button
-                                            type="button"
-                                            @click="previewThemeInBuilder(theme)"
-                                            class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
-                                            title="Preview this theme in the Website Builder"
-                                        >
-                                            <span>👁️ Preview</span>
-                                        </button>
-                                        <a
-                                            :href="`/site/${club.slug}?preview_theme=${theme.id}`"
-                                            target="_blank"
-                                            class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
-                                            title="Open full live preview with this theme in a new tab"
-                                        >
-                                            <span>🌐 Live ↗</span>
-                                        </a>
+                        <!-- Step 2: Colour scheme (any layout except the fixed-colour legacy one) -->
+                        <div v-if="selectedLayoutId !== LEGACY.id" class="space-y-3">
+                            <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">2. Colour Scheme</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                                <button
+                                    v-for="c in COLOR_SCHEMES"
+                                    :key="c.id"
+                                    type="button"
+                                    @click="selectedColorSchemeId = c.id"
+                                    :class="[
+                                        'text-left rounded-2xl border p-4 space-y-3 transition-all duration-200 cursor-pointer',
+                                        selectedColorSchemeId === c.id ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-md bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md'
+                                    ]"
+                                >
+                                    <div class="flex gap-1">
+                                        <span v-for="(color, cIdx) in c.swatch" :key="cIdx" :style="{ backgroundColor: color }" class="w-6 h-6 rounded-lg border border-slate-400/30 shadow-sm"></span>
                                     </div>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="font-extrabold text-xs text-slate-900 dark:text-white">{{ c.name }}</span>
+                                        <span v-if="selectedColorSchemeId === c.id" class="text-[10px] font-black text-blue-600 dark:text-blue-400">✓</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
 
-                                    <button
-                                        v-if="currentThemeKey === theme.id"
-                                        disabled
-                                        class="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-extrabold text-xs flex items-center gap-1.5 cursor-default"
-                                    >
-                                        <span>✓ Active Theme</span>
-                                    </button>
+                        <!-- Preview & apply -->
+                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Previewing: <strong class="text-slate-800 dark:text-slate-100">{{ themeLabel(effectivePreviewThemeKey) }}</strong></p>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button
+                                    type="button"
+                                    @click="previewThemeInBuilder(selectedLayoutId, selectedColorSchemeId)"
+                                    class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
+                                    title="Preview this combination in the Website Builder"
+                                >
+                                    <span>👁️ Preview in Builder</span>
+                                </button>
+                                <a
+                                    :href="`/site/${club.slug}?preview_theme=${effectivePreviewThemeKey}`"
+                                    target="_blank"
+                                    class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
+                                    title="Open full live preview with this combination in a new tab"
+                                >
+                                    <span>🌐 Live ↗</span>
+                                </a>
 
-                                    <button
-                                        v-else
-                                        type="button"
-                                        @click="openApplyThemeModal(theme)"
-                                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1.5"
-                                    >
-                                        <span>✨ Select Theme</span>
-                                    </button>
-                                </div>
+                                <button
+                                    v-if="effectivePreviewThemeKey === currentThemeKey"
+                                    disabled
+                                    class="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-extrabold text-xs flex items-center gap-1.5 cursor-default"
+                                >
+                                    <span>✓ Active Theme</span>
+                                </button>
+
+                                <button
+                                    v-else
+                                    type="button"
+                                    @click="openApplyThemeModal(effectivePreviewThemeKey, themeLabel(effectivePreviewThemeKey))"
+                                    class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1.5"
+                                >
+                                    <span>✨ Apply This Combination</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -2012,7 +2317,7 @@ const confirmDeleteActivePage = () => {
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                                    <tr v-for="(p, idx) in pages" :key="p.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50/50 transition-colors">
+                                    <tr v-for="(p, idx) in pages" :key="p.id" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                         <td class="p-4 text-center font-bold text-slate-400">
                                             {{ idx + 1 }}
                                         </td>
@@ -2171,8 +2476,14 @@ const confirmDeleteActivePage = () => {
 
         <!-- Delete Confirmation Modal -->
         <div v-if="showDeleteConfirmModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200 dark:border-slate-800">
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Delete Page?</h3>
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-page-modal-title"
+                v-focus-trap="() => { showDeleteConfirmModal = false; pageToDelete = null; }"
+                class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200 dark:border-slate-800"
+            >
+                <h3 id="delete-page-modal-title" class="text-lg font-bold text-slate-900 dark:text-white">Delete Page?</h3>
                 <p class="text-xs text-slate-600 dark:text-slate-300">Are you sure you want to delete <strong>{{ pageToDelete ? pageToDelete.title : form.title }}</strong>? This action cannot be undone.</p>
                 <div class="flex items-center justify-end gap-3 pt-2">
                     <button @click="showDeleteConfirmModal = false; pageToDelete = null;" class="py-2 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer">Cancel</button>
@@ -2196,13 +2507,19 @@ const confirmDeleteActivePage = () => {
                 v-if="showUnsavedModal" 
                 class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
             >
-                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden">
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="unsaved-changes-modal-title"
+                    v-focus-trap="handleStayAndEdit"
+                    class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden"
+                >
                     <div class="flex items-start gap-4">
                         <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0 shadow-inner">
                             ⚠️
                         </div>
                         <div class="space-y-1 pt-0.5">
-                            <h3 class="text-lg font-black text-slate-900 dark:text-white leading-tight">Unsaved Changes</h3>
+                            <h3 id="unsaved-changes-modal-title" class="text-lg font-black text-slate-900 dark:text-white leading-tight">Unsaved Changes</h3>
                             <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
                                 You have modified <strong class="text-slate-900 dark:text-white font-bold">"{{ form.title || 'this page' }}"</strong>. 
                                 What would you like to do with your changes before leaving?
@@ -2251,15 +2568,21 @@ const confirmDeleteActivePage = () => {
                 v-if="showThemeConfirmModal && selectedThemeForModal" 
                 class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
             >
-                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden">
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="theme-confirm-modal-title"
+                    v-focus-trap="() => { showThemeConfirmModal = false; selectedThemeForModal = null; }"
+                    class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden"
+                >
                     <div class="flex items-start gap-4">
                         <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl shrink-0 shadow-inner">
                             🎨
                         </div>
                         <div class="space-y-1 pt-0.5">
-                            <h3 class="text-lg font-black text-slate-900 dark:text-white leading-tight">Apply New Website Theme?</h3>
+                            <h3 id="theme-confirm-modal-title" class="text-lg font-black text-slate-900 dark:text-white leading-tight">Apply New Website Theme?</h3>
                             <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                You are about to switch your active design to <strong class="text-blue-600 dark:text-blue-400 font-bold">"{{ selectedThemeForModal.name }}"</strong>.
+                                You are about to switch your active design to <strong class="text-blue-600 dark:text-blue-400 font-bold">"{{ selectedThemeForModal.label }}"</strong>.
                             </p>
                         </div>
                     </div>

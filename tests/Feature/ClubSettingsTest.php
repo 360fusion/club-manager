@@ -102,6 +102,29 @@ class ClubSettingsTest extends TestCase
         $this->assertEquals(['owner', 'admin', 'treasurer'], $this->club->settings['permission_matrix']['manage_members']['roles']);
     }
 
+    public function test_super_admin_can_set_the_storage_quota(): void
+    {
+        $superAdmin = User::factory()->create(['is_super_admin' => true]);
+
+        $response = $this->actingAs($superAdmin)
+            ->put(route('admin.settings.update', ['clubSlug' => $this->club->slug]), ['storage_quota_mb' => 2048]);
+
+        $response->assertRedirect();
+        $this->club->refresh();
+        $this->assertEquals(2048, $this->club->settings['storage_quota_mb']);
+        $this->assertSame(2048 * 1024 * 1024, $this->club->storageQuotaBytes());
+    }
+
+    public function test_a_club_admin_cannot_change_the_storage_quota(): void
+    {
+        $response = $this->actingAs($this->adminUser)
+            ->put(route('admin.settings.update', ['clubSlug' => $this->club->slug]), ['storage_quota_mb' => 999999]);
+
+        $response->assertRedirect();
+        $this->club->refresh();
+        $this->assertArrayNotHasKey('storage_quota_mb', $this->club->settings);
+    }
+
     public function test_admin_can_update_active_modules_and_custom_domain(): void
     {
         $payload = [

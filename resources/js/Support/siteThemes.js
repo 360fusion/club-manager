@@ -1,254 +1,204 @@
-// The website builder's colour themes: one definition used by the editor's live preview and by the real
-// public site (Public/Site.vue), so a theme only has to be written once and the preview can never drift
-// from what a visitor actually sees.
+// The website builder's theme is two independent choices, combined into one string stored in
+// `settings.website_theme`:
+//   - a LAYOUT (structure, typography, shape — see SITE_LAYOUTS / LAYOUT_TABLE)
+//   - a COLOR SCHEME (just the brand hue — see SITE_COLOR_SCHEMES / COLOR_SCHEME_TABLE)
+// The stored value is either the legacy id `masonic` (a fixed, self-contained design that ignores
+// colour schemes), or `${layoutId}:${colorSchemeId}`, e.g. `banded:navy_gold`.
+//
+// A layout's Tailwind classes reference the colour scheme only through `var(--cm-*)` custom
+// properties (accent, accent-bright, accent-deep, tint, hero-to) — never a literal hue — so any
+// layout can be painted with any of the 5 colour schemes. `themeClasses()` resolves the stored
+// string into the merged class table plus a `cssVars` object that must be bound with `:style` on
+// the same element `theme.wrapper` is applied to (Public/Site.vue, Admin/PageList.vue), so the
+// custom properties cascade down to every themed child.
 
-export const SITE_THEME_IDS = [
-    'classic', 'obsidian', 'masonic', 'minimal', 'vibrant',
-    'light_navy', 'executive_light', 'masonic_light', 'warm_light',
+export const SITE_LAYOUTS = [
+    {
+        id: 'banded',
+        name: 'Heritage Banded',
+        badge: 'Full-Width Banded Layout',
+        description: 'A distinguished institutional layout with full-width alternating bands, serif display headings, and a dedicated dark hero band — closer to a heritage society\'s site than a boxed template.',
+        features: ['Full-bleed alternating bands', 'Serif display headings', 'Dedicated dark hero band', 'Neutral slate chrome'],
+    },
+    {
+        id: 'editorial',
+        name: 'Editorial Broadsheet',
+        badge: 'Sharp, Asymmetric Layout',
+        description: 'A modern, magazine-style layout: left-aligned oversized headlines, hairline borders, sharp corners and generous whitespace instead of boxed, rounded cards.',
+        features: ['Left-aligned asymmetric hero', 'Sharp, hairline-bordered cards', 'No rounded corners', 'Warm stone chrome'],
+    },
+    {
+        id: 'bold',
+        name: 'Vivid Bold',
+        badge: 'High-Energy, Rounded',
+        description: 'A loud, energetic layout for a youthful club: a saturated gradient hero, thick borders, and oversized pill-shaped buttons and cards.',
+        features: ['Saturated gradient hero', 'Thick, colourful card borders', 'Oversized rounded shapes', 'Bold pill navigation'],
+    },
 ];
 
-// The gallery shown on the Themes tab: name, description and a swatch preview for each theme.
-export const SITE_THEMES = [
+// The legacy, self-contained design The Lodge of Fraternity uses — fixed navy & gold, not part of
+// the layout/colour-scheme matrix (picking it hides the colour scheme picker in the builder).
+export const LEGACY_THEME = {
+    id: 'masonic',
+    name: 'Royal Masonic Dark & Gold',
+    badge: 'Regal Dark (fixed colours)',
+    description: 'Traditional Masonic & fraternal lodge aesthetic featuring deep royal navy, rich gold foil borders, crest embellishments, and classic serif typography. Fixed colours — not paired with a colour scheme.',
+    palette: ['#0c1938', '#f59e0b', '#d97706', '#1e1b4b'],
+};
+
+// The 5 colour schemes: just a brand hue, applied through CSS custom properties so every layout
+// can use every scheme. `swatch` is what the gallery shows; the rest feed `cssVars`.
+export const SITE_COLOR_SCHEMES = [
     {
-        id: 'light_navy',
-        name: 'Pure White & Oxford Navy',
-        badge: 'White Canvas / Navy',
-        isLight: true,
-        description: 'Pristine pure white background with Oxford Navy typography, crisp card borders, and subtle sky blue accents.',
-        previewBg: 'bg-gradient-to-br from-white via-slate-50 to-slate-100 border border-slate-200 dark:border-slate-800 shadow-inner',
-        palette: ['#ffffff', '#0f172a', '#0284c7', '#38bdf8'],
-        features: ['100% White background', 'Oxford Navy typography', 'Crisp card borders', 'Clean corporate header'],
+        id: 'navy_gold',
+        name: 'Navy & Gold',
+        swatch: ['#ffffff', '#0f172a', '#d97706', '#92400e'],
+        vars: { accent: '#d97706', accentBright: '#fbbf24', accentDeep: '#92400e', tint: '#fffbeb', heroTo: '#78350f' },
     },
     {
-        id: 'executive_light',
-        name: 'Executive Slate & Indigo',
-        badge: 'Executive Light',
-        isLight: true,
-        description: 'Off-white light background with elevated white cards, deep slate headings, and royal indigo highlights.',
-        previewBg: 'bg-gradient-to-br from-slate-100 via-blue-50/50 dark:via-blue-950/50 to-slate-200 border border-slate-200 dark:border-slate-800 shadow-inner',
-        palette: ['#f8fafc', '#1e1b4b', '#4f46e5', '#6366f1'],
-        features: ['Soft off-white background', 'Indigo accent bar', 'Elevated white cards', 'Modern floating header'],
+        id: 'rust_stone',
+        name: 'Rust & Stone',
+        swatch: ['#fafaf9', '#1c1917', '#c2410c', '#7c2d12'],
+        vars: { accent: '#c2410c', accentBright: '#fb923c', accentDeep: '#7c2d12', tint: '#fff7ed', heroTo: '#78350f' },
     },
     {
-        id: 'masonic_light',
-        name: 'White Gold Masonic Lodge',
-        badge: 'White & Royal Gold',
-        isLight: true,
-        description: 'Traditional fraternal lodge layout set on a pure white background with gold foil borders and dark navy serif typography.',
-        previewBg: 'bg-gradient-to-br from-white via-amber-50/30 dark:via-amber-950/30 to-slate-100 border border-amber-300 dark:border-amber-700/60 shadow-inner',
-        palette: ['#ffffff', '#0c1938', '#d97706', '#fbbf24'],
-        features: ['Pure white background', 'Gold foil card borders', 'Dark navy serif typography', 'Regal gold badges'],
+        id: 'violet_coral',
+        name: 'Violet & Coral',
+        swatch: ['#ffffff', '#2e1065', '#7c3aed', '#c084fc'],
+        vars: { accent: '#7c3aed', accentBright: '#e879f9', accentDeep: '#5b21b6', tint: '#f5f3ff', heroTo: '#fb923c' },
     },
     {
-        id: 'minimal',
-        name: 'Minimalist Emerald Light',
-        badge: 'Clean & Flat Light',
-        isLight: true,
-        description: 'Bright, airy, contemporary design with generous whitespace, crisp emerald green accents, high-contrast typography, and flat white cards.',
-        previewBg: 'bg-gradient-to-br from-white via-emerald-50/30 dark:via-emerald-950/30 to-slate-100 border border-emerald-200 dark:border-emerald-800/60 shadow-inner',
-        palette: ['#ffffff', '#059669', '#10b981', '#1e293b'],
-        features: ['Airy whitespace layout', 'Emerald green highlights', 'Flat modern borders', 'High-contrast typography'],
+        id: 'forest_moss',
+        name: 'Forest & Moss',
+        swatch: ['#ffffff', '#052e16', '#15803d', '#14532d'],
+        vars: { accent: '#15803d', accentBright: '#4ade80', accentDeep: '#14532d', tint: '#f0fdf4', heroTo: '#0d9488' },
     },
     {
-        id: 'warm_light',
-        name: 'Warm Cream & Bronze',
-        badge: 'Warm Light',
-        isLight: true,
-        description: 'Soft warm ivory background with rich bronze accents, rounded white cards, and inviting warm tones.',
-        previewBg: 'bg-gradient-to-br from-amber-50/50 dark:from-amber-950/50 via-orange-50/30 dark:via-orange-950/30 to-amber-100/50 dark:to-amber-900/50 border border-amber-200 dark:border-amber-800/60 shadow-inner',
-        palette: ['#fffbe6', '#78350f', '#b45309', '#f59e0b'],
-        features: ['Warm ivory backdrop', 'Bronze & Amber accents', 'Rounded white cards', 'Inviting layout'],
-    },
-    {
-        id: 'classic',
-        name: 'Classic Dark Heritage',
-        badge: 'Classic Dark',
-        isLight: false,
-        description: 'Clean, timeless corporate and club layout featuring crisp white cards on dark slate, rich navy accents, gold highlights, and subtle shadows.',
-        previewBg: 'bg-gradient-to-br from-slate-900 via-blue-900 to-blue-950 shadow-inner',
-        palette: ['#0f172a', '#0284c7', '#d97706', '#f8fafc'],
-        features: ['Navy & Amber accents', 'Classic serif headings', 'Subtle card elevations', 'Centered footer navigation'],
-    },
-    {
-        id: 'obsidian',
-        name: 'Obsidian Dark',
-        badge: 'Modern Dark Mode',
-        isLight: false,
-        description: 'Sleek, high-tech dark mode aesthetic with midnight background, glassmorphism panel surfaces, and glowing cyan/indigo accents.',
-        previewBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 shadow-inner',
-        palette: ['#020617', '#38bdf8', '#818cf8', '#1e293b'],
-        features: ['Midnight dark backdrop', 'Glassmorphism panels', 'Neon accent glows', 'Compact dark header bar'],
-    },
-    {
-        id: 'masonic',
-        name: 'Royal Masonic Dark & Gold',
-        badge: 'Regal Dark',
-        isLight: false,
-        description: 'Traditional Masonic & fraternal lodge aesthetic featuring deep royal navy, rich gold foil borders, crest embellishments, and classic serif typography.',
-        previewBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-blue-950 shadow-inner',
-        palette: ['#0c1938', '#f59e0b', '#d97706', '#1e1b4b'],
-        features: ['Royal Navy & Gold palette', 'Lodge crest detailing', 'Regal badge styling', 'Ornate section dividers'],
-    },
-    {
-        id: 'vibrant',
-        name: 'Vibrant Sunset Dark',
-        badge: 'High Impact Banners',
-        isLight: false,
-        description: 'Dynamic, high-energy theme with bold gradient hero banners, warm coral and amber tones, rounded cards, and prominent action buttons.',
-        previewBg: 'bg-gradient-to-br from-amber-900 via-rose-950 to-blue-950 shadow-inner',
-        palette: ['#f43f5e', '#fb923c', '#4c1d95', '#fff1f2'],
-        features: ['Sunset gradient headers', 'Warm coral & amber tones', 'Rounded card borders', 'Prominent action CTAs'],
+        id: 'ocean_teal',
+        name: 'Ocean & Teal',
+        swatch: ['#ffffff', '#083344', '#0e7490', '#164e63'],
+        vars: { accent: '#0e7490', accentBright: '#22d3ee', accentDeep: '#164e63', tint: '#ecfeff', heroTo: '#4338ca' },
     },
 ];
+
+export const DEFAULT_THEME_KEY = 'editorial:rust_stone';
+
+/** `${layoutId}:${colorSchemeId}` for every valid combination — used to build server-side validation lists. */
+export const SITE_THEME_KEYS = [
+    LEGACY_THEME.id,
+    ...SITE_LAYOUTS.flatMap((layout) => SITE_COLOR_SCHEMES.map((scheme) => `${layout.id}:${scheme.id}`)),
+];
+
+const cssVarsFor = (scheme) => ({
+    '--cm-accent': scheme.vars.accent,
+    '--cm-accent-bright': scheme.vars.accentBright,
+    '--cm-accent-deep': scheme.vars.accentDeep,
+    '--cm-tint': scheme.vars.tint,
+    '--cm-hero-to': scheme.vars.heroTo,
+});
 
 /**
- * The Tailwind classes for one theme. `wrapper`/`header` are used by the public site's outer shell;
- * `container`/`nav` are aliases of the same classes for the editor's boxed-in preview mockup.
+ * Resolves a stored `website_theme` value (`masonic`, or `${layoutId}:${colorSchemeId}`) into the
+ * merged Tailwind class table BlockRenderer/PublicHeader/PublicFooter consume, plus the `cssVars`
+ * that must be bound with `:style` on the wrapper. `container`/`nav` are aliases of the same
+ * classes for the editor's boxed-in preview mockup.
  */
 export function themeClasses(key) {
-    const base = THEME_CLASS_TABLE[key] || THEME_CLASS_TABLE.classic;
+    if (key === LEGACY_THEME.id) {
+        return { ...MASONIC_CLASSES, container: MASONIC_CLASSES.wrapper, nav: MASONIC_CLASSES.header, cssVars: {} };
+    }
+
+    const [layoutId, colorSchemeId] = String(key || '').split(':');
+    const layout = LAYOUT_TABLE[layoutId] || LAYOUT_TABLE[DEFAULT_THEME_KEY.split(':')[0]];
+    const scheme = SITE_COLOR_SCHEMES.find((s) => s.id === colorSchemeId) || SITE_COLOR_SCHEMES.find((s) => s.id === DEFAULT_THEME_KEY.split(':')[1]);
 
     return {
-        ...base,
-        container: base.wrapper,
-        nav: base.header,
+        ...layout,
+        container: layout.wrapper,
+        nav: layout.header,
+        cssVars: cssVarsFor(scheme),
     };
 }
 
-const THEME_CLASS_TABLE = {
-    light_navy: {
-        wrapper: 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-sans selection:bg-blue-500 selection:text-white',
-        header: 'sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800/90 shadow-sm',
-        navActive: 'bg-slate-900 dark:bg-slate-700 text-white font-bold shadow-md shadow-slate-900/10',
-        navInactive: 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-transparent',
-        heroBg: 'bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-white border border-slate-800 shadow-xl',
-        heroPill: 'bg-blue-500/20 border-blue-400/30 text-blue-300 font-semibold',
-        heroCta: 'bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-blue-600/25',
-        cardBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm hover:shadow-md transition-shadow',
+const MASONIC_CLASSES = {
+    layout: 'boxed',
+    wrapper: 'bg-slate-950 text-slate-100 font-serif selection:bg-amber-500 selection:text-slate-950',
+    header: 'sticky top-0 z-50 backdrop-blur-xl bg-blue-950/90 border-b border-amber-500/30 shadow-md',
+    navActive: 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm',
+    navInactive: 'text-slate-300 hover:text-amber-300 border-transparent',
+    heroBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-blue-950 border-2 border-amber-500/30 shadow-2xl',
+    heroPill: 'bg-amber-500/10 border-amber-500/30 text-amber-400 font-sans tracking-widest',
+    heroCta: 'bg-gradient-to-r from-amber-600 to-amber-500 text-slate-950 dark:text-white font-black shadow-amber-500/20',
+    cardBg: 'bg-blue-950/60 border border-amber-500/25 text-slate-100 shadow-xl',
+    headingText: 'text-amber-100',
+    bodyText: 'text-slate-300',
+    accentText: 'text-amber-400',
+    accentBg: 'bg-amber-500',
+    footer: 'bg-blue-950 border-t border-amber-500/20 text-slate-400 font-sans',
+};
+
+// Layouts reference colour only via var(--cm-*) custom properties, so any of the 5 colour schemes
+// can paint any layout. Neutrals (bg/ink/borders), type, shape and structure stay fixed per layout.
+const LAYOUT_TABLE = {
+    // Full-bleed alternating bands (white / accent-tinted), serif headings, dedicated dark hero band.
+    banded: {
+        layout: 'banded',
+        bandA: 'bg-white dark:bg-slate-950',
+        bandB: 'bg-[var(--cm-tint)] dark:bg-slate-900',
+        wrapper: 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-serif selection:bg-[var(--cm-accent)] selection:text-white',
+        header: 'sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-[var(--cm-accent)]/20 shadow-sm',
+        navActive: 'bg-slate-900 dark:bg-[var(--cm-accent)]/15 text-white dark:text-[var(--cm-accent-bright)] border-slate-900 dark:border-[var(--cm-accent)]/30 font-sans font-bold',
+        navInactive: 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-[var(--cm-accent-bright)] font-sans border-transparent',
+        heroBg: 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white',
+        heroPill: 'bg-[var(--cm-accent)]/15 border-[var(--cm-accent)]/30 text-[var(--cm-accent-bright)] font-sans tracking-widest',
+        heroCta: 'bg-[var(--cm-accent)] hover:bg-[var(--cm-accent-bright)] text-slate-950 font-bold',
+        cardBg: 'bg-white dark:bg-slate-950/60 border border-[var(--cm-accent)]/25 dark:border-[var(--cm-accent)]/20 text-slate-900 dark:text-white shadow-sm hover:border-[var(--cm-accent)]/50 transition-colors',
         headingText: 'text-slate-900 dark:text-white',
-        bodyText: 'text-slate-700 dark:text-slate-200',
-        accentText: 'text-blue-600 dark:text-blue-400',
-        accentBg: 'bg-blue-600',
-        footer: 'bg-slate-900 dark:bg-slate-700 border-t border-slate-800 text-slate-400',
+        bodyText: 'text-slate-700 dark:text-slate-300',
+        accentText: 'text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)]',
+        accentBg: 'bg-[var(--cm-accent)]',
+        footer: 'bg-slate-950 border-t border-[var(--cm-accent)]/20 text-slate-400 font-sans',
+        radiusLg: 'rounded-2xl',
+        radiusMd: 'rounded-xl',
     },
-    executive_light: {
-        wrapper: 'bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white font-sans selection:bg-blue-600 selection:text-white',
-        header: 'sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-sm',
-        navActive: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60 font-bold shadow-sm',
-        navInactive: 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-transparent',
-        heroBg: 'bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 shadow-md text-slate-900 dark:text-white',
-        heroPill: 'bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-700 dark:text-blue-300 font-semibold',
-        heroCta: 'bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold shadow-blue-600/20',
-        cardBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm hover:border-blue-200 dark:hover:border-blue-800/60 transition-colors',
+
+    // Sharp, hairline-bordered, left-aligned hero. No rounded corners anywhere.
+    editorial: {
+        layout: 'editorial',
+        wrapper: 'bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 font-sans selection:bg-stone-900 selection:text-white',
+        header: 'sticky top-0 z-50 bg-stone-50/95 dark:bg-stone-950/95 backdrop-blur-md border-b-2 border-stone-900 dark:border-stone-100',
+        navActive: 'text-stone-900 dark:text-white border-b-2 border-[var(--cm-accent)] dark:border-[var(--cm-accent-bright)] font-bold rounded-none',
+        navInactive: 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white border-transparent rounded-none',
+        heroBg: 'bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-white',
+        heroPill: 'bg-transparent border-[var(--cm-accent)] dark:border-[var(--cm-accent-bright)] text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] font-sans tracking-widest',
+        heroCta: 'bg-stone-900 hover:bg-[var(--cm-accent-deep)] dark:bg-white dark:hover:bg-stone-200 text-white dark:text-stone-900 font-bold shadow-none',
+        cardBg: 'bg-transparent border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-stone-100 shadow-none hover:border-[var(--cm-accent)] dark:hover:border-[var(--cm-accent-bright)] transition-colors',
+        headingText: 'text-stone-900 dark:text-white',
+        bodyText: 'text-stone-600 dark:text-stone-300',
+        accentText: 'text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)]',
+        accentBg: 'bg-[var(--cm-accent)]',
+        footer: 'bg-stone-50 dark:bg-stone-950 border-t-2 border-stone-900 dark:border-stone-100 text-stone-500 dark:text-stone-400 font-sans',
+        radiusLg: 'rounded-none',
+        radiusMd: 'rounded-none',
+    },
+
+    // Saturated gradient hero, thick borders, oversized rounded/pill shapes.
+    bold: {
+        layout: 'boxed',
+        wrapper: 'bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans selection:bg-[var(--cm-accent)] selection:text-white',
+        header: 'sticky top-0 z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b-4 border-[var(--cm-accent)] shadow-sm',
+        navActive: 'bg-[var(--cm-accent)] text-white font-bold shadow-md',
+        navInactive: 'text-slate-600 dark:text-slate-300 hover:text-[var(--cm-accent)] dark:hover:text-[var(--cm-accent-bright)] border-transparent',
+        heroBg: 'bg-gradient-to-br from-[var(--cm-accent)] via-[var(--cm-accent-deep)] to-[var(--cm-hero-to)] text-white border-0 shadow-2xl',
+        heroPill: 'bg-white/20 border-white/30 text-white font-black tracking-widest',
+        heroCta: 'bg-white hover:bg-slate-100 text-[var(--cm-accent-deep)] font-black shadow-xl',
+        cardBg: 'bg-white dark:bg-slate-900/60 border-4 border-[var(--cm-accent)]/20 dark:border-[var(--cm-accent)]/30 text-slate-900 dark:text-white shadow-lg hover:border-[var(--cm-accent)] transition-colors',
         headingText: 'text-slate-900 dark:text-white',
-        bodyText: 'text-slate-700 dark:text-slate-200',
-        accentText: 'text-blue-600 dark:text-blue-400',
-        accentBg: 'bg-blue-600',
-        footer: 'bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300',
-    },
-    masonic_light: {
-        wrapper: 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-serif selection:bg-amber-500 selection:text-slate-950 dark:selection:text-white',
-        header: 'sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b-2 border-amber-500/40 shadow-sm',
-        navActive: 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 font-sans font-bold shadow-sm',
-        navInactive: 'text-slate-700 dark:text-slate-200 hover:text-amber-800 dark:hover:text-amber-200 font-sans border-transparent',
-        heroBg: 'bg-gradient-to-br from-blue-950 via-blue-950 to-slate-950 text-white border-2 border-amber-500/40 shadow-xl',
-        heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300 font-sans tracking-widest',
-        heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 dark:text-white font-sans font-black shadow-amber-500/30',
-        cardBg: 'bg-white dark:bg-slate-900 border border-amber-500/30 text-slate-900 dark:text-white shadow-sm hover:border-amber-500/50 transition-colors',
-        headingText: 'text-slate-900 dark:text-white',
-        bodyText: 'text-slate-700 dark:text-slate-200',
-        accentText: 'text-amber-700 dark:text-amber-300',
-        accentBg: 'bg-amber-600',
-        footer: 'bg-slate-900 dark:bg-slate-700 border-t-2 border-amber-500/40 text-slate-400 font-sans',
-    },
-    warm_light: {
-        wrapper: 'bg-amber-50/30 dark:bg-amber-950/30 text-slate-900 dark:text-white font-sans selection:bg-amber-500 selection:text-white',
-        header: 'sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-amber-200/60 dark:border-amber-800/60 shadow-sm',
-        navActive: 'bg-amber-100/70 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 font-bold',
-        navInactive: 'text-slate-600 dark:text-slate-300 hover:text-amber-900 dark:hover:text-amber-200 border-transparent',
-        heroBg: 'bg-gradient-to-br from-amber-900 via-amber-950 to-orange-950 text-amber-50 border border-amber-700/50 shadow-xl',
-        heroPill: 'bg-amber-500/20 border-amber-400/40 text-amber-300',
-        heroCta: 'bg-gradient-to-r from-amber-500 to-amber-600 text-amber-950 dark:text-amber-100 font-bold',
-        cardBg: 'bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60 text-slate-900 dark:text-white shadow-sm hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors',
-        headingText: 'text-slate-900 dark:text-white',
-        bodyText: 'text-slate-700 dark:text-slate-200',
-        accentText: 'text-amber-700 dark:text-amber-300',
-        accentBg: 'bg-amber-600',
-        footer: 'bg-white dark:bg-slate-900 border-t border-amber-200/60 dark:border-amber-800/60 text-slate-600 dark:text-slate-300',
-    },
-    obsidian: {
-        wrapper: 'bg-slate-950 text-slate-100 font-sans selection:bg-blue-500 selection:text-white',
-        header: 'sticky top-0 z-50 backdrop-blur-xl bg-slate-950/90 border-b border-slate-800',
-        navActive: 'bg-blue-500/20 text-blue-400 border-blue-500/40 shadow-sm shadow-blue-500/10',
-        navInactive: 'text-slate-400 hover:text-white border-transparent',
-        heroBg: 'bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800/80 shadow-2xl',
-        heroPill: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
-        heroCta: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-500/30',
-        cardBg: 'bg-slate-900/90 border border-slate-800 text-slate-100 shadow-xl',
-        headingText: 'text-white',
-        bodyText: 'text-slate-300',
-        accentText: 'text-blue-400',
-        accentBg: 'bg-blue-500',
-        footer: 'bg-slate-950 border-t border-slate-900 text-slate-500',
-    },
-    masonic: {
-        wrapper: 'bg-slate-950 text-slate-100 font-serif selection:bg-amber-500 selection:text-slate-950',
-        header: 'sticky top-0 z-50 backdrop-blur-xl bg-blue-950/90 border-b border-amber-500/30 shadow-md',
-        navActive: 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm',
-        navInactive: 'text-slate-300 hover:text-amber-300 border-transparent',
-        heroBg: 'bg-gradient-to-br from-blue-950 via-slate-950 to-blue-950 border-2 border-amber-500/30 shadow-2xl',
-        heroPill: 'bg-amber-500/10 border-amber-500/30 text-amber-400 font-sans tracking-widest',
-        heroCta: 'bg-gradient-to-r from-amber-600 to-amber-500 text-slate-950 dark:text-white font-black shadow-amber-500/20',
-        cardBg: 'bg-blue-950/60 border border-amber-500/25 text-slate-100 shadow-xl',
-        headingText: 'text-amber-100',
-        bodyText: 'text-slate-300',
-        accentText: 'text-amber-400',
-        accentBg: 'bg-amber-500',
-        footer: 'bg-blue-950 border-t border-amber-500/20 text-slate-400 font-sans',
-    },
-    minimal: {
-        wrapper: 'bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white font-sans selection:bg-emerald-500 selection:text-white',
-        header: 'sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm',
-        navActive: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 font-bold',
-        navInactive: 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-transparent',
-        heroBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-white',
-        heroPill: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300',
-        heroCta: 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/20',
-        cardBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm',
-        headingText: 'text-slate-900 dark:text-white',
-        bodyText: 'text-slate-700 dark:text-slate-200',
-        accentText: 'text-emerald-700 dark:text-emerald-400',
-        accentBg: 'bg-emerald-600',
-        footer: 'bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300',
-    },
-    vibrant: {
-        wrapper: 'bg-slate-900 dark:bg-slate-700 text-slate-100 font-sans selection:bg-rose-500 selection:text-white',
-        header: 'sticky top-0 z-50 backdrop-blur-xl bg-slate-900/90 border-b border-rose-500/20',
-        navActive: 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm',
-        navInactive: 'text-slate-300 hover:text-rose-300 border-transparent',
-        heroBg: 'bg-gradient-to-r from-rose-900 via-amber-900 to-blue-950 border border-rose-500/30 shadow-2xl',
-        heroPill: 'bg-rose-500/20 border-rose-500/40 text-rose-300',
-        heroCta: 'bg-gradient-to-r from-rose-500 via-amber-500 to-rose-600 text-white shadow-rose-500/30',
-        cardBg: 'bg-slate-950/80 border border-slate-800 text-slate-100 shadow-xl',
-        headingText: 'text-white',
-        bodyText: 'text-slate-300',
-        accentText: 'text-rose-400',
-        accentBg: 'bg-rose-500',
-        footer: 'bg-slate-950 border-t border-slate-800 text-slate-400',
-    },
-    classic: {
-        wrapper: 'bg-slate-950 text-slate-100 font-sans selection:bg-blue-500 selection:text-white',
-        header: 'sticky top-0 z-50 backdrop-blur-xl bg-slate-950/85 border-b border-slate-800',
-        navActive: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
-        navInactive: 'text-slate-400 hover:text-white border-transparent',
-        heroBg: 'bg-gradient-to-r from-slate-900 via-blue-950/40 to-slate-900 border border-slate-800',
-        heroPill: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-        heroCta: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-500/20',
-        cardBg: 'bg-slate-900 dark:bg-slate-700 border border-slate-800 text-slate-100 shadow-xl',
-        headingText: 'text-white',
-        bodyText: 'text-slate-300',
-        accentText: 'text-blue-400',
-        accentBg: 'bg-blue-500',
-        footer: 'bg-slate-950 border-t border-slate-800 text-slate-400',
+        bodyText: 'text-slate-600 dark:text-slate-300',
+        accentText: 'text-[var(--cm-accent)] dark:text-[var(--cm-accent-bright)]',
+        accentBg: 'bg-[var(--cm-accent)]',
+        footer: 'bg-slate-950 border-t-4 border-[var(--cm-accent)] text-slate-400 font-sans',
+        radiusLg: 'rounded-[2.5rem]',
+        radiusMd: 'rounded-3xl',
     },
 };

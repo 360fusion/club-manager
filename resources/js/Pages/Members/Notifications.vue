@@ -18,9 +18,10 @@ const CATEGORIES = [
     { value: 'event', label: 'Events' },
     { value: 'notice', label: 'Notices' },
     { value: 'membership', label: 'Membership' },
+    { value: 'signature', label: 'Sign' },
 ];
 
-const VARIANTS = { summons: 'danger', news: 'info', event: 'success', notice: 'warning', membership: 'neutral' };
+const VARIANTS = { summons: 'danger', news: 'info', event: 'success', notice: 'warning', membership: 'neutral', signature: 'info' };
 
 const chip = (active) => ['rounded-full border px-3 py-1 text-xs font-medium transition-colors', active ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300' : 'border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'];
 

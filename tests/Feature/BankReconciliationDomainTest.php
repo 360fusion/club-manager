@@ -17,7 +17,9 @@ use App\Domains\ClubAccounting\Services\SubscriptionBillingService;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
 use App\Models\ClubType;
+use App\Models\Invoice;
 use App\Models\User;
+use App\Services\AccountingService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -185,6 +187,160 @@ class BankReconciliationDomainTest extends TestCase
         $this->subscription->refresh();
         $this->assertEquals(160.00, $this->subscription->amount_paid);
         $this->assertEquals(SubscriptionStatus::Paid, $this->subscription->status);
+    }
+
+    public function test_reconciling_a_supplier_bill_marks_it_paid_and_reconciled_independently(): void
+    {
+        app(AccountingService::class)->seedDefaultAccounts($this->club);
+
+        $import = BankImport::create([
+            'club_id' => $this->club->id,
+            'filename' => 'statement.csv',
+            'total_lines' => 1,
+            'total_amount' => -350.00,
+        ]);
+
+        $tx = BankTransaction::create([
+            'club_id' => $this->club->id,
+            'bank_import_id' => $import->id,
+            'transaction_date' => Carbon::parse('2026-09-16'),
+            'raw_description' => 'Payment to Grand Hall Catering Ltd BILL-9001',
+            'amount' => -350.00,
+            'transaction_hash' => 'hash-supplier-bill',
+            'status' => BankTransactionStatus::Unmatched,
+        ]);
+
+        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
+        $matcher->reconcileTransaction($tx, 'supplier_bill', $this->supplierBill->id);
+
+        $this->supplierBill->refresh();
+        $this->assertEquals('paid', $this->supplierBill->status);
+        $this->assertNotNull($this->supplierBill->paid_at);
+        $this->assertNotNull($this->supplierBill->reconciled_at);
+        $this->assertEquals($tx->id, $this->supplierBill->reconciled_bank_transaction_id);
+
+        // The correct Accounts Payable clearing entry was posted via markBillAsPaid()
+        // (source_type VendorBillPayment) — not a second, generic bank_transaction
+        // entry against a hardcoded offset account.
+        $this->assertDatabaseHas('accounting_journal_entries', [
+            'club_id' => $this->club->id,
+            'source_type' => 'VendorBillPayment',
+            'source_id' => $this->supplierBill->id,
+        ]);
+        $this->assertDatabaseMissing('accounting_journal_entries', [
+            'club_id' => $this->club->id,
+            'source_type' => 'bank_transaction',
+            'source_id' => $tx->id,
+        ]);
+    }
+
+    public function test_marking_a_bill_paid_manually_then_reconciling_does_not_double_post_the_ledger(): void
+    {
+        $accountingService = app(AccountingService::class);
+        $accountingService->seedDefaultAccounts($this->club);
+        $accountingService->markBillAsPaid($this->supplierBill, $this->adminUser);
+
+        $this->supplierBill->refresh();
+        $this->assertEquals('paid', $this->supplierBill->status);
+        $this->assertNull($this->supplierBill->reconciled_at);
+        $this->assertDatabaseCount('accounting_journal_entries', 1);
+
+        $import = BankImport::create([
+            'club_id' => $this->club->id,
+            'filename' => 'statement.csv',
+            'total_lines' => 1,
+            'total_amount' => -350.00,
+        ]);
+
+        $tx = BankTransaction::create([
+            'club_id' => $this->club->id,
+            'bank_import_id' => $import->id,
+            'transaction_date' => Carbon::parse('2026-09-16'),
+            'raw_description' => 'Payment to Grand Hall Catering Ltd BILL-9001',
+            'amount' => -350.00,
+            'transaction_hash' => 'hash-already-paid',
+            'status' => BankTransactionStatus::Unmatched,
+        ]);
+
+        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
+        $matcher->reconcileTransaction($tx, 'supplier_bill', $this->supplierBill->id);
+
+        $this->supplierBill->refresh();
+        $this->assertNotNull($this->supplierBill->reconciled_at);
+        $this->assertEquals($tx->id, $this->supplierBill->reconciled_bank_transaction_id);
+
+        // Reconciling an already-paid bill must not post a second settlement entry.
+        $this->assertDatabaseCount('accounting_journal_entries', 1);
+    }
+
+    public function test_suggest_matches_and_reconcile_for_unpaid_invoice_credit(): void
+    {
+        app(AccountingService::class)->seedDefaultAccounts($this->club);
+
+        $payer = User::factory()->create(['name' => 'Alice Example']);
+        $invoice = Invoice::create([
+            'club_id' => $this->club->id,
+            'user_id' => $payer->id,
+            'title' => 'Locker Rental 2026',
+            'amount' => 120.00,
+            'status' => 'unpaid',
+            'invoice_number' => 'INV-LOCKER-1',
+        ]);
+
+        $import = BankImport::create([
+            'club_id' => $this->club->id,
+            'filename' => 'statement.csv',
+            'total_lines' => 1,
+            'total_amount' => 120.00,
+        ]);
+
+        $tx = BankTransaction::create([
+            'club_id' => $this->club->id,
+            'bank_import_id' => $import->id,
+            'transaction_date' => Carbon::parse('2026-09-17'),
+            'raw_description' => 'BACS INV-LOCKER-1 Alice Example',
+            'amount' => 120.00,
+            'transaction_hash' => 'hash-invoice',
+            'status' => BankTransactionStatus::Unmatched,
+        ]);
+
+        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
+        $suggestions = $matcher->suggestMatches($tx);
+
+        $this->assertNotEmpty($suggestions);
+        $this->assertEquals('invoice', $suggestions[0]['match_type']);
+        $this->assertEquals($invoice->id, $suggestions[0]['target_id']);
+
+        $matcher->reconcileTransaction($tx, 'invoice', $invoice->id);
+
+        $invoice->refresh();
+        $this->assertEquals('paid', $invoice->status);
+        $this->assertNotNull($invoice->paid_at);
+        $this->assertNotNull($invoice->reconciled_at);
+        $this->assertEquals($tx->id, $invoice->reconciled_bank_transaction_id);
+    }
+
+    public function test_mark_paid_actions_are_forbidden_for_non_billing_roles(): void
+    {
+        $member = User::factory()->create();
+        $member->clubs()->attach($this->club->id, ['role' => 'member']);
+
+        $this->actingAs($member)
+            ->post(route('admin.accounting.bills.pay', ['clubSlug' => $this->club->slug, 'id' => $this->supplierBill->id]))
+            ->assertForbidden();
+
+        $invoice = Invoice::create([
+            'club_id' => $this->club->id,
+            'user_id' => $this->adminUser->id,
+            'title' => 'Test Fee',
+            'amount' => 50.00,
+            'status' => 'unpaid',
+            'invoice_number' => 'INV-FORBID-1',
+        ]);
+
+        $this->actingAs($member)
+            ->post(route('admin.accounting.invoices.pay', ['clubSlug' => $this->club->slug, 'id' => $invoice->id]))
+            ->assertForbidden();
     }
 
     public function test_reconciliation_workspace_livewire_component(): void

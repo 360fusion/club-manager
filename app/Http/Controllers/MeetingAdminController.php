@@ -10,6 +10,7 @@ use App\Domains\ClubAccounting\Services\AnnualOfficerRosterService;
 use App\Models\Club;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Models\MeetingRsvpGuest;
 use App\Models\RecurringRule;
 use App\Models\User;
 use App\Notifications\ClubNotification;
@@ -321,6 +322,124 @@ class MeetingAdminController extends Controller
     /**
      * Display administrative attendance dashboard & caterer breakdown.
      */
+    /** How a dining head can be settled. Kept here so the page and the validator can't drift. */
+    public const DINING_PAYMENT_METHODS = ['bank', 'online', 'cash'];
+
+    /**
+     * The dining list for one meeting: every head the caterer is cooking for, what they owe and
+     * whether it has been settled.
+     */
+    public function dining(string $clubSlug, int $id): Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $rsvps = MeetingRsvp::where('meeting_id', $meeting->id)
+            ->where('attendance_status', 'attending_dining')
+            ->with(['user', 'guests' => fn ($q) => $q->where('attending_dining', true), 'paidRecorder:id,name'])
+            ->get();
+
+        $diners = collect();
+
+        foreach ($rsvps as $rsvp) {
+            $diners->push([
+                'kind' => 'member',
+                'id' => $rsvp->id,
+                'name' => $rsvp->user?->name ?? 'Unknown member',
+                'host' => null,
+                'fee' => (float) $meeting->dining_cost_member,
+                'dietary' => $rsvp->dietary_requirements,
+                'payment_status' => $rsvp->payment_status,
+                'payment_method' => $rsvp->payment_method,
+                'payment_reference' => $rsvp->payment_reference,
+                'paid_at' => $rsvp->paid_at?->format('j M Y, H:i'),
+                'paid_by' => $rsvp->paidRecorder?->name,
+            ]);
+
+            foreach ($rsvp->guests as $guest) {
+                $diners->push([
+                    'kind' => 'guest',
+                    'id' => $guest->id,
+                    'name' => trim(($guest->guest_title_rank ? $guest->guest_title_rank.' ' : '').$guest->guest_name),
+                    'host' => $rsvp->user?->name,
+                    'fee' => (float) ($guest->dining_fee ?: $meeting->dining_cost_guest),
+                    'dietary' => $guest->dietary_requirements,
+                    'payment_status' => $guest->payment_status,
+                    'payment_method' => $guest->payment_method,
+                    'payment_reference' => null,
+                    'paid_at' => $guest->paid_at?->format('j M Y, H:i'),
+                    'paid_by' => $guest->paidRecorder?->name,
+                ]);
+            }
+        }
+
+        $diners = $diners->sortBy(fn ($d) => [$d['host'] ?? $d['name'], $d['kind'] === 'guest' ? 1 : 0])->values();
+        $settled = $diners->whereIn('payment_status', ['paid', 'waived']);
+
+        return Inertia::render('Admin/Meetings/Dining', [
+            'club' => $club,
+            'meeting' => [
+                'id' => $meeting->id,
+                'title' => $meeting->title,
+                'meeting_date' => $meeting->meeting_date?->format('l, j F Y'),
+                'dining_cost_member' => (float) $meeting->dining_cost_member,
+                'dining_cost_guest' => (float) $meeting->dining_cost_guest,
+            ],
+            'diners' => $diners,
+            'paymentMethods' => self::DINING_PAYMENT_METHODS,
+            'totals' => [
+                'heads' => $diners->count(),
+                'expected' => round((float) $diners->sum('fee'), 2),
+                'collected' => round((float) $settled->sum('fee'), 2),
+                'outstanding' => round((float) $diners->sum('fee') - (float) $settled->sum('fee'), 2),
+            ],
+        ]);
+    }
+
+    /**
+     * Record how one dining head was settled. Members and guests pay separately, so the row is
+     * addressed by kind plus its own id rather than by user.
+     */
+    public function recordDiningPayment(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        $validated = $request->validate([
+            'kind' => 'required|in:member,guest',
+            'diner_id' => 'required|integer',
+            'payment_status' => 'required|in:unpaid,paid,waived,refunded',
+            'payment_method' => 'nullable|in:'.implode(',', self::DINING_PAYMENT_METHODS),
+            'payment_reference' => 'nullable|string|max:255',
+        ]);
+
+        $isSettled = $validated['payment_status'] === 'paid';
+
+        $changes = [
+            'payment_status' => $validated['payment_status'],
+            'payment_method' => $isSettled ? $validated['payment_method'] : null,
+            'paid_at' => $isSettled ? now() : null,
+            'paid_recorded_by' => $isSettled ? $request->user()->id : null,
+        ];
+
+        if ($validated['kind'] === 'member') {
+            $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('id', $validated['diner_id'])->firstOrFail();
+            $changes['payment_reference'] = $validated['payment_reference'] ?? $rsvp->payment_reference;
+            $rsvp->update($changes);
+            $who = $rsvp->user?->name ?? 'member';
+        } else {
+            $guest = MeetingRsvpGuest::where('id', $validated['diner_id'])
+                ->whereHas('rsvp', fn ($q) => $q->where('meeting_id', $meeting->id))
+                ->firstOrFail();
+            $guest->update($changes);
+            $who = $guest->guest_name;
+        }
+
+        return redirect()->back()->with('success', $isSettled
+            ? "Dining payment recorded for {$who}."
+            : "Dining payment status updated for {$who}.");
+    }
+
     public function show(string $clubSlug, int $id): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();

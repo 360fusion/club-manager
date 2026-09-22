@@ -23,12 +23,16 @@ class MeetingRsvp extends Model
         'dietary_requirements',
         'payment_status',
         'payment_reference',
+        'payment_method',
+        'paid_at',
+        'paid_recorded_by',
         'responded_at',
         'is_postal_printed',
     ];
 
     protected $casts = [
         'token_expires_at' => 'datetime',
+        'paid_at' => 'datetime',
         'responded_at' => 'datetime',
         'is_postal_printed' => 'boolean',
     ];
@@ -52,6 +56,14 @@ class MeetingRsvp extends Model
     /**
      * @return HasMany<MeetingRsvpGuest, $this>
      */
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function paidRecorder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'paid_recorded_by');
+    }
+
     public function guests(): HasMany
     {
         return $this->hasMany(MeetingRsvpGuest::class, 'meeting_rsvp_id');

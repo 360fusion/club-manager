@@ -21,16 +21,28 @@ class MeetingRsvpGuest extends Model
         'dietary_requirements',
         'dining_fee',
         'payment_status',
+        'payment_method',
+        'paid_at',
+        'paid_recorded_by',
     ];
 
     protected $casts = [
         'attending_dining' => 'boolean',
         'dining_fee' => 'decimal:2',
+        'paid_at' => 'datetime',
     ];
 
     /**
      * @return BelongsTo<MeetingRsvp, $this>
      */
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function paidRecorder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'paid_recorded_by');
+    }
+
     public function rsvp(): BelongsTo
     {
         return $this->belongsTo(MeetingRsvp::class, 'meeting_rsvp_id');
