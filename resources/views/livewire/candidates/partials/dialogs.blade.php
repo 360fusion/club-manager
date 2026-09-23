@@ -174,12 +174,29 @@
                     <h4 class="font-black text-slate-900 dark:text-white text-xs">✍️ Form P signatures</h4>
                     @if($form_p_signed_at)
                         <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">Signed {{ \Carbon\Carbon::parse($form_p_signed_at)->format('j M Y') }}</span>
-                    @elseif($proposer_member_id && $seconder_member_id)
-                        <button type="button" wire:click="requestFormPSignatures" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-[11px]">Request signatures</button>
-                    @else
+                    @elseif($proposer_member_id && $seconder_member_id && ! $showFormPSignatureConfirm)
+                        <button type="button" wire:click="openFormPSignatureConfirm" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-[11px]">Request signatures</button>
+                    @elseif(! $showFormPSignatureConfirm)
                         <span class="text-[11px] text-slate-400">Choose a proposer and seconder first</span>
                     @endif
                 </div>
+
+                @if($showFormPSignatureConfirm)
+                    <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-xl p-3 space-y-2">
+                        <p class="text-[11px] font-semibold text-blue-900 dark:text-blue-200">Each person below will be emailed a private link to sign Form P themselves.</p>
+                        @foreach($this->formPSignatureCandidates() as $roleLabel => $person)
+                            <div class="flex items-center justify-between text-[11px] bg-white dark:bg-slate-900 rounded-lg px-3 py-2">
+                                <span class="font-bold text-slate-900 dark:text-white">{{ $roleLabel }} — {{ $person['name'] }}</span>
+                                <span class="text-slate-500 dark:text-slate-400">{{ $person['email'] ?? 'no email on file' }}</span>
+                            </div>
+                        @endforeach
+                        <div class="flex items-center justify-end gap-2 pt-1">
+                            <button type="button" wire:click="$set('showFormPSignatureConfirm', false)" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-lg text-[11px]">Cancel</button>
+                            <button type="button" wire:click="requestFormPSignatures" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-lg text-[11px]">Send signature requests</button>
+                        </div>
+                    </div>
+                @endif
+
                 @foreach(['form_p_proposer' => 'Proposer', 'form_p_seconder' => 'Seconder'] as $purpose => $roleLabel)
                     @if($req = $formPSignatures[$purpose] ?? null)
                         <div class="flex items-center justify-between text-[11px] bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2">

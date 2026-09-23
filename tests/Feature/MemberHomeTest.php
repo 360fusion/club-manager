@@ -10,7 +10,10 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Post;
 use App\Models\User;
+use App\Services\AccountingService;
+use App\Services\Signatures\SignatureRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -126,6 +129,21 @@ class MemberHomeTest extends TestCase
 
         $this->actingAs($this->member)->get(route('members.dashboard'))
             ->assertInertia(fn (Assert $page) => $page->has('inbox', 0));
+    }
+
+    public function test_pending_signature_requests_need_attention(): void
+    {
+        Mail::fake();
+        $auditorTwo = User::factory()->create();
+        $auditorTwo->clubs()->attach($this->club->id, ['role' => 'member', 'status' => 'active']);
+
+        $audit = app(AccountingService::class)->requestYearAudit($this->club, 2025, $this->member, $auditorTwo, null);
+        app(SignatureRequestService::class)->request($audit, 'year_audit_auditor_one', $this->member, $this->member->name, $this->member->email, $this->member);
+
+        $this->actingAs($this->member)->get(route('members.dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('inbox', 1)
+                ->where('inbox.0.kind', 'signature'));
     }
 
     public function test_up_next_only_shows_the_users_clubs_and_what_they_may_see(): void

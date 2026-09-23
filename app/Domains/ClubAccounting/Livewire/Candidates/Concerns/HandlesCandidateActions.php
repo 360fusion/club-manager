@@ -47,6 +47,8 @@ trait HandlesCandidateActions
     // Form P and the proposal
     public bool $showFormPModal = false;
 
+    public bool $showFormPSignatureConfirm = false;
+
     public ?int $proposer_member_id = null;
 
     public ?int $seconder_member_id = null;
@@ -200,6 +202,7 @@ trait HandlesCandidateActions
         $candidate = $this->candidateFor($id);
 
         $this->candidateId = $candidate->id;
+        $this->showFormPSignatureConfirm = false;
         $this->proposer_member_id = $candidate->proposer_member_id;
         $this->seconder_member_id = $candidate->seconder_member_id;
         $this->form_p_signed_at = $candidate->form_p_signed_at?->format('Y-m-d');
@@ -270,10 +273,41 @@ trait HandlesCandidateActions
     }
 
     /**
+     * The proposer and seconder who would be emailed, for the "who is this going to?" confirmation.
+     *
+     * @return array<string, array{name: string, email: ?string}>
+     */
+    public function formPSignatureCandidates(): array
+    {
+        $candidate = $this->candidateFor((int) $this->candidateId);
+
+        if (! $candidate->proposer_member_id || ! $candidate->seconder_member_id) {
+            return [];
+        }
+
+        $members = Member::where('club_id', $this->getClub()->id)
+            ->whereIn('id', [$candidate->proposer_member_id, $candidate->seconder_member_id])
+            ->get()
+            ->keyBy('id');
+
+        return [
+            'Proposer' => ['name' => $members->get($candidate->proposer_member_id)?->full_name ?? '—', 'email' => $members->get($candidate->proposer_member_id)?->email],
+            'Seconder' => ['name' => $members->get($candidate->seconder_member_id)?->full_name ?? '—', 'email' => $members->get($candidate->seconder_member_id)?->email],
+        ];
+    }
+
+    public function openFormPSignatureConfirm(): void
+    {
+        $this->showFormPSignatureConfirm = true;
+    }
+
+    /**
      * Email the proposer and seconder their private links to sign Form P.
      */
     public function requestFormPSignatures(SignatureRequestService $signatures): void
     {
+        $this->showFormPSignatureConfirm = false;
+
         $candidate = $this->candidateFor((int) $this->candidateId);
 
         if (! $candidate->proposer_member_id || ! $candidate->seconder_member_id) {

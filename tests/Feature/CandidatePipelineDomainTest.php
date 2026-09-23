@@ -391,6 +391,26 @@ class CandidatePipelineDomainTest extends TestCase
         $this->assertNotEquals($proposerRequest->getAttribute('token_hash'), $proposerRequest->fresh()->getAttribute('token_hash'));
     }
 
+    public function test_requesting_form_p_signatures_shows_who_will_be_emailed_before_sending(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate(['proposer_member_id' => $this->proposer->id, 'seconder_member_id' => $this->seconder->id]);
+        $this->actingAs($this->admin);
+
+        $component = Livewire::test(CandidateDetail::class, ['clubSlug' => $this->club->slug, 'candidateId' => $candidate->id])
+            ->call('openFormPModal', $candidate->id)
+            ->assertSet('showFormPSignatureConfirm', false)
+            ->call('openFormPSignatureConfirm')
+            ->assertSet('showFormPSignatureConfirm', true);
+
+        $candidates = $component->instance()->formPSignatureCandidates();
+        $this->assertEquals('John Doe', $candidates['Proposer']['name']);
+        $this->assertEquals('proposer@example.com', $candidates['Proposer']['email']);
+        $this->assertEquals('James Smith', $candidates['Seconder']['name']);
+
+        $component->call('requestFormPSignatures')->assertSet('showFormPSignatureConfirm', false);
+    }
+
     public function test_a_member_without_permission_and_another_clubs_admin_cannot_reach_a_candidate(): void
     {
         $candidate = $this->candidate();

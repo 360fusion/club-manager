@@ -11,11 +11,13 @@ use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\SignatureRequest;
 use App\Models\User;
+use App\Notifications\ClubNotification;
 use App\Services\AccountingService;
 use App\Services\Signatures\SignatureRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -185,5 +187,43 @@ class SignatureRequestServiceTest extends TestCase
 
         $this->service()->sign($r2, 'typed', ['typed_name' => $auditorTwo->name], '1.1.1.1', 'Agent');
         $this->assertNotNull($audit->fresh()->signed_off_at);
+    }
+
+    public function test_requesting_notifies_a_signer_who_is_a_user_directly(): void
+    {
+        Mail::fake();
+        Notification::fake();
+
+        $auditorOne = User::factory()->create();
+        $this->service()->request($this->candidate(), 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $this->admin);
+
+        Notification::assertSentTo($auditorOne, ClubNotification::class, fn ($n) => $n->category === 'signature');
+    }
+
+    public function test_requesting_notifies_a_signer_who_is_a_member_with_a_linked_user(): void
+    {
+        Mail::fake();
+        Notification::fake();
+
+        $user = User::factory()->create();
+        $member = Member::create(['club_id' => $this->club->id, 'user_id' => $user->id, 'first_name' => 'Linked', 'last_name' => 'Member', 'email' => 'linked@example.com']);
+
+        $this->service()->request($this->candidate(), 'form_p_proposer', $member, $member->full_name, $member->email, $this->admin);
+
+        Notification::assertSentTo($user, ClubNotification::class);
+    }
+
+    public function test_requesting_does_not_notify_a_member_with_no_linked_user(): void
+    {
+        Mail::fake();
+        Notification::fake();
+
+        $candidate = $this->candidate();
+        $proposer = Member::find($candidate->proposer_member_id);
+        $this->assertNull($proposer->user_id);
+
+        $this->service()->request($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+
+        Notification::assertNothingSent();
     }
 }
