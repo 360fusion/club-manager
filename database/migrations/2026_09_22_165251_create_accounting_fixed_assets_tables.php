@@ -32,14 +32,14 @@ return new class extends Migration
 
         Schema::create('accounting_fixed_asset_depreciation_entries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('fixed_asset_id')->constrained('accounting_fixed_assets')->cascadeOnDelete();
+            $table->foreignId('fixed_asset_id')->constrained('accounting_fixed_assets', indexName: 'fixed_asset_depreciation_entries_asset_id_foreign')->cascadeOnDelete();
             $table->foreignId('club_id')->constrained('clubs')->cascadeOnDelete();
             $table->string('period'); // e.g. '2026' for an annual depreciation run
             $table->decimal('amount', 12, 2);
-            $table->foreignId('journal_entry_id')->nullable()->constrained('accounting_journal_entries')->nullOnDelete();
+            $table->foreignId('journal_entry_id')->nullable()->constrained('accounting_journal_entries', indexName: 'fixed_asset_depreciation_entries_journal_entry_id_foreign')->nullOnDelete();
             $table->timestamps();
 
-            $table->unique(['fixed_asset_id', 'period']);
+            $table->unique(['fixed_asset_id', 'period'], 'fixed_asset_depreciation_entries_asset_period_unique');
         });
     }
 
