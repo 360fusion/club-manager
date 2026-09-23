@@ -275,7 +275,7 @@ class ClubSettingsController extends Controller
             'allModules' => $allModules,
             'members' => $members,
             'provinces' => $provinces,
-            'masonicHalls' => MasonicHall::orderBy('name')->get(['id', 'province_id', 'name', 'address_line_1', 'address_line_2', 'town', 'county', 'postcode']),
+            'masonicHalls' => MasonicHall::orderBy('name')->get(['id', 'province_id', 'name', 'kind', 'address_line_1', 'address_line_2', 'town', 'county', 'postcode']),
             'currencies' => array_values(Currencies::available()),
             'currencyLocked' => $club->currencyIsLocked(),
             'storage' => $club->storageSummary(),

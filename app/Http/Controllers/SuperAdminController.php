@@ -607,6 +607,7 @@ class SuperAdminController extends Controller
         return Inertia::render('SuperAdmin/MasonicHalls/Index', [
             'halls' => MasonicHall::with('province:id,name')->withCount('clubs')->orderBy('name')->get(),
             'provinces' => Province::orderBy('name')->get(['id', 'name']),
+            'kinds' => MasonicHall::KINDS,
         ]);
     }
 
@@ -654,6 +655,7 @@ class SuperAdminController extends Controller
         return $request->validate([
             'province_id' => 'nullable|exists:provinces,id',
             'name' => 'required|string|max:255',
+            'kind' => ['sometimes', Rule::in(array_keys(MasonicHall::KINDS))],
             'address_line_1' => 'nullable|string|max:255',
             'address_line_2' => 'nullable|string|max:255',
             'town' => 'nullable|string|max:100',

@@ -148,6 +148,11 @@ const availableHalls = computed(() => props.masonicHalls.filter(
   (h) => !form.province_id || !h.province_id || h.province_id === Number(form.province_id)
 ));
 
+const hallsOnly = computed(() => availableHalls.value.filter((h) => h.kind === 'hall'));
+const otherVenues = computed(() => availableHalls.value.filter((h) => h.kind !== 'hall'));
+
+const hallLabel = (h) => (h.town && !h.name.toLowerCase().includes(h.town.toLowerCase()) ? `${h.name} – ${h.town}` : h.name);
+
 const selectedHall = computed(() => props.masonicHalls.find((h) => h.id === Number(form.masonic_hall_id)) || null);
 
 const selectedHallAddress = computed(() => selectedHall.value
@@ -1020,15 +1025,18 @@ const moveOfficerDown = (index) => {
             </div>
 
             <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Masonic Hall</label>
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Masonic Hall / Meeting Place</label>
               <select v-model="form.masonic_hall_id" @change="onHallChange" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">No Masonic Hall Selected</option>
-                <option v-for="h in availableHalls" :key="h.id" :value="h.id">
-                  {{ h.name }}{{ h.town ? ' – ' + h.town : '' }}
-                </option>
+                <optgroup label="Masonic halls">
+                  <option v-for="h in hallsOnly" :key="h.id" :value="h.id">{{ hallLabel(h) }}</option>
+                </optgroup>
+                <optgroup v-if="otherVenues.length" label="Hotels, clubs and other venues">
+                  <option v-for="h in otherVenues" :key="h.id" :value="h.id">{{ hallLabel(h) }}</option>
+                </optgroup>
               </select>
               <p v-if="selectedHallAddress" class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">📍 {{ selectedHallAddress }}</p>
-              <p v-else class="text-[11px] text-slate-400 mt-1">Where your lodge or chapter meets. Choose a province first to narrow the list.</p>
+              <p v-else class="text-[11px] text-slate-400 mt-1">Where your lodge or chapter meets, including hotels and clubs. Choose a province first to narrow the list.</p>
               <p v-if="form.errors.masonic_hall_id" class="text-[11px] text-rose-600 mt-1">{{ form.errors.masonic_hall_id }}</p>
             </div>
 

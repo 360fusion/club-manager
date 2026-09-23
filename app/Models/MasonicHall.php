@@ -11,9 +11,22 @@ class MasonicHall extends Model
 {
     use HasFactory;
 
+    /**
+     * What sort of place a lodge meets in. Lodges also meet in hotels, clubs and schools, so those
+     * are kept in the same list but told apart from masonic halls.
+     */
+    public const KINDS = [
+        'hall' => 'Masonic hall',
+        'hotel' => 'Hotel, inn or pub',
+        'club' => 'Club',
+        'school' => 'School or college',
+        'other' => 'Other venue',
+    ];
+
     protected $fillable = [
         'province_id',
         'name',
+        'kind',
         'slug',
         'address_line_1',
         'address_line_2',

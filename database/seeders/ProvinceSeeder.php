@@ -110,6 +110,8 @@ class ProvinceSeeder extends Seeder
             ['name' => 'Province of East Kent', 'code' => 'east_kent', 'country' => 'England', 'region' => 'South East', 'website_url' => 'https://eastkentmasons.org.uk'],
             ['name' => 'Province of West Kent', 'code' => 'west_kent', 'country' => 'England', 'region' => 'South East', 'website_url' => 'https://westkentmasons.org.uk'],
             ['name' => 'Province of Middlesex', 'code' => 'middlesex', 'country' => 'England', 'region' => 'South East', 'website_url' => 'https://pglmiddlesex.org.uk'],
+            ['name' => 'Province of Surrey', 'code' => 'surrey', 'country' => 'England', 'region' => 'South East', 'website_url' => 'https://surreymasons.org.uk'],
+            ['name' => 'Province of Sussex', 'code' => 'sussex', 'country' => 'England', 'region' => 'South East', 'website_url' => 'https://sussexmasons.org.uk'],
             // England - South West
             ['name' => 'Province of Bristol', 'code' => 'bristol', 'country' => 'England', 'region' => 'South West', 'website_url' => 'https://bristolmasons.co.uk'],
             [

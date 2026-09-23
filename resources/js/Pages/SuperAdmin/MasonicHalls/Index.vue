@@ -6,10 +6,12 @@ import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 const props = defineProps({
     halls: { type: Array, required: true },
     provinces: { type: Array, default: () => [] },
+    kinds: { type: Object, default: () => ({}) },
 });
 
 const searchQuery = ref('');
 const provinceFilter = ref('all');
+const kindFilter = ref('all');
 const showModal = ref(false);
 const editingId = ref(null);
 
@@ -18,6 +20,7 @@ const withoutProvince = computed(() => props.halls.filter((h) => !h.province_id)
 const emptyForm = () => ({
     province_id: '',
     name: '',
+    kind: 'hall',
     address_line_1: '',
     address_line_2: '',
     town: '',
@@ -38,6 +41,10 @@ const filteredHalls = computed(() => {
         result = result.filter((h) => !h.province_id);
     } else if (provinceFilter.value !== 'all') {
         result = result.filter((h) => h.province_id === Number(provinceFilter.value));
+    }
+
+    if (kindFilter.value !== 'all') {
+        result = result.filter((h) => h.kind === kindFilter.value);
     }
 
     const q = searchQuery.value.toLowerCase().trim();
@@ -124,6 +131,10 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
                     <option value="none">No province</option>
                     <option v-for="p in provinces" :key="p.id" :value="p.id">{{ p.name }}</option>
                 </select>
+                <select v-model="kindFilter" class="bg-slate-100 border border-slate-300 text-slate-900 text-xs rounded-xl px-3 py-2.5 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                    <option value="all">All types</option>
+                    <option v-for="(label, key) in kinds" :key="key" :value="key">{{ label }}</option>
+                </select>
                 <div class="text-xs text-slate-500 self-center dark:text-slate-400">
                     <strong class="text-slate-900 dark:text-white">{{ filteredHalls.length }}</strong> of {{ halls.length }}
                     <span v-if="withoutProvince" class="ml-2 text-amber-600 dark:text-amber-400">{{ withoutProvince }} with no province</span>
@@ -136,6 +147,7 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-500 uppercase tracking-wider dark:bg-slate-900/60 dark:border-slate-800 dark:text-slate-400">
                                 <th class="py-3 px-4">Hall</th>
+                                <th class="py-3 px-3">Type</th>
                                 <th class="py-3 px-3">Address</th>
                                 <th class="py-3 px-3">Province</th>
                                 <th class="py-3 px-3">Bodies</th>
@@ -145,6 +157,7 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
                         <tbody class="divide-y divide-slate-200 text-xs dark:divide-slate-800">
                             <tr v-for="h in filteredHalls" :key="h.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                                 <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{{ h.name }}</td>
+                                <td class="py-3.5 px-3 text-slate-700 dark:text-slate-300">{{ kinds[h.kind] || h.kind }}</td>
                                 <td class="py-3.5 px-3 text-slate-700 dark:text-slate-300">{{ addressOf(h) || '—' }}</td>
                                 <td class="py-3.5 px-3" :class="h.province ? 'text-slate-700 dark:text-slate-300' : 'text-amber-600 dark:text-amber-400'">{{ h.province?.name || 'No province' }}</td>
                                 <td class="py-3.5 px-3 text-slate-700 dark:text-slate-300">{{ h.clubs_count }}</td>
@@ -154,7 +167,7 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
                                 </td>
                             </tr>
                             <tr v-if="filteredHalls.length === 0">
-                                <td colspan="5" class="py-12 px-4 text-center text-slate-500 dark:text-slate-400">No masonic halls match.</td>
+                                <td colspan="6" class="py-12 px-4 text-center text-slate-500 dark:text-slate-400">No masonic halls match.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -174,6 +187,13 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
                         <label class="block font-medium text-slate-700 mb-1 dark:text-slate-300">Name</label>
                         <input v-model="form.name" type="text" required placeholder="e.g. Freemasons' Hall" :class="inputClass" />
                         <p v-if="form.errors.name" class="text-rose-600 mt-1">{{ form.errors.name }}</p>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1 dark:text-slate-300">Type</label>
+                        <select v-model="form.kind" :class="inputClass">
+                            <option v-for="(label, key) in kinds" :key="key" :value="key">{{ label }}</option>
+                        </select>
+                        <p v-if="form.errors.kind" class="text-rose-600 mt-1">{{ form.errors.kind }}</p>
                     </div>
                     <div>
                         <label class="block font-medium text-slate-700 mb-1 dark:text-slate-300">Province</label>

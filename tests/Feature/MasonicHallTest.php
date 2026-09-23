@@ -228,4 +228,54 @@ class MasonicHallTest extends TestCase
         $this->assertSame($this->bristol->id, $hall->refresh()->province_id);
         $this->assertNotSame($durham->id, $hall->province_id);
     }
+
+    public function test_venues_that_are_not_masonic_halls_are_kept_and_typed(): void
+    {
+        $this->seed(ProvinceSeeder::class);
+
+        $this->assertSame('hotel', MasonicHall::where('name', 'Lumley Castle Hotel')->value('kind'));
+        $this->assertSame('hotel', MasonicHall::where('name', 'Gosforth Hotel, Newcastle upon Tyne')->value('kind'));
+        $this->assertSame('club', MasonicHall::where('name', 'Northern Counties Club')->value('kind'));
+        $this->assertSame('hall', MasonicHall::where('name', 'Stockton-on-Tees Masonic Hall')->value('kind'));
+        $this->assertGreaterThan(100, MasonicHall::where('kind', '!=', 'hall')->count());
+
+        foreach ((new MasonicHallSeeder)->rows() as $row) {
+            $this->assertArrayHasKey($row['kind'], MasonicHall::KINDS, "{$row['name']} has an unknown type.");
+        }
+    }
+
+    public function test_a_hall_is_a_masonic_hall_unless_told_otherwise(): void
+    {
+        $this->assertSame('hall', MasonicHall::factory()->create()->refresh()->kind);
+    }
+
+    public function test_settings_page_tells_the_page_what_kind_each_venue_is(): void
+    {
+        MasonicHall::factory()->create(['province_id' => $this->bristol->id, 'kind' => 'hotel']);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.settings.show', ['clubSlug' => $this->club->slug]))
+            ->assertInertia(fn ($page) => $page->where('masonicHalls.0.kind', 'hotel'));
+    }
+
+    public function test_a_lodge_can_meet_in_a_hotel_venue(): void
+    {
+        $hotel = MasonicHall::factory()->create(['province_id' => $this->bristol->id, 'kind' => 'hotel']);
+
+        $this->saveSettings(['masonic_hall_id' => $hotel->id])->assertSessionHasNoErrors();
+
+        $this->assertSame($hotel->id, $this->club->refresh()->masonic_hall_id);
+    }
+
+    public function test_superadmin_can_set_the_venue_type_and_bad_types_are_refused(): void
+    {
+        $superAdmin = User::factory()->create(['is_super_admin' => true]);
+
+        $this->actingAs($superAdmin)->post(route('superadmin.masonic_halls.store'), ['name' => 'Golf Club Room', 'kind' => 'club'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('club', MasonicHall::where('name', 'Golf Club Room')->value('kind'));
+
+        $this->actingAs($superAdmin)->post(route('superadmin.masonic_halls.store'), ['name' => 'Odd', 'kind' => 'castle'])
+            ->assertSessionHasErrors('kind');
+    }
 }

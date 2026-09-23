@@ -1,27 +1,27 @@
-province_code,slug,name,address_line_1,address_line_2,town,county,postcode,country,telephone,email,website_url,source_url
-northumberland,,Alnwick Masonic Hall,Prudhoe Street,,Alnwick,Northumberland,NE66 1UW,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Amble Masonic Hall,Gloster Terrace,,Amble,Northumberland,NE65 0LN,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Ashington Masonic Hall,John Street,,Ashington,Northumberland,NE63 0SE,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Bedlington Masonic Hall,Hartford Road West,,Bedlington,Northumberland,NE22 6HU,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Bellingham Masonic Hall,Manchester Square,,Bellingham,Northumberland,NE48 2BN,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Berwick Masonic Hall,Church Street,,Berwick upon Tweed,Northumberland,TD15 1EE,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Blyth Masonic Hall,Beaconsfield Street,,Blyth,Northumberland,NE24 2DR,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Byker Masonic Hall,Corbridge Road,,Newcastle upon Tyne,,NE6 1HY,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Cramlington Masonic Hall,School Road,,Cramlington,Northumberland,NE23 1DN,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Jesmond Masonic Hall,Fern Avenue,Jesmond,Newcastle upon Tyne,,NE2 2RA,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Haltwhistle Masonic Hall,Banks Terrace,,Haltwhistle,Northumberland,NE49 9DQ,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Hexham Masonic Hall,Westfield Terrace,,Hexham,Northumberland,NE46 3DJ,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Newcastle Central Masonic Hall,Maple Terrace,,Newcastle upon Tyne,,NE4 7SE,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Mickley Masonic Hall,Mickley,,Stocksfield,Northumberland,NE43 7BW,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Morpeth Masonic Hall,Winton House,Dacre Street,Morpeth,Northumberland,NE61 1HW,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Newbiggin Masonic Hall,Homelyn House,,Newbiggin by the Sea,Northumberland,NE64 6NR,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,North Shields Masonic Hall,Albion Road,,North Shields,,NE30 2RQ,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Northern Counties Club,Hood Street,,Newcastle upon Tyne,,NE1 6LH,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Ponteland Memorial Hall,Memorial Hall,Darras Road,Ponteland,Northumberland,NE20 9NX,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Seaton Delaval Masonic Hall,Astley Road,,Seaton Delaval,,NE25 0PT,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Seahouses Masonic Hall,North Sunderland,,Seahouses,Northumberland,NE68 7TT,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Shiremoor Masonic Hall,Moor Edge Road,,Shiremoor,Northumberland,NE27 0HU,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Throckley Masonic Hall,Falmouth House,Hexham Road,Throckley,,NE15 9DX,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Wallsend Masonic Hall,Hugh Street,,Wallsend,,NE28 6RL,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Whitley Bay Masonic Hall,Norham Rd,,Whitley Bay,,NE26 2SE,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
-northumberland,,Wylam Masonic Hall,Chapel Lane,,Wylam,Northumberland,NE41 8DF,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+province_code,slug,name,kind,address_line_1,address_line_2,town,county,postcode,country,telephone,email,website_url,source_url
+northumberland,,Alnwick Masonic Hall,hall,Prudhoe Street,,Alnwick,Northumberland,NE66 1UW,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Amble Masonic Hall,hall,Gloster Terrace,,Amble,Northumberland,NE65 0LN,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Ashington Masonic Hall,hall,John Street,,Ashington,Northumberland,NE63 0SE,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Bedlington Masonic Hall,hall,Hartford Road West,,Bedlington,Northumberland,NE22 6HU,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Bellingham Masonic Hall,hall,Manchester Square,,Bellingham,Northumberland,NE48 2BN,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Berwick Masonic Hall,hall,Church Street,,Berwick upon Tweed,Northumberland,TD15 1EE,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Blyth Masonic Hall,hall,Beaconsfield Street,,Blyth,Northumberland,NE24 2DR,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Byker Masonic Hall,hall,Corbridge Road,,Newcastle upon Tyne,,NE6 1HY,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Cramlington Masonic Hall,hall,School Road,,Cramlington,Northumberland,NE23 1DN,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Jesmond Masonic Hall,hall,Fern Avenue,Jesmond,Newcastle upon Tyne,,NE2 2RA,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Haltwhistle Masonic Hall,hall,Banks Terrace,,Haltwhistle,Northumberland,NE49 9DQ,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Hexham Masonic Hall,hall,Westfield Terrace,,Hexham,Northumberland,NE46 3DJ,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Newcastle Central Masonic Hall,hall,Maple Terrace,,Newcastle upon Tyne,,NE4 7SE,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Mickley Masonic Hall,hall,Mickley,,Stocksfield,Northumberland,NE43 7BW,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Morpeth Masonic Hall,hall,Winton House,Dacre Street,Morpeth,Northumberland,NE61 1HW,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Newbiggin Masonic Hall,hall,Homelyn House,,Newbiggin by the Sea,Northumberland,NE64 6NR,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,North Shields Masonic Hall,hall,Albion Road,,North Shields,,NE30 2RQ,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Northern Counties Club,club,Hood Street,,Newcastle upon Tyne,,NE1 6LH,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Ponteland Memorial Hall,hall,Memorial Hall,Darras Road,Ponteland,Northumberland,NE20 9NX,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Seaton Delaval Masonic Hall,hall,Astley Road,,Seaton Delaval,,NE25 0PT,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Seahouses Masonic Hall,hall,North Sunderland,,Seahouses,Northumberland,NE68 7TT,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Shiremoor Masonic Hall,hall,Moor Edge Road,,Shiremoor,Northumberland,NE27 0HU,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Throckley Masonic Hall,hall,Falmouth House,Hexham Road,Throckley,,NE15 9DX,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Wallsend Masonic Hall,hall,Hugh Street,,Wallsend,,NE28 6RL,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Whitley Bay Masonic Hall,hall,Norham Rd,,Whitley Bay,,NE26 2SE,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,,Wylam Masonic Hall,hall,Chapel Lane,,Wylam,Northumberland,NE41 8DF,England,,,,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/

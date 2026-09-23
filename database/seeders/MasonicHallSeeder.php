@@ -12,10 +12,11 @@ class MasonicHallSeeder extends Seeder
 {
     /**
      * The columns a hall CSV may carry. `province_code` is the `provinces.code` the hall belongs to
-     * and `slug` is optional (it defaults to the hall name and town).
+     * and `slug` is optional (it defaults to the hall name and town). `kind` is one of
+     * MasonicHall::KINDS and defaults to a masonic hall.
      */
     public const COLUMNS = [
-        'province_code', 'slug', 'name', 'address_line_1', 'address_line_2', 'town', 'county',
+        'province_code', 'slug', 'name', 'kind', 'address_line_1', 'address_line_2', 'town', 'county',
         'postcode', 'country', 'telephone', 'email', 'website_url', 'source_url',
     ];
 
@@ -67,6 +68,12 @@ class MasonicHallSeeder extends Seeder
                 $row = array_map(fn ($value) => trim($value) === '' ? null : trim($value), array_combine($header, $line));
                 $row['province_code'] ??= '';
                 $row['slug'] ??= Str::slug(trim($row['name'].' '.($row['town'] ?? '')));
+                $row['kind'] ??= 'hall';
+
+                if (! array_key_exists($row['kind'], MasonicHall::KINDS)) {
+                    throw new RuntimeException(basename($file)." has an unknown kind '{$row['kind']}' for {$row['name']}.");
+                }
+
                 $rows[] = $row;
             }
 
