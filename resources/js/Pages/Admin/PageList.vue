@@ -1183,8 +1183,9 @@ const confirmDeleteActivePage = () => {
                                                     type="button"
                                                     @click="moveBlockUp(bIdx)"
                                                     :disabled="bIdx === 0"
-                                                    class="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
+                                                    class="p-1 min-w-6 min-h-6 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                                                     title="Move Up"
+                                                    aria-label="Move block up"
                                                 >
                                                     ▲
                                                 </button>
@@ -1192,24 +1193,27 @@ const confirmDeleteActivePage = () => {
                                                     type="button"
                                                     @click="moveBlockDown(bIdx)"
                                                     :disabled="bIdx === form.blocks.length - 1"
-                                                    class="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
+                                                    class="p-1 min-w-6 min-h-6 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
                                                     title="Move Down"
+                                                    aria-label="Move block down"
                                                 >
                                                     ▼
                                                 </button>
                                                 <button
                                                     type="button"
                                                     @click="duplicateBlock(bIdx)"
-                                                    class="p-1 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
+                                                    class="p-1 min-w-6 min-h-6 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
                                                     title="Duplicate Element"
+                                                    aria-label="Duplicate block"
                                                 >
                                                     📋
                                                 </button>
                                                 <button
                                                     type="button"
                                                     @click="removeBlock(bIdx)"
-                                                    class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
+                                                    class="p-1 min-w-6 min-h-6 flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
                                                     title="Delete Element"
+                                                    aria-label="Delete block"
                                                 >
                                                     🗑️
                                                 </button>

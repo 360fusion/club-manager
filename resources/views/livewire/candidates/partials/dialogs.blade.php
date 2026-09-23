@@ -169,22 +169,27 @@
             </form>
 
             @php($formPSignatures = $this->formPSignatureRequests())
+            @php($openFormPRoles = $this->formPSignatureCandidates())
             <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
                 <div class="flex items-center justify-between">
                     <h4 class="font-black text-slate-900 dark:text-white text-xs">✍️ Form P signatures</h4>
                     @if($form_p_signed_at)
                         <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">Signed {{ \Carbon\Carbon::parse($form_p_signed_at)->format('j M Y') }}</span>
-                    @elseif($proposer_member_id && $seconder_member_id && ! $showFormPSignatureConfirm)
+                    @elseif(! $proposer_member_id || ! $seconder_member_id)
+                        @if(! $showFormPSignatureConfirm)
+                            <span class="text-[11px] text-slate-400">Choose a proposer and seconder first</span>
+                        @endif
+                    @elseif(count($openFormPRoles) && ! $showFormPSignatureConfirm)
                         <button type="button" wire:click="openFormPSignatureConfirm" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-[11px]">Request signatures</button>
-                    @elseif(! $showFormPSignatureConfirm)
-                        <span class="text-[11px] text-slate-400">Choose a proposer and seconder first</span>
+                    @elseif(! count($openFormPRoles) && ! $showFormPSignatureConfirm)
+                        <span class="text-[11px] text-slate-400">Both requested — cancel one below to reassign it</span>
                     @endif
                 </div>
 
                 @if($showFormPSignatureConfirm)
                     <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-xl p-3 space-y-2">
                         <p class="text-[11px] font-semibold text-blue-900 dark:text-blue-200">Each person below will be emailed a private link to sign Form P themselves.</p>
-                        @foreach($this->formPSignatureCandidates() as $roleLabel => $person)
+                        @foreach($openFormPRoles as $roleLabel => $person)
                             <div class="flex items-center justify-between text-[11px] bg-white dark:bg-slate-900 rounded-lg px-3 py-2">
                                 <span class="font-bold text-slate-900 dark:text-white">{{ $roleLabel }} — {{ $person['name'] }}</span>
                                 <span class="text-slate-500 dark:text-slate-400">{{ $person['email'] ?? 'no email on file' }}</span>
@@ -205,6 +210,9 @@
                                 <span class="font-bold {{ $req['status'] === 'signed' ? 'text-emerald-700 dark:text-emerald-300' : ($req['status'] === 'pending' ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500') }}">{{ $req['label'] }}</span>
                                 @if($req['status'] === 'pending')
                                     <button type="button" wire:click="resendFormPSignature('{{ $purpose }}')" class="text-blue-600 dark:text-blue-400 font-bold underline">Resend</button>
+                                    <button type="button" wire:click="cancelFormPSignature('{{ $purpose }}')" wire:confirm="Cancel this signature request?" class="text-rose-600 dark:text-rose-400 font-bold underline">Cancel</button>
+                                @elseif($req['status'] === 'signed')
+                                    <a href="{{ route('admin.candidates.signatures.pdf', ['clubSlug' => $this->candidateClubSlug(), 'id' => $req['id']]) }}" class="text-blue-600 dark:text-blue-400 font-bold underline">Download PDF</a>
                                 @endif
                             </span>
                         </div>

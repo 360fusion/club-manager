@@ -10,6 +10,8 @@ use App\Domains\ClubAccounting\Services\SubscriptionBillingService;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\AccountingYearAudit;
 use App\Models\Club;
+use App\Models\SignatureRequest;
+use App\Services\Signatures\SignatureCertificatePdf;
 use App\Services\Signatures\SignatureRequestService;
 use App\Support\Csv;
 use Illuminate\Support\Collection;
@@ -33,6 +35,7 @@ class AnnualTreasurerReportService
         protected AccountingService $accountingService,
         protected SubscriptionBillingService $subscriptionBillingService,
         protected SignatureRequestService $signatureRequestService,
+        protected SignatureCertificatePdf $signatureCertificatePdf,
     ) {}
 
     public function build(Club $club, int $year): array
@@ -88,14 +91,66 @@ class AnnualTreasurerReportService
                 'signed_off_at' => $auditSignOff->signed_off_at->format('d M Y'),
                 'notes' => $auditSignOff->notes,
             ] : null,
-            'audit_signatures' => $auditSignOff && ! $auditSignOff->signed_off_at
+            'signatures' => $auditSignOff?->signed_off_at ? $this->auditorSignatures($auditSignOff) : null,
+            'audit_log' => $auditSignOff?->signed_off_at ? $this->auditorAuditLog($auditSignOff) : null,
+            'audit_signatures' => $auditSignOff
                 ? $this->signatureRequestService->forSignable($auditSignOff)
                     ->whereIn('purpose', ['year_audit_auditor_one', 'year_audit_auditor_two'])
                     ->unique('purpose')
-                    ->mapWithKeys(fn ($r) => [$r->purpose => ['signer_name' => $r->signer_name, 'status' => $r->status->value, 'label' => $r->status->label()]])
+                    ->mapWithKeys(fn ($r) => [$r->purpose => ['id' => $r->id, 'signer_id' => $r->signer_id, 'signer_name' => $r->signer_name, 'status' => $r->status->value, 'label' => $r->status->label()]])
                     ->all()
                 : [],
         ];
+    }
+
+    /**
+     * Each auditor's mark, ready to drop into the sign-off area of the PDF in place of a blank line.
+     *
+     * @return array{auditor_one: array{method: string, value: string}, auditor_two: array{method: string, value: string}}|null
+     */
+    private function auditorSignatures(AccountingYearAudit $auditSignOff): ?array
+    {
+        $signed = $this->signatureRequestService->forSignable($auditSignOff)
+            ->whereIn('purpose', ['year_audit_auditor_one', 'year_audit_auditor_two'])
+            ->unique('purpose')
+            ->keyBy('purpose');
+
+        $one = $signed->get('year_audit_auditor_one');
+        $two = $signed->get('year_audit_auditor_two');
+
+        if (! $one || ! $two || $one->status->value !== 'signed' || $two->status->value !== 'signed') {
+            return null;
+        }
+
+        return [
+            'auditor_one' => $this->signatureCertificatePdf->renderedSignature($one),
+            'auditor_two' => $this->signatureCertificatePdf->renderedSignature($two),
+        ];
+    }
+
+    /**
+     * The audit trail for both auditors' signatures, for the certificate page appended to the signed PDF.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function auditorAuditLog(AccountingYearAudit $auditSignOff): array
+    {
+        return $this->signatureRequestService->forSignable($auditSignOff)
+            ->whereIn('purpose', ['year_audit_auditor_one', 'year_audit_auditor_two'])
+            ->unique('purpose')
+            ->filter(fn (SignatureRequest $r) => $r->status->value === 'signed')
+            ->map(fn (SignatureRequest $r) => [
+                'signer_name' => $r->signer_name,
+                'signer_email' => $r->signer_email,
+                'method' => $r->method === 'typed' ? 'Typed name' : 'Drawn signature',
+                'signed_at' => $r->signed_at?->format('j F Y, H:i'),
+                'requested_by' => $r->requestedBy?->name,
+                'requested_at' => $r->requested_at?->format('j F Y'),
+                'ip' => $r->consent_ip,
+                'document_hash' => $r->document_hash,
+            ])
+            ->values()
+            ->all();
     }
 
     /**

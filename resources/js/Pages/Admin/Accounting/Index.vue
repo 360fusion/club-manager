@@ -1314,9 +1314,26 @@ const submitCloseYear = () => {
 
 const signOffForm = useForm({ financial_year: props.annualTreasurerReport.financial_year, auditor_one_user_id: '', auditor_two_user_id: '', notes: '' });
 const showAuditConfirmModal = ref(false);
-const auditRecipients = computed(() => [signOffForm.auditor_one_user_id, signOffForm.auditor_two_user_id]
-  .map((id) => props.members.find((m) => m.id === Number(id)))
-  .filter(Boolean));
+
+// A slot with an active (pending or signed) request is locked: picking someone new here does nothing until
+// that request is cancelled, so the picker itself is replaced with a plain status line instead of a live select.
+const ACTIVE_SIGNATURE_STATUSES = ['pending', 'signed'];
+const auditorOneSignature = computed(() => props.annualTreasurerReport.audit_signatures?.year_audit_auditor_one ?? null);
+const auditorTwoSignature = computed(() => props.annualTreasurerReport.audit_signatures?.year_audit_auditor_two ?? null);
+const auditorOneLocked = computed(() => ACTIVE_SIGNATURE_STATUSES.includes(auditorOneSignature.value?.status));
+const auditorTwoLocked = computed(() => ACTIVE_SIGNATURE_STATUSES.includes(auditorTwoSignature.value?.status));
+const bothAuditorsLocked = computed(() => auditorOneLocked.value && auditorTwoLocked.value);
+
+watch([auditorOneSignature, auditorTwoSignature], () => {
+  signOffForm.auditor_one_user_id = auditorOneLocked.value ? String(auditorOneSignature.value.signer_id) : signOffForm.auditor_one_user_id;
+  signOffForm.auditor_two_user_id = auditorTwoLocked.value ? String(auditorTwoSignature.value.signer_id) : signOffForm.auditor_two_user_id;
+}, { immediate: true });
+
+const auditRecipients = computed(() => [
+  !auditorOneLocked.value ? signOffForm.auditor_one_user_id : null,
+  !auditorTwoLocked.value ? signOffForm.auditor_two_user_id : null,
+].map((id) => props.members.find((m) => m.id === Number(id))).filter(Boolean));
+
 const submitSignOff = () => {
   showAuditConfirmModal.value = true;
 };
@@ -1325,7 +1342,7 @@ const confirmSignOff = () => {
   signOffForm.post(route('admin.accounting.financial_year.audit', props.club.slug), {
     preserveScroll: true,
     onSuccess: () => {
-      signOffForm.reset('auditor_one_user_id', 'auditor_two_user_id', 'notes');
+      signOffForm.reset('notes');
       showAuditConfirmModal.value = false;
     },
   });
@@ -1333,6 +1350,11 @@ const confirmSignOff = () => {
 
 const resendAuditSignature = (purpose) => {
   router.post(route('admin.accounting.financial_year.audit.resend', { clubSlug: props.club.slug, purpose }), { financial_year: props.annualTreasurerReport.financial_year }, { preserveScroll: true });
+};
+
+const cancelAuditSignature = (purpose) => {
+  if (!confirm('Cancel this signature request?')) return;
+  router.post(route('admin.accounting.financial_year.audit.cancel', { clubSlug: props.club.slug, purpose }), { financial_year: props.annualTreasurerReport.financial_year }, { preserveScroll: true });
 };
 
 // Recurring Vendor Bills
@@ -3482,29 +3504,49 @@ const getTypeBadge = (type) => {
 
               <form @submit.prevent="submitSignOff" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 space-y-3">
                 <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">Auditors' Sign-Off</h4>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">Two elected members, neither the Treasurer nor Secretary (Rule 153). Each is emailed a private link to sign themselves.</p>
-                <select v-model="signOffForm.auditor_one_user_id" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
-                  <option value="">Auditor 1…</option>
-                  <option v-for="m in members" :key="m.id" :value="m.id">{{ m.name }}</option>
-                </select>
-                <select v-model="signOffForm.auditor_two_user_id" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
-                  <option value="">Auditor 2…</option>
-                  <option v-for="m in members" :key="m.id" :value="m.id">{{ m.name }}</option>
-                </select>
-                <input v-model="signOffForm.notes" placeholder="Notes (optional)" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
-                <button type="submit" :disabled="!signOffForm.auditor_one_user_id || !signOffForm.auditor_two_user_id || signOffForm.processing" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-50">
-                  Request signatures
-                </button>
+                <template v-if="!annualTreasurerReport.audit_sign_off">
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400">Two elected members, neither the Treasurer nor Secretary (Rule 153). Each is emailed a private link to sign themselves. To replace someone, cancel their request first — picking someone else here does nothing on its own.</p>
+                  <div v-if="auditorOneLocked" class="w-full px-3 py-2 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-600 dark:text-slate-300 font-semibold">{{ auditorOneSignature.signer_name }} — {{ auditorOneSignature.label }}</div>
+                  <select v-else v-model="signOffForm.auditor_one_user_id" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+                    <option value="">Auditor 1…</option>
+                    <option v-for="m in members" :key="m.id" :value="m.id">{{ m.name }}</option>
+                  </select>
+                  <div v-if="auditorTwoLocked" class="w-full px-3 py-2 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-600 dark:text-slate-300 font-semibold">{{ auditorTwoSignature.signer_name }} — {{ auditorTwoSignature.label }}</div>
+                  <select v-else v-model="signOffForm.auditor_two_user_id" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+                    <option value="">Auditor 2…</option>
+                    <option v-for="m in members" :key="m.id" :value="m.id">{{ m.name }}</option>
+                  </select>
+                  <template v-if="!bothAuditorsLocked">
+                    <input v-model="signOffForm.notes" placeholder="Notes (optional)" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
+                    <button type="submit" :disabled="!signOffForm.auditor_one_user_id || !signOffForm.auditor_two_user_id || signOffForm.processing" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-50">
+                      Request signatures
+                    </button>
+                  </template>
+                  <p v-else class="text-[11px] text-slate-500 dark:text-slate-400">Both signatures have been requested. Cancel one below to send it to someone else.</p>
+                </template>
+                <p v-else class="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold">Fully signed off — download each auditor's certificate below.</p>
 
                 <div v-if="Object.keys(annualTreasurerReport.audit_signatures || {}).length" class="pt-2 space-y-1.5 border-t border-slate-100 dark:border-slate-800">
                   <div v-for="(sig, purpose) in annualTreasurerReport.audit_signatures" :key="purpose" class="flex items-center justify-between text-[11px] bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2">
                     <span class="font-semibold text-slate-700 dark:text-slate-200">{{ sig.signer_name }}</span>
                     <span class="flex items-center gap-2">
                       <span :class="['font-bold', sig.status === 'signed' ? 'text-emerald-700 dark:text-emerald-300' : sig.status === 'pending' ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500']">{{ sig.label }}</span>
-                      <button v-if="sig.status === 'pending'" type="button" @click="resendAuditSignature(purpose)" class="text-blue-600 dark:text-blue-400 font-bold underline cursor-pointer">Resend</button>
+                      <template v-if="sig.status === 'pending'">
+                        <button type="button" @click="resendAuditSignature(purpose)" class="text-blue-600 dark:text-blue-400 font-bold underline cursor-pointer">Resend</button>
+                        <button type="button" @click="cancelAuditSignature(purpose)" class="text-rose-600 dark:text-rose-400 font-bold underline cursor-pointer">Cancel</button>
+                      </template>
                     </span>
                   </div>
                 </div>
+
+                <a
+                  v-if="annualTreasurerReport.audit_sign_off"
+                  :href="route('admin.accounting.treasurer_report.export_pdf', { clubSlug: club.slug, year: annualTreasurerReport.financial_year })"
+                  target="_blank"
+                  class="block text-center px-3 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl cursor-pointer"
+                >
+                  📄 Download signed PDF
+                </a>
               </form>
             </div>
           </div>

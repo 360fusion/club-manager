@@ -30,6 +30,13 @@
         .signoff { margin-top: 24px; display: table; width: 100%; }
         .signoff-col { display: table-cell; width: 50%; padding-right: 16px; }
         .signoff-line { border-top: 1px solid #334155; margin-top: 32px; padding-top: 4px; font-size: 10px; }
+        .signoff-mark { height: 60px; display: flex; align-items: flex-end; }
+        .signoff-typed { font-family: 'DejaVu Sans', cursive; font-style: italic; font-size: 26px; color: #0f172a; }
+        .signoff-image { max-height: 55px; max-width: 100%; }
+        .audit-log-page { page-break-before: always; padding-top: 10px; }
+        .audit-log-entry { margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; }
+        .audit-log-entry table td.label { width: 150px; color: #64748b; font-size: 10px; text-transform: uppercase; font-weight: 700; }
+        .hash { font-family: monospace; word-break: break-all; font-size: 9px; }
     </style>
 </head>
 <body>
@@ -128,9 +135,37 @@
 
     @if($report['audit_sign_off'])
         <div class="section-title">Auditors' Sign-Off</div>
-        <p class="muted">Verified by {{ $report['audit_sign_off']['auditor_one'] }} and {{ $report['audit_sign_off']['auditor_two'] }} on {{ $report['audit_sign_off']['signed_off_at'] }}.
-            @if($report['audit_sign_off']['notes']) {{ $report['audit_sign_off']['notes'] }} @endif
-        </p>
+        @if($report['signatures'])
+            <div class="signoff">
+                <div class="signoff-col">
+                    <div class="signoff-mark">
+                        @if($report['signatures']['auditor_one']['method'] === 'typed')
+                            <span class="signoff-typed">{{ $report['signatures']['auditor_one']['value'] }}</span>
+                        @else
+                            <img src="{{ $report['signatures']['auditor_one']['value'] }}" class="signoff-image" alt="Signature">
+                        @endif
+                    </div>
+                    <div class="signoff-line">{{ $report['audit_sign_off']['auditor_one'] }} — {{ $report['audit_sign_off']['signed_off_at'] }}</div>
+                </div>
+                <div class="signoff-col">
+                    <div class="signoff-mark">
+                        @if($report['signatures']['auditor_two']['method'] === 'typed')
+                            <span class="signoff-typed">{{ $report['signatures']['auditor_two']['value'] }}</span>
+                        @else
+                            <img src="{{ $report['signatures']['auditor_two']['value'] }}" class="signoff-image" alt="Signature">
+                        @endif
+                    </div>
+                    <div class="signoff-line">{{ $report['audit_sign_off']['auditor_two'] }} — {{ $report['audit_sign_off']['signed_off_at'] }}</div>
+                </div>
+            </div>
+            @if($report['audit_sign_off']['notes'])
+                <p class="muted">{{ $report['audit_sign_off']['notes'] }}</p>
+            @endif
+        @else
+            <p class="muted">Verified by {{ $report['audit_sign_off']['auditor_one'] }} and {{ $report['audit_sign_off']['auditor_two'] }} on {{ $report['audit_sign_off']['signed_off_at'] }}.
+                @if($report['audit_sign_off']['notes']) {{ $report['audit_sign_off']['notes'] }} @endif
+            </p>
+        @endif
     @else
         <div class="signoff">
             <div class="signoff-col">
@@ -147,5 +182,30 @@
         Grand Lodges — check the exact layout and figures with your Provincial Secretary before submission.
     </div>
 </div>
+
+@if($report['audit_log'])
+    <div class="container audit-log-page">
+        <div class="header">
+            <div class="club-name">{{ $report['club_name'] }}</div>
+            <div class="report-title">Signature Audit Log</div>
+        </div>
+        @foreach($report['audit_log'] as $entry)
+            <div class="audit-log-entry">
+                <table>
+                    <tr><td class="label">Signed by</td><td>{{ $entry['signer_name'] }}{{ $entry['signer_email'] ? ' ('.$entry['signer_email'].')' : '' }}</td></tr>
+                    <tr><td class="label">Method</td><td>{{ $entry['method'] }}</td></tr>
+                    <tr><td class="label">Signed on</td><td>{{ $entry['signed_at'] }}</td></tr>
+                    <tr><td class="label">Requested by</td><td>{{ $entry['requested_by'] ?? '—' }} on {{ $entry['requested_at'] }}</td></tr>
+                    <tr><td class="label">IP address</td><td>{{ $entry['ip'] }}</td></tr>
+                    <tr><td class="label">Consent</td><td>The signer confirmed this was their electronic signature, intended to have the same effect as a handwritten signature.</td></tr>
+                    <tr><td class="label">Document reference</td><td class="hash">{{ $entry['document_hash'] }}</td></tr>
+                </table>
+            </div>
+        @endforeach
+        <div class="footer">
+            This page is generated by Club Manager as the audit trail for the electronic signatures above. It is appended automatically once both auditors have signed.
+        </div>
+    </div>
+@endif
 </body>
 </html>

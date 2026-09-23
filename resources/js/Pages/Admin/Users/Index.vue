@@ -522,7 +522,7 @@ const submitImportCsv = () => {
                   <div class="flex items-center gap-3">
                     <Link 
                       :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
-                      class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-400 text-white font-bold flex items-center justify-center text-xs uppercase flex-shrink-0 shadow-sm hover:opacity-90 transition-opacity"
+                      class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-blue-700 text-white font-bold flex items-center justify-center text-xs uppercase flex-shrink-0 shadow-sm hover:opacity-90 transition-opacity"
                     >
                       {{ m.name.substring(0, 2) }}
                     </Link>

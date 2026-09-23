@@ -48,6 +48,7 @@ const submitDecline = () => {
                     <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center text-3xl mx-auto">✓</div>
                     <h1 class="text-xl font-bold text-slate-900 dark:text-white">Signed, thank you</h1>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">You signed <strong>{{ documentLabel }}</strong> on {{ signedAt }}.</p>
+                    <a :href="route('member.signatures.pdf', { slug: club.slug, id })" class="inline-block px-4 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl text-xs">Download PDF copy</a>
                 </div>
             </Card>
 

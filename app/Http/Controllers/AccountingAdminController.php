@@ -744,8 +744,8 @@ class AccountingAdminController extends Controller
 
         $audit = $this->accountingService->requestYearAudit($club, (int) $validated['financial_year'], $auditorOne, $auditorTwo, $validated['notes'] ?? null);
 
-        $this->signatureRequestService->request($audit, 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $request->user());
-        $this->signatureRequestService->request($audit, 'year_audit_auditor_two', $auditorTwo, $auditorTwo->name, $auditorTwo->email, $request->user());
+        $this->signatureRequestService->requestIfOpen($audit, 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $request->user());
+        $this->signatureRequestService->requestIfOpen($audit, 'year_audit_auditor_two', $auditorTwo, $auditorTwo->name, $auditorTwo->email, $request->user());
 
         return redirect()->back()->with('success', "Signature requests sent to {$auditorOne->name} and {$auditorTwo->name} for {$validated['financial_year']}.");
     }
@@ -771,6 +771,29 @@ class AccountingAdminController extends Controller
         }
 
         return redirect()->back()->with('success', 'Signature request resent.');
+    }
+
+    public function cancelYearAuditSignature(Request $request, string $clubSlug, string $purpose): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+
+        abort_unless(in_array($purpose, ['year_audit_auditor_one', 'year_audit_auditor_two'], true), 404);
+
+        $validated = $request->validate(['financial_year' => ['required', 'integer', 'min:2000', 'max:2100']]);
+
+        $audit = AccountingYearAudit::where('club_id', $club->id)->where('financial_year', $validated['financial_year'])->firstOrFail();
+
+        $pending = $this->signatureRequestService->forSignable($audit)
+            ->where('purpose', $purpose)
+            ->where('status', SignatureRequestStatus::Pending)
+            ->first();
+
+        if ($pending) {
+            $this->signatureRequestService->cancel($pending);
+        }
+
+        return redirect()->back()->with('success', 'Signature request cancelled.');
     }
 
     public function storeRecurringBillTemplate(Request $request, string $clubSlug): RedirectResponse

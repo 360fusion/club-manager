@@ -443,7 +443,9 @@ const isImage = (mimeOrUrl) => {
             <div class="flex items-center justify-between gap-3">
               <!-- Search Box -->
               <div class="relative flex-1">
+                <label for="media-library-search" class="sr-only">Search files by name</label>
                 <input
+                  id="media-library-search"
                   v-model="searchQuery"
                   type="text"
                   placeholder="Search files by name..."
@@ -471,8 +473,8 @@ const isImage = (mimeOrUrl) => {
               
               <!-- 1. Category / Type Filter -->
               <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <span class="text-slate-400">Type:</span>
-                <select v-model="filterType" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
+                <label for="media-library-filter-type" class="text-slate-400">Type:</label>
+                <select id="media-library-filter-type" v-model="filterType" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="all">All Types</option>
                   <option value="image">🖼️ Images Only</option>
                   <option value="document">📄 Documents Only</option>
@@ -481,8 +483,8 @@ const isImage = (mimeOrUrl) => {
 
               <!-- 2. Dynamic Extension Filter (Only available extensions listed) -->
               <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <span class="text-slate-400">Extension:</span>
-                <select v-model="filterExtension" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
+                <label for="media-library-filter-extension" class="text-slate-400">Extension:</label>
+                <select id="media-library-filter-extension" v-model="filterExtension" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="all">All Extensions</option>
                   <option v-for="ext in availableExtensions" :key="ext" :value="ext">
                     .{{ ext.toUpperCase() }}
@@ -492,8 +494,8 @@ const isImage = (mimeOrUrl) => {
 
               <!-- 3. Dynamic Date Added Filter (Year / Month) -->
               <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <span class="text-slate-400">Date:</span>
-                <select v-model="filterDate" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
+                <label for="media-library-filter-date" class="text-slate-400">Date:</label>
+                <select id="media-library-filter-date" v-model="filterDate" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="all">All Dates</option>
                   <option v-for="m in availableMonths" :key="m.value" :value="m.value">
                     📅 {{ m.label }}
@@ -503,8 +505,8 @@ const isImage = (mimeOrUrl) => {
 
               <!-- 4. Sort Order -->
               <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <span class="text-slate-400">Sort:</span>
-                <select v-model="sortBy" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
+                <label for="media-library-sort" class="text-slate-400">Sort:</label>
+                <select id="media-library-sort" v-model="sortBy" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
                   <option value="name_asc">Name (A to Z)</option>

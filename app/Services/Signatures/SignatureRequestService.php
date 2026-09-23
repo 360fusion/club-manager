@@ -123,9 +123,36 @@ class SignatureRequestService
 
     public function cancel(SignatureRequest $request): SignatureRequest
     {
+        if ($request->status !== SignatureRequestStatus::Pending) {
+            throw new InvalidArgumentException('Only a pending request can be cancelled.');
+        }
+
         $request->update(['status' => SignatureRequestStatus::Cancelled]);
 
         return $request;
+    }
+
+    /**
+     * The one entry point admin screens should call when a form is (re)submitted: does nothing if this purpose
+     * already has an active request (pending or signed) — even for a newly-picked, different person, since
+     * changing who is asked requires explicitly cancelling their current request first via cancel(). Only
+     * creates a fresh request when the purpose is genuinely open (never asked, or cancelled/declined/expired).
+     */
+    public function requestIfOpen(Model $signable, string $purpose, Model $signer, string $signerName, ?string $signerEmail, User $requestedBy, ?CarbonInterface $expiresAt = null): SignatureRequest
+    {
+        $existing = SignatureRequest::query()
+            ->where('signable_type', $signable->getMorphClass())
+            ->where('signable_id', $signable->getKey())
+            ->where('purpose', $purpose)
+            ->whereIn('status', [SignatureRequestStatus::Pending, SignatureRequestStatus::Signed])
+            ->latest('requested_at')
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        return $this->request($signable, $purpose, $signer, $signerName, $signerEmail, $requestedBy, $expiresAt);
     }
 
     /**

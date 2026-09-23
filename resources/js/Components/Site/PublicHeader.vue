@@ -50,7 +50,7 @@ const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (prop
                 </template>
                 <div>
                     <div :class="['font-extrabold text-lg transition-colors', theme.headingText]">{{ club.name }}</div>
-                    <div v-if="showTagline && club.tagline" :class="['text-xs opacity-75', theme.bodyText]">{{ club.tagline }}</div>
+                    <div v-if="showTagline && club.tagline" :class="['text-xs', theme.bodyText]">{{ club.tagline }}</div>
                 </div>
             </component>
 

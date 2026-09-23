@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Models\Member;
+use App\Enums\SignatureRequestStatus;
 use App\Models\SignatureRequest;
+use App\Models\User;
+use App\Services\Signatures\SignatureCertificatePdf;
 use App\Services\Signatures\SignatureRequestService;
 use App\Support\ImageDownscaler;
 use App\Support\MemberScope;
@@ -30,6 +34,42 @@ class MemberSignatureController extends Controller
             'documentLabel' => $request->signable->signatureLabel($request->purpose),
             'signedAt' => $request->signed_at?->format('j M Y, H:i'),
         ]);
+    }
+
+    /**
+     * Every document this user has actually signed, across every club they belong to.
+     */
+    public function history(Request $httpRequest): Response
+    {
+        $user = $httpRequest->user();
+        $memberIds = Member::where('user_id', $user->id)->pluck('id');
+
+        $requests = SignatureRequest::where('status', SignatureRequestStatus::Signed)
+            ->where(function ($query) use ($user, $memberIds) {
+                $query->where(fn ($q) => $q->where('signer_type', User::class)->where('signer_id', $user->id))
+                    ->orWhere(fn ($q) => $q->where('signer_type', Member::class)->whereIn('signer_id', $memberIds));
+            })
+            ->with(['club', 'signable'])
+            ->latest('signed_at')
+            ->paginate(20)
+            ->through(fn (SignatureRequest $r) => [
+                'id' => $r->id,
+                'club' => ['slug' => $r->club->slug, 'name' => $r->club->name],
+                'document_label' => $r->signable?->signatureLabel($r->purpose) ?? 'A document',
+                'method' => $r->method,
+                'signed_at' => $r->signed_at?->format('j M Y, H:i'),
+            ]);
+
+        return Inertia::render('Members/SignedDocuments', ['documents' => $requests]);
+    }
+
+    public function downloadPdf(Request $httpRequest, string $slug, int $id, SignatureRequestService $signatures, SignatureCertificatePdf $pdf)
+    {
+        $request = $this->authorized($httpRequest, $slug, $id, $signatures);
+
+        abort_unless($request->status === SignatureRequestStatus::Signed, 404);
+
+        return $pdf->render($request)->download($pdf->filename($request));
     }
 
     public function store(Request $httpRequest, string $slug, int $id, SignatureRequestService $signatures): RedirectResponse

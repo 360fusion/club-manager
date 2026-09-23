@@ -16,6 +16,7 @@ use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\SignatureRequest;
 use App\Models\User;
+use App\Services\Signatures\SignatureRequestService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -409,6 +410,74 @@ class CandidatePipelineDomainTest extends TestCase
         $this->assertEquals('James Smith', $candidates['Seconder']['name']);
 
         $component->call('requestFormPSignatures')->assertSet('showFormPSignatureConfirm', false);
+    }
+
+    public function test_a_pending_form_p_signature_request_can_be_cancelled(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate(['proposer_member_id' => $this->proposer->id, 'seconder_member_id' => $this->seconder->id]);
+        $this->actingAs($this->admin);
+
+        Livewire::test(CandidateDetail::class, ['clubSlug' => $this->club->slug, 'candidateId' => $candidate->id])
+            ->call('openFormPModal', $candidate->id)
+            ->call('requestFormPSignatures')
+            ->call('cancelFormPSignature', 'form_p_proposer')
+            ->assertHasNoErrors();
+
+        $this->assertEquals('cancelled', SignatureRequest::where('signable_id', $candidate->id)->where('purpose', 'form_p_proposer')->sole()->status->value);
+    }
+
+    public function test_picking_a_different_seconder_does_nothing_until_the_current_one_is_cancelled(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate(['proposer_member_id' => $this->proposer->id, 'seconder_member_id' => $this->seconder->id]);
+        $this->actingAs($this->admin);
+
+        Livewire::test(CandidateDetail::class, ['clubSlug' => $this->club->slug, 'candidateId' => $candidate->id])
+            ->call('openFormPModal', $candidate->id)
+            ->call('requestFormPSignatures');
+
+        $proposerRequest = SignatureRequest::where('signable_id', $candidate->id)->where('purpose', 'form_p_proposer')->sole();
+        app(SignatureRequestService::class)->sign($proposerRequest, 'typed', ['typed_name' => $this->proposer->full_name], '1.1.1.1', 'Agent');
+
+        $newSeconder = Member::create(['club_id' => $this->club->id, 'first_name' => 'New', 'last_name' => 'Seconder', 'email' => 'new-seconder@example.com', 'masonic_rank' => 'Bro', 'membership_status' => MembershipStatus::Active, 'current_office' => LodgeOffice::JuniorWarden]);
+        $candidate->update(['seconder_member_id' => $newSeconder->id]);
+
+        // Re-requesting while the original seconder's request is still pending changes nothing.
+        Livewire::test(CandidateDetail::class, ['clubSlug' => $this->club->slug, 'candidateId' => $candidate->id])
+            ->call('openFormPModal', $candidate->id)
+            ->call('requestFormPSignatures');
+
+        $this->assertEquals('signed', $proposerRequest->fresh()->status->value, 'the already-signed proposer is left alone');
+        $stillOriginal = SignatureRequest::where('signable_id', $candidate->id)->where('purpose', 'form_p_seconder')->where('status', 'pending')->sole();
+        $this->assertEquals($this->seconder->full_name, $stillOriginal->signer_name, 'picking someone new does not reassign on its own');
+
+        // Only after cancelling the seconder's request does resubmitting pick up the newly-selected person.
+        Livewire::test(CandidateDetail::class, ['clubSlug' => $this->club->slug, 'candidateId' => $candidate->id])
+            ->call('openFormPModal', $candidate->id)
+            ->call('cancelFormPSignature', 'form_p_seconder')
+            ->call('requestFormPSignatures');
+
+        $seconderRequest = SignatureRequest::where('signable_id', $candidate->id)->where('purpose', 'form_p_seconder')->where('status', 'pending')->sole();
+        $this->assertEquals('New Seconder', $seconderRequest->signer_name);
+    }
+
+    public function test_staff_can_download_the_signed_form_p_certificate(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate(['proposer_member_id' => $this->proposer->id, 'seconder_member_id' => $this->seconder->id]);
+        $signatures = app(SignatureRequestService::class);
+        $request = $signatures->request($candidate, 'form_p_proposer', $this->proposer, $this->proposer->full_name, $this->proposer->email, $this->admin);
+        $signatures->sign($request, 'typed', ['typed_name' => $this->proposer->full_name], '1.1.1.1', 'Agent');
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.candidates.signatures.pdf', ['clubSlug' => $this->club->slug, 'id' => $request->id]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        $this->actingAs($this->member)
+            ->get(route('admin.candidates.signatures.pdf', ['clubSlug' => $this->club->slug, 'id' => $request->id]))
+            ->assertForbidden();
     }
 
     public function test_a_member_without_permission_and_another_clubs_admin_cannot_reach_a_candidate(): void

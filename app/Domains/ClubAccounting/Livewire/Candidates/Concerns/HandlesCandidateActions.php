@@ -76,6 +76,11 @@ trait HandlesCandidateActions
 
     abstract protected function getClub(): Club;
 
+    public function candidateClubSlug(): string
+    {
+        return $this->getClub()->slug;
+    }
+
     protected function candidateFor(int $id): Candidate
     {
         return Candidate::where('club_id', $this->getClub()->id)->findOrFail($id);
@@ -265,6 +270,7 @@ trait HandlesCandidateActions
             ->unique('purpose')
             ->keyBy('purpose')
             ->map(fn (SignatureRequest $r) => [
+                'id' => $r->id,
                 'status' => $r->status->value,
                 'label' => $r->status->label(),
                 'signer_name' => $r->signer_name,
@@ -273,7 +279,9 @@ trait HandlesCandidateActions
     }
 
     /**
-     * The proposer and seconder who would be emailed, for the "who is this going to?" confirmation.
+     * The purposes that still need a request sent: whichever of Proposer/Seconder does not already have an
+     * active (pending or signed) request. A purpose that's already active must be cancelled before it can be
+     * sent to someone new, so it never shows here as "about to be emailed" — it would not actually be resent.
      *
      * @return array<string, array{name: string, email: ?string}>
      */
@@ -290,10 +298,18 @@ trait HandlesCandidateActions
             ->get()
             ->keyBy('id');
 
-        return [
-            'Proposer' => ['name' => $members->get($candidate->proposer_member_id)?->full_name ?? '—', 'email' => $members->get($candidate->proposer_member_id)?->email],
-            'Seconder' => ['name' => $members->get($candidate->seconder_member_id)?->full_name ?? '—', 'email' => $members->get($candidate->seconder_member_id)?->email],
-        ];
+        $active = app(SignatureRequestService::class)->forSignable($candidate)
+            ->whereIn('purpose', ['form_p_proposer', 'form_p_seconder'])
+            ->unique('purpose')
+            ->keyBy('purpose')
+            ->filter(fn (SignatureRequest $r) => in_array($r->status, [SignatureRequestStatus::Pending, SignatureRequestStatus::Signed], true));
+
+        $roles = ['Proposer' => ['id' => $candidate->proposer_member_id, 'purpose' => 'form_p_proposer'], 'Seconder' => ['id' => $candidate->seconder_member_id, 'purpose' => 'form_p_seconder']];
+
+        return collect($roles)
+            ->reject(fn (array $role) => $active->has($role['purpose']))
+            ->map(fn (array $role) => ['name' => $members->get($role['id'])?->full_name ?? '—', 'email' => $members->get($role['id'])?->email])
+            ->all();
     }
 
     public function openFormPSignatureConfirm(): void
@@ -332,7 +348,7 @@ trait HandlesCandidateActions
                 continue;
             }
 
-            $signatures->request($candidate, $purpose, $signerMember, $signerMember->full_name, $signerMember->email, auth()->user());
+            $signatures->requestIfOpen($candidate, $purpose, $signerMember, $signerMember->full_name, $signerMember->email, auth()->user());
             $sent++;
         }
 
@@ -359,6 +375,26 @@ trait HandlesCandidateActions
 
         $signatures->resend($request);
         session()->flash('success', 'Signature request resent.');
+    }
+
+    /**
+     * Withdraw a request that has not been actioned yet, so a different proposer or seconder can be sent one.
+     */
+    public function cancelFormPSignature(string $purpose, SignatureRequestService $signatures): void
+    {
+        $candidate = $this->candidateFor((int) $this->candidateId);
+
+        $request = $signatures->forSignable($candidate)
+            ->where('purpose', $purpose)
+            ->where('status', SignatureRequestStatus::Pending)
+            ->first();
+
+        if (! $request) {
+            return;
+        }
+
+        $signatures->cancel($request);
+        session()->flash('success', 'Signature request cancelled.');
     }
 
     public function openInitiationModal(int $id): void

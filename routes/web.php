@@ -64,6 +64,7 @@ use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\QuickRsvpController;
+use App\Http\Controllers\SignatureAdminController;
 use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\StripeConnectWebhookController;
@@ -368,6 +369,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/accounting/financial-year/reopen', [AccountingAdminController::class, 'reopenFinancialYear'])->name('admin.accounting.financial_year.reopen');
     Route::post('/{clubSlug}/admin/accounting/financial-year/audit', [AccountingAdminController::class, 'signOffYearAudit'])->name('admin.accounting.financial_year.audit');
     Route::post('/{clubSlug}/admin/accounting/financial-year/audit/{purpose}/resend', [AccountingAdminController::class, 'resendYearAuditSignature'])->name('admin.accounting.financial_year.audit.resend');
+    Route::post('/{clubSlug}/admin/accounting/financial-year/audit/{purpose}/cancel', [AccountingAdminController::class, 'cancelYearAuditSignature'])->name('admin.accounting.financial_year.audit.cancel');
+    // Under /admin/accounting so it inherits the manage_billing capability from the route map, like every other accounting page.
+    Route::get('/{clubSlug}/admin/accounting/signatures/{id}/pdf', [SignatureAdminController::class, 'downloadPdf'])->name('admin.accounting.signatures.pdf');
     Route::get('/{clubSlug}/admin/accounting/reports/{report}/export', [AccountingAdminController::class, 'exportReport'])->name('admin.accounting.reports.export');
     Route::get('/{clubSlug}/admin/accounting/treasurer-report/export-pdf', [AccountingAdminController::class, 'exportAnnualTreasurerReportPdf'])->name('admin.accounting.treasurer_report.export_pdf');
     Route::get('/{clubSlug}/admin/accounting/treasurer-report/export-csv', [AccountingAdminController::class, 'exportAnnualTreasurerReportCsv'])->name('admin.accounting.treasurer_report.export_csv');
@@ -437,6 +441,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/{clubSlug}/admin/members/{memberId}', MemberProfile::class)->name('admin.club_acc.members.show');
     Route::get('/{clubSlug}/admin/candidates', CandidatePipeline::class)->name('admin.club_acc.candidates.index');
     Route::get('/{clubSlug}/admin/candidates/{candidateId}', CandidateDetail::class)->whereNumber('candidateId')->name('admin.club_acc.candidates.show');
+    // Under /admin/candidates so it inherits the manage_members capability from the route map, like every other candidate page.
+    Route::get('/{clubSlug}/admin/candidates/signatures/{id}/pdf', [SignatureAdminController::class, 'downloadPdf'])->name('admin.candidates.signatures.pdf');
     Route::get('/{clubSlug}/admin/dues-subscriptions', SubscriptionIndex::class)->name('admin.club_acc.subscriptions.index');
     Route::get('/{clubSlug}/admin/bank-accounts', BankAccountsIndex::class)->name('admin.club_acc.bank_accounts.index');
     Route::get('/{clubSlug}/admin/bank-imports', BankImportIndex::class)->name('admin.club_acc.bank_imports.index');
@@ -475,6 +481,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/notifications', [NotificationController::class, 'index'])->name('members.notifications');
     Route::post('/members/notifications/read-all', [NotificationController::class, 'readAll'])->name('members.notifications.read_all');
     Route::get('/members/notifications/{id}/open', [NotificationController::class, 'open'])->name('members.notifications.open');
+    Route::get('/members/signed-documents', [MemberSignatureController::class, 'history'])->name('members.signed_documents');
 
     Route::get('/members/{slug}', [MemberPortalController::class, 'show'])->name('member.dashboard');
     Route::get('/members/{slug}/calendar', [MemberCalendarController::class, 'show'])->name('member.calendar');
@@ -497,6 +504,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/members/{slug}/sign/{id}', [MemberSignatureController::class, 'show'])->name('member.signatures.show');
     Route::post('/members/{slug}/sign/{id}', [MemberSignatureController::class, 'store'])->name('member.signatures.store');
     Route::post('/members/{slug}/sign/{id}/decline', [MemberSignatureController::class, 'decline'])->name('member.signatures.decline');
+    Route::get('/members/{slug}/sign/{id}/pdf', [MemberSignatureController::class, 'downloadPdf'])->name('member.signatures.pdf');
 
     // Invite-Only Member Approval & Rejection Routes
     Route::post('/{slug}/members/{userId}/approve', [ClubController::class, 'approveMember'])->name('clubs.members.approve')->middleware('club.admin:manage_members');

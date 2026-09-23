@@ -105,6 +105,13 @@ const markAllRead = () => {
             >
                 View all notifications
             </Link>
+            <Link
+                :href="route('members.signed_documents')"
+                class="block border-t border-slate-200 px-4 py-3 text-center text-sm font-medium text-blue-600 hover:bg-slate-50 dark:border-slate-800 dark:text-blue-400 dark:hover:bg-slate-800/60"
+                @click="open = false"
+            >
+                Signed documents
+            </Link>
         </div>
     </div>
 </template>

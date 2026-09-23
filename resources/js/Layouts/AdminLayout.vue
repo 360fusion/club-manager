@@ -115,7 +115,7 @@ const currentActiveTab = computed(() => {
             class="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 transition-all group"
           >
             <div class="flex items-center gap-3 overflow-hidden">
-              <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-500 to-blue-400 text-white font-black flex items-center justify-center text-xs shadow-md uppercase flex-shrink-0">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-blue-700 text-white font-black flex items-center justify-center text-xs shadow-md uppercase flex-shrink-0">
                 {{ clubName.substring(0, 2) }}
               </div>
               <div class="text-left overflow-hidden">
@@ -373,7 +373,7 @@ const currentActiveTab = computed(() => {
               @click="userMenuOpen = !userMenuOpen"
               class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 border border-slate-200 transition-all group focus:outline-none dark:hover:bg-slate-800 dark:border-slate-700"
             >
-              <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-blue-600 shadow-sm bg-gradient-to-tr from-blue-600 to-blue-500 text-white font-black text-xs flex items-center justify-center">
+              <div class="w-9 h-9 rounded-full overflow-hidden border-2 border-blue-600 shadow-sm bg-gradient-to-tr from-blue-700 to-blue-600 text-white font-black text-xs flex items-center justify-center">
                 <img v-if="page.props.auth?.user?.avatar_url" :src="page.props.auth.user.avatar_url" class="w-full h-full object-cover" />
                 <span v-else>{{ page.props.auth?.user?.name ? page.props.auth.user.name.substring(0, 2).toUpperCase() : 'ME' }}</span>
               </div>

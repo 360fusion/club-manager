@@ -46,7 +46,7 @@ const copyright = computed(() => props.settings.footer_copyright || `© ${new Da
             <div v-if="isColumns" class="grid gap-x-8 gap-y-8 pb-8 text-left grid-cols-[repeat(auto-fit,minmax(140px,1fr))]">
                 <div>
                     <div :class="['font-extrabold text-sm mb-1', theme.headingText]">{{ club.name }}</div>
-                    <p v-if="club.tagline" :class="['opacity-75', theme.bodyText]">{{ club.tagline }}</p>
+                    <p v-if="club.tagline" :class="[theme.bodyText]">{{ club.tagline }}</p>
                 </div>
 
                 <div v-if="showNav && navigation.length">

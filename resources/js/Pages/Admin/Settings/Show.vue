@@ -1208,7 +1208,7 @@ const moveOfficerDown = (index) => {
             </div>
 
             <div class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
-              <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-400 text-white font-black flex items-center justify-center text-sm uppercase shadow-md flex-shrink-0">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-600 to-blue-700 text-white font-black flex items-center justify-center text-sm uppercase shadow-md flex-shrink-0">
                 {{ club.name.substring(0, 2) }}
               </div>
               <div>

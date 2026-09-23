@@ -226,4 +226,106 @@ class SignatureRequestServiceTest extends TestCase
 
         Notification::assertNothingSent();
     }
+
+    public function test_cancelling_a_pending_request_stops_it_being_signed(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate();
+        $proposer = Member::find($candidate->proposer_member_id);
+        $request = $this->service()->request($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+
+        $cancelled = $this->service()->cancel($request);
+        $this->assertEquals(SignatureRequestStatus::Cancelled, $cancelled->status);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->service()->sign($cancelled, 'typed', ['typed_name' => 'John Doe'], '1.1.1.1', 'Agent');
+    }
+
+    public function test_only_a_pending_request_can_be_cancelled(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate();
+        $proposer = Member::find($candidate->proposer_member_id);
+        $request = $this->service()->request($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+        $this->service()->sign($request, 'typed', ['typed_name' => 'John Doe'], '1.1.1.1', 'Agent');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->service()->cancel($request->fresh());
+    }
+
+    public function test_request_if_open_reissues_to_the_same_person_without_a_new_row(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate();
+        $proposer = Member::find($candidate->proposer_member_id);
+
+        $pending = $this->service()->requestIfOpen($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+        $stillPending = $this->service()->requestIfOpen($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+        $this->assertEquals($pending->id, $stillPending->id);
+        Mail::assertQueued(SignatureRequestMail::class, 1);
+    }
+
+    public function test_request_if_open_does_nothing_once_signed_even_for_the_same_person(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate();
+        $proposer = Member::find($candidate->proposer_member_id);
+
+        $pending = $this->service()->requestIfOpen($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+        $this->service()->sign($pending->fresh(), 'typed', ['typed_name' => $proposer->full_name], '1.1.1.1', 'Agent');
+
+        $afterSigning = $this->service()->requestIfOpen($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+        $this->assertEquals($pending->id, $afterSigning->id);
+        $this->assertEquals(SignatureRequestStatus::Signed, $afterSigning->status);
+        Mail::assertQueued(SignatureRequestMail::class, 1);
+    }
+
+    public function test_request_if_open_ignores_a_newly_picked_person_while_the_purpose_is_still_active(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate();
+        $proposer = Member::find($candidate->proposer_member_id);
+        $original = $this->service()->requestIfOpen($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+
+        $newProposer = Member::create(['club_id' => $this->club->id, 'first_name' => 'New', 'last_name' => 'Proposer', 'email' => 'new-proposer@example.com']);
+        $result = $this->service()->requestIfOpen($candidate, 'form_p_proposer', $newProposer, $newProposer->full_name, $newProposer->email, $this->admin);
+
+        $this->assertEquals($original->id, $result->id, 'picking someone new does not reassign — the purpose must be cancelled first');
+        $this->assertEquals($proposer->full_name, $result->signer_name);
+        Mail::assertQueued(SignatureRequestMail::class, 1);
+    }
+
+    public function test_cancelling_then_request_if_open_asks_the_newly_picked_person(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate();
+        $proposer = Member::find($candidate->proposer_member_id);
+        $original = $this->service()->requestIfOpen($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+        $this->service()->cancel($original);
+
+        $newProposer = Member::create(['club_id' => $this->club->id, 'first_name' => 'New', 'last_name' => 'Proposer', 'email' => 'new-proposer@example.com']);
+        $result = $this->service()->requestIfOpen($candidate, 'form_p_proposer', $newProposer, $newProposer->full_name, $newProposer->email, $this->admin);
+
+        $this->assertNotEquals($original->id, $result->id);
+        $this->assertEquals('New Proposer', $result->signer_name);
+        $this->assertEquals(SignatureRequestStatus::Pending, $result->status);
+    }
+
+    public function test_request_if_open_asks_the_new_person_without_re_emailing_an_already_signed_one(): void
+    {
+        Mail::fake();
+        $candidate = $this->candidate();
+        $proposer = Member::find($candidate->proposer_member_id);
+
+        $proposerRequest = $this->service()->requestIfOpen($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+        $this->service()->sign($proposerRequest->fresh(), 'typed', ['typed_name' => $proposer->full_name], '1.1.1.1', 'Agent');
+
+        $newSeconder = Member::create(['club_id' => $this->club->id, 'first_name' => 'New', 'last_name' => 'Seconder', 'email' => 'new-seconder@example.com']);
+
+        $this->service()->requestIfOpen($candidate, 'form_p_proposer', $proposer, $proposer->full_name, $proposer->email, $this->admin);
+        $this->service()->requestIfOpen($candidate, 'form_p_seconder', $newSeconder, $newSeconder->full_name, $newSeconder->email, $this->admin);
+
+        Mail::assertQueued(SignatureRequestMail::class, 2);
+        $this->assertEquals(SignatureRequestStatus::Signed, $proposerRequest->fresh()->status);
+    }
 }

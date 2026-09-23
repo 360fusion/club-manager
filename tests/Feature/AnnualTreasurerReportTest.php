@@ -15,8 +15,11 @@ use App\Models\ClubType;
 use App\Models\User;
 use App\Services\AccountingService;
 use App\Services\AnnualTreasurerReportService;
+use App\Services\Signatures\SignatureRequestService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class AnnualTreasurerReportTest extends TestCase
@@ -138,6 +141,58 @@ class AnnualTreasurerReportTest extends TestCase
         $this->assertNotNull($report['audit_sign_off']);
         $this->assertEquals('Auditor One', $report['audit_sign_off']['auditor_one']);
         $this->assertEquals('Auditor Two', $report['audit_sign_off']['auditor_two']);
+        $this->assertNull($report['signatures'], 'no actual electronic signatures exist for a directly-stamped sign-off');
+        $this->assertEmpty($report['audit_log']);
+    }
+
+    public function test_report_embeds_the_actual_signatures_and_audit_log_once_both_auditors_have_signed_electronically(): void
+    {
+        Mail::fake();
+        $auditorOne = User::factory()->create(['name' => 'Auditor One']);
+        $auditorTwo = User::factory()->create(['name' => 'Auditor Two']);
+        $auditorOne->clubs()->attach($this->club->id, ['role' => 'member']);
+        $auditorTwo->clubs()->attach($this->club->id, ['role' => 'member']);
+
+        $audit = $this->accountingService->requestYearAudit($this->club, 2026, $auditorOne, $auditorTwo, null);
+        $signatures = app(SignatureRequestService::class);
+        $r1 = $signatures->request($audit, 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $this->adminUser);
+        $r2 = $signatures->request($audit, 'year_audit_auditor_two', $auditorTwo, $auditorTwo->name, $auditorTwo->email, $this->adminUser);
+        $signatures->sign($r1, 'typed', ['typed_name' => 'Auditor One'], '1.1.1.1', 'Agent');
+        $signatures->sign($r2, 'typed', ['typed_name' => 'Auditor Two'], '1.1.1.1', 'Agent');
+
+        $report = $this->reportService->build($this->club, 2026);
+
+        $this->assertNotNull($report['audit_sign_off']);
+        $this->assertEquals(['method' => 'typed', 'value' => 'Auditor One'], $report['signatures']['auditor_one']);
+        $this->assertEquals(['method' => 'typed', 'value' => 'Auditor Two'], $report['signatures']['auditor_two']);
+        $this->assertCount(2, $report['audit_log']);
+        $this->assertEquals('Auditor One', $report['audit_log'][0]['signer_name']);
+
+        $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.treasurer_report.export_pdf', ['clubSlug' => $this->club->slug, 'year' => 2026]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_a_drawn_signature_is_embedded_as_an_image_in_the_report_data(): void
+    {
+        Mail::fake();
+        $auditorOne = User::factory()->create(['name' => 'Auditor One']);
+        $auditorTwo = User::factory()->create(['name' => 'Auditor Two']);
+        $auditorOne->clubs()->attach($this->club->id, ['role' => 'member']);
+        $auditorTwo->clubs()->attach($this->club->id, ['role' => 'member']);
+
+        $audit = $this->accountingService->requestYearAudit($this->club, 2026, $auditorOne, $auditorTwo, null);
+        $signatures = app(SignatureRequestService::class);
+        $r1 = $signatures->request($audit, 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $this->adminUser);
+        $r2 = $signatures->request($audit, 'year_audit_auditor_two', $auditorTwo, $auditorTwo->name, $auditorTwo->email, $this->adminUser);
+        $signatures->sign($r1, 'drawn', ['image' => UploadedFile::fake()->image('signature.png', 300, 100)], '1.1.1.1', 'Agent');
+        $signatures->sign($r2, 'typed', ['typed_name' => 'Auditor Two'], '1.1.1.1', 'Agent');
+
+        $report = $this->reportService->build($this->club, 2026);
+
+        $this->assertEquals('drawn', $report['signatures']['auditor_one']['method']);
+        $this->assertStringStartsWith('data:image/png;base64,', $report['signatures']['auditor_one']['value']);
     }
 
     public function test_csv_export_route_returns_a_downloadable_csv(): void

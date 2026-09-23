@@ -115,4 +115,36 @@ class MemberSignatureControllerTest extends TestCase
 
         $this->get(route('member.signatures.show', ['slug' => $this->club->slug, 'id' => $request->id]))->assertRedirect('/login');
     }
+
+    public function test_the_signer_can_download_a_pdf_once_signed(): void
+    {
+        $request = $this->pendingRequest();
+        app(SignatureRequestService::class)->sign($request, 'typed', ['typed_name' => $this->auditorOne->name], '1.1.1.1', 'Agent');
+
+        $this->actingAs($this->auditorOne)->get(route('member.signatures.pdf', ['slug' => $this->club->slug, 'id' => $request->id]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_the_pdf_is_not_available_before_signing(): void
+    {
+        $request = $this->pendingRequest();
+
+        $this->actingAs($this->auditorOne)->get(route('member.signatures.pdf', ['slug' => $this->club->slug, 'id' => $request->id]))->assertNotFound();
+    }
+
+    public function test_signed_documents_are_listed_in_the_members_area(): void
+    {
+        $request = $this->pendingRequest();
+        app(SignatureRequestService::class)->sign($request, 'typed', ['typed_name' => $this->auditorOne->name], '1.1.1.1', 'Agent');
+
+        $this->actingAs($this->auditorOne)->get(route('members.signed_documents'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Members/SignedDocuments')
+                ->has('documents.data', 1)
+                ->where('documents.data.0.club.slug', $this->club->slug));
+
+        $this->actingAs($this->auditorTwo)->get(route('members.signed_documents'))
+            ->assertInertia(fn (Assert $page) => $page->has('documents.data', 0));
+    }
 }

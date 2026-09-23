@@ -156,7 +156,7 @@ const statusBadgeClass = (status) => {
       <!-- Member Header Card -->
       <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div class="flex items-center gap-4 sm:gap-6 overflow-hidden">
-          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-blue-500 to-blue-400 text-white font-black text-xl sm:text-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 uppercase flex-shrink-0">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-blue-700 text-white font-black text-xl sm:text-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 uppercase flex-shrink-0">
             {{ member.name.substring(0, 2) }}
           </div>
           <div class="space-y-1 overflow-hidden">
