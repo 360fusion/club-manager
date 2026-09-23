@@ -23,7 +23,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
 
-            $table->index(['club_id', 'is_active', 'next_run_date']);
+            $table->index(['club_id', 'is_active', 'next_run_date'], 'recurring_bill_templates_due_lookup_index');
         });
     }
 

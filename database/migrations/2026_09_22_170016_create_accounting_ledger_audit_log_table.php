@@ -23,7 +23,7 @@ return new class extends Migration
             $table->json('after_json')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
-            $table->index(['club_id', 'entity_type', 'entity_id', 'created_at']);
+            $table->index(['club_id', 'entity_type', 'entity_id', 'created_at'], 'ledger_audit_log_entity_lookup_index');
         });
     }
 
