@@ -91,7 +91,7 @@ class EventEmailTemplateTest extends TestCase
 
         $html = (new EventGuestBookingMail($this->event, $this->registration, $guest))->render();
 
-        $this->assertStringContainsString('Gary Guest {{payment_details}} {{manage_url}} '.$this->registration->contact_name, $html);
+        $this->assertStringContainsString('Gary Guest {{payment_details}} {{manage_url}} '.e($this->registration->contact_name), $html);
         $this->assertStringNotContainsString($this->registration->payment_reference, $html);
     }
 

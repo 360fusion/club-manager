@@ -2230,9 +2230,10 @@ class AccountingAdminController extends Controller
                     $browsershot->setIncludePath($binDir.':/opt/homebrew/bin:/usr/local/bin:/usr/bin');
                     $browsershot->setNpmBinary($npmBinary);
                 })
-                ->name($filename);
+                ->name($filename)
+                ->toResponse($request);
         } catch (\Throwable $e) {
-            // Fallback gracefully to DomPDF if Node/Browsershot fails in specific PHP-FPM environments.
+            // The PDF is only rendered by toResponse(), so it must run inside this try for the fallback to work.
             return \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.accounting.annual-treasurer-report', $viewData)
                 ->setPaper('a4', 'portrait')
                 ->download($filename);

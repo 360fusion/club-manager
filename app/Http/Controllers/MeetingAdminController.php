@@ -307,9 +307,10 @@ class MeetingAdminController extends Controller
                             $browsershot->setNpmBinary($npmBinary);
                         }
                     })
-                    ->name($filename);
+                    ->name($filename)
+                    ->toResponse(request());
             } catch (\Throwable $e) {
-                // Fallback gracefully to DomPDF if Node/Browsershot fails in specific PHP-FPM environments
+                // The PDF is only rendered by toResponse(), so it must run inside this try for the fallback to work.
                 return \Barryvdh\DomPDF\Facade\Pdf::loadView('summons.pdf', $viewData)
                     ->setPaper('a4', 'landscape')
                     ->download($filename);
