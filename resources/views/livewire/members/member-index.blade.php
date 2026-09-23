@@ -1,4 +1,6 @@
 <div class="space-y-6">
+    @include('livewire.members._notice')
+
     <!-- Member Management Domain Unified Navigation -->
     <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 dark:border-slate-700/60 shadow-inner">
         <a
@@ -36,7 +38,7 @@
 
     <!-- Header & Action Toolbar -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
+        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
             <div class="space-y-1">
                 <div class="flex items-center gap-2">
                     <span class="text-xs font-bold text-slate-400">Lodge Governance &amp; Administration</span>
@@ -51,24 +53,33 @@
                 </p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2.5">
+            <div class="flex flex-wrap lg:flex-nowrap items-center justify-start lg:justify-end lg:shrink-0 gap-2.5">
                 <button
                     type="button"
                     wire:click="exportCsv"
                     class="px-4 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl shadow-xs transition-all inline-flex items-center gap-1.5 cursor-pointer"
                 >
                     <span>📥</span>
-                    <span>Export CSV (Secretarial Return)</span>
+                    <span>Export CSV</span>
                 </button>
 
-                <button
-                    type="button"
-                    wire:click="openAddModal"
+                @if($canInvite)
+                    <a
+                        href="{{ route('admin.club_acc.members.import', ['clubSlug' => $club->slug]) }}"
+                        class="px-4 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl shadow-xs transition-all inline-flex items-center gap-1.5"
+                    >
+                        <span>📤</span>
+                        <span>Import CSV</span>
+                    </a>
+                @endif
+
+                <a
+                    href="{{ route('admin.club_acc.members.create', ['clubSlug' => $club->slug]) }}"
                     class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all inline-flex items-center gap-1.5 cursor-pointer"
                 >
                     <span>➕</span>
                     <span>Add New Member</span>
-                </button>
+                </a>
             </div>
         </div>
 
@@ -126,11 +137,11 @@
             </div>
 
             <!-- Dropdown Filters -->
-            <div class="flex items-center gap-2 flex-wrap w-full md:w-auto justify-start md:justify-end text-xs">
+            <div class="flex items-center gap-2 flex-wrap lg:flex-nowrap w-full md:w-auto justify-start md:justify-end text-xs">
                 <!-- Status Filter -->
                 <select
                     wire:model.live="statusFilter"
-                    class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    class="min-w-0 max-w-44 truncate px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
                     <option value="all">All Statuses</option>
                     @foreach($statuses as $st)
@@ -141,7 +152,7 @@
                 <!-- Office Filter -->
                 <select
                     wire:model.live="officeFilter"
-                    class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    class="min-w-0 max-w-44 truncate px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
                     <option value="all">All Offices</option>
                     @foreach($offices as $of)
@@ -152,17 +163,42 @@
                 <!-- Rank Filter -->
                 <select
                     wire:model.live="rankFilter"
-                    class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    class="min-w-0 max-w-44 truncate px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
                     <option value="all">All Masonic Ranks</option>
-                    <option value="Bro">Bro (Master Mason / Fellowcraft / EA)</option>
-                    <option value="WBro">WBro (Past Master / Master)</option>
-                    <option value="VWBro">VWBro (Very Worshipful)</option>
-                    <option value="RWBro">RWBro (Right Worshipful)</option>
+                    @foreach($ranks as $rankValue => $rankLabel)
+                        <option value="{{ $rankValue }}">{{ $rankLabel }}</option>
+                    @endforeach
+                </select>
+
+                <!-- Portal Account Filter -->
+                <select
+                    wire:model.live="accountFilter"
+                    aria-label="Portal account"
+                    class="min-w-0 max-w-44 truncate px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                    <option value="all">All Accounts</option>
+                    <option value="not_invited">Not invited</option>
+                    <option value="invited">Invited</option>
+                    <option value="has_account">Has account</option>
                 </select>
             </div>
         </div>
     </div>
+
+    @if($canInvite && count($selected) > 0)
+        <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-2xl text-xs">
+            <span class="font-bold text-blue-900 dark:text-blue-200">{{ count($selected) }} selected</span>
+            <div class="flex items-center gap-2">
+                <button type="button" wire:click="inviteSelected" wire:loading.attr="disabled" wire:target="inviteSelected" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition cursor-pointer disabled:opacity-60">
+                    Invite selected
+                </button>
+                <button type="button" wire:click="clearSelection" class="px-4 py-2 font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer">
+                    Clear
+                </button>
+            </div>
+        </div>
+    @endif
 
     <!-- Roster Table Card -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -170,6 +206,19 @@
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        @if($canInvite)
+                            <th class="py-3.5 pl-6 pr-0 w-8">
+                                <input
+                                    type="checkbox"
+                                    aria-label="Select everyone on this page who can be invited"
+                                    @disabled(empty($invitableIds))
+                                    x-data
+                                    x-effect="const ids = {{ \Illuminate\Support\Js::from($invitableIds) }}.map(String); const picked = $wire.selected.map(String).filter(id => ids.includes(id)); $el.checked = ids.length > 0 && picked.length === ids.length; $el.indeterminate = picked.length > 0 && picked.length < ids.length"
+                                    x-on:change="$wire.$set('selected', $event.target.checked ? {{ \Illuminate\Support\Js::from($invitableIds) }} : [])"
+                                    class="rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500"
+                                />
+                            </th>
+                        @endif
                         <th class="py-3.5 px-6 cursor-pointer" wire:click="sortBy('full_name')">
                             Member Name
                             @if($sortField === 'full_name') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
@@ -183,12 +232,21 @@
                             Status
                             @if($sortField === 'membership_status') <span>{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                         </th>
+                        <th class="py-3.5 px-4">Portal Account</th>
                         <th class="py-3.5 px-4 text-right"><span class="sr-only">Actions</span></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($members as $m)
-                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors">
+                        @php($account = $m->accountStatus($club))
+                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors" wire:key="member-{{ $m->id }}">
+                            @if($canInvite)
+                                <td class="py-4 pl-6 pr-0 w-8">
+                                    @if(in_array($m->id, $invitableIds, true))
+                                        <input type="checkbox" value="{{ $m->id }}" wire:model.live="selected" aria-label="Select {{ $m->full_name }}" class="rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500" />
+                                    @endif
+                                </td>
+                            @endif
                             <!-- Member Name -->
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
@@ -241,11 +299,34 @@
                                 </span>
                             </td>
 
-                            <!-- Edit -->
-                            <td class="py-4 px-4 text-right">
-                                <button
-                                    type="button"
-                                    wire:click="openEditModal({{ $m->id }})"
+                            <!-- Portal Account -->
+                            <td class="py-4 px-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $account->badgeClass() }}">
+                                    {{ $account->label() }}
+                                </span>
+                                @if($account->isInvitePending() && $m->acct_invited_at)
+                                    <span class="block mt-1 text-[10px] text-slate-400">Sent {{ \Illuminate\Support\Carbon::parse($m->acct_invited_at)->format('j M Y') }}</span>
+                                @endif
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="py-4 px-4 text-right whitespace-nowrap">
+                                @if($canInvite)
+                                    @if($account->canInvite() && $m->email && $m->membership_status->isSubscribing())
+                                        <button type="button" wire:click="inviteMember({{ $m->id }})" wire:loading.attr="disabled" wire:target="inviteMember({{ $m->id }})" class="mr-1.5 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[11px] hover:bg-blue-100 dark:hover:bg-blue-900/40 transition cursor-pointer disabled:opacity-60">
+                                            Invite
+                                        </button>
+                                    @elseif($account->isInvitePending())
+                                        <button type="button" wire:click="resendInvite({{ $m->id }})" wire:loading.attr="disabled" wire:target="resendInvite({{ $m->id }})" class="mr-1.5 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800/60 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[11px] hover:bg-blue-100 dark:hover:bg-blue-900/40 transition cursor-pointer disabled:opacity-60">
+                                            Resend
+                                        </button>
+                                        <button type="button" wire:click="revokeInvite({{ $m->id }})" wire:confirm="Withdraw the invitation for {{ $m->full_name }}? The link in their email will stop working." class="mr-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold text-[11px] hover:text-rose-600 dark:hover:text-rose-400 transition cursor-pointer">
+                                            Revoke
+                                        </button>
+                                    @endif
+                                @endif
+                                <a
+                                    href="{{ route('admin.club_acc.members.edit', ['clubSlug' => $club->slug, 'memberId' => $m->id]) }}"
                                     title="Edit {{ $m->full_name }}"
                                     aria-label="Edit {{ $m->full_name }}"
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700/60 transition-colors cursor-pointer"
@@ -253,12 +334,12 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.86 4.49a2.1 2.1 0 1 1 2.97 2.97L8.4 18.9l-3.9.93.93-3.9L16.86 4.49Z" />
                                     </svg>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-12 text-center text-slate-400">
+                            <td colspan="8" class="py-12 text-center text-slate-400">
                                 <div class="space-y-2">
                                     <span class="text-2xl block">👥</span>
                                     <p class="font-bold text-slate-700 dark:text-slate-200">No members found matching filters.</p>
@@ -276,197 +357,4 @@
             {{ $members->links() }}
         </div>
     </div>
-
-    <!-- Add / Edit Member Modal -->
-    @if($showMemberModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6" x-data @keydown.escape.window="$wire.closeModal()">
-            <div @click.outside="$wire.closeModal()" class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-6 relative text-slate-800 dark:text-slate-100">
-                <!-- Header -->
-                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-                    <div>
-                        <h3 class="text-base font-black text-slate-900 dark:text-white">
-                            {{ $editingMemberId ? 'Edit Member Record' : 'Add New Lodge Member' }}
-                        </h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">
-                            {{ $editingMemberId ? 'Update masonic ranks, office assignments, and contact details.' : 'Register a new brother onto the Lodge Rule 153 roster.' }}
-                        </p>
-                    </div>
-                    <button type="button" wire:click="closeModal" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
-                        ✕
-                    </button>
-                </div>
-
-                <!-- Form -->
-                <form wire:submit="saveMember" class="space-y-4 text-xs">
-                    <!-- Grid 1: Name & Title -->
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                        <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Title Prefix</label>
-                            <input type="text" wire:model="title" placeholder="Bro / WBro / Dr" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                        </div>
-                        <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">First Name *</label>
-                            <input type="text" wire:model="first_name" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
-                            @error('first_name') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Middle Names</label>
-                            <input type="text" wire:model="middle_names" placeholder="David Arthur" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                        </div>
-                        <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Surname / Last Name *</label>
-                            <input type="text" wire:model="last_name" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" required />
-                            @error('last_name') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                        <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Preferred Name</label>
-                            <input type="text" wire:model="preferred_name" placeholder="Dave" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                        </div>
-                    </div>
-
-                    <!-- Grid 2: Contact & Residential Address -->
-                    <div class="space-y-3 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl">
-                        <span class="font-extrabold text-slate-900 dark:text-white block text-xs">Contact &amp; Residential Address</span>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Email Address</label>
-                                <input type="email" wire:model="email" placeholder="brother@example.org" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                                @error('email') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                            </div>
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Phone Number</label>
-                                <input type="text" wire:model="phone" placeholder="07123 456789" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Address Line 1</label>
-                                <input type="text" wire:model="address_line_1" placeholder="Building name, house number & street" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                            </div>
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Address Line 2</label>
-                                <input type="text" wire:model="address_line_2" placeholder="Apartment, suite, unit, etc." class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Town / City</label>
-                                <input type="text" wire:model="city" placeholder="Oxford" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                            </div>
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">County / Region</label>
-                                <input type="text" wire:model="county" placeholder="Oxfordshire" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                            </div>
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Postcode / ZIP</label>
-                                <input type="text" wire:model="postcode" placeholder="OX1 2JD" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs uppercase focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                            </div>
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Country</label>
-                                <input type="text" wire:model="country" placeholder="United Kingdom" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Grid 3: Masonic Ranks & Metadata -->
-                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl space-y-3">
-                        <span class="font-extrabold text-slate-900 dark:text-white block text-xs">Masonic Governance &amp; Ranks</span>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Masonic Rank *</label>
-                                <select wire:model="masonic_rank" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                    <option value="Bro">Bro (Master Mason / EA / FC)</option>
-                                    <option value="WBro">WBro (Worshipful Brother / PM)</option>
-                                    <option value="VWBro">VWBro (Very Worshipful)</option>
-                                    <option value="RWBro">RWBro (Right Worshipful)</option>
-                                    <option value="MWBro">MWBro (Most Worshipful)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Grand Rank</label>
-                                <input type="text" wire:model="grand_rank" placeholder="e.g. PAGDC / PJGD" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                            </div>
-
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Provincial Rank</label>
-                                <input type="text" wire:model="provincial_rank" placeholder="e.g. PPrGSuptWks" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Hermes / GL Member ID</label>
-                                <input type="text" wire:model="grand_lodge_number" placeholder="1482092" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                            </div>
-
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Current Office *</label>
-                                <select wire:model="current_office" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                    @foreach($offices as $of)
-                                        <option value="{{ $of->value }}">{{ $of->label() }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Membership Status *</label>
-                                <select wire:model="membership_status" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                    @foreach($statuses as $st)
-                                        <option value="{{ $st->value }}">{{ $st->label() }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Grid 4: Key Dates -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Date of Initiation</label>
-                            <input type="date" wire:model="date_of_initiation" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                        </div>
-                        <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Date of Passing</label>
-                            <input type="date" wire:model="date_of_passing" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                        </div>
-                        <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Date of Raising</label>
-                            <input type="date" wire:model="date_of_raising" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                        </div>
-                        <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Date Joined Lodge</label>
-                            <input type="date" wire:model="date_of_joining" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-                        </div>
-                    </div>
-
-                    <!-- Accounting Customer Link -->
-                    @if($accountingContacts->isNotEmpty())
-                        <div class="space-y-1">
-                            <label class="block font-bold text-slate-700 dark:text-slate-200">Accounting Ledger Contact Link</label>
-                            <select wire:model="customer_account_id" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <option value="">-- No Ledger Account Linked --</option>
-                                @foreach($accountingContacts as $ac)
-                                    <option value="{{ $ac->id }}">{{ $ac->full_name }} ({{ $ac->email ?: 'No email' }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-
-                    <!-- Modal Actions -->
-                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
-                        <button type="button" wire:click="closeModal" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer">
-                            Cancel
-                        </button>
-                        <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition cursor-pointer">
-                            {{ $editingMemberId ? 'Save Changes' : 'Create Member Record' }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endif
 </div>

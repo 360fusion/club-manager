@@ -9,6 +9,8 @@ const props = defineProps({
   members: Array,
   offices: Array,
   installationMonth: String,
+  grandRanks: { type: Array, default: () => [] },
+  provincialRanks: { type: Array, default: () => [] },
 });
 
 const localMembers = ref([...(props.members || [])]);
@@ -1091,21 +1093,17 @@ const installCurrentRoster = () => {
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-1">
                 <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Grand Rank <span class="text-slate-400 font-normal">(Optional)</span></label>
-                <input
-                  type="text"
-                  v-model="quickMemberForm.grand_rank"
-                  placeholder="e.g. PJGD"
-                  class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <select v-model="quickMemberForm.grand_rank" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">None</option>
+                  <option v-for="rank in grandRanks" :key="rank.value" :value="rank.value">{{ rank.label }}</option>
+                </select>
               </div>
               <div class="space-y-1">
                 <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Provincial Rank <span class="text-slate-400 font-normal">(Optional)</span></label>
-                <input
-                  type="text"
-                  v-model="quickMemberForm.provincial_rank"
-                  placeholder="e.g. PPrGReg"
-                  class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <select v-model="quickMemberForm.provincial_rank" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">None</option>
+                  <option v-for="rank in provincialRanks" :key="rank.value" :value="rank.value">{{ rank.label }}</option>
+                </select>
               </div>
             </div>
 

@@ -3,87 +3,60 @@
 namespace App\Mail;
 
 use App\Models\Club;
-use App\Models\DefaultEmailTemplate;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Address;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class MemberInvitationMail extends Mailable implements ShouldQueue
+/**
+ * Invites a member to set up an online account (or, with $reminder, nudges one who has not yet). The wording is the
+ * `account_invitation` / `account_invitation_reminder` template, which a lodge can override for itself.
+ */
+class MemberInvitationMail extends EventTemplatedMail
 {
-    use Queueable, SerializesModels;
-
     public function __construct(
         public Club $club,
         public User $user,
         public string $invitationToken,
-        public string $acceptUrl
+        public string $acceptUrl,
+        public ?User $inviter = null,
+        public bool $reminder = false,
     ) {
         $this->onQueue('transactional');
     }
 
-    public function envelope(): Envelope
+    protected function club(): Club
     {
-        $fromName = $this->club->settings['email_from_name'] ?? $this->club->name;
-        $replyTo = $this->club->settings['email_reply_to'] ?? null;
-        $template = DefaultEmailTemplate::where('template_key', 'account_invitation')->first();
-
-        if ($template) {
-            $replacements = [
-                '{{member_name}}' => e($this->user->name),
-                '{{club_name}}' => e($this->club->name),
-                '{{invite_url}}' => $this->acceptUrl,
-                '{{expiry_days}}' => 7,
-            ];
-            $subject = str_replace(array_keys($replacements), array_values($replacements), $template->subject);
-        } else {
-            $isExistingUser = ! empty($this->user->password) && $this->user->clubs()->where('clubs.id', '!=', $this->club->id)->exists();
-            $subject = $isExistingUser
-                ? "Access granted to {$this->club->name} on Club Manager"
-                : "You're invited to join {$this->club->name}!";
-        }
-
-        $envelope = new Envelope(
-            subject: $subject,
-            from: new Address(config('mail.from.address'), $fromName)
-        );
-
-        if ($replyTo) {
-            $envelope->replyTo = [new Address($replyTo, $fromName)];
-        }
-
-        return $envelope;
+        return $this->club;
     }
 
-    public function content(): Content
+    protected function templateKey(): string
     {
-        $template = DefaultEmailTemplate::where('template_key', 'account_invitation')->first();
+        return $this->reminder ? 'account_invitation_reminder' : 'account_invitation';
+    }
 
-        if ($template) {
-            $replacements = [
-                '{{member_name}}' => e($this->user->name),
-                '{{club_name}}' => e($this->club->name),
-                '{{invite_url}}' => $this->acceptUrl,
-                '{{expiry_days}}' => 7,
-            ];
-            $bodyHtml = str_replace(array_keys($replacements), array_values($replacements), $template->body_html);
+    protected function values(): array
+    {
+        return [
+            'text' => [
+                'member_name' => $this->user->name,
+                'club_name' => $this->club->name,
+                'invite_url' => $this->acceptUrl,
+                'expiry_days' => $this->club->inviteExpirationDays(),
+                'inviter_name' => $this->inviter?->name ?? $this->club->name,
+            ],
+            'html' => [],
+        ];
+    }
 
-            return new Content(
-                htmlString: $bodyHtml
-            );
-        }
+    protected function fallbackSubject(): string
+    {
+        return $this->reminder
+            ? "Reminder: your {$this->club->name} invitation"
+            : "You're invited to join {$this->club->name}";
+    }
 
-        $isExistingUser = ! empty($this->user->password) && $this->user->clubs()->where('clubs.id', '!=', $this->club->id)->exists();
+    protected function fallbackBody(): string
+    {
+        $values = $this->values()['text'];
 
-        return new Content(
-            html: 'emails.member-invitation',
-            with: [
-                'isExistingUser' => $isExistingUser,
-            ]
-        );
+        return '<p>Dear '.e($values['member_name']).',</p><p>'.e($values['club_name']).' has invited you to set up your online member account.</p><p><a href="'.e($values['invite_url']).'">Accept invitation and set up your account</a></p><p>This invitation link will expire in '.e((string) $values['expiry_days']).' days.</p>';
     }
 }

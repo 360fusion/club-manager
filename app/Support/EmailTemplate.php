@@ -26,6 +26,8 @@ class EmailTemplate
         'event_refund' => null,
         'event_place_available' => null,
         'signature_request' => 'sign_url',
+        'account_invitation' => 'invite_url',
+        'account_invitation_reminder' => 'invite_url',
     ];
 
     /**

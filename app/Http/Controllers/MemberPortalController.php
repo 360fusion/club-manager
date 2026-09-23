@@ -11,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Newsletter;
+use App\Models\NewsTag;
 use App\Models\Post;
 use App\Services\Events\EventMailer;
 use App\Services\Events\EventOnlinePayment;
@@ -539,7 +540,28 @@ class MemberPortalController extends Controller
     {
         $user = Auth::user();
         $club = Club::where('slug', $slug)->firstOrFail();
-        $post = Post::where('club_id', $club->id)->published()->visibleTo($user)->findOrFail($id);
+        $post = Post::where('club_id', $club->id)->published()->visibleTo($user)->with('tags:id,name,slug,color')->findOrFail($id);
+
+        $others = fn () => Post::where('club_id', $club->id)->published()->visibleTo($user)->whereKeyNot($post->id);
+        $newestFirst = 'COALESCE(posts.published_at, posts.created_at) DESC';
+        $tagIds = $post->tags->pluck('id')->all();
+
+        $latest = $others()->orderByRaw($newestFirst)->limit(5)->get();
+
+        // Other items sharing at least one tag, most shared tags first, then newest.
+        $related = $tagIds === [] ? collect() : $others()
+            ->whereHas('tags', fn ($tags) => $tags->whereIn('news_tags.id', $tagIds))
+            ->withCount(['tags as shared_tags' => fn ($tags) => $tags->whereIn('news_tags.id', $tagIds)])
+            ->orderByDesc('shared_tags')
+            ->orderByRaw($newestFirst)
+            ->limit(5)
+            ->get();
+
+        $summary = fn (Post $item) => [
+            'id' => $item->id,
+            'title' => $item->title,
+            'at' => ($item->published_at ?? $item->created_at)->toIso8601String(),
+        ];
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 
@@ -557,7 +579,11 @@ class MemberPortalController extends Controller
                 'cover_image_url' => $post->cover_image_url,
                 'published_at' => ($post->published_at ?? $post->created_at)?->format('M d, Y'),
                 'author_name' => $post->author?->name ?? 'Club Secretary',
+                'tags' => $post->tags->map(fn (NewsTag $tag) => ['name' => $tag->name, 'slug' => $tag->slug, 'color' => $tag->color])->values(),
             ],
+            'tagOptions' => NewsTag::browsableFor([$club->id], $user),
+            'latest' => $latest->map($summary)->values(),
+            'related' => $related->map($summary)->values(),
         ]);
     }
 }

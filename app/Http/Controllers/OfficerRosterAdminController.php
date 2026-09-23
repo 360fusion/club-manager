@@ -8,9 +8,11 @@ use App\Domains\ClubAccounting\Models\AnnualOfficerRoster;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\AnnualOfficerRosterService;
 use App\Models\Club;
+use App\Support\MasonicRanks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -65,6 +67,8 @@ class OfficerRosterAdminController extends Controller
             'members' => $members,
             'offices' => $offices,
             'installationMonth' => $installationMonth,
+            'grandRanks' => MasonicRanks::optionsFor($club, MasonicRanks::GRAND),
+            'provincialRanks' => MasonicRanks::optionsFor($club, MasonicRanks::PROVINCIAL),
         ]);
     }
 
@@ -161,20 +165,18 @@ class OfficerRosterAdminController extends Controller
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
             'membership_status' => 'nullable|string|max:50',
-            'masonic_rank' => 'nullable|string|max:50',
-            'grand_rank' => 'nullable|string|max:100',
-            'provincial_rank' => 'nullable|string|max:100',
+            'masonic_rank' => ['nullable', Rule::in(array_keys(Member::MASONIC_RANKS))],
+            'grand_rank' => ['nullable', 'string', 'max:100', Rule::in(MasonicRanks::allowedValues($club, MasonicRanks::GRAND))],
+            'provincial_rank' => ['nullable', 'string', 'max:100', Rule::in(MasonicRanks::allowedValues($club, MasonicRanks::PROVINCIAL))],
         ]);
 
         $masonicRank = $validated['masonic_rank'] ?: 'Bro';
-        $title = in_array($masonicRank, ['WBro', 'VWBro', 'RWBro', 'MWBro']) ? 'W. Bro.' : 'Bro.';
 
         $statusStr = $validated['membership_status'] ?? 'historical';
         $membershipStatus = MembershipStatus::tryFrom($statusStr) ?? MembershipStatus::Historical;
 
         $member = Member::create([
             'club_id' => $club->id,
-            'title' => $title,
             'first_name' => trim($validated['first_name']),
             'last_name' => trim($validated['last_name']),
             'masonic_rank' => $masonicRank,

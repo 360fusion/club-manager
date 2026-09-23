@@ -18,7 +18,17 @@ class GrandLodge extends Model
         'country',
         'website_url',
         'description',
+        'grand_ranks',
+        'provincial_ranks',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'grand_ranks' => 'array',
+            'provincial_ranks' => 'array',
+        ];
+    }
 
     /**
      * Get the provinces under this Grand Lodge.

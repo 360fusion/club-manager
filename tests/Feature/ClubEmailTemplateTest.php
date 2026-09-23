@@ -87,7 +87,7 @@ class ClubEmailTemplateTest extends TestCase
 
         $this->actingAs($this->admin)->get(route('admin.email_templates.index', ['clubSlug' => 'club-a']))->assertInertia(fn ($page) => $page
             ->component('Admin/EmailTemplates/Index')
-            ->has('templates', 7)
+            ->has('templates', 9)
             ->where('templates', fn ($templates) => collect($templates)->firstWhere('key', 'event_refund')['customised'] === true
                 && collect($templates)->firstWhere('key', 'event_refund')['subject'] === 'Money back'
                 && collect($templates)->firstWhere('key', 'event_payment_reminder')['customised'] === false));
@@ -114,7 +114,7 @@ class ClubEmailTemplateTest extends TestCase
         $this->save('event_guest_confirmation', ['subject' => 'Hi {{bank_details}}', 'body_html' => '<p>Hi</p>'])->assertSessionHasErrors('body_html');
         $this->save('event_booking_confirmation', ['subject' => 'Booked', 'body_html' => '<p>No link here</p>'])->assertSessionHasErrors('body_html');
         $this->save('event_payment_reminder', ['subject' => 'Pay', 'body_html' => '<script>x()</script>'])->assertSessionHasErrors('body_html');
-        $this->save('account_invitation', ['subject' => 'x', 'body_html' => '<p>x</p>'])->assertNotFound();
+        $this->save('password_reset', ['subject' => 'x', 'body_html' => '<p>x</p>'])->assertNotFound();
 
         $this->assertSame(0, ClubEmailTemplate::count());
     }

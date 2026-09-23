@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Enums\MembershipStatus;
+use App\Domains\ClubAccounting\Livewire\Members\MemberFormPage;
 use App\Domains\ClubAccounting\Livewire\Members\MemberIndex;
 use App\Domains\ClubAccounting\Livewire\Members\MemberProfile;
 use App\Domains\ClubAccounting\Models\Member;
@@ -107,18 +108,18 @@ class MemberManagementDomainTest extends TestCase
             ->assertSee('Alexander Hamilton')
             ->set('search', 'NonExistent')
             ->assertDontSee('Alexander Hamilton')
-            ->set('search', '')
-            ->call('openAddModal')
-            ->assertSet('showMemberModal', true)
+            ->set('search', '');
+
+        Livewire::test(MemberFormPage::class, ['clubSlug' => $this->club->slug])
             ->set('first_name', 'Benjamin')
             ->set('last_name', 'Franklin')
             ->set('email', 'ben@lodge.org')
             ->set('masonic_rank', 'WBro')
             ->set('current_office', 'treasurer')
             ->set('membership_status', 'active')
-            ->call('saveMember')
-            ->assertSet('showMemberModal', false)
-            ->assertHasNoErrors();
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('admin.club_acc.members.index', ['clubSlug' => $this->club->slug]));
 
         $this->assertDatabaseHas('club_acc_members', [
             'club_id' => $this->club->id,

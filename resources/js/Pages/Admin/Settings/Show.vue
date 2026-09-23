@@ -3,6 +3,8 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
+import NewsTagsManager from '@/Components/NewsTagsManager.vue';
+import RankListEditor from '@/Components/RankListEditor.vue';
 
 const showMediaModal = ref(false);
 
@@ -19,6 +21,14 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  ranks: {
+    type: Object,
+    default: () => ({ grandLodgeName: null, usage: { grand: {}, provincial: {} } }),
+  },
+  newsTags: {
+    type: Array,
+    default: () => [],
+  },
   currencies: {
     type: Array,
     default: () => [],
@@ -32,6 +42,10 @@ const props = defineProps({
     default: () => [],
   },
   provinces: {
+    type: Array,
+    default: () => [],
+  },
+  masonicHalls: {
     type: Array,
     default: () => [],
   },
@@ -80,9 +94,9 @@ const switchProvider = (provider) => {
 };
 
 const validTabs = [
-  'general', 'positions', 'officers', 'branding', 'roles', 'modules',
+  'general', 'positions', 'ranks', 'officers', 'branding', 'roles', 'modules',
   'accounting', 'subscriptions', 'payments', 'events', 'dining',
-  'communications', 'website', 'bookings'
+  'communications', 'news-tags', 'website', 'bookings'
 ];
 
 // Event and booking payment options are set up once for the lodge on their own page, which comes back here.
@@ -129,10 +143,34 @@ onUnmounted(() => {
   }
 });
 
+// Halls offered for the chosen province (all of them until a province is picked).
+const availableHalls = computed(() => props.masonicHalls.filter(
+  (h) => !form.province_id || !h.province_id || h.province_id === Number(form.province_id)
+));
+
+const selectedHall = computed(() => props.masonicHalls.find((h) => h.id === Number(form.masonic_hall_id)) || null);
+
+const selectedHallAddress = computed(() => selectedHall.value
+  ? [selectedHall.value.address_line_1, selectedHall.value.address_line_2, selectedHall.value.town, selectedHall.value.county, selectedHall.value.postcode].filter(Boolean).join(', ')
+  : '');
+
+function onProvinceChange() {
+  if (selectedHall.value && selectedHall.value.province_id && selectedHall.value.province_id !== Number(form.province_id)) {
+    form.masonic_hall_id = '';
+  }
+}
+
+function onHallChange() {
+  if (selectedHall.value?.province_id && !form.province_id) {
+    form.province_id = selectedHall.value.province_id;
+  }
+}
+
 // Primary Settings Form
 const form = useForm({
   name: props.club.name || '',
   province_id: props.club.province_id || '',
+  masonic_hall_id: props.club.masonic_hall_id || '',
   lodge_number: props.club.lodge_number || props.settings.lodge_number || '1418',
   lodge_status: props.settings.lodge_status || 'Normal',
   installed_masters: props.settings.installed_masters || 'No',
@@ -166,6 +204,9 @@ const form = useForm({
   member_prefix: props.settings.member_prefix || '',
   default_role: props.settings.default_role || 'member',
   invite_expiration_days: props.settings.invite_expiration_days ?? 14,
+  invite_reminder_days: props.settings.invite_reminder_days ?? 7,
+  grand_ranks: (props.settings.grand_ranks || []).map((r) => ({ ...r })),
+  provincial_ranks: (props.settings.provincial_ranks || []).map((r) => ({ ...r })),
   membership_year_start: props.settings.membership_year_start || '2026-10-01',
   enable_member_ranks: props.settings.enable_member_ranks ?? true,
   member_ranks: props.settings.member_ranks || [
@@ -278,6 +319,18 @@ const form = useForm({
 });
 
 const isSavedSuccess = ref(false);
+
+const resetRanks = () => {
+  const name = props.ranks.grandLodgeName || 'standard';
+  if (!window.confirm(`Replace both rank lists with the ${name} lists? Any changes you have made to them here will be lost.`)) return;
+  router.post(route('admin.settings.ranks.reset', { clubSlug: props.club.slug }), {}, {
+    preserveScroll: true,
+    onSuccess: () => {
+      form.grand_ranks = (props.settings.grand_ranks || []).map((r) => ({ ...r }));
+      form.provincial_ranks = (props.settings.provincial_ranks || []).map((r) => ({ ...r }));
+    },
+  });
+};
 
 const submitSettings = () => {
   form.put(route('admin.settings.update', { clubSlug: props.club.slug }), {
@@ -609,6 +662,7 @@ const moveOfficerDown = (index) => {
               <optgroup label="Workspace & Security">
                 <option value="general">🏢 General Profile & Access</option>
                 <option value="positions">🎖️ Club Positions & Ranks</option>
+                <option value="ranks">🏅 Grand & Provincial Ranks</option>
                 <option value="officers">👔 Provincial & Officers Roster</option>
                 <option value="branding">🎨 Branding & Styling</option>
                 <option value="roles">🛡️ Roles & Permissions</option>
@@ -621,6 +675,7 @@ const moveOfficerDown = (index) => {
                 <option value="events">📅 Events & Check-Ins</option>
                 <option value="dining">🍽️ Dining & Catering RSVPs</option>
                 <option value="communications">✉️ Communications & Emails</option>
+                <option value="news-tags">🏷️ News Tags</option>
               </optgroup>
               <optgroup label="Module Policies">
                 <option value="bookings">🚣 Pitch & Equipment Bookings</option>
@@ -653,6 +708,16 @@ const moveOfficerDown = (index) => {
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>🎖️</span> Club Positions</span>
+                </button>
+
+                <button
+                  @click="activeTab = 'ranks'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'ranks' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🏅</span> Grand &amp; Provincial Ranks</span>
                 </button>
 
                 <button
@@ -759,6 +824,16 @@ const moveOfficerDown = (index) => {
                   ]"
                 >
                   <span class="flex items-center gap-2.5"><span>✉️</span> Communications</span>
+                </button>
+
+                <button
+                  @click="activeTab = 'news-tags'"
+                  :class="[
+                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
+                    activeTab === 'news-tags' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                  ]"
+                >
+                  <span class="flex items-center gap-2.5"><span>🏷️</span> News Tags</span>
                 </button>
               </div>
             </div>
@@ -936,12 +1011,25 @@ const moveOfficerDown = (index) => {
 
             <div>
               <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Assigned Masonic Province</label>
-              <select v-model="form.province_id" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500">
+              <select v-model="form.province_id" @change="onProvinceChange" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">No Province Selected</option>
                 <option v-for="p in provinces" :key="p.id" :value="p.id">
                   🏛️ {{ p.name }}
                 </option>
               </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Masonic Hall</label>
+              <select v-model="form.masonic_hall_id" @change="onHallChange" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">No Masonic Hall Selected</option>
+                <option v-for="h in availableHalls" :key="h.id" :value="h.id">
+                  {{ h.name }}{{ h.town ? ' – ' + h.town : '' }}
+                </option>
+              </select>
+              <p v-if="selectedHallAddress" class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">📍 {{ selectedHallAddress }}</p>
+              <p v-else class="text-[11px] text-slate-400 mt-1">Where your lodge or chapter meets. Choose a province first to narrow the list.</p>
+              <p v-if="form.errors.masonic_hall_id" class="text-[11px] text-rose-600 mt-1">{{ form.errors.masonic_hall_id }}</p>
             </div>
 
             <div>
@@ -1029,6 +1117,12 @@ const moveOfficerDown = (index) => {
             <div>
               <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Invite Expiry (Days)</label>
               <input v-model="form.invite_expiration_days" type="number" min="1" max="365" placeholder="14" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Invite Reminder (Days)</label>
+              <input v-model="form.invite_reminder_days" type="number" min="0" max="365" placeholder="7" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
+              <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">One reminder is emailed to anyone who has not accepted after this many days. Use 0 to switch reminders off.</p>
             </div>
 
             <div>
@@ -1184,6 +1278,45 @@ const moveOfficerDown = (index) => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- TAB: GRAND & PROVINCIAL RANKS -->
+      <div v-if="activeTab === 'ranks'" class="space-y-6">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-8">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900 dark:text-white">🏅 Grand &amp; Provincial Ranks</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">The ranks you can pick from when adding or editing a member. The abbreviation is what appears after their name; the full title helps people choose the right one. Save the page to keep your changes.</p>
+            </div>
+            <button
+              type="button"
+              @click="resetRanks"
+              class="shrink-0 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+            >
+              Reset to the {{ ranks.grandLodgeName || 'standard' }} list
+            </button>
+          </div>
+
+          <RankListEditor
+            v-model="form.grand_ranks"
+            label="Grand ranks"
+            help="Ranks conferred by the Grand Lodge, for example PAGDC."
+            id-prefix="grand_ranks"
+            :usage="ranks.usage.grand"
+            :errors="form.errors"
+          />
+
+          <RankListEditor
+            v-model="form.provincial_ranks"
+            label="Provincial ranks"
+            help="Ranks conferred by the Province, for example PPrSGD."
+            id-prefix="provincial_ranks"
+            :usage="ranks.usage.provincial"
+            :errors="form.errors"
+          />
+
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Removing or renaming a rank here never changes a member who already holds it. Their rank stays selectable on their own record.</p>
         </div>
       </div>
 
@@ -1882,6 +2015,17 @@ const moveOfficerDown = (index) => {
       </div>
 
 
+
+      <!-- TAB: NEWS TAGS -->
+      <div v-if="activeTab === 'news-tags'" class="space-y-6">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white">🏷️ News Tags</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">The tags available when writing a news item. Editors can only choose from this list, and members can filter news by them. Tags are saved as you add or edit them; you don't need to press Save Changes.</p>
+          </div>
+          <NewsTagsManager :club-slug="club.slug" :tags="newsTags" />
+        </div>
+      </div>
 
       <!-- TAB 9: BOOKINGS -->
       <div v-if="activeTab === 'bookings'" class="space-y-6">

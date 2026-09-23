@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Models\Member;
-use App\Mail\MemberInvitationMail;
+use App\Domains\ClubAccounting\Services\MemberInvitationException;
+use App\Domains\ClubAccounting\Services\MemberInvitationService;
 use App\Models\Club;
 use App\Models\EventRegistration;
 use App\Models\Invoice;
@@ -15,8 +16,8 @@ use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,15 +27,18 @@ class UserAdminController extends Controller
     /**
      * Display member roster for a club in the admin portal.
      */
-    public function index(string $clubSlug): Response
+    public function index(string $clubSlug, MemberInvitationService $invitations): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
         $members = $club->users()
             ->wherePivot('status', '!=', 'deleted')
             ->get()
-            ->map(function ($u) {
+            ->map(function ($u) use ($club, $invitations) {
+                $isJoinRequest = $u->pivot->status === 'pending' && empty($u->pivot->invitation_token);
+
                 return [
+                    'matching_member' => $isJoinRequest ? $invitations->matchForUser($club, $u)?->full_name : null,
                     'id' => $u->id,
                     'name' => $u->name,
                     'email' => $u->email,
@@ -170,7 +174,7 @@ class UserAdminController extends Controller
     /**
      * Store a newly created member in the club roster.
      */
-    public function storeMember(Request $request, string $clubSlug): RedirectResponse
+    public function storeMember(Request $request, string $clubSlug, MemberInvitationService $invitations): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
@@ -186,92 +190,85 @@ class UserAdminController extends Controller
 
         abort_unless(ClubAccess::canAssignRole($request->user(), $club, $validated['role'], null), 403, 'Only a club owner can grant the owner role.');
 
-        $sendInvite = $request->boolean('send_invite', true);
-        $token = $sendInvite ? Str::random(40) : null;
+        $email = strtolower($validated['email']);
 
-        $user = User::firstOrCreate(
-            ['email' => strtolower($validated['email'])],
-            [
-                'name' => $validated['name'],
-                'password' => Hash::make(Str::random(16)),
-            ]
-        );
-
-        if ($club->users()->where('user_id', $user->id)->exists()) {
+        if ($club->users()->whereRaw('lower(users.email) = ?', [$email])->exists()) {
             return redirect()->back()->with('error', 'User is already a member of this club.');
         }
 
-        $club->users()->attach($user->id, [
+        $sendInvite = $request->boolean('send_invite', true);
+        $pivotDetails = [
             'role' => $validated['role'],
             'rank' => $validated['rank'] ?? null,
             'committee_role' => $validated['committee_role'] ?? null,
-            'member_number' => ($validated['member_number'] ?? null) ?: ('MEM-'.rand(1000, 9999)),
-            'status' => $sendInvite ? 'pending' : 'active',
-            'invitation_token' => $token,
-            'invited_at' => $sendInvite ? now() : null,
-        ]);
+            'member_number' => ($validated['member_number'] ?? null) ?: ('MEM-'.random_int(1000, 9999)),
+        ];
 
-        // Sync with club_acc_members domain roster
-        $nameParts = explode(' ', trim($user->name), 2);
-        Member::firstOrCreate(
-            [
-                'club_id' => $club->id,
-                'email' => strtolower($user->email),
-            ],
-            [
-                'user_id' => $user->id,
-                'first_name' => $nameParts[0] ?? $user->name,
-                'last_name' => $nameParts[1] ?? '',
-                'title' => 'Bro',
-                'masonic_rank' => $validated['rank'] ?? 'Bro',
-                'membership_status' => MembershipStatus::Active,
-                'current_office' => LodgeOffice::Member,
-            ]
-        );
+        try {
+            $sent = DB::transaction(function () use ($club, $validated, $email, $sendInvite, $pivotDetails, $request, $invitations) {
+                $nameParts = explode(' ', trim($validated['name']), 2);
 
-        if ($sendInvite && $token) {
-            $acceptUrl = route('invitation.accept', ['slug' => $club->slug, 'token' => $token]);
-            try {
-                Mail::to($user->email)->send(new MemberInvitationMail($club, $user, $token, $acceptUrl));
+                $member = Member::where('club_id', $club->id)->whereNull('user_id')->whereRaw('lower(email) = ?', [$email])->first()
+                    ?? Member::create([
+                        'club_id' => $club->id,
+                        'email' => $email,
+                        'first_name' => $nameParts[0],
+                        'last_name' => $nameParts[1] ?? '',
+                        'masonic_rank' => $validated['rank'] ?? 'Bro',
+                        'membership_status' => MembershipStatus::Active,
+                        'current_office' => LodgeOffice::Member,
+                    ]);
 
-                return redirect()->back()->with('success', "Member added to roster & invitation email sent to {$user->email}.");
-            } catch (\Exception $e) {
-                return redirect()->back()->with('success', "Member added to roster. Invitation link: {$acceptUrl}");
-            }
+                if ($sendInvite) {
+                    $sent = $invitations->invite($member, $club, $request->user());
+                    $club->users()->updateExistingPivot($member->fresh()->user_id, $pivotDetails);
+
+                    return $sent;
+                }
+
+                $user = User::firstOrCreate(['email' => $email], ['name' => $validated['name'], 'password' => Hash::make(Str::random(16))]);
+                $club->users()->attach($user->id, $pivotDetails + ['status' => 'active']);
+                $member->forceFill(['user_id' => $user->id])->save();
+
+                return null;
+            });
+        } catch (MemberInvitationException $e) {
+            return redirect()->back()->with('error', $e->getMessage().'.');
         }
 
-        return redirect()->back()->with('success', 'Member added successfully to roster.');
+        if ($sent === null) {
+            return redirect()->back()->with('success', 'Member added successfully to roster.');
+        }
+
+        return redirect()->back()->with('success', $sent['emailed']
+            ? "Member added to roster & invitation email sent to {$email}."
+            : "Member added to roster. Invitation link: {$sent['url']}");
     }
 
     /**
      * Send or resend an email invitation to a member.
      */
-    public function sendInvite(Request $request, string $clubSlug, int $userId): RedirectResponse
+    public function sendInvite(Request $request, string $clubSlug, int $userId, MemberInvitationService $invitations): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $user = User::findOrFail($userId);
+        $user = $club->users()->where('users.id', $userId)->first();
 
-        $memberPivot = $user->clubs()->where('clubs.id', $club->id)->first()?->pivot;
-        if (! $memberPivot) {
+        if (! $user) {
             return redirect()->back()->with('error', 'User is not a member of this club.');
         }
 
-        $token = Str::random(40);
-
-        $club->users()->updateExistingPivot($userId, [
-            'invitation_token' => $token,
-            'invited_at' => now(),
-        ]);
-
-        $acceptUrl = route('invitation.accept', ['slug' => $club->slug, 'token' => $token]);
-
         try {
-            Mail::to($user->email)->send(new MemberInvitationMail($club, $user, $token, $acceptUrl));
-
-            return redirect()->back()->with('success', "Invitation email sent successfully to {$user->email}.");
-        } catch (\Exception $e) {
-            return redirect()->back()->with('success', "Invitation token created. Share activation link: {$acceptUrl}");
+            $member = $invitations->memberForUser($club, $user);
+            $sent = $member->accountStatus($club)->isInvitePending()
+                ? $invitations->resend($member, $club, $request->user())
+                : $invitations->invite($member, $club, $request->user());
+        } catch (MemberInvitationException $e) {
+            return redirect()->back()->with('error', $e->getMessage().'.');
         }
+
+        return redirect()->back()->with('success', $sent['emailed']
+            ? "Invitation email sent successfully to {$user->email}."
+            : "Invitation token created. Share activation link: {$sent['url']}");
     }
 
     /**
@@ -337,15 +334,12 @@ class UserAdminController extends Controller
     /**
      * Revoke an active invitation for a member.
      */
-    public function revokeInvite(string $clubSlug, int $userId): RedirectResponse
+    public function revokeInvite(string $clubSlug, int $userId, MemberInvitationService $invitations): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $user = $club->users()->where('users.id', $userId)->firstOrFail();
 
-        $club->users()->updateExistingPivot($userId, [
-            'invitation_token' => null,
-            'invited_at' => null,
-        ]);
+        $invitations->revoke($club, $user);
 
         return redirect()->back()->with('success', "Invitation revoked for {$user->name}.");
     }

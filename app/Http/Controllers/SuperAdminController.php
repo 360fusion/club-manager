@@ -8,15 +8,18 @@ use App\Models\ClubType;
 use App\Models\DefaultEmailTemplate;
 use App\Models\District;
 use App\Models\GrandLodge;
+use App\Models\MasonicHall;
 use App\Models\Meeting;
 use App\Models\Province;
 use App\Models\User;
 use App\Support\Currencies;
+use App\Support\MasonicRanks;
 use App\Support\OrderColours;
 use Database\Seeders\ClubTypeSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -282,6 +285,41 @@ class SuperAdminController extends Controller
         $grandLodge->update($validated);
 
         return redirect()->back()->with('success', "Grand Lodge '{$grandLodge->name}' updated successfully.");
+    }
+
+    /**
+     * The rank lists this Grand Lodge's lodges start from.
+     */
+    public function grandLodgeRanks(int $id): Response
+    {
+        $grandLodge = GrandLodge::withCount('clubs')->findOrFail($id);
+
+        return Inertia::render('SuperAdmin/GrandLodges/Ranks', [
+            'grandLodge' => $grandLodge->only(['id', 'name', 'short_name', 'clubs_count']),
+            'grandRanks' => $grandLodge->grand_ranks ?? [],
+            'provincialRanks' => $grandLodge->provincial_ranks ?? [],
+        ]);
+    }
+
+    public function updateGrandLodgeRanks(Request $request, int $id): RedirectResponse
+    {
+        $grandLodge = GrandLodge::findOrFail($id);
+
+        $validated = $request->validate([
+            'grand_ranks' => 'nullable|array|max:200',
+            'grand_ranks.*.abbreviation' => 'required|string|max:30|distinct:ignore_case',
+            'grand_ranks.*.title' => 'nullable|string|max:120',
+            'provincial_ranks' => 'nullable|array|max:200',
+            'provincial_ranks.*.abbreviation' => 'required|string|max:30|distinct:ignore_case',
+            'provincial_ranks.*.title' => 'nullable|string|max:120',
+        ]);
+
+        $grandLodge->update([
+            'grand_ranks' => MasonicRanks::clean($validated['grand_ranks'] ?? []),
+            'provincial_ranks' => MasonicRanks::clean($validated['provincial_ranks'] ?? []),
+        ]);
+
+        return redirect()->back()->with('success', "Rank lists saved for {$grandLodge->name}. Lodges that already have their own copy are not changed; new lodges, and lodges that reset, will use these.");
     }
 
     /**
@@ -557,6 +595,87 @@ class SuperAdminController extends Controller
         $district->delete();
 
         return redirect()->route('superadmin.districts.index')->with('success', "'{$name}' deleted.");
+    }
+
+    // ─── Masonic Halls ────────────────────────────────────────────────────────
+
+    /**
+     * List every masonic hall, with the number of lodges and other bodies that meet in it.
+     */
+    public function masonicHallsIndex(): Response
+    {
+        return Inertia::render('SuperAdmin/MasonicHalls/Index', [
+            'halls' => MasonicHall::with('province:id,name')->withCount('clubs')->orderBy('name')->get(),
+            'provinces' => Province::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    /**
+     * Add a masonic hall.
+     */
+    public function storeMasonicHall(Request $request): RedirectResponse
+    {
+        $validated = $this->validateMasonicHall($request);
+        $validated['slug'] = $this->uniqueMasonicHallSlug($validated['name']);
+
+        $hall = MasonicHall::create($validated);
+
+        return redirect()->route('superadmin.masonic_halls.index')->with('success', "'{$hall->name}' added.");
+    }
+
+    /**
+     * Update a masonic hall.
+     */
+    public function updateMasonicHall(Request $request, int $id): RedirectResponse
+    {
+        $hall = MasonicHall::findOrFail($id);
+        $hall->update($this->validateMasonicHall($request));
+
+        return redirect()->route('superadmin.masonic_halls.index')->with('success', "'{$hall->name}' updated.");
+    }
+
+    /**
+     * Delete a masonic hall. Lodges that met there are simply left without a hall.
+     */
+    public function destroyMasonicHall(int $id): RedirectResponse
+    {
+        $hall = MasonicHall::findOrFail($id);
+        $name = $hall->name;
+        $hall->delete();
+
+        return redirect()->route('superadmin.masonic_halls.index')->with('success', "'{$name}' deleted.");
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validateMasonicHall(Request $request): array
+    {
+        return $request->validate([
+            'province_id' => 'nullable|exists:provinces,id',
+            'name' => 'required|string|max:255',
+            'address_line_1' => 'nullable|string|max:255',
+            'address_line_2' => 'nullable|string|max:255',
+            'town' => 'nullable|string|max:100',
+            'county' => 'nullable|string|max:100',
+            'postcode' => 'nullable|string|max:30',
+            'country' => 'nullable|string|max:100',
+            'telephone' => 'nullable|string|max:50',
+            'email' => 'nullable|email|max:255',
+            'website_url' => ['nullable', 'url', 'max:255', 'regex:#^https?://#i'],
+        ]);
+    }
+
+    private function uniqueMasonicHallSlug(string $name): string
+    {
+        $base = Str::slug($name) ?: 'masonic-hall';
+        $slug = $base;
+
+        for ($i = 2; MasonicHall::where('slug', $slug)->exists(); $i++) {
+            $slug = $base.'-'.$i;
+        }
+
+        return $slug;
     }
 
     /**

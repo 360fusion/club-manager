@@ -25,6 +25,12 @@ class ProvinceSeeder extends Seeder
             ]
         );
 
+        // The starting rank lists go on once; a superadmin's edits are never overwritten by re-running the seeder.
+        $ugle->update([
+            'grand_ranks' => $ugle->grand_ranks ?? config('masonic_ranks.grand'),
+            'provincial_ranks' => $ugle->provincial_ranks ?? config('masonic_ranks.provincial'),
+        ]);
+
         $glos = GrandLodge::updateOrCreate(
             ['code' => 'glos'],
             [
@@ -227,5 +233,8 @@ class ProvinceSeeder extends Seeder
             $p['grand_lodge_id'] = $sglm->id;
             Province::updateOrCreate(['code' => $p['code']], $p);
         }
+
+        // 6. Masonic halls, linked to the provinces above.
+        $this->call(MasonicHallSeeder::class);
     }
 }

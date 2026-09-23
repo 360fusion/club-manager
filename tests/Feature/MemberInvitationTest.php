@@ -92,7 +92,7 @@ class MemberInvitationTest extends TestCase
 
     public function test_invited_member_can_set_password_and_activate_account(): void
     {
-        $user = User::factory()->create(['password' => Hash::make('temp-secret')]);
+        $user = User::factory()->unverified()->create(['password' => Hash::make('temp-secret')]);
         $token = 'test-token-activate-99';
 
         $this->club->users()->attach($user->id, [

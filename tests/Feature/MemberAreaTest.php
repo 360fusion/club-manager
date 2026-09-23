@@ -128,6 +128,18 @@ class MemberAreaTest extends TestCase
         $this->get('/members/events')->assertInertia(fn (Assert $page) => $page->has('events', 1)->where('events.0.title', 'Oxford dinner'));
     }
 
+    public function test_meetings_list_carries_the_members_reply_for_the_edit_popup(): void
+    {
+        $answered = $this->meeting($this->oxford, ['title' => 'Answered meeting', 'meeting_date' => now()->addDays(3)->toDateString()]);
+        $this->meeting($this->oxford, ['title' => 'Unanswered meeting', 'meeting_date' => now()->addDays(5)->toDateString()]);
+        MeetingRsvp::create(['meeting_id' => $answered->id, 'user_id' => $this->member->id, 'token_hash' => 'x', 'token_expires_at' => now()->addWeek(), 'attendance_status' => 'apologies', 'apology_reason' => 'Away', 'responded_at' => now()]);
+
+        $this->actingAs($this->member)->get('/members/meetings')->assertInertia(fn (Assert $page) => $page
+            ->where('meetings.0.rsvp.attendance_status', 'apologies')
+            ->where('meetings.0.rsvp.apology_reason', 'Away')
+            ->where('meetings.1.rsvp', null));
+    }
+
     public function test_news_items_carry_the_extra_detail_the_page_shows(): void
     {
         $post = $this->newsPost($this->oxford, 'Detailed news', Visibility::Public);

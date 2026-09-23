@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import CommunicationsTabs from '@/Components/CommunicationsTabs.vue';
+import { orderColour } from '@/Utils/orderColour';
 
 const props = defineProps({
   club: Object,
@@ -45,6 +46,9 @@ const deletePost = (postId) => {
             </div>
 
             <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ post.title }}</h3>
+            <div v-if="post.tags?.length" class="flex flex-wrap gap-1.5">
+              <span v-for="tag in post.tags" :key="tag.id" :class="['rounded-full px-2.5 py-0.5 text-[11px] font-bold', orderColour(tag.color).soft]">{{ tag.name }}</span>
+            </div>
             <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{{ post.excerpt || post.content }}</p>
           </div>
 

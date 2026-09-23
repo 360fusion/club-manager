@@ -9,6 +9,8 @@ use App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline;
 use App\Domains\ClubAccounting\Livewire\Committee\LiveMinuteTaker;
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingIndex;
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingWorkspace;
+use App\Domains\ClubAccounting\Livewire\Members\MemberFormPage;
+use App\Domains\ClubAccounting\Livewire\Members\MemberImportPage;
 use App\Domains\ClubAccounting\Livewire\Members\MemberIndex;
 use App\Domains\ClubAccounting\Livewire\Members\MemberProfile;
 use App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex;
@@ -53,6 +55,7 @@ use App\Http\Controllers\MemberSubscriptionsController;
 use App\Http\Controllers\NewsletterAdminController;
 use App\Http\Controllers\NewsletterPublicController;
 use App\Http\Controllers\NewsletterTypeAdminController;
+use App\Http\Controllers\NewsTagAdminController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficerRosterAdminController;
 use App\Http\Controllers\PageAdminController;
@@ -100,7 +103,7 @@ Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create']
 Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update')->middleware('throttle:auth-forms');
 
 // Member Email Invitation Setup Routes
-Route::get('/{slug}/invite/{token}', [InvitationController::class, 'showForm'])->name('invitation.accept');
+Route::get('/{slug}/invite/{token}', [InvitationController::class, 'showForm'])->name('invitation.accept')->middleware('throttle:auth-forms');
 Route::post('/{slug}/invite/{token}', [InvitationController::class, 'accept'])->name('invitation.submit')->middleware('throttle:auth-forms');
 
 // Passwordless Summons Email RSVP Routes
@@ -171,6 +174,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/clubs', [ClubController::class, 'myClubs'])->name('admin.clubs.index');
     Route::get('/{clubSlug}/admin/settings', [ClubSettingsController::class, 'show'])->name('admin.settings.show');
     Route::put('/{clubSlug}/admin/settings', [ClubSettingsController::class, 'update'])->name('admin.settings.update');
+    Route::post('/{clubSlug}/admin/settings/ranks/reset', [ClubSettingsController::class, 'resetRanks'])->name('admin.settings.ranks.reset');
+    Route::post('/{clubSlug}/admin/settings/news-tags', [NewsTagAdminController::class, 'store'])->name('admin.settings.news_tags.store');
+    Route::put('/{clubSlug}/admin/settings/news-tags/{id}', [NewsTagAdminController::class, 'update'])->name('admin.settings.news_tags.update');
+    Route::delete('/{clubSlug}/admin/settings/news-tags/{id}', [NewsTagAdminController::class, 'destroy'])->name('admin.settings.news_tags.destroy');
     Route::post('/{slug}/domain', [ClubController::class, 'updateDomain'])->name('clubs.domain.update')->middleware('club.admin:manage_settings');
 
     // Central Spatie Media Library Routes
@@ -196,7 +203,6 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/{clubSlug}/admin/media/{id}', [MediaAdminController::class, 'destroy'])->name('admin.media.destroy');
 
     // CSV Member Import & Export Routes
-    Route::post('/{slug}/members/import', [MemberImportExportController::class, 'import'])->name('clubs.members.import')->middleware('club.admin:manage_members');
     Route::get('/{slug}/members/export', [MemberImportExportController::class, 'export'])->name('clubs.members.export')->middleware('club.admin:manage_members');
 
     // Executive Analytics Route
@@ -438,6 +444,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Core Member Management, Dues & Banking Domain Routes
     Route::get('/{clubSlug}/admin/members', MemberIndex::class)->name('admin.club_acc.members.index');
+    Route::get('/{clubSlug}/admin/members/import', MemberImportPage::class)->name('admin.club_acc.members.import');
+    Route::get('/{clubSlug}/admin/members/create', MemberFormPage::class)->name('admin.club_acc.members.create');
+    Route::get('/{clubSlug}/admin/members/{memberId}/edit', MemberFormPage::class)->whereNumber('memberId')->name('admin.club_acc.members.edit');
     Route::get('/{clubSlug}/admin/members/{memberId}', MemberProfile::class)->name('admin.club_acc.members.show');
     Route::get('/{clubSlug}/admin/candidates', CandidatePipeline::class)->name('admin.club_acc.candidates.index');
     Route::get('/{clubSlug}/admin/candidates/{candidateId}', CandidateDetail::class)->whereNumber('candidateId')->name('admin.club_acc.candidates.show');
@@ -561,6 +570,8 @@ Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
     Route::get('/superadmin/grand-lodges', [SuperAdminController::class, 'grandLodgesIndex'])->name('superadmin.grand_lodges.index');
     Route::post('/superadmin/grand-lodges', [SuperAdminController::class, 'storeGrandLodge'])->name('superadmin.grand_lodges.store');
     Route::put('/superadmin/grand-lodges/{id}', [SuperAdminController::class, 'updateGrandLodge'])->name('superadmin.grand_lodges.update');
+    Route::get('/superadmin/grand-lodges/{id}/ranks', [SuperAdminController::class, 'grandLodgeRanks'])->name('superadmin.grand_lodges.ranks');
+    Route::put('/superadmin/grand-lodges/{id}/ranks', [SuperAdminController::class, 'updateGrandLodgeRanks'])->name('superadmin.grand_lodges.ranks.update');
     Route::delete('/superadmin/grand-lodges/{id}', [SuperAdminController::class, 'destroyGrandLodge'])->name('superadmin.grand_lodges.destroy');
     Route::get('/superadmin/provinces', [SuperAdminController::class, 'provincesIndex'])->name('superadmin.provinces.index');
     Route::get('/superadmin/provinces/{id}', [SuperAdminController::class, 'showProvince'])->name('superadmin.provinces.show');
@@ -576,6 +587,12 @@ Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
     Route::post('/superadmin/districts', [SuperAdminController::class, 'storeDistrict'])->name('superadmin.districts.store');
     Route::put('/superadmin/districts/{id}', [SuperAdminController::class, 'updateDistrict'])->name('superadmin.districts.update');
     Route::delete('/superadmin/districts/{id}', [SuperAdminController::class, 'destroyDistrict'])->name('superadmin.districts.destroy');
+
+    // Masonic halls
+    Route::get('/superadmin/masonic-halls', [SuperAdminController::class, 'masonicHallsIndex'])->name('superadmin.masonic_halls.index');
+    Route::post('/superadmin/masonic-halls', [SuperAdminController::class, 'storeMasonicHall'])->name('superadmin.masonic_halls.store');
+    Route::put('/superadmin/masonic-halls/{id}', [SuperAdminController::class, 'updateMasonicHall'])->name('superadmin.masonic_halls.update');
+    Route::delete('/superadmin/masonic-halls/{id}', [SuperAdminController::class, 'destroyMasonicHall'])->name('superadmin.masonic_halls.destroy');
 
     Route::get('/superadmin/australian-grand-lodges', [SuperAdminController::class, 'australianGrandLodges'])->name('superadmin.australian_grand_lodges');
     Route::get('/superadmin/us-grand-lodges', [SuperAdminController::class, 'usGrandLodges'])->name('superadmin.us_grand_lodges');

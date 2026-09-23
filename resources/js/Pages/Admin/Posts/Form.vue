@@ -5,11 +5,13 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
 import Select from '@/Components/Ui/Select.vue';
+import { orderColour } from '@/Utils/orderColour';
 
 const props = defineProps({
   club: Object,
   post: Object,
   visibilityOptions: { type: Array, default: () => [] },
+  tags: { type: Array, default: () => [] },
 });
 
 const existingAttachments = ref([...(props.post.attachments || [])]);
@@ -83,6 +85,7 @@ const form = useForm({
   visibility: props.post.visibility || 'club',
   published_at: props.post.published_at || '',
   expires_at: props.post.expires_at || '',
+  tag_ids: [...(props.post.tag_ids || [])],
   action_type: 'save',
   blocks: blocks.value,
   existing_attachments: existingAttachments.value,
@@ -92,6 +95,10 @@ const form = useForm({
 watch(isPublished, (val) => {
   form.status = val ? 'published' : 'draft';
 });
+
+const toggleTag = (id) => {
+  form.tag_ids = form.tag_ids.includes(id) ? form.tag_ids.filter((t) => t !== id) : [...form.tag_ids, id];
+};
 
 const visibilityHint = computed(() => props.visibilityOptions.find((o) => o.value === form.visibility)?.description ?? '');
 
@@ -368,7 +375,7 @@ const submitWithAction = (actionType) => {
 <template>
   <AdminLayout :title="`${post.id ? 'Edit' : 'Create'} Post`" :club="club" active-tab="posts">
     
-    <div class="max-w-4xl mx-auto space-y-6">
+    <div class="max-w-6xl mx-auto space-y-6">
       
       <!-- Top Action Bar -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
@@ -424,6 +431,33 @@ const submitWithAction = (actionType) => {
           <div>
             <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Teaser Excerpt</label>
             <input v-model="form.excerpt" type="text" placeholder="Short summary for member portal dashboard and newsletters..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
+          </div>
+
+          <!-- Tags: chosen from the list an admin keeps under Settings -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Tags</label>
+            <div v-if="tags.length" class="flex flex-wrap gap-2" role="group" aria-label="Tags">
+              <button
+                v-for="tag in tags"
+                :key="tag.id"
+                type="button"
+                :aria-pressed="form.tag_ids.includes(tag.id)"
+                :class="[
+                  'rounded-full px-3 py-1.5 text-xs font-bold border-2 transition cursor-pointer',
+                  form.tag_ids.includes(tag.id)
+                    ? [orderColour(tag.color).soft, 'border-current']
+                    : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
+                ]"
+                @click="toggleTag(tag.id)"
+              >
+                <span v-if="form.tag_ids.includes(tag.id)" aria-hidden="true">✓ </span>{{ tag.name }}
+              </button>
+            </div>
+            <p v-else class="text-xs text-slate-500 dark:text-slate-400">
+              No tags exist yet. An admin can add them in
+              <Link :href="`${route('admin.settings.show', { clubSlug: club.slug })}?tab=news-tags`" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Settings</Link>.
+            </p>
+            <p v-if="form.errors.tag_ids || form.errors['tag_ids.0']" class="mt-1 text-xs font-semibold text-red-600">{{ form.errors.tag_ids || form.errors['tag_ids.0'] }}</p>
           </div>
 
           <!-- Cover Image Upload & URL -->

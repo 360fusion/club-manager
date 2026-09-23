@@ -1,0 +1,6 @@
+province_code,slug,name,address_line_1,address_line_2,town,county,postcode,country,telephone,email,website_url,source_url
+london_metropolitan,freemasons-hall-london,Freemasons' Hall,60 Great Queen Street,,London,,WC2B 5AZ,England,,,https://www.ugle.org.uk,"https://en.wikipedia.org/wiki/Freemasons%27_Hall,_London"
+london_metropolitan,mark-masons-hall-london,Mark Masons' Hall,86 St James's Street,,London,,SW1A 1PL,England,,,,"https://en.wikipedia.org/wiki/Mark_Masons%27_Hall,_London"
+bristol,freemasons-hall-bristol,Freemasons' Hall Bristol,31 Park Street,,Bristol,,BS1 5NH,England,,,,"https://en.wikipedia.org/wiki/Freemasons%27_Hall,_Bristol"
+,freemasons-hall-edinburgh,Freemasons' Hall Edinburgh,96 George Street,,Edinburgh,,EH2 3DH,Scotland,,,,
+pgl_dublin,freemasons-hall-dublin,Freemasons' Hall Dublin,17 Molesworth Street,,Dublin,Dublin 2,,Ireland,,,,

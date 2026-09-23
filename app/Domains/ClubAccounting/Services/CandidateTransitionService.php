@@ -378,7 +378,6 @@ class CandidateTransitionService
 
             $member = Member::create([
                 'club_id' => $candidate->club_id,
-                'title' => 'Bro',
                 'first_name' => $candidate->first_name,
                 'last_name' => $candidate->last_name,
                 'email' => $candidate->email,

@@ -1,4 +1,6 @@
 <div class="space-y-8">
+    @include('livewire.members._notice')
+
     <!-- Header Card -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
@@ -91,16 +93,6 @@
                 <div class="space-y-3">
                     <h4 class="text-[11px] font-black uppercase tracking-wider text-slate-400">Personal &amp; Preferred Name Details</h4>
                     <div class="flex flex-col md:flex-row gap-3 min-w-0">
-                        <div class="w-full md:w-36 shrink-0 min-w-0">
-                            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1 truncate">Title</label>
-                            <select wire:model="title" class="w-full px-2.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 cursor-pointer">
-                                <option value="Bro">Bro (Brother)</option>
-                                <option value="WBro">WBro (Worshipful Brother)</option>
-                                <option value="VWBro">VWBro (Very Worshipful Brother)</option>
-                                <option value="RWBro">RWBro (Right Worshipful Brother)</option>
-                                <option value="MWBro">MWBro (Most Worshipful Brother)</option>
-                            </select>
-                        </div>
                         <div class="w-full md:flex-1 min-w-0">
                             <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1 truncate">First Name *</label>
                             <input type="text" wire:model="first_name" class="w-full px-2.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900" required />
@@ -170,20 +162,28 @@
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Masonic Rank *</label>
                             <select wire:model="masonic_rank" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold cursor-pointer focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900">
-                                <option value="Bro">Bro (Brother)</option>
-                                <option value="WBro">WBro (Worshipful Brother)</option>
-                                <option value="VWBro">VWBro (Very Worshipful Brother)</option>
-                                <option value="RWBro">RWBro (Right Worshipful Brother)</option>
-                                <option value="MWBro">MWBro (Most Worshipful Brother)</option>
+                                @foreach($ranks as $rankValue => $rankLabel)
+                                    <option value="{{ $rankValue }}">{{ $rankLabel }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Grand Rank</label>
-                            <input type="text" wire:model="grand_rank" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900" placeholder="e.g. PJGD" />
+                            <select wire:model="grand_rank" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 cursor-pointer">
+                                <option value="">None</option>
+                                @foreach($grandRanks as $rank)
+                                    <option value="{{ $rank['value'] }}">{{ $rank['label'] }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Provincial Rank</label>
-                            <input type="text" wire:model="provincial_rank" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900" placeholder="e.g. PPrGReg" />
+                            <select wire:model="provincial_rank" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 cursor-pointer">
+                                <option value="">None</option>
+                                @foreach($provincialRanks as $rank)
+                                    <option value="{{ $rank['value'] }}">{{ $rank['label'] }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Membership Status</label>
@@ -394,6 +394,55 @@
                             Active Office
                         </span>
                     </div>
+                </div>
+
+                <!-- Portal Account Card -->
+                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-3">
+                    <h3 class="text-sm font-black text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2">
+                        <span>🔑</span>
+                        <span>Portal Account</span>
+                    </h3>
+
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $account->badgeClass() }}">{{ $account->label() }}</span>
+                        @if($member->user)
+                            <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ $member->user->email }}</span>
+                        @endif
+                    </div>
+
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5">
+                        @if($account === \App\Domains\ClubAccounting\Enums\MemberAccountStatus::NotInvited)
+                            <p>{{ $member->email ? 'Not yet invited to set up an online account.' : 'Add an email address to invite this member.' }}</p>
+                        @elseif($account->isInvitePending() && $accountPivot?->invited_at)
+                            <p>Invited {{ \Illuminate\Support\Carbon::parse($accountPivot->invited_at)->format('j M Y') }}@if($accountInviter) by {{ $accountInviter->name }}@endif.</p>
+                            @if($accountExpiresAt)
+                                <p>{{ $account === \App\Domains\ClubAccounting\Enums\MemberAccountStatus::InviteExpired ? 'The link expired on' : 'The link works until' }} {{ $accountExpiresAt->format('j M Y') }}.</p>
+                            @endif
+                            @if($accountPivot->invitation_reminded_at)
+                                <p>Reminder sent {{ \Illuminate\Support\Carbon::parse($accountPivot->invitation_reminded_at)->format('j M Y') }}.</p>
+                            @endif
+                        @elseif($account === \App\Domains\ClubAccounting\Enums\MemberAccountStatus::AwaitingApproval)
+                            <p>This person asked to join and is waiting for approval on the Users page.</p>
+                        @elseif($account === \App\Domains\ClubAccounting\Enums\MemberAccountStatus::HasAccount)
+                            <p>@if($accountPivot?->invitation_accepted_at)Accepted {{ \Illuminate\Support\Carbon::parse($accountPivot->invitation_accepted_at)->format('j M Y') }}.@else Signed up with a verified email.@endif</p>
+                        @elseif($account === \App\Domains\ClubAccounting\Enums\MemberAccountStatus::Deactivated)
+                            <p>Portal access has been switched off. Inviting again will restore it.</p>
+                        @endif
+                    </div>
+
+                    @if($canInvite)
+                        <div class="flex flex-wrap items-center gap-2 pt-1">
+                            @if($account->canInvite() && $member->email && $member->membership_status->isSubscribing())
+                                <button type="button" wire:click="inviteToPortal" wire:loading.attr="disabled" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition cursor-pointer disabled:opacity-60">Invite to portal</button>
+                            @elseif($account->isInvitePending())
+                                <button type="button" wire:click="resendPortalInvite" wire:loading.attr="disabled" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition cursor-pointer disabled:opacity-60">Resend invitation</button>
+                                <button type="button" wire:click="revokePortalInvite" wire:confirm="Withdraw this invitation? The link in their email will stop working." class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs hover:text-rose-600 dark:hover:text-rose-400 transition cursor-pointer">Revoke</button>
+                            @endif
+                            @if($member->user_id)
+                                <a href="{{ route('admin.users.show', ['clubSlug' => $club->slug, 'userId' => $member->user_id]) }}" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Manage on Users page</a>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Accounting Ledger Bridge Card -->

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Domains\ClubAccounting\Services\MemberInvitationService;
 use App\Http\Controllers\Controller;
 use App\Models\Club;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +16,8 @@ use Inertia\Response;
 
 class InvitationController extends Controller
 {
+    public function __construct(private MemberInvitationService $invitations) {}
+
     /**
      * Show account activation & password creation form for invited member.
      */
@@ -23,16 +25,15 @@ class InvitationController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
-        $user = $club->users()
-            ->where('club_user.invitation_token', $token)
-            ->first();
+        $user = $this->invitations->userForToken($club, $token);
 
         if (! $user) {
             return redirect()->route('login')->with('error', 'Invitation link is invalid or has already been used.');
         }
 
-        $expiryDays = (int) ($club->settings['invite_expiration_days'] ?? 14);
-        if ($user->pivot->invited_at && Carbon::parse($user->pivot->invited_at)->addDays($expiryDays)->isPast()) {
+        if ($this->invitations->isExpired($club, $user->pivot)) {
+            $expiryDays = $club->inviteExpirationDays();
+
             return redirect()->route('login')->with('error', "This invitation link expired after {$expiryDays} days. Please request a new invitation from your club administrator.");
         }
 
@@ -43,12 +44,13 @@ class InvitationController extends Controller
                 'invitation_token' => null,
                 'status' => 'active',
             ]);
+            $this->invitations->linkMatchingMember($club, $user);
 
             return redirect()->route('member.dashboard', ['slug' => $club->slug])
                 ->with('success', "Welcome to {$club->name}! You now have access to your new club portal.");
         }
 
-        $isExistingUser = ! empty($user->password) && $user->clubs()->wherePivotNotNull('invitation_accepted_at')->exists();
+        $isExistingUser = $this->isExistingAccount($user);
 
         return Inertia::render('Auth/AcceptInvitation', [
             'club' => [
@@ -74,20 +76,19 @@ class InvitationController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
-        $user = $club->users()
-            ->where('club_user.invitation_token', $token)
-            ->first();
+        $user = $this->invitations->userForToken($club, $token);
 
         if (! $user) {
             return redirect()->route('login')->with('error', 'Invitation link is invalid or has already been used.');
         }
 
-        $expiryDays = (int) ($club->settings['invite_expiration_days'] ?? 14);
-        if ($user->pivot->invited_at && Carbon::parse($user->pivot->invited_at)->addDays($expiryDays)->isPast()) {
+        if ($this->invitations->isExpired($club, $user->pivot)) {
+            $expiryDays = $club->inviteExpirationDays();
+
             return redirect()->route('login')->with('error', "This invitation link expired after {$expiryDays} days. Please request a new invitation from your club administrator.");
         }
 
-        $isExistingUser = ! empty($user->password) && $user->clubs()->wherePivotNotNull('invitation_accepted_at')->exists();
+        $isExistingUser = $this->isExistingAccount($user);
 
         if ($isExistingUser) {
             $request->validate([
@@ -116,9 +117,20 @@ class InvitationController extends Controller
             $user->markEmailAsVerified();
         }
 
+        $this->invitations->linkMatchingMember($club, $user);
+
         Auth::login($user);
 
         return redirect()->route('member.dashboard', ['slug' => $club->slug])
             ->with('success', "Welcome to {$club->name}! Your access has been confirmed.");
+    }
+
+    /**
+     * Whether the person already has a real account of their own (so they confirm their password instead of setting one).
+     * A user created by an invitation has a random password and an unverified email, so it counts as new.
+     */
+    private function isExistingAccount(User $user): bool
+    {
+        return $user->hasVerifiedEmail() || $user->clubs()->wherePivotNotNull('invitation_accepted_at')->exists();
     }
 }

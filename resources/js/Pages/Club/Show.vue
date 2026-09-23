@@ -14,10 +14,6 @@ const domainForm = useForm({
     custom_domain: props.club.custom_domain || '',
 });
 
-const importForm = useForm({
-    csv_file: null,
-});
-
 // RSVP Form with Eventbrite Ticketing & Promo
 const rsvpForm = ref({
     attendance_status: 'attending',
@@ -84,14 +80,6 @@ const saveDomain = () => {
     domainForm.post(`/${props.club.slug}/domain`, {
         preserveScroll: true,
     });
-};
-
-const handleImport = () => {
-    if (importForm.csv_file) {
-        importForm.post(`/${props.club.slug}/members/import`, {
-            preserveScroll: true,
-        });
-    }
 };
 
 const getIcon = (typeCode) => {

@@ -25,7 +25,7 @@ class PostAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $posts = Post::where('club_id', $club->id)
-            ->with('author')
+            ->with(['author', 'tags:id,name,slug,color'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -81,6 +81,7 @@ class PostAdminController extends Controller
             ]);
 
         $postArray = $post->toArray();
+        $postArray['tag_ids'] = $post->exists ? $post->tags()->pluck('news_tags.id')->all() : [];
         $publishedAt = $post->published_at ?? ($post->created_at ?? Carbon::now());
         $postArray['published_at'] = $publishedAt ? $publishedAt->format('Y-m-d\TH:i') : Carbon::now()->format('Y-m-d\TH:i');
         $postArray['expires_at'] = $post->expires_at ? $post->expires_at->format('Y-m-d\TH:i') : null;
@@ -88,6 +89,7 @@ class PostAdminController extends Controller
         return Inertia::render('Admin/Posts/Form', [
             'club' => $club,
             'post' => $postArray,
+            'tags' => $club->newsTags()->orderBy('name')->get(['id', 'name', 'color']),
             'visibilityOptions' => Visibility::options(),
         ]);
     }
@@ -116,6 +118,8 @@ class PostAdminController extends Controller
             'existing_attachments' => 'nullable|array|max:50',
             'new_attachments.*' => UploadRules::attachment(10240),
             'action_type' => 'nullable|string|max:50',
+            'tag_ids' => 'nullable|array|max:20',
+            'tag_ids.*' => ['integer', Rule::exists('news_tags', 'id')->where('club_id', $club->id)],
         ]);
 
         // Checked separately: rules on nested block keys would make validated() drop the rest of each block.
@@ -259,6 +263,9 @@ class PostAdminController extends Controller
             ]
         );
 
+        // Only tags of this club can be chosen. Tags are made and removed under Settings.
+        $post->tags()->sync($validated['tag_ids'] ?? []);
+
         if ($post->status === 'published' && ! $wasLive && ($post->published_at === null || $post->published_at->lte(now()))) {
             app(ClubNotifier::class)->toMembers($club, ClubNotification::news($post, $club), $user);
         }
@@ -275,6 +282,7 @@ class PostAdminController extends Controller
             $duplicate->title = $post->title.' (Copy)';
             $duplicate->slug = $post->slug.'-copy-'.time();
             $duplicate->save();
+            $duplicate->tags()->sync($post->tags()->pluck('news_tags.id')->all());
 
             return redirect()->route('admin.posts.edit', ['clubSlug' => $club->slug, 'id' => $duplicate->id])
                 ->with('success', 'Article saved and duplicated successfully.');

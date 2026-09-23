@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\Currencies;
+use App\Support\MasonicRanks;
 use App\Support\OrderColours;
 use App\Support\ReservedClubSlugs;
 use App\Support\SiteThemes;
@@ -59,6 +60,7 @@ class Club extends Model implements HasMedia
     protected $fillable = [
         'club_type_id',
         'province_id',
+        'masonic_hall_id',
         'name',
         'slug',
         'email',
@@ -102,6 +104,8 @@ class Club extends Model implements HasMedia
 
         static::created(function (Club $club) {
             $club->ensureDefaultPages();
+            NewsTag::ensureDefaults($club);
+            MasonicRanks::seedClub($club);
         });
 
         // A summons stores the club name as it was when the meeting was created, so a lodge that
@@ -328,12 +332,22 @@ class Club extends Model implements HasMedia
     }
 
     /**
+     * The masonic hall this lodge or chapter meets in.
+     *
+     * @return BelongsTo<MasonicHall, $this>
+     */
+    public function masonicHall(): BelongsTo
+    {
+        return $this->belongsTo(MasonicHall::class);
+    }
+
+    /**
      * @return BelongsToMany<User, $this>
      */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
-            ->withPivot(['role', 'rank', 'committee_role', 'member_number', 'status', 'phone', 'emergency_contact', 'dietary_notes', 'invitation_token', 'invited_at', 'invitation_accepted_at'])
+            ->withPivot(['role', 'rank', 'committee_role', 'member_number', 'status', 'phone', 'emergency_contact', 'dietary_notes', 'invitation_token', 'invited_at', 'invitation_accepted_at', 'invitation_reminded_at', 'invited_by'])
             ->withTimestamps();
     }
 
@@ -367,6 +381,14 @@ class Club extends Model implements HasMedia
     public function newsletters(): HasMany
     {
         return $this->hasMany(Newsletter::class);
+    }
+
+    /**
+     * @return HasMany<NewsTag, $this>
+     */
+    public function newsTags(): HasMany
+    {
+        return $this->hasMany(NewsTag::class);
     }
 
     /**
@@ -508,6 +530,22 @@ class Club extends Model implements HasMedia
         }
 
         return round($bytes / 1024, 1).' KB';
+    }
+
+    /**
+     * How long an emailed account invitation stays valid.
+     */
+    public function inviteExpirationDays(): int
+    {
+        return max(1, (int) ($this->settings['invite_expiration_days'] ?? 14));
+    }
+
+    /**
+     * Days after which an unanswered invitation gets one reminder; 0 switches reminders off.
+     */
+    public function inviteReminderDays(): int
+    {
+        return max(0, (int) ($this->settings['invite_reminder_days'] ?? 7));
     }
 
     /**

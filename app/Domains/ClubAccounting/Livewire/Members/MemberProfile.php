@@ -4,14 +4,24 @@ namespace App\Domains\ClubAccounting\Livewire\Members;
 
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Enums\MembershipStatus;
+use App\Domains\ClubAccounting\Livewire\Concerns\ShowsNotice;
 use App\Domains\ClubAccounting\Models\Member;
+use App\Domains\ClubAccounting\Services\MemberInvitationException;
+use App\Domains\ClubAccounting\Services\MemberInvitationService;
 use App\Models\Accounting\AccountingContact;
 use App\Models\Club;
+use App\Models\User;
+use App\Support\ClubAccess;
+use App\Support\MasonicRanks;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class MemberProfile extends Component
 {
+    use ShowsNotice;
+
     #[Locked]
     public string $clubSlug;
 
@@ -22,8 +32,6 @@ class MemberProfile extends Component
 
     // Quick Edit fields
     public bool $isEditing = false;
-
-    public string $title = '';
 
     public string $first_name = '';
 
@@ -86,15 +94,6 @@ class MemberProfile extends Component
     {
         $member = $this->getMember();
 
-        $rawTitle = $member->title ?: 'Bro';
-        $titleMap = [
-            'Bro.' => 'Bro',
-            'W. Bro.' => 'WBro',
-            'V. W. Bro.' => 'VWBro',
-            'R. W. Bro.' => 'RWBro',
-            'M. W. Bro.' => 'MWBro',
-        ];
-        $this->title = $titleMap[$rawTitle] ?? $rawTitle;
         $this->first_name = $member->first_name;
         $this->middle_names = $member->middle_names ?? '';
         $this->last_name = $member->last_name;
@@ -132,6 +131,8 @@ class MemberProfile extends Component
 
     public function updateProfile(): void
     {
+        $stored = $this->getMember();
+
         $this->validate([
             'first_name' => 'required|string|max:100',
             'middle_names' => 'nullable|string|max:150',
@@ -145,7 +146,9 @@ class MemberProfile extends Component
             'county' => 'nullable|string|max:100',
             'postcode' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
-            'masonic_rank' => 'required|string|max:50',
+            'masonic_rank' => 'required|in:'.implode(',', array_keys(Member::MASONIC_RANKS)),
+            'grand_rank' => ['nullable', 'string', 'max:255', Rule::in(MasonicRanks::allowedValues($stored->club, MasonicRanks::GRAND, $stored->grand_rank))],
+            'provincial_rank' => ['nullable', 'string', 'max:255', Rule::in(MasonicRanks::allowedValues($stored->club, MasonicRanks::PROVINCIAL, $stored->provincial_rank))],
             'membership_status' => 'required|string|max:50',
             'current_office' => 'nullable|string|max:50',
             'date_of_initiation' => 'nullable|date',
@@ -157,7 +160,6 @@ class MemberProfile extends Component
         $member = $this->getMember();
 
         $member->update([
-            'title' => $this->title,
             'first_name' => $this->first_name,
             'middle_names' => $this->middle_names ?: null,
             'last_name' => $this->last_name,
@@ -228,7 +230,7 @@ class MemberProfile extends Component
         }
 
         $this->isEditing = false;
-        session()->flash('success', "Updated profile for {$member->formatted_rank_name}.");
+        $this->notify("Updated profile for {$member->formatted_rank_name}.");
     }
 
     public function archiveMember(): void
@@ -236,7 +238,7 @@ class MemberProfile extends Component
         $member = $this->getMember();
         $member->update(['membership_status' => MembershipStatus::Resigned]);
         $this->membership_status = MembershipStatus::Resigned->value;
-        session()->flash('success', "{$member->formatted_rank_name} marked as Resigned / Archived.");
+        $this->notify("{$member->formatted_rank_name} marked as Resigned / Archived.");
     }
 
     public function deleteMember()
@@ -248,6 +250,47 @@ class MemberProfile extends Component
         session()->flash('success', "Member {$name} removed from roster.");
 
         return redirect()->route('admin.club_acc.members.index', ['clubSlug' => $this->clubSlug]);
+    }
+
+    public function inviteToPortal(MemberInvitationService $invitations): void
+    {
+        $member = $this->getMember();
+        $club = $member->club;
+        ClubAccess::authorize(auth()->user(), $club, 'manage_members');
+
+        try {
+            $sent = $invitations->invite($member, $club, auth()->user());
+            $this->notify($sent['emailed'] ? "Invitation emailed to {$member->email}." : "Email could not be sent. Share this link: {$sent['url']}");
+        } catch (MemberInvitationException $e) {
+            $this->notify($e->getMessage().'.', 'error');
+        }
+    }
+
+    public function resendPortalInvite(MemberInvitationService $invitations): void
+    {
+        $member = $this->getMember();
+        $club = $member->club;
+        ClubAccess::authorize(auth()->user(), $club, 'manage_members');
+
+        try {
+            $sent = $invitations->resend($member, $club, auth()->user());
+            $this->notify($sent['emailed'] ? "Invitation sent again to {$member->email}." : "Invitation renewed. Share this link: {$sent['url']}");
+        } catch (MemberInvitationException $e) {
+            $this->notify($e->getMessage(), 'error');
+        }
+    }
+
+    public function revokePortalInvite(MemberInvitationService $invitations): void
+    {
+        $member = $this->getMember();
+        $club = $member->club;
+        ClubAccess::authorize(auth()->user(), $club, 'manage_members');
+
+        if ($member->user) {
+            $invitations->revoke($club, $member->user);
+        }
+
+        $this->notify('Invitation withdrawn.');
     }
 
     public function getMember(): Member
@@ -267,10 +310,21 @@ class MemberProfile extends Component
 
         $accountingContacts = AccountingContact::where('club_id', $club->id)->get();
 
+        $invitations = app(MemberInvitationService::class);
+        $accountPivot = $invitations->pivotFor($member, $club);
+
         return view('livewire.members.member-profile', [
             'club' => $club,
             'member' => $member,
+            'account' => $member->accountStatus($club),
+            'accountPivot' => $accountPivot,
+            'accountInviter' => $accountPivot?->invited_by ? User::find($accountPivot->invited_by) : null,
+            'accountExpiresAt' => $accountPivot?->invited_at ? Carbon::parse($accountPivot->invited_at)->addDays($club->inviteExpirationDays()) : null,
+            'canInvite' => ClubAccess::can(auth()->user(), $club, 'manage_members'),
             'accountingContacts' => $accountingContacts,
+            'ranks' => Member::MASONIC_RANKS,
+            'grandRanks' => MasonicRanks::optionsFor($club, MasonicRanks::GRAND, $member->grand_rank),
+            'provincialRanks' => MasonicRanks::optionsFor($club, MasonicRanks::PROVINCIAL, $member->provincial_rank),
             'offices' => LodgeOffice::cases(),
             'statuses' => MembershipStatus::cases(),
         ])->layout('components.layouts.app', [

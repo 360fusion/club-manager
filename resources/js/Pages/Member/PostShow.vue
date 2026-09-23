@@ -1,12 +1,19 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
+import NewsTagPill from '@/Components/NewsTagPill.vue';
 
 const props = defineProps({
   club: Object,
   memberRole: String,
   post: Object,
+  tagOptions: { type: Array, default: () => [] },
+  latest: { type: Array, default: () => [] },
+  related: { type: Array, default: () => [] },
 });
+
+const shortDate = (iso) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const postUrl = (id) => route('member.posts.show', { slug: props.club.slug, id });
 
 const getFileIcon = (mimeOrName) => {
   const name = (mimeOrName || '').toLowerCase();
@@ -23,7 +30,7 @@ const getFileIcon = (mimeOrName) => {
   <MembersLayout title="News Article" :club="club" :member-role="memberRole">
     <Head :title="`${post.title} - ${club.name}`" />
 
-    <div class="max-w-3xl mx-auto space-y-6">
+    <div class="max-w-6xl mx-auto space-y-6">
       <!-- Back Link -->
       <div>
         <Link
@@ -34,6 +41,7 @@ const getFileIcon = (mimeOrName) => {
         </Link>
       </div>
 
+      <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <!-- Article Card -->
       <article class="bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
         
@@ -52,6 +60,10 @@ const getFileIcon = (mimeOrName) => {
           <h1 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-tight">
             {{ post.title }}
           </h1>
+
+          <div v-if="post.tags?.length" class="flex flex-wrap gap-1.5">
+            <NewsTagPill v-for="tag in post.tags" :key="tag.slug" :tag="tag" :club-slug="club.slug" />
+          </div>
 
           <p v-if="post.excerpt" class="text-sm font-medium text-slate-600 dark:text-slate-300 italic border-l-4 border-blue-500 pl-3 py-1 bg-slate-50 dark:bg-slate-800/50 rounded-r-xl">
             {{ post.excerpt }}
@@ -188,6 +200,38 @@ const getFileIcon = (mimeOrName) => {
         </div>
 
       </article>
+
+      <!-- Right-hand menu: tags, latest and related news -->
+      <aside class="space-y-4 lg:sticky lg:top-6" aria-label="More news">
+        <section v-if="tagOptions.length" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
+          <h2 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">Browse by tag</h2>
+          <div class="flex flex-wrap gap-1.5">
+            <NewsTagPill v-for="tag in tagOptions" :key="tag.slug" :tag="tag" :club-slug="club.slug" :count="tag.count" :active="post.tags?.some((t) => t.slug === tag.slug)" />
+          </div>
+        </section>
+
+        <section v-if="related.length" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
+          <h2 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">Related news</h2>
+          <ul class="space-y-3">
+            <li v-for="item in related" :key="item.id">
+              <Link :href="postUrl(item.id)" class="block text-sm font-semibold leading-snug text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ item.title }}</Link>
+              <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ shortDate(item.at) }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section v-if="latest.length" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
+          <h2 class="mb-3 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">Latest news</h2>
+          <ul class="space-y-3">
+            <li v-for="item in latest" :key="item.id">
+              <Link :href="postUrl(item.id)" class="block text-sm font-semibold leading-snug text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ item.title }}</Link>
+              <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ shortDate(item.at) }}</span>
+            </li>
+          </ul>
+          <Link :href="route('member.news', { slug: club.slug })" class="mt-4 inline-block text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400">All news →</Link>
+        </section>
+      </aside>
+      </div>
 
     </div>
   </MembersLayout>

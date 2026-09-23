@@ -6,11 +6,14 @@ use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Models\Invoice;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Models\NewsTag;
 use App\Models\Post;
 use App\Services\MemberCalendar;
 use App\Support\MemberScope;
+use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -57,6 +60,24 @@ class MemberListController extends Controller
             ->map(fn (array $item) => $this->serialise($item))
             ->values();
 
+        $rsvps = MeetingRsvp::whereIn('meeting_id', $items->pluck('id'))
+            ->where('user_id', $scope->user->id)
+            ->with('guests')
+            ->get()
+            ->keyBy('meeting_id');
+
+        $items = $items->map(function (array $item) use ($rsvps) {
+            $rsvp = $rsvps->get($item['id']);
+
+            return [...$item, 'rsvp' => $rsvp ? [
+                'attendance_status' => $rsvp->attendance_status,
+                'dietary_requirements' => $rsvp->dietary_requirements,
+                'apology_reason' => $rsvp->apology_reason,
+                'payment_status' => $rsvp->payment_status ?? 'unpaid',
+                'guests' => $rsvp->guests,
+            ] : null];
+        });
+
         $recent = Meeting::whereIn('club_id', $scope->clubIds())
             ->where('status', 'published')
             ->whereDate('meeting_date', '<', today())
@@ -78,10 +99,13 @@ class MemberListController extends Controller
     {
         $scope = MemberScope::fromRequest($request, $slug);
 
+        $filters = $this->newsFilters($request);
+
         $posts = Post::whereIn('club_id', $scope->clubIds())
-            ->with(['author', 'media'])
+            ->with(['author', 'media', 'tags:id,name,slug,color'])
             ->published()
             ->visibleTo($scope->user)
+            ->filter($filters)
             ->orderByRaw('COALESCE(published_at, created_at) DESC')
             ->paginate(15)
             ->withQueryString()
@@ -101,10 +125,40 @@ class MemberListController extends Controller
                     'reading_minutes' => max(1, (int) ceil(str_word_count(strip_tags((string) $post->content)) / 200)),
                     'attachments' => count($post->attachments ?? []),
                     'visibility' => ['value' => $post->visibility->value, 'label' => $post->visibility->label()],
+                    'tags' => $post->tags->map(fn ($tag) => ['name' => $tag->name, 'slug' => $tag->slug, 'color' => $tag->color])->values(),
                 ];
             });
 
-        return Inertia::render('Members/News', [...$this->scopeProps($scope), 'posts' => $posts]);
+        return Inertia::render('Members/News', [
+            ...$this->scopeProps($scope),
+            'posts' => $posts,
+            'filters' => [...$filters, 'club' => $scope->club?->slug],
+            'tagOptions' => NewsTag::browsableFor($scope->clubIds()->all(), $scope->user),
+        ]);
+    }
+
+    /**
+     * The news filters from the query string. Anything malformed is ignored rather than
+     * rejected, so a stale or hand-edited link still shows the list.
+     *
+     * @return array{q: string, tags: list<string>, from: ?string, to: ?string}
+     */
+    private function newsFilters(Request $request): array
+    {
+        $valid = Validator::make($request->query(), [
+            'q' => 'nullable|string|max:100',
+            'tags' => 'nullable|array|max:20',
+            'tags.*' => 'string|max:80',
+            'from' => 'nullable|date',
+            'to' => 'nullable|date',
+        ])->valid();
+
+        return [
+            'q' => trim((string) ($valid['q'] ?? '')),
+            'tags' => array_values(array_unique($valid['tags'] ?? [])),
+            'from' => ($valid['from'] ?? null) ? Carbon::parse($valid['from'])->toDateString() : null,
+            'to' => ($valid['to'] ?? null) ? Carbon::parse($valid['to'])->toDateString() : null,
+        ];
     }
 
     public function dues(Request $request): Response

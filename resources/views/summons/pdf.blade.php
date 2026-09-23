@@ -491,8 +491,8 @@
               <strong>{{ \App\Support\Currencies::symbolFor($club) }}{{ number_format($grant->amount, 2) }}</strong> to <strong>{{ $grant->recipient_name }}</strong> — {{ $grant->purpose }}
               @if($grant->proposer || $grant->seconder)
                 <div style="font-size: 7.5pt; color: #555;">
-                  @if($grant->proposer) Proposed by: Bro {{ $grant->proposer->first_name }} {{ $grant->proposer->last_name }} @endif
-                  @if($grant->seconder) | Seconded by: Bro {{ $grant->seconder->first_name }} {{ $grant->seconder->last_name }} @endif
+                  @if($grant->proposer) Proposed by: {{ $grant->proposer->formatted_rank_name }} @endif
+                  @if($grant->seconder) | Seconded by: {{ $grant->seconder->formatted_rank_name }} @endif
                 </div>
               @endif
             </div>

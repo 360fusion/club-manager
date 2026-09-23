@@ -51,7 +51,7 @@ const reset = () => {
 
         <div v-if="selected" class="lg:col-span-8">
           <EmailTemplateEditor :template="selected" :processing="form.processing" :errors="form.errors" :can-reset="selected.customised" @save="send('put', 'update', $event)" @test="send('post', 'test', $event)" @reset="reset" />
-          <p v-if="selected.required_placeholder" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">This email must keep <span class="font-mono">&#123;&#123; {{ selected.required_placeholder }} &#125;&#125;</span> so people can view or cancel their booking.</p>
+          <p v-if="selected.required_placeholder" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">This email must keep <span class="font-mono">&#123;&#123; {{ selected.required_placeholder }} &#125;&#125;</span> so the link in the email keeps working.</p>
         </div>
       </div>
     </div>

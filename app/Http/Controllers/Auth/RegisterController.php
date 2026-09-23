@@ -30,6 +30,13 @@ class RegisterController extends Controller
 
         $email = strtolower($request->email);
 
+        $clubSlug = $request->input('club') ?? $request->input('club_slug');
+        $club = $clubSlug ? Club::where('slug', $clubSlug)->first() : null;
+
+        if ($club && ($club->settings['registration_mode'] ?? 'open') === 'invite_only') {
+            return back()->withInput($request->only('name', 'email'))->withErrors(['email' => 'This club only accepts members by invitation. Please ask the club secretary to invite you.']);
+        }
+
         // The response is the same whether or not the address already has an
         // account, so this form cannot be used to find out who is registered.
         if (! User::where('email', $email)->exists()) {
@@ -38,9 +45,6 @@ class RegisterController extends Controller
                 'email' => $email,
                 'password' => Hash::make($request->password),
             ]);
-
-            $clubSlug = $request->input('club') ?? $request->input('club_slug');
-            $club = $clubSlug ? Club::where('slug', $clubSlug)->first() : null;
 
             if ($club) {
                 $user->clubs()->attach($club->id, [

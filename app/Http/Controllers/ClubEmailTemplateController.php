@@ -127,7 +127,7 @@ class ClubEmailTemplateController extends Controller
         $required = EmailTemplate::LODGE_EDITABLE[$default->template_key] ?? null;
 
         if ($required && ! str_contains($body, '{{'.$required.'}}')) {
-            throw ValidationException::withMessages(['body_html' => 'This email must keep {{'.$required.'}}, so people can view or cancel their booking.']);
+            throw ValidationException::withMessages(['body_html' => 'This email must keep {{'.$required.'}}, so the link in the email keeps working.']);
         }
     }
 }

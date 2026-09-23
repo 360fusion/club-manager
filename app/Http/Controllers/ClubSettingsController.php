@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
+use App\Models\MasonicHall;
 use App\Models\Province;
 use App\Support\ClubAccess;
 use App\Support\ClubDomain;
 use App\Support\Currencies;
+use App\Support\MasonicRanks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -81,6 +83,7 @@ class ClubSettingsController extends Controller
             'member_prefix' => strtoupper(substr($club->slug, 0, 4)).'-',
             'default_role' => 'member',
             'invite_expiration_days' => 14,
+            'invite_reminder_days' => 7,
             'membership_year_start' => '2026-10-01',
             'enable_member_ranks' => true,
             'member_ranks' => [
@@ -256,12 +259,23 @@ class ClubSettingsController extends Controller
 
         $provinces = Province::orderBy('name')->get();
 
+        // The lodge's rank lists, with how many members hold each rank so the editor can say so.
+        $settings['grand_ranks'] = MasonicRanks::forClub($club, MasonicRanks::GRAND);
+        $settings['provincial_ranks'] = MasonicRanks::forClub($club, MasonicRanks::PROVINCIAL);
+        $rankUsage = fn (string $column) => Member::where('club_id', $club->id)->whereNotNull($column)->selectRaw("{$column} as rank_value, count(*) as total")->groupBy($column)->pluck('total', 'rank_value')->all();
+
         return Inertia::render('Admin/Settings/Show', [
+            'ranks' => [
+                'grandLodgeName' => $club->province?->grandLodge?->name,
+                'usage' => ['grand' => $rankUsage('grand_rank'), 'provincial' => $rankUsage('provincial_rank')],
+            ],
             'club' => $club->load('province'),
+            'newsTags' => $club->newsTags()->withCount('posts')->orderBy('name')->get(['id', 'name', 'slug', 'color']),
             'settings' => $settings,
             'allModules' => $allModules,
             'members' => $members,
             'provinces' => $provinces,
+            'masonicHalls' => MasonicHall::orderBy('name')->get(['id', 'province_id', 'name', 'address_line_1', 'address_line_2', 'town', 'county', 'postcode']),
             'currencies' => array_values(Currencies::available()),
             'currencyLocked' => $club->currencyIsLocked(),
             'storage' => $club->storageSummary(),
@@ -286,6 +300,7 @@ class ClubSettingsController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'province_id' => 'nullable|exists:provinces,id',
+            'masonic_hall_id' => 'nullable|exists:masonic_halls,id',
             'tagline' => 'nullable|string|max:255',
             'lodge_number' => 'nullable|string|max:100',
             'lodge_status' => 'nullable|string|max:100',
@@ -319,10 +334,17 @@ class ClubSettingsController extends Controller
             'member_prefix' => 'nullable|string|max:50',
             'default_role' => 'nullable|in:member,coach,treasurer,admin',
             'invite_expiration_days' => 'nullable|integer|min:1|max:365',
+            'invite_reminder_days' => 'nullable|integer|min:0|max:365',
             'membership_year_start' => 'nullable|string|max:50',
             'enable_member_ranks' => 'nullable|boolean',
             'member_ranks' => 'nullable|array|max:100',
             'member_ranks.*' => 'nullable|string|max:255',
+            'grand_ranks' => 'nullable|array|max:200',
+            'grand_ranks.*.abbreviation' => 'required|string|max:30|distinct:ignore_case',
+            'grand_ranks.*.title' => 'nullable|string|max:120',
+            'provincial_ranks' => 'nullable|array|max:200',
+            'provincial_ranks.*.abbreviation' => 'required|string|max:30|distinct:ignore_case',
+            'provincial_ranks.*.title' => 'nullable|string|max:120',
             'provincial_name' => 'nullable|string|max:255',
             'provincial_grand_master' => 'nullable|string|max:255',
             'deputy_provincial_grand_master' => 'nullable|string|max:255',
@@ -406,6 +428,14 @@ class ClubSettingsController extends Controller
             }
         }
 
+        foreach (MasonicRanks::KINDS as $kind) {
+            $key = MasonicRanks::settingKey($kind);
+
+            if (array_key_exists($key, $validated)) {
+                $validated[$key] = MasonicRanks::clean($validated[$key] ?? []);
+            }
+        }
+
         // Storage quota is a platform-level limit; only super admins may change it.
         if (array_key_exists('storage_quota_mb', $validated) && ! $request->user()->is_super_admin) {
             unset($validated['storage_quota_mb']);
@@ -417,6 +447,17 @@ class ClubSettingsController extends Controller
 
         if (array_key_exists('province_id', $validated)) {
             $club->province_id = $validated['province_id'];
+        }
+
+        if (array_key_exists('masonic_hall_id', $validated)) {
+            $hall = $validated['masonic_hall_id'] ? MasonicHall::find($validated['masonic_hall_id']) : null;
+
+            if ($hall && $hall->province_id && $club->province_id && (int) $hall->province_id !== (int) $club->province_id) {
+                throw ValidationException::withMessages(['masonic_hall_id' => 'That masonic hall is not in the selected province.']);
+            }
+
+            $club->masonic_hall_id = $hall?->id;
+            unset($validated['masonic_hall_id']);
         }
 
         if (isset($validated['logo_url'])) {
@@ -484,5 +525,17 @@ class ClubSettingsController extends Controller
         }
 
         return $clean;
+    }
+
+    /**
+     * Replace this lodge's rank lists with its Grand Lodge's (or the platform starter) again.
+     */
+    public function resetRanks(string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        MasonicRanks::resetClub($club);
+
+        return redirect()->back()->with('success', 'Rank lists reset to the '.($club->province?->grandLodge?->name ?? 'standard').' list.');
     }
 }

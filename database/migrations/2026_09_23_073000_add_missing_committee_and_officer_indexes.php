@@ -23,7 +23,7 @@ return new class extends Migration
         $duplicates = DB::table('club_acc_annual_officer_assignments')
             ->select('roster_id', 'member_id', 'office', DB::raw('count(*) as total'))
             ->groupBy('roster_id', 'member_id', 'office')
-            ->having('total', '>', 1)
+            ->havingRaw('count(*) > 1')
             ->get();
 
         if ($duplicates->isNotEmpty()) {

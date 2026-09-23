@@ -77,7 +77,6 @@ const fallbackCopyText = (text) => {
 
 // Modals state
 const showAddModal = ref(false);
-const showImportModal = ref(false);
 
 // Forms
 const addForm = useForm({
@@ -88,10 +87,6 @@ const addForm = useForm({
   committee_role: '',
   member_number: '',
   send_invite: true,
-});
-
-const importForm = useForm({
-  csv_file: null,
 });
 
 // Role Badge Color Mapper
@@ -110,8 +105,9 @@ const roleBadgeClass = (role) => {
 };
 
 // Computed counts for tabs
+// Join requests only: people who were invited by email are pending too, but they approve themselves by accepting.
 const pendingMembers = computed(() => {
-  return props.members.filter((m) => m.status === 'pending');
+  return props.members.filter((m) => m.status === 'pending' && !m.invitation_token);
 });
 
 const counts = computed(() => {
@@ -259,14 +255,6 @@ const submitAddMember = () => {
   });
 };
 
-const submitImportCsv = () => {
-  importForm.post(route('clubs.members.import', { slug: props.club.slug }), {
-    onSuccess: () => {
-      importForm.reset();
-      showImportModal.value = false;
-    },
-  });
-};
 </script>
 
 <template>
@@ -297,15 +285,15 @@ const submitImportCsv = () => {
             <span>Export CSV</span>
           </a>
 
-          <button
-            @click="showImportModal = true"
+          <a
+            :href="`/${club.slug}/admin/members/import`"
             class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
           >
             <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             <span>Import CSV</span>
-          </button>
+          </a>
 
           <button
             @click="showAddModal = true"
@@ -336,6 +324,7 @@ const submitImportCsv = () => {
             <div class="overflow-hidden">
               <div class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ pending.name }}</div>
               <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ pending.email }}</div>
+              <div v-if="pending.matching_member" class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 truncate">Matches member record: {{ pending.matching_member }}</div>
             </div>
             <div class="flex items-center gap-1.5 flex-shrink-0">
               <button
@@ -826,54 +815,6 @@ const submitImportCsv = () => {
               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20"
             >
               Add Member
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal 2: Import CSV Modal -->
-    <div
-      v-if="showImportModal"
-      class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
-    >
-      <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-100 dark:border-slate-800">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-          <h3 class="text-base font-bold text-slate-900 dark:text-white">Bulk Import Roster via CSV</h3>
-          <button @click="showImportModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold">
-            &times;
-          </button>
-        </div>
-
-        <p class="text-xs text-slate-500 dark:text-slate-400">
-          Upload a CSV file containing columns: <code class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-1 py-0.5 rounded">Name, Email, Role, MemberNumber</code>.
-        </p>
-
-        <form @submit.prevent="submitImportCsv" class="space-y-4">
-          <div>
-            <input
-              type="file"
-              accept=".csv,.txt"
-              @change="importForm.csv_file = $event.target.files[0]"
-              required
-              class="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 dark:file:bg-blue-950/40 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40"
-            />
-          </div>
-
-          <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <button
-              type="button"
-              @click="showImportModal = false"
-              class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="importForm.processing"
-              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20"
-            >
-              Upload & Import
             </button>
           </div>
         </form>

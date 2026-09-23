@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\ClubAccounting\Services\MemberInvitationService;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\User;
@@ -252,6 +253,11 @@ class ClubController extends Controller
 
         if ($approved && $member = User::find($userId)) {
             app(ClubNotifier::class)->toUser($member, ClubNotification::membershipApproved($club));
+
+            // A record is only tied to the account once the person has proved the email is theirs.
+            if ($member->hasVerifiedEmail()) {
+                app(MemberInvitationService::class)->linkMatchingMember($club, $member);
+            }
         }
 
         return redirect()->back()->with('success', 'Member approved successfully.');

@@ -1,13 +1,14 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
 import ClubChip from '@/Components/Ui/ClubChip.vue';
 import ClubChips from '@/Components/ClubChips.vue';
 import DateTile from '@/Components/Ui/DateTile.vue';
-import QuickReply from '@/Components/QuickReply.vue';
+import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 
 const props = defineProps({
     meetings: { type: Array, default: () => [] },
@@ -20,6 +21,12 @@ const urlScoped = computed(() => Boolean(route().params.slug));
 const chipsRoute = 'members.meetings';
 const when = (iso) => new Date(iso).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 const day = (date) => new Date(`${date}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const selectedMeeting = ref(null);
+const STATUS = {
+    attending_dining: { label: 'Attending dining', variant: 'success' },
+    attending_meeting_only: { label: 'Attending meeting', variant: 'info' },
+    apologies: { label: 'Apologies', variant: 'danger' },
+};
 const REPLIES = { attending_dining: 'Going, dining', attending_meeting_only: 'Going', apologies: 'Apologies' };
 </script>
 
@@ -45,7 +52,14 @@ const REPLIES = { attending_dining: 'Going, dining', attending_meeting_only: 'Go
                                 <Link :href="meeting.url" class="text-sm font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ meeting.title }}</Link>
                                 <p v-if="meeting.where" class="text-xs text-slate-500 dark:text-slate-400">{{ meeting.where }}</p>
                             </div>
-                            <QuickReply :item="{ type: 'meeting', id: meeting.id, slug: meeting.club.slug, reply: meeting.reply, closed: meeting.closed, simple: true }" />
+                            <div class="flex flex-wrap items-center gap-2">
+                                <Badge v-if="meeting.rsvp" :variant="STATUS[meeting.rsvp.attendance_status]?.variant ?? 'neutral'">{{ STATUS[meeting.rsvp.attendance_status]?.label ?? meeting.rsvp.attendance_status }}</Badge>
+                                <Badge v-if="meeting.rsvp?.attendance_status === 'attending_dining' && meeting.rsvp.payment_status === 'paid'" variant="success">Paid</Badge>
+                                <Button size="sm" :variant="meeting.rsvp ? 'secondary' : 'primary'" :disabled="meeting.closed" @click="selectedMeeting = meeting">
+                                    {{ meeting.rsvp ? 'Edit Response' : 'Respond' }}
+                                </Button>
+                                <span v-if="meeting.closed" class="text-xs text-slate-500 dark:text-slate-400">Replies closed</span>
+                            </div>
                         </div>
                         </div>
                     </li>
@@ -65,5 +79,7 @@ const REPLIES = { attending_dining: 'Going, dining', attending_meeting_only: 'Go
                 </Card>
             </section>
         </div>
+
+        <MeetingRsvpModal v-if="selectedMeeting" :key="selectedMeeting.key" :meeting="selectedMeeting" :club-slug="selectedMeeting.club.slug" :rsvp="selectedMeeting.rsvp" @close="selectedMeeting = null" />
     </MembersLayout>
 </template>

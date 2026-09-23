@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingWorkspace;
+use App\Domains\ClubAccounting\Livewire\Members\MemberImportPage;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
@@ -22,7 +23,6 @@ use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -117,27 +117,17 @@ class SecurityAuditTest extends TestCase
         $this->assertNull($this->a->fresh()->custom_domain);
     }
 
-    public function test_only_club_staff_can_import_or_export_members(): void
+    public function test_only_club_staff_can_open_the_member_import_or_export_members(): void
     {
-        $csv = UploadedFile::fake()->createWithContent('m.csv', "Eve,evil@example.test,admin\n");
+        $import = route('admin.club_acc.members.import', ['clubSlug' => 'club-a']);
 
-        $this->actingAs($this->member)->post(route('clubs.members.import', ['slug' => 'club-a']), ['csv_file' => $csv])->assertForbidden();
-        $this->actingAs($this->outsider)->post(route('clubs.members.import', ['slug' => 'club-a']), ['csv_file' => $csv])->assertForbidden();
-        $this->assertFalse(User::where('email', 'evil@example.test')->exists());
+        $this->actingAs($this->member)->get($import)->assertForbidden();
+        $this->actingAs($this->outsider)->get($import)->assertForbidden();
+        $this->actingAs($this->adminB)->get($import)->assertForbidden();
+        $this->actingAs($this->admin)->get($import)->assertOk();
 
         $this->actingAs($this->member)->get(route('clubs.members.export', ['slug' => 'club-a']))->assertForbidden();
         $this->actingAs($this->outsider)->get(route('clubs.members.export', ['slug' => 'club-a']))->assertForbidden();
-    }
-
-    public function test_imported_members_do_not_get_a_known_password(): void
-    {
-        $csv = UploadedFile::fake()->createWithContent('m.csv', "name,email,role\nNewbie,newbie@example.test,member\n");
-
-        $this->actingAs($this->admin)->post(route('clubs.members.import', ['slug' => 'club-a']), ['csv_file' => $csv]);
-
-        $imported = User::where('email', 'newbie@example.test')->first();
-        $this->assertNotNull($imported);
-        $this->assertFalse(Hash::check('password123', $imported->password));
     }
 
     public function test_invoices_can_only_be_downloaded_by_their_owner_or_billing_staff(): void
@@ -506,17 +496,22 @@ class SecurityAuditTest extends TestCase
         $this->assertStringContainsString('Secret Hall', (string) $this->actingAs($this->member)->get(route('member.events', ['slug' => 'club-a']))->getContent());
     }
 
-    public function test_member_import_never_changes_existing_members_and_skips_bad_rows(): void
+    public function test_member_import_never_changes_existing_members_by_default_and_skips_bad_rows(): void
     {
-        $csv = "name,email,role\nOwner Demoted,{$this->owner->email},member\nBad,not-an-email,member\nFresh Person,Fresh@Example.test,member\n";
+        Storage::fake('local');
+        $owner = Member::create(['club_id' => $this->a->id, 'user_id' => $this->owner->id, 'first_name' => 'Real', 'last_name' => 'Owner', 'email' => $this->owner->email, 'masonic_rank' => 'Bro']);
+        $csv = "name,email\nOwner Demoted,{$this->owner->email}\nBad,not-an-email\nFresh Person,Fresh@Example.test\n";
 
-        $this->actingAs($this->admin)->post(route('clubs.members.import', ['slug' => 'club-a']), [
-            'csv_file' => UploadedFile::fake()->createWithContent('members.csv', $csv),
-        ])->assertRedirect();
+        Livewire::actingAs($this->admin)->test(MemberImportPage::class, ['clubSlug' => 'club-a'])
+            ->set('file', UploadedFile::fake()->createWithContent('members.csv', $csv))
+            ->call('reviewRows')
+            ->call('runImport');
 
         $this->assertSame('owner', $this->a->users()->where('users.id', $this->owner->id)->first()->pivot->role);
-        $this->assertNotNull(User::where('email', 'fresh@example.test')->first());
-        $this->assertDatabaseMissing('users', ['email' => 'not-an-email']);
+        $this->assertSame('Real', $owner->fresh()->first_name);
+        $this->assertNotNull(Member::where('club_id', $this->a->id)->where('email', 'fresh@example.test')->first());
+        $this->assertDatabaseMissing('club_acc_members', ['email' => 'not-an-email']);
+        $this->assertNull(User::where('email', 'fresh@example.test')->first(), 'Importing must not create a login.');
     }
 
     public function test_agenda_packs_are_only_emailed_to_people_in_the_meetings_club(): void
