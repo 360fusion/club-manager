@@ -36,6 +36,7 @@ class LodgeReferenceLinks
             $links[] = [LodgeSource::TIERS[$source->kind] ?? 3, ['label' => match ($source->kind) {
                 LodgeSource::PROVINCE_LIST => "The province's list of lodges",
                 LodgeSource::DIRECTORY_PAGE => 'OnTheSquare: this lodge',
+                LodgeSource::CATALOGUE_PAGE => 'Worcestershire Masonic Library catalogue: units in this province',
                 default => "This lodge on the province's website",
             }, 'url' => $source->url, 'is_search' => false]];
         }

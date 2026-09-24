@@ -21,6 +21,9 @@ class LodgeSource extends Model
     /** A third-party directory's page for the lodge. */
     public const DIRECTORY_PAGE = 'directory_page';
 
+    /** The Worcestershire Masonic Library and Museum catalogue's list of the units in the lodge's province. */
+    public const CATALOGUE_PAGE = 'catalogue_page';
+
     /** UGLE's page for the meeting place the lodge uses. */
     public const UGLE_HALL = 'ugle_hall';
 
@@ -28,6 +31,7 @@ class LodgeSource extends Model
         self::PROVINCE_PAGE => 'Province website: this lodge\'s page',
         self::PROVINCE_LIST => 'Province website: list of lodges',
         self::DIRECTORY_PAGE => 'OnTheSquare directory: this lodge',
+        self::CATALOGUE_PAGE => 'Masonic library catalogue: units in this province',
         self::UGLE_HALL => 'UGLE: its meeting place',
     ];
 
@@ -40,6 +44,7 @@ class LodgeSource extends Model
         self::PROVINCE_PAGE => 2,
         self::PROVINCE_LIST => 2,
         self::DIRECTORY_PAGE => 3,
+        self::CATALOGUE_PAGE => 3,
     ];
 
     protected $fillable = ['lodge_id', 'kind', 'url', 'is_search'];

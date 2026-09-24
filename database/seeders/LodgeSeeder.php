@@ -19,12 +19,12 @@ class LodgeSeeder extends Seeder
      * `provinces.code` and `hall_postcode` finds the hall the lodge meets in, or `hall_town` when only the town is known
      * (used only when the province has exactly one masonic hall in that town). `meets_text` is the
      * wording from the source, kept as written; the regular pattern is worked out from it.
-     * `source_url` is the page the details were read from (a province page, or the directory's page where nothing better exists) and `directory_url` is an extra link to the lodge's page on a third-party directory. `installation_text` is a month, or the words for one; without it the month is read from
+     * `source_url` is the page the details were read from (a province page, or the directory's page where nothing better exists) `directory_url` is an extra link to the lodge's page on OnTheSquare and `catalogue_url` one to the Worcestershire Masonic Library catalogue's list for its province. `installation_text` is a month, or the words for one; without it the month is read from
      * `meets_text` where the wording names one.
      */
     public const COLUMNS = [
         'province_code', 'order', 'number', 'name', 'hall_postcode', 'hall_town', 'meets_text',
-        'installation_text', 'website_url', 'source_url', 'directory_url',
+        'installation_text', 'website_url', 'source_url', 'directory_url', 'catalogue_url',
     ];
 
     /**
@@ -72,9 +72,10 @@ class LodgeSeeder extends Seeder
             ]);
             $lodge->save();
 
-            $fromDirectory = $this->isDirectoryUrl($row['source_url']);
-            $this->saveSource($lodge, $fromDirectory ? LodgeSource::PROVINCE_PAGE : $this->listingKind($row['source_url'], $lodgesPerUrl), $fromDirectory ? null : $row['source_url']);
-            $this->saveSource($lodge, LodgeSource::DIRECTORY_PAGE, $fromDirectory ? $row['source_url'] : $row['directory_url']);
+            $thirdParty = $this->thirdPartyKind($row['source_url']);
+            $this->saveSource($lodge, $thirdParty ? LodgeSource::PROVINCE_PAGE : $this->listingKind($row['source_url'], $lodgesPerUrl), $thirdParty ? null : $row['source_url']);
+            $this->saveSource($lodge, LodgeSource::DIRECTORY_PAGE, $thirdParty === LodgeSource::DIRECTORY_PAGE ? $row['source_url'] : $row['directory_url']);
+            $this->saveSource($lodge, LodgeSource::CATALOGUE_PAGE, $thirdParty === LodgeSource::CATALOGUE_PAGE ? $row['source_url'] : $row['catalogue_url']);
             $this->saveSource($lodge, LodgeSource::UGLE_HALL, $hallUgleUrls[$lodge->masonic_hall_id] ?? null);
 
             $lodge->schedules()->where('source', 'import')->delete();
@@ -99,9 +100,16 @@ class LodgeSeeder extends Seeder
         }
     }
 
-    private function isDirectoryUrl(?string $url): bool
+    /**
+     * The kind of source a listing URL is when it is not the province's own site, or null when it is.
+     */
+    private function thirdPartyKind(?string $url): ?string
     {
-        return $url !== null && parse_url($url, PHP_URL_HOST) === 'onthesquare.co';
+        return match ($url === null ? null : parse_url($url, PHP_URL_HOST)) {
+            'onthesquare.co' => LodgeSource::DIRECTORY_PAGE,
+            'catalogue.wmlmt.org.uk' => LodgeSource::CATALOGUE_PAGE,
+            default => null,
+        };
     }
 
     /**

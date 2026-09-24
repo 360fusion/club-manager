@@ -76,6 +76,28 @@ class LodgeSourcesTest extends TestCase
         $this->assertNotSame($lodge->sources->firstWhere('kind', LodgeSource::DIRECTORY_PAGE)->url, $lodge->source_url);
     }
 
+    public function test_a_lodge_known_only_from_the_library_catalogue_gets_a_catalogue_source(): void
+    {
+        $this->seed([ClubTypeSeeder::class, ProvinceSeeder::class, LodgeSeeder::class]);
+
+        $lodge = Lodge::where('source_url', 'like', 'https://catalogue.wmlmt.org.uk/%')->with('sources')->firstOrFail();
+        $this->assertSame([LodgeSource::CATALOGUE_PAGE], $lodge->sources->whereIn('kind', [...LodgeSource::PROVINCE_KINDS, LodgeSource::CATALOGUE_PAGE])->pluck('kind')->all());
+
+        $groups = LodgeReferenceLinks::forLodge($lodge);
+        $this->assertSame(3, $groups[array_key_last($groups)]['tier']);
+        $this->assertStringContainsString('Masonic Library', $groups[array_key_last($groups)]['links'][0]['label']);
+    }
+
+    public function test_a_province_lodge_also_carries_the_catalogue_page_when_the_catalogue_lists_it(): void
+    {
+        $this->seed([ClubTypeSeeder::class, ProvinceSeeder::class, LodgeSeeder::class]);
+
+        $lodge = Lodge::whereHas('sources', fn ($q) => $q->where('kind', LodgeSource::CATALOGUE_PAGE))
+            ->whereHas('sources', fn ($q) => $q->whereIn('kind', LodgeSource::PROVINCE_KINDS))->with('sources')->firstOrFail();
+
+        $this->assertStringStartsWith('https://catalogue.wmlmt.org.uk/', $lodge->sources->firstWhere('kind', LodgeSource::CATALOGUE_PAGE)->url);
+    }
+
     public function test_reference_links_are_grouped_ugle_then_province_then_directories(): void
     {
         $hall = MasonicHall::factory()->create(['postcode' => 'DE55 7AQ', 'ugle_url' => 'https://www.ugle.org.uk/x/hall']);
