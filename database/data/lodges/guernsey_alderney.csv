@@ -1,12 +1,12 @@
-province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url,directory_url
-guernsey_alderney,craft_lodge,84,Doyles Lodge of Fellowship,,,,,https://onthesquare.co/lodge/doyles-lodge-of-fellowship/,
-guernsey_alderney,craft_lodge,168,Mariners Lodge,,,,,https://onthesquare.co/lodge/mariners-lodge/,
-guernsey_alderney,craft_lodge,243,Loyalty Lodge,,,,,https://onthesquare.co/lodge/loyalty-lodge/,
-guernsey_alderney,craft_lodge,593,St Ann’s Lodge,,,,,https://onthesquare.co/lodge/st-anns-lodge/,
-guernsey_alderney,craft_lodge,1809,Lodge Fidelis,,,,,https://onthesquare.co/lodge/lodge-fidelis/,
-guernsey_alderney,craft_lodge,2598,St Sampson’s Lodge,,,,,https://onthesquare.co/lodge/st-sampsons-lodge/,
-guernsey_alderney,craft_lodge,2805,Balfour Cockburn Lodge,,,,,https://onthesquare.co/lodge/balfour-cockburn-lodge/,
-guernsey_alderney,craft_lodge,3515,Hansard Lodge,,,,,https://onthesquare.co/lodge/hansard-lodge/,
-guernsey_alderney,craft_lodge,4142,St Martin’s Lodge,,,,,https://onthesquare.co/lodge/st-martins-lodge-2/,
-guernsey_alderney,craft_lodge,6892,Victor Carey Lodge,,,,,https://onthesquare.co/lodge/victor-carey-lodge/,
-guernsey_alderney,craft_lodge,8564,The Guernsey and Alderney Lodge of installed Masters,,,,,https://onthesquare.co/lodge/the-guernsey-and-alderney-lodge-of-installed-masters/,
+province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url,directory_url,catalogue_url
+guernsey_alderney,craft_lodge,84,Doyles Lodge of Fellowship,,,,,https://onthesquare.co/lodge/doyles-lodge-of-fellowship/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.
+guernsey_alderney,craft_lodge,168,Mariners Lodge,,,,,https://onthesquare.co/lodge/mariners-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.
+guernsey_alderney,craft_lodge,243,Loyalty Lodge,,,,,https://onthesquare.co/lodge/loyalty-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.
+guernsey_alderney,craft_lodge,593,St Ann’s Lodge,,,,,https://onthesquare.co/lodge/st-anns-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.
+guernsey_alderney,craft_lodge,1809,Lodge Fidelis,,,,,https://onthesquare.co/lodge/lodge-fidelis/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.
+guernsey_alderney,craft_lodge,2598,St Sampson’s Lodge,,,,,https://onthesquare.co/lodge/st-sampsons-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.
+guernsey_alderney,craft_lodge,2805,Balfour Cockburn Lodge,,,,,https://onthesquare.co/lodge/balfour-cockburn-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.
+guernsey_alderney,craft_lodge,3515,Hansard Lodge,,,,,https://onthesquare.co/lodge/hansard-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.
+guernsey_alderney,craft_lodge,4142,St Martin’s Lodge,,,,,https://onthesquare.co/lodge/st-martins-lodge-2/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.
+guernsey_alderney,craft_lodge,6892,Victor Carey Lodge,,,,,https://onthesquare.co/lodge/victor-carey-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.
+guernsey_alderney,craft_lodge,8564,The Guernsey and Alderney Lodge of installed Masters,,,,,https://onthesquare.co/lodge/the-guernsey-and-alderney-lodge-of-installed-masters/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Guernsey_&_Alderney.

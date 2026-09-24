@@ -1,172 +1,256 @@
-province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url,directory_url
-surrey,craft_lodge,370,St Georges Lodge,,,,,https://onthesquare.co/lodge/st-georges-lodge/,
-surrey,craft_lodge,416,Surrey Lodge,,,,,https://onthesquare.co/lodge/surrey-lodge/,
-surrey,craft_lodge,777,Royal Alfred Lodge,,,,,https://onthesquare.co/lodge/royal-alfred-lodge/,
-surrey,craft_lodge,1046,St Andrews Lodge,,,,,https://onthesquare.co/lodge/st-andrews-lodge/,
-surrey,craft_lodge,1347,Lorne Lodge,,,,,https://onthesquare.co/lodge/lorne-lodge/,
-surrey,craft_lodge,1362,Royal Albert Edward Lodge,,,,,https://onthesquare.co/lodge/royal-albert-edward-lodge/,
-surrey,craft_lodge,1395,Wayside Lodge,,,,,https://onthesquare.co/lodge/wayside-lodge/,
-surrey,craft_lodge,1564,Saint Johns Lodge,,,,,https://onthesquare.co/lodge/saint-johns-lodge/,
-surrey,craft_lodge,1616,Lodge of Friendship and Harmony,,,,,https://onthesquare.co/lodge/lodge-of-friendship-and-harmony/,
-surrey,craft_lodge,1790,Old England Lodge,,,,,https://onthesquare.co/lodge/old-england-lodge/,
-surrey,craft_lodge,1826,Parthenon Lodge,,,,,https://onthesquare.co/lodge/parthenon-lodge/,
-surrey,craft_lodge,1872,St Margarets Lodge,,,,,https://onthesquare.co/lodge/st-margarets-lodge/,
-surrey,craft_lodge,1892,Wallington Lodge,,,,,https://onthesquare.co/lodge/wallington-lodge/,
-surrey,craft_lodge,1929,Mozart Lodge,,,,,https://onthesquare.co/lodge/mozart-lodge/,
-surrey,craft_lodge,2096,George Price Lodge,,,,,https://onthesquare.co/lodge/george-price-lodge/,
-surrey,craft_lodge,2146,Surbiton Lodge,,,,,https://onthesquare.co/lodge/surbiton-lodge/,
-surrey,craft_lodge,2234,Onslow Lodge,,,,,https://onthesquare.co/lodge/onslow-lodge/,
-surrey,craft_lodge,2444,Noel Surrey Motorcycle Lodge,,,,,https://onthesquare.co/lodge/noel-surrey-motorcycle-lodge/,
-surrey,craft_lodge,2473,Molesey Lodge,,,,,https://onthesquare.co/lodge/molesey-lodge/,
-surrey,craft_lodge,2502,Gatwick Lodge,,,,,https://onthesquare.co/lodge/gatwick-lodge/,
-surrey,craft_lodge,2521,Noel Money Lodge,,,,,https://onthesquare.co/lodge/noel-money-lodge/,
-surrey,craft_lodge,2790,Merton Lodge,,,,,https://onthesquare.co/lodge/merton-lodge/,
-surrey,craft_lodge,2875,Malden Lodge,,,,,https://onthesquare.co/lodge/malden-lodge/,
-surrey,craft_lodge,3090,Sutton Lodge,,,,,https://onthesquare.co/lodge/sutton-lodge/,
-surrey,craft_lodge,3109,Mid-Surrey Lodge,,,,,https://onthesquare.co/lodge/mid-surrey-lodge/,
-surrey,craft_lodge,3136,Purley Lodge,,,,,https://onthesquare.co/lodge/purley-lodge/,
-surrey,craft_lodge,3232,Old Sinjuns Lodge,,,,,https://onthesquare.co/lodge/old-sinjuns-lodge/,
-surrey,craft_lodge,3530,Tiffinian Lodge,,,,,https://onthesquare.co/lodge/tiffinian-lodge/,
-surrey,craft_lodge,3577,James Speller Lodge,,,,,https://onthesquare.co/lodge/james-speller-lodge/,
-surrey,craft_lodge,3617,Whitgift Lodge,,,,,https://onthesquare.co/lodge/whitgift-lodge/,
-surrey,craft_lodge,3809,St Leonards Streatham Lodge,,,,,https://onthesquare.co/lodge/st-leonards-streatham-lodge/,
-surrey,craft_lodge,3811,Godalming Lodge,,,,,https://onthesquare.co/lodge/godalming-lodge/,
-surrey,craft_lodge,3860,Kingston Aero Lodge,,,,,https://onthesquare.co/lodge/kingston-aero-lodge/,
-surrey,craft_lodge,3870,Lodge Light In Arabia,,,,,https://onthesquare.co/lodge/lodge-light-in-arabia/,
-surrey,craft_lodge,3938,Shirley Park Lodge,,,,,https://onthesquare.co/lodge/shirley-park-lodge/,
-surrey,craft_lodge,4057,New Era Lodge,,,,,https://onthesquare.co/lodge/new-era-lodge/,
-surrey,craft_lodge,4139,Waterfall Lodge,,,,,https://onthesquare.co/lodge/waterfall-lodge/,
-surrey,craft_lodge,4162,Waddon Lodge,,,,,https://onthesquare.co/lodge/waddon-lodge/,
-surrey,craft_lodge,4181,Turner Lodge,,,,,https://onthesquare.co/lodge/turner-lodge/,
-surrey,craft_lodge,4186,Light from the East Lodge,,,,,https://onthesquare.co/lodge/light-from-the-east-lodge/,
-surrey,craft_lodge,4286,Star of Croydon Lodge,,,,,https://onthesquare.co/lodge/star-of-croydon-lodge/,
-surrey,craft_lodge,4416,Rutlish Lodge,,,,,https://onthesquare.co/lodge/rutlish-lodge/,
-surrey,craft_lodge,4514,Petersham Lodge,,,,,https://onthesquare.co/lodge/petersham-lodge/,
-surrey,craft_lodge,4526,Reigate Priory Lodge,,,,,https://onthesquare.co/lodge/reigate-priory-lodge/,
-surrey,craft_lodge,4567,South Croydon Lodge,,,,,https://onthesquare.co/lodge/south-croydon-lodge/,
-surrey,craft_lodge,4614,Royal Borough of Kingston Lodge,,,,,https://onthesquare.co/lodge/royal-borough-of-kingston-lodge/,
-surrey,craft_lodge,4627,Mole Lodge,,,,,https://onthesquare.co/lodge/mole-lodge/,
-surrey,craft_lodge,4722,Kingston Temple Lodge,,,,,https://onthesquare.co/lodge/kingston-temple-lodge/,
-surrey,craft_lodge,4723,Waverley Lodge,,,,,https://onthesquare.co/lodge/waverley-lodge/,
-surrey,craft_lodge,4787,Royal Edward Lodge,,,,,https://onthesquare.co/lodge/royal-edward-lodge/,
-surrey,craft_lodge,4845,Prince of Wales Lodge,,,,,https://onthesquare.co/lodge/prince-of-wales-lodge/,
-surrey,craft_lodge,4891,Woodcote Lodge,,,,,https://onthesquare.co/lodge/woodcote-lodge/,
-surrey,craft_lodge,4915,Prince David 4915 (Shotgun Lo Lodge,,,,,https://onthesquare.co/lodge/prince-david-4915-shotgun-lo-lodge/,
-surrey,craft_lodge,4922,Lumen Lodge,,,,,https://onthesquare.co/lodge/lumen-lodge/,
-surrey,craft_lodge,4958,Morden Lodge,,,,,https://onthesquare.co/lodge/morden-lodge/,
-surrey,craft_lodge,5005,Selsdon Park Lodge,,,,,https://onthesquare.co/lodge/selsdon-park-lodge/,
-surrey,craft_lodge,5055,Welcome Lodge,,,,,https://onthesquare.co/lodge/welcome-lodge/,
-surrey,craft_lodge,5183,Hindhead Lodge,,,,,https://onthesquare.co/lodge/hindhead-lodge/,
-surrey,craft_lodge,5306,Pilgrims Way Lodge,,,,,https://onthesquare.co/lodge/pilgrims-way-lodge/,
-surrey,craft_lodge,5365,Wandsworthians Lodge,,,,,https://onthesquare.co/lodge/wandsworthians-lodge/,
-surrey,craft_lodge,5377,Royal Kingston Lodge,,,,,https://onthesquare.co/lodge/royal-kingston-lodge/,
-surrey,craft_lodge,5402,Worcester Park Lodge,,,,,https://onthesquare.co/lodge/worcester-park-lodge/,
-surrey,craft_lodge,5443,Guildford Lodge,,,,,https://onthesquare.co/lodge/guildford-lodge/,
-surrey,craft_lodge,5476,Thurlow Park Lodge,,,,,https://onthesquare.co/lodge/thurlow-park-lodge/,
-surrey,craft_lodge,5543,Glenmore Lodge,,,,,https://onthesquare.co/lodge/glenmore-lodge/,
-surrey,craft_lodge,5552,Garth Lodge,,,,,https://onthesquare.co/lodge/garth-lodge/,
-surrey,craft_lodge,5623,Streatham Vale Lodge,,,,,https://onthesquare.co/lodge/streatham-vale-lodge/,
-surrey,craft_lodge,5688,West Croydon Lodge,,,,,https://onthesquare.co/lodge/west-croydon-lodge/,
-surrey,craft_lodge,5689,Spring Park Lodge,,,,,https://onthesquare.co/lodge/spring-park-lodge/,
-surrey,craft_lodge,5699,Stoneleigh Coronation Lodge,,,,,https://onthesquare.co/lodge/stoneleigh-coronation-lodge/,
-surrey,craft_lodge,5704,Simplicitas Lodge,,,,,https://onthesquare.co/lodge/simplicitas-lodge/,
-surrey,craft_lodge,5725,Sit Perpetuum Lodge,,,,,https://onthesquare.co/lodge/sit-perpetuum-lodge/,
-surrey,craft_lodge,5767,Tandridge Hundred Lodge,,,,,https://onthesquare.co/lodge/tandridge-hundred-lodge/,
-surrey,craft_lodge,5847,Sword and Trowel Lodge,,,,,https://onthesquare.co/lodge/sword-and-trowel-lodge/,
-surrey,craft_lodge,5853,St Saviours Lodge,,,,,https://onthesquare.co/lodge/st-saviours-lodge/,
-surrey,craft_lodge,5855,Precision Lodge,,,,,https://onthesquare.co/lodge/precision-lodge/,
-surrey,craft_lodge,5859,Nonsuch Park Lodge,,,,,https://onthesquare.co/lodge/nonsuch-park-lodge/,
-surrey,craft_lodge,5860,Gatehouse Lodge,,,,,https://onthesquare.co/lodge/gatehouse-lodge/,
-surrey,craft_lodge,5867,Semper Fidelis Lodge,,,,,https://onthesquare.co/lodge/semper-fidelis-lodge/,
-surrey,craft_lodge,5885,John Lord Lumley Lodge,,,,,https://onthesquare.co/lodge/john-lord-lumley-lodge/,
-surrey,craft_lodge,5887,Septem Lodge,,,,,https://onthesquare.co/lodge/septem-lodge/,
-surrey,craft_lodge,5905,North Surrey Masters Lodge,,,,,https://onthesquare.co/lodge/north-surrey-masters-lodge/,
-surrey,craft_lodge,5921,Oaks Lodge,,,,,https://onthesquare.co/lodge/oaks-lodge/,
-surrey,craft_lodge,5965,South West Surrey Masters Lodge,,,,,https://onthesquare.co/lodge/south-west-surrey-masters-lodge/,
-surrey,craft_lodge,6051,Willow Lodge,,,,,https://onthesquare.co/lodge/willow-lodge/,
-surrey,craft_lodge,6052,Springfield Lodge,,,,,https://onthesquare.co/lodge/springfield-lodge/,
-surrey,craft_lodge,6053,Sir Francis Drake Lodge,,,,,https://onthesquare.co/lodge/sir-francis-drake-lodge/,
-surrey,craft_lodge,6077,Lodge of Grand Design,,,,,https://onthesquare.co/lodge/lodge-of-grand-design/,
-surrey,craft_lodge,6107,Riddlesdown Lodge,,,,,https://onthesquare.co/lodge/riddlesdown-lodge/,
-surrey,craft_lodge,6138,Upper Thames Lodge,,,,,https://onthesquare.co/lodge/upper-thames-lodge/,
-surrey,craft_lodge,6149,Merantune Lodge,,,,,https://onthesquare.co/lodge/merantune-lodge/,
-surrey,craft_lodge,6188,Lodge of Remembrance,,,,,https://onthesquare.co/lodge/lodge-of-remembrance/,
-surrey,craft_lodge,6213,Lodge of Allegiance,,,,,https://onthesquare.co/lodge/lodge-of-allegiance/,
-surrey,craft_lodge,6264,Woking Lodge,,,,,https://onthesquare.co/lodge/woking-lodge/,
-surrey,craft_lodge,6293,Woodcote Epsom Lodge,,,,,https://onthesquare.co/lodge/woodcote-epsom-lodge/,
-surrey,craft_lodge,6348,Walton-on-Thames Lodge,,,,,https://onthesquare.co/lodge/walton-on-thames-lodge/,
-surrey,craft_lodge,6429,Lavender Lodge,,,,,https://onthesquare.co/lodge/lavender-lodge/,
-surrey,craft_lodge,6463,Gavel and Sextant Lodge,,,,,https://onthesquare.co/lodge/gavel-and-sextant-lodge/,
-surrey,craft_lodge,6465,Homestead Lodge,,,,,https://onthesquare.co/lodge/homestead-lodge/,
-surrey,craft_lodge,6541,Ye Olde Wells Lodge,,,,,https://onthesquare.co/lodge/ye-olde-wells-lodge/,
-surrey,craft_lodge,6597,"St Georges, Esher Lodge",,,,,https://onthesquare.co/lodge/st-georges-esher-lodge/,
-surrey,craft_lodge,6636,Renascentur Lodge,,,,,https://onthesquare.co/lodge/renascentur-lodge/,
-surrey,craft_lodge,6697,Springwell Lodge,,,,,https://onthesquare.co/lodge/springwell-lodge/,
-surrey,craft_lodge,6711,Lodge of Mutual Defence,,,,,https://onthesquare.co/lodge/lodge-of-mutual-defence/,
-surrey,craft_lodge,6786,Saxondom Lodge,,,,,https://onthesquare.co/lodge/saxondom-lodge/,
-surrey,craft_lodge,6787,Weybridge Lodge,,,,,https://onthesquare.co/lodge/weybridge-lodge/,
-surrey,craft_lodge,6806,Tamesa Lodge,,,,,https://onthesquare.co/lodge/tamesa-lodge/,
-surrey,craft_lodge,6807,Lovekyn Chantry Lodge,,,,,https://onthesquare.co/lodge/lovekyn-chantry-lodge/,
-surrey,craft_lodge,6950,Lodge of Radiance,,,,,https://onthesquare.co/lodge/lodge-of-radiance/,
-surrey,craft_lodge,6951,Perfect Ashlar Lodge,,,,,https://onthesquare.co/lodge/perfect-ashlar-lodge/,
-surrey,craft_lodge,7010,North Downs Lodge,,,,,https://onthesquare.co/lodge/north-downs-lodge/,
-surrey,craft_lodge,7011,Oakfield Lodge,,,,,https://onthesquare.co/lodge/oakfield-lodge/,
-surrey,craft_lodge,7027,Porchway Lodge,,,,,https://onthesquare.co/lodge/porchway-lodge/,
-surrey,craft_lodge,7045,Southborough Lodge,,,,,https://onthesquare.co/lodge/southborough-lodge/,
-surrey,craft_lodge,7097,Moreford Lodge,,,,,https://onthesquare.co/lodge/moreford-lodge/,
-surrey,craft_lodge,7114,Manor of Bensham Lodge,,,,,https://onthesquare.co/lodge/manor-of-bensham-lodge/,
-surrey,craft_lodge,7159,Godstone Lodge,,,,,https://onthesquare.co/lodge/godstone-lodge/,
-surrey,craft_lodge,7173,Old Palace Lodge,,,,,https://onthesquare.co/lodge/old-palace-lodge/,
-surrey,craft_lodge,7177,Lodge of Resolve,,,,,https://onthesquare.co/lodge/lodge-of-resolve/,
-surrey,craft_lodge,7282,Old Franhamians Lodge,,,,,https://onthesquare.co/lodge/old-franhamians-lodge/,
-surrey,craft_lodge,7316,Vale of Caterham Lodge,,,,,https://onthesquare.co/lodge/vale-of-caterham-lodge/,
-surrey,craft_lodge,7328,Haroldslea Lodge,,,,,https://onthesquare.co/lodge/haroldslea-lodge/,
-surrey,craft_lodge,7369,Shirley Hills Lodge,,,,,https://onthesquare.co/lodge/shirley-hills-lodge/,
-surrey,craft_lodge,7388,Mid-Surrey Masters Lodge,,,,,https://onthesquare.co/lodge/mid-surrey-masters-lodge/,
-surrey,craft_lodge,7405,Lodge of United Endeavour,,,,,https://onthesquare.co/lodge/lodge-of-united-endeavour/,
-surrey,craft_lodge,7406,St Peters Lodge,,,,,https://onthesquare.co/lodge/st-peters-lodge/,
-surrey,craft_lodge,7470,Lodge of Service,,,,,https://onthesquare.co/lodge/lodge-of-service/,
-surrey,craft_lodge,7494,Surrey Hills Lodge,,,,,https://onthesquare.co/lodge/surrey-hills-lodge/,
-surrey,craft_lodge,7524,Lodge of Good Companions,,,,,https://onthesquare.co/lodge/lodge-of-good-companions/,
-surrey,craft_lodge,7535,Lodge of Good Report,,,,,https://onthesquare.co/lodge/lodge-of-good-report/,
-surrey,craft_lodge,7622,Oxshott Lodge,,,,,https://onthesquare.co/lodge/oxshott-lodge/,
-surrey,craft_lodge,7659,Stoneleigh Park Lodge,,,,,https://onthesquare.co/lodge/stoneleigh-park-lodge/,
-surrey,craft_lodge,7698,Trojan Lodge,,,,,https://onthesquare.co/lodge/trojan-lodge/,
-surrey,craft_lodge,7721,Lodge of Unanimity,,,,,https://onthesquare.co/lodge/lodge-of-unanimity/,
-surrey,craft_lodge,7802,Lingfield Lodge,,,,,https://onthesquare.co/lodge/lingfield-lodge/,
-surrey,craft_lodge,7803,Old Strodians Lodge,,,,,https://onthesquare.co/lodge/old-strodians-lodge/,
-surrey,craft_lodge,7837,Lodge of Harmony and Progress,,,,,https://onthesquare.co/lodge/lodge-of-harmony-and-progress/,
-surrey,craft_lodge,7914,William Cobbett Lodge,,,,,https://onthesquare.co/lodge/william-cobbett-lodge/,
-surrey,craft_lodge,7948,Woodstock Lodge,,,,,https://onthesquare.co/lodge/woodstock-lodge/,
-surrey,craft_lodge,7960,St Catherines Priory Lodge,,,,,https://onthesquare.co/lodge/st-catherines-priory-lodge/,
-surrey,craft_lodge,8036,Sceptred Isle Lodge,,,,,https://onthesquare.co/lodge/sceptred-isle-lodge/,
-surrey,craft_lodge,8038,Morden Park Lodge,,,,,https://onthesquare.co/lodge/morden-park-lodge/,
-surrey,craft_lodge,8069,Venture Ad Astra Lodge,,,,,https://onthesquare.co/lodge/venture-ad-astra-lodge/,
-surrey,craft_lodge,8138,Lodge of Saint Jude,,,,,https://onthesquare.co/lodge/lodge-of-saint-jude/,
-surrey,craft_lodge,8150,Lodge of Light and Learning,,,,,https://onthesquare.co/lodge/lodge-of-light-and-learning/,
-surrey,craft_lodge,8202,Priory Gate Lodge,,,,,https://onthesquare.co/lodge/priory-gate-lodge/,
-surrey,craft_lodge,8221,Woolsack Lodge,,,,,https://onthesquare.co/lodge/woolsack-lodge/,
-surrey,craft_lodge,8244,Star Of Stoneleigh Lodge,,,,,https://onthesquare.co/lodge/star-of-stoneleigh-lodge/,
-surrey,craft_lodge,8321,South Surrey Masters Lodge,,,,,https://onthesquare.co/lodge/south-surrey-masters-lodge/,
-surrey,craft_lodge,8389,Rosehill Park Lodge,,,,,https://onthesquare.co/lodge/rosehill-park-lodge/,
-surrey,craft_lodge,8426,Pinewood Lodge,,,,,https://onthesquare.co/lodge/pinewood-lodge/,
-surrey,craft_lodge,8440,Honeywood Lodge,,,,,https://onthesquare.co/lodge/honeywood-lodge/,
-surrey,craft_lodge,8502,Michelham Lodge,,,,,https://onthesquare.co/lodge/michelham-lodge/,
-surrey,craft_lodge,8733,Lamborn Lodge,,,,,https://onthesquare.co/lodge/lamborn-lodge/,
-surrey,craft_lodge,8783,Operative Lodge,,,,,https://onthesquare.co/lodge/operative-lodge/,
-surrey,craft_lodge,8989,Table Fellowship Lodge,,,,,https://onthesquare.co/lodge/table-fellowship-lodge/,
-surrey,craft_lodge,9046,St Crispin Lodge,,,,,https://onthesquare.co/lodge/st-crispin-lodge/,
-surrey,craft_lodge,9076,Worplesdon Lodge,,,,,https://onthesquare.co/lodge/worplesdon-lodge/,
-surrey,craft_lodge,9167,Pride of Surrey Lodge,,,,,https://onthesquare.co/lodge/pride-of-surrey-lodge/,
-surrey,craft_lodge,9239,Mount Ararat Lodge,,,,,https://onthesquare.co/lodge/mount-ararat-lodge/,
-surrey,craft_lodge,9264,Regis Aurigae Lodge,,,,,https://onthesquare.co/lodge/regis-aurigae-lodge/,
-surrey,craft_lodge,9272,Hale Lodge,,,,,https://onthesquare.co/lodge/hale-lodge/,
-surrey,craft_lodge,9305,Look Forward Lodge,,,,,https://onthesquare.co/lodge/look-forward-lodge/,
-surrey,craft_lodge,9356,Lodge of Quality,,,,,https://onthesquare.co/lodge/lodge-of-quality/,
-surrey,craft_lodge,9373,Spirit of St George Lodge,,,,,https://onthesquare.co/lodge/spirit-of-st-george-lodge/,
-surrey,craft_lodge,9408,Oak Tree Lodge,,,,,https://onthesquare.co/lodge/oak-tree-lodge/,
-surrey,craft_lodge,9455,Lodge of Construction,,,,,https://onthesquare.co/lodge/lodge-of-construction/,
-surrey,craft_lodge,9505,Triumvirate Lodge,,,,,https://onthesquare.co/lodge/triumvirate-lodge/,
-surrey,craft_lodge,9764,Surrey Secretaries Golden Jubilee Lodge,,,,,https://onthesquare.co/lodge/surrey-secretaries-golden-jubilee-lodge/,
-surrey,craft_lodge,9789,The Friends Lodge,,,,,https://onthesquare.co/lodge/the-friends-lodge/,
-surrey,craft_lodge,9902,West Surrey Installed Masters Lodge,,,,,https://onthesquare.co/lodge/west-surrey-installed-masters-lodge/,
+province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url,directory_url,catalogue_url
+surrey,craft_lodge,370,St Georges Lodge,,,,,https://onthesquare.co/lodge/st-georges-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,416,Surrey Lodge,,,,,https://onthesquare.co/lodge/surrey-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,452,Frederick Lodge of Unity,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,463,Croydon Lodge of Concord,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,777,Royal Alfred Lodge,,,,,https://onthesquare.co/lodge/royal-alfred-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,889,Dobie Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,1046,St Andrews Lodge,,,,,https://onthesquare.co/lodge/st-andrews-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1149,Dorking Lodge,,Dorking,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,1347,Lorne Lodge,,,,,https://onthesquare.co/lodge/lorne-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1362,Royal Albert Edward Lodge,,,,,https://onthesquare.co/lodge/royal-albert-edward-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1395,Wayside Lodge,,,,,https://onthesquare.co/lodge/wayside-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1556,Addiscombe Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,1564,Saint Johns Lodge,,,,,https://onthesquare.co/lodge/saint-johns-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1616,Lodge of Friendship and Harmony,,,,,https://onthesquare.co/lodge/lodge-of-friendship-and-harmony/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1638,Brownrigg Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,1790,Old England Lodge,,,,,https://onthesquare.co/lodge/old-england-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1826,Parthenon Lodge,,,,,https://onthesquare.co/lodge/parthenon-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1861,Claremont Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,1872,St Margarets Lodge,,,,,https://onthesquare.co/lodge/st-margarets-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1892,Wallington Lodge,,,,,https://onthesquare.co/lodge/wallington-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1929,Mozart Lodge,,,,,https://onthesquare.co/lodge/mozart-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,1981,Arnold Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,2095,Caterham Lodge,,Redhill,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,2096,George Price Lodge,,,,,https://onthesquare.co/lodge/george-price-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,2101,Bramston Beach Lodge,,Godalming,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,2120,Abbey Lodge,,Chertsey,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,2146,Surbiton Lodge,,,,,https://onthesquare.co/lodge/surbiton-lodge/,,
+surrey,craft_lodge,2222,Dormer Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,2234,Onslow Lodge,,,,,https://onthesquare.co/lodge/onslow-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,2246,Cyclist Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,2317,Bisley Lodge,,Godalming,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,2422,Ebbisham Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,2444,Noel Surrey Motorcycle Lodge,,,,,https://onthesquare.co/lodge/noel-surrey-motorcycle-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,2473,Molesey Lodge,,,,,https://onthesquare.co/lodge/molesey-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,2502,Gatwick Lodge,,,,,https://onthesquare.co/lodge/gatwick-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,2521,Noel Money Lodge,,,,,https://onthesquare.co/lodge/noel-money-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,2652,Albany Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,2769,East Surrey Lodge,,Redhill,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,2790,Merton Lodge,,,,,https://onthesquare.co/lodge/merton-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,2875,Malden Lodge,,,,,https://onthesquare.co/lodge/malden-lodge/,,
+surrey,craft_lodge,3090,Sutton Lodge,,,,,https://onthesquare.co/lodge/sutton-lodge/,,
+surrey,craft_lodge,3109,Mid-Surrey Lodge,,,,,https://onthesquare.co/lodge/mid-surrey-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,3136,Purley Lodge,,,,,https://onthesquare.co/lodge/purley-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,3232,Old Sinjuns Lodge,,,,,https://onthesquare.co/lodge/old-sinjuns-lodge/,,
+surrey,craft_lodge,3411,Redwood Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,3445,Cranleigh Lodge,,Cranleigh,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,3530,Tiffinian Lodge,,,,,https://onthesquare.co/lodge/tiffinian-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,3577,James Speller Lodge,,,,,https://onthesquare.co/lodge/james-speller-lodge/,,
+surrey,craft_lodge,3617,Whitgift Lodge,,,,,https://onthesquare.co/lodge/whitgift-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,3809,St Leonards Streatham Lodge,,,,,https://onthesquare.co/lodge/st-leonards-streatham-lodge/,,
+surrey,craft_lodge,3811,Godalming Lodge,,,,,https://onthesquare.co/lodge/godalming-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,3860,Kingston Aero Lodge,,,,,https://onthesquare.co/lodge/kingston-aero-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,3870,Lodge Light In Arabia,,,,,https://onthesquare.co/lodge/lodge-light-in-arabia/,,
+surrey,craft_lodge,3909,Sutton Lodge,,Sutton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,3938,Shirley Park Lodge,,,,,https://onthesquare.co/lodge/shirley-park-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,3968,Croham Hurst Lodge,,South Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4057,New Era Lodge,,,,,https://onthesquare.co/lodge/new-era-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4139,Waterfall Lodge,,,,,https://onthesquare.co/lodge/waterfall-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4143,Ditton Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4162,Waddon Lodge,,,,,https://onthesquare.co/lodge/waddon-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4181,Turner Lodge,,,,,https://onthesquare.co/lodge/turner-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4186,Light from the East Lodge,,,,,https://onthesquare.co/lodge/light-from-the-east-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4212,Coveham Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4286,Star of Croydon Lodge,,,,,https://onthesquare.co/lodge/star-of-croydon-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4376,Burstow Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4416,Rutlish Lodge,,,,,https://onthesquare.co/lodge/rutlish-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4429,Carshalton Lodge,,Sutton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4514,Petersham Lodge,,,,,https://onthesquare.co/lodge/petersham-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4526,Reigate Priory Lodge,,,,,https://onthesquare.co/lodge/reigate-priory-lodge/,,
+surrey,craft_lodge,4527,Bucknill Lodge,,Godalming,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4547,Coulsdon Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4552,Angelus Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4567,South Croydon Lodge,,,,,https://onthesquare.co/lodge/south-croydon-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4614,Royal Borough of Kingston Lodge,,,,,https://onthesquare.co/lodge/royal-borough-of-kingston-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4627,Mole Lodge,,,,,https://onthesquare.co/lodge/mole-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4693,Astede Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4722,Kingston Temple Lodge,,,,,https://onthesquare.co/lodge/kingston-temple-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4723,Waverley Lodge,,,,,https://onthesquare.co/lodge/waverley-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4740,Ember Manor Lodge,,Esher,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4771,Athelstan Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4787,Royal Edward Lodge,,,,,https://onthesquare.co/lodge/royal-edward-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4804,Bagshot Lodge,,Camberley,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,4845,Prince of Wales Lodge,,,,,https://onthesquare.co/lodge/prince-of-wales-lodge/,,
+surrey,craft_lodge,4891,Woodcote Lodge,,,,,https://onthesquare.co/lodge/woodcote-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4915,Prince David Lodge,,,,,https://onthesquare.co/lodge/prince-david-4915-shotgun-lo-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4922,Lumen Lodge,,,,,https://onthesquare.co/lodge/lumen-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,4958,Morden Lodge,,,,,https://onthesquare.co/lodge/morden-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5005,Selsdon Park Lodge,,,,,https://onthesquare.co/lodge/selsdon-park-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5032,Banstead Lodge,,Sutton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5047,Croydon Airport Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5054,Crescent Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5055,Welcome Lodge,,,,,https://onthesquare.co/lodge/welcome-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5063,Croydon Chantry Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5080,Addington Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5091,Ballards Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5164,Croydon Lodge of Unity,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5183,Hindhead Lodge,,,,,https://onthesquare.co/lodge/hindhead-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5222,Addlestone Lodge,,Chertsey,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5306,Pilgrims Way Lodge,,,,,https://onthesquare.co/lodge/pilgrims-way-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5349,Athene Lodge,,Sutton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5365,Wandsworthians Lodge,,,,,https://onthesquare.co/lodge/wandsworthians-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5377,Royal Kingston Lodge,,,,,https://onthesquare.co/lodge/royal-kingston-lodge/,,
+surrey,craft_lodge,5402,Worcester Park Lodge,,,,,https://onthesquare.co/lodge/worcester-park-lodge/,,
+surrey,craft_lodge,5427,Copthorne Lodge,,Sutton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5443,Guildford Lodge,,,,,https://onthesquare.co/lodge/guildford-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5463,Chipstead Lodge,,Redhill,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5476,Thurlow Park Lodge,,,,,https://onthesquare.co/lodge/thurlow-park-lodge/,,
+surrey,craft_lodge,5482,Corinthian Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5492,Beddington Lodge,,Sutton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5541,Benhilton Lodge,,Sutton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5542,Chingestune Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5543,Glenmore Lodge,,,,,https://onthesquare.co/lodge/glenmore-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5552,Garth Lodge,,,,,https://onthesquare.co/lodge/garth-lodge/,,
+surrey,craft_lodge,5591,Camberley Lodge,,Camberley,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5623,Streatham Vale Lodge,,,,,https://onthesquare.co/lodge/streatham-vale-lodge/,,
+surrey,craft_lodge,5688,West Croydon Lodge,,,,,https://onthesquare.co/lodge/west-croydon-lodge/,,
+surrey,craft_lodge,5689,Spring Park Lodge,,,,,https://onthesquare.co/lodge/spring-park-lodge/,,
+surrey,craft_lodge,5699,Stoneleigh Coronation Lodge,,,,,https://onthesquare.co/lodge/stoneleigh-coronation-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5704,Simplicitas Lodge,,,,,https://onthesquare.co/lodge/simplicitas-lodge/,,
+surrey,craft_lodge,5725,Sit Perpetuum Lodge,,,,,https://onthesquare.co/lodge/sit-perpetuum-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5767,Tandridge Hundred Lodge,,,,,https://onthesquare.co/lodge/tandridge-hundred-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5838,Elmbridge Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5847,Sword and Trowel Lodge,,,,,https://onthesquare.co/lodge/sword-and-trowel-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5848,Astolat Lodge,,Guildford,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5853,St Saviours Lodge,,,,,https://onthesquare.co/lodge/st-saviours-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5855,Precision Lodge,,,,,https://onthesquare.co/lodge/precision-lodge/,,
+surrey,craft_lodge,5858,Box Hill Lodge,,Redhill,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5859,Nonsuch Park Lodge,,,,,https://onthesquare.co/lodge/nonsuch-park-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5860,Gatehouse Lodge,,,,,https://onthesquare.co/lodge/gatehouse-lodge/,,
+surrey,craft_lodge,5867,Semper Fidelis Lodge,,,,,https://onthesquare.co/lodge/semper-fidelis-lodge/,,
+surrey,craft_lodge,5878,Croydon Lodge of Freedom,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5885,John Lord Lumley Lodge,,,,,https://onthesquare.co/lodge/john-lord-lumley-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5887,Septem Lodge,,,,,https://onthesquare.co/lodge/septem-lodge/,,
+surrey,craft_lodge,5888,East Surrey Masters Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,5905,North Surrey Masters Lodge,,,,,https://onthesquare.co/lodge/north-surrey-masters-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5921,Oaks Lodge,,,,,https://onthesquare.co/lodge/oaks-lodge/,,
+surrey,craft_lodge,5965,South West Surrey Masters Lodge,,,,,https://onthesquare.co/lodge/south-west-surrey-masters-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,5995,Egham Lodge,,Chertsey,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,6050,Archbishop Abbot Lodge,,Godalming,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,6051,Willow Lodge,,,,,https://onthesquare.co/lodge/willow-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6052,Springfield Lodge,,,,,https://onthesquare.co/lodge/springfield-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6053,Sir Francis Drake Lodge,,,,,https://onthesquare.co/lodge/sir-francis-drake-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6076,Chessington Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,6077,Lodge of Grand Design,,,,,https://onthesquare.co/lodge/lodge-of-grand-design/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6107,Riddlesdown Lodge,,,,,https://onthesquare.co/lodge/riddlesdown-lodge/,,
+surrey,craft_lodge,6138,Upper Thames Lodge,,,,,https://onthesquare.co/lodge/upper-thames-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6149,Merantune Lodge,,,,,https://onthesquare.co/lodge/merantune-lodge/,,
+surrey,craft_lodge,6188,Lodge of Remembrance,,,,,https://onthesquare.co/lodge/lodge-of-remembrance/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6213,Lodge of Allegiance,,,,,https://onthesquare.co/lodge/lodge-of-allegiance/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6264,Woking Lodge,,,,,https://onthesquare.co/lodge/woking-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6293,Woodcote Epsom Lodge,,,,,https://onthesquare.co/lodge/woodcote-epsom-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6294,Bedford Park Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,6348,Walton-on-Thames Lodge,,,,,https://onthesquare.co/lodge/walton-on-thames-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6394,Cheam Village Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,6429,Lavender Lodge,,,,,https://onthesquare.co/lodge/lavender-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6446,Castle Keep Lodge,,Godalming,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,6463,Gavel and Sextant Lodge,,,,,https://onthesquare.co/lodge/gavel-and-sextant-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6465,Homestead Lodge,,,,,https://onthesquare.co/lodge/homestead-lodge/,,
+surrey,craft_lodge,6541,Ye Olde Wells Lodge,,,,,https://onthesquare.co/lodge/ye-olde-wells-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6543,Cherchefelle Lodge,,Redhill,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,6571,Cradiden Lodge,,Redhill,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,6597,"St Georges, Esher Lodge",,,,,https://onthesquare.co/lodge/st-georges-esher-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6636,Renascentur Lodge,,,,,https://onthesquare.co/lodge/renascentur-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6657,Castle Lodge,,Farnham,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,6697,Springwell Lodge,,,,,https://onthesquare.co/lodge/springwell-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6711,Lodge of Mutual Defence,,,,,https://onthesquare.co/lodge/lodge-of-mutual-defence/,,
+surrey,craft_lodge,6786,Saxondom Lodge,,,,,https://onthesquare.co/lodge/saxondom-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6787,Weybridge Lodge,,,,,https://onthesquare.co/lodge/weybridge-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6806,Tamesa Lodge,,,,,https://onthesquare.co/lodge/tamesa-lodge/,,
+surrey,craft_lodge,6807,Lovekyn Chantry Lodge,,,,,https://onthesquare.co/lodge/lovekyn-chantry-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6950,Lodge of Radiance,,,,,https://onthesquare.co/lodge/lodge-of-radiance/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,6951,Perfect Ashlar Lodge,,,,,https://onthesquare.co/lodge/perfect-ashlar-lodge/,,
+surrey,craft_lodge,7010,North Downs Lodge,,,,,https://onthesquare.co/lodge/north-downs-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7011,Oakfield Lodge,,,,,https://onthesquare.co/lodge/oakfield-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7027,Porchway Lodge,,,,,https://onthesquare.co/lodge/porchway-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7045,Southborough Lodge,,,,,https://onthesquare.co/lodge/southborough-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7097,Moreford Lodge,,,,,https://onthesquare.co/lodge/moreford-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7114,Manor of Bensham Lodge,,,,,https://onthesquare.co/lodge/manor-of-bensham-lodge/,,
+surrey,craft_lodge,7159,Godstone Lodge,,,,,https://onthesquare.co/lodge/godstone-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7172,Agincourt Lodge,,Camberley,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,7173,Old Palace Lodge,,,,,https://onthesquare.co/lodge/old-palace-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7177,Lodge of Resolve,,,,,https://onthesquare.co/lodge/lodge-of-resolve/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7282,Old Franhamians Lodge,,,,,https://onthesquare.co/lodge/old-franhamians-lodge/,,
+surrey,craft_lodge,7316,Vale of Caterham Lodge,,,,,https://onthesquare.co/lodge/vale-of-caterham-lodge/,,
+surrey,craft_lodge,7328,Haroldslea Lodge,,,,,https://onthesquare.co/lodge/haroldslea-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7369,Shirley Hills Lodge,,,,,https://onthesquare.co/lodge/shirley-hills-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7388,Mid-Surrey Masters Lodge,,,,,https://onthesquare.co/lodge/mid-surrey-masters-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7405,Lodge of United Endeavour,,,,,https://onthesquare.co/lodge/lodge-of-united-endeavour/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7406,St Peters Lodge,,,,,https://onthesquare.co/lodge/st-peters-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7470,Lodge of Service,,,,,https://onthesquare.co/lodge/lodge-of-service/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7494,Surrey Hills Lodge,,,,,https://onthesquare.co/lodge/surrey-hills-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7524,Lodge of Good Companions,,,,,https://onthesquare.co/lodge/lodge-of-good-companions/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7535,Lodge of Good Report,,,,,https://onthesquare.co/lodge/lodge-of-good-report/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7575,Croydon Sincerity Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,7622,Oxshott Lodge,,,,,https://onthesquare.co/lodge/oxshott-lodge/,,
+surrey,craft_lodge,7659,Stoneleigh Park Lodge,,,,,https://onthesquare.co/lodge/stoneleigh-park-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7698,Trojan Lodge,,,,,https://onthesquare.co/lodge/trojan-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7711,Clock Tower from Haslemere Lodge,,Brookwood,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,7721,Lodge of Unanimity,,,,,https://onthesquare.co/lodge/lodge-of-unanimity/,,
+surrey,craft_lodge,7776,Crescamus Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,7802,Lingfield Lodge,,,,,https://onthesquare.co/lodge/lingfield-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7803,Old Strodians Lodge,,,,,https://onthesquare.co/lodge/old-strodians-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7837,Lodge of Harmony and Progress,,,,,https://onthesquare.co/lodge/lodge-of-harmony-and-progress/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7914,William Cobbett Lodge,,,,,https://onthesquare.co/lodge/william-cobbett-lodge/,,
+surrey,craft_lodge,7930,Claygate Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,7948,Woodstock Lodge,,,,,https://onthesquare.co/lodge/woodstock-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,7960,St Catherines Priory Lodge,,,,,https://onthesquare.co/lodge/st-catherines-priory-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8036,Sceptred Isle Lodge,,,,,https://onthesquare.co/lodge/sceptred-isle-lodge/,,
+surrey,craft_lodge,8037,Frederick Wheeler Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,8038,Morden Park Lodge,,,,,https://onthesquare.co/lodge/morden-park-lodge/,,
+surrey,craft_lodge,8069,Venture Ad Astra Lodge,,,,,https://onthesquare.co/lodge/venture-ad-astra-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8138,Lodge of Saint Jude,,,,,https://onthesquare.co/lodge/lodge-of-saint-jude/,,
+surrey,craft_lodge,8141,Croydon Lodge of Fellowship,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,8150,Lodge of Light and Learning,,,,,https://onthesquare.co/lodge/lodge-of-light-and-learning/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8202,Priory Gate Lodge,,,,,https://onthesquare.co/lodge/priory-gate-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8221,Woolsack Lodge,,,,,https://onthesquare.co/lodge/woolsack-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8244,Star Of Stoneleigh Lodge,,,,,https://onthesquare.co/lodge/star-of-stoneleigh-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8262,Alvering Lodge,,Sutton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,8297,"Richard, Earl of Shannon Lodge",,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,8321,South Surrey Masters Lodge,,,,,https://onthesquare.co/lodge/south-surrey-masters-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8389,Rosehill Park Lodge,,,,,https://onthesquare.co/lodge/rosehill-park-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8420,Castlemartyr Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,8426,Pinewood Lodge,,,,,https://onthesquare.co/lodge/pinewood-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8440,Honeywood Lodge,,,,,https://onthesquare.co/lodge/honeywood-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8457,Bond of Friendship Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,8502,Michelham Lodge,,,,,https://onthesquare.co/lodge/michelham-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8554,Croydon Lodge of Achievement,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,8733,Lamborn Lodge,,,,,https://onthesquare.co/lodge/lamborn-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8783,Operative Lodge,,,,,https://onthesquare.co/lodge/operative-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,8814,Elizabethan Jubilee Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,8978,Burma-Kohima Lodge,,Guildford,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,8989,Table Fellowship Lodge,,,,,https://onthesquare.co/lodge/table-fellowship-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9045,Compass Rose Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,9046,St Crispin Lodge,,,,,https://onthesquare.co/lodge/st-crispin-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9076,Worplesdon Lodge,,,,,https://onthesquare.co/lodge/worplesdon-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9149,Fearnhamme Lodge,,Farnham,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,9167,Pride of Surrey Lodge,,,,,https://onthesquare.co/lodge/pride-of-surrey-lodge/,,
+surrey,craft_lodge,9208,Azor Lodge,,Farnham,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,9239,Mount Ararat Lodge,,,,,https://onthesquare.co/lodge/mount-ararat-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9264,Regis Aurigae Lodge,,,,,https://onthesquare.co/lodge/regis-aurigae-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9272,Hale Lodge,,,,,https://onthesquare.co/lodge/hale-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9305,Look Forward Lodge,,,,,https://onthesquare.co/lodge/look-forward-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9356,Lodge of Quality,,,,,https://onthesquare.co/lodge/lodge-of-quality/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9373,Spirit of St George Lodge,,,,,https://onthesquare.co/lodge/spirit-of-st-george-lodge/,,
+surrey,craft_lodge,9408,Oak Tree Lodge,,,,,https://onthesquare.co/lodge/oak-tree-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9451,Democratic Lodge,,Surbiton,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,9455,Lodge of Construction,,,,,https://onthesquare.co/lodge/lodge-of-construction/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9505,Triumvirate Lodge,,,,,https://onthesquare.co/lodge/triumvirate-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9686,Windlesham Dawn Lodge,,Chertsey,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,9707,Fountainhead Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,9725,British Forces Foundation Lodge,,Croydon,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,
+surrey,craft_lodge,9764,Surrey Secretaries Golden Jubilee Lodge,,,,,https://onthesquare.co/lodge/surrey-secretaries-golden-jubilee-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9789,The Friends Lodge,,,,,https://onthesquare.co/lodge/the-friends-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,9902,West Surrey Installed Masters Lodge,,,,,https://onthesquare.co/lodge/west-surrey-installed-masters-lodge/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey
+surrey,craft_lodge,10030,Nigeria Heritage Lodge,,N/A,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Surrey,,

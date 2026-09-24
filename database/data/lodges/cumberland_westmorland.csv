@@ -1,75 +1,91 @@
-province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url,directory_url
-cumberland_westmorland,craft_lodge,119,"Sun,Square & Compass",,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,129,Union,,Kendal,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,310,Union,,Carlisle,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,327,Wigton St John’s,,Wigton,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,339,Unanimity,,Penrith,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,872,Lewis,,Whitehaven,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,962,Sun & Sector,,Workington,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,1002,Skiddaw,,Cockernouth,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,1073,Greta,,Keswick,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,1074,Underley,,Carnforth,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,1220,Solway,,Aspatria,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,1267,Kenlis,,Egremont,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,1390,Whitwell,,Millom,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,1400,Curwen,,Workington,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,1532,Bective,,Carlisle,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,1660,Arlecdon,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,1989,Stirling,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,2217,Windermere,,,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,2285,Eden,,Workington,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,2493,Vale of Eden,,Appleby,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,2745,Ambleside,,,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,2794,Alston,,,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,2854,Temperantia,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,3189,Belted Will,,Brampton,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,3297,Ullswater,,Penrith,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,3481,Utter Pendragon,,Kirkby Stephen,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,3768,Scawfell,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,3984,Winder,,Kendal,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,4216,Ennerdale,,Wath Brow,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,4280,Harmony,,Carlisle,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,4470,Miramar,,Silloth,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,4607,Copeland,,Egremont,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,5286,Gospatric,,Workington,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,5372,BLIM,,Carlisle,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,6041,Huddleston,,Millom,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,6202,Beacon,,Penrith,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,6375,Derwent Water,,Penrith,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,6643,Cumbria,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,6730,Trinity,,Kendal,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,7111,Westmorland I. M,,Kendal,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,7132,Dalston,,,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,7375,Ellen Vale,,Aspatria,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,7576,Bela,,Milnthorpe,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,7577,John Dalton,,Cockermouth,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,8071,Creighton,,Carlise,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,8114,WCLIM,,,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,craft_lodge,8275,Friendship,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,
-cumberland_westmorland,royal_arch,119,Pheonix Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,129,Kendal Castle Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,310,Union Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,327,St Johns Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,339,Regularity Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,371,Nicholson Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,872,Lewis Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,962,Sun & Sector Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,1073,Greta Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,1074,Bective Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,1220,Solway Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,1267,Kenlis Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,1390,McKay Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,1660,Arlecdon Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,2217,Windermere Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,2745,Wansfell Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,2794,Alston Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,2906,Border City Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,3189,Belted Will Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,3768,Scawfell Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,3984,Winder Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,5372,Border Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,7576,Flowerden Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,8071,C&W Inst Principals Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,8660,St John’s Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,9430,Custodes Copiiae Chapter of Grand Stewards,,,,,https://cumbriafreemasons.org/chapter-list/,
-cumberland_westmorland,royal_arch,9734,Brigantes Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,
+province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url,directory_url,catalogue_url
+cumberland_westmorland,craft_lodge,119,"Sun,Square & Compass",,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,129,Union,,Kendal,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,310,Union,,Carlisle,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,327,Wigton St John’s,,Wigton,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,339,Unanimity,,Penrith,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,872,Lewis,,Whitehaven,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,962,Sun & Sector,,Workington,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,1002,Skiddaw,,Cockernouth,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,1073,Greta,,Keswick,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,1074,Underley,,Carnforth,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,1220,Solway,,Aspatria,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,1267,Kenlis,,Egremont,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,1390,Whitwell,,Millom,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,1400,Curwen,,Workington,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,1532,Bective,,Carlisle,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,1660,Arlecdon,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,1989,Stirling,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,2217,Windermere,,,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,2285,Eden,,Workington,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,2493,Vale of Eden,,Appleby,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,2745,Ambleside,,,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,2794,Alston,,,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,2854,Temperantia,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,3189,Belted Will,,Brampton,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,3297,Ullswater,,Penrith,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,3481,Utter Pendragon,,Kirkby Stephen,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,3768,Scawfell,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,3984,Winder,,Kendal,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,4089,Carliol Lodge,,Carlisle,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,4216,Ennerdale,,Wath Brow,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,4280,Harmony,,Carlisle,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,4470,Miramar,,Silloth,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,4607,Copeland,,Egremont,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,5286,Gospatric,,Workington,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,5372,BLIM,,Carlisle,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,6041,Huddleston,,Millom,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,6202,Beacon,,Penrith,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,6375,Derwent Water,,Penrith,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,6643,Cumbria,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,6730,Trinity,,Kendal,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,7111,Westmorland I. M,,Kendal,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,7132,Dalston,,,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,7146,Ewanrigg Lodge,,Maryport,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,7375,Ellen Vale,,Aspatria,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,7576,Bela,,Milnthorpe,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,7577,John Dalton,,Cockermouth,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,8071,Creighton,,Carlise,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,8113,Concord Lodge,,Cleator Moor,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,8114,WCLIM,,,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,8275,Friendship,,Cleator Moor,,,https://cumbriafreemasons.org/lodgelist/,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland
+cumberland_westmorland,craft_lodge,8396,Heversham Lodge,,Milnthorpe,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,8454,St. Michael's Lodge,,Carlisle,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,8660,St. John's Lodge,,Workington,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,8796,St. Bega Lodge,,St Bees,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,9232,Alnefoot Lodge,,Maryport,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,9430,Custodes Copiae Lodge of Provincial Grand Stewards,,Keswick,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,9668,Nova Lodge,,Keswick,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,9733,John Hale Lodge,,Keswick,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,9734,Brigantes Lodge,,Kendal,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,9800,Zenith Lodge,,Penrith,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,9803,Meridian Lodge,,Keswick,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,9898,Lodge of Country Pursuits,,Cleator Moor,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,craft_lodge,9911,Lodge of Uniformed Service,,Kendal,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Cumberland_&_Westmorland,,
+cumberland_westmorland,royal_arch,119,Pheonix Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,129,Kendal Castle Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,310,Union Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,327,St Johns Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,339,Regularity Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,371,Nicholson Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,872,Lewis Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,962,Sun & Sector Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,1073,Greta Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,1074,Bective Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,1220,Solway Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,1267,Kenlis Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,1390,McKay Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,1660,Arlecdon Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,2217,Windermere Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,2745,Wansfell Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,2794,Alston Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,2906,Border City Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,3189,Belted Will Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,3768,Scawfell Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,3984,Winder Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,5372,Border Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,7576,Flowerden Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,8071,C&W Inst Principals Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,8660,St John’s Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,9430,Custodes Copiiae Chapter of Grand Stewards,,,,,https://cumbriafreemasons.org/chapter-list/,,
+cumberland_westmorland,royal_arch,9734,Brigantes Chapter,,,,,https://cumbriafreemasons.org/chapter-list/,,
