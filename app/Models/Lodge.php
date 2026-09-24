@@ -166,7 +166,13 @@ class Lodge extends Model
      */
     public static function slugFor(string $name, ?string $number, ?string $typeCode): string
     {
-        return Str::slug(trim(self::displayNameFor($name, $typeCode).' '.$number));
+        $suffix = match ($typeCode) {
+            'mark_lodge' => ' mark',
+            'royal_ark_mariner' => ' ram',
+            default => '',
+        };
+
+        return Str::slug(trim(self::displayNameFor($name, $typeCode).' '.$number.$suffix));
     }
 
     /**

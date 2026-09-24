@@ -1,0 +1,43 @@
+province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url
+yorkshire_ne,mark_lodge,95,Star in the East,YO11 2ES,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,182,The Humber,,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,276,Middlesborough,TS5 5QA,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,277,Fitzwilliam,,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,281,Beverlac,HU17 0DY,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,291,Londesborough,YO16 4NG,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,329,De la Pole,,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,337,Streonshalh,YO21 3ET,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,743,St Cuthbert's,DN14 7JW,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,782,Thesaurus,HU7 4UP,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,785,Lord Bolton (DL),HU7 4UP,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,803,Alexandra,HU18 1PU,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,804,Redcar,TS10 3BY,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,845,Alverton,DL8 2BN,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1008,St Peter's,YO1 8NQ,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1040,Cleveland,TS9 5BD,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1130,The Lodge of St Andrew,,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1170,Brough,HU7 4UP,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1428,John Ashton Wade I.M.,YO25 6RU,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1452,Memorial I.M.,,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1532,Saltburn,TS12 1DZ,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1583,The Beacon Centenary,YO42 2HA,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1588,The Victory,YO18 8DT,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1640,The Abbot Hugh of Selby,YO8 4PL,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1671,Sir Wm Crosthwaite M.G.O. (DL),YO42 2HA,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1681,Hoveden I.M.,,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1711,Stokesley I.M.,TS9 5BD,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1784,The Farmers',YO18 8DT,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1830,Sykes,YO25 6RU,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1939,Provincial White Rose I.M.,YO42 2HA,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,mark_lodge,1949,The Combined Services,YO18 8DT,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,royal_ark_mariner,95,Scarborough,YO21 3ET,,,,https://neyorksmark.com/ram-lodges-locations
+yorkshire_ne,royal_ark_mariner,182,Hull,HU7 4UP,,,,https://neyorksmark.com/ram-lodges-locations
+yorkshire_ne,royal_ark_mariner,276,Middlesbrough,TS5 5QA,,,,https://neyorksmark.com/ram-lodges-locations
+yorkshire_ne,royal_ark_mariner,277,Ryedale,,,,,https://neyorksmark.com/ram-lodges-locations
+yorkshire_ne,royal_ark_mariner,743,Howdenshire,,,,,https://neyorksmark.com/ram-lodges-locations
+yorkshire_ne,royal_ark_mariner,803,Alexandra,HU18 1PU,,,,https://neyorksmark.com/ram-lodges-locations
+yorkshire_ne,royal_ark_mariner,845,Allertonshire,YO7 1PS,,,,https://neyorksmark.com/ram-lodges-locations
+yorkshire_ne,royal_ark_mariner,1008,St Peter's,YO1 8NQ,,,,https://neyorksmark.com/ram-lodges-locations
+yorkshire_ne,royal_ark_mariner,1428,Trinity I.C.,YO25 6RU,,,,https://neyorksmark.com/ram-lodges-locations
+yorkshire_ne,royal_ark_mariner,1452,The Ridings I.C.,,,,,https://neyorksmark.com/ram-lodges-locations
+yorkshire_ne,royal_ark_mariner,1583,The Beacon Centenary,YO42 2HA,,,,https://neyorksmark.com/ram-lodges-locations

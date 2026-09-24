@@ -113,4 +113,17 @@ class LodgeSeederTest extends TestCase
             ->filter(fn (Lodge $lodge) => $lodge->schedules->count() === 1)
             ->each(fn (Lodge $lodge) => $this->assertContains($lodge->installation_month, $lodge->schedules->first()->months, $lodge->name));
     }
+
+    public function test_side_orders_load_with_their_own_types_and_never_share_a_slug_with_a_craft_lodge(): void
+    {
+        $this->seedAll();
+
+        foreach (['mark_lodge', 'royal_ark_mariner', 'knights_templar', 'rose_croix'] as $code) {
+            $this->assertGreaterThan(50, Lodge::whereHas('clubType', fn ($type) => $type->where('code', $code))->count(), $code);
+        }
+
+        $this->assertSame('porchester-lodge-27-ram', Lodge::slugFor('Porchester', '27', 'royal_ark_mariner'));
+        $this->assertSame('porchester-lodge-27-mark', Lodge::slugFor('Porchester', '27', 'mark_lodge'));
+        $this->assertSame('porchester-lodge-27', Lodge::slugFor('Porchester', '27', 'craft_lodge'));
+    }
 }

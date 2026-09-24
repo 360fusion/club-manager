@@ -1,0 +1,23 @@
+province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url
+suffolk,mark_lodge,70,Albert Victor,,Ipswich,"1st Wed Feb. Apr, Oct, Dec",Oct,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,105,Freeman,,Bury St Edmunds,"3rd Thurs, Sept, Feb, April (Inst).,1st Mon in Nov",,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,317,Youell,,Gt Yarmouth,"4th Mon Jan, Apr, Nov",Jan,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,686,Lowestoft,,Lowestoft,"1st Mon Apr, Oct, Dec",Apr,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,850,Dunwich,,Bungay,"4th Thurs Mar, Sep, 3rd Thurs May",Sep,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,965,Connaught,,Ipswich,"3rd Tues. Nov, 3rd Tues. Jan, March (Inst), May",,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,1210,Suthburgh,,Sudbury,"2nd Fri Oct, Nov, Feb, Apr",Oct,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,1465,Deben Valley,,Woodbridge,"2nd Thurs Jan, Mar, 2nd Fri. May, Last WD Oct",Oct,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,1659,Brackenbury,,Felixstowe,"4th Thurs. Sept, Nov, Feb, 1st Thurs May.",Nov,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,1715,Ronald Chitty,,Framlingham,"1st Fri Mar, Nov, 3rd Fri June",Mar,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,1724,Thomas Beevor,,Gt Yarmouth,"2nd Mon Jan, Mar, June, Nov",Nov,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,1866,Columbyne,,Stowmarket,"1st Fri May, Oct, Feb",May,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,mark_lodge,1967,Royal Clarence,,Clare,"3rd Mon Feb, April and 4th Mon Oct",Oct,http://www.eastangliamark.org.uk/mark-lodges
+suffolk,royal_ark_mariner,70,Henneker,,Ipswich,"1st Wed Feb. Apr, Oct, Dec",Apr,http://www.eastangliamark.org.uk/ram
+suffolk,royal_ark_mariner,105,Edmondsbury,,Bury St Edmunds,"3rd Thurs Sept, Feb, 1st Mon Nov.",Nov,http://www.eastangliamark.org.uk/ram
+suffolk,royal_ark_mariner,317,Martyn,,Gt Yarmouth,"4th Mon. Nov, Feb, April",Feb,http://www.eastangliamark.org.uk/ram
+suffolk,royal_ark_mariner,686,Lowestoft,,Lowestoft,"1st Mon Apr, Oct, Dec",Oct,http://www.eastangliamark.org.uk/ram
+suffolk,royal_ark_mariner,850,Henham,,Bungay,"4th Thurs Mar, 3rd Thurs May, July",July,http://www.eastangliamark.org.uk/ram
+suffolk,royal_ark_mariner,965,Connaught,,Ipswich,"3rd Tues. Nov, 3rd Tues. Jan, March, May",May,http://www.eastangliamark.org.uk/ram
+suffolk,royal_ark_mariner,1210,Suthburgh,,Sudbury,"2nd Fri Nov, 2nd Fri. Feb, 2nd Fri April, May",May,http://www.eastangliamark.org.uk/ram
+suffolk,royal_ark_mariner,1659,Brackenbury,,Felixstowe,"2nd Thurs Oct, Dec, 4th Thurs May",Oct,http://www.eastangliamark.org.uk/ram
+suffolk,royal_ark_mariner,1967,Royal Clarence,,Clare,"3rd Mon in Feb, Apr & Aug",Aug,http://www.eastangliamark.org.uk/ram

@@ -1,0 +1,11 @@
+province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url
+cambridgeshire,mark_lodge,112,Isaac Newton University,,Cambridge,"1st Sat. Dec, 1st Sat. March, Last Sat. April",Dec,http://www.eastangliamark.org.uk/mark-lodges
+cambridgeshire,mark_lodge,334,York,,Cambridge,"3rd Wed Feb, May, 1st Wed Dec",May,http://www.eastangliamark.org.uk/mark-lodges
+cambridgeshire,mark_lodge,1410,Gild of Good Fellowship,,Wisbech,"2nd Mon Jan, Apr, Nov",Nov,http://www.eastangliamark.org.uk/mark-lodges
+cambridgeshire,mark_lodge,1427,Admiral Rous,,Newmarket,"3rd Fri. Sep, Last Fri. Feb, 1st Fri. May.",Sep,http://www.eastangliamark.org.uk/mark-lodges
+cambridgeshire,mark_lodge,1847,Abbott Simeon,,Ely,"1 Mon Sept, 4 Thurs Nov, 2 Thurs March",Sept,http://www.eastangliamark.org.uk/mark-lodges
+cambridgeshire,royal_ark_mariner,112,Isaac Newton University,,Cambridge,"1st Sat. Dec, 1st Sat. March, Last Sat. April",March,http://www.eastangliamark.org.uk/ram
+cambridgeshire,royal_ark_mariner,334,York,,Cambridge,"3rd Wed Feb, Apr, 1st Wed Dec",Apr,http://www.eastangliamark.org.uk/ram
+cambridgeshire,royal_ark_mariner,1410,Gild of Good Fellowship,,Wisbech,"3rd Wed Feb, 2nd Wed May, 3rd Wed Sept",May,http://www.eastangliamark.org.uk/ram
+cambridgeshire,royal_ark_mariner,1427,Admiral Rous,,Newmarket,"Last Fri Feb, 1st Fri May",May,http://www.eastangliamark.org.uk/ram
+cambridgeshire,royal_ark_mariner,1847,Ship of the Fens,,Ely,"1st Thurs. Nov, 3rd Thurs. June",June,http://www.eastangliamark.org.uk/ram

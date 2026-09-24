@@ -1,0 +1,37 @@
+province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url
+west_kent,mark_lodge,226,Excelsior Lodge,,Welling,"1st Sat in Feb(i), May, Nov",,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,267,King Charles Martyr Lodge,,Tunbridge Wells,"30th Jan, 3rd Fri in May, 19th Nov",Jan,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,309,Saye & Sele Lodge,,Sidcup,"3rd Mon in Jan, Mar, Apr",Jan,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,322,Temple Lodge,,Bromley,"2nd Sat in Jan, June, 3rd Sat in Nov",June,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,416,Royal Oak Lodge,,Sidcup,"3rd Tues in May, Sept, 2nd Tues in Jan",Jan,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,841,Catford Lodge,,Bromley,"1st Wed in Apr, June, Dec",Dec,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,857,Kentish Lodge,,Welling,"1st Tues in March, Dec, 4th Tues in Sep",Sep,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,876,Knole Lodge,,Sevenoaks,"1st Fri June, 2nd Fri Oct & Dec",Oct,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,1083,Orpington Lodge,,Bromley,"1st Wed in Feb, May, July, Nov",Nov,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,1233,Pilgrims Lodge,,Wrotham,"4th Mon in Feb, Apr, Nov",Apr,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,1354,Westwood Lodge,,Wilmington,"3rd Thurs in Feb, 4th Thurs June, 2nd Mon in Dec",Dec,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,1448,Manor Of Bexley Lodge,,Sidcup,"2nd Sat in May, Dec, March",,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,1494,The Lord Harris Lodge,,Sidcup,"3rd Fri in Feb, 2nd Fri in May, 2nd Tues in Dec",,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,1557,Biggin Hill Lodge,,Sevenoaks,"4th Mon Apr, 2nd Mon Nov, 3rd Mon March",,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,1682,The North Kent Lodge,,Wilmington,"3rd Sat in Aug, Dec, 4th Sat in Mar",,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,1691,Kent Mark Stewards’ Lodge,,Wrotham & others,"1st Wed in Sept, Mar",,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,1886,Mandalay Lodge,,Bromley,"3rd Thurs in Jan, 2nd Thurs in May, Nov",,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,mark_lodge,1894,The Erdemont Lodge,,"West Hill, Dartford","2nd Thurs in Sept, Feb, Apr",,https://kentmarkmastermasons.org.uk/mark-lodges/
+west_kent,royal_ark_mariner,226,Excelsior Lodge,,Welling,"1st Sat in Feb, May, Nov",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,267,King Charles The Martyr Lodge,,Tunbridge Wells,"1st Thurs in April, 19th Nov",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,309,Saye & Sele Lodge,,Sidcup,"3rd Mon in Apr, Nov, 4th Tues in May",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,322,Temple Lodge,,Bromley,"2nd Sat in Jan, June, 3rd Sat in Nov",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,416,Royal Oak Lodge,,Sidcup,"2nd Tues in Jan, 3rd Tues in May, Sept",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,841,Catford Lodge,,Bromley,"1st Wed in Apr, June, Dec",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,857,Kentish Lodge,,Welling,"1st Tues in Mar, Dec, 4th Tues in Sept",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,876,Knole Lodge,,Sevenoaks,"2nd Fri in Oct, Dec, Mar",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,1083,Orpington Lodge,,Bromley,"1st Wed in Feb, Nov, 3rd Fri in May",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,1233,Pilgrims Lodge,,Wrotham,"1st Thurs in Sept, Apr",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,1354,Westwood Lodge,,Wilmington,"4th Thurs in Feb, June",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,1448,Manor Of Bexley Lodge,,Sidcup,"2nd Sat in Mar, May, Dec",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,1494,The Lord Harris Lodge,,Sidcup,"3rd Fri Feb, 2nd Fri May, Sept, 2nd Tues Dec",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,1557,Biggin Hill Lodge,,Sevenoaks,"4th Mon in Apr, Sept, 2nd Mon in Nov",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,1584,Oakley Lodge,,Bromley,"4th Tues in Feb, Oct, 2nd Tues in Sept",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,1682,The North Kent Lodge,,Wilmington,"4th Sat in March, 3rd Sat in Aug, Dec",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,1886,Ravensmead & Mandalay Lodge,,Bromley,"4th Wed in Apr, Sept",,https://kentmarkmastermasons.org.uk/ram-lodges/
+west_kent,royal_ark_mariner,1984,The Erdemont Lodge,,"West Hill, Dartford","2nd Thur in Feb, Apr, Sept",,https://kentmarkmastermasons.org.uk/ram-lodges/
