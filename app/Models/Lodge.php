@@ -149,7 +149,10 @@ class Lodge extends Model
             'craft_lodge', 'mark_lodge', 'royal_ark_mariner' => 'Lodge',
             'royal_arch', 'rose_croix' => 'Chapter',
             'knights_templar' => 'Preceptory',
-            'cryptic_council' => 'Council',
+            'cryptic_council', 'allied_masonic' => 'Council',
+            'secret_monitor', 'red_cross_constantine' => 'Conclave',
+            'ktp_tabernacle' => 'Tabernacle',
+            'sria_college' => 'College',
             default => null,
         };
 
@@ -169,6 +172,10 @@ class Lodge extends Model
         $suffix = match ($typeCode) {
             'mark_lodge' => ' mark',
             'royal_ark_mariner' => ' ram',
+            'cryptic_council' => ' rsm',
+            'allied_masonic' => ' amd',
+            'secret_monitor' => ' osm',
+            'red_cross_constantine' => ' rcc',
             default => '',
         };
 

@@ -1,0 +1,84 @@
+province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url
+london_metropolitan,rose_croix,1,Grand Metropolitan,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,3,Mount Calvary,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,29,Palestine,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,45,Oxford and Cambridge University,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,53,Holy Sanctuary,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,67,United Studholme,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,71,Bayard,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,72,Canterbury,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,79,Orpheus,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,97,Rose and Lily,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,100,Duke of Connaught and Strathearn,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,101,Adoniram,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,105,Coeur de Lion,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,107,Shadwell Clerke,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,121,Belgrave,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,126,Victory,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,129,Tuscan,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,130,Alfred Bevan,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,132,Dartrey,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,137,Earl of Lathom,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,138,Grafton,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,139,Alleyn,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,140,St. Pancras,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,148,Euston,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,151,King Edward VII,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,160,Golden Square,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,161,McMahon,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,164,Athiumney,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,166,Celsus,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,168,Crusaders,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,181,Public Schools,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,184,Old Wykeharnist,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,185,Connaught Army and Navy,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,186,City of London,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,207,Royal Naval Volunteer Reserve,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,231,Royal Savoy,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,232,True Light,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,234,Landale Johnston,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,235,Sydenham,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,242,Royal Colonial Institute,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,245,Pro Deo et Patria,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,249,Golden Seal,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,263,Fidelis ad Finem,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,278,Piccadilly,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,309,Rose of Sind,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,310,Pillar of Wisdom,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,312,Khyber,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,320,Woodard,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,323,Eton and Harrow,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,328,Britannic Chapter of Madeira,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,341,St. Saviour’s,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,356,Northern Heights,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,360,Avenue,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,371,Hale,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,384,Arbor Vitae,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,392,Lute,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,408,Barnet,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,421,Harmony,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,442,Middlesex St. David's,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,478,Christ’s Hospital,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,515,"Richard, Earl of Donoughmore",,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,521,St. John’s Wood,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,529,Juventus,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,534,Sutton,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,549,John Tower,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,556,Old Masonians,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,567,Green Room,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,583,Howell Evans,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,600,Holy Empire,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,630,Garrick,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,631,University of London,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,652,Friendship from Service,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,653,Castle Gates,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,717,Red Rose,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,777,Cornucopia,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,992,St. Eligius,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,999,Salus Populi,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Peter
+london_metropolitan,rose_croix,1042,West Indies,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Matthew
+london_metropolitan,rose_croix,1044,Swan of Avon,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,1061,Guild of Freemen,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul
+london_metropolitan,rose_croix,1084,Abbey of St. James,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._James
+london_metropolitan,rose_croix,1108,London West Africa,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._John
+london_metropolitan,rose_croix,1163,Henry Cottrell,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/London_Group_of_Chapters_-_St._Paul

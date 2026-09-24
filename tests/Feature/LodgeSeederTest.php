@@ -122,6 +122,12 @@ class LodgeSeederTest extends TestCase
             $this->assertGreaterThan(50, Lodge::whereHas('clubType', fn ($type) => $type->where('code', $code))->count(), $code);
         }
 
+        foreach (['cryptic_council', 'secret_monitor', 'allied_masonic', 'red_cross_constantine'] as $code) {
+            $this->assertGreaterThan(10, Lodge::whereHas('clubType', fn ($type) => $type->where('code', $code))->count(), $code);
+        }
+
+        $this->assertSame('invicta-council-54-amd', Lodge::slugFor('Invicta', '54', 'allied_masonic'));
+        $this->assertSame('invicta-council-54-rsm', Lodge::slugFor('Invicta', '54', 'cryptic_council'));
         $this->assertSame('porchester-lodge-27-ram', Lodge::slugFor('Porchester', '27', 'royal_ark_mariner'));
         $this->assertSame('porchester-lodge-27-mark', Lodge::slugFor('Porchester', '27', 'mark_lodge'));
         $this->assertSame('porchester-lodge-27', Lodge::slugFor('Porchester', '27', 'craft_lodge'));

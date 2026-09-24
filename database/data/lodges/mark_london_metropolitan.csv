@@ -1,29 +1,223 @@
 province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url
+london_metropolitan,mark_lodge,0,Grand Masters Lodge,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Mark_Master_Masons_of_London
+london_metropolitan,mark_lodge,1,St. Mark's Lodge,SW1A 1PL,,"4th Wednesday of April, October",February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,mark_lodge,3,Keystone,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,mark_lodge,4,Prince of Wales Lodge,SW1A 1PL,,1st Monday of February. 4th Monday of October,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,5,Mallet and Chisel Lodge,SW1A 1PL,,2nd Wednesday of January. 3rd Wednesday of April,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,7,Carnarvon Lodge,SW1A 1PL,,3rd Thursday of May. 4th Thursday of November,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,8,Thistle Lodge,SW1A 1PL,,4th Friday of January. 3rd Monday of April,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,22,Southwark Lodge,SW1A 1PL,,1st Friday of November,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,mark_lodge,44,Florence Nightingale Lodge,,"Mark Masons Hall, London","3rd Thu Feb, 4th Thu May, 4th Thu Oct",May,https://kentmarkmastermasons.org.uk/mark-lodges/
+london_metropolitan,mark_lodge,104,The Macdonald Lodge,,Bylaws date = Easter Monday,last Friday of January. 1st Thursday of April,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,107,Keystone Lodge,SW1A 1PL,,"2nd Thursday of May, November",February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,139,Panmure Lodge,SW1A 1PL,,4th Wednesday of February,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,176,New Era Lodge,SW1A 1PL,,1st Saturday of February. 3rd Saturday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,mark_lodge,181,Sir Francis Burdett,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,mark_lodge,197,Studholme Lodge,SW1A 1PL,,1st Thursday of May,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,224,Athlumney Menatschim Lodge,SW1Y 6BS,,2nd Wednesday of October,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,234,Brixton Lodge,SW1A 1PL,,4th Tuesday of February. 1st Monday of December,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,238,Prince Leopold Lodge,SW1A 1PL,,3rd Monday of March. 2nd Thursday of September,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,239,Royal Naval Lodge,SW1A 1PL,,"3rd Thursday of April, June",January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,mark_lodge,284,High Cross,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
 london_metropolitan,mark_lodge,294,Royal Naval College,,"Mark Masons Hall, London","2nd Mon in Feb, May, 4th Mon in Oct",Feb,https://kentmarkmastermasons.org.uk/mark-lodges/
+london_metropolitan,mark_lodge,315,Henniker Lodge,W13 9NF,,1st Friday of February. 2nd Friday of May,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,mark_lodge,332,The Greenwich Lodge,,"Mark Masons Hall, London","2nd Thurs in Apr, Dec, 4th Thurs in Sept",Sept,https://kentmarkmastermasons.org.uk/mark-lodges/
 london_metropolitan,mark_lodge,350,Emblems of Service,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
 london_metropolitan,mark_lodge,357,Chiswick,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,mark_lodge,361,Onslow Lodge,,Furniture Makers Hall,4th Tuesday of March. 1st Tuesday of July,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,363,Ruspini Lodge,SW1A 1PL,,2nd Thursday of March,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,385,King Solomon Lodge,SW1A 1PL,,1st Thursday of June. 2nd Thursday of November,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,399,Euston Lodge,SW1A 1PL,,3rd Thursday of June,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,400,Egerton of Tatton Lodge,SW1A 1PL,,1st Thursday of November,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,406,Scots Lodge,SW1A 1PL,,3rd Monday of October,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,410,Eclectic and Empress Britannic Lodge,SW1A 1PL,,2nd Monday of November,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,411,Ubique Lodge,SW1A 1PL,,"3rd Friday of June, September",December,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,415,Grafton Lodge,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Mark_Master_Masons_of_London
+london_metropolitan,mark_lodge,418,Camden Lodge,,Civil Service Club,4th Tuesday of June. 3rd Tuesday of October,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,431,Hibernia Lodge,SW1A 1PL,,3rd Thursday of November,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,433,Britannic Lodge,SW1A 1PL,,3rd Friday of April. 2nd Monday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,454,Tuscan Lodge,SW1A 1PL,,4th Monday of October,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,458,Ethical Lodge,,Milan,1st Saturday of April. 2nd Friday of May,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,459,La France Lodge,SW1A 1PL,,"3rd Monday of April, October",June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,469,Savage Club Lodge,SW1A 1PL,,"2nd Wednesday of March, October",December,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,487,Dramatic Lodge,SW1A 1PL,,1st Tuesday of October,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,489,United Service Lodge,SW1A 1PL,,2nd Tuesday of February. 2nd Thursday of May,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,mark_lodge,494,Saint Pancras,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,mark_lodge,569,Abernethy Lodge,SW1A 1PL,,4th Thursday of January. 2nd Monday of October,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,577,Wicket Lodge,SW1A 1PL,,1st Friday of November,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,616,Carnarvon Lodge,SW1A 1PL,,"2nd Saturday of June, October",February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,633,Horas Lodge,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Mark_Master_Masons_of_London
+london_metropolitan,mark_lodge,643,Imperial Lodge,SW1Y 6BS,,2nd Tuesday of March. 1st Wednesday of September,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,647,Guild of Freemen Lodge,SW1A 1PL,,3rd Thursday of March. 2nd Thursday of November,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,652,Alliance and Memorial Lodge,SW1A 1PL,,1st Tuesday of November,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,728,Royal Colonial Institute Lodge,SW1A 1PL,,3rd Friday of June. 1st Friday of December,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,742,Kelvin Lodge,SW1A 1PL,,4th Tuesday of January. 1st Tuesday of November,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,748,Connaught Army and Navy Lodge,SW1A 1PL,,3rd Tuesday of February,July,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,mark_lodge,772,Enfield,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,mark_lodge,786,Sanitarian Lodge,SW1A 1PL,,4th Wednesday of February. 3rd Monday of September,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,791,Public Schools Lodge,SW1A 1PL,,2nd Wednesday of February,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,801,Vaudeville Lodge,,Grand Order of Water Rats,4th Tuesday of June. 1st Monday of October,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,802,Composite Lodge,SW1A 1PL,,4th Thursday of April,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,815,FitzRoy Lodge,,Armoury House,2nd Monday of September,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,828,King Solomon's Quarries Lodge,SW1A 1PL,,3rd Thursday of June. 4th Thursday of November,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,830,Eton and Harrow Lodge,SW1A 1PL,,3rd Tuesday of November,July,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,833,Maguncor Lodge,SW1A 1PL,,"2nd Wednesday of July, October",March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,835,Cenabis Bene Lodge,SW1A 1PL,,1st Wednesday of September,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,856,Golden Square Lodge,SW1A 1PL,,"2nd Wednesday of April, October",February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,mark_lodge,869,City of London,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
 london_metropolitan,mark_lodge,892,Tower Hamlets,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,mark_lodge,897,Barnet Mark Well Lodge,SW1A 1PL,,4th Tuesday of May. 1st Tuesday of December,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,899,Irenic Lodge,SW1A 1PL,,3rd Wednesday of October,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,921,Foundation Lodge,SW1A 1PL,,4th Monday of September,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,932,Prudence and Verity Lodge,SW1A 1PL,,2nd Monday of November,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,936,Meridian Lodge,SW1A 1PL,,4th Wednesday of April,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,976,Johann Gutenberg Lodge,SW1A 1PL,,2nd Tuesday of June. 4th Tuesday of September,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,987,Lapis Lapsus Lodge,SW1A 1PL,,3rd Wednesday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,996,ISMA Lodge,SW1A 1PL,,4th Tuesday of February. 1st Wednesday of May,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,997,Pickwick Lodge,SW1A 1PL,,2nd Friday of March. 3rd Friday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,mark_lodge,1063,Middlesex Saint David's,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,mark_lodge,1071,Polytechnic Lodge,SW1A 1PL,,3rd Tuesday of April. 1st Wednesday of October,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1074,Thea Sinensis Lodge,SW1A 1PL,,1st Wednesday of February. 4th Thursday of October,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1091,Commemoration Lodge,,Mumbai Square,4th Tuesday of May. 4th Wednesday of October,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1105,Mapesbury Lodge,SW1A 1PL,,1st Thursday of September,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1118,Halcyon Lodge,SW1A 1PL,,3rd Thursday of January. 4th Thursday of May,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1124,St. John's Wood Lodge,SW1A 1PL,,1st Wednesday of November,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,mark_lodge,1138,Exedra,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,mark_lodge,1152,Minchenden Oak Lodge,N14 6EB,,2nd Wednesday of March. 3rd Wednesday of June,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1160,Pro Minimis Lodge,SW1A 1PL,,2nd Thursday of June,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1200,Centenary Lodge,,Mumbai Square,4th Monday of April. 3rd Monday of October,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1227,London Installed Mark Masters Lodge,SW1A 1PL,,4th Monday of February,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1228,Drury Lane Lodge,SW1A 1PL,,4th Thursday of May. 3rd Thursday of October,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1265,Woodard Lodge,SW1A 1PL,,4th Tuesday of March,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1313,Friendship from Service Lodge,SW1A 1PL,,2nd Thursday of January. 1st Thursday of September,July,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1336,Scriveners Lodge,SW1A 1PL,,1st Monday of September,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1363,Piscator Lodge,SW1A 1PL,,4th Friday of April. 1st Monday of December,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1389,University of London Lodge,SW1A 1PL,,2nd Thursday of February. 1st Wednesday of May,December,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1457,London West Africa Lodge,SW1A 1PL,,3rd Friday of March. 2nd Friday of June,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1467,Italia Lodge,SW1A 1PL,,2nd Monday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1473,Semper Fidelis Lodge,SW1A 1PL,,2nd Wednesday of June. 3rd Wednesday of December,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1534,Orchestral Lodge,SW1A 1PL,,1st Wednesday of March. 2nd Monday of June,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1604,London East Africa Lodge,SW1A 1PL,,3rd Saturday of November,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1638,City Livery Lodge,,Bakers Hall,4th Wednesday of June. 3rd Tuesday of November,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1641,The Mark Provincial Grand Secretaries Lodge,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Mark_Master_Masons_of_London
+london_metropolitan,mark_lodge,1748,Euclid Lodge,SW1A 1PL,,1st Wednesday of June. 4th Tuesday of October,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1767,Roentgen Portal Lodge,SW1A 1PL,,"2nd Thursday of March, June",October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1771,Epworth Lodge,SW1Y 6BS,,3rd Monday of February. 1st Friday of November,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1856,Carpathia Lodge,SW1A 1PL,,1st Saturday of February. 3rd Saturday of November,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1870,London Mark Provincial Grand Stewards' Lodge,SW1A 1PL,,1st Thursday of June,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1889,Equator Lodge,W13 9NF,,"3rd Friday of February, May",October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1895,St. James Lodge,SW1A 1PL,,4th Thursday of March,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1909,Highgate Lodge,SW1A 1PL,,4th Saturday of June. 1st Saturday of December,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1953,Lodge of Clemency,SW1A 1PL,,2nd Saturday of January,July,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1978,Aegean Lodge,SW1A 1PL,,4th Tuesday of March,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1984,Gallipoli Lodge,SW1A 1PL,,"3rd Saturday of February, May",November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1989,Loyalty Lodge,SW1A 1PL,,3rd Friday of June. 3rd Saturday of September,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1994,Albatross Lodge,,Golf course,1st Tuesday of May. last Thursday of July,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,1997,Ralph Reader Lodge,SW1A 1PL,,"2nd Saturday of February, May",October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,2001,Namik Kemal Lodge,SW1A 1PL,,1st Friday of November,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,2003,Metropolitan Lodge,SW1A 1PL,,last Thursday of October,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,2013,Locomotion Lodge,SW1A 1PL,,2nd Wednesday of February. 2nd Friday of April,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,2014,Spirit of Rugby Lodge,SW1A 1PL,,2nd Friday of February. 2nd Thursday of April,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,2022,Khalsa Lodge,SW1A 1PL,,2nd Saturday of January. 4th Saturday of April,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,2042,Royal Air Force,SW1A 1PL,,2nd Friday of April,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,2061,The London Charity Stewards' Lodge,SW1A 1PL,,2nd Saturday of March,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,mark_lodge,2070,Atholl,SW1A 1PL,,1st Saturday of November,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1,Mother,SW1A 1PL,,3rd Tuesday of February,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,royal_ark_mariner,3,Keystone,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,royal_ark_mariner,4,Prince of Wales Lodge,SW1A 1PL,,3rd Monday of May. 4th Monday of October,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,5,Mallet and Chisel Lodge,SW1A 1PL,,3rd Wednesday of April. 2nd Tuesday of October,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,7,Carnarvon Lodge,SW1A 1PL,,"3rd Thursday of February, May",November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,8,Thistle Lodge,SW1A 1PL,,4th Friday of January. 2nd Tuesday of October,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,22,Southwark Lodge,SW1A 1PL,,2nd Monday of February,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,royal_ark_mariner,44,Florence Nightingale Lodge,,"Mark Masons Hall, London","4th Tues in Feb, 2nd Tues in May, 4th Mon in Nov",,https://kentmarkmastermasons.org.uk/ram-lodges/
+london_metropolitan,royal_ark_mariner,104,Macdonald Lodge,,Bylaws date = Easter Monday,last Friday of January. last Thursday of October,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,107,Hospitallers,SW1A 1PL,,"2nd Thursday of February, November",May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,139,Panmure Lodge,SW1A 1PL,,3rd Wednesday of November,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,176,New Era Lodge,SW1A 1PL,,"3rd Saturday of June, October",February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,royal_ark_mariner,181,Sir Francis Burdett,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,royal_ark_mariner,197,Studholme Lodge,SW1A 1PL,,4th Thursday of November,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,224,Athlumney Menatschim Lodge,SW1Y 6BS,,2nd Wednesday of February,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,234,Brixton Lodge,SW1A 1PL,,4th Tuesday of February. 2nd Tuesday of April,December,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,238,Prince Leopold Lodge,SW1A 1PL,,3rd Monday of March. 4th Wednesday of June,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,239,Royal Naval Lodge,SW1A 1PL,,"3rd Thursday of January, April",June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,royal_ark_mariner,284,High Cross,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
 london_metropolitan,royal_ark_mariner,294,Royal Naval College,,"Mark Masons Hall, London","2nd Mon in May, 4th Mon in Oct",,https://kentmarkmastermasons.org.uk/ram-lodges/
+london_metropolitan,royal_ark_mariner,315,Henniker Lodge,W13 9NF,,2nd Friday of May. 1st Friday of November,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,royal_ark_mariner,332,The Greenwich Lodge,,"Mark Masons Hall, London","4th Thurs in Sept, 2nd Thurs in Apr, Dec",,https://kentmarkmastermasons.org.uk/ram-lodges/
 london_metropolitan,royal_ark_mariner,350,Emblems of Service,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
 london_metropolitan,royal_ark_mariner,357,Chiswick,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,royal_ark_mariner,361,Onslow Lodge,,Furniture Makers Hall,1st Tuesday of July. 3rd Thursday of November,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,363,Ruspini Lodge,SW1A 1PL,,2nd Thursday of March,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,385,King Solomon Lodge,SW1A 1PL,,4th Tuesday of January. 1st Thursday of June,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,399,Euston Lodge,SW1A 1PL,,3rd Thursday of June,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,400,Matier,SW1A 1PL,,2nd Monday of May,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,406,Scots Lodge,SW1A 1PL,,3rd Monday of February,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,410,Empress Britannic Lodge,SW1A 1PL,,3rd Thursday of March,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,411,Ubique Lodge,SW1A 1PL,,"3rd Friday of September, December",June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,418,Camden Lodge,,Civil Service Club,3rd Wednesday of March. 4th Tuesday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,431,Hibernia Lodge,SW1A 1PL,,3rd Monday of March,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,433,Britannic Lodge,SW1A 1PL,,2nd Monday of June. 2nd Tuesday of October,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,454,Tuscan Lodge,SW1A 1PL,,3rd Monday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,458,Ethical Lodge,,Milan,1st Saturday of April. 4th Friday of October,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,459,La France Lodge,SW1A 1PL,,"3rd Monday of April, June",October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,487,Dramatic Lodge,,Union Jack Club,2nd Wednesday of September,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,489,United Service Lodge,SW1A 1PL,,2nd Thursday of May. 2nd Tuesday of November,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,royal_ark_mariner,494,Saint Pancras,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,royal_ark_mariner,569,Abernethy Lodge,SW1A 1PL,,3rd Monday of March. 2nd Monday of October,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,577,Wicket Lodge,SW1A 1PL,,1st Friday of February,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,616,Carnarvon Lodge,SW1A 1PL,,"2nd Saturday of February, June",October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,633,Horas Lodge,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Mark_Master_Masons_of_London
+london_metropolitan,royal_ark_mariner,647,Guild of Freemen Lodge,SW1A 1PL,,3rd Thursday of March. 2nd Thursday of November,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,652,Alliance,SW1A 1PL,,4th Tuesday of May,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,728,Royal Colonial Institute Lodge,SW1A 1PL,,2nd Friday of March. 3rd Friday of June,December,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,742,Kelvin Lodge,SW1A 1PL,,4th Tuesday of January. 1st Tuesday of November,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,748,Connaught Army and Navy Lodge,SW1A 1PL,,2nd Wednesday of July,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,royal_ark_mariner,772,Enfield,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,royal_ark_mariner,786,Sanitarian Lodge,SW1A 1PL,,4th Wednesday of February. 4th Monday of June,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,791,Public Schools Lodge,SW1A 1PL,,1st Wednesday of June,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,801,Vaudeville Lodge,,Grand Order of Water Rats,2nd Monday of January. 4th Tuesday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,802,Composite Lodge,SW1A 1PL,,4th Thursday of September,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,828,King Solomon's Quarries Lodge,SW1A 1PL,,"4th Thursday of April, November",June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,856,Golden Square Lodge,SW1A 1PL,,3rd Wednesday of February. 2nd Wednesday of October,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,royal_ark_mariner,869,City of London,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
 london_metropolitan,royal_ark_mariner,892,Tower Hamlets,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,royal_ark_mariner,897,Barnet Mark Well Lodge,SW1A 1PL,,4th Tuesday of May. 3rd Monday of September,December,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,899,Irenic Lodge,SW1A 1PL,,3rd Wednesday of April,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,921,Foundation Lodge,SW1A 1PL,,4th Monday of March,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,936,Meridian Lodge,SW1A 1PL,,3rd Wednesday of September,April,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,976,Johann Gutenberg Lodge,SW1A 1PL,,1st Tuesday of March. 2nd Tuesday of June,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,996,ISMA Lodge,SW1A 1PL,,4th Tuesday of February. 3rd Wednesday of October,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,997,Pickwick Lodge,SW1A 1PL,,3rd Friday of June. 4th Friday of October,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,royal_ark_mariner,1063,Middlesex Saint David's,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,royal_ark_mariner,1071,Polytechnic Lodge,SW1A 1PL,,"3rd Tuesday of April, June",October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1074,Thea Sinensis Lodge,SW1A 1PL,,4th Thursday of October,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1091,Commemoration Lodge,,Mumbai Square,2nd Friday of February. 4th Tuesday of May,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1105,Mapesbury Lodge,SW1A 1PL,,1st Saturday of July,September,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1118,Halcyon Lodge,SW1A 1PL,,4th Thursday of May. 3rd Thursday of November,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1124,St. John's Wood Lodge,SW1A 1PL,,1st Monday of March,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
 london_metropolitan,royal_ark_mariner,1138,Exedra,,Mark Masons Hall,,,https://middlesexmark.org/mark-ram-directory/
+london_metropolitan,royal_ark_mariner,1152,Minchenden Oak Lodge,N14 6EB,,3rd Wednesday of June. 1st Wednesday of September,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1160,Pro Minimis Lodge,SW1A 1PL,,1st Thursday of March,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1200,Centenary Lodge,,Mumbai Square,4th Monday of April. 2nd Monday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1227,London Installed Commanders Lodge,SW1A 1PL,,1st Monday of September,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1228,Drury Lane Lodge,SW1A 1PL,,2nd Thursday of March. 3rd Thursday of October,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1265,Woodard Lodge,SW1A 1PL,,3rd Wednesday of October,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1313,Friendship from Service Lodge,SW1A 1PL,,1st Monday of July. 1st Thursday of September,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1336,Gibraltar Lodge,,Westminster,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Mark_Master_Masons_of_London
+london_metropolitan,royal_ark_mariner,1363,Piscator Lodge,SW1A 1PL,,"4th Friday of January, April",December,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1389,University of London Lodge,SW1A 1PL,,1st Wednesday of May,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1457,London West Africa Lodge,SW1A 1PL,,"2nd Friday of June, September",March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1467,Italia Lodge,SW1A 1PL,,2nd Monday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1473,Semper Fidelis Lodge,SW1A 1PL,,1st Thursday of April. 3rd Wednesday of December,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1604,London East Africa Lodge,SW1A 1PL,,3rd Saturday of May,November,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1638,City Livery Lodge,,Bakers Hall,2nd Tuesday of February. 3rd Tuesday of November,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1748,Euclid Lodge,SW1A 1PL,,3rd Tuesday of January,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1889,Equator Lodge,W13 9NF,,"3rd Friday of February, October",May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1895,St. James Lodge,SW1A 1PL,,4th Thursday of June,June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1909,Highgate Lodge,SW1A 1PL,,"1st Saturday of April, December",June,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1978,Aegean Lodge,SW1A 1PL,,4th Tuesday of November,March,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1989,Loyalty Lodge,SW1A 1PL,,3rd Friday of June. 3rd Saturday of September,May,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,1997,Ralph Reader Lodge,SW1A 1PL,,"2nd Saturday of May, October",February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,2003,Metropolitan Lodge,SW1A 1PL,,4th Tuesday of June,October,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,2013,Locomotion Lodge,SW1A 1PL,,2nd Friday of April. last Friday of October,February,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/
+london_metropolitan,royal_ark_mariner,2022,Khalsa Lodge,SW1A 1PL,,4th Saturday of April. 2nd Saturday of September,January,https://www.markprovinceoflondon.com/diary/lodge-meeting-dates/

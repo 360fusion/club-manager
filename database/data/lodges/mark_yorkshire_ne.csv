@@ -1,4 +1,5 @@
 province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url
+yorkshire_ne,mark_lodge,12,Minerva Lodge,,Hull,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Mark_Master_Masons_of_North_and_East_Yorkshire
 yorkshire_ne,mark_lodge,95,Star in the East,YO11 2ES,,,,https://neyorksmark.com/mark-lodges
 yorkshire_ne,mark_lodge,182,The Humber,,,,,https://neyorksmark.com/mark-lodges
 yorkshire_ne,mark_lodge,276,Middlesborough,TS5 5QA,,,,https://neyorksmark.com/mark-lodges
@@ -30,6 +31,7 @@ yorkshire_ne,mark_lodge,1784,The Farmers',YO18 8DT,,,,https://neyorksmark.com/ma
 yorkshire_ne,mark_lodge,1830,Sykes,YO25 6RU,,,,https://neyorksmark.com/mark-lodges
 yorkshire_ne,mark_lodge,1939,Provincial White Rose I.M.,YO42 2HA,,,,https://neyorksmark.com/mark-lodges
 yorkshire_ne,mark_lodge,1949,The Combined Services,YO18 8DT,,,,https://neyorksmark.com/mark-lodges
+yorkshire_ne,royal_ark_mariner,12,Minerva Lodge,,Hull,,,https://catalogue.wmlmt.org.uk/wiki/Provincial_Grand_Lodge_of_Mark_Master_Masons_of_North_and_East_Yorkshire
 yorkshire_ne,royal_ark_mariner,95,Scarborough,YO21 3ET,,,,https://neyorksmark.com/ram-lodges-locations
 yorkshire_ne,royal_ark_mariner,182,Hull,HU7 4UP,,,,https://neyorksmark.com/ram-lodges-locations
 yorkshire_ne,royal_ark_mariner,276,Middlesbrough,TS5 5QA,,,,https://neyorksmark.com/ram-lodges-locations
