@@ -32,7 +32,7 @@ class LodgeReferenceLinks
     {
         $links = [];
 
-        foreach ($lodge->sources as $source) {
+        foreach ($lodge->sources->where('kind', '!=', LodgeSource::UGLE_HALL) as $source) {
             $links[] = [LodgeSource::TIERS[$source->kind] ?? 3, ['label' => match ($source->kind) {
                 LodgeSource::PROVINCE_LIST => "The province's list of lodges",
                 LodgeSource::DIRECTORY_PAGE => 'OnTheSquare: this lodge',
@@ -41,7 +41,7 @@ class LodgeReferenceLinks
             }, 'url' => $source->url, 'is_search' => false]];
         }
 
-        if ($lodge->sources->isEmpty() && $lodge->source_url) {
+        if ($lodge->sources->where('kind', '!=', LodgeSource::UGLE_HALL)->isEmpty() && $lodge->source_url) {
             $links[] = [2, ['label' => "This lodge on the province's website", 'url' => $lodge->source_url, 'is_search' => false]];
         }
 

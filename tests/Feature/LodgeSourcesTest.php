@@ -107,7 +107,11 @@ class LodgeSourcesTest extends TestCase
 
         $groups = LodgeReferenceLinks::forLodge($lodge->fresh(['sources', 'masonicHall']));
 
+        $lodge->sources()->create(['kind' => LodgeSource::UGLE_HALL, 'url' => 'https://www.ugle.org.uk/x/hall']);
+        $groups = LodgeReferenceLinks::forLodge($lodge->fresh(['sources', 'masonicHall']));
+
         $this->assertSame([1, 2, 3], array_column($groups, 'tier'));
+        $this->assertCount(2, $groups[0]['links']);
         $this->assertSame(['https://www.ugle.org.uk/x/hall'], [$groups[0]['links'][0]['url']]);
         $this->assertTrue($groups[0]['links'][1]['is_search']);
         $this->assertStringContainsString('origin_address%5D=DE55%207AQ', $groups[0]['links'][1]['url']);
