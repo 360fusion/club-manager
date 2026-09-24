@@ -1,44 +1,44 @@
-province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url
-monmouthshire,royal_arch,7901,Llantarnam Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/llantarnamchapter7901/
-monmouthshire,royal_arch,4562,Crystal Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/crystalchapter4562/
-monmouthshire,royal_arch,4074,Frederick Phillips Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/frederickphillipschapter4074/
-monmouthshire,royal_arch,3762,Gwent Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/gwentchapter3762/
-monmouthshire,royal_arch,2964,Mon First Principals Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/monfirstprincipalschapter2964/
-monmouthshire,royal_arch,2226,St David’s Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/stdavidschapter2226/
-monmouthshire,royal_arch,2186,Striguil Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/striguilchapter2186/
-monmouthshire,royal_arch,1562,Homfray Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/homfraychapter1562/
-monmouthshire,royal_arch,1098,Prince of Wales Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/princeofwaleschapter1098/
-monmouthshire,royal_arch,818,St John’s Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/stjohnschapter818/
-monmouthshire,royal_arch,683,St Woolos Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/stwooloschapter683/
-monmouthshire,royal_arch,471,Silurian Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/silurianchapter471/
-monmouthshire,royal_arch,457,Loyal Monmouth Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/loyalmonmouthchapter457/
-monmouthshire,royal_arch,1258,Kennard Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/kennardchapter1258/
-monmouthshire,craft_lodge,2964,Charles Lyne Installed Masters Lodge,,,,,https://monmouthshirefreemasons.org/lodge/charles-lyne-installed-masters-lodge-2964/
-monmouthshire,craft_lodge,9840,Blue Lamp Lodge,,,,,https://monmouthshirefreemasons.org/lodge/blue-lamp-lodge-9840/
-monmouthshire,craft_lodge,9875,Armed Forces Lodge,,,,,https://monmouthshirefreemasons.org/lodge/armed-forces-lodge-9875/
-monmouthshire,craft_lodge,9530,Myrddin Jones Lodge,,,,,https://monmouthshirefreemasons.org/lodge/myrddin-jones-lodge-9530/
-monmouthshire,craft_lodge,1098,St George’s Lodge,,,,,https://monmouthshirefreemasons.org/lodge/st-georges-lodge-1098/
-monmouthshire,craft_lodge,2226,St David’s Lodge,,,,,https://monmouthshirefreemasons.org/lodge/st-davids-lodge-2226/
-monmouthshire,craft_lodge,1562,Homfray Lodge,,,,,https://monmouthshirefreemasons.org/lodge/homfray-lodge-1562/
-monmouthshire,craft_lodge,2556,Glyn Ebbw Lodge,,,,,https://monmouthshirefreemasons.org/lodge/glyn-ebbw-lodge-2556/
-monmouthshire,craft_lodge,6169,Lodge of Friendship,,,,,https://monmouthshirefreemasons.org/lodge/lodge-of-friendship-6169/
-monmouthshire,craft_lodge,471,Silurian Lodge,,,,,https://monmouthshirefreemasons.org/lodge/silurian-lodge-471/
-monmouthshire,craft_lodge,5264,NIOBA Lodge,,,,,https://monmouthshirefreemasons.org/lodge/nioba-lodge-5264/
-monmouthshire,craft_lodge,4074,Jasper Tudor Lodge,,,,,https://monmouthshirefreemasons.org/lodge/jasper-tudor-4074/
-monmouthshire,craft_lodge,457,Loyal Monmouth Lodge,,,,,https://monmouthshirefreemasons.org/lodge/loyal-monmouth-lodge-457/
-monmouthshire,craft_lodge,1429,Albert Edward Prince of Wales Lodge,,,,,https://monmouthshirefreemasons.org/lodge/aepow-lodge-1429/
-monmouthshire,craft_lodge,2186,Striguil Lodge,,,,,https://monmouthshirefreemasons.org/lodge/striguil-lodge-2186/
-monmouthshire,craft_lodge,6779,Casnewydd Lodge,,,,,https://monmouthshirefreemasons.org/lodge/casnewydd-lodge-6779/
-monmouthshire,craft_lodge,4562,Crystal Lodge,,,,,https://monmouthshirefreemasons.org/lodge/crystal-lodge-4562/
-monmouthshire,craft_lodge,1258,Kennard Lodge,,,,,https://monmouthshirefreemasons.org/lodge/kennard1258/
-monmouthshire,craft_lodge,7901,Llantarnam Lodge,,,,,https://monmouthshirefreemasons.org/lodge/llantarnam7901/
-monmouthshire,craft_lodge,8283,Henllys Lodge,,,,,https://monmouthshirefreemasons.org/lodge/henllys8283/
-monmouthshire,craft_lodge,818,St John’s Lodge,,,,,https://monmouthshirefreemasons.org/lodge/stjohns818/
-monmouthshire,craft_lodge,8619,Roderick Hill Lodge,,,,,https://monmouthshirefreemasons.org/lodge/roderickhill8619/
-monmouthshire,craft_lodge,683,Isca Lodge,,,,,https://monmouthshirefreemasons.org/lodge/isca683/
-monmouthshire,craft_lodge,3762,Gwent Lodge,,,,,https://monmouthshirefreemasons.org/lodge/gwent3762/
-monmouthshire,craft_lodge,4725,Islwyn Lodge,,,,,https://monmouthshirefreemasons.org/lodge/islwyn4725/
-monmouthshire,craft_lodge,9380,Lodge of Progress,,,,,https://monmouthshirefreemasons.org/lodge/progress9380/
-monmouthshire,craft_lodge,8711,St Gabriel Lodge,,,,,https://monmouthshirefreemasons.org/lodge/stgabriel8711/
-monmouthshire,craft_lodge,7515,St Mellonius Lodge,,,,,https://monmouthshirefreemasons.org/lodge/stmellonius7515/
-monmouthshire,craft_lodge,6008,Trevethin Lodge,,,,,https://monmouthshirefreemasons.org/lodge/trevethin6008/
+province_code,order,number,name,hall_postcode,hall_town,meets_text,installation_text,source_url,directory_url
+monmouthshire,royal_arch,7901,Llantarnam Royal Arch Chapter,NP4 8AT,,"Fourth Friday in February, second Friday in April, December, and September",September,https://monmouthshirefreemasons.org/lodge/llantarnamchapter7901/,
+monmouthshire,royal_arch,4562,Crystal Royal Arch Chapter,,,"Fourth Wednesday in May, third Wednesday in December, February, and October",May,https://monmouthshirefreemasons.org/lodge/crystalchapter4562/,
+monmouthshire,royal_arch,4074,Frederick Phillips Royal Arch Chapter,,,,,https://monmouthshirefreemasons.org/lodge/frederickphillipschapter4074/,
+monmouthshire,royal_arch,3762,Gwent Royal Arch Chapter,NP12 0NT,,"First Tuesday in February, April, October, and December",April,https://monmouthshirefreemasons.org/lodge/gwentchapter3762/,
+monmouthshire,royal_arch,2964,Mon First Principals Royal Arch Chapter,NP4 8AT,,Third Monday in February and fourth Thursday in October,October,https://monmouthshirefreemasons.org/lodge/monfirstprincipalschapter2964/,
+monmouthshire,royal_arch,2226,St David’s Royal Arch Chapter,NP22 5LY,,"Second Monday in January, April and October",July,https://monmouthshirefreemasons.org/lodge/stdavidschapter2226/,
+monmouthshire,royal_arch,2186,Striguil Royal Arch Chapter,,,"First Wednesday in February, April, October, and December",April,https://monmouthshirefreemasons.org/lodge/striguilchapter2186/,
+monmouthshire,royal_arch,1562,Homfray Royal Arch Chapter,NP11 6HB,,"Second Wednesday in February, April, October, and December",February,https://monmouthshirefreemasons.org/lodge/homfraychapter1562/,
+monmouthshire,royal_arch,1098,Prince of Wales Royal Arch Chapter,NP22 3NA,,Third Thursday in June and November,June,https://monmouthshirefreemasons.org/lodge/princeofwaleschapter1098/,
+monmouthshire,royal_arch,818,St John’s Royal Arch Chapter,NP7 5RT,,"Second Wednesday in March, May, September, November",November,https://monmouthshirefreemasons.org/lodge/stjohnschapter818/,
+monmouthshire,royal_arch,683,St Woolos Royal Arch Chapter,NP20 2AG,,"First Wednesday in March, May, and November",March,https://monmouthshirefreemasons.org/lodge/stwooloschapter683/,
+monmouthshire,royal_arch,471,Silurian Royal Arch Chapter,NP20 2AG,,"Third Wednesday in March, April, May, September, November",March,https://monmouthshirefreemasons.org/lodge/silurianchapter471/,
+monmouthshire,royal_arch,457,Loyal Monmouth Royal Arch Chapter,NP25 3NZ,,"Third Tuesday in February, May, October, November",October,https://monmouthshirefreemasons.org/lodge/loyalmonmouthchapter457/,
+monmouthshire,royal_arch,1258,Kennard Royal Arch Chapter,NP4 8AT,,"Third Monday in January, March, May, November",March,https://monmouthshirefreemasons.org/lodge/kennardchapter1258/,
+monmouthshire,craft_lodge,2964,Charles Lyne Installed Masters Lodge,NP20 2AG,,"We meet on the first Thursday in June, and the last Thursday in February and November,",November,https://monmouthshirefreemasons.org/lodge/charles-lyne-installed-masters-lodge-2964/,https://onthesquare.co/lodge/charles-lyne-installed-masters-lodge/
+monmouthshire,craft_lodge,9840,Blue Lamp Lodge,NP16 5BZ,,"We meet on the third Friday in February, fourth Thursday in May, first Friday in October, and the last Saturday in December",May,https://monmouthshirefreemasons.org/lodge/blue-lamp-lodge-9840/,https://onthesquare.co/lodge/blue-lamp-lodge/
+monmouthshire,craft_lodge,9875,Armed Forces Lodge,NP20 2AG,,"We meet on the third Friday in March and the first Friday in June, November, and September",March,https://monmouthshirefreemasons.org/lodge/armed-forces-lodge-9875/,https://onthesquare.co/lodge/armed-forces-lodge/
+monmouthshire,craft_lodge,9530,Myrddin Jones Lodge,,The,"We meet on the last Saturday in February, April, and October, and the first Saturday in December",February,https://monmouthshirefreemasons.org/lodge/myrddin-jones-lodge-9530/,https://onthesquare.co/lodge/myrddin-jones-lodge/
+monmouthshire,craft_lodge,1098,St George’s Lodge,NP22 3NA,,"We meet on the second Thursday in January, February, March, April, May, June, October, November, December",April,https://monmouthshirefreemasons.org/lodge/st-georges-lodge-1098/,https://onthesquare.co/lodge/st-georges-lodge-6/
+monmouthshire,craft_lodge,2226,St David’s Lodge,NP22 5LY,,"We meet on the third Thursday in January, February, March, April, May, June, October, November, and December",April,https://monmouthshirefreemasons.org/lodge/st-davids-lodge-2226/,https://onthesquare.co/lodge/st-davids-lodge/
+monmouthshire,craft_lodge,1562,Homfray Lodge,,,"We meet on the third Thursday in January, February, March, April, May, September, October, November, and December",October,https://monmouthshirefreemasons.org/lodge/homfray-lodge-1562/,https://onthesquare.co/lodge/homfray-lodge/
+monmouthshire,craft_lodge,2556,Glyn Ebbw Lodge,NP23 6ES,,"We meet on the first Wednesday in January, February, March, April, May, June, September, October, November, and December",November,https://monmouthshirefreemasons.org/lodge/glyn-ebbw-lodge-2556/,https://onthesquare.co/lodge/glyn-ebbw-lodge/
+monmouthshire,craft_lodge,6169,Lodge of Friendship,NP20 2AG,,"We meet on the second Friday in January, February, March, April, May, October, November, and December",October,https://monmouthshirefreemasons.org/lodge/lodge-of-friendship-6169/,https://onthesquare.co/lodge/lodge-of-friendship/
+monmouthshire,craft_lodge,471,Silurian Lodge,NP20 2AG,,"We meet on the first Wednesday of the month in October, November, December, January (Installation), February, March, April, May, and June",January,https://monmouthshirefreemasons.org/lodge/silurian-lodge-471/,https://onthesquare.co/lodge/silurian-lodge/
+monmouthshire,craft_lodge,5264,NIOBA Lodge,NP20 2AG,,"Third Tuesday in January, February, March, April, May, September, October, November, December",September,https://monmouthshirefreemasons.org/lodge/nioba-lodge-5264/,https://onthesquare.co/lodge/nioba-lodge/
+monmouthshire,craft_lodge,4074,Jasper Tudor Lodge,NP20 2AG,,"Third Saturday in January, February, March, April, May, September, October, November, December",February,https://monmouthshirefreemasons.org/lodge/jasper-tudor-4074/,https://onthesquare.co/lodge/jasper-tudor-lodge/
+monmouthshire,craft_lodge,457,Loyal Monmouth Lodge,NP25 3NZ,,"We meet on the first Tuesday in February, March, April, May, September, October, November, and December",May,https://monmouthshirefreemasons.org/lodge/loyal-monmouth-lodge-457/,https://onthesquare.co/lodge/loyal-monmouth-lodge/
+monmouthshire,craft_lodge,1429,Albert Edward Prince of Wales Lodge,NP20 2AG,,"The Lodge meets on the second Thursday in January, February, March, April, May, September, October, November and December",January,https://monmouthshirefreemasons.org/lodge/aepow-lodge-1429/,https://onthesquare.co/lodge/albert-edward-prince-of-wales-lodge/
+monmouthshire,craft_lodge,2186,Striguil Lodge,NP16 5BZ,,"We meet on the last Wednesday in January, February, March, April, May, September, October, November, and December",January,https://monmouthshirefreemasons.org/lodge/striguil-lodge-2186/,https://onthesquare.co/lodge/striguil-lodge/
+monmouthshire,craft_lodge,6779,Casnewydd Lodge,NP20 2AG,,"We meet on the second Wednesday of September to April and the last Friday in May, which is our Installation Meeting",May,https://monmouthshirefreemasons.org/lodge/casnewydd-lodge-6779/,https://onthesquare.co/lodge/casnewydd-lodge/
+monmouthshire,craft_lodge,4562,Crystal Lodge,NP20 2AG,,24/03/26,March,https://monmouthshirefreemasons.org/lodge/crystal-lodge-4562/,https://onthesquare.co/lodge/crystal-lodge/
+monmouthshire,craft_lodge,1258,Kennard Lodge,NP4 8AT,,"Last Tuesday in January, February, March, April, May, September, October, and November. Lodge meetings normally start at 1830, with Installations starting at 1700",September,https://monmouthshirefreemasons.org/lodge/kennard1258/,https://onthesquare.co/lodge/kennard-lodge/
+monmouthshire,craft_lodge,7901,Llantarnam Lodge,NP4 8AT,,"Third Friday in January, February, March, April, May, September, October, November, and December. Meetings normally start at 1830, Installations at 1630",September,https://monmouthshirefreemasons.org/lodge/llantarnam7901/,
+monmouthshire,craft_lodge,8283,Henllys Lodge,NP4 8AT,,"Last Monday in April, February, January, March, October, and November. Meetings normally start at 18:30 with the installation meeting, which takes place in September, starting at 16:30",September,https://monmouthshirefreemasons.org/lodge/henllys8283/,https://onthesquare.co/lodge/henllys-lodge/
+monmouthshire,craft_lodge,818,St John’s Lodge,NP7 5RT,,"Fourth Wednesday in January, February, March, April, May, September, October, November, and December. Meetings normally start at 1830",February,https://monmouthshirefreemasons.org/lodge/stjohns818/,https://onthesquare.co/lodge/st-johns-lodge-6/
+monmouthshire,craft_lodge,8619,Roderick Hill Lodge,NP16 5BZ,,"Second Friday in March. Second Monday in April, December, February, January, May, November, October, and September. Meetings usually start at 1830, Installations at 1600",March,https://monmouthshirefreemasons.org/lodge/roderickhill8619/,
+monmouthshire,craft_lodge,683,Isca Lodge,NP20 2AG,,"Third Wednesday in January,March, May, September, and November. Meetings normally start at 1830, Installations at 16.30",January,https://monmouthshirefreemasons.org/lodge/isca683/,https://onthesquare.co/lodge/isca-lodge/
+monmouthshire,craft_lodge,3762,Gwent Lodge,NP12 0NT,,"Second Wednesday in January, February, March, April, May, June, October, November, and December. Meetings normally start at 1830, Installations at 1700",October,https://monmouthshirefreemasons.org/lodge/gwent3762/,https://onthesquare.co/lodge/gwent-lodge/
+monmouthshire,craft_lodge,4725,Islwyn Lodge,NP12 0NT,,"Fourth Wednesday in January, February, March, April, May, September, October, November. Meetings normally start at 1830, Installations at 1630",November,https://monmouthshirefreemasons.org/lodge/islwyn4725/,https://onthesquare.co/lodge/islywn-lodge/
+monmouthshire,craft_lodge,9380,Lodge of Progress,NP11 6HB,,"Lodge of Progress meets on the first Friday in April and October. Meetings usually start at 1830, Installations at 1630",April,https://monmouthshirefreemasons.org/lodge/progress9380/,https://onthesquare.co/lodge/lodge-of-progress-3/
+monmouthshire,craft_lodge,8711,St Gabriel Lodge,,,"We meet on the second Tuesday in February, March, May, October, and December. Meetings normally start at 1830, Installations at 1630",May,https://monmouthshirefreemasons.org/lodge/stgabriel8711/,https://onthesquare.co/lodge/st-gabriel-lodge/
+monmouthshire,craft_lodge,7515,St Mellonius Lodge,,,"St Mellonius Lodge meets on the second Tuesday in January, first Friday in May, and first Tuesday in April, December, February,March, November, and October. Meetings normally start at 1830, Installations at 1630",May,https://monmouthshirefreemasons.org/lodge/stmellonius7515/,https://onthesquare.co/lodge/st-mellonius-lodge/
+monmouthshire,craft_lodge,6008,Trevethin Lodge,NP4 8AT,,Second Monday of each month (September to May),March,https://monmouthshirefreemasons.org/lodge/trevethin6008/,https://onthesquare.co/lodge/trevethin-lodge/

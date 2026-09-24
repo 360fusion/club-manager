@@ -1,2 +1,2 @@
-province_code,slug,name,kind,address_line_1,address_line_2,town,county,postcode,country,telephone,email,website_url,source_url
-jersey,,St Helier Masonic Temple,hall,Stopford Road,,St Helier,,JE2 4LB,Channel Islands,,,,https://www.ugle.org.uk/become-freemason/join-freemasonry/register-your-interest/provincial-grand-lodge-jersey-masonic-temple-stopford-road
+province_code,slug,name,kind,address_line_1,address_line_2,town,county,postcode,country,telephone,email,website_url,source_url,ugle_url
+jersey,,St Helier Masonic Temple,hall,Stopford Road,,St Helier,,JE2 4LB,Channel Islands,,,,https://www.ugle.org.uk/become-freemason/join-freemasonry/register-your-interest/provincial-grand-lodge-jersey-masonic-temple-stopford-road,https://www.ugle.org.uk/become-freemason/join-freemasonry/register-your-interest/provincial-grand-lodge-jersey-masonic-temple-stopford-road

@@ -1,6 +1,6 @@
-province_code,slug,name,kind,address_line_1,address_line_2,town,county,postcode,country,telephone,email,website_url,source_url
-london_metropolitan,freemasons-hall-london,Freemasons' Hall,hall,60 Great Queen Street,,London,,WC2B 5AZ,England,,,https://www.ugle.org.uk,"https://en.wikipedia.org/wiki/Freemasons%27_Hall,_London"
-london_metropolitan,mark-masons-hall-london,Mark Masons' Hall,hall,86 St James's Street,,London,,SW1A 1PL,England,,,,"https://en.wikipedia.org/wiki/Mark_Masons%27_Hall,_London"
-bristol,freemasons-hall-bristol,Freemasons' Hall Bristol,hall,31 Park Street,,Bristol,,BS1 5NH,England,,,,"https://en.wikipedia.org/wiki/Freemasons%27_Hall,_Bristol"
-,freemasons-hall-edinburgh,Freemasons' Hall Edinburgh,hall,96 George Street,,Edinburgh,,EH2 3DH,Scotland,,,,
-pgl_dublin,freemasons-hall-dublin,Freemasons' Hall Dublin,hall,17 Molesworth Street,,Dublin,Dublin 2,,Ireland,,,,
+province_code,slug,name,kind,address_line_1,address_line_2,town,county,postcode,country,telephone,email,website_url,source_url,ugle_url
+london_metropolitan,freemasons-hall-london,Freemasons' Hall,hall,60 Great Queen Street,,London,,WC2B 5AZ,England,,,https://www.ugle.org.uk,"https://en.wikipedia.org/wiki/Freemasons%27_Hall,_London",https://www.ugle.org.uk/become-freemason/join-freemasonry/register-your-interest/metropolitan-grand-lodge-london-freemasons-hall-60-great-queen-street
+london_metropolitan,mark-masons-hall-london,Mark Masons' Hall,hall,86 St James's Street,,London,,SW1A 1PL,England,,,,"https://en.wikipedia.org/wiki/Mark_Masons%27_Hall,_London",https://www.ugle.org.uk/become-freemason/join-freemasonry/register-your-interest/metropolitan-grand-lodge-london-mark-masons-hall-86-st-jamess-street
+bristol,freemasons-hall-bristol,Freemasons' Hall Bristol,hall,31 Park Street,,Bristol,,BS1 5NH,England,,,,"https://en.wikipedia.org/wiki/Freemasons%27_Hall,_Bristol",https://www.ugle.org.uk/become-freemason/join-freemasonry/register-your-interest/provincial-grand-lodge-bristol-freemasons-hall-31-park-street
+,freemasons-hall-edinburgh,Freemasons' Hall Edinburgh,hall,96 George Street,,Edinburgh,,EH2 3DH,Scotland,,,,,
+pgl_dublin,freemasons-hall-dublin,Freemasons' Hall Dublin,hall,17 Molesworth Street,,Dublin,Dublin 2,,Ireland,,,,,
