@@ -112,7 +112,7 @@ const webcal = computed(() => props.feedUrl.replace(/^https?:/, 'webcal:'));
                         @click="selected = selected === day.key ? null : day.key"
                     >
                         <span :class="['inline-flex h-6 w-6 items-center justify-center rounded-full text-xs', day.key === today ? 'bg-blue-600 font-bold text-white' : '']">{{ day.day }}</span>
-                        <span v-for="item in (byDay[day.key] ?? []).slice(0, 3)" :key="item.key" :class="['block truncate rounded px-1 py-0.5 text-[10px] font-medium leading-tight sm:text-[11px]', colourFor(item.club.colour), item.clash ? 'ring-1 ring-amber-500' : '']">{{ item.title }}</span>
+                        <span v-for="item in (byDay[day.key] ?? []).slice(0, 3)" :key="item.key" :class="['block truncate rounded px-1 py-0.5 text-[10px] font-medium leading-tight sm:text-[11px]', colourFor(item.club.colour), item.clash ? 'ring-1 ring-amber-500' : '']"><span v-if="item.installation" aria-label="Installation meeting">★ </span>{{ item.title }}</span>
                         <span v-if="(byDay[day.key] ?? []).length > 3" class="block text-[10px] text-slate-500">+{{ byDay[day.key].length - 3 }} more</span>
                     </button>
                 </div>
@@ -124,18 +124,19 @@ const webcal = computed(() => props.feedUrl.replace(/^https?:/, 'webcal:'));
                     <ul>
                         <li v-for="item in agenda" :key="item.key" class="space-y-2 border-b border-slate-200 p-4 last:border-b-0 dark:border-slate-800">
                             <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                                <Badge :variant="item.type === 'meeting' ? 'info' : 'success'">{{ item.type === 'meeting' ? 'Meeting' : 'Event' }}</Badge>
+                                <Badge :variant="item.type === 'meeting' ? 'info' : item.type === 'lodge' ? 'neutral' : 'success'">{{ item.type === 'meeting' ? 'Meeting' : item.type === 'lodge' ? 'Following' : 'Event' }}</Badge>
+                                <Badge v-if="item.installation" variant="warning">Installation</Badge>
                                 <Badge v-if="item.clash" variant="warning">Clashes with another item</Badge>
                                 <span>{{ item.club.name }}</span>
                                 <span aria-hidden="true">·</span>
-                                <span>{{ longDate(item.start) }}, {{ time(item.start) }}</span>
+                                <span>{{ longDate(item.start) }}<template v-if="!item.all_day">, {{ time(item.start) }}</template><template v-else> · time not listed</template></span>
                             </div>
                             <div class="flex flex-wrap items-center justify-between gap-2">
                                 <div class="min-w-0">
                                     <Link :href="item.url" class="text-sm font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ item.title }}</Link>
                                     <p v-if="item.where" class="text-xs text-slate-500 dark:text-slate-400">{{ item.where }}</p>
                                 </div>
-                                <QuickReply :item="{ type: item.type, id: item.id, slug: item.club.slug, reply: item.reply, closed: item.closed, simple: item.simple }" />
+                                <QuickReply v-if="item.type !== 'lodge'" :item="{ type: item.type, id: item.id, slug: item.club.slug, reply: item.reply, closed: item.closed, simple: item.simple }" />
                             </div>
                         </li>
                     </ul>

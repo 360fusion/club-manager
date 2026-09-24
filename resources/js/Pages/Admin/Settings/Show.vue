@@ -206,6 +206,7 @@ const form = useForm({
   social_instagram: props.settings.social_instagram || '',
   social_twitter: props.settings.social_twitter || '',
   registration_mode: props.settings.registration_mode || 'open',
+  summons_visibility: props.settings.summons_visibility || 'members',
   member_prefix: props.settings.member_prefix || '',
   default_role: props.settings.default_role || 'member',
   invite_expiration_days: props.settings.invite_expiration_days ?? 14,
@@ -1105,6 +1106,16 @@ const moveOfficerDown = (index) => {
                 <option value="open">🔓 Public Open Join</option>
                 <option value="invite_only">🔒 Invite-Only / Admin Approval</option>
               </select>
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Who outside the lodge can see your meetings</label>
+              <select v-model="form.summons_visibility" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                <option value="members">Members only (nothing is shared)</option>
+                <option value="approved_visitors">Visiting brethren I approve</option>
+                <option value="public_safe">Anyone: date, time, venue, dress and dining only</option>
+              </select>
+              <p class="text-[11px] text-slate-400 mt-1">Shown on your lodge's directory page. Outsiders never see the sick list, candidates, dues, bank details or the rest of a summons.</p>
             </div>
 
             <div>

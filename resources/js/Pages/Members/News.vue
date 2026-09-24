@@ -165,6 +165,7 @@ const groups = computed(() => {
 
                                     <div class="flex flex-wrap items-center gap-2 text-xs">
                                         <ClubChip :name="post.club.name" :colour="post.club.colour" />
+                                        <Badge v-if="post.following" variant="info">Following</Badge>
                                         <Badge v-if="post.is_new" variant="success">New</Badge>
                                         <Badge v-if="post.visibility.value === 'public'" variant="neutral">Public</Badge>
                                         <span class="text-slate-500 dark:text-slate-400">{{ ago(post.at) }}</span>

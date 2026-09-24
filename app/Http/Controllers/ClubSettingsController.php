@@ -11,6 +11,7 @@ use App\Support\ClubAccess;
 use App\Support\ClubDomain;
 use App\Support\Currencies;
 use App\Support\MasonicRanks;
+use App\Support\VisitorSummons;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -310,6 +311,7 @@ class ClubSettingsController extends Controller
             'constitution_date' => 'nullable|string|max:255',
             'subscription_month' => 'nullable|string|max:100',
             'installation_month' => 'nullable|string|max:100',
+            'summons_visibility' => ['nullable', Rule::in(array_keys(VisitorSummons::VISIBILITIES))],
             'provincial_ar_month' => 'nullable|string|max:100',
             'meeting_formula' => 'nullable|string|max:255',
             'logo_url' => ['nullable', 'string', 'max:500', 'regex:#^(https?://|/)#i'],

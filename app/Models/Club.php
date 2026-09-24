@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\Currencies;
 use App\Support\MasonicRanks;
+use App\Support\Months;
 use App\Support\OrderColours;
 use App\Support\ReservedClubSlugs;
 use App\Support\SiteThemes;
@@ -329,6 +330,31 @@ class Club extends Model implements HasMedia
     public function province(): BelongsTo
     {
         return $this->belongsTo(Province::class);
+    }
+
+    /**
+     * The directory listing this club manages, when it was claimed from the lodge directory.
+     *
+     * @return HasOne<Lodge, $this>
+     */
+    public function lodge(): HasOne
+    {
+        return $this->hasOne(Lodge::class);
+    }
+
+    /**
+     * Whether a meeting is this club's installation: its usual meeting in the installation month it
+     * has set, or one that says so in its title.
+     */
+    public function isInstallationMeeting(Meeting $meeting): bool
+    {
+        if (stripos((string) $meeting->title, 'installation') !== false) {
+            return true;
+        }
+
+        $month = Months::number($this->settings['installation_month'] ?? null);
+
+        return $month !== null && $meeting->meeting_date !== null && (int) $meeting->meeting_date->format('n') === $month;
     }
 
     /**

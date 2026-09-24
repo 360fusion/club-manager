@@ -55,4 +55,12 @@ class Province extends Model
     {
         return $this->hasMany(MasonicHall::class);
     }
+
+    /**
+     * @return HasMany<Lodge, $this>
+     */
+    public function lodges(): HasMany
+    {
+        return $this->hasMany(Lodge::class);
+    }
 }

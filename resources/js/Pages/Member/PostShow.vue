@@ -6,6 +6,8 @@ import NewsTagPill from '@/Components/NewsTagPill.vue';
 const props = defineProps({
   club: Object,
   memberRole: String,
+  isMember: { type: Boolean, default: true },
+  lodgeSlug: { type: String, default: null },
   post: Object,
   tagOptions: { type: Array, default: () => [] },
   latest: { type: Array, default: () => [] },
@@ -27,13 +29,21 @@ const getFileIcon = (mimeOrName) => {
 </script>
 
 <template>
-  <MembersLayout title="News Article" :club="club" :member-role="memberRole">
+  <MembersLayout title="News Article" :club="isMember ? club : null" :member-role="memberRole">
     <Head :title="`${post.title} - ${club.name}`" />
 
     <div class="max-w-6xl mx-auto space-y-6">
       <!-- Back Link -->
       <div>
         <Link
+          v-if="!isMember && lodgeSlug"
+          :href="route('lodges.show', lodgeSlug)"
+          class="inline-flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        >
+          ← {{ club.name }}
+        </Link>
+        <Link
+          v-else
           :href="route('member.dashboard', club.slug)"
           class="inline-flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
         >

@@ -85,6 +85,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * The lodges this user follows in the public directory. Private: a lodge never sees who follows it.
+     *
+     * @return BelongsToMany<Lodge, $this>
+     */
+    public function followedLodges(): BelongsToMany
+    {
+        return $this->belongsToMany(Lodge::class, 'lodge_follows')->withPivot(['in_calendar', 'notify_summons'])->withTimestamps();
+    }
+
+    /**
      * IDs of the clubs this user is an active member of.
      *
      * @return Collection<int, int>

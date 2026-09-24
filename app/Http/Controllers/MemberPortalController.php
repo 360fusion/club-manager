@@ -568,6 +568,8 @@ class MemberPortalController extends Controller
         return Inertia::render('Member/PostShow', [
             'club' => $club,
             'memberRole' => $memberPivot->role ?? 'member',
+            'isMember' => $memberPivot !== null || (bool) $user?->is_super_admin,
+            'lodgeSlug' => $club->lodge?->slug,
             'post' => [
                 'id' => $post->id,
                 'title' => $post->title,

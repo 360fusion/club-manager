@@ -55,4 +55,12 @@ class ClubType extends Model
     {
         return $this->hasMany(DefaultRank::class);
     }
+
+    /**
+     * @return HasMany<Lodge, $this>
+     */
+    public function lodges(): HasMany
+    {
+        return $this->hasMany(Lodge::class);
+    }
 }

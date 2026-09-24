@@ -61,9 +61,21 @@ class MemberCalendarController extends Controller
         $items = $this->calendar->items($scope, CarbonImmutable::now()->subMonth(), CarbonImmutable::now()->addMonths(12));
 
         foreach ($items as $item) {
+            if ($item['type'] === 'lodge') {
+                $note = 'Expected date from the lodge\'s published meeting pattern. Confirm with the lodge before you travel.';
+
+                if ($item['all_day']) {
+                    $ics->addAllDay($item['key'], $item['club']['name'].': '.$item['title'], $item['start'], $item['where'], $note, url($item['url']));
+                } else {
+                    $ics->add($item['key'], $item['club']['name'].': '.$item['title'], $item['start'], $item['end'], $item['where'], $note, url($item['url']));
+                }
+
+                continue;
+            }
+
             $ics->add(
                 $item['key'],
-                $item['club']['name'].': '.$item['title'],
+                $item['club']['name'].': '.$item['title'].(! empty($item['installation']) ? ' (Installation)' : ''),
                 $item['start'],
                 $item['end'],
                 $item['where'],

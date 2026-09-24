@@ -658,6 +658,7 @@ class MeetingAdminController extends Controller
 
         if (! $alreadyPublished) {
             app(ClubNotifier::class)->toMembers($club, ClubNotification::summons($meeting, $club), auth()->user());
+            app(ClubNotifier::class)->toFollowers($club, $meeting);
         }
 
         return redirect()->back()->with('success', "Summons published! Passwordless RSVP tokens issued to {$members->count()} members.");

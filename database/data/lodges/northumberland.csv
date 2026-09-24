@@ -1,0 +1,157 @@
+province_code,order,number,name,hall_postcode,meets_text,installation_text,source_url
+northumberland,craft_lodge,4824,Cowpen,NE24 2DR,"1st Monday Jan, Mar, Apr, May, Sep, Oct, Nov, Dec",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,9618,Epicure,NE46 3DJ,"1st Monday Feb, Apr, Jun, Nov",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6469,Athelstan,NE2 2RA,"1st Tuesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,685,Northumberland,NE1 6LH,"1st Tuesday Feb, Mar, Apr, Oct, Nov, Dec",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,7065,Prudhoe Castle,NE43 7BW,"1st Tuesday Mar, May, Jul, Oct, Dec",May,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,393,St David’s,TD15 1EE,"1st Tuesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,431,St George’s,NE30 2RQ,"1st Tuesday Feb, Mar, Apr, May, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,1167,Alnwick,NE66 1UW,"1st Wednesday Feb, Mar, Apr, May, Jun, Jul, Aug, Oct, Nov, Dec",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4196,Cramlington,NE23 1DN,"1st Wednesday Feb, Mar, Apr, May, Jun, Jul, Aug, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5328,Newminster,NE61 1HW,"1st Wednesday Feb, Mar, Apr, May, Jun, Sept, Oct, Nov, Dec",Dec,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2666,Reserve Forces of Northumbria,NE2 2RA,"1st Wednesday Jan, Feb, Mar, Apr, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2260,Ridley,NE2 2RA,"1st Wednesday Feb, Mar, Apr, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6239,Seaton Valley,NE25 0PT,"1st Wednesday Jan, Feb, Mar, Apr,May, June, Sept, Oct, Nov, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4313,Segedunum,NE28 6RL,"1st Wednesday Feb, Mar, Apr, May, Jun, Jul, Sep, Oct, Nov, Dec",Dec,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,7864,Severus,NE15 9DX,"1st Wednesday Feb, Mar, Apr, May, Jun, Jul, Sep, Oct, Nov, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5322,St. Alban,NE27 0HU,"1st Wednesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Dec,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,1902,St. Cuthbert,NE22 6HU,"1st Wednesday Jan, Feb, Mar, Apr, May, Jun, Aug, Sep, Oct, Nov, Dec",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,1557,Albert Edward,NE46 3DJ,"1st Thursday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6558,Belvedere,NE26 2SE,"1st Thursday Jan, Feb, Mar, Apr, May, Jun, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6029,Corinthian,NE28 6RL,"1st Thursday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3361,Novocastrian,NE2 2RA,"1st Thursday Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6242,Plessey,NE24 2DR,"1st Thursday Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3886,Insurance & Banking,NE2 2RA,"1st Friday Feb, Apr, Sep, Nov",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,9823,Lodge of Sportsmen,NE4 7SE,"1st Friday Mar, Jun, Sep, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6342,Pilgrim,NE2 2RA,"1st Friday Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6170,Portland,NE63 0SE,"1st Friday Feb, June, Oct, Dec",Dec,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,8927,Sure and Stedfast,NE28 6RL,"1st Friday Mar, May, Jul, Sep, Oct, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,8928,The Gavel,NE27 0HU,"1st Friday Feb, Mar, Apr, May, Jun, Jul, Sep, Oct, Nov, Dec",May,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6772,Hadrian,NE28 6RL,"2nd Monday Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5090,Haltwhistle,NE49 9DQ,"2nd Monday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,1427,Percy,NE2 2RA,"2nd Monday Feb, Mar, April, Sept, Oct, Nov, Dec,",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,7463,Royal Grammar School,NE2 2RA,"2nd Monday Feb, Mar, Sep, Oct, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,481,St. Peter's,NE4 7SE,"2nd Monday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2680,Swinburne,NE20 9NX,"2nd Friday Jan, Mar, Apr, May, Sep, Nov, Dec",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6609,Excelsior,NE6 1HY,"2nd Tuesday Jan, Feb, Mar (2nd Thu), Apr, May, Jun, Sep, Oct, Nov, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,7654,Good Samaritan,NE43 7BW,"2nd Tuesday Feb, Apr, Jun, Sep, Nov",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6464,Hulne Priory,NE66 1UW,"2nd Tuesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Jun,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5420,St. Thomas,NE4 7SE,"2nd Tuesday Feb, Mar, Apr, May, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,9824,Argent,NE23 1DN,"2nd Wednesday Feb, Mar, Apr, May, Sep (1st Sat), Oct, Nov, Dec",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4125,Berwick St. George,TD15 1EE,"2nd Wednesday Jan, Feb, Mar, Apr (1st Wed), Sep, Oct, Nov, Dec",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4116,Bothal,NE63 0SE,"2nd Wednesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Dec,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3188,Burdon,NE6 1HY,"2nd Wednesday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov, Dec",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4504,Free Burgesses,NE2 2RA,"2nd Wednesday Jan, Mar, May, Jul, Sep, Nov, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3390,George Stephenson,NE41 8DF,"2nd Wednesday Feb, Mar, Apr, May, Jun, Jul, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,9981,The Provincial Grand Stewards Lodge of Northumberland,,"2nd Thursday Mar, Jun, Sep",Jun,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3679,Holy Cross,NE28 6RL,"2nd Wednesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2892,King Edward VII,NE64 6NR,"2nd Wednesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,1879,Lord Warkworth,NE65 0LN,"2nd Wednesday Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4617,Seaton Delaval,NE25 0PT,"2nd Wednesday Jan, Feb, Mar, Apr, May, June, Sep, Oct, Nov, Dec",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3586,Vandeleur,NE27 0HU,"2nd Wednesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5122,Coquetdale,NE66 1UW,"2nd Thursday Jan, Feb, Mar, Apr, May, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2568,Delaval,NE4 7SE,"2nd Thursday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,8329,Ocianus,NE15 9DX,"2nd Thursday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov, Dec",May,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,1863,Priory,NE30 2RQ,"2nd Thursday Jan, Feb, Mar, Apr, May, Oct, Nov, Dec",Dec,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,991,Tyne,NE28 6RL,"2nd Thursday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3187,Eldon,NE4 7SE,"2nd Friday Jan, Feb, Mar, Apr, May, Jun, Oct, Nov, Dec",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,8157,Heddon-on-the-Wall,NE41 8DF,"2nd Friday Feb, Mar, Apr, Jun, Jul, Sep, Oct, Nov, Dec",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,9297,Posthorn,NE27 0HU,"2nd Friday Jan, Apr, Jun, Sep, Nov",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2520,Prince of Wales,NE2 2RA,"2nd Friday Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4421,Justice,NE6 1HY,"2nd Saturday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,7934,Viking,NE61 1HW,"2nd Saturday Feb (1st Sat), Apr, Oct, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6690,Horton,NE24 2DR,"3rd Monday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,9371,Oriental,NE6 1HY,"3rd Monday Feb, Mar, May, Sep, Nov",May,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3937,Buddle,NE28 6RL,"3rd Tuesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,541,De Loraine,NE2 2RA,"3rd Tuesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5425,Dudley,NE23 1DN,"3rd Tuesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5345,Palatine,NE22 6HU,"3rd Tuesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2557,Temperance,NE6 1HY,"3rd Tuesday Jan, Feb, Apr, Jun, Oct, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,659,Blagdon,NE24 2DR,"3rd Wednesday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov, Dec",Dec,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5419,Carliol,NE2 2RA,"3rd Wednesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5228,Farne & Glendale,NE68 7TT,"3rd Tuesday Jan, Feb Mar, Apr, May, Jun, Sep, Oct, Nov",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5577,Hextoldesham,NE46 3DJ,"3rd Wednesday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov, Dec",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5315,Howdon Panns,NE28 6RL,"3rd Wednesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,8198,Venture,NE26 2SE,"3rd Wednesday Feb, Mar, Apr, May, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5344,Brier Dene,NE26 2SE,"3rd Thursday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5426,Haven,NE30 2RQ,"3rd Thursday Jan, Feb, Mar, Apr, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3246,Lord Collingwood,NE6 1HY,"3rd Thursday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,406,Northern Counties,NE6 1HY,"3rd Thursday Feb, Apr, Jun, Oct, Dec, Jan (3rd Wed)",Jun,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,1626,Hotspur,NE2 2RA,"3rd Friday Jan , Feb, Mar, Apr, Sep, Oct, Nov, Dec",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3619,John Page,NE23 1DN,"3rd Friday Jan, Feb, Mar, Apr, May, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,24,Newcastle upon Tyne,NE6 1HY,"3rd Friday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov,",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6319,Lodge of Remembrance,NE15 9DX,"3rd Friday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,7562,Sion,NE30 2RQ,"3rd Friday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6564,St. Luke's,NE28 6RL,"3rd Friday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec (2nd Fri)",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,8412,Vanbrugh,NE27 0HU,"3rd Friday Jan, Feb, Mar, May, Oct, Nov, Dec",May,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4236,Purcell,NE24 2DR,"3rd Saturday Jan, Feb, Mar, Apr, Oct, Nov",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6784,Beaconsfield,NE24 2DR,"4th Monday Jan, Feb, Mar, Apr, May, Aug, Sep, Oct, Nov, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5529,St. Mark’s,NE2 2RA,"4th Monday Jan, Feb, Mar, Apr, May, Jun, Aug, Sep, Oct, Nov",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6261,St. Raphael,NE6 1HY,"4th Monday Jan, Feb, Mar, Apr, Jun, Sep, Oct, Nov",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5439,St. Wilfrid,NE30 2RQ,"4th Monday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,7000,Arcot,NE23 1DN,"4th Tuesday Jan, Feb, Mar, Apr, May, Jun, Jul, Sep, Oct, Nov",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2908,Neptune,NE28 6RL,"4th Tuesday Jan, Feb, Mar, Apr, May, Aug, Sep, Oct, Nov, Dec (3rd Fri)""",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,8864,Regius,NE26 2SE,"2nd Thursday Jan, Feb, Mar, Apr, May, Oct, Nov, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5761,Risingham,NE48 2BN,"4th Tuesday Jan, Feb, Mar, Apr, May, Jun, Jul, Sep, Oct, Nov",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6921,Shiremoor,NE27 0HU,"4th Tuesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,1676,St. Nicholas,NE3 1HQ,"4th Tuesday Jan, Mar, April, Jun, Oct, Nov",Jun,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2571,Holmes,NE6 1HY,"4th Wednesday Feb, Mar, Apr, May, Jun, Sep, Oct",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2762,Lindisfarne,NE30 2RQ,"4th Wednesday Jan, Feb, Mar, Apr, May, Sep, Oct, Nov",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2868,Ashington,NE63 0SE,"4th Wednesday Jan, Feb, Mar, Apr, May, Jun, Aug, Sep, Oct, Nov",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,2997,Astley,NE25 0PT,"4th Wednesday Jan, Feb, Mar, Apr, May, Aug, Sep, Oct, Nov, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,7261,Grainger,NE2 2RA,"4th Wednesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,6240,Bedlington,NE22 6HU,"4th Thursday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3892,Duke of Connaught,NE2 2RA,"1st Thursday Feb, Mar, Apr, May, Jun, Sep, Oct, Nov Nov",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5762,Monkchester,NE6 1HY,"4th Thursday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,5722,Morden,NE2 2RA,"4th Thursday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov, Dec (3rd Thurs)",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4423,St. Anthony's,NE6 1HY,"4th Friday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,1712,St. John's,NE4 7SE,"4th Friday Jan, Feb, Mar, Apr, Sep, Oct, Nov",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,8213,Castle Wardens,NE20 9NX,"Last Thursday Mar (3rd Fri), May, Sep, Dec (2nd Fri)",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3310,Croft,NE24 2DR,"Last Tuesday Jan, Feb, Mar, Apr, May, Aug, Sep, Oct, Nov, Dec",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,636,De Ogle,NE61 1HW,"Last Thursday Jan, Feb, Mar, Apr, May, Aug, Sep, Oct, Nov",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4398,Eadwine,NE22 6HU,"Last Tuesday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov",May,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3512,Golfers',NE2 2RA,"Last Monday Jan, Feb, Mar, Apr, Oct, Nov",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,1664,Gosforth,NE23 1DN,"Last Friday Jan, Feb, Mar, Apr, May, Jun, Sep, Oct, Nov",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,4523,Bretwalda Pons Aelii,NE27 0HU,"Last Friday Jan, Feb, March, April, Sept, Oct, Nov",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,3477,Northumbrian Masters,NE2 2RA,"Last Weekday Jan, Mar, May, Oct",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,craft_lodge,7966,Perfect Ashlar,NE61 1HW,"4th Wednesday Jan, Feb, Mar, Apr, May, Oct, Nov",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,6105,Servavi,NE61 1HW,"1st Monday Feb, Apr, Oct, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,2497,Carville,NE4 7SE,"3rd Tuesday Feb, Apr, Sep (1st Tues)",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,406,De Sussex,NE27 0HU,"Last Wed Feb, Mar, May, Oct",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,3619,John Page,NE23 1DN,"1st Monday Mar, Jun, Sep, Nov",Jun,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,1863,Priory,NE30 2RQ,"1st Monday Feb, Apr, Oct, Dec",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,2260,Ridley,NE2 2RA,"1st Monday Feb, Apr, Sep, Nov, Dec",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,2868,Ashington,NE63 0SE,"1st Wednesday Mar, May, Jul, Sep, Nov",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,2762,Benebalcrag,NE30 2RQ,"1st Thursday Feb, Apr, Oct, Dec",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,7299,Security,NE28 6RL,"1st Friday Feb, Apr, Jun, Nov",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,6985,Stability,NE27 0HU,"2nd Monday Jan, Mar, May, Sep, Nov",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,4196,Cramlington,NE23 1DN,"2nd Tuesday Jan, Mar, May, Sep, Nov",May,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,5315,Howdon Panns,NE28 6RL,"2nd Tuesday Jan, Mar, May, Sep, Nov",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,1902,St. Cuthbert,NE22 6HU,"2nd Tuesday Feb, Apr, Jun, Oct, Dec",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,1557,Albert Edward,NE46 3DJ,"2nd Wednesday Jan, Mar, May, Sep, Nov",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,659,Blagdon,NE24 2DR,"2nd Wednesday Feb, Mar, May, Oct, Nov",May,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,431,Ogle,NE30 2RQ,"2nd Wednesday Mar, Sep, Nov",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,2557,Temperance,NE2 2RA,"2nd Wednesday Feb, Apr, Jun, Oct",Jun,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,4617,Seaton Delaval,NE25 0PT,"2nd Thursday Feb, Jun, Oct, Dec",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,3986,Victory,NE15 9DX,"2nd Friday Jan, Mar, May, Oct, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,2908,Neptune,NE28 6RL,"3rd Monday Jan, Feb, Mar, Oct, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,9371,Oriental,NE6 1HY,"3rd Monday Apr, Jun, Oct, Dec",Dec,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,685,Northumberland,NE2 2RA,"2nd Thursday Feb, Mar, Oct, Dec",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,393,Berwick upon Tweed,TD15 1EE,"3rd Wednesday Feb, Apr, Jun, Oct",Oct,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,481,St. Peter’s,NE4 7SE,"3rd Wednesday Feb, Apr, Jun, Sep, Nov",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,1167,Alnwick,NE66 1UW,"3rd Thursday Jan, Mar, May, Sep, Nov",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,3310,Croft,NE24 2DR,"3rd Thursday Jan, Apr, Sep, Nov",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,636,De Percy,NE61 1HW,"3rd Thursday Mar, May, Sep, Nov",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,24,De Swinburne,NE6 1HY,"3rd Thursday Jan, Mar, May, Sep, Nov",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,1879,Lord Warkworth,NE65 0LN,"3rd Thursday Feb, Apr, Jul, Oct",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,9638,Per Diem,NE6 1HY,"3rd Thursday Feb, Apr, Sep, Nov",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,3892,Duke of Connaught,NE4 7SE,"3rd Friday Jan, Mar, May, Sep, Nov",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,5419,Carliol,NE2 2RA,"4th Tuesday Feb, Apr, Jun, Sep, Nov",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,541,De Loraine,NE2 2RA,"4th Tuesday Jan, Mar, May, Oct",Mar,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,3390,George Stephenson,NE41 8DF,"4th Wednesday Jan, Mar, May, Sep, Nov",Jan,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,2892,King Edward VII,NE64 6NR,"4th Wednesday Mar, Apr, May, Sep, Oct, Nov",May,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,7864,Severus,NE15 9DX,"4th Wednesday Feb, Apr, Jun, Oct",Feb,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,2821,Napier - Clavering,NE26 2SE,"4th Thursday Feb, Apr, Sep, Nov",Nov,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,5228,Farne,NE66 1UW,"4th Friday May, Jul",Jul,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,3586,Vandeleur,NE27 0HU,"Last Thursday Mar, Apr, Sep, Oct, Nov",Sep,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/
+northumberland,royal_arch,3477,Northumbrian 1st Princ,NE30 2RQ,"Last Weekday Apr, Sep",Apr,https://northumberlandmasons.org.uk/members/lodge-and-chapter-meetings/

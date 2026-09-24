@@ -85,6 +85,7 @@ return [
         'meetings' => 'manage_meetings',
         'officers' => 'manage_meetings',
         'committee' => 'manage_meetings',
+        'visitors' => 'manage_meetings',
 
         'members' => 'manage_members',
         'users' => 'manage_members',

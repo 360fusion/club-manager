@@ -57,7 +57,7 @@ const copyInviteLink = () => {
 const currentActiveTab = computed(() => {
   if (typeof window !== 'undefined') {
     const path = window.location.pathname;
-    if (path.includes('/admin/meetings')) return 'meetings';
+    if (path.includes('/admin/meetings') || path.includes('/admin/visitors')) return 'meetings';
     if (path.includes('/admin/committee')) return 'committee';
     if (path.includes('/admin/events') || path.includes('/admin/payment-options') || path.includes('/admin/email-templates')) return 'events';
     if (path.includes('/admin/accounting')) return 'accounting';

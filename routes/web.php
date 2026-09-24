@@ -43,12 +43,19 @@ use App\Http\Controllers\EventQuoteController;
 use App\Http\Controllers\GoCardlessWebhookController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LegacyClubUrlController;
+use App\Http\Controllers\LodgeCalendarController;
+use App\Http\Controllers\LodgeClaimController;
+use App\Http\Controllers\LodgeDirectoryController;
+use App\Http\Controllers\LodgeFeedController;
+use App\Http\Controllers\LodgeFollowController;
+use App\Http\Controllers\LodgeVisitorController;
 use App\Http\Controllers\MediaAdminController;
 use App\Http\Controllers\MeetingAdminController;
 use App\Http\Controllers\MemberCalendarController;
 use App\Http\Controllers\MemberHomeController;
 use App\Http\Controllers\MemberImportExportController;
 use App\Http\Controllers\MemberListController;
+use App\Http\Controllers\MemberLodgesController;
 use App\Http\Controllers\MemberPortalController;
 use App\Http\Controllers\MemberSignatureController;
 use App\Http\Controllers\MemberSubscriptionsController;
@@ -73,8 +80,11 @@ use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\StripeConnectWebhookController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\SuperAdminLodgeClaimController;
+use App\Http\Controllers\SuperAdminLodgeController;
 use App\Http\Controllers\UpdateAdminController;
 use App\Http\Controllers\UserAdminController;
+use App\Http\Controllers\VisitorAccessAdminController;
 use App\Http\Controllers\VisitorRegistrationController;
 use App\Http\Middleware\EnsureUserIsSuperAdmin;
 use App\Models\Club;
@@ -122,6 +132,13 @@ Route::get('/', [ClubController::class, 'index'])->name('home');
 Route::any('/clubs/{legacySlug}/{path?}', LegacyClubUrlController::class)
     ->where('legacySlug', '[A-Za-z0-9_-]+')
     ->where('path', '.*');
+
+// The public lodge directory. Before the /site/{club} and /{slug} routes, and "lodges" is a reserved club slug.
+Route::get('/lodges', [LodgeDirectoryController::class, 'index'])->middleware('throttle:120,1')->name('lodges.index');
+Route::get('/lodges/halls/{slug}', [LodgeDirectoryController::class, 'hall'])->middleware('throttle:120,1')->name('lodges.hall');
+Route::get('/lodges/{slug}/feed.xml', [LodgeFeedController::class, 'show'])->middleware('throttle:60,1')->name('lodges.feed');
+Route::get('/lodges/{slug}/calendar.ics', [LodgeCalendarController::class, 'show'])->middleware('throttle:60,1')->name('lodges.ics');
+Route::get('/lodges/{slug}', [LodgeDirectoryController::class, 'show'])->middleware('throttle:120,1')->name('lodges.show');
 
 // A private copy of a newsletter, opened from "view in your browser" (before the /site/{club} routes so "newsletter" is never read as a club).
 Route::get('/site/newsletter/{token}', [NewsletterPublicController::class, 'view'])->middleware('throttle:60,1')->name('newsletters.view');
@@ -309,6 +326,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/newsletters/{id}/send', [NewsletterAdminController::class, 'send'])->name('admin.newsletters.send');
     Route::delete('/{clubSlug}/admin/newsletters/{id}', [NewsletterAdminController::class, 'destroy'])->name('admin.newsletters.destroy');
 
+    // Visitors who ask to receive the lodge's summonses (guarded by the meetings capability through the route map)
+    Route::get('/{clubSlug}/admin/visitors', [VisitorAccessAdminController::class, 'index'])->name('admin.visitors.index');
+    Route::post('/{clubSlug}/admin/visitors/{id}/approve', [VisitorAccessAdminController::class, 'approve'])->name('admin.visitors.approve');
+    Route::post('/{clubSlug}/admin/visitors/{id}/decline', [VisitorAccessAdminController::class, 'decline'])->name('admin.visitors.decline');
+    Route::post('/{clubSlug}/admin/visitors/{id}/revoke', [VisitorAccessAdminController::class, 'revoke'])->name('admin.visitors.revoke');
+
     // Admin Updates & Weekly Digest Routes
     Route::get('/{clubSlug}/admin/updates', [UpdateAdminController::class, 'index'])->name('admin.updates.index');
     Route::post('/{clubSlug}/admin/updates', [UpdateAdminController::class, 'store'])->name('admin.updates.store');
@@ -317,6 +340,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/updates/dispatch-digest', [UpdateAdminController::class, 'triggerDigest'])->name('admin.updates.dispatch_digest');
 
     // National Directory & Member Subscriptions Hub Routes
+    Route::get('/members/lodges', [MemberLodgesController::class, 'index'])->name('members.lodges');
+    Route::post('/lodges/{slug}/visitor-access', [LodgeVisitorController::class, 'store'])->middleware('throttle:10,1')->name('lodges.visitor_access');
+    Route::delete('/lodges/{slug}/visitor-access', [LodgeVisitorController::class, 'destroy'])->middleware('throttle:20,1')->name('lodges.visitor_access.withdraw');
+    Route::get('/lodges/{slug}/claim', [LodgeClaimController::class, 'create'])->name('lodges.claim');
+    Route::post('/lodges/{slug}/claim', [LodgeClaimController::class, 'store'])->middleware('throttle:6,1')->name('lodges.claim.store');
+    Route::post('/members/lodges/claims/{id}/respond', [LodgeClaimController::class, 'respond'])->middleware('throttle:20,1')->name('lodges.claim.respond');
+    Route::delete('/members/lodges/claims/{id}', [LodgeClaimController::class, 'destroy'])->middleware('throttle:20,1')->name('lodges.claim.withdraw');
+    Route::post('/lodges/{slug}/follow', [LodgeFollowController::class, 'store'])->middleware('throttle:60,1')->name('lodges.follow');
+    Route::patch('/lodges/{slug}/follow', [LodgeFollowController::class, 'update'])->middleware('throttle:60,1')->name('lodges.follow.update');
+    Route::delete('/lodges/{slug}/follow', [LodgeFollowController::class, 'destroy'])->middleware('throttle:60,1')->name('lodges.unfollow');
     Route::get('/members/directory', [ClubDirectoryController::class, 'index'])->name('directory.index');
     Route::post('/members/directory/{clubSlug}/subscribe/{typeId}', [ClubDirectoryController::class, 'subscribe'])->name('directory.subscribe');
     Route::get('/members/subscriptions', [MemberSubscriptionsController::class, 'index'])->name('portal.subscriptions');
@@ -587,6 +620,18 @@ Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
     Route::post('/superadmin/districts', [SuperAdminController::class, 'storeDistrict'])->name('superadmin.districts.store');
     Route::put('/superadmin/districts/{id}', [SuperAdminController::class, 'updateDistrict'])->name('superadmin.districts.update');
     Route::delete('/superadmin/districts/{id}', [SuperAdminController::class, 'destroyDistrict'])->name('superadmin.districts.destroy');
+
+    // Lodge directory
+    Route::get('/superadmin/lodges', [SuperAdminLodgeController::class, 'index'])->name('superadmin.lodges.index');
+    Route::post('/superadmin/lodges', [SuperAdminLodgeController::class, 'store'])->name('superadmin.lodges.store');
+    Route::put('/superadmin/lodges/{id}', [SuperAdminLodgeController::class, 'update'])->name('superadmin.lodges.update');
+    Route::post('/superadmin/lodges/{id}/link-club', [SuperAdminLodgeController::class, 'linkClub'])->name('superadmin.lodges.link_club');
+    Route::delete('/superadmin/lodges/{id}/link-club', [SuperAdminLodgeController::class, 'unlinkClub'])->name('superadmin.lodges.unlink_club');
+    Route::get('/superadmin/lodge-claims', [SuperAdminLodgeClaimController::class, 'index'])->name('superadmin.lodge_claims.index');
+    Route::post('/superadmin/lodge-claims/{id}/approve', [SuperAdminLodgeClaimController::class, 'approve'])->name('superadmin.lodge_claims.approve');
+    Route::post('/superadmin/lodge-claims/{id}/reject', [SuperAdminLodgeClaimController::class, 'reject'])->name('superadmin.lodge_claims.reject');
+    Route::post('/superadmin/lodge-claims/{id}/request-info', [SuperAdminLodgeClaimController::class, 'requestInfo'])->name('superadmin.lodge_claims.request_info');
+    Route::delete('/superadmin/lodges/{id}', [SuperAdminLodgeController::class, 'destroy'])->name('superadmin.lodges.destroy');
 
     // Masonic halls
     Route::get('/superadmin/masonic-halls', [SuperAdminController::class, 'masonicHallsIndex'])->name('superadmin.masonic_halls.index');

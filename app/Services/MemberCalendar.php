@@ -4,9 +4,13 @@ namespace App\Services;
 
 use App\Models\Event;
 use App\Models\EventRegistration;
+use App\Models\Lodge;
+use App\Models\LodgeSchedule;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
+use App\Models\User;
 use App\Support\MemberScope;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
@@ -59,6 +63,7 @@ class MemberCalendar
             return [
                 'key' => 'meeting-'.$meeting->id,
                 'type' => 'meeting',
+                'installation' => $club->isInstallationMeeting($meeting),
                 'id' => $meeting->id,
                 'club' => ['id' => $club->id, 'name' => $club->name, 'slug' => $club->slug, 'colour' => $club->colourKey()],
                 'title' => $meeting->title,
@@ -87,9 +92,55 @@ class MemberCalendar
                 'simple' => $event->allowsQuickReply(),
                 'url' => route('member.events', ['slug' => $club->slug], false),
             ];
-        }))->sortBy(fn (array $item) => $item['start']->getTimestamp())->values();
+        }));
 
-        return $this->flagClashes($items);
+        // Followed lodges have no member area of their own, so they only join the all-clubs calendar.
+        if (! $scope->isSingle()) {
+            $items = $items->concat($this->followedLodgeItems($user, $clubIds, $from, $to));
+        }
+
+        return $this->flagClashes($items->sortBy(fn (array $item) => $item['start']->getTimestamp())->values());
+    }
+
+    /**
+     * Expected meetings of the lodges the user follows, worked out from each lodge's pattern.
+     * A followed lodge the user already belongs to is left out, because its real meetings are
+     * already on the calendar.
+     *
+     * @param  Collection<int, int>  $memberClubIds
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function followedLodgeItems(User $user, Collection $memberClubIds, CarbonInterface $from, CarbonInterface $to): Collection
+    {
+        $lodges = $user->followedLodges()
+            ->wherePivot('in_calendar', true)
+            ->where('lodges.status', 'active')
+            ->where(fn ($lodge) => $lodge->whereNull('lodges.club_id')->orWhereNotIn('lodges.club_id', $memberClubIds->all()))
+            ->with(['schedules', 'masonicHall', 'clubType:id,code,name'])
+            ->get();
+
+        return $lodges->flatMap(function (Lodge $lodge) use ($from, $to) {
+            return $lodge->schedules->flatMap(fn (LodgeSchedule $schedule) => array_map(function (CarbonImmutable $date) use ($lodge, $schedule) {
+                $start = $schedule->startsOn($date) ?? $date->startOfDay();
+
+                return [
+                    'key' => 'lodge-'.$lodge->id.'-'.$date->toDateString(),
+                    'type' => 'lodge',
+                    'id' => $lodge->id,
+                    'club' => ['id' => null, 'name' => $lodge->displayName(), 'slug' => $lodge->slug, 'colour' => 'slate'],
+                    'title' => $lodge->isInstallationOn($date) ? 'Installation meeting (expected)' : 'Meeting (expected)',
+                    'installation' => $lodge->isInstallationOn($date),
+                    'start' => $start,
+                    'end' => $start->addHours(self::MEETING_HOURS),
+                    'all_day' => $schedule->start_time === null,
+                    'where' => $lodge->masonicHall ? trim($lodge->masonicHall->name.', '.$lodge->masonicHall->fullAddress(), ', ') : null,
+                    'reply' => null,
+                    'closed' => false,
+                    'simple' => false,
+                    'url' => route('lodges.show', ['slug' => $lodge->slug], false),
+                ];
+            }, $schedule->datesBetween($from, $to)));
+        })->values();
     }
 
     /**
@@ -100,8 +151,11 @@ class MemberCalendar
      */
     private function flagClashes(Collection $items): Collection
     {
-        return $items->map(function (array $item) use ($items) {
-            $item['clash'] = $items->contains(fn (array $other) => $other['key'] !== $item['key']
+        // An expected date with no known time cannot honestly clash with anything.
+        $timed = $items->reject(fn (array $item) => ! empty($item['all_day']));
+
+        return $items->map(function (array $item) use ($timed) {
+            $item['clash'] = empty($item['all_day']) && $timed->contains(fn (array $other) => $other['key'] !== $item['key']
                 && $other['start'] < $item['end']
                 && $item['start'] < $other['end']);
 

@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Club;
 use App\Models\ClubUpdate;
+use App\Models\ClubVisitorAccess;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Meeting;
@@ -56,6 +57,49 @@ class ClubNotification extends Notification
             'member.meetings.summons',
             ['slug' => $club->slug, 'id' => $meeting->id],
             true,
+        );
+    }
+
+    public static function visitorRequested(ClubVisitorAccess $access, Club $club): self
+    {
+        return new self(
+            self::MEMBERSHIP,
+            $access->user->name.' asks to receive your summonses',
+            'From '.$access->home_lodge_name.($access->home_lodge_number ? ' No. '.$access->home_lodge_number : '').'.',
+            $club,
+            'admin.visitors.index',
+            ['clubSlug' => $club->slug],
+            true,
+        );
+    }
+
+    public static function visitorDecided(ClubVisitorAccess $access, Club $club): self
+    {
+        $approved = $access->status === ClubVisitorAccess::APPROVED;
+        $lodge = $club->lodge;
+
+        return new self(
+            self::MEMBERSHIP,
+            $approved ? $club->name.' will share its summonses with you' : $club->name.' did not approve your request',
+            $approved ? 'You can now see its meetings on its page.' : 'You can ask again later.',
+            $club,
+            $lodge ? 'lodges.show' : 'members.dashboard',
+            $lodge ? ['slug' => $lodge->slug] : [],
+        );
+    }
+
+    /**
+     * For someone who follows a lodge without belonging to it.
+     */
+    public static function followedSummons(Meeting $meeting, Club $club, string $lodgeSlug): self
+    {
+        return new self(
+            self::SUMMONS,
+            'New summons: '.$meeting->title,
+            trim(($meeting->meeting_date?->format('j M Y') ?? '').' · '.($meeting->venue ?? ''), ' ·'),
+            $club,
+            'lodges.show',
+            ['slug' => $lodgeSlug],
         );
     }
 

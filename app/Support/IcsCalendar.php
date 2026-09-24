@@ -44,6 +44,37 @@ class IcsCalendar
         $this->events[] = implode("\r\n", array_map($this->fold(...), $lines));
     }
 
+    /**
+     * An event with a date and no time, for meetings whose start time is not known.
+     */
+    public function addAllDay(string $uid, string $summary, DateTimeInterface $date, ?string $location = null, ?string $description = null, ?string $url = null): void
+    {
+        $lines = [
+            'BEGIN:VEVENT',
+            'UID:'.$uid.'@'.$this->host,
+            'DTSTAMP:'.gmdate('Ymd\THis\Z'),
+            'DTSTART;VALUE=DATE:'.$date->format('Ymd'),
+            'DTEND;VALUE=DATE:'.\DateTimeImmutable::createFromInterface($date)->modify('+1 day')->format('Ymd'),
+            'SUMMARY:'.$this->escape($summary),
+        ];
+
+        if ($location) {
+            $lines[] = 'LOCATION:'.$this->escape($location);
+        }
+
+        if ($description) {
+            $lines[] = 'DESCRIPTION:'.$this->escape($description);
+        }
+
+        if ($url) {
+            $lines[] = 'URL:'.$url;
+        }
+
+        $lines[] = 'END:VEVENT';
+
+        $this->events[] = implode("\r\n", array_map($this->fold(...), $lines));
+    }
+
     public function render(): string
     {
         return implode("\r\n", [

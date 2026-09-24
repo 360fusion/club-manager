@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\MemberSubscription;
+use App\Models\Club;
 use App\Models\Invoice;
+use App\Models\Lodge;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\NewsTag;
@@ -13,6 +15,7 @@ use App\Support\MemberScope;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -101,7 +104,12 @@ class MemberListController extends Controller
 
         $filters = $this->newsFilters($request);
 
-        $posts = Post::whereIn('club_id', $scope->clubIds())
+        // Followed lodges that keep their news here appear beside the member's own clubs, on the
+        // all-clubs page only. What is shown is still limited by each post's audience, so a
+        // follower only ever gets what a member of any club is allowed to read.
+        $followedClubs = $scope->isSingle() ? collect() : $this->followedClubs($scope);
+
+        $posts = Post::whereIn('club_id', $scope->clubIds()->merge($followedClubs->keys()))
             ->with(['author', 'media', 'tags:id,name,slug,color'])
             ->published()
             ->visibleTo($scope->user)
@@ -109,12 +117,13 @@ class MemberListController extends Controller
             ->orderByRaw('COALESCE(published_at, created_at) DESC')
             ->paginate(15)
             ->withQueryString()
-            ->through(function (Post $post) use ($scope) {
-                $club = $scope->clubFor($post->club_id);
+            ->through(function (Post $post) use ($scope, $followedClubs) {
+                $club = $scope->clubFor($post->club_id) ?? $followedClubs->get($post->club_id);
                 $at = $post->published_at ?? $post->created_at;
 
                 return [
                     'id' => $post->id,
+                    'following' => $followedClubs->has($post->club_id),
                     'club' => ['name' => $club->name, 'slug' => $club->slug, 'colour' => $club->colourKey()],
                     'title' => $post->title,
                     'excerpt' => Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($post->excerpt ?: $post->content))), 240),
@@ -135,6 +144,24 @@ class MemberListController extends Controller
             'filters' => [...$filters, 'club' => $scope->club?->slug],
             'tagOptions' => NewsTag::browsableFor($scope->clubIds()->all(), $scope->user),
         ]);
+    }
+
+    /**
+     * The clubs of the managed lodges this member follows and does not belong to, by club id.
+     *
+     * @return Collection<int, Club>
+     */
+    private function followedClubs(MemberScope $scope): Collection
+    {
+        return $scope->user->followedLodges()
+            ->where('lodges.status', 'active')
+            ->whereNotNull('lodges.club_id')
+            ->whereNotIn('lodges.club_id', $scope->clubIds()->all())
+            ->with('club')
+            ->get()
+            ->map(fn (Lodge $lodge) => $lodge->club)
+            ->filter()
+            ->keyBy('id');
     }
 
     /**
