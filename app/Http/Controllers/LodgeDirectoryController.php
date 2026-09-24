@@ -12,6 +12,7 @@ use App\Models\Post;
 use App\Models\Province;
 use App\Models\User;
 use App\Support\ClubAccess;
+use App\Support\LodgeReferenceLinks;
 use App\Support\VisitorSummons;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -92,7 +93,7 @@ class LodgeDirectoryController extends Controller
 
     public function show(Request $request, string $slug): Response
     {
-        $lodge = Lodge::query()->listed()->with(self::relations())->where('slug', $slug)->firstOrFail();
+        $lodge = Lodge::query()->listed()->with(self::relations())->where('slug', $slug)->firstOrFail()->load('sources');
         $hall = $lodge->masonicHall;
 
         $sharing = $hall
@@ -126,7 +127,7 @@ class LodgeDirectoryController extends Controller
                 'can_claim' => ! $lodge->isManaged(),
                 'claim' => $request->user() ? $this->claimFor($lodge, $request->user()->id) : null,
                 'last_verified_at' => $lodge->last_verified_at?->toDateString(),
-                'source_url' => $lodge->source_url,
+                'references' => LodgeReferenceLinks::forLodge($lodge),
                 'upcoming' => $expected,
                 'confirmed' => $confirmed,
                 'visitor' => $club ? $this->visitorState($club, $viewer) : null,
@@ -281,6 +282,7 @@ class LodgeDirectoryController extends Controller
             'address' => $address,
             'province' => $hall->province?->name,
             'website_url' => $hall->website_url,
+            'references' => LodgeReferenceLinks::forHall($hall),
             'map_url' => $address ? 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($hall->name.', '.$address) : null,
         ];
     }

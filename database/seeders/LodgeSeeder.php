@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\ClubType;
 use App\Models\Lodge;
+use App\Models\LodgeSource;
 use App\Models\MasonicHall;
 use App\Models\Province;
 use App\Support\MeetingScheduleParser;
@@ -18,12 +19,12 @@ class LodgeSeeder extends Seeder
      * `provinces.code` and `hall_postcode` finds the hall the lodge meets in, or `hall_town` when only the town is known
      * (used only when the province has exactly one masonic hall in that town). `meets_text` is the
      * wording from the source, kept as written; the regular pattern is worked out from it.
-     * `installation_text` is a month, or the words for one; without it the month is read from
+     * `source_url` is the page the details were read from (a province page, or the directory's page where nothing better exists) and `directory_url` is an extra link to the lodge's page on a third-party directory. `installation_text` is a month, or the words for one; without it the month is read from
      * `meets_text` where the wording names one.
      */
     public const COLUMNS = [
         'province_code', 'order', 'number', 'name', 'hall_postcode', 'hall_town', 'meets_text',
-        'installation_text', 'website_url', 'source_url',
+        'installation_text', 'website_url', 'source_url', 'directory_url',
     ];
 
     /**
@@ -39,10 +40,13 @@ class LodgeSeeder extends Seeder
             ->mapWithKeys(fn (MasonicHall $hall) => [self::normalisePostcode($hall->postcode) => $hall->id]);
         $hallsByTown = MasonicHall::where('kind', 'hall')->whereNotNull('town')->whereNotNull('province_id')->get(['id', 'province_id', 'town'])
             ->groupBy(fn (MasonicHall $hall) => $hall->province_id.'|'.strtolower(trim($hall->town)));
+        $hallUgleUrls = MasonicHall::whereNotNull('ugle_url')->pluck('ugle_url', 'id');
         $parser = new MeetingScheduleParser;
         $skipped = 0;
+        $rows = $this->rows();
+        $lodgesPerUrl = array_count_values(array_filter(array_column($rows, 'source_url')));
 
-        foreach ($this->rows() as $row) {
+        foreach ($rows as $row) {
             if (! $types->has($row['order'])) {
                 $skipped++;
 
@@ -68,23 +72,71 @@ class LodgeSeeder extends Seeder
             ]);
             $lodge->save();
 
-            $lodge->schedules()->where('source', 'import')->delete();
-            $pattern = $row['meets_text'] ? $parser->parse($row['meets_text']) : null;
+            $fromDirectory = $this->isDirectoryUrl($row['source_url']);
+            $this->saveSource($lodge, $fromDirectory ? LodgeSource::PROVINCE_PAGE : $this->listingKind($row['source_url'], $lodgesPerUrl), $fromDirectory ? null : $row['source_url']);
+            $this->saveSource($lodge, LodgeSource::DIRECTORY_PAGE, $fromDirectory ? $row['source_url'] : $row['directory_url']);
+            $this->saveSource($lodge, LodgeSource::UGLE_HALL, $hallUgleUrls[$lodge->masonic_hall_id] ?? null);
 
-            if ($pattern && ! $lodge->schedules()->exists()) {
-                // The installation is a meeting too, so its month is one of the meeting months.
-                if ($installation && ! in_array($installation, $pattern['months'], true)) {
-                    $pattern['months'] = [...$pattern['months'], $installation];
-                    sort($pattern['months']);
+            $lodge->schedules()->where('source', 'import')->delete();
+            $patterns = $row['meets_text'] ? $parser->parseAll($row['meets_text']) : [];
+
+            if ($patterns !== [] && ! $lodge->schedules()->exists()) {
+                // The installation is a meeting too. With one pattern its month joins that pattern; with
+                // several, it is left alone unless one of them already covers it.
+                if ($installation && count($patterns) === 1 && ! in_array($installation, $patterns[0]['months'], true)) {
+                    $patterns[0]['months'] = [...$patterns[0]['months'], $installation];
+                    sort($patterns[0]['months']);
                 }
 
-                $lodge->schedules()->create([...$pattern, 'masonic_hall_id' => $lodge->masonic_hall_id, 'source' => 'import']);
+                foreach ($patterns as $pattern) {
+                    $lodge->schedules()->create([...$pattern, 'masonic_hall_id' => $lodge->masonic_hall_id, 'source' => 'import']);
+                }
             }
         }
 
         if ($skipped > 0) {
             $this->command?->warn("Skipped {$skipped} lodges whose order (club type) is not set up.");
         }
+    }
+
+    private function isDirectoryUrl(?string $url): bool
+    {
+        return $url !== null && parse_url($url, PHP_URL_HOST) === 'onthesquare.co';
+    }
+
+    /**
+     * @param  array<string, int>  $lodgesPerUrl
+     */
+    private function listingKind(?string $url, array $lodgesPerUrl): string
+    {
+        return ($lodgesPerUrl[$url] ?? 0) > 1 ? LodgeSource::PROVINCE_LIST : LodgeSource::PROVINCE_PAGE;
+    }
+
+    /**
+     * Keep the lodge's link of one kind in step with the file. The province link is either the
+     * lodge's own page or a list page, never both. A link that changed loses its old check
+     * results, and one that is no longer known is removed.
+     */
+    private function saveSource(Lodge $lodge, string $kind, ?string $url): void
+    {
+        $kinds = in_array($kind, LodgeSource::PROVINCE_KINDS, true) ? LodgeSource::PROVINCE_KINDS : [$kind];
+
+        if ($url === null) {
+            $lodge->sources()->whereIn('kind', $kinds)->delete();
+
+            return;
+        }
+
+        $lodge->sources()->whereIn('kind', array_diff($kinds, [$kind]))->delete();
+
+        $source = $lodge->sources()->firstOrNew(['kind' => $kind]);
+
+        if ($source->exists && $source->url !== $url) {
+            $source->forceFill(['last_checked_at' => null, 'last_status' => null, 'last_http_status' => null, 'content_hash' => null, 'changed_at' => null]);
+        }
+
+        $source->url = $url;
+        $source->save();
     }
 
     /**

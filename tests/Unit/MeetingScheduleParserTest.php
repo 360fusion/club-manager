@@ -91,4 +91,60 @@ class MeetingScheduleParserTest extends TestCase
     {
         $this->assertSame($month, (new MeetingScheduleParser)->installationMonth($text));
     }
+
+    public function test_reads_several_patterns_when_each_names_its_own_months(): void
+    {
+        $patterns = (new MeetingScheduleParser)->parseAll('Last Tuesday in February (Installation). Last Wednesday in May. Last Wednesday in November at 18:30');
+
+        $this->assertSame([
+            ['occurrence' => 'last', 'day_of_week' => 'Tuesday', 'months' => [2], 'start_time' => '18:30'],
+            ['occurrence' => 'last', 'day_of_week' => 'Wednesday', 'months' => [5, 11], 'start_time' => '18:30'],
+        ], $patterns);
+    }
+
+    public function test_run_on_wording_with_two_patterns_is_split(): void
+    {
+        $patterns = (new MeetingScheduleParser)->parseAll('4th Wednesday September to June 3rd Wednesday December');
+
+        // The December meeting is on another Wednesday, but the first pattern already claims December.
+        $this->assertSame([], $patterns);
+
+        $patterns = (new MeetingScheduleParser)->parseAll('4th Tue Sep, Feb & Jun. 3rd Mon Nov & Apr');
+        $this->assertSame([
+            ['occurrence' => '4th', 'day_of_week' => 'Tuesday', 'months' => [2, 6, 9], 'start_time' => null],
+            ['occurrence' => '3rd', 'day_of_week' => 'Monday', 'months' => [4, 11], 'start_time' => null],
+        ], $patterns);
+    }
+
+    public function test_patterns_that_only_differ_by_month_are_merged(): void
+    {
+        $patterns = (new MeetingScheduleParser)->parseAll('4th Saturday in April, 3rd Friday in June, 3rd Friday in September, 3rd Saturday in October.');
+
+        $this->assertSame(['4th|Saturday|4', '3rd|Friday|6,9', '3rd|Saturday|10'], array_map(fn ($p) => "{$p['occurrence']}|{$p['day_of_week']}|".implode(',', $p['months']), $patterns));
+    }
+
+    public function test_a_single_pattern_still_comes_back_as_one(): void
+    {
+        $this->assertCount(1, (new MeetingScheduleParser)->parseAll('Last Thursday Jan to May, Sep to Dec.'));
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function ambiguousAsSeveral(): array
+    {
+        return [
+            'an exception inside' => ['1st Monday Jan to May except March. 2nd Friday September'],
+            'no months given' => ['1st Monday. 2nd Friday.'],
+            'overlapping months' => ['1st Monday January, March. 2nd Friday March, May'],
+            'penultimate' => ['penultimate Thursday in February and the last Thursday in June, first Monday in May'],
+            'nothing' => ['Meets when the moon is full'],
+        ];
+    }
+
+    #[DataProvider('ambiguousAsSeveral')]
+    public function test_several_patterns_are_not_guessed(string $text): void
+    {
+        $this->assertSame([], (new MeetingScheduleParser)->parseAll($text));
+    }
 }

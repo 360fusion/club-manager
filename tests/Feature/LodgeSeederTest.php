@@ -107,9 +107,10 @@ class LodgeSeederTest extends TestCase
         $phoenix = Lodge::where('slug', 'phoenix-lodge-94')->firstOrFail();
         $this->assertSame(12, $phoenix->installation_month);
 
-        // Every lodge with an installation month meets in it.
+        // Every lodge with one pattern and an installation month meets in that month. (A lodge with several
+        // patterns is left as its source words it, because there is no telling which weekday the installation is on.)
         Lodge::whereNotNull('installation_month')->with('schedules')->get()
-            ->filter(fn (Lodge $lodge) => $lodge->schedules->isNotEmpty())
+            ->filter(fn (Lodge $lodge) => $lodge->schedules->count() === 1)
             ->each(fn (Lodge $lodge) => $this->assertContains($lodge->installation_month, $lodge->schedules->first()->months, $lodge->name));
     }
 }

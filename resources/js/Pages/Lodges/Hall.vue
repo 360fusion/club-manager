@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import ReferenceLinks from '@/Components/ReferenceLinks.vue';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 
 defineProps({
@@ -35,6 +36,8 @@ defineProps({
                     </li>
                 </ul>
             </section>
+
+            <ReferenceLinks :groups="hall.references" />
         </div>
     </PublicLayout>
 </template>

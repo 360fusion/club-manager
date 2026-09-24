@@ -89,6 +89,14 @@ class Lodge extends Model
     }
 
     /**
+     * @return HasMany<LodgeSource, $this>
+     */
+    public function sources(): HasMany
+    {
+        return $this->hasMany(LodgeSource::class);
+    }
+
+    /**
      * The people who follow this lodge. For sending them notices only: it is never shown to anyone,
      * because a follow is private.
      *

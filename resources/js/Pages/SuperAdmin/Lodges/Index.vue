@@ -76,7 +76,10 @@ function openEdit(lodge) {
     for (const key of ['club_type_id', 'province_id', 'masonic_hall_id', 'name', 'number', 'status', 'meets_text', 'installation_month', 'website_url', 'description']) {
         values[key] = lodge[key] ?? '';
     }
-    if (lodge.schedule) {
+    if (lodge.schedules.length > 1) {
+        // Several patterns cannot be edited in this form. Leaving the field out keeps them as they are.
+        values.schedule = null;
+    } else if (lodge.schedule) {
         values.schedule = {
             occurrence: lodge.schedule.occurrence,
             day_of_week: lodge.schedule.day_of_week,
@@ -187,7 +190,7 @@ const filterClass = 'bg-slate-100 border border-slate-300 text-slate-900 text-xs
                                 <td class="py-3 px-3" :class="l.province ? 'text-slate-700 dark:text-slate-300' : 'text-amber-600 dark:text-amber-400'">{{ l.province || 'No province' }}</td>
                                 <td class="py-3 px-3" :class="l.hall ? 'text-slate-700 dark:text-slate-300' : 'text-amber-600 dark:text-amber-400'">{{ l.hall || 'No hall' }}</td>
                                 <td class="py-3 px-3 text-slate-700 dark:text-slate-300 max-w-xs">
-                                    <span v-if="l.schedule">{{ describePattern(l.schedule) }}</span>
+                                    <span v-if="l.schedules.length"><span v-for="(sch, i) in l.schedules" :key="i" class="block">{{ describePattern(sch) }}</span></span>
                                     <span v-else-if="l.meets_text" class="line-clamp-2 text-slate-500" :title="l.meets_text">{{ l.meets_text }}</span>
                                     <span v-else class="text-amber-600 dark:text-amber-400">Not listed</span>
                                 </td>
@@ -270,7 +273,14 @@ const filterClass = 'bg-slate-100 border border-slate-300 text-slate-900 text-xs
                         </label>
                     </div>
 
-                    <fieldset class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                    <fieldset v-if="form.schedule === null" class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                        <legend class="px-1 font-medium dark:text-slate-300">Meeting patterns (used for expected dates)</legend>
+                        <ul class="space-y-1">
+                            <li v-for="(sch, i) in editingLodge.schedules" :key="i">{{ describePattern(sch) }}<span v-if="sch.start_time"> · from {{ sch.start_time }}</span></li>
+                        </ul>
+                        <p class="mt-2 text-slate-500 dark:text-slate-400">This lodge meets on different days in different months, so its patterns are kept as they are. Tick "Read the pattern from this wording" above to build them again from the wording.</p>
+                    </fieldset>
+                    <fieldset v-else class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
                         <legend class="px-1 font-medium dark:text-slate-300">Meeting pattern (used for expected dates)</legend>
                         <div class="grid grid-cols-3 gap-3">
                             <select v-model="form.schedule.occurrence" :class="inputClass" aria-label="Occurrence">
@@ -306,6 +316,19 @@ const filterClass = 'bg-slate-100 border border-slate-300 text-slate-900 text-xs
                             <p v-if="form.errors.website_url" class="text-rose-600 mt-1">{{ form.errors.website_url }}</p>
                         </div>
                     </div>
+
+                    <fieldset v-if="editingLodge?.sources.length" class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                        <legend class="px-1 font-medium dark:text-slate-300">Where the details came from</legend>
+                        <ul class="space-y-2">
+                            <li v-for="src in editingLodge.sources" :key="src.url">
+                                <a :href="src.url" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline dark:text-blue-400">{{ src.label }} ↗</a>
+                                <span class="block text-slate-500 dark:text-slate-400">
+                                    <template v-if="src.last_checked_at">Checked {{ src.last_checked_at }}: {{ src.last_status }}<span v-if="src.changed_at"> (page changed {{ src.changed_at }})</span></template>
+                                    <template v-else>Not checked yet. Run <code>php artisan lodges:check-sources</code>.</template>
+                                </span>
+                            </li>
+                        </ul>
+                    </fieldset>
 
                     <fieldset v-if="editingLodge" class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
                         <legend class="px-1 font-medium dark:text-slate-300">Club account</legend>

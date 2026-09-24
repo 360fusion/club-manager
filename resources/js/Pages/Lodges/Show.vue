@@ -3,6 +3,7 @@ import { computed, reactive } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import Badge from '@/Components/Ui/Badge.vue';
+import ReferenceLinks from '@/Components/ReferenceLinks.vue';
 import { formatMeetingDate, describePattern } from '@/Utils/lodgeDates';
 
 const props = defineProps({
@@ -213,10 +214,9 @@ function setCalendar(event) {
 
                 <section class="rounded-xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
                     <a v-if="lodge.website_url" :href="lodge.website_url" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline dark:text-blue-400">Lodge website ↗</a>
-                    <p v-if="lodge.source_url" class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                        Listing taken from <a :href="lodge.source_url" target="_blank" rel="noopener noreferrer" class="underline">the province's website</a><span v-if="lodge.last_verified_at">, checked {{ lodge.last_verified_at }}</span>.
-                    </p>
                 </section>
+
+                <ReferenceLinks :groups="lodge.references" :checked-on="lodge.last_verified_at" />
             </aside>
         </div>
     </PublicLayout>

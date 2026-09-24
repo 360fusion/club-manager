@@ -38,6 +38,7 @@ class MasonicHall extends Model
         'email',
         'website_url',
         'source_url',
+        'ugle_url',
     ];
 
     /**

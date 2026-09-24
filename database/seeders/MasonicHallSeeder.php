@@ -17,7 +17,7 @@ class MasonicHallSeeder extends Seeder
      */
     public const COLUMNS = [
         'province_code', 'slug', 'name', 'kind', 'address_line_1', 'address_line_2', 'town', 'county',
-        'postcode', 'country', 'telephone', 'email', 'website_url', 'source_url',
+        'postcode', 'country', 'telephone', 'email', 'website_url', 'source_url', 'ugle_url',
     ];
 
     /**

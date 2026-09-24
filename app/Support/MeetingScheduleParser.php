@@ -86,6 +86,69 @@ class MeetingScheduleParser
     }
 
     /**
+     * Every regular pattern in the wording. Most lodges have one, but some meet on different days in
+     * different months ("Last Tuesday in February, last Wednesday in May"). Several patterns are only
+     * returned when each one names its own months and none overlap, because otherwise the wording
+     * is ambiguous and it is better to show the text than guess.
+     *
+     * @return list<array{occurrence: string, day_of_week: string, months: list<int>, start_time: ?string}>
+     */
+    public function parseAll(string $text): array
+    {
+        $single = $this->parse($text);
+
+        if ($single !== null) {
+            return [$single];
+        }
+
+        $clean = $this->clean(trim($text));
+        $pattern = '/\b(1st|first|2nd|second|3rd|third|4th|fourth|forth|last)\.?\s+(?:of\s+the\s+|of\s+)?(mon|tue|wed|thu|fri|sat|sun)[a-z]*/';
+
+        if (str_contains($clean, 'penultimate') || ! preg_match_all($pattern, $clean, $found, PREG_SET_ORDER | PREG_OFFSET_CAPTURE) || count($found) < 2) {
+            return [];
+        }
+
+        $time = $this->time($text);
+        $merged = [];
+        $claimed = [];
+
+        foreach ($found as $i => $match) {
+            $from = $match[0][1] + strlen($match[0][0]);
+            $to = $found[$i + 1][0][1] ?? strlen($clean);
+            $segment = substr($clean, $from, $to - $from);
+
+            // Every pattern must say which months it covers, and must not carve out exceptions.
+            if (! preg_match('/\b'.self::MONTH_PATTERN.'\b/', $segment)
+                || preg_match('/\b(?:except(?:ing)?|excluding|with the exception of|other than|apart from|not in|but|recess|closed|dark|no meetings?|not meet|not held)\b/', $segment)) {
+                return [];
+            }
+
+            $months = $this->months($segment);
+            $key = self::OCCURRENCES[$match[1][0]].'|'.self::DAYS[$match[2][0]];
+
+            foreach ($months as $month) {
+                if (isset($claimed[$month]) && $claimed[$month] !== $key) {
+                    return [];
+                }
+
+                $claimed[$month] = $key;
+            }
+
+            $merged[$key] = array_values(array_unique([...($merged[$key] ?? []), ...$months]));
+        }
+
+        $patterns = [];
+
+        foreach ($merged as $key => $months) {
+            [$occurrence, $day] = explode('|', $key);
+            sort($months);
+            $patterns[] = ['occurrence' => $occurrence, 'day_of_week' => $day, 'months' => $months, 'start_time' => $time];
+        }
+
+        return $patterns;
+    }
+
+    /**
      * The month of the installation meeting, when the wording names exactly one: "Installation
      * December", "Installation is in October", or a month marked "(Inst)" or "(Installation)".
      */

@@ -6,6 +6,7 @@ use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Lodge;
 use App\Models\LodgeSchedule;
+use App\Models\LodgeSource;
 use App\Models\MasonicHall;
 use App\Models\Province;
 use App\Services\Lodges\LodgeClaimService;
@@ -32,7 +33,7 @@ class SuperAdminLodgeController extends Controller
             'gaps' => 'nullable|in:no_hall,no_schedule,no_province',
         ]);
 
-        $query = Lodge::query()->with(['clubType:id,code,name', 'province:id,name', 'masonicHall:id,name,town', 'schedules', 'club:id,name,slug']);
+        $query = Lodge::query()->with(['clubType:id,code,name', 'province:id,name', 'masonicHall:id,name,town', 'schedules', 'sources', 'club:id,name,slug']);
 
         if ($q = trim((string) ($filters['q'] ?? ''))) {
             $like = '%'.$q.'%';
@@ -82,6 +83,14 @@ class SuperAdminLodgeController extends Controller
                 'is_managed' => $lodge->isManaged(),
                 'club' => $lodge->club ? ['name' => $lodge->club->name, 'slug' => $lodge->club->slug] : null,
                 'schedule' => $lodge->schedules->first()?->only(['occurrence', 'day_of_week', 'months', 'start_time', 'source']),
+                'schedules' => $lodge->schedules->map->only(['occurrence', 'day_of_week', 'months', 'start_time'])->values(),
+                'sources' => $lodge->sources->sortBy(fn ($source) => LodgeSource::TIERS[$source->kind] ?? 3)->map(fn ($source) => [
+                    'label' => $source->label(),
+                    'url' => $source->url,
+                    'last_checked_at' => $source->last_checked_at?->diffForHumans(),
+                    'last_status' => $source->last_status,
+                    'changed_at' => $source->changed_at?->toDateString(),
+                ])->values(),
             ]),
             'filters' => [
                 'q' => $filters['q'] ?? '',
@@ -212,11 +221,14 @@ class SuperAdminLodgeController extends Controller
         $schedule = $validated['schedule'] ?? null;
 
         if (! empty($validated['reparse'])) {
-            $pattern = $lodge->meets_text ? (new MeetingScheduleParser)->parse($lodge->meets_text) : null;
+            $patterns = $lodge->meets_text ? (new MeetingScheduleParser)->parseAll($lodge->meets_text) : [];
             $lodge->schedules()->delete();
 
-            if ($pattern) {
-                $pattern['months'] = $this->withInstallationMonth($pattern['months'], $lodge);
+            foreach ($patterns as $pattern) {
+                if (count($patterns) === 1) {
+                    $pattern['months'] = $this->withInstallationMonth($pattern['months'], $lodge);
+                }
+
                 $lodge->schedules()->create([...$pattern, 'masonic_hall_id' => $lodge->masonic_hall_id, 'source' => 'import']);
             }
 
