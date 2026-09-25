@@ -16,12 +16,12 @@ class SiteThemes
     /**
      * @var list<string>
      */
-    public const LAYOUTS = ['banded', 'editorial', 'bold'];
+    public const LAYOUTS = ['banded', 'classic', 'editorial', 'bold'];
 
     /**
      * @var list<string>
      */
-    public const COLOR_SCHEMES = ['navy_gold', 'rust_stone', 'violet_coral', 'forest_moss', 'ocean_teal'];
+    public const COLOR_SCHEMES = ['navy_gold', 'rust_stone', 'crimson_rose', 'violet_coral', 'forest_moss', 'ocean_teal'];
 
     /**
      * Every value `website_theme` is allowed to hold.

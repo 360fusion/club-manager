@@ -70,7 +70,7 @@ class WebsiteBuilderTest extends TestCase
         $this->get(route('public.site', ['clubSlug' => 'club-a', 'pageSlug' => 'about']))->assertInertia(fn ($p) => $p
             ->where('page.meta_title', 'Custom Title')
             ->where('page.meta_description', 'Custom description.')
-            ->has('site.footer_copyright'));
+            ->has('site.footer_copyright_holder')->has('site.footer_copyright_text'));
     }
 
     // ---- members-only pages -------------------------------------------------------------------------------------

@@ -4,6 +4,12 @@
 import { ref, computed } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import ObfuscatedEmail from '@/Components/ObfuscatedEmail.vue';
+import { parseYouTubeUrl, youtubeEmbedUrl, youtubeThumbnail } from '@/Utils/youtube';
+import CtaBannerBlock from '@/Components/Blocks/CtaBannerBlock.vue';
+import FaqBlock from '@/Components/Blocks/FaqBlock.vue';
+import MapBlock from '@/Components/Blocks/MapBlock.vue';
+import DownloadsBlock from '@/Components/Blocks/DownloadsBlock.vue';
+import CalendarBlock from '@/Components/Blocks/CalendarBlock.vue';
 
 const props = defineProps({
     blocks: { type: Array, default: () => [] },
@@ -13,6 +19,8 @@ const props = defineProps({
     upcomingEvents: { type: Array, default: () => [] },
     membershipPlans: { type: Array, default: () => [] },
     donations: { type: Array, default: () => [] },
+    // The public calendar for the page's calendar block (month grid + upcoming list), only sent when the page has one.
+    calendar: { type: Object, default: null },
     // false in the website builder's own preview: forms are shown but do nothing, so editing a page can
     // never accidentally email someone or take a donation.
     interactive: { type: Boolean, default: true },
@@ -35,6 +43,30 @@ const blockOuterClass = (block, index) => {
     return ['w-full', index % 2 === 0 ? props.theme.bandA : props.theme.bandB];
 };
 const blockInnerClass = computed(() => (isBanded.value ? 'max-w-7xl mx-auto px-6 py-16 sm:py-20' : ''));
+
+// Every block (except the full-bleed hero) sits in the same content column, so they all line up. A block can be
+// narrowed to three quarters or half of it (block_width) and placed left, centre or right (block_align); the
+// widths each block used to set for itself are overridden so "full" means the same width for all of them.
+const BLOCK_WIDTHS = { full: 'w-full', three_quarter: 'w-full lg:w-3/4', half: 'w-full lg:w-1/2' };
+const BLOCK_ALIGNS = { center: 'mx-auto', left: 'mr-auto', right: 'ml-auto' };
+const blockWidthClass = (block) => (block.type === 'hero'
+    ? ''
+    : [BLOCK_WIDTHS[block.block_width] || BLOCK_WIDTHS.full, BLOCK_ALIGNS[block.block_align] || BLOCK_ALIGNS.center, '[&>section]:!max-w-none']);
+
+// ---- youtube video: click-to-play, so YouTube's player (and its cookies) only load when a visitor asks for it ------
+const playingVideos = ref({});
+const YOUTUBE_ASPECT = { '16:9': 'aspect-video', '4:3': 'aspect-[4/3]', '21:9': 'aspect-[21/9]', '1:1': 'aspect-square', '9:16': 'aspect-[9/16]' };
+
+const youtubeVideo = (block) => parseYouTubeUrl(block.url);
+const isSideBySide = (block) => block.layout === 'side_left' || block.layout === 'side_right';
+const hasYoutubeButton = (block) => !!(block.button_enabled && block.button_label && block.button_url);
+const hasYoutubeText = (block) => (block.layout !== 'video_only' && !!(block.title || block.description))
+    || block.show_youtube_link !== false
+    || hasYoutubeButton(block);
+const videoKey = (block, index) => block.id || index;
+const playVideo = (block, index) => {
+    if (props.interactive) playingVideos.value[videoKey(block, index)] = true;
+};
 
 // ---- news feed: pagination and layout, one block can hold several of these -------------------------------------
 const newsBlockPages = ref({});
@@ -111,6 +143,7 @@ const submitContactForm = (block) => {
     <div :class="isBanded ? '' : 'max-w-7xl mx-auto px-6 py-8 space-y-16'">
         <div v-for="(block, index) in blocks" :key="block.id || index" :class="blockOuterClass(block, index)">
         <div :class="blockInnerClass">
+        <div :class="blockWidthClass(block)">
 
             <!-- 1. Hero banner -->
             <section v-if="block.type === 'hero' && isEditorialHero" :class="['relative py-16 sm:py-24 text-left transition-colors', theme.heroBg]">
@@ -187,6 +220,77 @@ const submitContactForm = (block) => {
                     </component>
                 </div>
             </section>
+
+            <!-- 6b. YouTube video -->
+            <section v-else-if="block.type === 'youtube' && (youtubeVideo(block) || !interactive)" class="mx-auto">
+                <div v-if="!youtubeVideo(block)" :class="['flex items-center justify-center aspect-video border-2 border-dashed text-sm font-semibold opacity-70 text-center p-4', radiusMd, theme.bodyText]">
+                    Paste a YouTube link to show the video here
+                </div>
+                <div v-else :class="['grid gap-6 items-start', isSideBySide(block) ? 'md:grid-cols-2' : '']">
+                    <div :class="[block.layout === 'side_right' ? 'md:order-2' : '']">
+                        <div :class="['relative w-full overflow-hidden shadow-xl border border-slate-800 bg-black', radiusMd, YOUTUBE_ASPECT[block.aspect] || 'aspect-video', block.aspect === '9:16' ? 'max-w-sm mx-auto' : '']">
+                            <iframe
+                                v-if="interactive && playingVideos[videoKey(block, index)]"
+                                :src="youtubeEmbedUrl(youtubeVideo(block).id, { start: block.start, end: block.end, loop: block.loop, captions: block.captions })"
+                                :title="block.title || 'YouTube video'"
+                                class="absolute inset-0 w-full h-full"
+                                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allowfullscreen
+                            ></iframe>
+                            <component
+                                :is="interactive ? 'button' : 'div'"
+                                v-else
+                                :type="interactive ? 'button' : undefined"
+                                :aria-label="`Play video: ${block.title || 'YouTube video'}`"
+                                class="group absolute inset-0 w-full h-full cursor-pointer"
+                                @click="playVideo(block, index)"
+                            >
+                                <img :src="block.cover_url || youtubeThumbnail(youtubeVideo(block).id)" alt="" loading="lazy" class="w-full h-full object-cover" />
+                                <span class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                                    <span class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/95 text-slate-900 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                                        <svg viewBox="0 0 24 24" class="w-7 h-7 sm:w-9 sm:h-9 ml-1 fill-current" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                                    </span>
+                                </span>
+                            </component>
+                        </div>
+                    </div>
+
+                    <div v-if="hasYoutubeText(block)" :class="['space-y-3', block.text_align === 'center' ? 'text-center' : 'text-left']">
+                        <h2 v-if="block.layout !== 'video_only' && block.title" :class="['text-2xl sm:text-3xl font-bold', theme.headingText]">{{ block.title }}</h2>
+                        <p v-if="block.layout !== 'video_only' && block.description" :class="['whitespace-pre-line leading-relaxed', theme.bodyText]">{{ block.description }}</p>
+                        <div v-if="block.show_youtube_link !== false || hasYoutubeButton(block)" :class="['flex flex-wrap gap-3 pt-1', block.text_align === 'center' ? 'justify-center' : 'justify-start']">
+                            <component
+                                :is="interactive ? 'a' : 'span'"
+                                v-if="block.show_youtube_link !== false"
+                                :href="interactive ? `https://www.youtube.com/watch?v=${youtubeVideo(block).id}` : undefined"
+                                target="_blank"
+                                rel="noopener"
+                                :class="['inline-block py-2.5 px-5 font-bold text-sm border transition-all hover:scale-105', radiusMd, theme.cardBg]"
+                            >
+                                ▶ Watch on YouTube
+                            </component>
+                            <component
+                                :is="interactive ? 'a' : 'span'"
+                                v-if="hasYoutubeButton(block)"
+                                :href="interactive ? resolveUrl(block.button_url) : undefined"
+                                :target="block.button_new_tab ? '_blank' : undefined"
+                                :rel="block.button_new_tab ? 'noopener' : undefined"
+                                :class="['inline-block py-2.5 px-5 font-bold text-sm shadow-lg transition-all hover:scale-105', radiusMd, theme.heroCta]"
+                            >
+                                {{ block.button_label }}
+                            </component>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6c. Newer blocks, each in its own component -->
+            <CtaBannerBlock v-else-if="block.type === 'cta_banner'" :block="block" :theme="theme" :interactive="interactive" :resolve-url="resolveUrl" :radius-lg="radiusLg" :radius-md="radiusMd" />
+            <FaqBlock v-else-if="block.type === 'faq'" :block="block" :theme="theme" :interactive="interactive" :radius-md="radiusMd" />
+            <MapBlock v-else-if="block.type === 'map'" :block="block" :theme="theme" :interactive="interactive" :radius-md="radiusMd" />
+            <DownloadsBlock v-else-if="block.type === 'downloads'" :block="block" :theme="theme" :club="club" :interactive="interactive" :resolve-url="resolveUrl" :radius-md="radiusMd" />
+            <CalendarBlock v-else-if="block.type === 'calendar'" :block="block" :theme="theme" :club="club" :calendar="calendar" :interactive="interactive" :radius-md="radiusMd" :radius-lg="radiusLg" />
 
             <!-- 7. Membership pricing -->
             <section v-else-if="block.type === 'pricing_cards'" class="max-w-6xl mx-auto space-y-6">
@@ -369,6 +473,7 @@ const submitContactForm = (block) => {
                     <p v-if="!interactive" class="text-[11px] text-center opacity-70">🔒 Submissions will route to: <strong>{{ block.recipient_email || club.contact_email || club.email || 'not set yet' }}</strong><span v-if="block.cc_emails"> (CC: {{ block.cc_emails }})</span></p>
                 </form>
             </section>
+        </div>
         </div>
         </div>
 

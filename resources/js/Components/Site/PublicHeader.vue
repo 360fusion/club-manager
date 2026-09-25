@@ -4,6 +4,7 @@
 // configures is exactly what a visitor sees.
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
+import SiteAccountMenu from '@/Components/Site/SiteAccountMenu.vue';
 
 const props = defineProps({
     club: { type: Object, required: true },
@@ -12,6 +13,9 @@ const props = defineProps({
     currentPage: { type: Object, default: () => ({}) },
     settings: { type: Object, default: () => ({}) },
     resolveUrl: { type: Function, default: (url) => url },
+    // 'logo_only' drops the menu and buttons (a landing page); the page can also hide the whole header, which
+    // the page itself does by not rendering this component.
+    mode: { type: String, default: 'full' },
     // false in the website builder's own preview, so clicking around a mockup header can never navigate you
     // away from the builder.
     interactive: { type: Boolean, default: true },
@@ -35,6 +39,11 @@ const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (prop
 
 <template>
     <header :class="theme.header">
+        <!-- Login / Member Area: always the top right corner, whether the logo is on the left or centred -->
+        <div v-if="showAccountLinks && mode !== 'logo_only'" class="max-w-7xl mx-auto px-6 pt-2 flex justify-end">
+            <SiteAccountMenu :club="club" :theme="theme" :interactive="interactive" />
+        </div>
+
         <div :class="['max-w-7xl mx-auto px-6 flex', isCentered ? 'flex-col items-center py-5 gap-4' : 'min-h-20 py-3 items-center justify-between flex-wrap gap-y-2']">
             <component :is="Tag" :href="interactive ? homeHref : undefined" class="flex items-center gap-3 group shrink-0">
                 <template v-if="showLogo">
@@ -49,12 +58,12 @@ const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (prop
                     </div>
                 </template>
                 <div>
-                    <div :class="['font-extrabold text-lg transition-colors', theme.headingText]">{{ club.name }}</div>
-                    <div v-if="showTagline && club.tagline" :class="['text-xs', theme.bodyText]">{{ club.tagline }}</div>
+                    <div :class="['font-extrabold text-lg transition-colors', theme.headerHeading || theme.headingText]">{{ club.name }}</div>
+                    <div v-if="showTagline && club.tagline" :class="['text-xs', theme.headerBody || theme.bodyText]">{{ club.tagline }}</div>
                 </div>
             </component>
 
-            <nav :class="['flex items-center gap-1 sm:gap-2 flex-wrap', isCentered ? 'justify-center' : '']">
+            <nav v-if="mode !== 'logo_only'" :class="['flex items-center gap-1 sm:gap-2 flex-wrap', isCentered ? 'justify-center' : '']">
                 <component
                     :is="Tag"
                     v-for="item in navigation"
@@ -70,25 +79,12 @@ const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (prop
                     :is="Tag"
                     v-if="ctaEnabled"
                     :href="interactive ? resolveUrl(settings.header_cta_link) : undefined"
-                    :class="theme.heroCta"
+                    :class="theme.headerCta || theme.heroCta"
                     class="ml-1 px-3.5 py-1.5 rounded-xl text-xs font-bold shadow transition-all"
                 >
                     {{ settings.header_cta_text }}
                 </component>
 
-                <template v-if="showAccountLinks">
-                    <component :is="Tag" :href="interactive ? '/login' : undefined" :class="theme.navInactive" class="px-3 py-1.5 text-xs font-semibold border border-transparent rounded-xl">
-                        Log In
-                    </component>
-                    <component
-                        :is="Tag"
-                        :href="interactive ? `/${club.slug}/overview` : undefined"
-                        :class="theme.cardBg"
-                        class="ml-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold"
-                    >
-                        🔒 Admin Portal
-                    </component>
-                </template>
             </nav>
         </div>
     </header>

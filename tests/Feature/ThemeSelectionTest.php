@@ -86,4 +86,26 @@ class ThemeSelectionTest extends TestCase
 
         $response->assertSessionHasErrors(['website_theme']);
     }
+
+    public function test_classic_layout_and_crimson_rose_colours_can_be_saved(): void
+    {
+        $clubType = ClubType::create(['name' => 'Lodge', 'code' => 'lodge']);
+        $club = Club::create([
+            'name' => 'Supreme Council',
+            'slug' => 'supreme-council',
+            'club_type_id' => $clubType->id,
+            'email' => 'club@example.org',
+        ]);
+
+        $user = User::factory()->create();
+        $user->clubs()->attach($club->id, ['role' => 'admin']);
+
+        $this->actingAs($user);
+
+        $this->post(route('admin.pages.themes.update', ['clubSlug' => $club->slug]), [
+            'website_theme' => 'classic:crimson_rose',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('classic:crimson_rose', $club->fresh()->settings['website_theme']);
+    }
 }

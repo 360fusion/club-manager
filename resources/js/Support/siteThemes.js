@@ -21,6 +21,13 @@ export const SITE_LAYOUTS = [
         features: ['Full-bleed alternating bands', 'Serif display headings', 'Dedicated dark hero band', 'Neutral slate chrome'],
     },
     {
+        id: 'classic',
+        name: 'Classic Banner',
+        badge: 'Solid Header & Footer',
+        description: 'A clean, traditional layout: a solid brand-coloured header and footer around white content, a soft tinted title band, serif headings and neat rounded cards.',
+        features: ['Solid brand-coloured header and footer', 'Soft tinted title band', 'Clean white content bands', 'Serif headings'],
+    },
+    {
         id: 'editorial',
         name: 'Editorial Broadsheet',
         badge: 'Sharp, Asymmetric Layout',
@@ -60,6 +67,12 @@ export const SITE_COLOR_SCHEMES = [
         name: 'Rust & Stone',
         swatch: ['#fafaf9', '#1c1917', '#c2410c', '#7c2d12'],
         vars: { accent: '#c2410c', accentBright: '#fb923c', accentDeep: '#7c2d12', tint: '#fff7ed', heroTo: '#78350f' },
+    },
+    {
+        id: 'crimson_rose',
+        name: 'Crimson & Rose',
+        swatch: ['#ffffff', '#960018', '#f4b9c7', '#fbeaee'],
+        vars: { accent: '#960018', accentBright: '#f4b9c7', accentDeep: '#7a0013', tint: '#fbeaee', heroTo: '#7a0013' },
     },
     {
         id: 'violet_coral',
@@ -162,6 +175,35 @@ const LAYOUT_TABLE = {
         radiusMd: 'rounded-xl',
     },
 
+    // Solid brand-coloured header and footer around white bands, a tinted title band, serif headings. The header and
+    // footer are dark surfaces, so they carry their own text and button classes (headerHeading, headerBody, headerCta,
+    // footerHeading, footerBody) that PublicHeader/PublicFooter prefer over the page-level ones.
+    classic: {
+        layout: 'banded',
+        bandA: 'bg-white dark:bg-slate-950',
+        bandB: 'bg-[var(--cm-tint)] dark:bg-slate-900',
+        wrapper: 'bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans selection:bg-[var(--cm-accent)] selection:text-white',
+        header: 'sticky top-0 z-50 bg-[var(--cm-accent)] text-white shadow-md',
+        headerHeading: 'font-serif text-white',
+        headerBody: 'text-white/75',
+        headerCta: 'bg-white hover:bg-[var(--cm-tint)] text-[var(--cm-accent-deep)] font-semibold',
+        navActive: 'text-white border-b-2 border-transparent border-b-[color:var(--cm-accent-bright)] font-semibold rounded-none',
+        navInactive: 'text-white/85 hover:text-white border-transparent rounded-none',
+        heroBg: 'bg-[var(--cm-tint)] dark:bg-slate-900 text-[var(--cm-accent-deep)] dark:text-white font-serif',
+        heroPill: 'bg-white dark:bg-slate-800 border-[var(--cm-accent)]/30 text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] font-sans tracking-widest',
+        heroCta: 'bg-[var(--cm-accent)] hover:bg-[var(--cm-accent-deep)] text-white font-semibold',
+        cardBg: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white shadow-none hover:border-[var(--cm-accent)]/50 transition-colors',
+        headingText: 'font-serif text-slate-900 dark:text-white',
+        bodyText: 'text-slate-600 dark:text-slate-300',
+        accentText: 'text-[var(--cm-accent)] dark:text-[var(--cm-accent-bright)]',
+        accentBg: 'bg-[var(--cm-accent)]',
+        footer: 'bg-[var(--cm-accent)] border-white/10 text-white/85 font-sans',
+        footerHeading: 'font-serif text-white',
+        footerBody: 'text-white/75',
+        radiusLg: 'rounded-2xl',
+        radiusMd: 'rounded-xl',
+    },
+
     // Sharp, hairline-bordered, left-aligned hero. No rounded corners anywhere.
     editorial: {
         layout: 'editorial',
@@ -202,3 +244,36 @@ const LAYOUT_TABLE = {
         radiusMd: 'rounded-3xl',
     },
 };
+
+// Optional typography and corner overrides a lodge can layer over any theme (Website Themes, step 3). Fonts are
+// system stacks only, so nothing is downloaded from a font service and no visitor's address is shared.
+// Keep the keys in step with PageAdminController::FONT_PAIRINGS / CORNER_STYLES.
+export const FONT_PAIRINGS = [
+    { id: 'theme', name: 'Theme default', sample: 'As the layout was designed', stack: null },
+    { id: 'georgia', name: 'Classic serif', sample: 'Georgia, Times New Roman', stack: 'Georgia, Cambria, "Times New Roman", Times, serif' },
+    { id: 'clean', name: 'Clean sans-serif', sample: 'System UI, Helvetica, Arial', stack: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' },
+    { id: 'palatino', name: 'Book style', sample: 'Palatino, Book Antiqua', stack: '"Palatino Linotype", Palatino, "Book Antiqua", "URW Palladio L", serif' },
+];
+
+export const CORNER_STYLES = [
+    { id: 'theme', name: 'Theme default', radiusLg: null, radiusMd: null },
+    { id: 'square', name: 'Square', radiusLg: 'rounded-none', radiusMd: 'rounded-none' },
+    { id: 'soft', name: 'Softly rounded', radiusLg: 'rounded-xl', radiusMd: 'rounded-lg' },
+    { id: 'round', name: 'Very round', radiusLg: 'rounded-[2rem]', radiusMd: 'rounded-3xl' },
+];
+
+/**
+ * The theme's classes with the club's font and corner choices laid over them. Tailwind's font-sans and
+ * font-serif read the --font-sans / --font-serif properties, so setting those on the wrapper restyles every
+ * themed element without touching each layout's class table.
+ */
+export function withSiteStyle(theme, { font_pairing: font = 'theme', corner_style: corner = 'theme' } = {}) {
+    const stack = FONT_PAIRINGS.find((f) => f.id === font)?.stack;
+    const corners = CORNER_STYLES.find((c) => c.id === corner);
+
+    return {
+        ...theme,
+        ...(corners?.radiusLg ? { radiusLg: corners.radiusLg, radiusMd: corners.radiusMd } : {}),
+        cssVars: { ...theme.cssVars, ...(stack ? { '--font-sans': stack, '--font-serif': stack } : {}) },
+    };
+}

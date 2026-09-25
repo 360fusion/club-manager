@@ -147,11 +147,6 @@ class Club extends Model implements HasMedia
             $settingsUpdated = true;
         }
 
-        if (empty($settings['footer_copyright'])) {
-            $settings['footer_copyright'] = '© '.date('Y').' '.$this->name.'. All rights reserved.';
-            $settingsUpdated = true;
-        }
-
         if (! array_key_exists('header_layout', $settings)) {
             $settings['header_layout'] = 'logo_left';
             $settings['header_show_logo'] = true;
@@ -528,6 +523,16 @@ class Club extends Model implements HasMedia
         $versionBytes = (int) MediaVersion::where('club_id', $this->id)->sum('size');
 
         return $mediaBytes + $versionBytes;
+    }
+
+    /**
+     * Whether a file of this many bytes still fits within the club's storage quota.
+     */
+    public function hasStorageFor(int $incomingBytes): bool
+    {
+        $quota = $this->storageQuotaBytes();
+
+        return $quota === null || $this->storageUsedBytes() + $incomingBytes <= $quota;
     }
 
     /**

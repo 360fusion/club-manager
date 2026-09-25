@@ -1,2 +1,12 @@
+# Only the public club websites and the lodge directory are open to search engines.
+# The sitemap for every club site is at /sitemap.xml (add "Sitemap: https://your-domain/sitemap.xml"
+# below once the live address is known). A server that is not production sends a noindex header on every
+# response (see SecurityHeaders), so a staging site stays out of search results even though this is open.
 User-agent: *
+Allow: /site/
+Allow: /lodges
+Allow: /build/
+Allow: /storage/
+Disallow: /site/newsletter/
+Disallow: /site/*/booking/
 Disallow: /

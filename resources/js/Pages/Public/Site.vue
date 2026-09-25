@@ -4,25 +4,30 @@ import { computed } from 'vue';
 import BlockRenderer from '@/Components/Blocks/BlockRenderer.vue';
 import PublicHeader from '@/Components/Site/PublicHeader.vue';
 import PublicFooter from '@/Components/Site/PublicFooter.vue';
-import { themeClasses, DEFAULT_THEME_KEY } from '@/Support/siteThemes';
+import AnnouncementBar from '@/Components/Site/AnnouncementBar.vue';
+import CookieNotice from '@/Components/Site/CookieNotice.vue';
+import { themeClasses, withSiteStyle, DEFAULT_THEME_KEY } from '@/Support/siteThemes';
 
 const props = defineProps({
     club: Object,
     page: Object,
     site: { type: Object, default: () => ({}) },
     navigation: Array,
+    footerNavigation: { type: Array, default: () => [] },
+    // Set when the page is opened through its private preview link (see PageAdminController::previewLink).
+    preview: { type: Object, default: null },
     latestPosts: Array,
     upcomingEvents: Array,
     membershipPlans: Array,
     donations: Array,
+    calendar: { type: Object, default: null },
     previewTheme: String,
 });
 
 const currentThemeKey = computed(() => props.previewTheme || props.club?.website_theme || DEFAULT_THEME_KEY);
-const theme = computed(() => themeClasses(currentThemeKey.value));
+const theme = computed(() => withSiteStyle(themeClasses(currentThemeKey.value), props.site));
 
 const pageTitle = computed(() => `${props.page.meta_title || props.page.title} ${props.site.title_suffix || '- ' + props.club.name}`);
-const metaDescription = computed(() => props.page.meta_description || props.site.meta_description || '');
 
 const getSiteUrl = (urlPath) => {
     if (!urlPath) return '';
@@ -36,9 +41,8 @@ const getSiteUrl = (urlPath) => {
 </script>
 
 <template>
-    <Head :title="pageTitle">
-        <meta v-if="metaDescription" name="description" :content="metaDescription" />
-    </Head>
+    <!-- The description, share image and the rest of the head are written by the server (app.blade.php). -->
+    <Head :title="pageTitle" />
 
     <div :class="['min-h-screen transition-colors duration-300', theme.wrapper]" :style="theme.cssVars">
         <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-blue-600 focus:text-white focus:font-bold focus:text-sm focus:shadow-lg">
@@ -54,8 +58,17 @@ const getSiteUrl = (urlPath) => {
             </Link>
         </div>
 
-        <!-- Public Website Header / Nav -->
+        <AnnouncementBar :announcement="site.announcement" :club-slug="club.slug" />
+
+        <!-- Draft preview of a page that may not be live yet -->
+        <div v-if="preview" class="bg-violet-600 text-white px-4 py-2.5 text-center text-xs font-bold sticky top-0 z-[100] shadow-md">
+            🔒 Draft preview<span v-if="preview.has_draft"> of the unpublished draft</span>. <span v-if="!preview.is_live" class="opacity-90">This page is not live, so only people with this link can see it.</span><span v-else class="opacity-90">Visitors see the live page.</span>
+        </div>
+
+        <!-- Public Website Header / Nav (a page can show only the logo, or no header at all) -->
         <PublicHeader
+            v-if="page.header_style !== 'hidden'"
+            :mode="page.header_style"
             :club="club"
             :theme="theme"
             :navigation="navigation"
@@ -76,6 +89,7 @@ const getSiteUrl = (urlPath) => {
                 :upcoming-events="upcomingEvents"
                 :membership-plans="membershipPlans"
                 :donations="donations"
+                :calendar="calendar"
                 :interactive="true"
                 :resolve-url="getSiteUrl"
             />
@@ -86,9 +100,12 @@ const getSiteUrl = (urlPath) => {
             :club="club"
             :theme="theme"
             :navigation="navigation"
+            :footer-links="footerNavigation"
             :settings="site"
             :resolve-url="getSiteUrl"
             :interactive="true"
         />
+
+        <CookieNotice v-if="site.tracking && !previewTheme && !preview" :tracking="site.tracking" :club-slug="club.slug" />
     </div>
 </template>

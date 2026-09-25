@@ -2,6 +2,7 @@
 
 namespace App\Casts;
 
+use App\Support\BlockNormaliser;
 use App\Support\RichTextSanitizer;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
@@ -19,12 +20,12 @@ class SanitizedHtmlBlocks implements CastsAttributes
     /**
      * Block keys whose values are rendered as HTML.
      */
-    private const HTML_KEYS = ['content', 'html', 'body'];
+    private const HTML_KEYS = ['content', 'html', 'body', 'answer'];
 
     /**
      * Block fields rendered into href/src attributes; only safe URL schemes are kept.
      */
-    private const URL_KEYS = ['url', 'cta_link', 'link', 'href', 'src', 'image_url', 'cta_url'];
+    private const URL_KEYS = ['url', 'cta_link', 'link', 'href', 'src', 'image_url', 'cta_url', 'cover_url', 'button_url', 'button2_url'];
 
     public function get(Model $model, string $key, mixed $value, array $attributes): ?array
     {
@@ -74,6 +75,10 @@ class SanitizedHtmlBlocks implements CastsAttributes
             if (is_string($value) && in_array($key, self::URL_KEYS, true) && ! $this->isSafeUrl($value)) {
                 $blocks[$key] = '';
             }
+        }
+
+        if (is_string($blocks['type'] ?? null)) {
+            $blocks = BlockNormaliser::normalise($blocks);
         }
 
         return $blocks;

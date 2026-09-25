@@ -57,11 +57,13 @@ class MediaAdminController extends Controller
         }
 
         $trashCount = $club->media()->onlyTrashed()
+            ->where('collection_name', '!=', 'page_downloads')
             ->when(! $canViewAccounting, fn ($q) => $q->where('collection_name', '!=', 'accounting'))
             ->count();
 
         // Fetch all non-trashed club media once to build metadata filters (available extensions & dates)
         $allClubMedia = $club->media()
+            ->where('collection_name', '!=', 'page_downloads')
             ->when(! $canViewAccounting, fn ($q) => $q->where('collection_name', '!=', 'accounting'))
             ->get();
 
@@ -93,6 +95,9 @@ class MediaAdminController extends Controller
                 $query->where('collection_name', $folder);
             }
         }
+
+        // Private downloads for website pages are served by the site itself, never listed in the file manager.
+        $query->where('collection_name', '!=', 'page_downloads');
 
         if (! $canViewAccounting) {
             $query->where('collection_name', '!=', 'accounting');
@@ -1007,13 +1012,10 @@ class MediaAdminController extends Controller
      */
     private function assertQuotaAvailable(Club $club, int $incomingBytes): ?JsonResponse
     {
-        $quota = $club->storageQuotaBytes();
-        if ($quota === null) {
-            return null;
-        }
+        if (! $club->hasStorageFor($incomingBytes)) {
+            $quota = (int) $club->storageQuotaBytes();
+            $used = $club->storageUsedBytes();
 
-        $used = $club->storageUsedBytes();
-        if ($used + $incomingBytes > $quota) {
             return response()->json([
                 'success' => false,
                 'message' => 'Storage quota exceeded. This club has used '.Club::formatStorageBytes($used).' of '.Club::formatStorageBytes($quota).' available.',

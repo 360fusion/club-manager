@@ -21,17 +21,22 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
+        // Staging and local copies must never end up in a search engine, whatever robots.txt says.
+        if (! app()->isProduction()) {
+            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        }
+
         // Report-only: browsers log violations to the console without blocking anything,
         // so the policy can be tightened before it is enforced.
         if (! app()->environment('local') && ! $response->headers->has('Content-Security-Policy-Report-Only')) {
             $response->headers->set('Content-Security-Policy-Report-Only', implode('; ', [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://plausible.io",
                 "style-src 'self' 'unsafe-inline' https:",
                 "img-src 'self' data: blob: https:",
                 "font-src 'self' data: https:",
-                "connect-src 'self'",
-                "frame-src 'self'",
+                "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://plausible.io",
+                "frame-src 'self' https://www.youtube-nocookie.com https://www.openstreetmap.org",
                 "object-src 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",

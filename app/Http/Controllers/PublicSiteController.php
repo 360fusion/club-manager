@@ -4,23 +4,37 @@ namespace App\Http\Controllers;
 
 use App\Mail\ContactFormSubmittedMail;
 use App\Models\Club;
+use App\Models\ClubRedirect;
+use App\Models\Media;
 use App\Models\Page;
 use App\Models\PageRedirect;
+use App\Models\User;
+use App\Services\PagePublisher;
+use App\Services\PublicCalendar;
 use App\Support\ClubAccess;
+use App\Support\FooterCopyright;
+use App\Support\IcsCalendar;
+use App\Support\PageBlocks;
+use App\Support\SiteAnnouncement;
+use App\Support\SiteSeo;
 use App\Support\SiteThemes;
+use App\Support\SiteTracking;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class PublicSiteController extends Controller
 {
     /**
      * Render a club's public website page.
      */
-    public function showPage(string $clubSlug, ?string $pageSlug = null): Response|RedirectResponse
+    public function showPage(string $clubSlug, ?string $pageSlug = null): SymfonyResponse|Response
     {
         $club = Club::where('slug', $clubSlug)
             ->with(['clubType', 'membershipPlans', 'donations.contributions'])
@@ -30,21 +44,48 @@ class PublicSiteController extends Controller
 
         $viewer = Auth::user();
 
-        // Determine target page (Homepage or specific page slug)
-        $query = Page::where('club_id', $club->id)->where('is_published', true);
+        // A private preview link (?preview=token) shows this one page, draft and all, even before it is live.
+        $page = null;
+        $preview = false;
+        $token = (string) request()->query('preview', '');
 
-        if ($pageSlug) {
+        if ($token !== '') {
+            $candidate = $pageSlug
+                ? Page::where('club_id', $club->id)->where('slug', $pageSlug)->first()
+                : Page::where('club_id', $club->id)->where('is_homepage', true)->first();
+
+            if ($candidate && $candidate->preview_token && hash_equals($candidate->preview_token, $token)) {
+                $page = $candidate;
+                $preview = true;
+            }
+        }
+
+        // Determine target page (Homepage or specific page slug)
+        $query = Page::where('club_id', $club->id)->live();
+
+        if ($preview) {
+            // The private link already picked the page, so nothing below applies.
+        } elseif ($pageSlug) {
             $page = $query->where('slug', $pageSlug)->first();
 
             if (! $page) {
                 // The page may just have been renamed: an old address keeps working as a redirect rather
                 // than 404ing a bookmark or a link from somewhere else.
                 $redirect = PageRedirect::where('club_id', $club->id)->where('old_slug', $pageSlug)->first();
-                $target = $redirect ? Page::where('club_id', $club->id)->where('is_published', true)->find($redirect->page_id) : null;
+                $target = $redirect ? Page::where('club_id', $club->id)->live()->find($redirect->page_id) : null;
 
-                abort_unless($target, 404);
+                if ($target) {
+                    return redirect()->to(route('public.site', $target->is_homepage ? ['clubSlug' => $club->slug] : ['clubSlug' => $club->slug, 'pageSlug' => $target->slug]), 301);
+                }
 
-                return redirect()->to(route('public.site', $target->is_homepage ? ['clubSlug' => $club->slug] : ['clubSlug' => $club->slug, 'pageSlug' => $target->slug]), 301);
+                // An address the lodge pointed somewhere else by hand (from its old website, say).
+                $manual = ClubRedirect::where('club_id', $club->id)->where('from_path', ClubRedirect::normalisePath($pageSlug))->first();
+
+                if ($manual) {
+                    return redirect()->to($manual->to_url, $manual->is_permanent ? 301 : 302);
+                }
+
+                return $this->notFound($club, $viewer);
             }
         } else {
             $page = $query->where('is_homepage', true)->first()
@@ -53,21 +94,62 @@ class PublicSiteController extends Controller
 
         // A page kept for members only is not shown to a visitor who isn't an active member of this club
         // (being logged in as a member elsewhere doesn't count): they are sent to log in.
-        if ($page->is_members_only && ! ClubAccess::isActiveMember($viewer, $club)) {
+        if (! $preview && $page->is_members_only && ! ClubAccess::isActiveMember($viewer, $club)) {
             return redirect()->guest(route('login'))->with('error', 'That page is for members only.');
+        }
+
+        return $this->renderPage($club, $page, $viewer, 200, $preview);
+    }
+
+    /**
+     * The page the club chose to show for an address that does not exist (with a 404 status, so search
+     * engines still treat it as missing), or the ordinary not-found error if it has not chosen one.
+     */
+    private function notFound(Club $club, ?User $viewer): SymfonyResponse|Response
+    {
+        $id = $club->settings['not_found_page_id'] ?? null;
+
+        $page = $id
+            ? Page::where('club_id', $club->id)->live()->where('is_members_only', false)->find($id)
+            : null;
+
+        abort_unless($page, 404);
+
+        return $this->renderPage($club, $page, $viewer, 404);
+    }
+
+    /**
+     * Everything the public site needs to draw one page.
+     */
+    private function renderPage(Club $club, Page $page, ?User $viewer, int $status = 200, bool $preview = false): SymfonyResponse|Response
+    {
+        if ($preview) {
+            // What the page will look like once published. Only held in memory, never saved.
+            $content = app(PagePublisher::class)->effectiveContent($page);
+            $page->title = $content['title'];
+            $page->meta_title = $content['meta_title'];
+            $page->meta_description = $content['meta_description'];
+            $page->share_image = $content['share_image'];
+            $page->blocks = $content['blocks'];
         }
 
         // Navigation links (All published pages marked show_in_navigation)
         $navigationPages = Page::where('club_id', $club->id)
-            ->where('is_published', true)
+            ->live()
             ->where('show_in_navigation', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'title', 'slug', 'is_homepage']);
+
+        $footerPages = Page::where('club_id', $club->id)
+            ->live()
+            ->where('show_in_footer', true)
             ->orderBy('sort_order')
             ->get(['id', 'title', 'slug', 'is_homepage']);
 
         $rawPreviewTheme = request('preview_theme');
         $previewTheme = in_array($rawPreviewTheme, SiteThemes::keys(), true) ? $rawPreviewTheme : null;
 
-        return Inertia::render('Public/Site', [
+        $response = Inertia::render('Public/Site', [
             'previewTheme' => $previewTheme,
             'club' => [
                 'id' => $club->id,
@@ -85,7 +167,9 @@ class PublicSiteController extends Controller
             'site' => [
                 'meta_description' => $club->settings['seo_meta_description'] ?? null,
                 'title_suffix' => $club->settings['seo_title_suffix'] ?? ('| '.$club->name),
-                'footer_copyright' => $club->settings['footer_copyright'] ?? ('© '.date('Y').' '.$club->name.'. All rights reserved.'),
+                'footer_about_text' => $club->settings['footer_about_text'] ?? '',
+                'footer_copyright_holder' => FooterCopyright::parts($club)['holder'],
+                'footer_copyright_text' => FooterCopyright::parts($club)['text'],
                 'header_layout' => $club->settings['header_layout'] ?? 'logo_left',
                 'header_show_logo' => $club->settings['header_show_logo'] ?? true,
                 'header_show_tagline' => $club->settings['header_show_tagline'] ?? true,
@@ -99,7 +183,17 @@ class PublicSiteController extends Controller
                 'social_facebook' => $club->settings['social_facebook'] ?? '',
                 'social_instagram' => $club->settings['social_instagram'] ?? '',
                 'social_twitter' => $club->settings['social_twitter'] ?? '',
+                'social_youtube' => $club->settings['social_youtube'] ?? '',
+                'social_linkedin' => $club->settings['social_linkedin'] ?? '',
+                'social_tiktok' => $club->settings['social_tiktok'] ?? '',
+                'social_whatsapp' => $club->settings['social_whatsapp'] ?? '',
+                'footer_show_custom_columns' => $club->settings['footer_show_custom_columns'] ?? true,
+                'footer_nav_page_ids' => $club->settings['footer_nav_page_ids'] ?? null,
                 'footer_link_columns' => $club->settings['footer_link_columns'] ?? [],
+                'font_pairing' => $club->settings['font_pairing'] ?? 'theme',
+                'corner_style' => $club->settings['corner_style'] ?? 'theme',
+                'announcement' => SiteAnnouncement::forClub($club),
+                'tracking' => SiteTracking::forClub($club),
             ],
             'page' => [
                 'id' => $page->id,
@@ -107,11 +201,18 @@ class PublicSiteController extends Controller
                 'slug' => $page->slug,
                 'meta_title' => $page->meta_title,
                 'meta_description' => $page->meta_description,
-                'blocks' => $page->blocks ?? [],
+                'blocks' => PageBlocks::forViewer($page->blocks ?? [], $club, $viewer),
                 'is_homepage' => $page->is_homepage,
                 'is_members_only' => $page->is_members_only,
+                'header_style' => $page->header_style ?: 'full',
             ],
+            'preview' => $preview ? ['has_draft' => $page->hasDraft(), 'is_live' => $page->isLive()] : null,
             'navigation' => $navigationPages,
+            'footerNavigation' => $footerPages,
+            // Only worked out for a page that has a calendar block, and lazily so a month change (a partial reload) is cheap.
+            'calendar' => collect($page->blocks ?? [])->contains('type', 'calendar')
+                ? fn () => (new PublicCalendar($club, $viewer))->forMonth(request('cal'))
+                : null,
             'latestPosts' => $club->posts()->with('author')->published()->visibleTo($viewer)->take(24)->get()->map(fn ($p) => [
                 'id' => $p->id,
                 'title' => $p->title,
@@ -122,7 +223,7 @@ class PublicSiteController extends Controller
                 'author_name' => $p->author?->name ?? 'Club Admin',
                 'published_at' => ($p->published_at ?? $p->created_at)?->format('M d, Y'),
             ]),
-            'upcomingEvents' => $club->events()->visibleTo($viewer)->limit(3)->get()->map(fn ($e) => [
+            'upcomingEvents' => $club->events()->published()->visibleTo($viewer)->limit(3)->get()->map(fn ($e) => [
                 'id' => $e->id,
                 'title' => $e->title,
                 'slug' => $e->slug,
@@ -151,6 +252,103 @@ class PublicSiteController extends Controller
                 'status' => $d->status,
                 'contributions_count' => $d->contributions->count(),
             ]),
+        ]);
+
+        $seoEvents = collect($page->blocks ?? [])->contains(fn ($block) => in_array($block['type'] ?? null, ['calendar', 'events_calendar'], true))
+            ? $club->events()->published()->where('status', '!=', 'cancelled')->visibleTo(null)->where('starts_at', '>=', now())->orderBy('starts_at')->limit(10)->get()
+            : collect();
+
+        $response->withViewData(['seo' => SiteSeo::forPage($club, $page, request(), $seoEvents, $preview)]);
+
+        if ($status === 200 && ! $preview) {
+            return $response;
+        }
+
+        $symfony = $response->toResponse(request())->setStatusCode($status);
+
+        if ($preview) {
+            // A private link must never be kept by a browser or shared cache.
+            $symfony->headers->set('Cache-Control', 'no-store, private');
+        }
+
+        return $symfony;
+    }
+
+    /**
+     * A file uploaded to a Downloads block. It lives on the private disk, so this is the only way to reach it:
+     * it must be listed in a downloads block on a published page of this club, and a members-only block (or a
+     * members-only page) is only served to an active member.
+     */
+    public function file(string $clubSlug, int $mediaId): BinaryFileResponse|RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        /** @var Media|null $media */
+        $media = $club->media()->where('collection_name', 'page_downloads')->find($mediaId);
+        abort_unless($media, 404);
+
+        $found = null;
+
+        foreach (Page::where('club_id', $club->id)->live()->get() as $page) {
+            foreach ($page->blocks ?? [] as $block) {
+                if (($block['type'] ?? null) !== 'downloads') {
+                    continue;
+                }
+
+                foreach ($block['items'] ?? [] as $item) {
+                    if (($item['source'] ?? null) === 'upload' && (int) ($item['media_id'] ?? 0) === $media->id) {
+                        // A file listed in both a public and a members-only place counts as members-only.
+                        $restricted = ! empty($block['members_only']) || $page->is_members_only;
+                        if ($found === null || ($restricted && ! $found['restricted'])) {
+                            $found = ['restricted' => $restricted, 'inline' => ($block['open_in'] ?? 'new_tab') !== 'download'];
+                        }
+                    }
+                }
+            }
+        }
+
+        abort_unless($found, 404);
+
+        if ($found['restricted'] && ! ClubAccess::isActiveMember(Auth::user(), $club)) {
+            return redirect()->guest(route('login'))->with('error', 'That document is for members only.');
+        }
+
+        // Only formats a browser shows safely are opened in the tab; everything else is downloaded.
+        $showsInBrowser = in_array(strtolower(pathinfo($media->file_name, PATHINFO_EXTENSION)), ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'txt'], true);
+        $disposition = $found['inline'] && $showsInBrowser ? 'inline' : 'attachment';
+
+        return response()->file($media->getPath(), [
+            'Content-Type' => $media->mime_type ?: 'application/octet-stream',
+            'Content-Disposition' => $disposition.'; filename="'.str_replace('"', '', $media->file_name).'"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, max-age=300',
+        ]);
+    }
+
+    /**
+     * A public calendar of the club's public events, for the calendar block's "Add to your calendar" link.
+     */
+    public function calendarFeed(string $clubSlug): \Illuminate\Http\Response
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $ics = new IcsCalendar($club->name, parse_url(config('app.url'), PHP_URL_HOST) ?: 'clubmanager');
+        $from = CarbonImmutable::now()->subDays(30);
+
+        $events = $club->events()->published()->where('status', '!=', 'cancelled')->visibleTo(null)
+            ->where('starts_at', '>=', $from)->where('starts_at', '<=', $from->addMonths(13))
+            ->orderBy('starts_at')->get();
+
+        foreach ($events as $event) {
+            $start = CarbonImmutable::instance($event->starts_at);
+            $end = $event->ends_at ? CarbonImmutable::instance($event->ends_at) : $start->addHours(2);
+            $ics->add('event-'.$event->id, $event->title, $start, $end->lt($start) ? $start->addHours(2) : $end, $event->formatted_location ?: null, null, route('public.event', ['clubSlug' => $club->slug, 'eventSlug' => $event->slug]));
+        }
+
+        return response($ics->render(), 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'inline; filename="'.$club->slug.'.ics"',
+            'Cache-Control' => 'public, max-age=900',
         ]);
     }
 

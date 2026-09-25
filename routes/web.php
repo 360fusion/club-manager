@@ -74,6 +74,7 @@ use App\Http\Controllers\PostAdminController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\QuickRsvpController;
+use App\Http\Controllers\SearchIndexController;
 use App\Http\Controllers\SignatureAdminController;
 use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\StripeConnectController;
@@ -133,6 +134,9 @@ Route::any('/clubs/{legacySlug}/{path?}', LegacyClubUrlController::class)
     ->where('legacySlug', '[A-Za-z0-9_-]+')
     ->where('path', '.*');
 
+// What search engines read (robots.txt is a file in public/): before /{slug} and the /site/{club} routes.
+Route::get('/sitemap.xml', [SearchIndexController::class, 'index'])->name('sitemap.index');
+
 // The public lodge directory. Before the /site/{club} and /{slug} routes, and "lodges" is a reserved club slug.
 Route::get('/lodges', [LodgeDirectoryController::class, 'index'])->middleware('throttle:120,1')->name('lodges.index');
 Route::get('/lodges/halls/{slug}', [LodgeDirectoryController::class, 'hall'])->middleware('throttle:120,1')->name('lodges.hall');
@@ -155,7 +159,11 @@ Route::get('/site/{clubSlug}/booking/{token}', [PublicEventController::class, 'b
 Route::post('/site/{clubSlug}/booking/{token}/pay', [EventOnlinePaymentController::class, 'guest'])->name('public.event.booking.pay')->middleware('throttle:auth-forms');
 Route::get('/site/{clubSlug}/booking/{token}/paypal-return', [EventOnlinePaymentController::class, 'guestPayPalReturn'])->name('public.event.booking.paypal_return')->middleware('throttle:auth-forms');
 Route::post('/site/{clubSlug}/booking/{token}/cancel', [PublicEventController::class, 'cancel'])->name('public.event.booking.cancel')->middleware('throttle:auth-forms');
-Route::get('/site/{clubSlug}/{pageSlug?}', [PublicSiteController::class, 'showPage'])->name('public.site');
+Route::get('/site/{clubSlug}/files/{mediaId}', [PublicSiteController::class, 'file'])->whereNumber('mediaId')->middleware('throttle:60,1')->name('public.site.file');
+Route::get('/site/{clubSlug}/sitemap.xml', [SearchIndexController::class, 'club'])->middleware('throttle:60,1')->name('public.site.sitemap');
+Route::get('/site/{clubSlug}/calendar.ics', [PublicSiteController::class, 'calendarFeed'])->middleware('throttle:60,1')->name('public.site.calendar_feed');
+// The page slug matches any depth so an old nested address (/about/history) can still be redirected.
+Route::get('/site/{clubSlug}/{pageSlug?}', [PublicSiteController::class, 'showPage'])->where('pageSlug', '.*')->name('public.site');
 Route::post('/site/{clubSlug}/contact-form', [PublicSiteController::class, 'submitContactForm'])->name('public.site.contact_form')->middleware('throttle:public-forms');
 
 Route::get('/{slug}/overview', [ClubController::class, 'show'])->name('clubs.show');
@@ -235,6 +243,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/pages/settings', [PageAdminController::class, 'updateSettings'])->name('admin.pages.settings.update');
     Route::get('/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'themes'])->name('admin.pages.themes');
     Route::post('/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'updateTheme'])->name('admin.pages.themes.update');
+    Route::get('/{clubSlug}/admin/pages/places', [PageAdminController::class, 'placeSuggestions'])->middleware('throttle:60,1')->name('admin.pages.places');
+    Route::post('/{clubSlug}/admin/pages/geocode', [PageAdminController::class, 'geocode'])->middleware('throttle:20,1')->name('admin.pages.geocode');
+    Route::post('/{clubSlug}/admin/pages/downloads', [PageAdminController::class, 'uploadDownload'])->middleware('throttle:60,1')->name('admin.pages.downloads.upload');
+    Route::get('/{clubSlug}/admin/pages/redirects', [PageAdminController::class, 'redirects'])->name('admin.pages.redirects');
+    Route::get('/{clubSlug}/admin/pages/overview', [PageAdminController::class, 'overview'])->name('admin.pages.overview');
+    Route::post('/{clubSlug}/admin/pages/redirects', [PageAdminController::class, 'storeRedirect'])->name('admin.pages.redirects.store');
+    Route::delete('/{clubSlug}/admin/pages/redirects/{id}', [PageAdminController::class, 'destroyRedirect'])->name('admin.pages.redirects.destroy');
+    Route::post('/{clubSlug}/admin/pages/{id}/draft', [PageAdminController::class, 'saveDraft'])->name('admin.pages.draft.save');
+    Route::delete('/{clubSlug}/admin/pages/{id}/draft', [PageAdminController::class, 'discardDraft'])->name('admin.pages.draft.discard');
+    Route::post('/{clubSlug}/admin/pages/{id}/draft/publish', [PageAdminController::class, 'publishDraft'])->name('admin.pages.draft.publish');
+    Route::post('/{clubSlug}/admin/pages/{id}/preview-link', [PageAdminController::class, 'previewLink'])->middleware('throttle:30,1')->name('admin.pages.preview_link');
+    Route::get('/{clubSlug}/admin/pages/{id}/revisions', [PageAdminController::class, 'revisions'])->middleware('throttle:60,1')->name('admin.pages.revisions');
+    Route::get('/{clubSlug}/admin/pages/{id}/revisions/{revisionId}', [PageAdminController::class, 'revision'])->middleware('throttle:60,1')->name('admin.pages.revision');
+    Route::post('/{clubSlug}/admin/pages/{id}/copy-block', [PageAdminController::class, 'copyBlock'])->middleware('throttle:60,1')->name('admin.pages.copy_block');
     Route::get('/{clubSlug}/admin/pages/header-footer', [PageAdminController::class, 'headerFooter'])->name('admin.pages.header_footer');
     Route::post('/{clubSlug}/admin/pages/header-footer', [PageAdminController::class, 'updateHeaderFooter'])->name('admin.pages.header_footer.update');
     Route::get('/{clubSlug}/admin/pages/{id}/edit', [PageAdminController::class, 'edit'])->name('admin.pages.edit');
