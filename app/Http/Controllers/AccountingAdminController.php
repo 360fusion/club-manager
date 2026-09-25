@@ -686,7 +686,7 @@ class AccountingAdminController extends Controller
         $validated = $request->validate([
             'financial_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'lines' => ['required', 'array'],
-            'lines.*.account_id' => ['required', 'exists:accounting_accounts,id'],
+            'lines.*.account_id' => ['required', Rule::exists('accounting_accounts', 'id')->where('club_id', $club->id)],
             'lines.*.budgeted_amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
         ]);
 
@@ -876,7 +876,7 @@ class AccountingAdminController extends Controller
             'description' => ['required', 'string', 'max:255'],
             'entry_date' => ['required', 'date'],
             'items' => ['required', 'array', 'min:2', 'max:100'],
-            'items.*.account_id' => ['required', 'exists:accounting_accounts,id'],
+            'items.*.account_id' => ['required', Rule::exists('accounting_accounts', 'id')->where('club_id', $club->id)],
             'items.*.debit' => ['numeric', 'min:0'],
             'items.*.credit' => ['numeric', 'min:0'],
             'items.*.memo' => ['nullable', 'string', 'max:255'],
@@ -920,7 +920,7 @@ class AccountingAdminController extends Controller
         $isDraft = $request->boolean('is_draft');
 
         $validated = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
+            'user_id' => ['required', Rule::exists('club_user', 'user_id')->where('club_id', $club->id)],
             'title' => [$isDraft ? 'nullable' : 'required', 'string', 'max:255'],
             'amount' => [$isDraft ? 'nullable' : 'required', 'numeric', 'min:0'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
@@ -1111,7 +1111,7 @@ class AccountingAdminController extends Controller
         $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
         $validated = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
+            'user_id' => ['required', Rule::exists('club_user', 'user_id')->where('club_id', $club->id)],
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'status' => ['required', 'string', Rule::in($invoice->status === 'paid' ? ['draft', 'unpaid', 'paid'] : ['draft', 'unpaid'])],
@@ -1349,7 +1349,7 @@ class AccountingAdminController extends Controller
             'description' => ['required', 'string', 'max:255'],
             'entry_date' => ['required', 'date'],
             'items' => ['required', 'array', 'min:2', 'max:100'],
-            'items.*.account_id' => ['required', 'exists:accounting_accounts,id'],
+            'items.*.account_id' => ['required', Rule::exists('accounting_accounts', 'id')->where('club_id', $club->id)],
             'items.*.debit' => ['numeric', 'min:0'],
             'items.*.credit' => ['numeric', 'min:0'],
             'items.*.memo' => ['nullable', 'string', 'max:255'],

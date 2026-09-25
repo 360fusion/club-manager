@@ -193,6 +193,7 @@ class AccountingErpTest extends TestCase
     public function test_admin_can_issue_member_invoice_and_auto_post_ledger(): void
     {
         $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
 
         $response = $this->actingAs($this->adminUser)
             ->post(route('admin.accounting.invoices.store', $this->club->slug), [
@@ -250,6 +251,7 @@ class AccountingErpTest extends TestCase
         $this->accountingService->seedDefaultAccounts($this->club);
 
         $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
         $invoice = Invoice::create([
             'club_id' => $this->club->id,
             'user_id' => $member->id,
@@ -296,6 +298,7 @@ class AccountingErpTest extends TestCase
         $this->actingAs($this->adminUser);
         $this->accountingService->seedDefaultAccounts($this->club);
         $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
 
         $invoice = Invoice::create([
             'club_id' => $this->club->id,
@@ -359,6 +362,7 @@ class AccountingErpTest extends TestCase
         $this->actingAs($this->adminUser);
         $this->accountingService->seedDefaultAccounts($this->club);
         $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
 
         $invoice = Invoice::create([
             'club_id' => $this->club->id,
@@ -445,6 +449,7 @@ class AccountingErpTest extends TestCase
         $this->club->refresh();
 
         $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
 
         $response = $this->actingAs($this->adminUser)
             ->post(route('admin.accounting.invoices.store', $this->club->slug), [

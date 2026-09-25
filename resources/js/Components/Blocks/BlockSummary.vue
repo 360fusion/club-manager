@@ -191,6 +191,17 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
             </div>
         </div>
 
+        <!-- Image & Text -->
+        <div v-else-if="type === 'media_text'" class="flex items-center gap-3">
+            <img v-if="block.image_url" :src="block.image_url" alt="" loading="lazy" :class="[THUMB, 'w-28 h-20 shrink-0']" />
+            <div v-else :class="[THUMB, 'w-28 h-20 shrink-0 flex items-center justify-center text-slate-400']">No photo</div>
+            <div class="min-w-0 space-y-0.5">
+                <p v-if="block.eyebrow" :class="[MUTED, 'uppercase tracking-wider font-bold']">{{ block.eyebrow }}</p>
+                <p :class="HEADING">{{ block.title || 'Image & text' }}</p>
+                <p v-if="plain(block.content)" :class="[BODY, 'line-clamp-2']">{{ plain(block.content) }}</p>
+            </div>
+        </div>
+
         <!-- Motto -->
         <div v-else-if="type === 'quote_motto'" class="space-y-0.5">
             <p :class="HEADING">{{ block.heading || 'Motto' }}</p>

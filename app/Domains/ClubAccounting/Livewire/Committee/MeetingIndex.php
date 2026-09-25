@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Club;
 use App\Models\Meeting;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -148,7 +149,7 @@ class MeetingIndex extends Component
             'newTitle' => 'required|string|max:255',
             'newDate' => 'required|date',
             'newLocation' => 'nullable|string|max:255',
-            'linked_regular_meeting_id' => 'nullable|integer',
+            'linked_regular_meeting_id' => ['nullable', 'integer', Rule::exists('meetings', 'id')->where('club_id', Club::where('slug', $this->clubSlug)->value('id'))],
         ]);
 
         $club = Club::where('slug', $this->clubSlug)->firstOrFail();

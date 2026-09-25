@@ -21,6 +21,10 @@ const set = (patch) => {
     props.block.section = { ...SECTION_DEFAULTS, ...(props.block.section || {}), ...patch };
 };
 
+// Changing the background, text colour or spacing gives the element its own full-width band; the settings do nothing
+// while the element is left as the theme draws it.
+const setStyle = (patch) => set(section.value.mode === 'auto' ? { mode: 'band', ...patch } : patch);
+
 const PRESETS = [
     { label: 'Theme default', patch: { mode: 'auto', bg: 'none', tone: 'auto' } },
     { label: 'White band', patch: { mode: 'band', bg: 'none', tone: 'auto' } },
@@ -65,20 +69,21 @@ const BG_LABELS = { none: 'No background (page colour)', tint: 'Soft tint (cream
                         @click="set(preset.patch)"
                     >{{ preset.label }}</button>
                 </div>
-                <p :class="HINT">A full-width band runs edge to edge behind the element. A boxed panel keeps it inside the page column.</p>
+                <p :class="HINT">A full-width band runs edge to edge behind the element. A boxed panel keeps it inside the page column. Changing any setting below gives the element its own band; set Width back to "As the theme draws it" to undo.</p>
             </div>
 
-            <div v-if="section.mode !== 'auto'" :class="[CARD, 'grid grid-cols-1 gap-3 sm:grid-cols-2']">
+            <div :class="[CARD, 'grid grid-cols-1 gap-3 sm:grid-cols-2']">
                 <div>
                     <label :for="`block-${index}-section-mode`" :class="LABEL">Width</label>
                     <select :id="`block-${index}-section-mode`" :value="section.mode" :class="SELECT" @change="set({ mode: $event.target.value })">
+                        <option value="auto">As the theme draws it</option>
                         <option value="band">Full-width band</option>
                         <option value="contained">Boxed panel in the page</option>
                     </select>
                 </div>
                 <div>
                     <label :for="`block-${index}-section-bg`" :class="LABEL">Background</label>
-                    <select :id="`block-${index}-section-bg`" :value="section.bg" :class="SELECT" @change="set({ bg: $event.target.value })">
+                    <select :id="`block-${index}-section-bg`" :value="section.bg" :class="SELECT" @change="setStyle({ bg: $event.target.value })">
                         <option v-for="(label, key) in BG_LABELS" :key="key" :value="key">{{ label }}</option>
                     </select>
                 </div>
@@ -112,7 +117,7 @@ const BG_LABELS = { none: 'No background (page colour)', tint: 'Soft tint (cream
 
                 <div>
                     <label :for="`block-${index}-section-tone`" :class="LABEL">Text colour</label>
-                    <select :id="`block-${index}-section-tone`" :value="section.tone" :class="SELECT" @change="set({ tone: $event.target.value })">
+                    <select :id="`block-${index}-section-tone`" :value="section.tone" :class="SELECT" @change="setStyle({ tone: $event.target.value })">
                         <option value="auto">Automatic (light on dark)</option>
                         <option value="light">Dark text</option>
                         <option value="dark">Light text</option>
@@ -120,7 +125,7 @@ const BG_LABELS = { none: 'No background (page colour)', tint: 'Soft tint (cream
                 </div>
                 <div>
                     <label :for="`block-${index}-section-padding`" :class="LABEL">Space above and below</label>
-                    <select :id="`block-${index}-section-padding`" :value="section.padding" :class="SELECT" @change="set({ padding: $event.target.value })">
+                    <select :id="`block-${index}-section-padding`" :value="section.padding" :class="SELECT" @change="setStyle({ padding: $event.target.value })">
                         <option value="auto">Standard</option>
                         <option value="none">None</option>
                         <option value="sm">Small</option>

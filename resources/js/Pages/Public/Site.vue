@@ -6,6 +6,7 @@ import PublicHeader from '@/Components/Site/PublicHeader.vue';
 import PublicFooter from '@/Components/Site/PublicFooter.vue';
 import AnnouncementBar from '@/Components/Site/AnnouncementBar.vue';
 import CookieNotice from '@/Components/Site/CookieNotice.vue';
+import LatestNewsSidebar from '@/Components/Site/LatestNewsSidebar.vue';
 import { themeClasses, withSiteStyle, DEFAULT_THEME_KEY } from '@/Support/siteThemes';
 
 const props = defineProps({
@@ -22,10 +23,18 @@ const props = defineProps({
     donations: Array,
     calendar: { type: Object, default: null },
     previewTheme: String,
+    // Set for a news article: the latest other articles, shown in a column beside the article's own elements.
+    articleSidebar: { type: Object, default: null },
 });
 
 const currentThemeKey = computed(() => props.previewTheme || props.club?.website_theme || DEFAULT_THEME_KEY);
 const theme = computed(() => withSiteStyle(themeClasses(currentThemeKey.value, props.site.custom_color_schemes), props.site));
+
+// An article page keeps its heading across the full width and puts the rest in a column beside the sidebar. The column
+// is not a full-bleed stripe, so its elements are drawn the way a boxed theme draws them.
+const headerBlocks = computed(() => (props.page.blocks || []).filter((b) => b.type === 'post_header'));
+const bodyBlocks = computed(() => (props.page.blocks || []).filter((b) => b.type !== 'post_header'));
+const columnTheme = computed(() => ({ ...theme.value, layout: 'boxed' }));
 
 const pageTitle = computed(() => `${props.page.meta_title || props.page.title} ${props.site.title_suffix || '- ' + props.club.name}`);
 
@@ -81,7 +90,40 @@ const getSiteUrl = (urlPath) => {
         <!-- Page blocks -->
         <main id="main-content">
             <h1 class="sr-only">{{ page.meta_title || page.title }}</h1>
-            <BlockRenderer
+            <template v-if="articleSidebar">
+                <BlockRenderer
+                    :blocks="headerBlocks"
+                    :theme="theme"
+                    :club="club"
+                    :latest-posts="latestPosts"
+                    :upcoming-events="upcomingEvents"
+                    :membership-plans="membershipPlans"
+                    :donations="donations"
+                    :calendar="calendar"
+                    :interactive="true"
+                    :resolve-url="getSiteUrl"
+                />
+                <div class="mx-auto grid max-w-7xl gap-12 px-6 pb-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                    <div class="-mx-6 min-w-0">
+                        <BlockRenderer
+                            :blocks="bodyBlocks"
+                            :theme="columnTheme"
+                            :club="club"
+                            :latest-posts="latestPosts"
+                            :upcoming-events="upcomingEvents"
+                            :membership-plans="membershipPlans"
+                            :donations="donations"
+                            :calendar="calendar"
+                            :interactive="true"
+                            :resolve-url="getSiteUrl"
+                        />
+                    </div>
+                    <div class="lg:sticky lg:top-24 lg:self-start">
+                        <LatestNewsSidebar :sidebar="articleSidebar" :theme="theme" :resolve-url="getSiteUrl" />
+                    </div>
+                </div>
+            </template>
+            <BlockRenderer v-else
                 :blocks="page.blocks"
                 :theme="theme"
                 :club="club"

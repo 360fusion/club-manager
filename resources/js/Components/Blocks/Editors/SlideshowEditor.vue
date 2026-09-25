@@ -93,13 +93,14 @@ const move = (i, by) => {
             <label :class="CHECK_LABEL"><input v-model="block.show_dots" type="checkbox" :class="CHECK" /> Show dots</label>
             <label :class="CHECK_LABEL"><input v-model="block.show_arrows" type="checkbox" :class="CHECK" /> Show arrows</label>
             <label :class="[CHECK_LABEL, 'col-span-2 sm:col-span-4']"><input v-model="block.full_width" type="checkbox" :class="CHECK" /> Full width (edge to edge across the page)</label>
+            <label :class="[CHECK_LABEL, 'col-span-2 sm:col-span-4']"><input v-model="block.hero_look" type="checkbox" :class="CHECK" /> Hero style (large serif heading, square buttons and a “Scroll” cue, like a full-screen home page banner)</label>
         </div>
 
         <div :class="[CARD, 'space-y-3']">
             <p :class="LABEL">Text over the photos <span class="font-normal text-slate-400">(optional, makes it a hero)</span></p>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <input v-model="block.eyebrow" type="text" maxlength="80" placeholder="Small label" :class="SMALL_INPUT" aria-label="Small label" />
-                <input v-model="block.heading" type="text" maxlength="200" placeholder="Heading" :class="[SMALL_INPUT, 'font-bold sm:col-span-2']" aria-label="Heading" />
+                <textarea v-model="block.heading" rows="2" maxlength="200" placeholder="Heading (press Enter for a second line)" :class="[SMALL_INPUT, 'font-bold sm:col-span-2']" aria-label="Heading"></textarea>
             </div>
             <textarea v-model="block.text" rows="2" maxlength="500" placeholder="Text" :class="SMALL_INPUT" aria-label="Text over the photos"></textarea>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -39,6 +39,9 @@ const hidden = ref(false);
 const reducedMotion = ref(false);
 const root = ref(null);
 
+// The "hero style": a big serif heading, square-cornered gold and outlined buttons, a "Scroll" cue and the photos
+// pinned to their top, like a full-screen home page hero.
+const heroLook = computed(() => !!props.block.hero_look);
 const centered = computed(() => props.block.align === 'center');
 const edge = computed(() => !!props.block.full_width);
 const hasText = computed(() => !!(props.block.eyebrow || props.block.heading || props.block.text || hasPrimary.value || hasSecondary.value));
@@ -117,21 +120,29 @@ const tag = (link) => (props.interactive && link ? 'a' : 'span');
                 :aria-hidden="i !== current"
                 :class="['absolute inset-0 transition-opacity duration-1000 ease-in-out', i === current ? 'z-[1] opacity-100' : 'opacity-0']"
             >
-                <img :src="slide.image_url" :alt="slide.alt || ''" :loading="i === 0 ? 'eager' : 'lazy'" draggable="false" :class="['h-full w-full select-none object-cover', zoom && i === current ? ZOOMS[i % 3] : '']" />
+                <img :src="slide.image_url" :alt="slide.alt || ''" :loading="i === 0 ? 'eager' : 'lazy'" draggable="false" :class="['h-full w-full select-none object-cover', heroLook ? 'object-top' : '', zoom && i === current ? ZOOMS[i % 3] : '']" />
             </div>
         </div>
         <div v-if="block.overlay !== 'none'" :class="['pointer-events-none absolute inset-0 z-[2]', OVERLAYS[block.overlay] || OVERLAYS.medium]"></div>
 
         <div v-if="hasText" :class="['relative z-[3] mx-auto w-full max-w-7xl px-6 py-16 sm:px-12', centered ? 'text-center' : 'text-left']">
-            <div :class="['max-w-3xl space-y-5', centered ? 'mx-auto' : '']">
-                <p v-if="block.eyebrow" class="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--cm-accent-bright)]">{{ block.eyebrow }}</p>
-                <h2 v-if="block.heading" :class="['text-4xl font-bold leading-tight sm:text-6xl', theme.headingFont]">{{ block.heading }}</h2>
-                <p v-if="block.text" class="whitespace-pre-line text-lg leading-relaxed opacity-90 sm:text-xl">{{ block.text }}</p>
-                <div v-if="hasPrimary || hasSecondary" :class="['flex flex-wrap gap-3 pt-2', centered ? 'justify-center' : 'justify-start']">
-                    <component :is="tag(block.button_url)" v-if="hasPrimary" :href="interactive ? resolveUrl(block.button_url) : undefined" :class="['inline-block bg-[var(--cm-accent-bright)] px-8 py-3.5 text-sm font-semibold uppercase tracking-[0.1em] text-[var(--cm-on-accent-bright)] shadow-lg transition-all hover:-translate-y-0.5 hover:brightness-110', radiusMd]">{{ block.button_label }}</component>
-                    <component :is="tag(block.button2_url)" v-if="hasSecondary" :href="interactive ? resolveUrl(block.button2_url) : undefined" :class="['inline-block border-2 border-white/70 px-8 py-3.5 text-sm font-semibold uppercase tracking-[0.1em] text-white transition-all hover:bg-white/10', radiusMd]">{{ block.button2_label }}</component>
+            <div :class="[heroLook ? 'max-w-[650px]' : 'max-w-3xl', 'space-y-5', centered ? 'mx-auto' : '']">
+                <p v-if="block.eyebrow" :class="['text-xs font-semibold uppercase tracking-[0.3em] text-[var(--cm-accent-bright)]', heroLook ? 'sm:text-sm' : '']">{{ block.eyebrow }}</p>
+                <h2 v-if="block.heading" :class="['whitespace-pre-line text-4xl leading-tight sm:text-6xl', heroLook ? 'font-bold [text-shadow:0_2px_20px_rgb(0_0_0/0.3)] sm:leading-[1.15]' : 'font-bold', theme.headingFont]">{{ block.heading }}</h2>
+                <p v-if="block.text" :class="['whitespace-pre-line text-lg sm:text-xl', heroLook ? 'max-w-[520px] leading-[1.8] text-white/80' : 'leading-relaxed opacity-90', centered && heroLook ? 'mx-auto' : '']">{{ block.text }}</p>
+                <div v-if="hasPrimary || hasSecondary" :class="['flex flex-wrap gap-3 pt-2', heroLook ? 'items-center gap-4 pt-4' : '', centered ? 'justify-center' : 'justify-start']">
+                    <component :is="tag(block.button_url)" v-if="hasPrimary" :href="interactive ? resolveUrl(block.button_url) : undefined" :class="['inline-block bg-[var(--cm-accent-bright)] py-3.5 text-sm uppercase text-[var(--cm-on-accent-bright)] shadow-lg transition-all hover:-translate-y-0.5 hover:brightness-110', heroLook ? 'rounded-[3px] px-9 font-medium tracking-[0.1em]' : ['px-8 font-semibold tracking-[0.1em]', radiusMd]]">{{ block.button_label }}</component>
+                    <component :is="tag(block.button2_url)" v-if="hasSecondary" :href="interactive ? resolveUrl(block.button2_url) : undefined" :class="['group/btn inline-flex items-center gap-2.5 border-2 py-3.5 text-sm uppercase transition-all', heroLook ? 'rounded-[3px] border-white/50 px-8 font-medium tracking-[0.1em] text-white hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-[var(--cm-primary)]' : ['border-white/70 px-8 font-semibold tracking-[0.1em] text-white hover:bg-white/10', radiusMd]]">
+                        {{ block.button2_label }}
+                        <svg v-if="heroLook" viewBox="0 0 24 24" class="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                    </component>
                 </div>
             </div>
+        </div>
+
+        <div v-if="heroLook" class="pointer-events-none absolute bottom-16 right-8 z-[3] hidden flex-col items-center gap-2 sm:flex" aria-hidden="true">
+            <span class="text-[0.65rem] font-medium uppercase tracking-[0.3em] text-white/50 [writing-mode:vertical-rl]">Scroll</span>
+            <span class="h-10 w-px animate-pulse bg-gradient-to-b from-[var(--cm-accent-bright)] to-transparent"></span>
         </div>
 
         <p v-if="caption" class="absolute bottom-14 left-6 z-[3] max-w-[70%] rounded bg-black/45 px-3 py-1.5 text-sm sm:left-12">{{ caption }}</p>

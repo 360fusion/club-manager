@@ -2,7 +2,6 @@
 
 namespace App\Domains\ClubAccounting\Livewire\Committee;
 
-use App\Domains\ClubAccounting\Models\ClubCommitteeAttendee;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Models\Club;
@@ -140,7 +139,7 @@ class AgendaPackPreviewModal extends Component
             attachPdf: $this->includePdfAttachment,
         );
 
-        ClubCommitteeAttendee::whereIn('id', $this->selectedRecipientIds)
+        $meeting->attendees()->whereIn('id', $this->selectedRecipientIds)
             ->update(['pack_sent_at' => Carbon::now()]);
 
         $this->isSending = false;

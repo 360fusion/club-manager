@@ -60,7 +60,7 @@ class PublicEventBookingTest extends TestCase
     {
         $response = $this->get(route('public.event', ['clubSlug' => 'club-a', 'eventSlug' => 'open-dinner']))->assertOk();
 
-        $response->assertInertia(fn ($page) => $page->component('Public/Event')->where('event.title', 'Open Dinner')->where('canBookAsGuest', true)->has('event.menu.main', 1)->missing('club.settings'));
+        $response->assertInertia(fn ($page) => $page->component('Public/Event')->where('event.title', 'Open Dinner')->where('canBookAsGuest', true)->has('event.menu.main', 1)->missing('club.settings')->has('site')->has('navigation')->has('club.website_theme'));
         $this->assertStringNotContainsString('99887766', (string) $response->getContent());
     }
 

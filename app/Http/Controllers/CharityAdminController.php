@@ -15,6 +15,7 @@ use App\Models\Meeting;
 use App\Support\Currencies;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -222,9 +223,9 @@ class CharityAdminController extends Controller
             'collection_type' => 'required|string|max:50',
             'cash_amount' => 'required|numeric|min:0|max:99999999.99',
             'cheque_amount' => 'required|numeric|min:0|max:99999999.99',
-            'counted_by_member_id' => 'nullable|exists:club_acc_members,id',
-            'witnessed_by_member_id' => 'nullable|exists:club_acc_members,id',
-            'donor_member_id' => 'nullable|exists:club_acc_members,id',
+            'counted_by_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
+            'witnessed_by_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
+            'donor_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
             'donor_name' => 'nullable|string|max:150',
             'notes' => 'nullable|string|max:10000',
         ]);
@@ -256,9 +257,9 @@ class CharityAdminController extends Controller
             'purpose' => 'required|string|max:10000',
             'amount' => 'required|numeric|min:0.01|max:99999999.99',
             'relief_chest_number' => 'nullable|string|max:50',
-            'proposer_member_id' => 'nullable|exists:club_acc_members,id',
-            'seconder_member_id' => 'nullable|exists:club_acc_members,id',
-            'meeting_id' => 'nullable|exists:meetings,id',
+            'proposer_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
+            'seconder_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
+            'meeting_id' => ['nullable', Rule::exists('meetings', 'id')->where('club_id', $club->id)],
         ]);
 
         $grant = CharityGrant::create([
@@ -341,6 +342,9 @@ class CharityAdminController extends Controller
 
     public function updateMemberGiving(Request $request, string $clubSlug, int $memberId): RedirectResponse
     {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $member = Member::where('club_id', $club->id)->findOrFail($memberId);
+
         $validated = $request->validate([
             'regular_giving_amount' => 'required|numeric|min:0|max:99999999.99',
             'total_donated_to_date' => 'required|numeric|min:0|max:99999999.99',
@@ -353,7 +357,7 @@ class CharityAdminController extends Controller
         $autoBar = ($validated['qualifies_for_bar'] ?? false) || $donated >= 500.00;
 
         MemberFestivalGiving::updateOrCreate(
-            ['member_id' => $memberId],
+            ['member_id' => $member->id],
             [
                 'regular_giving_amount' => (float) $validated['regular_giving_amount'],
                 'total_donated_to_date' => $donated,

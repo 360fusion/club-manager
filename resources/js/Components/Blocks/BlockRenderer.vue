@@ -18,6 +18,7 @@ import FeatureCardsBlock from '@/Components/Blocks/FeatureCardsBlock.vue';
 import StatsBlock from '@/Components/Blocks/StatsBlock.vue';
 import QuoteMottoBlock from '@/Components/Blocks/QuoteMottoBlock.vue';
 import SectionHeadingBlock from '@/Components/Blocks/SectionHeadingBlock.vue';
+import MediaTextBlock from '@/Components/Blocks/MediaTextBlock.vue';
 import { toneTheme } from '@/Support/siteThemes';
 import { activeSection, sectionTone, sectionBackgroundClass, sectionBackgroundStyle, sectionOverlayClass, sectionPadding } from '@/Support/blockSection';
 
@@ -141,6 +142,7 @@ const groups = computed(() => {
 // narrowed to three quarters or half of it (block_width) and placed left, centre or right (block_align); the
 // widths each block used to set for itself are overridden so "full" means the same width for all of them.
 const BLOCK_WIDTHS = { full: 'w-full', three_quarter: 'w-full lg:w-3/4', half: 'w-full lg:w-1/2' };
+const TEXT_ALIGNS = { left: 'text-left', center: 'text-center', right: 'text-right' };
 const BLOCK_ALIGNS = { center: 'mx-auto', left: 'mr-auto', right: 'ml-auto' };
 const blockWidthClass = (block) => (block.type === 'hero'
     ? ''
@@ -249,7 +251,7 @@ const submitContactForm = (block) => {
             <HeroBlock v-if="block.type === 'hero'" :block="block" :theme="theme" :interactive="interactive" :resolve-url="resolveUrl" :radius-lg="radiusLg" :radius-md="radiusMd" />
 
             <!-- 2. Text -->
-            <section v-else-if="block.type === 'text' || block.type === 'rich_text'" :class="['prose max-w-4xl mx-auto', theme.onDark ? 'prose-invert' : 'dark:prose-invert']">
+            <section v-else-if="block.type === 'text' || block.type === 'rich_text'" :class="['prose max-w-4xl mx-auto', TEXT_ALIGNS[block.text_align] || '', theme.onDark ? 'prose-invert' : 'dark:prose-invert']">
                 <h2 v-if="block.heading" :class="['text-2xl sm:text-3xl font-bold mb-4', theme.headingText]">{{ block.heading }}</h2>
                 <div :class="theme.bodyText" v-html="block.content"></div>
             </section>
@@ -368,6 +370,7 @@ const submitContactForm = (block) => {
             <StatsBlock v-else-if="block.type === 'stats'" :block="block" :theme="theme" :interactive="interactive" :radius-md="radiusMd" />
             <QuoteMottoBlock v-else-if="block.type === 'quote_motto'" :block="block" :theme="theme" :interactive="interactive" :radius-md="radiusMd" />
             <SectionHeadingBlock v-else-if="block.type === 'section_heading'" :block="block" :theme="theme" :interactive="interactive" :radius-md="radiusMd" />
+            <MediaTextBlock v-else-if="block.type === 'media_text'" :block="block" :theme="theme" :interactive="interactive" :resolve-url="resolveUrl" :radius-lg="radiusLg" :radius-md="radiusMd" />
             <FaqBlock v-else-if="block.type === 'faq'" :block="block" :theme="theme" :interactive="interactive" :radius-md="radiusMd" />
             <MapBlock v-else-if="block.type === 'map'" :block="block" :theme="theme" :interactive="interactive" :radius-md="radiusMd" />
             <DownloadsBlock v-else-if="block.type === 'downloads'" :block="block" :theme="theme" :club="club" :interactive="interactive" :resolve-url="resolveUrl" :radius-md="radiusMd" />

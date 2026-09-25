@@ -21,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -144,7 +145,7 @@ class NewsletterAdminController extends Controller
 
         $validated = $request->validate([
             'id' => 'nullable|integer',
-            'newsletter_type_id' => 'nullable|exists:newsletter_types,id',
+            'newsletter_type_id' => ['nullable', Rule::exists('newsletter_types', 'id')->where('club_id', $club->id)],
             'subject' => 'required|string|max:255',
             'content' => 'required|string|max:200000',
             'target_roles' => 'required|array|max:10',

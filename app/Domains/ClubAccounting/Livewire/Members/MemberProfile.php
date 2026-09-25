@@ -155,6 +155,7 @@ class MemberProfile extends Component
             'date_of_passing' => 'nullable|date',
             'date_of_raising' => 'nullable|date',
             'date_of_joining' => 'nullable|date',
+            'customer_account_id' => ['nullable', 'integer', Rule::exists('accounting_contacts', 'id')->where('club_id', $stored->club_id)],
         ]);
 
         $member = $this->getMember();

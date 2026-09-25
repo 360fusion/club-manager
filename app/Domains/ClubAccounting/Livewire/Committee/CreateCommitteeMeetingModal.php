@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Club;
 use App\Models\Meeting;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -147,7 +148,7 @@ class CreateCommitteeMeetingModal extends Component
             'title' => ['required', 'string', 'max:255'],
             'location' => ['required', 'string', 'max:255'],
             'time_opened' => ['nullable', 'string', 'max:20'],
-            'linked_regular_meeting_id' => ['nullable', 'integer'],
+            'linked_regular_meeting_id' => ['nullable', 'integer', Rule::exists('meetings', 'id')->where('club_id', $this->getClub()->id)],
         ]);
 
         $club = $this->getClub();

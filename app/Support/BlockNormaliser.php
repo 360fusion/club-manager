@@ -45,7 +45,9 @@ class BlockNormaliser
             'stats' => self::stats($block),
             'slideshow' => self::slideshow($block),
             'quote_motto' => self::quoteMotto($block),
+            'text', 'rich_text' => self::textBlock($block),
             'section_heading' => self::sectionHeading($block),
+            'media_text' => self::mediaText($block),
             'faq' => self::faq($block),
             'map' => self::map($block),
             'downloads' => self::downloads($block),
@@ -310,6 +312,7 @@ class BlockNormaliser
         $block['show_arrows'] = self::flag($block['show_arrows'] ?? null, true);
         $block['pause_on_hover'] = self::flag($block['pause_on_hover'] ?? null, true);
         $block['full_width'] = self::flag($block['full_width'] ?? null, false);
+        $block['hero_look'] = self::flag($block['hero_look'] ?? null, false);
 
         $slides = [];
 
@@ -366,6 +369,42 @@ class BlockNormaliser
         $block['intro'] = self::text($block['intro'] ?? '', 500);
         $block['align'] = self::choice($block['align'] ?? null, ['center', 'left']);
         $block['show_divider'] = self::flag($block['show_divider'] ?? null, true);
+
+        return $block;
+    }
+
+    /**
+     * The Text Block: how its heading and text are aligned. A block saved before the option existed is left as it is.
+     *
+     * @param  array<int|string, mixed>  $block
+     * @return array<int|string, mixed>
+     */
+    private static function textBlock(array $block): array
+    {
+        if (array_key_exists('text_align', $block)) {
+            $block['text_align'] = self::choice($block['text_align'], ['left', 'center', 'right']);
+        }
+
+        return $block;
+    }
+
+    /**
+     * Image & Text: a photo beside a title and formatted text (the rich `content` is sanitised by the blocks cast),
+     * with an optional button. The photo goes on the left unless told otherwise.
+     *
+     * @param  array<int|string, mixed>  $block
+     * @return array<int|string, mixed>
+     */
+    private static function mediaText(array $block): array
+    {
+        $block['eyebrow'] = self::text($block['eyebrow'] ?? '', 80);
+        $block['title'] = self::text($block['title'] ?? '', 200);
+        $block['image_url'] = self::link($block['image_url'] ?? '');
+        $block['image_alt'] = self::text($block['image_alt'] ?? '', 200);
+        $block['layout'] = self::choice($block['layout'] ?? null, ['image_left', 'image_right']);
+        $block['show_divider'] = self::flag($block['show_divider'] ?? null, true);
+        $block['button_label'] = self::text($block['button_label'] ?? '', 80);
+        $block['button_url'] = self::link($block['button_url'] ?? '');
 
         return $block;
     }

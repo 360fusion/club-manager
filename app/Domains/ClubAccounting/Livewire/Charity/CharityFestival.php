@@ -52,6 +52,14 @@ class CharityFestival extends Component
         $this->loadFestivalTargetData();
     }
 
+    /**
+     * The browser can send any member id, so only a member of this club is ever loaded or saved.
+     */
+    private function givingMember(int $memberId): Member
+    {
+        return Member::where('club_id', $this->getClub()->id)->findOrFail($memberId);
+    }
+
     private function getClub(): Club
     {
         return Club::where('slug', $this->clubSlug)->firstOrFail();
@@ -105,8 +113,8 @@ class CharityFestival extends Component
 
     public function openGivingModal(int $memberId): void
     {
-        $this->givingMemberId = $memberId;
-        $giving = MemberFestivalGiving::where('member_id', $memberId)->first();
+        $this->givingMemberId = $this->givingMember($memberId)->id;
+        $giving = MemberFestivalGiving::where('member_id', $this->givingMemberId)->first();
         if ($giving) {
             $this->regular_giving_amount = (string) $giving->regular_giving_amount;
             $this->total_donated_to_date = (string) $giving->total_donated_to_date;
@@ -135,7 +143,7 @@ class CharityFestival extends Component
         $autoBar = $this->qualifies_for_bar || $donated >= 500.00;
 
         MemberFestivalGiving::updateOrCreate(
-            ['member_id' => $this->givingMemberId],
+            ['member_id' => $this->givingMember((int) $this->givingMemberId)->id],
             [
                 'regular_giving_amount' => (float) $this->regular_giving_amount,
                 'total_donated_to_date' => $donated,

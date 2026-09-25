@@ -14,6 +14,7 @@ use App\Domains\ClubAccounting\Services\ReliefChestExportService;
 use App\Domains\ClubAccounting\Services\ReliefChestReconciliationService;
 use App\Models\Club;
 use App\Support\Currencies;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -97,6 +98,14 @@ class CharityDashboard extends Component
         $this->loadFestivalTargetData();
     }
 
+    /**
+     * The browser can send any member id, so only a member of this club is ever loaded or saved.
+     */
+    private function givingMember(int $memberId): Member
+    {
+        return Member::where('club_id', $this->getClub()->id)->findOrFail($memberId);
+    }
+
     private function getClub(): Club
     {
         return Club::where('slug', $this->clubSlug)->firstOrFail();
@@ -131,8 +140,8 @@ class CharityDashboard extends Component
             'collection_type' => 'required|string|max:50',
             'cash_amount' => 'required|numeric|min:0|max:99999999.99',
             'cheque_amount' => 'required|numeric|min:0|max:99999999.99',
-            'counted_by_member_id' => 'required|exists:club_acc_members,id',
-            'witnessed_by_member_id' => 'required|exists:club_acc_members,id|different:counted_by_member_id',
+            'counted_by_member_id' => ['required', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
+            'witnessed_by_member_id' => ['required', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id), 'different:counted_by_member_id'],
             'collection_notes' => 'nullable|string|max:10000',
         ], [
             'witnessed_by_member_id.different' => 'Witness must be a different brother than the Counter for dual-custody verification.',
@@ -183,9 +192,9 @@ class CharityDashboard extends Component
             'purpose' => 'required|string|max:10000',
             'grant_amount' => 'required|numeric|min:0.01|max:99999999.99',
             'approval_status' => 'required|string|max:50',
-            'proposer_member_id' => 'nullable|exists:club_acc_members,id',
-            'seconder_member_id' => 'nullable|exists:club_acc_members,id|different:proposer_member_id',
-            'committee_meeting_id' => 'nullable|exists:club_acc_committee_meetings,id',
+            'proposer_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
+            'seconder_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id), 'different:proposer_member_id'],
+            'committee_meeting_id' => ['nullable', Rule::exists('club_acc_committee_meetings', 'id')->where('club_id', $club->id)],
         ], [
             'seconder_member_id.different' => 'The Seconder must be a different Brother than the Proposer.',
         ]);
@@ -259,8 +268,8 @@ class CharityDashboard extends Component
 
     public function openGivingModal(int $memberId): void
     {
-        $this->givingMemberId = $memberId;
-        $giving = MemberFestivalGiving::where('member_id', $memberId)->first();
+        $this->givingMemberId = $this->givingMember($memberId)->id;
+        $giving = MemberFestivalGiving::where('member_id', $this->givingMemberId)->first();
         if ($giving) {
             $this->regular_giving_amount = (string) $giving->regular_giving_amount;
             $this->total_donated_to_date = (string) $giving->total_donated_to_date;
@@ -289,7 +298,7 @@ class CharityDashboard extends Component
         $autoBar = $this->qualifies_for_bar || $donated >= 500.00;
 
         MemberFestivalGiving::updateOrCreate(
-            ['member_id' => $this->givingMemberId],
+            ['member_id' => $this->givingMember((int) $this->givingMemberId)->id],
             [
                 'regular_giving_amount' => (float) $this->regular_giving_amount,
                 'total_donated_to_date' => $donated,

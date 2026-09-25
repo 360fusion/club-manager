@@ -204,10 +204,45 @@ class SectionStylingAndLodgeBlocksTest extends TestCase
         $this->assertFalse($block['autoplay']);
         $this->assertTrue($block['show_dots']);
         $this->assertFalse($block['full_width']);
+        $this->assertFalse($block['hero_look']);
         $this->assertSame('', $block['button_url']);
         $this->assertSame('https://example.org', $block['button2_url']);
 
         $this->assertSame(8, $this->saved(['type' => 'slideshow', 'interval' => 8, 'slides' => []])['interval']);
+
+        $heroStyled = $this->saved(['type' => 'slideshow', 'hero_look' => true, 'heading' => "Two\nlines", 'slides' => []]);
+        $this->assertTrue($heroStyled['hero_look']);
+        $this->assertSame("Two\nlines", $heroStyled['heading']);
+    }
+
+    public function test_a_text_blocks_alignment_is_kept_or_falls_back(): void
+    {
+        $this->assertSame('center', $this->saved(['type' => 'text', 'content' => '<p>Hi</p>', 'text_align' => 'center'])['text_align']);
+        $this->assertSame('left', $this->saved(['type' => 'text', 'content' => '<p>Hi</p>', 'text_align' => 'upside-down'])['text_align']);
+        $this->assertArrayNotHasKey('text_align', $this->saved(['type' => 'text', 'content' => '<p>Hi</p>']));
+    }
+
+    public function test_an_image_and_text_element_is_cleaned(): void
+    {
+        $block = $this->saved([
+            'type' => 'media_text',
+            'layout' => 'sideways',
+            'title' => '<b>About us</b>',
+            'image_url' => 'javascript:alert(1)',
+            'button_label' => 'Join',
+            'button_url' => 'example.org/join',
+            'content' => '<p>Founded in 1874</p><script>alert(1)</script>',
+        ]);
+
+        $this->assertSame('image_left', $block['layout'], 'an unknown position falls back to the default');
+        $this->assertSame('About us', $block['title']);
+        $this->assertSame('', $block['image_url']);
+        $this->assertSame('https://example.org/join', $block['button_url']);
+        $this->assertTrue($block['show_divider']);
+        $this->assertStringNotContainsString('<script', $block['content']);
+        $this->assertStringContainsString('Founded in 1874', $block['content']);
+
+        $this->assertSame('image_right', $this->saved(['type' => 'media_text', 'layout' => 'image_right', 'image_url' => '/storage/1/about.webp'])['layout']);
     }
 
     public function test_an_element_can_be_hidden_and_is_left_out_of_the_public_page(): void

@@ -57,6 +57,22 @@ class PublicNewsArticleTest extends TestCase
                 ->where('page.blocks.2.items.0.name', 'Summons.pdf'));
     }
 
+    public function test_an_article_lists_the_latest_other_articles_beside_it(): void
+    {
+        $club = $this->club();
+        $this->article($club);
+        $this->article($club, ['title' => 'Summer dinner', 'slug' => 'summer-dinner', 'published_at' => now()->subHours(2)]);
+        $this->article($club, ['title' => 'Draft news', 'slug' => 'draft-news', 'status' => 'draft']);
+        $this->article($club, ['title' => 'Members only news', 'slug' => 'members-news', 'visibility' => 'club']);
+
+        $this->get('/site/lodge-of-fraternity/news/installation-night')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('articleSidebar.items', 1)
+                ->where('articleSidebar.items.0.title', 'Summer dinner')
+                ->where('articleSidebar.items.0.url', route('public.site.post', ['clubSlug' => 'lodge-of-fraternity', 'postSlug' => 'summer-dinner'])));
+    }
+
     public function test_an_article_with_only_body_text_still_shows_it(): void
     {
         $club = $this->club();

@@ -17,6 +17,7 @@ use App\Models\Club;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -95,8 +96,8 @@ class MeetingWorkspace extends Component
             'grantRecipient' => 'required|string|max:150',
             'grantPurpose' => 'required|string|max:10000',
             'grantAmount' => 'required|numeric|min:0.01|max:99999999.99',
-            'grantProposerId' => 'nullable|exists:club_acc_members,id',
-            'grantSeconderId' => 'nullable|exists:club_acc_members,id|different:grantProposerId',
+            'grantProposerId' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $meeting->club_id)],
+            'grantSeconderId' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $meeting->club_id), 'different:grantProposerId'],
         ], [
             'grantSeconderId.different' => 'The Seconder must be a different Brother than the Proposer.',
         ]);

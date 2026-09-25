@@ -23,8 +23,10 @@ import FeatureCardsEditor from '@/Components/Blocks/Editors/FeatureCardsEditor.v
 import SlideshowEditor from '@/Components/Blocks/Editors/SlideshowEditor.vue';
 import StatsEditor from '@/Components/Blocks/Editors/StatsEditor.vue';
 import QuoteMottoEditor from '@/Components/Blocks/Editors/QuoteMottoEditor.vue';
+import MediaTextEditor from '@/Components/Blocks/Editors/MediaTextEditor.vue';
 import SectionHeadingEditor from '@/Components/Blocks/Editors/SectionHeadingEditor.vue';
 import SectionStyleEditor from '@/Components/Blocks/Editors/SectionStyleEditor.vue';
+import { readCollapsed, writeCollapsed } from '@/Utils/collapsedBlocks';
 import DomainSetupGuide from '@/Components/DomainSetupGuide.vue';
 import PublicHeader from '@/Components/Site/PublicHeader.vue';
 import PublicFooter from '@/Components/Site/PublicFooter.vue';
@@ -309,6 +311,8 @@ const onMediaSelect = (mediaItem) => {
     } else if (type === 'cta_side_image' && targetObj) {
         targetObj.side_image_url = mediaItem.url;
     } else if (type === 'slideshow_image' && targetObj) {
+        targetObj.image_url = mediaItem.url;
+    } else if (type === 'media_text_image' && targetObj) {
         targetObj.image_url = mediaItem.url;
     } else if (type === 'hero_image' && targetObj) {
         targetObj.image_url = mediaItem.url;
@@ -606,7 +610,8 @@ const searchPreview = computed(() => {
 // The SEO and URL card starts folded away; it shows the page's address while closed.
 const seoOpen = ref(false);
 
-// Compact view state (see toggleCollapsed): ids of the elements folded down to a summary.
+// Compact view state (see toggleCollapsed): ids of the elements folded down to a summary. Remembered per page in
+// this browser (see Utils/collapsedBlocks), so it survives reloads of the page and copying an element elsewhere.
 const collapsedBlocks = ref(new Set());
 
 // The private preview link panel (see openPreviewPanel); declared here because loadPageIntoForm resets it.
@@ -614,7 +619,7 @@ const previewUrl = ref('');
 const previewOpen = ref(false);
 
 const loadPageIntoForm = (page) => {
-    collapsedBlocks.value = new Set();
+    collapsedBlocks.value = page?.id ? readCollapsed(props.club.slug, page.id) : new Set();
     previewUrl.value = '';
     previewOpen.value = false;
     if (page) {
@@ -817,6 +822,7 @@ const blockTypes = [
     { type: 'feature_cards', icon: '🃏', label: 'Icon Cards', desc: 'Grid of icon, title and text cards', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
     { type: 'stats', icon: '🔢', label: 'Stats Row', desc: 'Headline figures like 150+ years', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
     { type: 'quote_motto', icon: '❝', label: 'Motto', desc: 'Heading, divider, text and italic tagline', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+    { type: 'media_text', icon: '🖼️', label: 'Image & Text', desc: 'Photo beside a title and formatted text', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
 ];
 
 const blockColumns = computed(() => [
@@ -837,6 +843,7 @@ const blockColumns = computed(() => [
             { type: 'feature_cards', icon: '🃏', label: 'Icon Cards', desc: 'Grid of icon, title and text cards', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
             { type: 'stats', icon: '🔢', label: 'Stats Row', desc: 'Headline figures like 150+ years', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
             { type: 'quote_motto', icon: '❝', label: 'Motto', desc: 'Heading, divider, text and italic tagline', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+            { type: 'media_text', icon: '🖼️', label: 'Image & Text', desc: 'Photo beside a title and formatted text', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
         ],
     },
     {
@@ -936,7 +943,7 @@ const addBlock = (type, targetIndex = null) => {
     let newBlock = null;
 
     if (type === 'text' || type === 'rich_text') {
-        newBlock = { id, type: 'text', heading: '', content: '' };
+        newBlock = { id, type: 'text', heading: '', content: '', text_align: 'left' };
     } else if (type === 'image') {
         newBlock = { id, type: 'image', url: '', caption: '', position: 'center', size: 'large' };
     } else if (type === 'images') {
@@ -1019,7 +1026,7 @@ const addBlock = (type, targetIndex = null) => {
     } else if (type === 'slideshow') {
         newBlock = {
             id, type: 'slideshow', height: 'normal', effect: 'zoom', interval: 5, overlay: 'medium', align: 'left',
-            autoplay: true, pause_on_hover: true, show_dots: true, show_arrows: true, full_width: false,
+            autoplay: true, pause_on_hover: true, show_dots: true, show_arrows: true, full_width: false, hero_look: false,
             eyebrow: '', heading: '', text: '', button_label: '', button_url: '', button2_label: '', button2_url: '',
             slides: [{ id: id + '-p1', image_url: '', alt: '', caption: '' }, { id: id + '-p2', image_url: '', alt: '', caption: '' }],
         };
@@ -1044,6 +1051,8 @@ const addBlock = (type, targetIndex = null) => {
                 { id: id + '-s3', icon: 'calendar-check', number: '8', suffix: '', label: 'Meetings per year' },
             ],
         };
+    } else if (type === 'media_text') {
+        newBlock = { id, type: 'media_text', eyebrow: '', title: '', image_url: '', image_alt: '', layout: 'image_left', show_divider: true, content: '', button_label: '', button_url: '' };
     } else if (type === 'quote_motto') {
         newBlock = { id, type: 'quote_motto', heading: 'Our motto', text: '', tagline: '', show_divider: true };
     } else if (type === 'news_feed' || type === 'news_list') {
@@ -1117,6 +1126,13 @@ const toggleCollapsed = (block) => {
 const collapseAll = () => { collapsedBlocks.value = new Set(form.blocks.map((b) => b.id)); };
 const expandAll = () => { collapsedBlocks.value = new Set(); };
 const collapsedCount = computed(() => form.blocks.filter((b) => collapsedBlocks.value.has(b.id)).length);
+
+// Save the folded elements whenever they change (only for a saved page, and only ids that still exist on it).
+watch(collapsedBlocks, (folded) => {
+    if (!form.id) return;
+    const present = new Set(form.blocks.map((b) => b.id));
+    writeCollapsed(props.club.slug, form.id, [...folded].filter((id) => present.has(id)));
+});
 
 const removeBlock = (index) => {
     form.blocks.splice(index, 1);
@@ -2064,6 +2080,9 @@ const confirmDeleteActivePage = () => {
                                                 <span v-else-if="block.type === 'stats'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
                                                     🔢 Stats Row
                                                 </span>
+                                                <span v-else-if="block.type === 'media_text'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
+                                                    🖼️ Image &amp; Text
+                                                </span>
                                                 <span v-else-if="block.type === 'quote_motto'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
                                                     ❝ Motto
                                                 </span>
@@ -2188,6 +2207,14 @@ const confirmDeleteActivePage = () => {
                                                 <div>
                                                     <label :id="`block-${bIdx}-content-label`" class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Body Text Content</label>
                                                     <RichTextEditor v-model="block.content" placeholder="Write formatted text content here..." :aria-labelledby="`block-${bIdx}-content-label`" />
+                                                </div>
+                                                <div>
+                                                    <label :for="`block-${bIdx}-text-align`" class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Text alignment</label>
+                                                    <select :id="`block-${bIdx}-text-align`" v-model="block.text_align" class="w-full max-w-[12rem] p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-xs">
+                                                        <option value="left">Left aligned</option>
+                                                        <option value="center">Centred</option>
+                                                        <option value="right">Right aligned</option>
+                                                    </select>
                                                 </div>
                                             </div>
 
@@ -2474,6 +2501,7 @@ const confirmDeleteActivePage = () => {
                                             <FeatureCardsEditor v-else-if="block.type === 'feature_cards'" :block="block" :index="bIdx" :pages="pages" :club="club" />
                                             <SlideshowEditor v-else-if="block.type === 'slideshow'" :block="block" :index="bIdx" :pages="pages" :club="club" @media="(type, target) => openMediaLibrary(type, target || block, 'pages')" />
                                             <StatsEditor v-else-if="block.type === 'stats'" :block="block" :index="bIdx" />
+                                            <MediaTextEditor v-else-if="block.type === 'media_text'" :block="block" :index="bIdx" :pages="pages" :club="club" @media="(type, target) => openMediaLibrary(type, target || block, 'pages')" />
                                             <QuoteMottoEditor v-else-if="block.type === 'quote_motto'" :block="block" :index="bIdx" />
                                             <SectionHeadingEditor v-else-if="block.type === 'section_heading'" :block="block" :index="bIdx" />
                                             <HeroEditor v-else-if="block.type === 'hero'" :block="block" :index="bIdx" :pages="pages" :club="club" @media="(type, target) => openMediaLibrary(type, target || block, 'pages')" />

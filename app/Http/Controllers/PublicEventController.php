@@ -9,6 +9,7 @@ use App\Models\EventRegistration;
 use App\Services\Events\EventOnlinePayment;
 use App\Services\Events\EventPayload;
 use App\Services\Events\EventRegistrationService;
+use App\Support\SiteChrome;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +30,7 @@ class PublicEventController extends Controller
         $event = $this->findEvent($club, $eventSlug);
 
         return Inertia::render('Public/Event', [
-            'club' => $this->clubPayload($club),
+            ...SiteChrome::forClub($club),
             'event' => EventPayload::forMember($event),
             'canBookAsGuest' => $event->allow_public_registration && $event->visibility->value === 'public' && ! in_array($event->status, ['cancelled', 'completed'], true),
             'isSignedIn' => Auth::check(),
@@ -105,13 +106,13 @@ class PublicEventController extends Controller
         $registration = $this->findRegistration($club, $token);
 
         if (! $registration) {
-            return Inertia::render('Public/EventBooking', ['club' => $this->clubPayload($club), 'expired' => true]);
+            return Inertia::render('Public/EventBooking', [...SiteChrome::forClub($club), 'expired' => true]);
         }
 
         $event = $registration->event->load(['menuItems', 'ticketTiers', 'club']);
 
         return Inertia::render('Public/EventBooking', [
-            'club' => $this->clubPayload($club),
+            ...SiteChrome::forClub($club),
             'expired' => false,
             'token' => $token,
             'event' => EventPayload::forMember($event, $registration),
@@ -166,15 +167,5 @@ class PublicEventController extends Controller
     {
         return redirect()->route('public.event', ['clubSlug' => $club->slug, 'eventSlug' => $event->slug])
             ->with('success', 'Thank you. If the details are right, we have emailed you a private link to view or cancel your booking.');
-    }
-
-    /**
-     * Only what a public page needs; the club's settings hold private details.
-     *
-     * @return array{name: string, slug: string, logo_url: ?string}
-     */
-    private function clubPayload(Club $club): array
-    {
-        return ['name' => $club->name, 'slug' => $club->slug, 'logo_url' => $club->logo_url];
     }
 }

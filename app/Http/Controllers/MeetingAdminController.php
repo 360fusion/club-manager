@@ -23,8 +23,10 @@ use App\Support\UploadRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -164,7 +166,7 @@ class MeetingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
         $validated = $request->validate([
-            'id' => 'nullable|exists:meetings,id',
+            'id' => ['nullable', Rule::exists('meetings', 'id')->where('club_id', $club->id)],
             'title' => 'required|string|max:255',
             'meeting_number' => 'nullable|integer|max:1000000',
             'meeting_date' => 'required|date',
@@ -217,7 +219,7 @@ class MeetingAdminController extends Controller
         $agendaData = $validated['agenda_items'] ?? [];
         unset($validated['agenda_items']);
 
-        $meeting = Meeting::updateOrCreate(['id' => $request->id], $validated);
+        $meeting = Meeting::updateOrCreate(['id' => $validated['id'] ?? null, 'club_id' => $club->id], Arr::except($validated, ['id']));
 
         if (! empty($agendaData)) {
             $meeting->agendaItems()->delete();

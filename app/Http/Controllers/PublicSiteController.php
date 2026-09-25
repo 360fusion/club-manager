@@ -12,13 +12,11 @@ use App\Models\User;
 use App\Services\PagePublisher;
 use App\Services\PublicCalendar;
 use App\Support\ClubAccess;
-use App\Support\FooterCopyright;
 use App\Support\IcsCalendar;
 use App\Support\PageBlocks;
-use App\Support\SiteAnnouncement;
+use App\Support\SiteChrome;
 use App\Support\SiteSeo;
 use App\Support\SiteThemes;
-use App\Support\SiteTracking;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -171,7 +169,18 @@ class PublicSiteController extends Controller
             'blocks' => $blocks,
         ]);
 
-        return $this->renderPage($club, $page, $viewer);
+        $latest = $club->posts()->published()->visibleTo($viewer)->whereKeyNot($post->id)->orderByRaw($newestFirst)->take(5)->get()
+            ->map(fn ($other) => [
+                'id' => $other->id,
+                'title' => $other->title,
+                'url' => route('public.site.post', ['clubSlug' => $club->slug, 'postSlug' => $other->slug]),
+                'published_at' => ($other->published_at ?? $other->created_at)?->format('j F Y'),
+                'cover_image_url' => $other->cover_image_url ?: ($other->getFirstMediaUrl('cover') ?: null),
+            ])->all();
+
+        return $this->renderPage($club, $page, $viewer, extra: [
+            'articleSidebar' => ['heading' => 'Latest news', 'items' => $latest, 'all_url' => $blocks[0]['back_url'], 'all_label' => 'All news'],
+        ]);
     }
 
     /**
@@ -194,7 +203,7 @@ class PublicSiteController extends Controller
     /**
      * Everything the public site needs to draw one page.
      */
-    private function renderPage(Club $club, Page $page, ?User $viewer, int $status = 200, bool $preview = false): SymfonyResponse|Response
+    private function renderPage(Club $club, Page $page, ?User $viewer, int $status = 200, bool $preview = false, array $extra = []): SymfonyResponse|Response
     {
         if ($preview) {
             // What the page will look like once published. Only held in memory, never saved.
@@ -206,69 +215,13 @@ class PublicSiteController extends Controller
             $page->blocks = $content['blocks'];
         }
 
-        // Navigation links (All published pages marked show_in_navigation)
-        $navigationPages = Page::where('club_id', $club->id)
-            ->live()
-            ->where('show_in_navigation', true)
-            ->orderBy('sort_order')
-            ->get(['id', 'title', 'slug', 'is_homepage']);
-
-        $footerPages = Page::where('club_id', $club->id)
-            ->live()
-            ->where('show_in_footer', true)
-            ->orderBy('sort_order')
-            ->get(['id', 'title', 'slug', 'is_homepage']);
-
         $rawPreviewTheme = request('preview_theme');
         $previewTheme = is_string($rawPreviewTheme) && SiteThemes::isValidFor($rawPreviewTheme, $club) ? $rawPreviewTheme : null;
 
         $response = Inertia::render('Public/Site', [
             'previewTheme' => $previewTheme,
-            'club' => [
-                'id' => $club->id,
-                'name' => $club->name,
-                'slug' => $club->slug,
-                'type_name' => $club->clubType->name,
-                'tagline' => $club->settings['tagline'] ?? '',
-                'primary_color' => $club->settings['primary_color'] ?? '#0369a1',
-                'contact_email' => $club->settings['contact_email'] ?? $club->email,
-                'meeting_formula' => $club->settings['meeting_formula'] ?? '',
-                'address' => $club->settings['address'] ?? '',
-                'logo_url' => $club->logo_url,
-                'website_theme' => $club->settings['website_theme'] ?? SiteThemes::DEFAULT,
-            ],
-            'site' => [
-                'meta_description' => $club->settings['seo_meta_description'] ?? null,
-                'title_suffix' => $club->settings['seo_title_suffix'] ?? ('| '.$club->name),
-                'footer_about_text' => $club->settings['footer_about_text'] ?? '',
-                'footer_copyright_holder' => FooterCopyright::parts($club)['holder'],
-                'footer_copyright_text' => FooterCopyright::parts($club)['text'],
-                'header_layout' => $club->settings['header_layout'] ?? 'logo_left',
-                'header_show_logo' => $club->settings['header_show_logo'] ?? true,
-                'header_show_tagline' => $club->settings['header_show_tagline'] ?? true,
-                'header_cta_enabled' => $club->settings['header_cta_enabled'] ?? false,
-                'header_cta_text' => $club->settings['header_cta_text'] ?? '',
-                'header_cta_link' => $club->settings['header_cta_link'] ?? '',
-                'header_show_account_links' => $club->settings['header_show_account_links'] ?? true,
-                'footer_layout' => $club->settings['footer_layout'] ?? 'simple',
-                'footer_show_social' => $club->settings['footer_show_social'] ?? true,
-                'footer_show_nav' => $club->settings['footer_show_nav'] ?? false,
-                'social_facebook' => $club->settings['social_facebook'] ?? '',
-                'social_instagram' => $club->settings['social_instagram'] ?? '',
-                'social_twitter' => $club->settings['social_twitter'] ?? '',
-                'social_youtube' => $club->settings['social_youtube'] ?? '',
-                'social_linkedin' => $club->settings['social_linkedin'] ?? '',
-                'social_tiktok' => $club->settings['social_tiktok'] ?? '',
-                'social_whatsapp' => $club->settings['social_whatsapp'] ?? '',
-                'footer_show_custom_columns' => $club->settings['footer_show_custom_columns'] ?? true,
-                'footer_nav_page_ids' => $club->settings['footer_nav_page_ids'] ?? null,
-                'footer_link_columns' => $club->settings['footer_link_columns'] ?? [],
-                'font_pairing' => $club->settings['font_pairing'] ?? 'theme',
-                'corner_style' => $club->settings['corner_style'] ?? 'theme',
-                'custom_color_schemes' => SiteThemes::customSchemes($club),
-                'announcement' => SiteAnnouncement::forClub($club),
-                'tracking' => SiteTracking::forClub($club),
-            ],
+            ...$extra,
+            ...SiteChrome::forClub($club),
             'page' => [
                 'id' => $page->id,
                 'title' => $page->title,
@@ -281,8 +234,6 @@ class PublicSiteController extends Controller
                 'header_style' => $page->header_style ?: 'full',
             ],
             'preview' => $preview ? ['has_draft' => $page->hasDraft(), 'is_live' => $page->isLive()] : null,
-            'navigation' => $navigationPages,
-            'footerNavigation' => $footerPages,
             // Only worked out for a page that has a calendar block, and lazily so a month change (a partial reload) is cheap.
             'calendar' => collect($page->blocks ?? [])->contains('type', 'calendar')
                 ? fn () => (new PublicCalendar($club, $viewer))->forMonth(request('cal'))
