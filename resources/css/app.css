@@ -48,3 +48,32 @@
 .cm-zoom-a { animation: cm-zoom-a 9s ease-out forwards; }
 .cm-zoom-b { animation: cm-zoom-b 9s ease-out forwards; }
 .cm-zoom-c { animation: cm-zoom-c 9s ease-out forwards; }
+
+/* Formatted text (the `prose` class on text an editor wrote with the rich text editor). The Tailwind typography plugin is
+   not installed, so without this the headings, lists and quotes lose their styling. Kept in the components layer so a
+   utility class on the same element (a text size, a colour) still wins. */
+@layer components {
+    .prose p { margin: 0 0 1em; line-height: 1.75; }
+    .prose h1 { margin: 1.4em 0 0.5em; font-size: 2.25em; font-weight: 800; line-height: 1.15; }
+    .prose h2 { margin: 1.3em 0 0.5em; font-size: 1.75em; font-weight: 700; line-height: 1.2; }
+    .prose h3 { margin: 1.2em 0 0.4em; font-size: 1.35em; font-weight: 700; line-height: 1.3; }
+    .prose h4 { margin: 1.1em 0 0.4em; font-size: 1.1em; font-weight: 700; }
+    .prose > :first-child { margin-top: 0; }
+    .prose > :last-child { margin-bottom: 0; }
+    .prose ul { margin: 0 0 1em; padding-left: 1.5em; list-style: disc; }
+    .prose ol { margin: 0 0 1em; padding-left: 1.5em; list-style: decimal; }
+    .prose li { margin: 0.35em 0; line-height: 1.7; }
+    .prose li > p { margin: 0; }
+    .prose blockquote { margin: 0 0 1em; padding-left: 1em; border-left: 3px solid currentColor; font-style: italic; opacity: 0.85; }
+    .prose a { color: var(--cm-accent, inherit); font-weight: 600; text-decoration: underline; }
+    .prose hr { margin: 1.5em 0; border: 0; border-top: 1px solid currentColor; opacity: 0.2; }
+    .prose img { max-width: 100%; height: auto; }
+    .prose code { font-size: 0.9em; }
+    .prose-sm { font-size: 0.875rem; }
+}
+
+/* Text sizes from the rich text editor's size menu, relative to the surrounding text. */
+.rt-size-small { font-size: 0.875em; }
+.rt-size-large { font-size: 1.25em; }
+.rt-size-xlarge { font-size: 1.5em; }
+.rt-size-huge { font-size: 2em; }

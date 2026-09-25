@@ -3,6 +3,7 @@ import { ref, watch, onBeforeUnmount } from 'vue';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
+import { FontSize, FONT_SIZES } from '@/Utils/tiptapFontSize';
 
 const props = defineProps({
   modelValue: {
@@ -30,6 +31,7 @@ const editor = useEditor({
   content: props.modelValue,
   extensions: [
     StarterKit,
+    FontSize,
     Link.configure({
       openOnClick: false,
       autolink: true,
@@ -64,6 +66,15 @@ watch(() => props.modelValue, (value) => {
 onBeforeUnmount(() => {
   editor.value?.destroy();
 });
+
+const setSize = (size) => {
+  if (!editor.value) return;
+  if (size) {
+    editor.value.chain().focus().setFontSize(size).run();
+  } else {
+    editor.value.chain().focus().unsetFontSize().run();
+  }
+};
 
 const openLinkPrompt = () => {
   if (!editor.value) return;
@@ -172,6 +183,18 @@ const removeLink = () => {
       >
         H3
       </button>
+
+      <!-- Text size -->
+      <select
+        :value="editor.getAttributes('fontSize').size || ''"
+        class="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-1.5 py-1 text-xs font-semibold cursor-pointer"
+        title="Text size (select some text first)"
+        aria-label="Text size"
+        @change="setSize($event.target.value)"
+      >
+        <option value="">Normal size</option>
+        <option v-for="size in FONT_SIZES" :key="size.id" :value="size.id">{{ size.label }}</option>
+      </select>
 
       <div class="h-4 w-px bg-slate-300 mx-1"></div>
 

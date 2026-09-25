@@ -132,6 +132,13 @@ class RichTextSanitizationTest extends TestCase
         $this->assertSame('', $post->fresh()->content);
     }
 
+    public function test_sanitizer_keeps_the_editors_text_size_classes(): void
+    {
+        $html = RichTextSanitizer::sanitize('<p>Normal <span class="rt-size-large">big</span> text</p>');
+
+        $this->assertStringContainsString('<span class="rt-size-large">big</span>', $html);
+    }
+
     public function test_sanitizer_leaves_null_untouched(): void
     {
         $this->assertNull(RichTextSanitizer::sanitize(null));
