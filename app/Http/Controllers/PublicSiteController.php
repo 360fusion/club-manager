@@ -102,6 +102,79 @@ class PublicSiteController extends Controller
     }
 
     /**
+     * One news article on the club's public website, drawn inside the site's own header, footer and theme.
+     *
+     * It is shown as a page that only exists in memory: a heading block, the article's own elements and its
+     * attachments, so every element type a news post can hold is drawn the same way it is on an ordinary page.
+     */
+    public function showPost(string $clubSlug, string $postSlug): SymfonyResponse|Response
+    {
+        $club = Club::where('slug', $clubSlug)
+            ->with(['clubType', 'membershipPlans', 'donations.contributions'])
+            ->firstOrFail();
+
+        $viewer = Auth::user();
+        $newestFirst = 'COALESCE(posts.published_at, posts.created_at) DESC';
+
+        $post = $club->posts()->with('author')->published()->where('slug', $postSlug)->orderByRaw($newestFirst)->first();
+
+        abort_unless($post, 404);
+
+        if (! $club->posts()->published()->visibleTo($viewer)->whereKey($post->id)->exists()) {
+            // A members-only article: a visitor is sent to log in, a signed-in non-member just gets the not-found page.
+            abort_if($viewer, 404);
+
+            return redirect()->guest(route('login'))->with('error', 'That article is for members only.');
+        }
+
+        $newsPage = Page::where('club_id', $club->id)->live()->where('is_members_only', false)->orderBy('sort_order')->get()
+            ->first(fn (Page $page) => collect($page->blocks ?? [])->contains(fn ($block) => in_array($block['type'] ?? null, ['news_feed', 'news_list'], true)));
+
+        $blocks = [[
+            'id' => 'post-header',
+            'type' => 'post_header',
+            'title' => $post->title,
+            'excerpt' => $post->excerpt,
+            'cover_image_url' => $post->cover_image_url ?: ($post->getFirstMediaUrl('cover') ?: null),
+            'author_name' => $post->author?->name ?? 'Club Admin',
+            'published_at' => ($post->published_at ?? $post->created_at)?->format('j F Y'),
+            'back_url' => route('public.site', array_filter(['clubSlug' => $club->slug, 'pageSlug' => $newsPage && ! $newsPage->is_homepage ? $newsPage->slug : null])),
+            'back_label' => $newsPage?->title ?: 'News',
+        ]];
+
+        $body = $post->blocks ?? [];
+
+        if ($body === [] && trim(strip_tags((string) $post->content)) !== '') {
+            $body = [['id' => 'post-body', 'type' => 'text', 'content' => $post->content]];
+        }
+
+        array_push($blocks, ...$body);
+
+        $attachments = collect($post->attachments ?? [])
+            ->filter(fn ($file) => is_array($file) && ! empty($file['url']))
+            ->map(fn (array $file) => ['name' => (string) ($file['name'] ?? 'Download'), 'url' => (string) $file['url'], 'mime_type' => (string) ($file['mime_type'] ?? ''), 'size' => (string) ($file['size'] ?? '')])
+            ->values()->all();
+
+        if ($attachments !== []) {
+            $blocks[] = ['id' => 'post-attachments', 'type' => 'post_attachments', 'items' => $attachments];
+        }
+
+        $page = new Page([
+            'club_id' => $club->id,
+            'title' => $post->title,
+            'slug' => 'news/'.$post->slug,
+            'meta_description' => $post->excerpt ?: null,
+            'share_image' => $post->cover_image_url ?: null,
+            'is_published' => true,
+            'is_members_only' => false,
+            'noindex' => $post->visibility->value !== 'public',
+            'blocks' => $blocks,
+        ]);
+
+        return $this->renderPage($club, $page, $viewer);
+    }
+
+    /**
      * The page the club chose to show for an address that does not exist (with a 404 status, so search
      * engines still treat it as missing), or the ordinary not-found error if it has not chosen one.
      */
@@ -147,7 +220,7 @@ class PublicSiteController extends Controller
             ->get(['id', 'title', 'slug', 'is_homepage']);
 
         $rawPreviewTheme = request('preview_theme');
-        $previewTheme = in_array($rawPreviewTheme, SiteThemes::keys(), true) ? $rawPreviewTheme : null;
+        $previewTheme = is_string($rawPreviewTheme) && SiteThemes::isValidFor($rawPreviewTheme, $club) ? $rawPreviewTheme : null;
 
         $response = Inertia::render('Public/Site', [
             'previewTheme' => $previewTheme,
@@ -192,6 +265,7 @@ class PublicSiteController extends Controller
                 'footer_link_columns' => $club->settings['footer_link_columns'] ?? [],
                 'font_pairing' => $club->settings['font_pairing'] ?? 'theme',
                 'corner_style' => $club->settings['corner_style'] ?? 'theme',
+                'custom_color_schemes' => SiteThemes::customSchemes($club),
                 'announcement' => SiteAnnouncement::forClub($club),
                 'tracking' => SiteTracking::forClub($club),
             ],

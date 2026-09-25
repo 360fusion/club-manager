@@ -18,6 +18,7 @@ use App\Support\SiteAnnouncement;
 use App\Support\SiteThemes;
 use App\Support\SiteTracking;
 use App\Support\UploadRules;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,7 +39,7 @@ class PageAdminController extends Controller
     /**
      * @var list<string>
      */
-    private const FONT_PAIRINGS = ['theme', 'georgia', 'clean', 'palatino'];
+    private const FONT_PAIRINGS = ['theme', 'georgia', 'clean', 'palatino', 'lodge'];
 
     /**
      * @var list<string>
@@ -106,7 +107,7 @@ class PageAdminController extends Controller
             'analytics_provider' => ['nullable', Rule::in(SiteTracking::PROVIDERS)],
             'analytics_id' => [
                 'nullable', 'string', 'max:100', 'required_if:analytics_provider,google,plausible',
-                function (string $attribute, mixed $value, \Closure $fail) use ($request): void {
+                function (string $attribute, mixed $value, Closure $fail) use ($request): void {
                     $provider = $request->input('analytics_provider');
 
                     if ($provider === 'google' && ! preg_match(SiteTracking::GOOGLE_ID, (string) $value)) {
@@ -122,6 +123,8 @@ class PageAdminController extends Controller
             'cookie_banner_text' => 'nullable|string|max:500',
             'cookie_banner_link_label' => 'nullable|string|max:60',
             'cookie_banner_link_url' => ['nullable', 'string', 'max:500', 'regex:#^(https?://|/)#i'],
+            'revisions_keep' => ['nullable', 'integer', 'min:'.PagePublisher::MIN_KEEP, 'max:'.PagePublisher::MAX_KEEP],
+            'revisions_max_age_days' => ['nullable', 'integer', 'min:0', 'max:3650'],
             'not_found_page_id' => ['nullable', 'integer', Rule::exists('pages', 'id')->where('club_id', $club->id)->whereNull('deleted_at')],
         ]);
 
@@ -192,13 +195,18 @@ class PageAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
         $validated = $request->validate([
-            'website_theme' => ['required', 'string', Rule::in(SiteThemes::keys())],
+            'website_theme' => ['required', 'string', function (string $attribute, mixed $value, Closure $fail) use ($club) {
+                if (! is_string($value) || ! SiteThemes::isValidFor($value, $club)) {
+                    $fail('Choose one of the available themes.');
+                }
+            }],
             'font_pairing' => ['nullable', Rule::in(self::FONT_PAIRINGS)],
             'corner_style' => ['nullable', Rule::in(self::CORNER_STYLES)],
         ]);
 
         $existingSettings = $club->settings ?? [];
         $existingSettings['website_theme'] = $validated['website_theme'];
+
         foreach (['font_pairing', 'corner_style'] as $key) {
             if (array_key_exists($key, $validated)) {
                 $existingSettings[$key] = $validated[$key] ?: 'theme';
@@ -208,6 +216,69 @@ class PageAdminController extends Controller
         $club->save();
 
         return redirect()->back()->with('success', 'Website theme updated successfully.');
+    }
+
+    /**
+     * Create or update one of the lodge's own named colour schemes. The browser proposes the id of a new scheme;
+     * it is only accepted in the expected shape, and a scheme that already has that id is updated in place.
+     */
+    public function saveColourScheme(Request $request, string $clubSlug)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $validated = $request->validate([
+            'id' => ['required', 'string', 'regex:'.SiteThemes::CUSTOM_ID_PATTERN],
+            'name' => ['required', 'string', 'max:40'],
+            'primary' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'accent' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+        ]);
+
+        $schemes = SiteThemes::customSchemes($club);
+        $existing = collect($schemes)->search(fn (array $scheme) => $scheme['id'] === $validated['id']);
+
+        if ($existing === false && count($schemes) >= SiteThemes::MAX_CUSTOM_SCHEMES) {
+            throw ValidationException::withMessages(['name' => 'You can keep up to '.SiteThemes::MAX_CUSTOM_SCHEMES.' colour schemes. Delete one to make room.']);
+        }
+
+        $name = trim(strip_tags($validated['name']));
+
+        if ($name === '') {
+            throw ValidationException::withMessages(['name' => 'Give the colour scheme a name.']);
+        }
+
+        $scheme = ['id' => $validated['id'], 'name' => $name, 'primary' => strtolower($validated['primary']), 'accent' => strtolower($validated['accent'])];
+
+        if ($existing === false) {
+            $schemes[] = $scheme;
+        } else {
+            $schemes[$existing] = $scheme;
+        }
+
+        $settings = $club->settings ?? [];
+        $settings['custom_color_schemes'] = array_values($schemes);
+        $club->settings = $settings;
+        $club->save();
+
+        return redirect()->back()->with('success', 'Colour scheme saved.');
+    }
+
+    /**
+     * Remove one of the lodge's colour schemes, unless the live site is using it.
+     */
+    public function deleteColourScheme(string $clubSlug, string $schemeId)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        if (str_ends_with((string) ($club->settings['website_theme'] ?? ''), ':'.$schemeId)) {
+            throw ValidationException::withMessages(['scheme' => 'The live site is using this colour scheme. Apply a different one first, then delete it.']);
+        }
+
+        $settings = $club->settings ?? [];
+        $settings['custom_color_schemes'] = array_values(array_filter(SiteThemes::customSchemes($club), fn (array $scheme) => $scheme['id'] !== $schemeId));
+        $club->settings = $settings;
+        $club->save();
+
+        return redirect()->back()->with('success', 'Colour scheme deleted.');
     }
 
     /**
@@ -235,7 +306,7 @@ class PageAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
-        $urlLikeRule = function (string $attribute, mixed $value, \Closure $fail): void {
+        $urlLikeRule = function (string $attribute, mixed $value, Closure $fail): void {
             if ($value !== null && $value !== '' && ! preg_match('#^(https?://|/|\#|mailto:|tel:)#i', $value)) {
                 $fail('The :attribute must start with http://, https://, /, # or mailto:.');
             }
@@ -635,7 +706,7 @@ class PageAdminController extends Controller
         $page = $this->pageOf($clubSlug, $id);
 
         return response()->json([
-            'revisions' => $page->revisions()->with('user:id,name')->latest('id')->limit(PagePublisher::MAX_REVISIONS)->get()->map(fn (PageRevision $revision) => [
+            'revisions' => $page->revisions()->with('user:id,name')->latest('id')->limit(PagePublisher::keepFor($page->club))->get()->map(fn (PageRevision $revision) => [
                 'id' => $revision->id,
                 'created_at' => $revision->created_at?->toIso8601String(),
                 'user' => $revision->user?->name,
@@ -936,6 +1007,8 @@ class PageAdminController extends Controller
             'footer_show_nav' => false,
             'footer_show_custom_columns' => true,
             'footer_link_columns' => [],
+            'revisions_keep' => PagePublisher::DEFAULT_KEEP,
+            'revisions_max_age_days' => PagePublisher::DEFAULT_MAX_AGE_DAYS,
         ];
 
         return array_merge($defaults, $club->settings ?? [], [

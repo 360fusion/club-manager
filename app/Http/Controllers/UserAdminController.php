@@ -251,11 +251,7 @@ class UserAdminController extends Controller
     public function sendInvite(Request $request, string $clubSlug, int $userId, MemberInvitationService $invitations): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $user = $club->users()->where('users.id', $userId)->first();
-
-        if (! $user) {
-            return redirect()->back()->with('error', 'User is not a member of this club.');
-        }
+        $user = $club->users()->where('users.id', $userId)->firstOrFail();
 
         try {
             $member = $invitations->memberForUser($club, $user);
@@ -282,7 +278,7 @@ class UserAdminController extends Controller
             'role' => 'required|in:owner,admin,coach,member,treasurer',
         ]);
 
-        $targetRole = $club->users()->where('users.id', $userId)->first()?->pivot->role;
+        $targetRole = $club->users()->where('users.id', $userId)->firstOrFail()->pivot->role;
         abort_unless(ClubAccess::canAssignRole($request->user(), $club, $validated['role'], $targetRole), 403, 'Only a club owner can grant or change the owner role.');
 
         $club->users()->updateExistingPivot($userId, ['role' => $validated['role']]);
@@ -296,6 +292,8 @@ class UserAdminController extends Controller
     public function updateRank(Request $request, string $clubSlug, int $userId): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $club->users()->where('users.id', $userId)->firstOrFail();
 
         $validated = $request->validate([
             'rank' => 'nullable|string|max:100',
@@ -312,6 +310,8 @@ class UserAdminController extends Controller
     public function updateCommitteeRole(Request $request, string $clubSlug, int $userId): RedirectResponse
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        $club->users()->where('users.id', $userId)->firstOrFail();
 
         $validated = $request->validate([
             'committee_role' => 'nullable|in:chair,secretary,member',
@@ -351,7 +351,7 @@ class UserAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $this->guardOwner($club, $userId);
-        $user = User::findOrFail($userId);
+        $user = $club->users()->where('users.id', $userId)->firstOrFail();
 
         $validated = $request->validate([
             'status' => 'required|in:active,inactive,past,pending,deleted',
@@ -391,7 +391,7 @@ class UserAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $this->guardOwner($club, $userId);
-        $user = User::findOrFail($userId);
+        $user = $club->users()->where('users.id', $userId)->firstOrFail();
 
         // Soft hide member by setting pivot status to 'deleted'
         $club->users()->updateExistingPivot($userId, ['status' => 'deleted']);

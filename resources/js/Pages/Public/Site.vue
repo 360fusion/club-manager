@@ -25,7 +25,7 @@ const props = defineProps({
 });
 
 const currentThemeKey = computed(() => props.previewTheme || props.club?.website_theme || DEFAULT_THEME_KEY);
-const theme = computed(() => withSiteStyle(themeClasses(currentThemeKey.value), props.site));
+const theme = computed(() => withSiteStyle(themeClasses(currentThemeKey.value, props.site.custom_color_schemes), props.site));
 
 const pageTitle = computed(() => `${props.page.meta_title || props.page.title} ${props.site.title_suffix || '- ' + props.club.name}`);
 
@@ -45,7 +45,7 @@ const getSiteUrl = (urlPath) => {
     <Head :title="pageTitle" />
 
     <div :class="['min-h-screen transition-colors duration-300', theme.wrapper]" :style="theme.cssVars">
-        <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-blue-600 focus:text-white focus:font-bold focus:text-sm focus:shadow-lg">
+        <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-[var(--cm-accent-deep)] focus:text-white focus:font-bold focus:text-sm focus:shadow-lg">
             Skip to main content
         </a>
 

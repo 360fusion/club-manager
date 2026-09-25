@@ -13,3 +13,38 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-signature: 'Dancing Script', cursive;
 }
+
+/* Self-hosted fonts for the "Traditional Lodge" website theme (latin subset, no visitor data goes to a font service).
+   Playfair Display and Inter are licensed under the SIL Open Font License 1.1 (https://openfontlicense.org). */
+@font-face {
+    font-family: 'Playfair Display';
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    src: url('/fonts/playfair-display-latin.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Playfair Display';
+    font-style: italic;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('/fonts/playfair-display-latin-italic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 300 700;
+    font-display: swap;
+    src: url('/fonts/inter-latin.woff2') format('woff2');
+}
+
+/* Slow zoom on the visible slide of a website slideshow (only applied when the visitor has not asked for reduced motion). */
+@keyframes cm-zoom-a { from { transform: scale(1); } to { transform: scale(1.08); } }
+@keyframes cm-zoom-b { from { transform: scale(1.05) translateX(-1%); } to { transform: scale(1) translateX(1%); } }
+@keyframes cm-zoom-c { from { transform: scale(1); } to { transform: scale(1.06) translateY(-1%); } }
+
+.cm-zoom-a { animation: cm-zoom-a 9s ease-out forwards; }
+.cm-zoom-b { animation: cm-zoom-b 9s ease-out forwards; }
+.cm-zoom-c { animation: cm-zoom-c 9s ease-out forwards; }

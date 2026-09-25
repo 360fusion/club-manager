@@ -53,7 +53,7 @@ const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (prop
                         :alt="club.name"
                         class="w-10 h-10 rounded-xl object-cover shadow-lg group-hover:scale-105 transition-transform"
                     />
-                    <div v-else class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                    <div v-else class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[var(--cm-accent)] to-[var(--cm-accent-deep)] flex items-center justify-center font-bold text-white shadow-lg shadow-[var(--cm-accent)]/20 group-hover:scale-105 transition-transform">
                         🏆
                     </div>
                 </template>

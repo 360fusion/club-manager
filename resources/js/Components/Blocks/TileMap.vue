@@ -39,7 +39,7 @@ onBeforeUnmount(() => observer?.disconnect());
 </script>
 
 <template>
-    <div ref="box" :class="['relative w-full overflow-hidden border shadow-lg bg-slate-200', radius]" :style="{ height: `${height}px` }" role="img" :aria-label="label">
+    <div ref="box" :class="['relative w-full overflow-hidden border shadow-lg bg-neutral-200', radius]" :style="{ height: `${height}px` }" role="img" :aria-label="label">
         <img
             v-for="tile in view.tiles"
             :key="tile.key"
@@ -58,8 +58,8 @@ onBeforeUnmount(() => observer?.disconnect());
         </svg>
 
         <div v-if="controls" class="absolute top-2 right-2 flex flex-col gap-1">
-            <button type="button" class="w-8 h-8 rounded-lg bg-white/95 text-slate-800 font-bold shadow cursor-pointer hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Zoom in" :disabled="zoom >= current.maxZoom" @click="change(1)">+</button>
-            <button type="button" class="w-8 h-8 rounded-lg bg-white/95 text-slate-800 font-bold shadow cursor-pointer hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Zoom out" :disabled="zoom <= 3" @click="change(-1)">−</button>
+            <button type="button" class="w-8 h-8 rounded-lg bg-white/95 text-neutral-800 font-bold shadow cursor-pointer hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Zoom in" :disabled="zoom >= current.maxZoom" @click="change(1)">+</button>
+            <button type="button" class="w-8 h-8 rounded-lg bg-white/95 text-neutral-800 font-bold shadow cursor-pointer hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed" aria-label="Zoom out" :disabled="zoom <= 3" @click="change(-1)">−</button>
         </div>
 
         <div v-if="controls && allowSwitch" class="absolute top-2 left-2 inline-flex rounded-lg overflow-hidden shadow text-[11px] font-bold" role="group" aria-label="Map view">
@@ -68,11 +68,11 @@ onBeforeUnmount(() => observer?.disconnect());
                 :key="key"
                 type="button"
                 :aria-pressed="(key === 'street') === (style === 'street')"
-                :class="['px-2.5 py-1.5 cursor-pointer', (key === 'street') === (style === 'street') ? 'bg-slate-900 text-white' : 'bg-white/95 text-slate-800 hover:bg-white']"
+                :class="['px-2.5 py-1.5 cursor-pointer', (key === 'street') === (style === 'street') ? 'bg-neutral-900 text-white' : 'bg-white/95 text-neutral-800 hover:bg-white']"
                 @click="choose(key === 'street' ? 'street' : (style === 'hybrid' ? 'hybrid' : 'satellite'))"
             >{{ key === 'street' ? 'Map' : 'Satellite' }}</button>
         </div>
 
-        <a :href="current.creditUrl" target="_blank" rel="noopener" class="absolute bottom-0 right-0 max-w-full truncate px-1.5 py-0.5 text-[10px] bg-white/85 text-slate-700 hover:underline">{{ current.credit }}</a>
+        <a :href="current.creditUrl" target="_blank" rel="noopener" class="absolute bottom-0 right-0 max-w-full truncate px-1.5 py-0.5 text-[10px] bg-white/85 text-neutral-700 hover:underline">{{ current.credit }}</a>
     </div>
 </template>

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Club;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 /**
@@ -40,16 +41,24 @@ class ClubDomain
     }
 
     /**
-     * The DNS record a lodge needs to add, in plain words.
+     * What a lodge needs to set up at its DNS provider: the host a CNAME record points to, and that host's IPv4
+     * addresses for a bare domain (which most providers only allow an A record on). The addresses are looked up
+     * once an hour and left empty when they cannot be found.
      *
-     * @return array{host: string, type: string, target: string}
+     * @return array{type: string, target: string, ips: list<string>}
      */
     public static function instructions(): array
     {
+        $target = (string) config('services.club_domain.target', 'manager.360fusionhosting.co.uk');
+
         return [
-            'host' => '@ or www (whichever your domain uses)',
             'type' => 'CNAME',
-            'target' => (string) config('services.club_domain.target', 'manager.360fusionhosting.co.uk'),
+            'target' => $target,
+            'ips' => app()->runningUnitTests() ? [] : Cache::remember('club_domain.target_ips.'.$target, 3600, function () use ($target) {
+                $records = @dns_get_record($target, DNS_A);
+
+                return is_array($records) ? array_values(array_unique(array_filter(array_column($records, 'ip')))) : [];
+            }),
         ];
     }
 

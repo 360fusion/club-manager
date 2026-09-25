@@ -52,6 +52,7 @@ defineEmits(['media']);
                     <option value="bold">Bold theme banner</option>
                     <option value="soft">Soft card</option>
                     <option value="image">Photo background</option>
+                    <option value="panel">Panel with a side photo</option>
                 </select>
             </div>
             <div>
@@ -76,6 +77,41 @@ defineEmits(['media']);
                     <option value="medium">Medium</option>
                     <option value="strong">Strong</option>
                 </select>
+            </div>
+        </div>
+
+        <div v-if="block.style === 'panel'" :class="[CARD, 'space-y-3']">
+            <div class="flex items-center justify-between">
+                <label :for="`block-${index}-cta-side-image`" :class="LABEL">Side photo <span class="font-normal text-slate-400">(optional)</span></label>
+                <div class="flex items-center gap-1.5">
+                    <button v-if="block.side_image_url" type="button" :class="MINI_DANGER" @click="block.side_image_url = ''">🗑️ Clear</button>
+                    <button type="button" :class="MINI_BUTTON" @click="$emit('media', 'cta_side_image')">📁 Media Library</button>
+                </div>
+            </div>
+            <input :id="`block-${index}-cta-side-image`" v-model="block.side_image_url" type="text" placeholder="https://example.com/photo.jpg" :class="[SMALL_INPUT, 'font-mono text-[11px]']" />
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                    <label :for="`block-${index}-cta-shape`" :class="LABEL">Photo shape</label>
+                    <select :id="`block-${index}-cta-shape`" v-model="block.image_shape" :class="SELECT">
+                        <option value="circle">Round</option>
+                        <option value="rounded">Rounded square</option>
+                        <option value="square">Square</option>
+                    </select>
+                </div>
+                <div>
+                    <label :for="`block-${index}-cta-side`" :class="LABEL">Photo position</label>
+                    <select :id="`block-${index}-cta-side`" v-model="block.image_side" :class="SELECT">
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
+                    </select>
+                </div>
+                <div>
+                    <label :for="`block-${index}-cta-text-style`" :class="LABEL">Text style</label>
+                    <select :id="`block-${index}-cta-text-style`" v-model="block.text_style" :class="SELECT">
+                        <option value="normal">Normal</option>
+                        <option value="italic">Italic</option>
+                    </select>
+                </div>
             </div>
         </div>
 

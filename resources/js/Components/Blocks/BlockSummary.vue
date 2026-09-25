@@ -26,6 +26,7 @@ const videoThumb = computed(() => props.block.cover_url || (video.value ? youtub
 const located = computed(() => hasCoordinates(props.block));
 const items = computed(() => (Array.isArray(props.block.items) ? props.block.items : []));
 const filled = (list, key) => list.filter((item) => item[key]);
+const slides = computed(() => (Array.isArray(props.block.slides) ? props.block.slides : []));
 const galleryImages = computed(() => filled(items.value, 'url'));
 
 const noticeClass = computed(() => ({
@@ -162,6 +163,48 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
             </div>
         </div>
 
+        <!-- Icon cards -->
+        <div v-else-if="type === 'feature_cards'" class="space-y-1">
+            <p v-if="block.eyebrow" :class="[MUTED, 'uppercase tracking-wider font-bold']">{{ block.eyebrow }}</p>
+            <p :class="HEADING">{{ block.heading || 'Icon cards' }}</p>
+            <p :class="MUTED">{{ items.length }} card{{ items.length === 1 ? '' : 's' }}, {{ block.columns || 3 }} columns</p>
+            <p v-if="items.length" :class="[BODY, 'line-clamp-2']">{{ items.map((item) => item.title).filter(Boolean).join(' · ') }}</p>
+        </div>
+
+        <!-- Slideshow -->
+        <div v-else-if="type === 'slideshow'" class="space-y-1.5">
+            <div class="flex items-center gap-2">
+                <img v-for="slide in filled(slides, 'image_url').slice(0, 4)" :key="slide.id || slide.image_url" :src="slide.image_url" alt="" loading="lazy" :class="[THUMB, 'w-20 h-14']" />
+                <span v-if="filled(slides, 'image_url').length > 4" :class="MUTED">+{{ filled(slides, 'image_url').length - 4 }} more</span>
+                <span v-if="!filled(slides, 'image_url').length" :class="[MUTED, EMPTY]">No photos yet.</span>
+            </div>
+            <p v-if="block.heading" :class="HEADING">{{ block.heading }}</p>
+            <p :class="MUTED">{{ block.autoplay === false ? 'Manual' : `Changes every ${block.interval || 5}s` }}{{ block.full_width ? ', full width' : '' }}</p>
+        </div>
+
+        <!-- Stats -->
+        <div v-else-if="type === 'stats'" class="space-y-1">
+            <p v-if="block.heading" :class="HEADING">{{ block.heading }}</p>
+            <div class="flex flex-wrap gap-x-5 gap-y-1">
+                <span v-for="item in items" :key="item.id" :class="BODY"><strong class="text-slate-900 dark:text-white">{{ item.number }}{{ item.suffix }}</strong> {{ item.label }}</span>
+                <span v-if="!items.length" :class="[MUTED, EMPTY]">No figures yet.</span>
+            </div>
+        </div>
+
+        <!-- Motto -->
+        <div v-else-if="type === 'quote_motto'" class="space-y-0.5">
+            <p :class="HEADING">{{ block.heading || 'Motto' }}</p>
+            <p v-if="block.text" :class="[BODY, 'line-clamp-2']">{{ block.text }}</p>
+            <p v-if="block.tagline" :class="[BODY, 'italic']">{{ block.tagline }}</p>
+        </div>
+
+        <!-- Section heading -->
+        <div v-else-if="type === 'section_heading'" class="space-y-0.5">
+            <p v-if="block.eyebrow" :class="[MUTED, 'uppercase tracking-wider font-bold']">{{ block.eyebrow }}</p>
+            <p :class="HEADING">{{ block.title || 'Section heading' }}</p>
+            <p v-if="block.intro" :class="[BODY, 'line-clamp-2']">{{ block.intro }}</p>
+        </div>
+
         <!-- Events calendar -->
         <div v-else-if="type === 'calendar'" class="space-y-0.5">
             <p :class="HEADING">🗓️ {{ block.heading || 'Events calendar' }}</p>
@@ -172,7 +215,7 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
         <div v-else-if="type === 'hero'" class="space-y-0.5">
             <p :class="HEADING">{{ block.title || 'Hero banner' }}</p>
             <p v-if="block.subtitle" :class="[BODY, 'line-clamp-2']">{{ block.subtitle }}</p>
-            <p v-if="block.cta_text" :class="MUTED">Button: {{ block.cta_text }}</p>
+            <p v-if="block.cta_text" :class="MUTED">Button: {{ block.cta_text }}<span v-if="block.cta2_text"> · {{ block.cta2_text }}</span></p>
         </div>
 
         <!-- Dynamic feeds -->

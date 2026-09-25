@@ -969,7 +969,7 @@ class MediaAdminController extends Controller
 
         $versionDisk->put($versionPath, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
 
-        return MediaVersion::create([
+        $version = MediaVersion::create([
             'media_id' => $media->id,
             'club_id' => $media->model_id,
             'disk' => 'local',
@@ -980,6 +980,11 @@ class MediaAdminController extends Controller
             'note' => $note,
             'created_by' => $userId,
         ]);
+
+        // Only the newest few versions are kept, so repeated edits cannot fill the disk.
+        $media->pruneVersions();
+
+        return $version;
     }
 
     /**

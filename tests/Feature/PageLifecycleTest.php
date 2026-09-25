@@ -238,7 +238,7 @@ class PageLifecycleTest extends TestCase
         $this->assertSame('<p>Two</p>', $page->fresh()->blocks[0]['content']);
     }
 
-    public function test_only_the_newest_thirty_versions_are_kept(): void
+    public function test_only_the_newest_versions_are_kept(): void
     {
         $page = $this->page();
         $publisher = app(PagePublisher::class);
@@ -249,7 +249,7 @@ class PageLifecycleTest extends TestCase
             $publisher->snapshot($page, $this->admin, 'save');
         }
 
-        $this->assertSame(PagePublisher::MAX_REVISIONS, $page->revisions()->count());
+        $this->assertSame(PagePublisher::DEFAULT_KEEP, $page->revisions()->count());
         $this->assertSame('<p>v35</p>', $page->revisions()->latest('id')->first()->blocks[0]['content']);
         $this->assertFalse($page->revisions()->get()->contains(fn (PageRevision $r) => $r->blocks[0]['content'] === '<p>v1</p>'));
     }
@@ -359,5 +359,63 @@ class PageLifecycleTest extends TestCase
         $this->assertNull($copy->publish_at);
         $this->assertNull($copy->preview_token);
         $this->assertFalse($copy->hasDraft());
+    }
+
+    public function test_a_lodge_can_choose_how_many_versions_are_kept(): void
+    {
+        $page = $this->page();
+        $page->club->update(['settings' => ['revisions_keep' => 6]]);
+        $publisher = app(PagePublisher::class);
+
+        foreach (range(1, 10) as $n) {
+            $page->blocks = [['id' => 'b', 'type' => 'text', 'content' => "<p>v{$n}</p>"]];
+            $page->save();
+            $publisher->snapshot($page->fresh(), $this->admin, 'save');
+        }
+
+        $this->assertSame(6, $page->revisions()->count());
+    }
+
+    public function test_the_prune_command_applies_each_lodges_limits_and_keeps_the_newest_version(): void
+    {
+        $page = $this->page();
+        $club = $page->club;
+        $club->update(['settings' => ['revisions_keep' => 5, 'revisions_max_age_days' => 30]]);
+
+        foreach (range(1, 8) as $n) {
+            PageRevision::create(['page_id' => $page->id, 'club_id' => $club->id, 'title' => 'T', 'blocks' => [['id' => 'b', 'type' => 'text', 'content' => "<p>v{$n}</p>"]], 'source' => 'save']);
+        }
+
+        // Versions 1-8 exist; make the newest four (5-8) old, so the age limit would remove them all if it could.
+        PageRevision::where('page_id', $page->id)->update(['created_at' => now()->subDays(90)]);
+
+        $this->artisan('app:prune-page-revisions')->assertSuccessful();
+
+        $left = $page->revisions()->orderBy('id')->get();
+        $this->assertCount(1, $left, 'everything is over the age limit, but the newest version is always kept');
+        $this->assertSame('<p>v8</p>', $left->first()->blocks[0]['content']);
+
+        // Never expiring by age: only the count applies.
+        $club->update(['settings' => ['revisions_keep' => 5, 'revisions_max_age_days' => 0]]);
+        foreach (range(1, 7) as $n) {
+            PageRevision::create(['page_id' => $page->id, 'club_id' => $club->id, 'title' => 'T', 'blocks' => [['id' => 'b', 'type' => 'text', 'content' => "<p>w{$n}</p>"]], 'source' => 'save', 'created_at' => now()->subDays(400)]);
+        }
+
+        $this->artisan('app:prune-page-revisions')->assertSuccessful();
+        $this->assertSame(5, $page->revisions()->count());
+    }
+
+    public function test_the_history_settings_are_validated_and_saved(): void
+    {
+        $page = $this->page();
+        $url = route('admin.pages.settings.update', ['clubSlug' => $page->club->slug]);
+
+        $this->actingAs($this->admin)->post($url, ['revisions_keep' => 2])->assertSessionHasErrors('revisions_keep');
+        $this->actingAs($this->admin)->post($url, ['revisions_keep' => 51])->assertSessionHasErrors('revisions_keep');
+        $this->actingAs($this->admin)->post($url, ['revisions_max_age_days' => -1])->assertSessionHasErrors('revisions_max_age_days');
+
+        $this->actingAs($this->admin)->post($url, ['revisions_keep' => 10, 'revisions_max_age_days' => 90])->assertSessionHasNoErrors();
+        $this->assertSame(10, $page->club->fresh()->settings['revisions_keep']);
+        $this->assertSame(90, $page->club->fresh()->settings['revisions_max_age_days']);
     }
 }

@@ -57,6 +57,28 @@ Lodges see "Connect with Stripe" on their card option once these are done. Until
 - [ ] Check which lodge countries Stripe Connect supports (South Africa and India lodges probably keep their own keys), and that each lodge's currency matches its Stripe account.
 - [ ] Not built yet, decide later: hold-then-pay-out mode (we hold the money and pay lodges after the event), lodge payout statements, and ledger lines for the commission. Hold mode needs your accountant's and Stripe's agreement first.
 
+## Custom domains for lodge websites (serving and SSL): the DNS check is built, serving the site is not
+
+Today a lodge can save a domain, is shown the DNS record to add and can press Check Now (`App\Support\ClubDomain`, guide in `resources/js/Components/DomainSetupGuide.vue`). "Active" only means the DNS record was found: `IdentifyTenantByDomain` is not registered, so the site is **not** served on the domain, and no certificate is issued. Decision: **Caddy with on-demand TLS on the Ubuntu droplet** (DigitalOcean, DNS on Cloudflare). Cloudflare for SaaS is the alternative if this grows to hundreds of domains or needs a CDN.
+
+Still to build in the app:
+
+- [ ] Endpoint `GET /internal/domain-allowed?domain=…` that returns 200 only for a domain that is `Active` (verified), and is reachable only from the server itself (Caddy calls it before issuing a certificate, so nobody can make the server request certificates for arbitrary domains).
+- [ ] Register `IdentifyTenantByDomain` and use its result: on a verified custom domain, `/` and `/{page}` show that lodge's site, plus news articles (`/news/{article}`), events, `sitemap.xml`, `robots.txt` and the calendar feed. A Pending domain must never serve the site.
+- [ ] Redirect `/site/{slug}` (and its pages) to the custom domain once it is Active, so there is one canonical address; canonical URLs and the sitemap use it too.
+- [ ] Emails and payment return links use the lodge's custom domain where it makes sense (today they use `APP_URL`); Stripe and PayPal webhooks can stay on the main address.
+- [ ] Set `services.club_domain.target` in `config/services.php` to the real target hostname (the code currently falls back to `manager.360fusionhosting.co.uk`).
+- [ ] Tests: pending domain not served and not approved for a certificate; active domain serves its own lodge only (never another lodge's pages); the allowed-domain endpoint refuses outside callers; redirects.
+- [ ] Update the in-app guide's wording once serving works (it currently only promises that the DNS record is seen).
+
+Server setup (outside the code):
+
+- [ ] Install Caddy and PHP-FPM on the droplet; open ports 80 and 443 in the DigitalOcean firewall and `ufw`.
+- [ ] Caddyfile: a global `on_demand_tls { ask http://127.0.0.1/internal/domain-allowed }`, then a catch-all `https://` block with `tls { on_demand }`, `root * /var/www/<app>/public`, `php_fastcgi unix//run/php/php8.4-fpm.sock`, `file_server`, `encode zstd gzip`. The main domain gets its own normal site block.
+- [ ] `.env`: `TRUSTED_PROXIES` correct for the setup and `SESSION_SECURE_COOKIE=true`.
+- [ ] Cloudflare DNS: the target hostname lodges point at (`manager.360fusionhosting.co.uk` today) must be **DNS only (grey cloud)**, not proxied. If proxied, lodges' CNAMEs hit Cloudflare (error 1014) and the A-record comparison in the DNS check fails. The main domain itself may stay proxied.
+- [ ] Test end to end with a spare domain: add the CNAME, press Check Now (Active), open the domain over https (certificate issued on first visit), check redirects from `/site/<slug>`, and check a member can log in on that domain (sessions are per domain).
+
 ## Later clean-up
 
 - [ ] Drop the unused `event_user` table once the new event pages are verified.

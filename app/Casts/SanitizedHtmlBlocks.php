@@ -25,7 +25,7 @@ class SanitizedHtmlBlocks implements CastsAttributes
     /**
      * Block fields rendered into href/src attributes; only safe URL schemes are kept.
      */
-    private const URL_KEYS = ['url', 'cta_link', 'link', 'href', 'src', 'image_url', 'cta_url', 'cover_url', 'button_url', 'button2_url'];
+    private const URL_KEYS = ['url', 'cta_link', 'link', 'href', 'src', 'image_url', 'cta_url', 'cover_url', 'button_url', 'button2_url', 'bg_image', 'side_image_url', 'cta2_link'];
 
     public function get(Model $model, string $key, mixed $value, array $attributes): ?array
     {

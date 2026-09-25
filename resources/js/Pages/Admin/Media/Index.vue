@@ -1159,6 +1159,10 @@ const isImage = (mimeOrUrl) => {
             </div>
           </div>
 
+          <p v-if="activeFolder === 'trash'" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-semibold text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200">
+            Files in the Trash bin are deleted for good 30 days after they were moved here. Restore anything you want to keep before then.
+          </p>
+
           <!-- Bulk Actions Floating Control Bar -->
           <div v-if="selectedMediaIds.length > 0" class="p-4 bg-slate-900 dark:bg-slate-700 text-white rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
             <div class="flex items-center gap-3">

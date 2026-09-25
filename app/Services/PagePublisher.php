@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Club;
 use App\Models\Page;
 use App\Models\PageRevision;
 use App\Models\User;
@@ -15,7 +16,27 @@ use App\Models\User;
  */
 class PagePublisher
 {
-    public const MAX_REVISIONS = 30;
+    /**
+     * How many earlier versions of a page are kept unless the lodge chooses otherwise (Website & SEO Settings, Page
+     * history), the range it may choose from, and how old a version may get before it is deleted (0 = never).
+     */
+    public const DEFAULT_KEEP = 15;
+
+    public const MIN_KEEP = 5;
+
+    public const MAX_KEEP = 50;
+
+    public const DEFAULT_MAX_AGE_DAYS = 180;
+
+    public static function keepFor(Club $club): int
+    {
+        return max(self::MIN_KEEP, min(self::MAX_KEEP, (int) ($club->settings['revisions_keep'] ?? self::DEFAULT_KEEP)));
+    }
+
+    public static function maxAgeDaysFor(Club $club): int
+    {
+        return max(0, (int) ($club->settings['revisions_max_age_days'] ?? self::DEFAULT_MAX_AGE_DAYS));
+    }
 
     /**
      * @return array{title: string, meta_title: string|null, meta_description: string|null, share_image: string|null, blocks: array<int, mixed>}
@@ -150,7 +171,7 @@ class PagePublisher
             'source' => $source,
         ]);
 
-        $page->revisions()->orderByDesc('id')->skip(self::MAX_REVISIONS)->take(PHP_INT_MAX)->pluck('id')
+        $page->revisions()->orderByDesc('id')->skip(self::keepFor($page->club))->take(PHP_INT_MAX)->pluck('id')
             ->whenNotEmpty(fn ($ids) => PageRevision::whereIn('id', $ids)->delete());
 
         return $revision;

@@ -18,10 +18,18 @@ import FaqEditor from '@/Components/Blocks/Editors/FaqEditor.vue';
 import MapEditor from '@/Components/Blocks/Editors/MapEditor.vue';
 import DownloadsEditor from '@/Components/Blocks/Editors/DownloadsEditor.vue';
 import CalendarEditor from '@/Components/Blocks/Editors/CalendarEditor.vue';
+import HeroEditor from '@/Components/Blocks/Editors/HeroEditor.vue';
+import FeatureCardsEditor from '@/Components/Blocks/Editors/FeatureCardsEditor.vue';
+import SlideshowEditor from '@/Components/Blocks/Editors/SlideshowEditor.vue';
+import StatsEditor from '@/Components/Blocks/Editors/StatsEditor.vue';
+import QuoteMottoEditor from '@/Components/Blocks/Editors/QuoteMottoEditor.vue';
+import SectionHeadingEditor from '@/Components/Blocks/Editors/SectionHeadingEditor.vue';
+import SectionStyleEditor from '@/Components/Blocks/Editors/SectionStyleEditor.vue';
+import DomainSetupGuide from '@/Components/DomainSetupGuide.vue';
 import PublicHeader from '@/Components/Site/PublicHeader.vue';
 import PublicFooter from '@/Components/Site/PublicFooter.vue';
 import AnnouncementBar from '@/Components/Site/AnnouncementBar.vue';
-import { SITE_LAYOUTS, SITE_COLOR_SCHEMES, LEGACY_THEME, DEFAULT_THEME_KEY, FONT_PAIRINGS, CORNER_STYLES, themeClasses, withSiteStyle } from '@/Support/siteThemes';
+import { SITE_LAYOUTS, SITE_COLOR_SCHEMES, LEGACY_THEME, DEFAULT_THEME_KEY, FONT_PAIRINGS, CORNER_STYLES, themeClasses, withSiteStyle, paletteFromBrand, paletteForScheme, asColourScheme, contrastRatio, isHexColour } from '@/Support/siteThemes';
 
 const props = defineProps({
     club: {
@@ -105,6 +113,8 @@ const settingsForm = useForm({
     cookie_banner_link_label: props.websiteSettings?.cookie_banner_link_label || '',
     cookie_banner_link_url: props.websiteSettings?.cookie_banner_link_url || '',
     not_found_page_id: props.websiteSettings?.not_found_page_id || '',
+    revisions_keep: props.websiteSettings?.revisions_keep ?? 15,
+    revisions_max_age_days: props.websiteSettings?.revisions_max_age_days ?? 180,
 });
 
 const submitWebsiteSettings = () => {
@@ -217,10 +227,13 @@ const savedSiteStyle = computed(() => ({
     font_pairing: props.club?.settings?.font_pairing || 'theme',
     corner_style: props.club?.settings?.corner_style || 'theme',
 }));
-const liveThemeClasses = computed(() => withSiteStyle(themeClasses(currentThemeKey.value), savedSiteStyle.value));
+const liveThemeClasses = computed(() => withSiteStyle(themeClasses(currentThemeKey.value, customColourSchemes.value), savedSiteStyle.value));
 
 // The social links and the custom link columns share a row when both are showing, so each is stacked inside its half.
 const currentYear = new Date().getFullYear();
+
+// The example shown in the custom domain box: built from this club's own address name, never another club's.
+const domainExample = computed(() => `www.${props.club?.slug || 'yourclub'}.org.uk`);
 const copyrightPreview = computed(() => {
     const holder = (headerFooterForm.footer_copyright_holder || props.club.name || '').trim().replace(/\.+$/, '');
     const text = headerFooterForm.footer_copyright_text.trim();
@@ -293,6 +306,14 @@ const onMediaSelect = (mediaItem) => {
         targetObj.cover_url = mediaItem.url;
     } else if (type === 'cta_image' && targetObj) {
         targetObj.image_url = mediaItem.url;
+    } else if (type === 'cta_side_image' && targetObj) {
+        targetObj.side_image_url = mediaItem.url;
+    } else if (type === 'slideshow_image' && targetObj) {
+        targetObj.image_url = mediaItem.url;
+    } else if (type === 'hero_image' && targetObj) {
+        targetObj.image_url = mediaItem.url;
+    } else if (type === 'section_image' && targetObj) {
+        targetObj.section = { ...(targetObj.section || {}), bg: 'image', bg_image: mediaItem.url };
     } else if (type === 'page_share_image') {
         form.share_image = mediaItem.url;
     } else if (type === 'site_share_image') {
@@ -320,7 +341,11 @@ const setYoutubeTime = (block, field, event) => {
 };
 
 const LAYOUTS = SITE_LAYOUTS;
-const COLOR_SCHEMES = SITE_COLOR_SCHEMES;
+const PRESET_COLOR_SCHEMES = SITE_COLOR_SCHEMES;
+// The lodge's own named colour schemes (Colour Scheme step), shown after the built-in ones.
+const customColourSchemes = computed(() => props.club?.settings?.custom_color_schemes || []);
+const ownColourSchemes = computed(() => customColourSchemes.value.map(asColourScheme).filter(Boolean));
+const COLOR_SCHEMES = computed(() => [...PRESET_COLOR_SCHEMES, ...ownColourSchemes.value]);
 const LEGACY = LEGACY_THEME;
 
 const currentThemeKey = computed(() => props.club?.settings?.website_theme || DEFAULT_THEME_KEY);
@@ -333,7 +358,7 @@ const parseKey = (key) => {
     const [layoutId, colorSchemeId] = String(key || '').split(':');
     return {
         layoutId: LAYOUTS.some(l => l.id === layoutId) ? layoutId : DEFAULT_THEME_KEY.split(':')[0],
-        colorSchemeId: COLOR_SCHEMES.some(c => c.id === colorSchemeId) ? colorSchemeId : DEFAULT_THEME_KEY.split(':')[1],
+        colorSchemeId: COLOR_SCHEMES.value.some(c => c.id === colorSchemeId) ? colorSchemeId : DEFAULT_THEME_KEY.split(':')[1],
     };
 };
 
@@ -349,17 +374,85 @@ const themeForm = useForm({
     corner_style: props.club?.settings?.corner_style || 'theme',
 });
 
+// ---- the lodge's own colour schemes: a name and two colours, saved beside the built-in ones --------------------
+const selectedScheme = computed(() => COLOR_SCHEMES.value.find((c) => c.id === selectedColorSchemeId.value) || COLOR_SCHEMES.value[0]);
+const selectedSchemePalette = computed(() => paletteForScheme(selectedScheme.value));
+// Keep in step with App\Support\SiteThemes::MAX_CUSTOM_SCHEMES.
+const MAX_CUSTOM_SCHEMES = 2;
+const canCreateScheme = computed(() => customColourSchemes.value.length < MAX_CUSTOM_SCHEMES);
+const schemeEditorOpen = ref(false);
+const schemeError = ref('');
+const schemeForm = useForm({ id: '', name: '', primary: '', accent: '' });
+
+const newSchemeId = () => `custom-${Math.random().toString(36).slice(2, 10).padEnd(8, '0')}`;
+const openNewScheme = () => {
+    schemeError.value = '';
+    schemeForm.clearErrors();
+    schemeForm.id = newSchemeId();
+    schemeForm.name = '';
+    schemeForm.primary = selectedSchemePalette.value.primary;
+    schemeForm.accent = selectedSchemePalette.value.accent;
+    schemeEditorOpen.value = true;
+};
+const editScheme = (scheme) => {
+    schemeError.value = '';
+    schemeForm.clearErrors();
+    schemeForm.id = scheme.id;
+    schemeForm.name = scheme.name;
+    schemeForm.primary = scheme.vars.primary;
+    schemeForm.accent = scheme.vars.accent;
+    selectedColorSchemeId.value = scheme.id;
+    schemeEditorOpen.value = true;
+};
+const closeSchemeEditor = () => { schemeEditorOpen.value = false; schemeForm.clearErrors(); };
+const saveScheme = () => {
+    if (!schemeForm.name.trim()) {
+        schemeForm.setError('name', 'Give the colour scheme a name.');
+        document.getElementById('scheme-name')?.focus();
+        return;
+    }
+
+    schemeForm.clearErrors();
+    schemeForm.post(route('admin.pages.colour_schemes.save', { clubSlug: props.club.slug }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            selectedColorSchemeId.value = schemeForm.id;
+            schemeEditorOpen.value = false;
+        },
+    });
+};
+const deleteScheme = (scheme) => {
+    if (!window.confirm(`Delete the colour scheme "${scheme.name}"?`)) return;
+    schemeError.value = '';
+    router.delete(route('admin.pages.colour_schemes.delete', { clubSlug: props.club.slug, schemeId: scheme.id }), {
+        preserveScroll: true,
+        onSuccess: () => { if (selectedColorSchemeId.value === scheme.id) selectedColorSchemeId.value = PRESET_COLOR_SCHEMES[0].id; },
+        onError: (errors) => { schemeError.value = errors.scheme || 'That colour scheme could not be deleted.'; },
+    });
+};
+// While the editor is open the builder preview shows the colours being worked on.
+const draftColours = computed(() => (schemeEditorOpen.value && isHexColour(schemeForm.primary) && isHexColour(schemeForm.accent)
+    ? { primary: schemeForm.primary, accent: schemeForm.accent }
+    : null));
+const draftPalette = computed(() => paletteFromBrand(draftColours.value));
+const draftColoursClose = computed(() => !!draftColours.value && contrastRatio(draftColours.value.primary, draftColours.value.accent) < 2);
+const usedByLiveSite = (scheme) => currentThemeKey.value.endsWith(`:${scheme.id}`);
+const SCHEME_SHADES = [
+    ['primary', 'Dark sections'], ['primarySoft', 'Dark, softer'], ['night', 'Dark mode'], ['accent', 'Accent'],
+    ['accentBright', 'Accent on dark'], ['accentDeep', 'Accent text'], ['cream', 'Light band'], ['ink', 'Headings'], ['muted', 'Body text'],
+];
+
 const previewThemeInBuilder = (layoutId, colorSchemeId = null) => {
     selectedLayoutId.value = layoutId;
     if (layoutId !== LEGACY.id) {
-        selectedColorSchemeId.value = colorSchemeId || selectedColorSchemeId.value || COLOR_SCHEMES[0].id;
+        selectedColorSchemeId.value = colorSchemeId || selectedColorSchemeId.value || COLOR_SCHEMES.value[0].id;
     }
     const targetPageId = props.pages.length > 0 ? props.pages[0].id : 'new';
     requestNavigation(targetPageId, 'preview');
 };
 
 const effectivePreviewThemeKey = computed(() => keyFor(selectedLayoutId.value, selectedColorSchemeId.value));
-const previewThemeClasses = computed(() => withSiteStyle(themeClasses(effectivePreviewThemeKey.value), { font_pairing: themeForm.font_pairing, corner_style: themeForm.corner_style }));
+const previewThemeClasses = computed(() => withSiteStyle(themeClasses(effectivePreviewThemeKey.value, customColourSchemes.value), { font_pairing: themeForm.font_pairing, corner_style: themeForm.corner_style, theme_colors: draftColours.value }));
 
 const applyPreviewTheme = (themeKey = null) => {
     const targetThemeKey = themeKey || effectivePreviewThemeKey.value;
@@ -387,7 +480,7 @@ const confirmApplyTheme = () => {
 
 const styleChanged = computed(() => themeForm.font_pairing !== savedSiteStyle.value.font_pairing || themeForm.corner_style !== savedSiteStyle.value.corner_style);
 
-const colorSchemeName = (id) => COLOR_SCHEMES.find(c => c.id === id)?.name || '';
+const colorSchemeName = (id) => COLOR_SCHEMES.value.find(c => c.id === id)?.name || '';
 const layoutName = (id) => (id === LEGACY.id ? LEGACY.name : LAYOUTS.find(l => l.id === id)?.name || '');
 const themeLabel = (key) => {
     if (key === LEGACY.id) return LEGACY.name;
@@ -719,6 +812,11 @@ const blockTypes = [
     { type: 'donation_campaign', icon: '💰', label: 'Dynamic Donation', desc: 'Fundraising campaign progress bar', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40' },
     { type: 'contact_details', icon: '📇', label: 'Contact Details & Cards', desc: 'Email, meeting times & location cards', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
     { type: 'contact_form', icon: '📝', label: 'Interactive Contact Form', desc: 'Form with email notification & options', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+    { type: 'slideshow', icon: '🎞️', label: 'Slideshow', desc: 'Fading photos, optionally with text and buttons over them', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+    { type: 'section_heading', icon: '🔠', label: 'Section Heading', desc: 'Small label, serif title, divider and intro', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+    { type: 'feature_cards', icon: '🃏', label: 'Icon Cards', desc: 'Grid of icon, title and text cards', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+    { type: 'stats', icon: '🔢', label: 'Stats Row', desc: 'Headline figures like 150+ years', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+    { type: 'quote_motto', icon: '❝', label: 'Motto', desc: 'Heading, divider, text and italic tagline', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
 ];
 
 const blockColumns = computed(() => [
@@ -730,6 +828,15 @@ const blockColumns = computed(() => [
             { type: 'faq', icon: '❓', label: 'FAQ', desc: 'Expandable questions and answers', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
             { type: 'downloads', icon: '📥', label: 'Downloads', desc: 'List of documents and forms, can be members only', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
             { type: 'button', icon: '🔗', label: 'Button Link', desc: 'Call to action button link', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+        ],
+    },
+    {
+        title: 'Sections & Cards',
+        items: [
+            { type: 'section_heading', icon: '🔠', label: 'Section Heading', desc: 'Small label, serif title, divider and intro', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+            { type: 'feature_cards', icon: '🃏', label: 'Icon Cards', desc: 'Grid of icon, title and text cards', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+            { type: 'stats', icon: '🔢', label: 'Stats Row', desc: 'Headline figures like 150+ years', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+            { type: 'quote_motto', icon: '❝', label: 'Motto', desc: 'Heading, divider, text and italic tagline', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/40' },
         ],
     },
     {
@@ -746,6 +853,7 @@ const blockColumns = computed(() => [
         items: [
             { type: 'hero', icon: '🚀', label: 'Hero Banner', desc: 'Large title & subtitle header banner', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
             { type: 'cta_banner', icon: '📣', label: 'Call-to-Action Banner', desc: 'Heading, text and buttons on a banner', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+            { type: 'slideshow', icon: '🎞️', label: 'Slideshow', desc: 'Fading photos, optionally with text and buttons over them', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
             { type: 'pricing_cards', icon: '💳', label: 'Membership Dues', desc: 'Shows active membership plans', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
             { type: 'donation_campaign', icon: '💰', label: 'Dynamic Donation', desc: 'Fundraising campaign progress bar', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40' },
         ],
@@ -764,6 +872,12 @@ const blockColumns = computed(() => [
 
 const activeInsertIndex = ref(null);
 const insertMenuPlacement = ref('down');
+// The menu is centred on its button; this nudges it sideways so it never runs off either edge of the window and
+// keeps a wider gap on the right than the left.
+const insertMenuShift = ref(0);
+const INSERT_MENU_WIDTH = 1100;
+const INSERT_MENU_MARGIN_LEFT = 16;
+const INSERT_MENU_MARGIN_RIGHT = 40;
 
 const toggleInsertMenu = (index, event = null) => {
     if (activeInsertIndex.value === index) {
@@ -778,6 +892,11 @@ const toggleInsertMenu = (index, event = null) => {
         const spaceBelow = window.innerHeight - rect.bottom;
         const spaceAbove = rect.top;
 
+        const width = Math.min(INSERT_MENU_WIDTH, window.innerWidth - INSERT_MENU_MARGIN_LEFT - INSERT_MENU_MARGIN_RIGHT);
+        const centredLeft = rect.left + rect.width / 2 - width / 2;
+        const clampedLeft = Math.max(INSERT_MENU_MARGIN_LEFT, Math.min(centredLeft, window.innerWidth - INSERT_MENU_MARGIN_RIGHT - width));
+        insertMenuShift.value = Math.round(clampedLeft - centredLeft);
+
         if (spaceBelow < 300 && spaceAbove > spaceBelow) {
             insertMenuPlacement.value = 'up';
         } else {
@@ -785,6 +904,7 @@ const toggleInsertMenu = (index, event = null) => {
         }
     } else {
         insertMenuPlacement.value = 'down';
+        insertMenuShift.value = 0;
     }
 };
 
@@ -801,6 +921,15 @@ onMounted(() => {
 onUnmounted(() => {
     document.removeEventListener('click', handleDocumentClick);
 });
+
+// "Use this look on every element": copies one element's section style (not its anchor) to the others on the page.
+const applySectionToAll = (source) => {
+    const { anchor: _anchor, ...look } = source.section || {};
+
+    form.blocks.forEach((block) => {
+        if (block !== source && block.type !== 'hero') block.section = { ...look, anchor: block.section?.anchor || '' };
+    });
+};
 
 const addBlock = (type, targetIndex = null) => {
     const id = 'block-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
@@ -852,6 +981,7 @@ const addBlock = (type, targetIndex = null) => {
             button_label: 'Find out more', button_url: `/site/${props.club.slug}/join-us`, button_new_tab: false,
             button2_label: '', button2_url: '', button2_new_tab: false,
             style: 'bold', overlay: 'medium', align: 'center', size: 'normal', image_url: '',
+            side_image_url: '', image_shape: 'circle', image_side: 'left', text_style: 'normal',
         };
     } else if (type === 'faq') {
         newBlock = {
@@ -883,8 +1013,39 @@ const addBlock = (type, targetIndex = null) => {
             title: 'Welcome to ' + props.club.name,
             subtitle: 'Join us for training, events and community.',
             cta_text: 'Explore Membership',
-            cta_link: `/site/${props.club.slug}/join-us`
+            cta_link: `/site/${props.club.slug}/join-us`,
+            cta2_text: '', cta2_link: '', eyebrow: '', hide_eyebrow: false, image_url: '', overlay: 'medium', align: 'auto', height: 'normal',
         };
+    } else if (type === 'slideshow') {
+        newBlock = {
+            id, type: 'slideshow', height: 'normal', effect: 'zoom', interval: 5, overlay: 'medium', align: 'left',
+            autoplay: true, pause_on_hover: true, show_dots: true, show_arrows: true, full_width: false,
+            eyebrow: '', heading: '', text: '', button_label: '', button_url: '', button2_label: '', button2_url: '',
+            slides: [{ id: id + '-p1', image_url: '', alt: '', caption: '' }, { id: id + '-p2', image_url: '', alt: '', caption: '' }],
+        };
+    } else if (type === 'section_heading') {
+        newBlock = { id, type: 'section_heading', eyebrow: 'About us', title: 'A tradition of fellowship', intro: '', align: 'center', show_divider: true };
+    } else if (type === 'feature_cards') {
+        newBlock = {
+            id, type: 'feature_cards', eyebrow: '', heading: 'What we offer', intro: '', columns: 3, card_style: 'soft', icon_style: 'plain',
+            align: 'center', show_divider: true, numbered: false,
+            items: [
+                { id: id + '-c1', icon: 'users', title: 'Brotherhood', text: 'A genuine sense of belonging among men from all walks of life.', link: '', link_label: '' },
+                { id: id + '-c2', icon: 'heart', title: 'Charity', text: 'Active engagement in charitable events and community fundraising.', link: '', link_label: '' },
+                { id: id + '-c3', icon: 'seedling', title: 'Personal growth', text: 'Opportunity to explore your potential and build confidence.', link: '', link_label: '' },
+            ],
+        };
+    } else if (type === 'stats') {
+        newBlock = {
+            id, type: 'stats', heading: '', icon_style: 'circle', count_up: true,
+            items: [
+                { id: id + '-s1', icon: 'landmark', number: '150', suffix: '+', label: 'Years of history' },
+                { id: id + '-s2', icon: 'users', number: '40', suffix: '+', label: 'Members' },
+                { id: id + '-s3', icon: 'calendar-check', number: '8', suffix: '', label: 'Meetings per year' },
+            ],
+        };
+    } else if (type === 'quote_motto') {
+        newBlock = { id, type: 'quote_motto', heading: 'Our motto', text: '', tagline: '', show_divider: true };
     } else if (type === 'news_feed' || type === 'news_list') {
         newBlock = { id, type: 'news_feed', heading: 'Latest Club News', columns: '3', limit: 6 };
     } else if (type === 'events_calendar') {
@@ -1776,16 +1937,17 @@ const confirmDeleteActivePage = () => {
                                             <div
                                                 v-if="activeInsertIndex === 0"
                                                 :class="[
-                                                    'absolute z-40 w-[900px] max-w-[92vw] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 -translate-x-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
+                                                    'absolute z-40 w-[1100px] max-w-[calc(100vw-3.5rem)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
                                                     insertMenuPlacement === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
                                                 ]"
+                                                :style="{ translate: `calc(-50% + ${insertMenuShift}px) 0` }"
                                             >
                                                 <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
                                                     <span>Insert Element Here</span>
                                                     <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs cursor-pointer p-1">✕</button>
                                                 </div>
 
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 pt-1">
                                                     <div v-for="(col, cIdx) in blockColumns" :key="cIdx" class="space-y-1.5">
                                                         <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
                                                             {{ col.title }}
@@ -1890,10 +2052,31 @@ const confirmDeleteActivePage = () => {
                                                 <span v-else-if="block.type === 'contact_form'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
                                                     📝 Contact Form
                                                 </span>
+                                                <span v-else-if="block.type === 'slideshow'" class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[10px] uppercase font-bold">
+                                                    🎞️ Slideshow ({{ (block.slides || []).filter((slide) => slide.image_url).length }} Photos)
+                                                </span>
+                                                <span v-else-if="block.type === 'section_heading'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
+                                                    🔠 Section Heading
+                                                </span>
+                                                <span v-else-if="block.type === 'feature_cards'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
+                                                    🃏 Icon Cards ({{ block.columns || 3 }} Cols)
+                                                </span>
+                                                <span v-else-if="block.type === 'stats'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
+                                                    🔢 Stats Row
+                                                </span>
+                                                <span v-else-if="block.type === 'quote_motto'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
+                                                    ❝ Motto
+                                                </span>
                                             </div>
 
                                             <!-- Control Buttons (Up, Down, Duplicate, Delete) -->
                                             <div class="flex items-center gap-1">
+                                                <ToggleSwitch
+                                                    :model-value="!block.hidden"
+                                                    :label="`Show element ${bIdx + 1} on the live site`"
+                                                    class="mr-1"
+                                                    @update:model-value="block.hidden = !$event"
+                                                />
                                                 <template v-if="block.type !== 'hero'">
                                                     <select
                                                         :value="block.block_width || 'full'"
@@ -1989,7 +2172,7 @@ const confirmDeleteActivePage = () => {
                                         </div>
 
                                         <!-- Compact view: read-only summary -->
-                                        <div v-if="isCollapsed(block)" class="p-4">
+                                        <div v-if="isCollapsed(block)" :class="['p-4', block.hidden ? 'opacity-50' : '']">
                                             <BlockSummary :block="block" />
                                         </div>
 
@@ -2288,28 +2471,12 @@ const confirmDeleteActivePage = () => {
                                             <MapEditor v-else-if="block.type === 'map'" :block="block" :index="bIdx" :club="club" :club-addresses="clubAddresses" />
                                             <DownloadsEditor v-else-if="block.type === 'downloads'" :block="block" :index="bIdx" :club="club" @media="(type, target) => openMediaLibrary(type, target || block, 'documents')" />
                                             <CalendarEditor v-else-if="block.type === 'calendar'" :block="block" :index="bIdx" />
-
-                                            <!-- 6. Hero Banner Block -->
-                                            <div v-else-if="block.type === 'hero'" class="space-y-3 text-xs">
-                                                <div>
-                                                    <label :for="`block-${bIdx}-hero-title`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Banner Title</label>
-                                                    <input :id="`block-${bIdx}-hero-title`" v-model="block.title" placeholder="Hero Title" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
-                                                </div>
-                                                <div>
-                                                    <label :for="`block-${bIdx}-hero-subtitle`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Banner Subtitle</label>
-                                                    <input :id="`block-${bIdx}-hero-subtitle`" v-model="block.subtitle" placeholder="Hero Subtitle" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100" />
-                                                </div>
-                                                <div class="grid grid-cols-2 gap-3">
-                                                    <div>
-                                                        <label :for="`block-${bIdx}-hero-cta-text`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CTA Button Text</label>
-                                                        <input :id="`block-${bIdx}-hero-cta-text`" v-model="block.cta_text" placeholder="e.g. Join Us" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-800 dark:text-slate-100 w-full font-semibold" />
-                                                    </div>
-                                                    <div>
-                                                        <span class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CTA Button Target</span>
-                                                        <LinkField v-model="block.cta_link" :pages="pages" :club="club" label="Hero button" />
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <FeatureCardsEditor v-else-if="block.type === 'feature_cards'" :block="block" :index="bIdx" :pages="pages" :club="club" />
+                                            <SlideshowEditor v-else-if="block.type === 'slideshow'" :block="block" :index="bIdx" :pages="pages" :club="club" @media="(type, target) => openMediaLibrary(type, target || block, 'pages')" />
+                                            <StatsEditor v-else-if="block.type === 'stats'" :block="block" :index="bIdx" />
+                                            <QuoteMottoEditor v-else-if="block.type === 'quote_motto'" :block="block" :index="bIdx" />
+                                            <SectionHeadingEditor v-else-if="block.type === 'section_heading'" :block="block" :index="bIdx" />
+                                            <HeroEditor v-else-if="block.type === 'hero'" :block="block" :index="bIdx" :pages="pages" :club="club" @media="(type, target) => openMediaLibrary(type, target || block, 'pages')" />
 
                                             <!-- 7. Dynamic News Feed & News List Block -->
                                             <div v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="space-y-3 text-xs">
@@ -2551,6 +2718,7 @@ const confirmDeleteActivePage = () => {
                                                 </div>
                                             </div>
 
+                                            <SectionStyleEditor v-if="block.type !== 'hero'" :block="block" :index="bIdx" :can-apply-to-others="form.blocks.length > 1" @media="(type, target) => openMediaLibrary(type, target || block, 'pages')" @apply-all="applySectionToAll(block)" />
                                         </div>
                                     </div>
 
@@ -2573,16 +2741,17 @@ const confirmDeleteActivePage = () => {
                                             <div
                                                 v-if="activeInsertIndex === bIdx + 1"
                                                 :class="[
-                                                    'absolute z-40 w-[900px] max-w-[92vw] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 -translate-x-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
+                                                    'absolute z-40 w-[1100px] max-w-[calc(100vw-3.5rem)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 space-y-2 animate-in fade-in zoom-in-95 duration-100 left-1/2 max-h-[calc(100vh-100px)] overflow-y-auto',
                                                     insertMenuPlacement === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
                                                 ]"
+                                                :style="{ translate: `calc(-50% + ${insertMenuShift}px) 0` }"
                                             >
                                                 <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
                                                     <span>Insert Element Here</span>
                                                     <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs cursor-pointer p-1">✕</button>
                                                 </div>
 
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 pt-1">
                                                     <div v-for="(col, cIdx) in blockColumns" :key="cIdx" class="space-y-1.5">
                                                         <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
                                                             {{ col.title }}
@@ -2771,37 +2940,19 @@ const confirmDeleteActivePage = () => {
                                 <div class="p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-4">
                                     <div>
                                         <label for="custom-domain" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Custom Domain Name</label>
-                                        <input id="custom-domain" v-model="settingsForm.custom_domain" type="text" placeholder="e.g. members.oxfordboating.org" class="w-full sm:w-96 px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-                                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Connect your custom domain (e.g. <code class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-1 py-0.5 rounded font-bold">members.oxfordboating.org</code>) to your club portal.</p>
+                                        <input id="custom-domain" v-model="settingsForm.custom_domain" type="text" :placeholder="`e.g. ${domainExample}`" class="w-full sm:w-96 px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Connect your custom domain (e.g. <code class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-1 py-0.5 rounded font-bold">{{ domainExample }}</code>) to your club portal.</p>
                                     </div>
 
-                                    <div v-if="settingsForm.custom_domain" class="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl space-y-2 text-amber-900 dark:text-amber-200">
-                                        <div class="flex items-center justify-between gap-3 flex-wrap">
-                                            <div class="font-bold text-xs">DNS Configuration Instructions:</div>
-                                            <span
-                                                :class="[
-                                                    'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border',
-                                                    websiteSettings.domain_status === 'active'
-                                                        ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/60'
-                                                        : 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800/60'
-                                                ]"
-                                            >
-                                                {{ websiteSettings.domain_status === 'active' ? `✅ Active${websiteSettings.domain_verified_at ? ' since ' + websiteSettings.domain_verified_at : ''}` : '⏳ Pending verification' }}
-                                            </span>
-                                        </div>
-                                        <p class="text-[11px]">Add a CNAME record at your DNS provider pointing your subdomain/domain to this server's target hostname.</p>
-                                        <div class="font-mono text-[11px] bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-amber-200 dark:border-amber-800/60 font-bold">
-                                            Host: {{ websiteSettings.domain_instructions?.host }} • Type: {{ websiteSettings.domain_instructions?.type }} • Target: {{ websiteSettings.domain_instructions?.target }}
-                                        </div>
-                                        <button
-                                            type="button"
-                                            @click="checkDomainNow"
-                                            :disabled="checkingDomain"
-                                            class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-sm transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-wait"
-                                        >
-                                            {{ checkingDomain ? 'Checking…' : '🔄 Check Now' }}
-                                        </button>
-                                    </div>
+                                    <DomainSetupGuide
+                                        v-if="settingsForm.custom_domain"
+                                        :domain="settingsForm.custom_domain"
+                                        :status="websiteSettings.domain_status"
+                                        :verified-at="websiteSettings.domain_verified_at"
+                                        :instructions="websiteSettings.domain_instructions"
+                                        :checking="checkingDomain"
+                                        @check="checkDomainNow"
+                                    />
                                 </div>
                             </div>
 
@@ -2947,6 +3098,33 @@ const confirmDeleteActivePage = () => {
                                     </select>
                                     <p class="text-[10px] text-slate-400 mt-1">Build a friendly page (a message and a few links) and pick it here. Visitors still get a proper "not found" status, so search engines don't index the missing address.</p>
                                     <p v-if="settingsForm.errors.not_found_page_id" class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1">{{ settingsForm.errors.not_found_page_id }}</p>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-100 dark:border-slate-800" />
+
+                            <!-- Section 6: Page history -->
+                            <div class="space-y-3">
+                                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Page History</h3>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Every time a page is published or saved, the website builder keeps the earlier version so you can go back to it. To stop this filling up, older versions are deleted automatically once a page has more than the number below, or a version gets too old. The newest version of every page is always kept.</p>
+                                <div class="grid grid-cols-1 gap-4 sm:max-w-2xl sm:grid-cols-2">
+                                    <div>
+                                        <label for="revisions-keep" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Versions kept per page</label>
+                                        <input id="revisions-keep" v-model.number="settingsForm.revisions_keep" type="number" min="5" max="50" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold" />
+                                        <p class="text-[10px] text-slate-400 mt-1">Between 5 and 50. Fifteen is plenty for most lodges.</p>
+                                        <p v-if="settingsForm.errors.revisions_keep" class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1">{{ settingsForm.errors.revisions_keep }}</p>
+                                    </div>
+                                    <div>
+                                        <label for="revisions-age" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Delete versions older than</label>
+                                        <select id="revisions-age" v-model.number="settingsForm.revisions_max_age_days" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold">
+                                            <option :value="30">1 month</option>
+                                            <option :value="90">3 months</option>
+                                            <option :value="180">6 months</option>
+                                            <option :value="365">1 year</option>
+                                            <option :value="0">Never (only the number above applies)</option>
+                                        </select>
+                                        <p v-if="settingsForm.errors.revisions_max_age_days" class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1">{{ settingsForm.errors.revisions_max_age_days }}</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -3370,29 +3548,82 @@ const confirmDeleteActivePage = () => {
                             </div>
                         </div>
 
-                        <!-- Step 2: Colour scheme (any layout except the fixed-colour legacy one) -->
+                        <!-- Step 2: Colour scheme: the built-in ones and the lodge's own (any layout except the fixed-colour legacy one) -->
                         <div v-if="selectedLayoutId !== LEGACY.id" class="space-y-3">
                             <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">2. Colour Scheme</h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                                <button
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Pick a ready-made scheme, or create your own: give it a name and choose two colours, and every other shade (dark sections, light bands, text, buttons and dark mode) is worked out from them. Your schemes are saved here so you can switch between them.</p>
+
+                            <div class="grid grid-cols-2 items-stretch gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                                <div
                                     v-for="c in COLOR_SCHEMES"
                                     :key="c.id"
-                                    type="button"
-                                    @click="selectedColorSchemeId = c.id"
                                     :class="[
-                                        'text-left rounded-2xl border p-4 space-y-3 transition-all duration-200 cursor-pointer',
+                                        'flex h-full min-h-[8.5rem] flex-col rounded-2xl border transition-all duration-200',
                                         selectedColorSchemeId === c.id ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-md bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md'
                                     ]"
                                 >
-                                    <div class="flex gap-1">
-                                        <span v-for="(color, cIdx) in c.swatch" :key="cIdx" :style="{ backgroundColor: color }" class="w-6 h-6 rounded-lg border border-slate-400/30 shadow-sm"></span>
+                                    <button type="button" @click="selectedColorSchemeId = c.id" :aria-pressed="selectedColorSchemeId === c.id" class="flex flex-1 cursor-pointer flex-col gap-3 p-4 text-left">
+                                        <div class="flex gap-1">
+                                            <span v-for="(color, cIdx) in c.swatch" :key="cIdx" :style="{ backgroundColor: color }" class="h-6 w-6 shrink-0 rounded-lg border border-slate-400/30 shadow-sm"></span>
+                                        </div>
+                                        <div class="flex items-start justify-between gap-2">
+                                            <span class="text-xs font-extrabold leading-snug text-slate-900 dark:text-white">{{ c.name }}</span>
+                                            <span v-if="selectedColorSchemeId === c.id" class="text-[10px] font-black text-blue-600 dark:text-blue-400">✓</span>
+                                        </div>
+                                    </button>
+                                    <div class="flex h-9 items-center justify-between gap-2 border-t border-slate-100 px-4 dark:border-slate-800">
+                                        <span class="truncate text-[10px] font-semibold text-slate-400">{{ c.custom ? (usedByLiveSite(c) ? 'Your scheme · live' : 'Your scheme') : 'Ready-made' }}</span>
+                                        <span v-if="c.custom" class="flex gap-1">
+                                            <button type="button" :aria-label="`Edit ${c.name}`" title="Rename or change colours" class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-[11px] hover:bg-slate-100 dark:hover:bg-slate-800" @click="editScheme(c)">✏️</button>
+                                            <button type="button" :aria-label="`Delete ${c.name}`" title="Delete" class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-[11px] hover:bg-slate-100 dark:hover:bg-slate-800" @click="deleteScheme(c)">🗑️</button>
+                                        </span>
                                     </div>
-                                    <div class="flex items-center justify-between gap-2">
-                                        <span class="font-extrabold text-xs text-slate-900 dark:text-white">{{ c.name }}</span>
-                                        <span v-if="selectedColorSchemeId === c.id" class="text-[10px] font-black text-blue-600 dark:text-blue-400">✓</span>
-                                    </div>
+                                </div>
+
+                                <button v-if="canCreateScheme" type="button" class="flex h-full min-h-[8.5rem] cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-slate-300 p-4 text-center text-xs font-bold text-slate-500 transition-colors hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:text-slate-400" @click="openNewScheme">
+                                    <span class="text-xl leading-none" aria-hidden="true">＋</span>
+                                    Create your own colour scheme
                                 </button>
                             </div>
+                            <p v-if="!canCreateScheme" class="text-[11px] text-slate-400">You can keep {{ MAX_CUSTOM_SCHEMES }} colour schemes of your own. Delete one to create another.</p>
+                            <p v-if="schemeError" class="text-xs font-bold text-rose-600 dark:text-rose-400" role="alert">{{ schemeError }}</p>
+
+                            <form v-if="schemeEditorOpen" class="space-y-4 rounded-2xl border border-blue-300/60 bg-blue-50/30 p-4 dark:border-blue-800/60 dark:bg-blue-950/10" @submit.prevent="saveScheme">
+                                <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-100">{{ customColourSchemes.some((x) => x.id === schemeForm.id) ? 'Edit colour scheme' : 'New colour scheme' }}</h4>
+
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    <div class="space-y-1.5">
+                                        <label for="scheme-name" class="block text-xs font-bold text-slate-700 dark:text-slate-200">Name</label>
+                                        <input id="scheme-name" v-model="schemeForm.name" type="text" maxlength="40" :aria-invalid="!!schemeForm.errors.name" placeholder="e.g. Lodge crimson" class="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs font-semibold dark:border-slate-700 dark:bg-slate-900" />
+                                        <p v-if="schemeForm.errors.name" class="text-[10px] font-bold text-rose-600 dark:text-rose-400">{{ schemeForm.errors.name }}</p>
+                                    </div>
+                                    <div v-for="field in [{ key: 'primary', label: 'Dark colour', hint: 'Hero, dark sections, footer, headings' }, { key: 'accent', label: 'Accent colour', hint: 'Buttons, labels, dividers, icons' }]" :key="field.key" class="space-y-1.5">
+                                        <label :for="`scheme-${field.key}`" class="block text-xs font-bold text-slate-700 dark:text-slate-200">{{ field.label }}</label>
+                                        <div class="flex items-center gap-2">
+                                            <input type="color" :value="schemeForm[field.key] || '#000000'" class="h-10 w-14 cursor-pointer rounded-lg border border-slate-300 bg-white p-0.5 dark:border-slate-700" :aria-label="`Pick the ${field.label.toLowerCase()}`" @input="schemeForm[field.key] = $event.target.value" />
+                                            <input :id="`scheme-${field.key}`" v-model="schemeForm[field.key]" type="text" maxlength="7" placeholder="#rrggbb" class="w-28 rounded-xl border border-slate-300 bg-white p-2.5 font-mono text-xs dark:border-slate-700 dark:bg-slate-900" />
+                                        </div>
+                                        <p class="text-[10px] text-slate-400">{{ field.hint }}</p>
+                                        <p v-if="schemeForm.errors[field.key]" class="text-[10px] font-bold text-rose-600 dark:text-rose-400">Enter the colour as #rrggbb.</p>
+                                    </div>
+                                </div>
+
+                                <div v-if="draftPalette" class="flex flex-wrap gap-2" aria-label="Colours worked out from your two">
+                                    <div v-for="[key, label] in SCHEME_SHADES" :key="key" class="w-20 text-center">
+                                        <span :style="{ backgroundColor: draftPalette[key] }" class="block h-8 rounded-lg border border-slate-400/30 shadow-sm"></span>
+                                        <span class="mt-1 block text-[10px] font-semibold leading-tight text-slate-500 dark:text-slate-400">{{ label }}</span>
+                                    </div>
+                                </div>
+                                <p v-else class="text-[11px] font-bold text-amber-700 dark:text-amber-300">Enter both colours as #rrggbb to see the scheme.</p>
+                                <p v-if="schemeForm.errors.id" class="text-[11px] font-bold text-rose-600 dark:text-rose-400" role="alert">This colour scheme could not be saved. Close the form and try again.</p>
+                                <p v-if="draftColoursClose" class="text-[11px] font-bold text-amber-700 dark:text-amber-300">These two colours are very close, so accents will be hard to see on dark sections.</p>
+
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button type="submit" :disabled="schemeForm.processing || !draftColours" class="cursor-pointer rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">Save colour scheme</button>
+                                    <button type="button" class="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300" @click="closeSchemeEditor">Cancel</button>
+                                    <span class="text-[11px] text-slate-400">Saving adds it to the list above; use “Apply Theme to Live Site” to put it on your website.</span>
+                                </div>
+                            </form>
                         </div>
 
                         <!-- Step 3: Fonts and corners (layered over any theme) -->

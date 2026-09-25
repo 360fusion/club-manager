@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
     club: Object,
@@ -9,6 +9,9 @@ const props = defineProps({
 const activeTab = ref('events');
 const showRsvpModal = ref(false);
 const selectedEvent = ref(null);
+
+// The example shown in the domain box: built from this club's own address name.
+const domainExample = computed(() => `www.${props.club.slug || 'yourclub'}.org.uk`);
 
 const domainForm = useForm({
     custom_domain: props.club.custom_domain || '',
@@ -243,12 +246,12 @@ const getIcon = (typeCode) => {
                     <div class="flex items-start justify-between border-b border-slate-800 pb-4">
                         <div>
                             <h2 class="text-2xl font-bold text-white">Custom Domain Mapping</h2>
-                            <p class="text-xs text-slate-400 mt-1">Connect your club's domain name (e.g. <strong class="text-slate-300">www.oxfordrowing.co.uk</strong>).</p>
+                            <p class="text-xs text-slate-400 mt-1">Connect your club's domain name (e.g. <strong class="text-slate-300">{{ domainExample }}</strong>).</p>
                         </div>
                     </div>
 
                     <form @submit.prevent="saveDomain" class="space-y-4">
-                        <input v-model="domainForm.custom_domain" type="text" placeholder="www.oxfordrowing.co.uk" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-mono text-sm" />
+                        <input v-model="domainForm.custom_domain" type="text" :placeholder="domainExample" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-mono text-sm" />
                         <button type="submit" class="py-3 px-6 rounded-xl bg-emerald-600 text-white font-bold text-sm">Connect Domain</button>
                     </form>
                 </div>

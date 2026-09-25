@@ -27,11 +27,25 @@ class BlockNormaliser
             $block['block_align'] = self::choice($block['block_align'], ['center', 'left', 'right']);
         }
 
+        // Any element can be switched off (kept on the page in the builder, left out of the public site).
+        if (array_key_exists('hidden', $block)) {
+            $block['hidden'] = self::flag($block['hidden'], false);
+        }
+
+        if (array_key_exists('section', $block)) {
+            $block['section'] = self::section($block['section']);
+        }
+
         return match ($block['type'] ?? null) {
             'youtube' => self::youtube($block),
             'cta_banner' => self::ctaBanner($block),
             'button' => self::linkBlock($block, 'url'),
-            'hero' => self::linkBlock($block, 'cta_link'),
+            'hero' => self::hero($block),
+            'feature_cards' => self::featureCards($block),
+            'stats' => self::stats($block),
+            'slideshow' => self::slideshow($block),
+            'quote_motto' => self::quoteMotto($block),
+            'section_heading' => self::sectionHeading($block),
             'faq' => self::faq($block),
             'map' => self::map($block),
             'downloads' => self::downloads($block),
@@ -89,7 +103,7 @@ class BlockNormaliser
         $block['button_label'] = self::text($block['button_label'] ?? '', 80);
         $block['button2_label'] = self::text($block['button2_label'] ?? '', 80);
 
-        $block['style'] = self::choice($block['style'] ?? null, ['bold', 'soft', 'image']);
+        $block['style'] = self::choice($block['style'] ?? null, ['bold', 'soft', 'image', 'panel']);
         $block['overlay'] = self::choice($block['overlay'] ?? null, ['medium', 'light', 'strong']);
         $block['align'] = self::choice($block['align'] ?? null, ['center', 'left']);
         $block['size'] = self::choice($block['size'] ?? null, ['normal', 'compact', 'large']);
@@ -100,7 +114,268 @@ class BlockNormaliser
         $block['button_url'] = self::link($block['button_url'] ?? '');
         $block['button2_url'] = self::link($block['button2_url'] ?? '');
 
+        // The "panel" style: a card with a photo (round by default) beside the text.
+        $block['image_shape'] = self::choice($block['image_shape'] ?? null, ['circle', 'rounded', 'square']);
+        $block['image_side'] = self::choice($block['image_side'] ?? null, ['left', 'right']);
+        $block['text_style'] = self::choice($block['text_style'] ?? null, ['normal', 'italic']);
+
         return $block;
+    }
+
+    /**
+     * The optional "Section" settings any block can carry: how its strip of the page looks (background, tone,
+     * spacing). An empty or malformed value collapses to "auto", which leaves the theme's own look untouched.
+     *
+     * @return array<string, mixed>
+     */
+    public static function section(mixed $section): array
+    {
+        $section = is_array($section) ? $section : [];
+
+        $bg = self::choice($section['bg'] ?? null, ['none', 'tint', 'primary', 'accent', 'custom', 'image']);
+        $color = self::hexColour($section['bg_color'] ?? null);
+        $image = self::link($section['bg_image'] ?? '');
+
+        // A custom colour or image with nothing behind it would leave an invisible band.
+        if (($bg === 'custom' && $color === '') || ($bg === 'image' && $image === '')) {
+            $bg = 'none';
+        }
+
+        return [
+            'mode' => self::choice($section['mode'] ?? null, ['auto', 'contained', 'band']),
+            'bg' => $bg,
+            'bg_color' => $color,
+            'bg_image' => $image,
+            'overlay' => self::choice($section['overlay'] ?? null, ['medium', 'light', 'strong']),
+            'tone' => self::choice($section['tone'] ?? null, ['auto', 'light', 'dark']),
+            'padding' => self::choice($section['padding'] ?? null, ['auto', 'none', 'sm', 'md', 'lg', 'xl']),
+            'anchor' => mb_substr(trim((string) preg_replace('/[^a-z0-9-]+/', '-', strtolower(is_string($section['anchor'] ?? null) ? $section['anchor'] : '')), '-'), 0, 60),
+        ];
+    }
+
+    /**
+     * The Hero Banner. Older heroes have only a title, subtitle and one button, and keep the fixed "Official Club
+     * Website" label unless the editor now hides or replaces it.
+     *
+     * @param  array<int|string, mixed>  $block
+     * @return array<int|string, mixed>
+     */
+    private static function hero(array $block): array
+    {
+        $block = self::linkBlock($block, 'cta_link');
+
+        if (array_key_exists('cta2_link', $block)) {
+            $block['cta2_link'] = self::link($block['cta2_link']);
+        }
+
+        foreach (['eyebrow' => 80, 'cta2_text' => 80] as $key => $limit) {
+            if (array_key_exists($key, $block)) {
+                $block[$key] = self::text($block[$key], $limit);
+            }
+        }
+
+        if (array_key_exists('hide_eyebrow', $block)) {
+            $block['hide_eyebrow'] = self::flag($block['hide_eyebrow'], false);
+        }
+
+        foreach (['overlay' => ['medium', 'light', 'strong'], 'align' => ['auto', 'center', 'left'], 'height' => ['normal', 'compact', 'tall']] as $key => $allowed) {
+            if (array_key_exists($key, $block)) {
+                $block[$key] = self::choice($block[$key], $allowed);
+            }
+        }
+
+        return $block;
+    }
+
+    /**
+     * Icon cards: a heading over a grid of icon, title and short text. Used for "what we offer" and, on a dark
+     * section, for a lodge's values.
+     *
+     * @param  array<int|string, mixed>  $block
+     * @return array<int|string, mixed>
+     */
+    private static function featureCards(array $block): array
+    {
+        $block['eyebrow'] = self::text($block['eyebrow'] ?? '', 80);
+        $block['heading'] = self::text($block['heading'] ?? '', 200);
+        $block['intro'] = self::text($block['intro'] ?? '', 500);
+
+        $block['columns'] = self::choice($block['columns'] ?? null, [3, 2, 4]);
+        $block['card_style'] = self::choice($block['card_style'] ?? null, ['soft', 'outlined', 'plain']);
+        $block['icon_style'] = self::choice($block['icon_style'] ?? null, ['plain', 'circle']);
+        $block['align'] = self::choice($block['align'] ?? null, ['center', 'left']);
+
+        $block['show_divider'] = self::flag($block['show_divider'] ?? null, true);
+        $block['numbered'] = self::flag($block['numbered'] ?? null, false);
+
+        $items = [];
+
+        foreach (self::items($block['items'] ?? []) as $index => $item) {
+            if (count($items) >= 12) {
+                break;
+            }
+
+            $title = self::text($item['title'] ?? '', 120);
+            $text = self::text($item['text'] ?? '', 500);
+            $icon = BlockIcons::clean($item['icon'] ?? null);
+
+            if ($title === '' && $text === '' && $icon === '') {
+                continue;
+            }
+
+            $items[] = [
+                'id' => self::id($item['id'] ?? null, 'card-'.$index),
+                'icon' => $icon,
+                'title' => $title,
+                'text' => $text,
+                'link' => self::link($item['link'] ?? ''),
+                'link_label' => self::text($item['link_label'] ?? '', 60),
+            ];
+        }
+
+        $block['items'] = $items;
+
+        return $block;
+    }
+
+    /**
+     * A row of headline figures ("150+ years of history"). The number is kept as text so "1,200" or "£1m" work;
+     * only a plain whole number is animated by the renderer.
+     *
+     * @param  array<int|string, mixed>  $block
+     * @return array<int|string, mixed>
+     */
+    private static function stats(array $block): array
+    {
+        $block['heading'] = self::text($block['heading'] ?? '', 200);
+        $block['icon_style'] = self::choice($block['icon_style'] ?? null, ['circle', 'plain']);
+        $block['count_up'] = self::flag($block['count_up'] ?? null, true);
+
+        $items = [];
+
+        foreach (self::items($block['items'] ?? []) as $index => $item) {
+            if (count($items) >= 8) {
+                break;
+            }
+
+            $number = self::text($item['number'] ?? '', 20);
+            $label = self::text($item['label'] ?? '', 80);
+
+            if ($number === '' && $label === '') {
+                continue;
+            }
+
+            $items[] = [
+                'id' => self::id($item['id'] ?? null, 'stat-'.$index),
+                'icon' => BlockIcons::clean($item['icon'] ?? null),
+                'number' => $number,
+                'suffix' => self::text($item['suffix'] ?? '', 8),
+                'label' => $label,
+            ];
+        }
+
+        $block['items'] = $items;
+
+        return $block;
+    }
+
+    /**
+     * A photo slideshow, optionally with a heading, text and buttons laid over the photos. Only slides with a
+     * photo are kept (the photo address was already checked for a safe scheme), the timing is held to a sensible
+     * range and every choice falls back to its default.
+     *
+     * @param  array<int|string, mixed>  $block
+     * @return array<int|string, mixed>
+     */
+    private static function slideshow(array $block): array
+    {
+        $block['eyebrow'] = self::text($block['eyebrow'] ?? '', 80);
+        $block['heading'] = self::text($block['heading'] ?? '', 200);
+        $block['text'] = self::text($block['text'] ?? '', 500);
+        $block['button_label'] = self::text($block['button_label'] ?? '', 80);
+        $block['button2_label'] = self::text($block['button2_label'] ?? '', 80);
+        $block['button_url'] = self::link($block['button_url'] ?? '');
+        $block['button2_url'] = self::link($block['button2_url'] ?? '');
+
+        $block['height'] = self::choice($block['height'] ?? null, ['normal', 'compact', 'tall', 'screen']);
+        $block['overlay'] = self::choice($block['overlay'] ?? null, ['medium', 'none', 'light', 'strong']);
+        $block['align'] = self::choice($block['align'] ?? null, ['left', 'center']);
+        $block['effect'] = self::choice($block['effect'] ?? null, ['fade', 'zoom']);
+
+        $interval = self::number($block['interval'] ?? null, 2, 30);
+        $block['interval'] = $interval === null ? 5 : (int) round($interval);
+
+        $block['autoplay'] = self::flag($block['autoplay'] ?? null, true);
+        $block['show_dots'] = self::flag($block['show_dots'] ?? null, true);
+        $block['show_arrows'] = self::flag($block['show_arrows'] ?? null, true);
+        $block['pause_on_hover'] = self::flag($block['pause_on_hover'] ?? null, true);
+        $block['full_width'] = self::flag($block['full_width'] ?? null, false);
+
+        $slides = [];
+
+        foreach (self::items($block['slides'] ?? []) as $index => $slide) {
+            if (count($slides) >= 12) {
+                break;
+            }
+
+            $image = is_string($slide['image_url'] ?? null) ? trim($slide['image_url']) : '';
+
+            if ($image === '') {
+                continue;
+            }
+
+            $slides[] = [
+                'id' => self::id($slide['id'] ?? null, 'slide-'.$index),
+                'image_url' => $image,
+                'alt' => self::text($slide['alt'] ?? '', 200),
+                'caption' => self::text($slide['caption'] ?? '', 200),
+            ];
+        }
+
+        $block['slides'] = $slides;
+
+        return $block;
+    }
+
+    /**
+     * A motto or closing statement: a large serif heading, a short divider, a paragraph and an italic tagline.
+     *
+     * @param  array<int|string, mixed>  $block
+     * @return array<int|string, mixed>
+     */
+    private static function quoteMotto(array $block): array
+    {
+        $block['heading'] = self::text($block['heading'] ?? '', 200);
+        $block['text'] = self::text($block['text'] ?? '', 1500);
+        $block['tagline'] = self::text($block['tagline'] ?? '', 200);
+        $block['show_divider'] = self::flag($block['show_divider'] ?? null, true);
+
+        return $block;
+    }
+
+    /**
+     * A standalone section title: small label, serif heading, divider and a short introduction.
+     *
+     * @param  array<int|string, mixed>  $block
+     * @return array<int|string, mixed>
+     */
+    private static function sectionHeading(array $block): array
+    {
+        $block['eyebrow'] = self::text($block['eyebrow'] ?? '', 80);
+        $block['title'] = self::text($block['title'] ?? '', 200);
+        $block['intro'] = self::text($block['intro'] ?? '', 500);
+        $block['align'] = self::choice($block['align'] ?? null, ['center', 'left']);
+        $block['show_divider'] = self::flag($block['show_divider'] ?? null, true);
+
+        return $block;
+    }
+
+    /**
+     * A #RRGGBB colour, or an empty string.
+     */
+    public static function hexColour(mixed $value): string
+    {
+        return is_string($value) && preg_match('/^#[0-9a-f]{6}$/i', trim($value)) === 1 ? strtolower(trim($value)) : '';
     }
 
     /**

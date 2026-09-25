@@ -72,14 +72,14 @@ const noticeText = computed(() => props.tracking.banner_text
         aria-label="Cookies"
         class="fixed bottom-0 inset-x-0 z-[90] p-3 sm:p-4"
     >
-        <div class="max-w-3xl mx-auto bg-slate-900 text-white rounded-2xl shadow-2xl border border-white/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5 text-xs sm:text-sm">
+        <div class="max-w-3xl mx-auto bg-[var(--cm-night)] text-white rounded-2xl shadow-2xl border border-white/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5 text-xs sm:text-sm">
             <p class="flex-1 leading-relaxed">
                 {{ noticeText }}
                 <a v-if="tracking.banner_link_url && tracking.banner_link_label" :href="tracking.banner_link_url" class="underline font-bold whitespace-nowrap">{{ tracking.banner_link_label }}</a>
             </p>
             <div class="flex gap-2 shrink-0">
                 <button v-if="needsConsent" type="button" class="px-4 py-2 rounded-xl border border-white/30 font-bold hover:bg-white/10 cursor-pointer" @click="decide('declined')">Decline</button>
-                <button type="button" class="px-4 py-2 rounded-xl bg-white text-slate-900 font-bold hover:bg-slate-100 cursor-pointer" @click="decide(needsConsent ? 'accepted' : 'dismissed')">{{ needsConsent ? 'Accept' : 'OK' }}</button>
+                <button type="button" class="px-4 py-2 rounded-xl bg-white text-[var(--cm-night)] font-bold hover:bg-[var(--cm-tint)] cursor-pointer" @click="decide(needsConsent ? 'accepted' : 'dismissed')">{{ needsConsent ? 'Accept' : 'OK' }}</button>
             </div>
         </div>
     </div>

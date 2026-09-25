@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
 use App\Models\ClubType;
+use App\Models\Media;
+use App\Models\MediaVersion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -297,5 +299,58 @@ class MediaVersionHistoryTest extends TestCase
             ->assertJsonPath('media.version_count', 1);
 
         $this->assertDatabaseHas('media_versions', ['media_id' => $id]);
+    }
+
+    public function test_only_the_newest_versions_of_a_replaced_file_are_kept(): void
+    {
+        $id = $this->actingAs($this->user)
+            ->postJson("/{$this->club->slug}/admin/media", ['file' => UploadedFile::fake()->create('agenda.pdf', 10, 'application/pdf'), 'folder' => 'documents'])
+            ->json('media.id');
+
+        for ($i = 1; $i <= Media::KEEP_VERSIONS + 3; $i++) {
+            $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media/{$id}/replace", ['file' => UploadedFile::fake()->create("agenda-v{$i}.pdf", 10 + $i, 'application/pdf')])->assertOk();
+        }
+
+        $versions = MediaVersion::where('media_id', $id)->orderByDesc('id')->get();
+
+        $this->assertCount(Media::KEEP_VERSIONS, $versions);
+        $this->assertSame('agenda-v'.(Media::KEEP_VERSIONS + 2).'.pdf', $versions->first()->file_name, 'the newest earlier version is the one kept');
+
+        foreach ($versions as $version) {
+            Storage::disk('local')->assertExists($version->path);
+        }
+
+        $this->assertCount(Media::KEEP_VERSIONS, Storage::disk('local')->allFiles("media-versions/{$this->club->id}/{$id}"), 'the removed versions no longer take up disk space');
+    }
+
+    public function test_the_prune_command_deletes_old_trash_and_trims_versions(): void
+    {
+        $oldId = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => UploadedFile::fake()->create('old.pdf', 10, 'application/pdf'), 'folder' => 'documents'])->json('media.id');
+        $recentId = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => UploadedFile::fake()->create('recent.pdf', 10, 'application/pdf'), 'folder' => 'documents'])->json('media.id');
+        $liveId = $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media", ['file' => UploadedFile::fake()->create('live.pdf', 10, 'application/pdf'), 'folder' => 'documents'])->json('media.id');
+
+        $this->actingAs($this->user)->postJson("/{$this->club->slug}/admin/media/{$oldId}/replace", ['file' => UploadedFile::fake()->create('old-2.pdf', 10, 'application/pdf')]);
+        $oldVersionPath = MediaVersion::where('media_id', $oldId)->value('path');
+        Storage::disk('local')->assertExists($oldVersionPath);
+
+        Media::find($oldId)->delete();
+        Media::find($recentId)->delete();
+        Media::onlyTrashed()->whereKey($oldId)->update(['deleted_at' => now()->subDays(Media::TRASH_DAYS + 1)]);
+
+        // A file with too many versions already (from before the limit existed) is trimmed too.
+        for ($i = 0; $i < Media::KEEP_VERSIONS + 2; $i++) {
+            MediaVersion::create(['media_id' => $liveId, 'club_id' => $this->club->id, 'disk' => 'local', 'path' => "media-versions/x/{$i}.pdf", 'file_name' => 'live.pdf', 'mime_type' => 'application/pdf', 'size' => 1]);
+            Storage::disk('local')->put("media-versions/x/{$i}.pdf", 'old');
+        }
+
+        $this->artisan('app:prune-media')->assertSuccessful();
+
+        $this->assertNull(Media::withTrashed()->find($oldId), 'a file trashed for over 30 days is deleted for good');
+        Storage::disk('local')->assertMissing($oldVersionPath);
+        $this->assertDatabaseMissing('media_versions', ['media_id' => $oldId]);
+
+        $this->assertNotNull(Media::onlyTrashed()->find($recentId), 'a recently trashed file can still be restored');
+        $this->assertNotNull(Media::find($liveId));
+        $this->assertSame(Media::KEEP_VERSIONS, MediaVersion::where('media_id', $liveId)->count());
     }
 }

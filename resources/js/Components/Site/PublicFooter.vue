@@ -61,6 +61,13 @@ const navHref = (item) => props.resolveUrl(item.is_homepage ? `/site/${props.clu
 
 // "© 2026 The Lodge of Fraternity. All rights reserved." The year is worked out here, when the page is shown, so it is
 // always the current one and nobody has to edit it. Keep in step with App\Support\FooterCopyright::line().
+// The first column is a little wider than the others: it holds the name and a paragraph, the rest are short lists.
+const footerTemplate = computed(() => {
+    const count = Math.min(columnCount.value, 5);
+
+    return count > 1 ? `minmax(0,1.5fr) ${'minmax(0,1fr) '.repeat(count - 1).trim()}` : 'minmax(0,1fr)';
+});
+
 const copyright = computed(() => {
     const holder = String(props.settings.footer_copyright_holder || props.club.name || '').replace(/\.+$/, '');
     const text = props.settings.footer_copyright_text ?? 'All rights reserved.';
@@ -70,17 +77,17 @@ const copyright = computed(() => {
 </script>
 
 <template>
-    <footer :class="['mt-20 border-t text-xs', theme.footer]">
+    <footer :class="['mt-20 border-t text-sm', theme.footer]">
         <div class="max-w-7xl mx-auto px-6 py-10">
-            <!-- Every column gets the same share of the width: one equal slice per column, on one row up to five -->
-            <div v-if="isColumns" :style="{ '--footer-cols': Math.min(columnCount, 5) }" class="grid gap-x-8 gap-y-8 pb-8 text-left grid-cols-1 sm:grid-cols-2 md:grid-cols-[repeat(var(--footer-cols),minmax(0,1fr))]">
+            <!-- One row of up to five columns: the first (the lodge's name and about text) is wider than the link columns -->
+            <div v-if="isColumns" :style="{ '--footer-template': footerTemplate }" class="grid gap-x-8 gap-y-8 pb-8 text-left grid-cols-1 sm:grid-cols-2 md:grid-cols-[var(--footer-template)]">
                 <div class="min-w-0">
-                    <div :class="['font-extrabold text-sm mb-1', theme.footerHeading || theme.headingText]">{{ club.name }}</div>
-                    <p v-if="aboutText" :class="['whitespace-pre-line break-words', theme.footerBody || theme.bodyText]">{{ aboutText }}</p>
+                    <div :class="['font-extrabold text-base mb-2', theme.footerHeading || theme.headingText]">{{ club.name }}</div>
+                    <p v-if="aboutText" :class="['whitespace-pre-line break-words leading-relaxed', theme.footerBody || theme.bodyText]">{{ aboutText }}</p>
                 </div>
 
                 <div v-if="footerLinks.length">
-                    <div class="font-bold uppercase tracking-wider text-[10px] opacity-95 mb-2">Quick links</div>
+                    <div class="font-bold uppercase tracking-wider text-[11px] opacity-95 mb-2">Quick links</div>
                     <ul class="space-y-1.5">
                         <li v-for="item in footerLinks" :key="item.id">
                             <component :is="Tag" :href="interactive ? footerHref(item) : undefined" class="inline-block py-1 hover:underline">
@@ -91,7 +98,7 @@ const copyright = computed(() => {
                 </div>
 
                 <div v-if="showNav && footerNavItems.length">
-                    <div class="font-bold uppercase tracking-wider text-[10px] opacity-95 mb-2">Navigate</div>
+                    <div class="font-bold uppercase tracking-wider text-[11px] opacity-95 mb-2">Navigate</div>
                     <ul class="space-y-1.5">
                         <li v-for="item in footerNavItems" :key="item.id">
                             <component :is="Tag" :href="interactive ? navHref(item) : undefined" class="inline-block py-1 hover:underline">
@@ -102,7 +109,7 @@ const copyright = computed(() => {
                 </div>
 
                 <div v-for="col in linkColumns" :key="col.id">
-                    <div class="font-bold uppercase tracking-wider text-[10px] opacity-95 mb-2">{{ col.title }}</div>
+                    <div class="font-bold uppercase tracking-wider text-[11px] opacity-95 mb-2">{{ col.title }}</div>
                     <ul class="space-y-1.5">
                         <li v-for="link in col.links" :key="link.id">
                             <component :is="LinkTag" :href="interactive ? resolveUrl(link.url) : undefined" class="inline-block py-1 hover:underline">
@@ -113,7 +120,7 @@ const copyright = computed(() => {
                 </div>
 
                 <div v-if="showSocial && socialLinks.length">
-                    <div class="font-bold uppercase tracking-wider text-[10px] opacity-95 mb-2">Follow</div>
+                    <div class="font-bold uppercase tracking-wider text-[11px] opacity-95 mb-2">Follow</div>
                     <ul class="space-y-1.5">
                         <li v-for="s in socialLinks" :key="s.key">
                             <component :is="SocialTag" :href="interactive ? s.url : undefined" target="_blank" rel="noopener" class="inline-block py-2 hover:underline">

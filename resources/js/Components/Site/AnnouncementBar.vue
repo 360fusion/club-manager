@@ -11,10 +11,10 @@ const props = defineProps({
 });
 
 const STYLES = {
-    info: 'bg-blue-600 text-white',
+    info: 'bg-[var(--cm-accent-deep)] text-white',
     success: 'bg-emerald-600 text-white',
     warning: 'bg-amber-400 text-amber-950',
-    dark: 'bg-slate-900 text-white',
+    dark: 'bg-[var(--cm-night)] text-white',
 };
 
 const storageKey = computed(() => `cm_announcement_${props.clubSlug}_${props.announcement?.key}`);

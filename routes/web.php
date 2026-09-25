@@ -153,6 +153,7 @@ Route::get('/site/oxford-boating', function () {
 });
 
 Route::get('/site/{clubSlug}/events/{eventSlug}', [PublicEventController::class, 'show'])->name('public.event');
+Route::get('/site/{clubSlug}/news/{postSlug}', [PublicSiteController::class, 'showPost'])->name('public.site.post');
 Route::post('/site/{clubSlug}/events/{eventSlug}/quote', [EventQuoteController::class, 'guest'])->name('public.event.quote')->middleware('throttle:public-forms');
 Route::post('/site/{clubSlug}/events/{eventSlug}/register', [PublicEventController::class, 'register'])->name('public.event.register')->middleware('throttle:public-forms');
 Route::get('/site/{clubSlug}/booking/{token}', [PublicEventController::class, 'booking'])->name('public.event.booking')->middleware('throttle:auth-forms');
@@ -243,6 +244,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/pages/settings', [PageAdminController::class, 'updateSettings'])->name('admin.pages.settings.update');
     Route::get('/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'themes'])->name('admin.pages.themes');
     Route::post('/{clubSlug}/admin/pages/themes', [PageAdminController::class, 'updateTheme'])->name('admin.pages.themes.update');
+    Route::post('/{clubSlug}/admin/pages/colour-schemes', [PageAdminController::class, 'saveColourScheme'])->name('admin.pages.colour_schemes.save');
+    Route::delete('/{clubSlug}/admin/pages/colour-schemes/{schemeId}', [PageAdminController::class, 'deleteColourScheme'])->name('admin.pages.colour_schemes.delete');
     Route::get('/{clubSlug}/admin/pages/places', [PageAdminController::class, 'placeSuggestions'])->middleware('throttle:60,1')->name('admin.pages.places');
     Route::post('/{clubSlug}/admin/pages/geocode', [PageAdminController::class, 'geocode'])->middleware('throttle:20,1')->name('admin.pages.geocode');
     Route::post('/{clubSlug}/admin/pages/downloads', [PageAdminController::class, 'uploadDownload'])->middleware('throttle:60,1')->name('admin.pages.downloads.upload');
