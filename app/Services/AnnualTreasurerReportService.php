@@ -7,8 +7,10 @@ use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\CharityCollection;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Services\SubscriptionBillingService;
+use App\Enums\SignatureRequestStatus;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\AccountingYearAudit;
+use App\Models\Accounting\IndependentExaminerReport;
 use App\Models\Club;
 use App\Models\SignatureRequest;
 use App\Services\Signatures\SignatureCertificatePdf;
@@ -101,6 +103,40 @@ class AnnualTreasurerReportService
                     ->mapWithKeys(fn ($r) => [$r->purpose => ['id' => $r->id, 'signer_id' => $r->signer_id, 'signer_name' => $r->signer_name, 'status' => $r->status->value, 'label' => $r->status->label()]])
                     ->all()
                 : [],
+        ];
+    }
+
+    /**
+     * Everything the Independent Examiner's Report PDF needs: the year's accounts (the same data as
+     * the Annual Treasurer's Report) plus the examiner and their signature once it has been given.
+     *
+     * @return array<string, mixed>
+     */
+    public function independentExaminerReportData(Club $club, int $year): array
+    {
+        $examination = IndependentExaminerReport::where('club_id', $club->id)->where('financial_year', $year)->with('examiner')->first();
+        $signature = $examination
+            ? $this->signatureRequestService->forSignable($examination)
+                ->where('purpose', AccountingService::INDEPENDENT_EXAMINER_PURPOSE)
+                ->where('status', SignatureRequestStatus::Signed)
+                ->first()
+            : null;
+
+        return [
+            'report' => $this->build($club, $year),
+            'charity_number' => $club->charityCommissionSettings()['charity_number'],
+            'examiner_name' => $examination?->examiner?->name,
+            'observations' => $examination?->observations,
+            'examined_at' => $examination?->examined_at?->format('j F Y'),
+            'signature' => $signature ? $this->signatureCertificatePdf->renderedSignature($signature) : null,
+            'signature_log' => $signature ? [[
+                'signer_name' => $signature->signer_name,
+                'signer_email' => $signature->signer_email,
+                'method' => $signature->method === 'typed' ? 'Typed name' : 'Drawn signature',
+                'signed_at' => $signature->signed_at?->format('j F Y, H:i'),
+                'ip' => $signature->consent_ip,
+                'document_hash' => $signature->document_hash,
+            ]] : [],
         ];
     }
 

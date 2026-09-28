@@ -100,6 +100,14 @@ const props = defineProps({
     type: Object,
     default: () => ({ enabled: false, amount: null }),
   },
+  charityCommission: {
+    type: Object,
+    default: () => ({ registered: false, charity_number: null }),
+  },
+  independentExaminer: {
+    type: Object,
+    default: () => ({ financial_year: new Date().getFullYear(), examiners: [], report: null }),
+  },
   fixedAssets: {
     type: Array,
     default: () => [],
@@ -168,7 +176,7 @@ const props = defineProps({
 });
 
 const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'bank-accounts', 'chart-of-accounts', 'reconciliation', 'contacts', 'settings'];
-const validReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'reconciliation_summary', 'vat_return', 'fixed_assets', 'budget_vs_actual', 'treasurer_report', 'recurring_bills', 'provincial_due'];
+const validReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'reconciliation_summary', 'vat_return', 'fixed_assets', 'budget_vs_actual', 'treasurer_report', 'recurring_bills', 'provincial_due', 'independent_examiner'];
 const exportableReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'budget_vs_actual', 'provincial_due'];
 // Comparative I&E already has its own PDF via the Annual Treasurer's Report.
 const pdfExportableReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'budget_vs_actual', 'provincial_due'];
@@ -1272,6 +1280,34 @@ const submitFinancialYearEnd = () => {
   financialYearEndForm.post(route('admin.accounting.financial_year_end.update', props.club.slug), {
     preserveScroll: true,
   });
+};
+
+// Charity Commission Form
+const charityCommissionForm = useForm({
+  registered: props.charityCommission.registered,
+  charity_number: props.charityCommission.charity_number || '',
+});
+
+const submitCharityCommission = () => {
+  charityCommissionForm.post(route('admin.accounting.charity_commission.update', props.club.slug), {
+    preserveScroll: true,
+  });
+};
+
+// Independent Examiner's Report
+const examinerForm = useForm({ financial_year: props.independentExaminer.financial_year, examiner_user_id: '', notes: '' });
+
+const submitExaminerRequest = () => {
+  examinerForm.financial_year = props.independentExaminer.financial_year;
+  examinerForm.post(route('admin.accounting.independent_examiner.request', props.club.slug), { preserveScroll: true });
+};
+
+const resendExaminerSignature = () => {
+  router.post(route('admin.accounting.independent_examiner.resend', props.club.slug), { financial_year: props.independentExaminer.financial_year }, { preserveScroll: true });
+};
+
+const changeExaminerYear = (year) => {
+  router.get(route('admin.accounting.index', { clubSlug: props.club.slug, tab: 'reporting', report: 'independent_examiner' }), { treasurer_report_year: year }, { preserveState: true, preserveScroll: true });
 };
 
 // Approval Threshold Form
@@ -2729,6 +2765,21 @@ const getTypeBadge = (type) => {
             </div>
           </div>
 
+          <!-- Independent Examiner's Report -->
+          <div v-if="charityCommission.registered" @click="navigateTo('reporting', 'independent_examiner')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">🖋️</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded-full">Charity</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">Independent Examiner's Report</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Annual examination of the registered Charity Fund, signed by your examiner.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end text-xs font-bold text-purple-700 dark:text-purple-300">
+              <span>View Report →</span>
+            </div>
+          </div>
+
           <!-- Due to Province -->
           <div @click="navigateTo('reporting', 'provincial_due')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
@@ -3410,6 +3461,45 @@ const getTypeBadge = (type) => {
               </div>
 
             </div>
+          </div>
+
+          <!-- Report: Independent Examiner's Report -->
+          <div v-if="selectedReport === 'independent_examiner' && charityCommission.registered" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white">Independent Examiner's Report — {{ independentExaminer.financial_year }}</h3>
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">Charity number {{ charityCommission.charity_number }}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" @click="changeExaminerYear(independentExaminer.financial_year - 1)" class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-extrabold text-xs rounded-xl cursor-pointer">← {{ independentExaminer.financial_year - 1 }}</button>
+                <button type="button" @click="changeExaminerYear(independentExaminer.financial_year + 1)" class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-extrabold text-xs rounded-xl cursor-pointer">{{ independentExaminer.financial_year + 1 }} →</button>
+                <a :href="route('admin.accounting.independent_examiner.export_pdf', { clubSlug: club.slug, year: independentExaminer.financial_year })" target="_blank" class="px-3 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl cursor-pointer">📄 PDF</a>
+              </div>
+            </div>
+
+            <div v-if="independentExaminer.report" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-900 dark:text-white">{{ independentExaminer.report.examiner_name }}</span>
+                <span :class="['px-2 py-0.5 rounded-lg text-[10px] font-black uppercase border', independentExaminer.report.examined_at ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60' : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60']">
+                  {{ independentExaminer.report.examined_at ? `Signed ${independentExaminer.report.examined_at}` : (independentExaminer.report.signature_label || 'Awaiting signature') }}
+                </span>
+              </div>
+              <button v-if="canManageBilling && !independentExaminer.report.examined_at" type="button" @click="resendExaminerSignature" class="text-[11px] font-extrabold text-blue-700 dark:text-blue-300 hover:underline cursor-pointer">Resend signature request</button>
+            </div>
+
+            <form v-if="canManageBilling && !independentExaminer.report?.examined_at" @submit.prevent="submitExaminerRequest" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 space-y-3 text-xs">
+              <h4 class="font-extrabold text-slate-900 dark:text-white">{{ independentExaminer.report ? 'Change examiner' : 'Ask an examiner to sign' }}</h4>
+              <p v-if="!independentExaminer.examiners.length" class="text-slate-500 dark:text-slate-400">Invite your examiner to the lodge first and give them the "Examiner / Auditor" role, then choose them here.</p>
+              <template v-else>
+                <select v-model="examinerForm.examiner_user_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+                  <option value="" disabled>Choose examiner…</option>
+                  <option v-for="e in independentExaminer.examiners" :key="e.id" :value="e.id">{{ e.name }}</option>
+                </select>
+                <p v-if="examinerForm.errors.examiner_user_id" class="text-rose-600 dark:text-rose-400 font-semibold">{{ examinerForm.errors.examiner_user_id }}</p>
+                <textarea v-model="examinerForm.notes" rows="2" placeholder="Notes for the report (optional)" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl"></textarea>
+                <button type="submit" :disabled="!examinerForm.examiner_user_id || examinerForm.processing" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-xl cursor-pointer disabled:opacity-50">Send signature request</button>
+              </template>
+            </form>
           </div>
 
           <!-- Report: Due to Province -->
@@ -5752,6 +5842,28 @@ const getTypeBadge = (type) => {
                 {{ approvalThreshold.enabled ? `Enabled — ${$cs}${number_format(approvalThreshold.amount, 2)} and above` : 'Off' }}
               </span>
             </div>
+          </div>
+
+          <!-- Card 5: Charity Commission -->
+          <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🤝</span>
+              <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">Charity Commission</h4>
+            </div>
+            <form v-if="canManageBilling" @submit.prevent="submitCharityCommission" class="space-y-3 text-slate-600 dark:text-slate-300">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" v-model="charityCommissionForm.registered" class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500" />
+                <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">Our Charity / Benevolent Fund is separately registered</span>
+              </label>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400">Turns on the Independent Examiner's Report, which registered charities file each year.</p>
+              <div v-if="charityCommissionForm.registered">
+                <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">Registered Charity Number</span>
+                <input type="text" v-model="charityCommissionForm.charity_number" class="w-full px-3 py-2 text-sm font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <p v-if="charityCommissionForm.errors.charity_number" class="text-[10px] text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ charityCommissionForm.errors.charity_number }}</p>
+              </div>
+              <button type="submit" :disabled="charityCommissionForm.processing" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-lg transition-all cursor-pointer disabled:opacity-50">Save</button>
+            </form>
+            <span v-else class="font-bold text-slate-900 dark:text-white block">{{ charityCommission.registered ? `Registered — ${charityCommission.charity_number}` : 'Not registered' }}</span>
           </div>
         </div>
 

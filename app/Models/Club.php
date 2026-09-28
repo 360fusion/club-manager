@@ -678,4 +678,18 @@ class Club extends Model implements HasMedia
             'amount' => null,
         ], $this->settings['approval_threshold'] ?? []);
     }
+
+    /**
+     * Whether the club's Charity/Benevolent Fund is separately registered with the Charity
+     * Commission, which is what makes an Independent Examiner's Report a real filing obligation.
+     *
+     * @return array{registered: bool, charity_number: ?string}
+     */
+    public function charityCommissionSettings(): array
+    {
+        return array_merge([
+            'registered' => false,
+            'charity_number' => null,
+        ], $this->settings['charity_commission'] ?? []);
+    }
 }

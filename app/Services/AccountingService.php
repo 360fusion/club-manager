@@ -8,6 +8,7 @@ use App\Models\Accounting\Account;
 use App\Models\Accounting\AccountingPeriodClose;
 use App\Models\Accounting\AccountingYearAudit;
 use App\Models\Accounting\Bill;
+use App\Models\Accounting\IndependentExaminerReport;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Accounting\LedgerAuditLog;
 use App\Models\Accounting\MeetingFinancialReturn;
@@ -24,6 +25,8 @@ use InvalidArgumentException;
 
 class AccountingService
 {
+    public const INDEPENDENT_EXAMINER_PURPOSE = 'independent_examiner_report';
+
     /**
      * Default Chart of Accounts Template
      */
@@ -1286,6 +1289,39 @@ class AccountingService
                 'notes' => $notes,
             ]
         );
+    }
+
+    /**
+     * Name the Independent Examiner for a registered charity's financial year, leaving the report awaiting
+     * their single signature (examined_at stays null until it is completed via the signature-request flow).
+     */
+    public function requestIndependentExamination(Club $club, int $year, User $examiner, ?string $notes = null): IndependentExaminerReport
+    {
+        if (! $club->charityCommissionSettings()['registered']) {
+            throw new InvalidArgumentException('This lodge has not said its Charity Fund is registered with the Charity Commission.');
+        }
+
+        $existing = IndependentExaminerReport::where('club_id', $club->id)->where('financial_year', $year)->first();
+
+        if ($existing?->examined_at !== null) {
+            throw new InvalidArgumentException("The {$year} Independent Examiner's Report has already been signed.");
+        }
+
+        return IndependentExaminerReport::updateOrCreate(
+            ['club_id' => $club->id, 'financial_year' => $year],
+            ['examiner_user_id' => $examiner->id, 'observations' => $notes]
+        );
+    }
+
+    /**
+     * Called once the examiner's signature completes: stamps the report as examined and logs it.
+     */
+    public function markIndependentExaminationSigned(IndependentExaminerReport $report): void
+    {
+        $report->update(['examined_at' => now()]);
+        $report->loadMissing(['club', 'examiner']);
+
+        $this->log($report->club, 'financial_year', $report->financial_year, 'examined', "Financial year {$report->financial_year} independently examined by {$report->examiner?->name}.", userId: $report->examiner_user_id);
     }
 
     /**

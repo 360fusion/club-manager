@@ -20,6 +20,7 @@ use App\Models\Accounting\AccountingContact;
 use App\Models\Accounting\AccountingYearAudit;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\FixedAsset;
+use App\Models\Accounting\IndependentExaminerReport;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Accounting\LedgerAuditLog;
 use App\Models\Accounting\RecurringBillTemplate;
@@ -475,6 +476,8 @@ class AccountingAdminController extends Controller
             'vatSettings' => $club->vatSettings(),
             'vatLocked' => $club->vatSettingsAreLocked(),
             'approvalThreshold' => $club->approvalThresholdSettings(),
+            'charityCommission' => $club->charityCommissionSettings(),
+            'independentExaminer' => $this->independentExaminerPayload($club, $treasurerReportYear),
             'reconciliation' => $reconciliation,
             'fixedAssets' => $fixedAssets,
             'budgetVsActual' => $budgetVsActual,
@@ -483,6 +486,35 @@ class AccountingAdminController extends Controller
             'onboarding' => $onboarding,
             'canManageBilling' => $canManageBilling,
         ]);
+    }
+
+    /**
+     * What the Independent Examiner's Report screen needs; only meaningful for a registered charity.
+     *
+     * @return array<string, mixed>
+     */
+    private function independentExaminerPayload(Club $club, int $year): array
+    {
+        if (! $club->charityCommissionSettings()['registered']) {
+            return ['financial_year' => $year, 'examiners' => [], 'report' => null];
+        }
+
+        $report = IndependentExaminerReport::where('club_id', $club->id)->where('financial_year', $year)->with('examiner')->first();
+        $signature = $report
+            ? $this->signatureRequestService->forSignable($report)->where('purpose', AccountingService::INDEPENDENT_EXAMINER_PURPOSE)->sortByDesc('requested_at')->first()
+            : null;
+
+        return [
+            'financial_year' => $year,
+            'examiners' => $club->users()->wherePivot('role', 'examiner')->wherePivot('status', 'active')->orderBy('users.name')->get(['users.id', 'users.name'])->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])->all(),
+            'report' => $report ? [
+                'examiner_name' => $report->examiner?->name,
+                'examined_at' => $report->examined_at?->format('d M Y'),
+                'notes' => $report->observations,
+                'signature_status' => $signature?->status->value,
+                'signature_label' => $signature?->status->label(),
+            ] : null,
+        ];
     }
 
     public function reconcileBankTransaction(Request $request, string $clubSlug): RedirectResponse
@@ -662,6 +694,88 @@ class AccountingAdminController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'VAT settings updated.');
+    }
+
+    public function updateCharityCommission(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+
+        $validated = $request->validate([
+            'registered' => ['required', 'boolean'],
+            'charity_number' => ['nullable', 'required_if:registered,true', 'string', 'max:30'],
+        ]);
+
+        $club->update([
+            'settings' => array_merge($club->settings ?? [], ['charity_commission' => [
+                'registered' => $validated['registered'],
+                'charity_number' => $validated['charity_number'] ?? null,
+            ]]),
+        ]);
+
+        return redirect()->back()->with('success', 'Charity Commission details updated.');
+    }
+
+    public function requestIndependentExamination(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+        abort_unless($club->charityCommissionSettings()['registered'], 404);
+
+        $validated = $request->validate([
+            'financial_year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'examiner_user_id' => ['required', 'integer'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $examiner = $club->users()->wherePivot('role', 'examiner')->wherePivot('status', 'active')->where('users.id', $validated['examiner_user_id'])->first();
+
+        if (! $examiner) {
+            return redirect()->back()->withErrors(['examiner_user_id' => 'Choose someone who has been given the Examiner role at this lodge.']);
+        }
+
+        try {
+            $report = $this->accountingService->requestIndependentExamination($club, (int) $validated['financial_year'], $examiner, $validated['notes'] ?? null);
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        $this->signatureRequestService->requestIfOpen($report, AccountingService::INDEPENDENT_EXAMINER_PURPOSE, $examiner, $examiner->name, $examiner->email, $request->user());
+
+        return redirect()->back()->with('success', "Signature request sent to {$examiner->name} for the {$validated['financial_year']} Independent Examiner's Report.");
+    }
+
+    public function resendIndependentExaminerSignature(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+        abort_unless($club->charityCommissionSettings()['registered'], 404);
+
+        $validated = $request->validate(['financial_year' => ['required', 'integer', 'min:2000', 'max:2100']]);
+        $report = IndependentExaminerReport::where('club_id', $club->id)->where('financial_year', $validated['financial_year'])->firstOrFail();
+
+        $pending = $this->signatureRequestService->forSignable($report)
+            ->where('purpose', AccountingService::INDEPENDENT_EXAMINER_PURPOSE)
+            ->where('status', SignatureRequestStatus::Pending)
+            ->first();
+
+        if ($pending) {
+            $this->signatureRequestService->resend($pending);
+        }
+
+        return redirect()->back()->with('success', 'Signature request resent.');
+    }
+
+    public function exportIndependentExaminerReportPdf(Request $request, string $clubSlug)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'view_accounting');
+        abort_unless($club->charityCommissionSettings()['registered'], 404);
+
+        $year = (int) ($request->query('year') ?: now()->year);
+        $viewData = $this->annualTreasurerReportService->independentExaminerReportData($club, $year) + ['cs' => $club->currencySymbol()];
+
+        return $this->renderAccountingPdf($request, 'pdf.accounting.independent-examiner-report', $viewData, "Independent-Examiners-Report-{$club->slug}-{$year}.pdf");
     }
 
     public function updateApprovalThreshold(Request $request, string $clubSlug): RedirectResponse

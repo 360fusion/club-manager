@@ -99,6 +99,7 @@ class ClubPermissions
             '#^activity/[^/]+/\d+$#',
             '#^treasurer-report/export-(pdf|csv)$#',
             '#^vat-return/export$#',
+            '#^independent-examiner-report/export-pdf$#',
         ];
 
         foreach ($readOnlyPatterns as $pattern) {

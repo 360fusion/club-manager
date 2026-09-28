@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
+use App\Models\Accounting\IndependentExaminerReport;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
 use App\Models\ClubType;
@@ -15,7 +16,10 @@ use App\Models\Invoice;
 use App\Models\Province;
 use App\Models\User;
 use App\Services\AccountingService;
+use App\Services\AnnualTreasurerReportService;
+use App\Services\Signatures\SignatureRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
 use Tests\TestCase;
@@ -1028,5 +1032,70 @@ class AccountingErpTest extends TestCase
 
         $this->assertFalse($worksheet['has_province']);
         $this->assertNull($worksheet['total_due']);
+    }
+
+    public function test_independent_examiner_report_is_hidden_until_the_charity_fund_is_registered(): void
+    {
+        $examiner = User::factory()->create();
+        $this->club->users()->attach($examiner->id, ['role' => 'examiner', 'status' => 'active']);
+
+        $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.independent_examiner.export_pdf', $this->club->slug))
+            ->assertNotFound();
+
+        $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.independent_examiner.request', $this->club->slug), ['financial_year' => 2026, 'examiner_user_id' => $examiner->id])
+            ->assertNotFound();
+
+        $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.index', $this->club->slug))
+            ->assertInertia(fn ($page) => $page->where('charityCommission.registered', false)->where('independentExaminer.report', null));
+    }
+
+    public function test_independent_examiner_signs_once_and_the_report_is_stamped_and_renders_with_the_signature(): void
+    {
+        Mail::fake();
+        $this->accountingService->seedDefaultAccounts($this->club);
+
+        $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.charity_commission.update', $this->club->slug), ['registered' => true, 'charity_number' => '1234567'])
+            ->assertRedirect();
+
+        $examiner = User::factory()->create(['name' => 'Erica Examiner']);
+        $this->club->users()->attach($examiner->id, ['role' => 'examiner', 'status' => 'active']);
+        $notExaminer = User::factory()->create();
+        $this->club->users()->attach($notExaminer->id, ['role' => 'member', 'status' => 'active']);
+
+        $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.independent_examiner.request', $this->club->slug), ['financial_year' => 2026, 'examiner_user_id' => $notExaminer->id])
+            ->assertSessionHasErrors('examiner_user_id');
+
+        $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.independent_examiner.request', $this->club->slug), ['financial_year' => 2026, 'examiner_user_id' => $examiner->id])
+            ->assertSessionHasNoErrors();
+
+        $report = IndependentExaminerReport::where('club_id', $this->club->id)->where('financial_year', 2026)->firstOrFail();
+        $this->assertNull($report->examined_at);
+
+        $signatures = app(SignatureRequestService::class);
+        $pending = $signatures->forSignable($report)->where('purpose', 'independent_examiner_report')->first();
+        $this->assertNotNull($pending);
+        $signatures->sign($pending, 'typed', ['typed_name' => 'Erica Examiner'], '1.1.1.1', 'Agent');
+
+        $this->assertNotNull($report->fresh()->examined_at);
+
+        // The examiner role can download the signed report, but a plain member cannot.
+        $this->actingAs($examiner)
+            ->get(route('admin.accounting.independent_examiner.export_pdf', ['clubSlug' => $this->club->slug, 'year' => 2026]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+        $this->actingAs($notExaminer)
+            ->get(route('admin.accounting.independent_examiner.export_pdf', ['clubSlug' => $this->club->slug, 'year' => 2026]))
+            ->assertForbidden();
+
+        $data = app(AnnualTreasurerReportService::class)->independentExaminerReportData($this->club->fresh(), 2026);
+        $this->assertSame('Erica Examiner', $data['examiner_name']);
+        $this->assertSame(['method' => 'typed', 'value' => 'Erica Examiner'], $data['signature']);
+        $this->assertSame('1234567', $data['charity_number']);
     }
 }

@@ -424,6 +424,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/toggle', [AccountingAdminController::class, 'toggleBankAccount'])->name('admin.accounting.bank_accounts.toggle');
     Route::post('/{clubSlug}/admin/accounting/opening-balance', [AccountingAdminController::class, 'storeOpeningBalance'])->name('admin.accounting.opening_balance.store');
     Route::post('/{clubSlug}/admin/accounting/vat-settings', [AccountingAdminController::class, 'updateVatSettings'])->name('admin.accounting.vat_settings.update');
+    Route::post('/{clubSlug}/admin/accounting/charity-commission', [AccountingAdminController::class, 'updateCharityCommission'])->name('admin.accounting.charity_commission.update');
+    Route::post('/{clubSlug}/admin/accounting/independent-examiner-report', [AccountingAdminController::class, 'requestIndependentExamination'])->name('admin.accounting.independent_examiner.request');
+    Route::post('/{clubSlug}/admin/accounting/independent-examiner-report/resend', [AccountingAdminController::class, 'resendIndependentExaminerSignature'])->name('admin.accounting.independent_examiner.resend');
+    Route::get('/{clubSlug}/admin/accounting/independent-examiner-report/export-pdf', [AccountingAdminController::class, 'exportIndependentExaminerReportPdf'])->name('admin.accounting.independent_examiner.export_pdf');
     Route::post('/{clubSlug}/admin/accounting/approval-threshold', [AccountingAdminController::class, 'updateApprovalThreshold'])->name('admin.accounting.approval_threshold.update');
     Route::post('/{clubSlug}/admin/accounting/financial-year-end', [AccountingAdminController::class, 'updateFinancialYearEndMonth'])->name('admin.accounting.financial_year_end.update');
     Route::post('/{clubSlug}/admin/accounting/onboarding/dismiss', [AccountingAdminController::class, 'dismissOnboarding'])->name('admin.accounting.onboarding.dismiss');
