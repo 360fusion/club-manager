@@ -482,6 +482,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/{clubSlug}/admin/accounting/contacts/{id}', [AccountingAdminController::class, 'updateContact'])->name('admin.accounting.contacts.update');
     Route::delete('/{clubSlug}/admin/accounting/contacts/{id}', [AccountingAdminController::class, 'destroyContact'])->name('admin.accounting.contacts.destroy');
     Route::post('/{clubSlug}/admin/accounting/reconcile', [AccountingAdminController::class, 'reconcileBankTransaction'])->name('admin.accounting.reconcile');
+    Route::delete('/{clubSlug}/admin/accounting/reconcile/rules/{id}', [AccountingAdminController::class, 'forgetBankMatchRule'])->name('admin.accounting.match_rules.destroy');
     Route::post('/{clubSlug}/admin/accounting/ignore-transaction', [AccountingAdminController::class, 'ignoreBankTransaction'])->name('admin.accounting.ignore_transaction');
     Route::post('/{clubSlug}/admin/accounting/statement-lines/delete', [AccountingAdminController::class, 'deleteBankStatementLines'])->name('admin.accounting.statement_lines.delete');
     Route::post('/{clubSlug}/admin/accounting/statement-lines/restore', [AccountingAdminController::class, 'restoreBankStatementLines'])->name('admin.accounting.statement_lines.restore');

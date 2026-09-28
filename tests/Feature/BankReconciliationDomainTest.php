@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Enums\SubscriptionStatus;
 use App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace;
 use App\Domains\ClubAccounting\Models\BankImport;
+use App\Domains\ClubAccounting\Models\BankMatchRule;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
@@ -373,5 +374,81 @@ class BankReconciliationDomainTest extends TestCase
 
         $tx->refresh();
         $this->assertEquals(BankTransactionStatus::Matched, $tx->status);
+    }
+
+    private function statementLine(string $description, float $amount, string $hash): BankTransaction
+    {
+        $import = BankImport::firstOrCreate(['club_id' => $this->club->id, 'filename' => 'rules.csv'], ['total_lines' => 0, 'total_amount' => 0]);
+
+        return BankTransaction::create([
+            'club_id' => $this->club->id,
+            'bank_import_id' => $import->id,
+            'transaction_date' => Carbon::parse('2026-09-15'),
+            'raw_description' => $description,
+            'amount' => $amount,
+            'transaction_hash' => $hash,
+            'status' => BankTransactionStatus::Unmatched,
+        ]);
+    }
+
+    public function test_description_normalisation_strips_trailing_reference_and_date_tokens(): void
+    {
+        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
+
+        $this->assertSame('dd anglian water', $matcher->normalizeDescription('DD  Anglian Water 918273645 28SEP'));
+        $this->assertSame('dd anglian water', $matcher->normalizeDescription('dd anglian water 55501'));
+    }
+
+    public function test_a_recurring_payee_is_remembered_and_suggested_first_next_time(): void
+    {
+        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
+        $first = $this->statementLine('DD Anglian Water 918273645', -42.00, 'rule-hash-1');
+
+        $this->assertEmpty(array_filter($matcher->suggestMatches($first), fn ($m) => ($m['remembered'] ?? false)));
+
+        $matcher->reconcileTransaction($first, 'ledger_account', 0, ['nominal_code' => '5000']);
+        $this->assertDatabaseHas('club_acc_bank_match_rules', ['club_id' => $this->club->id, 'description_pattern' => 'dd anglian water', 'match_type' => 'ledger_account', 'nominal_code' => '5000', 'hit_count' => 1]);
+
+        $second = $this->statementLine('DD Anglian Water 555000111', -44.50, 'rule-hash-2');
+        $suggestions = $matcher->suggestMatches($second);
+
+        $this->assertTrue($suggestions[0]['remembered']);
+        $this->assertEquals(95, $suggestions[0]['confidence_score']);
+        $this->assertSame('5000', $suggestions[0]['nominal_code']);
+        $this->assertSame('Remembered from a previous match', $suggestions[0]['match_reason']);
+
+        $matcher->reconcileTransaction($second, 'ledger_account', 0, ['nominal_code' => '5000']);
+        $this->assertSame(2, BankMatchRule::where('club_id', $this->club->id)->value('hit_count'));
+
+        // Choosing a different code replaces the rule rather than piling up a conflicting one.
+        $third = $this->statementLine('DD Anglian Water 777', -40.00, 'rule-hash-3');
+        $matcher->reconcileTransaction($third, 'ledger_account', 0, ['nominal_code' => '5100']);
+        $this->assertSame(1, BankMatchRule::where('club_id', $this->club->id)->count());
+        $this->assertDatabaseHas('club_acc_bank_match_rules', ['description_pattern' => 'dd anglian water', 'nominal_code' => '5100', 'hit_count' => 1]);
+    }
+
+    public function test_one_off_document_matches_are_not_remembered(): void
+    {
+        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
+        $tx = $this->statementLine('Payment to Grand Hall Catering Ltd BILL-9001', -350.00, 'rule-hash-4');
+
+        $matcher->reconcileTransaction($tx, 'supplier_bill', $this->supplierBill->id);
+
+        $this->assertSame(0, BankMatchRule::count());
+    }
+
+    public function test_a_bad_remembered_match_can_be_forgotten(): void
+    {
+        $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
+        $matcher->reconcileTransaction($this->statementLine('DD Anglian Water 1234', -42.00, 'rule-hash-5'), 'ledger_account', 0, ['nominal_code' => '5000']);
+        $rule = BankMatchRule::firstOrFail();
+
+        $this->actingAs($this->adminUser)
+            ->delete(route('admin.accounting.match_rules.destroy', ['clubSlug' => $this->club->slug, 'id' => $rule->id]))
+            ->assertRedirect();
+
+        $this->assertSame(0, BankMatchRule::count());
+        $next = $this->statementLine('DD Anglian Water 9999', -42.00, 'rule-hash-6');
+        $this->assertEmpty(array_filter($matcher->suggestMatches($next), fn ($m) => ($m['remembered'] ?? false)));
     }
 }

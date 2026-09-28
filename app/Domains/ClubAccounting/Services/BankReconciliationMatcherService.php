@@ -3,6 +3,7 @@
 namespace App\Domains\ClubAccounting\Services;
 
 use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
+use App\Domains\ClubAccounting\Models\BankMatchRule;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Models\Accounting\Account;
@@ -24,6 +25,86 @@ class BankReconciliationMatcherService
     public function __construct(SubscriptionBillingService $billingService)
     {
         $this->billingService = $billingService;
+    }
+
+    /**
+     * Only these match types repeat for the same payee: a specific bill, invoice or booking is
+     * a one-off document, so remembering it would just suggest something already settled.
+     */
+    private const REMEMBERED_MATCH_TYPES = ['ledger_account', 'charity_relief'];
+
+    /**
+     * Reduce a bank description to the stable part that identifies the payee: lowercase, single
+     * spaces, trailing reference/date tokens (anything containing a digit) stripped.
+     */
+    public function normalizeDescription(string $raw): string
+    {
+        $tokens = preg_split('/\s+/', strtolower(trim($raw)), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        while ($tokens !== [] && preg_match('/\d/', end($tokens))) {
+            array_pop($tokens);
+        }
+
+        return implode(' ', $tokens);
+    }
+
+    /**
+     * Remember how a recurring line was matched, so it is suggested next time. A repeat with the
+     * same outcome strengthens the rule; a different outcome replaces it (the treasurer changed their mind).
+     */
+    private function rememberMatch(BankTransaction $transaction, string $matchType, ?string $nominalCode): void
+    {
+        $pattern = $this->normalizeDescription((string) $transaction->raw_description);
+
+        if (! in_array($matchType, self::REMEMBERED_MATCH_TYPES, true) || strlen($pattern) < 4) {
+            return;
+        }
+
+        $rule = BankMatchRule::firstOrNew(['club_id' => $transaction->club_id, 'description_pattern' => $pattern, 'match_type' => $matchType]);
+
+        if ($rule->exists && $rule->nominal_code === $nominalCode) {
+            $rule->hit_count++;
+        } else {
+            $rule->hit_count = 1;
+            $rule->nominal_code = $nominalCode;
+            $rule->created_from_transaction_id = $transaction->id;
+        }
+
+        $rule->save();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function rememberedSuggestion(BankTransaction $transaction): ?array
+    {
+        $pattern = $this->normalizeDescription((string) $transaction->raw_description);
+
+        if (strlen($pattern) < 4) {
+            return null;
+        }
+
+        $rule = BankMatchRule::where('club_id', $transaction->club_id)->where('description_pattern', $pattern)->orderByDesc('hit_count')->first();
+
+        if (! $rule) {
+            return null;
+        }
+
+        $account = $rule->nominal_code ? Account::where('club_id', $transaction->club_id)->where('code', $rule->nominal_code)->first() : null;
+
+        return [
+            'match_type' => $rule->match_type,
+            'target_id' => 0,
+            'target_title' => $rule->match_type === 'charity_relief' ? 'Charity Relief Chest / Provincial Contribution' : 'Ledger '.$rule->nominal_code.($account ? " — {$account->name}" : ''),
+            'target_amount' => abs((float) $transaction->amount),
+            'confidence_score' => 95,
+            'confidence_level' => 'high',
+            'match_reason' => 'Remembered from a previous match',
+            'nominal_code' => $rule->nominal_code,
+            'remembered' => true,
+            'rule_id' => $rule->id,
+            'record' => null,
+        ];
     }
 
     /**
@@ -255,6 +336,11 @@ class BankReconciliationMatcherService
         // Sort by confidence_score descending
         usort($matches, fn ($a, $b) => $b['confidence_score'] <=> $a['confidence_score']);
 
+        // A remembered match for this payee goes first; the heuristics above stay as the fallback.
+        if ($remembered = $this->rememberedSuggestion($transaction)) {
+            array_unshift($matches, $remembered);
+        }
+
         return $matches;
     }
 
@@ -387,6 +473,8 @@ class BankReconciliationMatcherService
                     ]);
                 }
             }
+
+            $this->rememberMatch($transaction, $matchType, $matchType === 'charity_relief' ? '4300' : ($matchType === 'ledger_account' ? $targetCode : null));
 
             $transaction->update([
                 'status' => BankTransactionStatus::Matched,

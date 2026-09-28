@@ -1742,6 +1742,12 @@ const markBillPaid = (id) => {
   }
 };
 
+const forgetMatchRule = (id) => {
+  if (confirm('Forget this remembered match? That payee will be matched from scratch next time.')) {
+    router.delete(route('admin.accounting.match_rules.destroy', { clubSlug: props.club.slug, id }), { preserveScroll: true });
+  }
+};
+
 const approveInvoice = (id) => {
   if (confirm('Approve this invoice? It will be posted to Accounts Receivable.')) {
     router.post(route('admin.accounting.invoices.approve', { clubSlug: props.club.slug, id }));
@@ -4480,6 +4486,21 @@ const getTypeBadge = (type) => {
       <!-- VIEW 8: BANK RECONCILIATION WORKSPACE (XERO COMPLETE DESIGN) -->
       <div v-if="activeTab === 'reconciliation' && canManageBilling" class="space-y-4">
         
+        <!-- Remembered matches -->
+        <details v-if="(reconciliation?.match_rules || []).length" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm text-xs">
+          <summary class="cursor-pointer font-extrabold text-slate-700 dark:text-slate-200">🔁 Remembered matches ({{ reconciliation.match_rules.length }})</summary>
+          <p class="mt-2 text-slate-500 dark:text-slate-400">Recurring payees are suggested first once you have matched them. Forget one if it was a mistake.</p>
+          <ul class="mt-2 divide-y divide-slate-100 dark:divide-slate-800">
+            <li v-for="rule in reconciliation.match_rules" :key="rule.id" class="py-2 flex items-center justify-between gap-3">
+              <span class="min-w-0">
+                <span class="font-mono font-bold text-slate-900 dark:text-white block truncate">{{ rule.pattern }}</span>
+                <span class="text-slate-500 dark:text-slate-400">{{ rule.match_type === 'charity_relief' ? 'Charity relief' : `Ledger ${rule.nominal_code}` }} · used {{ rule.hit_count }}×</span>
+              </span>
+              <button type="button" @click="forgetMatchRule(rule.id)" class="px-2.5 py-1 text-[10px] font-extrabold text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 rounded-lg cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-950/40">Forget</button>
+            </li>
+          </ul>
+        </details>
+
         <!-- Top Bank Account Balance Header Bar -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div class="space-y-2">
@@ -4975,7 +4996,7 @@ const getTypeBadge = (type) => {
                           class="p-2.5 rounded-lg border border-emerald-300 dark:border-emerald-700/60 bg-emerald-50/60 dark:bg-emerald-950/60 flex items-center justify-between"
                         >
                           <div>
-                            <span class="font-black text-slate-900 dark:text-white block text-xs">{{ m.target_title }}</span>
+                            <span class="font-black text-slate-900 dark:text-white block text-xs">{{ m.remembered ? '🔁 ' : '' }}{{ m.target_title }}</span>
                             <span class="text-[11px] text-emerald-800 dark:text-emerald-200 font-medium">{{ m.match_reason }} — {{ $cs }}{{ number_format(m.target_amount, 2) }}</span>
                           </div>
                           <button

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankImport;
+use App\Domains\ClubAccounting\Models\BankMatchRule;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
@@ -233,6 +234,8 @@ class AccountingAdminController extends Controller
                         'confidence_score' => $m['confidence_score'],
                         'confidence_level' => $m['confidence_level'],
                         'match_reason' => $m['match_reason'],
+                        'nominal_code' => $m['nominal_code'] ?? null,
+                        'remembered' => $m['remembered'] ?? false,
                     ];
                 }, $suggestions),
             ];
@@ -347,6 +350,13 @@ class AccountingAdminController extends Controller
             'unpaid_subscriptions' => $unpaidSubscriptions,
             'gift_aid_summary' => $giftAidSummary,
             'reconciled_donations' => $reconciledDonationsData,
+            'match_rules' => BankMatchRule::where('club_id', $club->id)->orderByDesc('hit_count')->orderBy('description_pattern')->take(100)->get()->map(fn ($r) => [
+                'id' => $r->id,
+                'pattern' => $r->description_pattern,
+                'match_type' => $r->match_type,
+                'nominal_code' => $r->nominal_code,
+                'hit_count' => $r->hit_count,
+            ])->all(),
         ];
 
         // Bank Accounts Assembly
@@ -536,6 +546,16 @@ class AccountingAdminController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Transaction successfully reconciled!');
+    }
+
+    public function forgetBankMatchRule(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+
+        BankMatchRule::where('club_id', $club->id)->where('id', $id)->firstOrFail()->delete();
+
+        return redirect()->back()->with('success', 'Forgotten — that payee will be matched from scratch next time.');
     }
 
     public function ignoreBankTransaction(Request $request, string $clubSlug): RedirectResponse
