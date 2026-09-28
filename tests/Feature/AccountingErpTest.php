@@ -15,6 +15,7 @@ use App\Models\ClubType;
 use App\Models\Invoice;
 use App\Models\Province;
 use App\Models\User;
+use App\Services\AccountingDataExportService;
 use App\Services\AccountingService;
 use App\Services\AnnualTreasurerReportService;
 use App\Services\Signatures\SignatureRequestService;
@@ -1097,5 +1098,79 @@ class AccountingErpTest extends TestCase
         $this->assertSame('Erica Examiner', $data['examiner_name']);
         $this->assertSame(['method' => 'typed', 'value' => 'Erica Examiner'], $data['signature']);
         $this->assertSame('1234567', $data['charity_number']);
+    }
+
+    /**
+     * @return array<string, list<array<string, string>>> filename => rows keyed by header
+     */
+    private function readExportZip(string $path): array
+    {
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($path) === true);
+        $files = [];
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            $lines = array_map('str_getcsv', array_filter(explode("\n", (string) $zip->getFromIndex($i)), fn ($l) => $l !== ''));
+            $header = array_shift($lines);
+            $files[$name] = $name === 'README.txt' ? [] : array_map(fn ($l) => array_combine($header, $l), $lines);
+        }
+
+        $zip->close();
+        unlink($path);
+
+        return $files;
+    }
+
+    public function test_full_export_contains_only_this_clubs_rows_and_no_credentials(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $this->accountingService->createVendorBill($this->club, ['vendor_name' => 'Export Vendor', 'category' => 'General Expense', 'amount' => 80.00, 'due_date' => '2026-11-01']);
+        $ledger = Account::where('club_id', $this->club->id)->where('code', '1000')->firstOrFail();
+        BankAccount::create([
+            'club_id' => $this->club->id, 'account_id' => $ledger->id, 'bank_name' => 'High Street Bank', 'account_name' => 'Main',
+            'account_type' => 'current', 'currency' => 'GBP', 'opening_balance' => 0, 'is_active' => true,
+            'stripe_secret_key' => 'sk_live_supersecret',
+        ]);
+
+        $other = Club::create(['name' => 'Other Lodge', 'slug' => 'other-lodge', 'club_type_id' => $this->club->club_type_id, 'is_active' => true]);
+        $this->accountingService->createVendorBill($other, ['vendor_name' => 'Someone Elses Vendor', 'category' => 'General Expense', 'amount' => 5.00, 'due_date' => '2026-11-01']);
+
+        $files = $this->readExportZip(app(AccountingDataExportService::class)->build($this->club));
+
+        $this->assertArrayHasKey('accounting_bills.csv', $files);
+        $this->assertArrayHasKey('accounting_journal_items.csv', $files);
+        $this->assertArrayHasKey('club_acc_bank_accounts.csv', $files);
+        $this->assertArrayHasKey('invoices.csv', $files);
+        $this->assertArrayHasKey('README.txt', $files);
+        $this->assertCount(1, $files['accounting_bills.csv']);
+        $this->assertSame('Export Vendor', $files['accounting_bills.csv'][0]['vendor_name']);
+        $this->assertNotEmpty($files['accounting_journal_items.csv']);
+        $this->assertArrayNotHasKey('stripe_secret_key', $files['club_acc_bank_accounts.csv'][0]);
+        $this->assertSame('High Street Bank', $files['club_acc_bank_accounts.csv'][0]['bank_name']);
+    }
+
+    public function test_full_export_of_a_club_with_no_data_is_still_a_valid_zip(): void
+    {
+        $empty = Club::create(['name' => 'Empty Lodge', 'slug' => 'empty-lodge', 'club_type_id' => $this->club->club_type_id, 'is_active' => true]);
+
+        $files = $this->readExportZip(app(AccountingDataExportService::class)->build($empty));
+
+        $this->assertArrayHasKey('accounting_bills.csv', $files);
+        $this->assertSame([], $files['accounting_bills.csv']);
+    }
+
+    public function test_only_the_owner_can_download_the_full_export(): void
+    {
+        $owner = User::factory()->create();
+        $this->makeClubAdmin($owner, $this->club, 'owner');
+
+        $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.export_all', $this->club->slug))
+            ->assertForbidden();
+
+        $response = $this->actingAs($owner)->get(route('admin.accounting.export_all', $this->club->slug));
+        $response->assertOk();
+        $this->assertStringContainsString('zip', (string) $response->headers->get('content-type'));
     }
 }

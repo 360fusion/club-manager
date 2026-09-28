@@ -28,6 +28,7 @@ use App\Models\Accounting\RecurringBillTemplate;
 use App\Models\Club;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\AccountingDataExportService;
 use App\Services\AccountingService;
 use App\Services\AnnualTreasurerReportService;
 use App\Services\BudgetService;
@@ -495,6 +496,7 @@ class AccountingAdminController extends Controller
             'recurringBillTemplates' => $recurringBillTemplates,
             'onboarding' => $onboarding,
             'canManageBilling' => $canManageBilling,
+            'canExportAllData' => $this->canExportAllData($request->user(), $club),
         ]);
     }
 
@@ -714,6 +716,24 @@ class AccountingAdminController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'VAT settings updated.');
+    }
+
+    /**
+     * The whole set of books as a zip of CSVs. Owner-only: it holds member details and bank references.
+     */
+    public function exportAccountingData(Request $request, string $clubSlug): BinaryFileResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        abort_unless($this->canExportAllData($request->user(), $club), 403, 'Only the lodge owner can export all accounting data.');
+
+        $path = app(AccountingDataExportService::class)->build($club);
+
+        return response()->download($path, "Accounting-Export-{$club->slug}-".date('Y-m-d').'.zip', ['Content-Type' => 'application/zip'])->deleteFileAfterSend(true);
+    }
+
+    private function canExportAllData(?User $user, Club $club): bool
+    {
+        return $user !== null && ($user->is_super_admin || ClubAccess::role($user, $club) === 'owner');
     }
 
     public function updateCharityCommission(Request $request, string $clubSlug): RedirectResponse

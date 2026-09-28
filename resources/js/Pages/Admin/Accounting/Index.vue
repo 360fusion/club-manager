@@ -141,6 +141,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  canExportAllData: {
+    type: Boolean,
+    default: false,
+  },
   initialTab: {
     type: String,
     default: null,
@@ -5886,6 +5890,14 @@ const getTypeBadge = (type) => {
             </form>
             <span v-else class="font-bold text-slate-900 dark:text-white block">{{ charityCommission.registered ? `Registered — ${charityCommission.charity_number}` : 'Not registered' }}</span>
           </div>
+        </div>
+
+        <div v-if="canExportAllData" class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs">
+          <div>
+            <span class="font-black text-slate-900 dark:text-white block">Export all accounting data</span>
+            <span class="text-slate-500 dark:text-slate-400">Every ledger, bill, invoice, bank line, member and committee record as CSV files in one zip. Passwords and API keys are left out.</span>
+          </div>
+          <a :href="route('admin.accounting.export_all', club.slug)" class="px-3.5 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm whitespace-nowrap">⬇️ Download zip</a>
         </div>
 
         <div class="p-4 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-800/60 flex items-center justify-between text-xs">

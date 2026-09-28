@@ -424,6 +424,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/toggle', [AccountingAdminController::class, 'toggleBankAccount'])->name('admin.accounting.bank_accounts.toggle');
     Route::post('/{clubSlug}/admin/accounting/opening-balance', [AccountingAdminController::class, 'storeOpeningBalance'])->name('admin.accounting.opening_balance.store');
     Route::post('/{clubSlug}/admin/accounting/vat-settings', [AccountingAdminController::class, 'updateVatSettings'])->name('admin.accounting.vat_settings.update');
+    Route::get('/{clubSlug}/admin/accounting/export-all', [AccountingAdminController::class, 'exportAccountingData'])->name('admin.accounting.export_all');
     Route::post('/{clubSlug}/admin/accounting/charity-commission', [AccountingAdminController::class, 'updateCharityCommission'])->name('admin.accounting.charity_commission.update');
     Route::post('/{clubSlug}/admin/accounting/independent-examiner-report', [AccountingAdminController::class, 'requestIndependentExamination'])->name('admin.accounting.independent_examiner.request');
     Route::post('/{clubSlug}/admin/accounting/independent-examiner-report/resend', [AccountingAdminController::class, 'resendIndependentExaminerSignature'])->name('admin.accounting.independent_examiner.resend');
