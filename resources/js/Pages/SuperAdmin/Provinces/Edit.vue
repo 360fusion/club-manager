@@ -34,6 +34,8 @@ const form = useForm({
   twitter_url: props.province.twitter_url || '',
   facebook_url: props.province.facebook_url || '',
   description: props.province.description || '',
+  per_capita_rate: props.province.per_capita_rate ?? '',
+  festival_contribution_rate: props.province.festival_contribution_rate ?? '',
 });
 
 function submitUpdate() {
@@ -242,6 +244,27 @@ function submitUpdate() {
                 placeholder="https://pglcornwall.org.uk"
                 class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
               />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Dues Rates -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
+          <h3 class="text-xs font-extrabold text-blue-700 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-blue-400 dark:border-slate-800">
+            <span>💷</span>
+            <span>Dues Rates (per member, per year)</span>
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Lodges under this Province see what they owe on their accounting worksheet. Leave a rate empty if it is not set: lodges then see "rate not set" rather than a zero.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Per-Capita Rate</label>
+              <input v-model="form.per_capita_rate" type="number" step="0.01" min="0" class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-mono dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+              <p v-if="form.errors.per_capita_rate" class="text-rose-500 font-semibold mt-1">{{ form.errors.per_capita_rate }}</p>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Festival Contribution Rate</label>
+              <input v-model="form.festival_contribution_rate" type="number" step="0.01" min="0" class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-mono dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+              <p v-if="form.errors.festival_contribution_rate" class="text-rose-500 font-semibold mt-1">{{ form.errors.festival_contribution_rate }}</p>
             </div>
           </div>
         </div>

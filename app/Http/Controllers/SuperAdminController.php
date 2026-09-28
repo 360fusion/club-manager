@@ -437,6 +437,8 @@ class SuperAdminController extends Controller
             'twitter_url' => 'nullable|url|max:255',
             'facebook_url' => 'nullable|url|max:255',
             'description' => 'nullable|string|max:10000',
+            'per_capita_rate' => 'nullable|numeric|min:0|max:99999.99',
+            'festival_contribution_rate' => 'nullable|numeric|min:0|max:99999.99',
         ]);
 
         $province->update($validated);

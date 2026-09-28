@@ -168,10 +168,10 @@ const props = defineProps({
 });
 
 const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'bank-accounts', 'chart-of-accounts', 'reconciliation', 'contacts', 'settings'];
-const validReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'reconciliation_summary', 'vat_return', 'fixed_assets', 'budget_vs_actual', 'treasurer_report', 'recurring_bills'];
-const exportableReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'budget_vs_actual'];
+const validReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'reconciliation_summary', 'vat_return', 'fixed_assets', 'budget_vs_actual', 'treasurer_report', 'recurring_bills', 'provincial_due'];
+const exportableReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'budget_vs_actual', 'provincial_due'];
 // Comparative I&E already has its own PDF via the Annual Treasurer's Report.
-const pdfExportableReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'budget_vs_actual'];
+const pdfExportableReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'budget_vs_actual', 'provincial_due'];
 
 const parseUrlState = () => {
   if (typeof window === 'undefined') {
@@ -2729,6 +2729,22 @@ const getTypeBadge = (type) => {
             </div>
           </div>
 
+          <!-- Due to Province -->
+          <div @click="navigateTo('reporting', 'provincial_due')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
+            <div class="flex items-center justify-between">
+              <span class="text-2xl group-hover:scale-110 transition-transform">🏛️</span>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded-full">Province</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">What's Due to Province</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Per-capita dues and Festival contribution for your active members.</p>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-300">
+              <span>{{ reports.provincial_due?.total_due != null ? formatCurrency(reports.provincial_due.total_due) : 'Rate not set' }}</span>
+              <span>View Report →</span>
+            </div>
+          </div>
+
           <!-- 3. Aged Receivables Summary -->
           <div @click="navigateTo('reporting', 'aged_receivables')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
             <div class="flex items-center justify-between">
@@ -3394,6 +3410,49 @@ const getTypeBadge = (type) => {
               </div>
 
             </div>
+          </div>
+
+          <!-- Report: Due to Province -->
+          <div v-if="selectedReport === 'provincial_due'" class="space-y-4">
+            <div>
+              <h4 class="text-base font-extrabold text-slate-900 dark:text-white">What's Due to Province</h4>
+              <p v-if="reports.provincial_due?.province_name" class="text-xs text-slate-500 dark:text-slate-400">{{ reports.provincial_due.province_name }}</p>
+            </div>
+            <p v-if="!reports.provincial_due?.has_province" class="text-xs text-slate-500 dark:text-slate-400">This lodge is not linked to a Province, so no rates apply.</p>
+            <template v-else>
+              <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase">
+                      <th class="py-3 px-4">Item</th>
+                      <th class="py-3 px-4 text-right">Members</th>
+                      <th class="py-3 px-4 text-right">Rate</th>
+                      <th class="py-3 px-4 text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-700 dark:text-slate-200">
+                    <tr>
+                      <td class="py-2.5 px-4">Per-capita dues</td>
+                      <td class="py-2.5 px-4 text-right font-mono">{{ reports.provincial_due.member_count }}</td>
+                      <td class="py-2.5 px-4 text-right font-mono">{{ reports.provincial_due.per_capita_rate != null ? formatCurrency(reports.provincial_due.per_capita_rate) : 'Rate not set' }}</td>
+                      <td class="py-2.5 px-4 text-right font-mono font-black">{{ reports.provincial_due.per_capita_amount != null ? formatCurrency(reports.provincial_due.per_capita_amount) : '—' }}</td>
+                    </tr>
+                    <tr>
+                      <td class="py-2.5 px-4">Festival contribution</td>
+                      <td class="py-2.5 px-4 text-right font-mono">{{ reports.provincial_due.member_count }}</td>
+                      <td class="py-2.5 px-4 text-right font-mono">{{ reports.provincial_due.festival_rate != null ? formatCurrency(reports.provincial_due.festival_rate) : 'Rate not set' }}</td>
+                      <td class="py-2.5 px-4 text-right font-mono font-black">{{ reports.provincial_due.festival_amount != null ? formatCurrency(reports.provincial_due.festival_amount) : '—' }}</td>
+                    </tr>
+                    <tr class="bg-slate-50 dark:bg-slate-800/50">
+                      <td colspan="3" class="py-2.5 px-4 font-black">Total due to Province</td>
+                      <td class="py-2.5 px-4 text-right font-mono font-black">{{ reports.provincial_due.total_due != null ? formatCurrency(reports.provincial_due.total_due) : '—' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p v-if="reports.provincial_due.per_capita_rate == null || reports.provincial_due.festival_rate == null" class="text-xs text-amber-700 dark:text-amber-300 font-semibold">Where a rate shows "Rate not set", your Province has not published one here. Contact your Province for the figure.</p>
+            </template>
+            <p class="text-[11px] text-slate-400">Counted on {{ reports.provincial_due?.counted_on }} from current active members. Lodges keep no leave date for members, so this is today's count, not a snapshot at a past date.</p>
           </div>
 
           <!-- Report: VAT Return -->

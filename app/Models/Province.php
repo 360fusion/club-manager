@@ -30,7 +30,17 @@ class Province extends Model
         'twitter_url',
         'facebook_url',
         'description',
+        'per_capita_rate',
+        'festival_contribution_rate',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'per_capita_rate' => 'decimal:2',
+            'festival_contribution_rate' => 'decimal:2',
+        ];
+    }
 
     /**
      * Get the governing Grand Lodge.

@@ -2,13 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Domains\ClubAccounting\Enums\LodgeOffice;
+use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Models\BankAccount;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Invoice;
+use App\Models\Province;
 use App\Models\User;
 use App\Services\AccountingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -965,5 +969,64 @@ class AccountingErpTest extends TestCase
         $this->assertCount(1, $reports['aged_payables']['items']);
         $this->assertEquals('pending_approval', $reports['aged_payables']['items'][0]['status']);
         $this->assertEquals(750.00, $reports['aged_payables']['total']);
+    }
+
+    private function addLodgeMember(string $email, MembershipStatus $status = MembershipStatus::Active): Member
+    {
+        return Member::create([
+            'club_id' => $this->club->id,
+            'first_name' => 'Test',
+            'last_name' => $email,
+            'email' => $email,
+            'masonic_rank' => 'Bro',
+            'membership_status' => $status,
+            'current_office' => LodgeOffice::Member,
+        ]);
+    }
+
+    public function test_provincial_due_worksheet_multiplies_active_members_by_the_province_rates(): void
+    {
+        $province = Province::create(['name' => 'Province of Test', 'code' => 'test', 'per_capita_rate' => 12.50, 'festival_contribution_rate' => 3.00]);
+        $this->club->update(['province_id' => $province->id]);
+        $this->addLodgeMember('a@example.com');
+        $this->addLodgeMember('b@example.com');
+        $this->addLodgeMember('gone@example.com', MembershipStatus::Resigned);
+
+        $worksheet = $this->accountingService->getProvincialDueWorksheet($this->club->fresh());
+
+        $this->assertSame(2, $worksheet['member_count']);
+        $this->assertSame(25.0, $worksheet['per_capita_amount']);
+        $this->assertSame(6.0, $worksheet['festival_amount']);
+        $this->assertSame(31.0, $worksheet['total_due']);
+
+        $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.reports.export', ['clubSlug' => $this->club->slug, 'report' => 'provincial_due']))
+            ->assertOk();
+        $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.reports.export_pdf', ['clubSlug' => $this->club->slug, 'report' => 'provincial_due']))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_provincial_due_worksheet_reports_rate_not_set_instead_of_zero(): void
+    {
+        $province = Province::create(['name' => 'Province of Test', 'code' => 'test']);
+        $this->club->update(['province_id' => $province->id]);
+        $this->addLodgeMember('a@example.com');
+
+        $worksheet = $this->accountingService->getProvincialDueWorksheet($this->club->fresh());
+
+        $this->assertNull($worksheet['per_capita_rate']);
+        $this->assertNull($worksheet['per_capita_amount']);
+        $this->assertNull($worksheet['festival_amount']);
+        $this->assertNull($worksheet['total_due']);
+    }
+
+    public function test_provincial_due_worksheet_handles_a_lodge_with_no_province(): void
+    {
+        $worksheet = $this->accountingService->getProvincialDueWorksheet($this->club);
+
+        $this->assertFalse($worksheet['has_province']);
+        $this->assertNull($worksheet['total_due']);
     }
 }

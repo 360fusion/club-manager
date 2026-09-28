@@ -122,6 +122,18 @@
         </tbody>
     </table>
 
+    @php($pd = $report['membership']['provincial_due'])
+    <div class="section-title">Due to Province</div>
+    <table>
+        <tbody>
+            <tr><td>Active members counted</td><td class="num">{{ $pd['member_count'] }}</td></tr>
+            <tr><td>Per-capita dues</td><td class="num">{{ $pd['per_capita_amount'] !== null ? $cs.number_format($pd['per_capita_amount'], 2) : 'Rate not set' }}</td></tr>
+            <tr><td>Festival contribution</td><td class="num">{{ $pd['festival_amount'] !== null ? $cs.number_format($pd['festival_amount'], 2) : 'Rate not set' }}</td></tr>
+            <tr class="totals-row"><td>Total due to Province</td><td class="num">{{ $pd['total_due'] !== null ? $cs.number_format($pd['total_due'], 2) : '—' }}</td></tr>
+        </tbody>
+    </table>
+    <p class="muted">Today's count of active members ({{ $pd['counted_on'] }}); lodges keep no leave date, so this is not a past-date snapshot.</p>
+
     @if($report['vat'] && $report['vat']['enabled'])
         <div class="section-title">VAT Summary (Q{{ \Carbon\Carbon::parse($report['vat']['quarter_start'])->quarter }})</div>
         <table>

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Domains\ClubAccounting\Models\BankTransaction;
+use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\AccountingPeriodClose;
 use App\Models\Accounting\AccountingYearAudit;
@@ -796,6 +797,40 @@ class AccountingService
             'profit_and_loss' => $profitAndLoss,
             'comparative_income_expenditure' => $comparativeStatement,
             'vat_return' => $vatReturn,
+            'provincial_due' => $this->getProvincialDueWorksheet($club),
+        ];
+    }
+
+    /**
+     * What the lodge owes its Province: per-capita dues plus any Festival contribution,
+     * each rate × active members. A rate the Province has not set stays null rather than
+     * defaulting to zero, so the lodge is told to ask rather than led to think nothing is owed.
+     * Member counts are always "current": members carry no leave date, so a true
+     * as-of-date snapshot is not possible.
+     *
+     * @return array{province_name: ?string, has_province: bool, member_count: int, per_capita_rate: ?float, per_capita_amount: ?float, festival_rate: ?float, festival_amount: ?float, total_due: ?float, counted_on: string}
+     */
+    public function getProvincialDueWorksheet(Club $club): array
+    {
+        $province = $club->province;
+        $count = Member::where('club_id', $club->id)->active()->count();
+
+        $perCapitaRate = $province?->per_capita_rate !== null ? (float) $province->per_capita_rate : null;
+        $festivalRate = $province?->festival_contribution_rate !== null ? (float) $province->festival_contribution_rate : null;
+
+        $perCapitaAmount = $perCapitaRate !== null ? round($perCapitaRate * $count, 2) : null;
+        $festivalAmount = $festivalRate !== null ? round($festivalRate * $count, 2) : null;
+
+        return [
+            'province_name' => $province?->name,
+            'has_province' => $province !== null,
+            'member_count' => $count,
+            'per_capita_rate' => $perCapitaRate,
+            'per_capita_amount' => $perCapitaAmount,
+            'festival_rate' => $festivalRate,
+            'festival_amount' => $festivalAmount,
+            'total_due' => $perCapitaAmount === null && $festivalAmount === null ? null : round(($perCapitaAmount ?? 0) + ($festivalAmount ?? 0), 2),
+            'counted_on' => now()->format('d M Y'),
         ];
     }
 
@@ -1333,6 +1368,14 @@ class AccountingService
                 collect($report['revenues'])->map(fn ($r) => ['Revenue', $r['code'], $r['name'], $r['amount']])
                     ->concat(collect($report['expenses'])->map(fn ($r) => ['Expense', $r['code'], $r['name'], $r['amount']]))
             ),
+            'provincial_due' => $this->csvFromRows(
+                ['Item', 'Members', 'Rate', 'Amount'],
+                collect([
+                    ['Per-capita dues', $report['member_count'], $report['per_capita_rate'] ?? 'not set', $report['per_capita_amount'] ?? 'not set'],
+                    ['Festival contribution', $report['member_count'], $report['festival_rate'] ?? 'not set', $report['festival_amount'] ?? 'not set'],
+                    ['Total due', '', '', $report['total_due'] ?? 'not set'],
+                ])
+            ),
             'comparative_income_expenditure' => $this->csvFromRows(
                 ['Category', "Prior Income ({$report['prior_year_label']})", "Prior Expenditure ({$report['prior_year_label']})", "Current Income ({$report['current_year_label']})", "Current Expenditure ({$report['current_year_label']})"],
                 collect($report['rows'])->map(fn ($r) => [$r['category'], $r['prior_income'], $r['prior_expenditure'], $r['current_income'], $r['current_expenditure']])
@@ -1359,6 +1402,7 @@ class AccountingService
             'executive_summary' => 'Executive Summary',
             'profit_and_loss' => 'Profit & Loss',
             'budget_vs_actual' => 'Budget vs Actual',
+            'provincial_due' => 'Due to Province',
         ];
 
         if (! isset($titles[$reportKey])) {

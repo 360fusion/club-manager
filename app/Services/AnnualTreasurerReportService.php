@@ -83,6 +83,7 @@ class AnnualTreasurerReportService
                     'invoice_reference' => $sub->invoice_reference,
                     'balance_due' => (float) $sub->balance_due,
                 ])->values()->all(),
+                'provincial_due' => $this->accountingService->getProvincialDueWorksheet($club),
             ],
             'vat' => $club->vatIsEnabled() ? $this->accountingService->getVatReturnData($club, "{$year}-01-01") : null,
             'audit_sign_off' => $auditSignOff?->signed_off_at ? [
