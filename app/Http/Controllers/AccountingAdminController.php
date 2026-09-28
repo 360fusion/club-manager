@@ -21,6 +21,7 @@ use App\Models\Accounting\AccountingYearAudit;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\FixedAsset;
 use App\Models\Accounting\JournalEntry;
+use App\Models\Accounting\LedgerAuditLog;
 use App\Models\Accounting\RecurringBillTemplate;
 use App\Models\Club;
 use App\Models\Invoice;
@@ -33,6 +34,7 @@ use App\Services\Signatures\SignatureRequestService;
 use App\Support\ClubAccess;
 use App\Support\Currencies;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -112,6 +114,7 @@ class AccountingAdminController extends Controller
                 'status' => $inv->status,
                 'recipient_name' => $inv->user ? $inv->user->name : 'Member',
                 'created_at' => $inv->created_at->format('d M Y'),
+                'can_approve' => $inv->status === 'pending_approval' && (int) $inv->created_by !== $request->user()->id,
                 'paid_at' => $inv->paid_at ? $inv->paid_at->format('d M Y') : null,
                 'reconciled_at' => $inv->reconciled_at ? $inv->reconciled_at->format('d M Y') : null,
                 'attachment' => $inv->media ? [
@@ -140,6 +143,7 @@ class AccountingAdminController extends Controller
                 'due_date' => $b->due_date->format('d M Y'),
                 'status' => $b->status,
                 'notes' => $b->notes,
+                'can_approve' => $b->status === 'pending_approval' && (int) $b->created_by !== $request->user()->id,
                 'paid_at' => $b->paid_at ? $b->paid_at->format('d M Y') : null,
                 'reconciled_at' => $b->reconciled_at ? $b->reconciled_at->format('d M Y') : null,
                 'attachment' => $b->media ? [
@@ -197,6 +201,7 @@ class AccountingAdminController extends Controller
             'receipt_footer_notes' => '',
             'dues_grace_period_days' => 14,
             'auto_invoice_days_before' => 7,
+            'financial_year_end_month' => 4,
         ], $club->settings ?? []);
 
         // Reconciliation Data Assembly
@@ -412,6 +417,43 @@ class AccountingAdminController extends Controller
                 'notes' => $t->notes,
             ]);
 
+        $canManageBilling = ClubAccess::can($request->user(), $club, 'manage_billing');
+
+        $rawSettings = $club->settings ?? [];
+        $onboarding = [
+            'dismissed' => (bool) ($rawSettings['onboarding_dismissed'] ?? false),
+            'steps' => [
+                [
+                    'key' => 'bank_account',
+                    'label' => 'Add your first bank account',
+                    'tab' => 'bank-accounts',
+                    'done' => $bankAccountsQuery->isNotEmpty(),
+                    'skippable' => false,
+                ],
+                [
+                    'key' => 'opening_balance',
+                    'label' => 'Set an opening balance',
+                    'tab' => 'chart-of-accounts',
+                    'done' => JournalEntry::where('club_id', $club->id)->where('source_type', 'OpeningBalance')->exists(),
+                    'skippable' => false,
+                ],
+                [
+                    'key' => 'financial_year_end',
+                    'label' => 'Set your financial year end',
+                    'tab' => 'settings',
+                    'done' => array_key_exists('financial_year_end_month', $rawSettings),
+                    'skippable' => false,
+                ],
+                [
+                    'key' => 'vat_settings',
+                    'label' => 'Review VAT settings',
+                    'tab' => 'settings',
+                    'done' => array_key_exists('vat', $rawSettings),
+                    'skippable' => true,
+                ],
+            ],
+        ];
+
         return Inertia::render('Admin/Accounting/Index', [
             'club' => [
                 'id' => $club->id,
@@ -432,11 +474,14 @@ class AccountingAdminController extends Controller
             'settings' => $clubSettings,
             'vatSettings' => $club->vatSettings(),
             'vatLocked' => $club->vatSettingsAreLocked(),
+            'approvalThreshold' => $club->approvalThresholdSettings(),
             'reconciliation' => $reconciliation,
             'fixedAssets' => $fixedAssets,
             'budgetVsActual' => $budgetVsActual,
             'annualTreasurerReport' => $annualTreasurerReport,
             'recurringBillTemplates' => $recurringBillTemplates,
+            'onboarding' => $onboarding,
+            'canManageBilling' => $canManageBilling,
         ]);
     }
 
@@ -617,6 +662,56 @@ class AccountingAdminController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'VAT settings updated.');
+    }
+
+    public function updateApprovalThreshold(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+
+        $validated = $request->validate([
+            'enabled' => ['required', 'boolean'],
+            'amount' => ['nullable', 'required_if:enabled,true', 'numeric', 'min:0.01', 'max:99999999.99'],
+        ]);
+
+        $club->update([
+            'settings' => array_merge($club->settings ?? [], [
+                'approval_threshold' => [
+                    'enabled' => $validated['enabled'],
+                    'amount' => $validated['amount'] !== null ? (float) $validated['amount'] : null,
+                ],
+            ]),
+        ]);
+
+        return redirect()->back()->with('success', 'Approval threshold updated.');
+    }
+
+    public function updateFinancialYearEndMonth(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+
+        $validated = $request->validate([
+            'financial_year_end_month' => ['required', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        $club->update([
+            'settings' => array_merge($club->settings ?? [], ['financial_year_end_month' => $validated['financial_year_end_month']]),
+        ]);
+
+        return redirect()->back()->with('success', 'Financial year end updated.');
+    }
+
+    public function dismissOnboarding(Request $request, string $clubSlug): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+
+        $club->update([
+            'settings' => array_merge($club->settings ?? [], ['onboarding_dismissed' => true]),
+        ]);
+
+        return redirect()->back();
     }
 
     public function storeFixedAsset(Request $request, string $clubSlug): RedirectResponse
@@ -927,9 +1022,9 @@ class AccountingAdminController extends Controller
             'is_draft' => ['nullable', 'boolean'],
         ]);
 
-        $status = $isDraft ? 'draft' : 'unpaid';
         $title = ! empty($validated['title']) ? $validated['title'] : 'Draft Invoice';
         $amount = isset($validated['amount']) ? (float) $validated['amount'] : 0.00;
+        $status = $isDraft ? 'draft' : $this->accountingService->issuedStatusFor($club, $amount);
         $vat = $this->accountingService->resolveVatFields($club, $amount, $request->float('vat_rate') ?: null);
 
         $invCount = Invoice::where('club_id', $club->id)->count() + 1;
@@ -950,6 +1045,7 @@ class AccountingAdminController extends Controller
 
         $invoice = Invoice::create([
             'club_id' => $club->id,
+            'created_by' => $request->user()->id,
             'user_id' => $validated['user_id'],
             'invoice_number' => $invNum,
             'title' => $title,
@@ -961,9 +1057,11 @@ class AccountingAdminController extends Controller
             'media_id' => $mediaId,
         ]);
 
-        if ($status !== 'draft') {
+        if ($status === 'unpaid') {
             $this->accountingService->postMemberInvoiceIssuedJournal($club, $invoice);
             $msg = 'Invoice created and posted to Accounts Receivable.';
+        } elseif ($status === 'pending_approval') {
+            $msg = 'Invoice created — it is over the approval threshold, so another admin or treasurer needs to approve it before it is posted.';
         } else {
             $msg = 'Invoice saved as draft.';
         }
@@ -979,10 +1077,16 @@ class AccountingAdminController extends Controller
         $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
         if ($invoice->status === 'draft') {
-            $invoice->update(['status' => 'unpaid']);
-            $this->accountingService->postMemberInvoiceIssuedJournal($club, $invoice);
+            $newStatus = $this->accountingService->issuedStatusFor($club, (float) $invoice->amount);
+            $invoice->update(['status' => $newStatus]);
 
-            return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} published and posted to Accounts Receivable.");
+            if ($newStatus === 'unpaid') {
+                $this->accountingService->postMemberInvoiceIssuedJournal($club, $invoice);
+
+                return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} published and posted to Accounts Receivable.");
+            }
+
+            return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} is over the approval threshold, so another admin or treasurer needs to approve it before it is posted.");
         }
 
         return redirect()->back();
@@ -1018,11 +1122,13 @@ class AccountingAdminController extends Controller
 
         $attachmentFile = $request->hasFile('attachment') ? $request->file('attachment') : null;
 
-        $this->accountingService->createVendorBill($club, $validated, $attachmentFile);
+        $bill = $this->accountingService->createVendorBill($club, $validated, $attachmentFile);
 
-        $msg = ! empty($validated['is_draft'])
-            ? 'Vendor bill saved as draft.'
-            : 'Vendor bill recorded and posted to Accounts Payable.';
+        $msg = match ($bill->status) {
+            'draft' => 'Vendor bill saved as draft.',
+            'pending_approval' => 'Vendor bill recorded — it is over the approval threshold, so another admin or treasurer needs to approve it before it is posted.',
+            default => 'Vendor bill recorded and posted to Accounts Payable.',
+        };
 
         return redirect()->route('admin.accounting.index', ['clubSlug' => $club->slug, 'tab' => 'purchases'])
             ->with('success', $msg);
@@ -1034,12 +1140,21 @@ class AccountingAdminController extends Controller
         $bill = Bill::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
         if ($bill->status === 'draft') {
-            \DB::transaction(function () use ($club, $bill) {
-                $bill->update(['status' => 'unpaid']);
-                $this->accountingService->postVendorBillIssuedJournal($club, $bill);
+            $newStatus = $this->accountingService->issuedStatusFor($club, (float) $bill->amount);
+
+            \DB::transaction(function () use ($club, $bill, $newStatus) {
+                $bill->update(['status' => $newStatus]);
+
+                if ($newStatus === 'unpaid') {
+                    $this->accountingService->postVendorBillIssuedJournal($club, $bill);
+                }
             });
 
-            return redirect()->back()->with('success', "Vendor bill {$bill->bill_number} published and posted to Accounts Payable.");
+            if ($newStatus === 'unpaid') {
+                return redirect()->back()->with('success', "Vendor bill {$bill->bill_number} published and posted to Accounts Payable.");
+            }
+
+            return redirect()->back()->with('success', "Vendor bill {$bill->bill_number} is over the approval threshold, so another admin or treasurer needs to approve it before it is posted.");
         }
 
         return redirect()->back();
@@ -1110,11 +1225,20 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
+        $invoiceStatusOptions = match ($invoice->status) {
+            'paid' => ['draft', 'unpaid', 'paid'],
+            // unpaid is deliberately not offered here while pending_approval: that
+            // transition only happens through approveInvoice(), which enforces a
+            // different approver and posts the issued journal entry.
+            'pending_approval' => ['draft', 'pending_approval'],
+            default => ['draft', 'unpaid'],
+        };
+
         $validated = $request->validate([
             'user_id' => ['required', Rule::exists('club_user', 'user_id')->where('club_id', $club->id)],
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
-            'status' => ['required', 'string', Rule::in($invoice->status === 'paid' ? ['draft', 'unpaid', 'paid'] : ['draft', 'unpaid'])],
+            'status' => ['required', 'string', Rule::in($invoiceStatusOptions)],
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
         ]);
 
@@ -1136,6 +1260,14 @@ class AccountingAdminController extends Controller
         $wasDraft = $invoice->status === 'draft';
         $before = $invoice->only(['title', 'amount', 'status']);
         $vat = $this->accountingService->resolveVatFields($club, (float) $validated['amount'], $invoice->vat_rate !== null ? (float) $invoice->vat_rate : null);
+
+        // Publishing a draft still has to respect the approval threshold, even though
+        // the requested status was 'unpaid' — otherwise saving as draft first would be
+        // a free bypass.
+        $finalStatus = ($wasDraft && $validated['status'] === 'unpaid')
+            ? $this->accountingService->issuedStatusFor($club, $vat['amount'])
+            : $validated['status'];
+
         $invoice->update([
             'user_id' => $validated['user_id'],
             'title' => $validated['title'],
@@ -1143,13 +1275,13 @@ class AccountingAdminController extends Controller
             'net_amount' => $vat['net_amount'],
             'vat_rate' => $vat['vat_rate'],
             'vat_amount' => $vat['vat_amount'],
-            'status' => $validated['status'],
+            'status' => $finalStatus,
             'media_id' => $validated['media_id'] ?? $invoice->media_id,
         ]);
 
         $this->accountingService->log($club, 'invoice', $invoice->id, 'updated', "Invoice {$invoice->invoice_number} updated.", before: $before, after: $invoice->only(['title', 'amount', 'status']));
 
-        if ($wasDraft && $invoice->status === 'unpaid') {
+        if ($wasDraft && $finalStatus === 'unpaid') {
             $this->accountingService->postMemberInvoiceIssuedJournal($club, $invoice);
         }
 
@@ -1186,13 +1318,22 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $bill = Bill::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
+        $billStatusOptions = match ($bill->status) {
+            'paid' => ['draft', 'unpaid', 'paid'],
+            // unpaid is deliberately not offered here while pending_approval: that
+            // transition only happens through approveBill(), which enforces a
+            // different approver and posts the issued journal entry.
+            'pending_approval' => ['draft', 'pending_approval'],
+            default => ['draft', 'unpaid'],
+        };
+
         $validated = $request->validate([
             'vendor_name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'due_date' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:500'],
-            'status' => ['required', 'string', Rule::in($bill->status === 'paid' ? ['draft', 'unpaid', 'paid'] : ['draft', 'unpaid'])],
+            'status' => ['required', 'string', Rule::in($billStatusOptions)],
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
         ]);
 
@@ -1214,6 +1355,14 @@ class AccountingAdminController extends Controller
         $wasDraft = $bill->status === 'draft';
         $before = $bill->only(['vendor_name', 'amount', 'status']);
         $vat = $this->accountingService->resolveVatFields($club, (float) $validated['amount'], $bill->vat_rate !== null ? (float) $bill->vat_rate : null);
+
+        // Publishing a draft still has to respect the approval threshold, even though
+        // the requested status was 'unpaid' — otherwise saving as draft first would be
+        // a free bypass.
+        $finalStatus = ($wasDraft && $validated['status'] === 'unpaid')
+            ? $this->accountingService->issuedStatusFor($club, $vat['amount'])
+            : $validated['status'];
+
         $bill->update([
             'vendor_name' => $validated['vendor_name'],
             'category' => $validated['category'],
@@ -1223,17 +1372,45 @@ class AccountingAdminController extends Controller
             'vat_amount' => $vat['vat_amount'],
             'due_date' => $validated['due_date'],
             'notes' => $validated['notes'] ?? null,
-            'status' => $validated['status'],
+            'status' => $finalStatus,
             'media_id' => $validated['media_id'] ?? $bill->media_id,
         ]);
 
         $this->accountingService->log($club, 'bill', $bill->id, 'updated', "Vendor bill {$bill->bill_number} updated.", before: $before, after: $bill->only(['vendor_name', 'amount', 'status']));
 
-        if ($wasDraft && $bill->status === 'unpaid') {
+        if ($wasDraft && $finalStatus === 'unpaid') {
             $this->accountingService->postVendorBillIssuedJournal($club, $bill);
         }
 
         return redirect()->back()->with('success', "Vendor bill {$bill->bill_number} updated successfully.");
+    }
+
+    /**
+     * Activity log for a single entity (bill, invoice, fixed asset, ...), backed by
+     * the append-only LedgerAuditLog trail every mutation already writes to.
+     */
+    public function activityLog(string $clubSlug, string $entityType, int $entityId): JsonResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+
+        abort_unless(in_array($entityType, ['bill', 'invoice', 'fixed_asset', 'journal_entry', 'financial_year'], true), 404);
+
+        $entries = LedgerAuditLog::where('club_id', $club->id)
+            ->where('entity_type', $entityType)
+            ->where('entity_id', $entityId)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->with('user')
+            ->get()
+            ->map(fn (LedgerAuditLog $log) => [
+                'id' => $log->id,
+                'action' => $log->action,
+                'summary' => $log->summary,
+                'user_name' => $log->user?->name ?? 'System',
+                'created_at' => $log->created_at->format('d M Y H:i'),
+            ]);
+
+        return response()->json(['entries' => $entries]);
     }
 
     public function editInvoice(string $clubSlug, int $id): Response
@@ -1386,6 +1563,36 @@ class AccountingAdminController extends Controller
         $this->accountingService->markInvoiceAsPaid($invoice, $request->user());
 
         return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} marked as paid.");
+    }
+
+    public function approveBill(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+        $bill = Bill::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        try {
+            $this->accountingService->approveBill($bill, $request->user());
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', "Vendor bill {$bill->bill_number} approved and posted to Accounts Payable.");
+    }
+
+    public function approveInvoice(Request $request, string $clubSlug, int $id): RedirectResponse
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+        $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
+
+        try {
+            $this->accountingService->approveInvoice($invoice, $request->user());
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} approved and posted to Accounts Receivable.");
     }
 
     public function createContact(string $clubSlug): Response
@@ -2165,7 +2372,7 @@ class AccountingAdminController extends Controller
     public function exportVatReturn(Request $request, string $clubSlug)
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+        ClubAccess::authorize($request->user(), $club, 'view_accounting');
 
         $quarterStart = $request->query('quarter_start');
         $csv = $this->accountingService->getVatReturnCsv($club, $quarterStart);
@@ -2181,7 +2388,7 @@ class AccountingAdminController extends Controller
     public function exportAnnualTreasurerReportPdf(Request $request, string $clubSlug)
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+        ClubAccess::authorize($request->user(), $club, 'view_accounting');
 
         $year = (int) ($request->query('year') ?: now()->year);
         $report = $this->annualTreasurerReportService->build($club, $year);
@@ -2189,6 +2396,16 @@ class AccountingAdminController extends Controller
         $viewData = compact('report', 'cs');
         $filename = "Annual-Treasurers-Report-{$club->slug}-{$year}.pdf";
 
+        return $this->renderAccountingPdf($request, 'pdf.accounting.annual-treasurer-report', $viewData, $filename);
+    }
+
+    /**
+     * Render an accounting PDF, preferring Browsershot (Node) when available and
+     * falling back to DomPDF when it isn't, or if it throws. The render must happen
+     * inside the try, since Pdf::view()->name() only actually renders in toResponse().
+     */
+    private function renderAccountingPdf(Request $request, string $view, array $data, string $filename)
+    {
         // Detect Node & Npm paths for Laravel Herd / macOS / Linux environments
         $nodeBinary = trim((string) shell_exec('which node 2>/dev/null'));
         $npmBinary = trim((string) shell_exec('which npm 2>/dev/null'));
@@ -2217,13 +2434,13 @@ class AccountingAdminController extends Controller
 
         if (! $nodeBinary || ! file_exists($nodeBinary) || ! $npmBinary || ! file_exists($npmBinary)) {
             // No Node/Browsershot available at all in this environment — go straight to DomPDF.
-            return \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.accounting.annual-treasurer-report', $viewData)
+            return \Barryvdh\DomPDF\Facade\Pdf::loadView($view, $data)
                 ->setPaper('a4', 'portrait')
                 ->download($filename);
         }
 
         try {
-            return Pdf::view('pdf.accounting.annual-treasurer-report', $viewData)
+            return Pdf::view($view, $data)
                 ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
                     $browsershot->setNodeBinary($nodeBinary);
                     $binDir = str_replace(' ', '\ ', dirname($nodeBinary));
@@ -2234,7 +2451,7 @@ class AccountingAdminController extends Controller
                 ->toResponse($request);
         } catch (\Throwable $e) {
             // The PDF is only rendered by toResponse(), so it must run inside this try for the fallback to work.
-            return \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.accounting.annual-treasurer-report', $viewData)
+            return \Barryvdh\DomPDF\Facade\Pdf::loadView($view, $data)
                 ->setPaper('a4', 'portrait')
                 ->download($filename);
         }
@@ -2243,7 +2460,7 @@ class AccountingAdminController extends Controller
     public function exportAnnualTreasurerReportCsv(Request $request, string $clubSlug)
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+        ClubAccess::authorize($request->user(), $club, 'view_accounting');
 
         $year = (int) ($request->query('year') ?: now()->year);
         $report = $this->annualTreasurerReportService->build($club, $year);
@@ -2258,7 +2475,7 @@ class AccountingAdminController extends Controller
     public function exportReport(Request $request, string $clubSlug, string $report)
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
-        ClubAccess::authorize($request->user(), $club, 'manage_billing');
+        ClubAccess::authorize($request->user(), $club, 'view_accounting');
 
         $budgetYear = $request->query('budget_year') ? (int) $request->query('budget_year') : null;
 
@@ -2274,6 +2491,24 @@ class AccountingAdminController extends Controller
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
+    }
+
+    public function exportReportPdf(Request $request, string $clubSlug, string $report)
+    {
+        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        ClubAccess::authorize($request->user(), $club, 'view_accounting');
+
+        $budgetYear = $request->query('budget_year') ? (int) $request->query('budget_year') : null;
+
+        try {
+            [$view, $data] = $this->accountingService->getReportPdfView($club, $report, $budgetYear);
+        } catch (\InvalidArgumentException $e) {
+            abort(404, $e->getMessage());
+        }
+
+        $filename = ucwords(str_replace('_', ' ', $report)).' - '.$club->slug.' - '.date('Y-m-d').'.pdf';
+
+        return $this->renderAccountingPdf($request, $view, $data, $filename);
     }
 
     public function filterReconciledDonations(Request $request, string $clubSlug)

@@ -181,7 +181,7 @@ class UserAdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'role' => 'required|in:owner,admin,coach,member,treasurer',
+            'role' => 'required|in:owner,admin,coach,member,treasurer,examiner',
             'rank' => 'nullable|string|max:100',
             'committee_role' => 'nullable|in:chair,secretary,member',
             'member_number' => 'nullable|string|max:100',
@@ -275,7 +275,7 @@ class UserAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
         $validated = $request->validate([
-            'role' => 'required|in:owner,admin,coach,member,treasurer',
+            'role' => 'required|in:owner,admin,coach,member,treasurer,examiner',
         ]);
 
         $targetRole = $club->users()->where('users.id', $userId)->firstOrFail()->pivot->role;

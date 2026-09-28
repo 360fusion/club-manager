@@ -18,6 +18,7 @@ class Bill extends Model
 
     protected $fillable = [
         'club_id',
+        'created_by',
         'bill_number',
         'vendor_name',
         'category',
@@ -87,6 +88,14 @@ class Bill extends Model
     public function paidByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'paid_by_user_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /**

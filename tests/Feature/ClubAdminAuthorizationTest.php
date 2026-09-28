@@ -112,10 +112,13 @@ class ClubAdminAuthorizationTest extends TestCase
     {
         $user = $this->makeClubAdmin(User::factory()->create(), $this->alpha, 'coach');
 
+        // The bare accounting page resolves to view_accounting (a coach never
+        // holds manage_billing, but the page itself is read-only), so that's
+        // the capability a club widens to let a coach see it.
         $this->alpha->update([
             'settings' => array_merge($this->alpha->settings ?? [], [
                 'permission_matrix' => [
-                    'manage_billing' => ['roles' => ['owner', 'admin', 'treasurer', 'coach']],
+                    'view_accounting' => ['roles' => ['owner', 'admin', 'treasurer', 'coach']],
                 ],
             ]),
         ]);

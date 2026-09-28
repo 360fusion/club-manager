@@ -44,6 +44,11 @@ return [
             'description' => 'Access payment history, issue receipts, and manage club platform billing',
             'roles' => ['owner', 'admin', 'treasurer'],
         ],
+        'view_accounting' => [
+            'label' => 'View Accounting (read-only)',
+            'description' => 'View the accounting records, ledgers and reports without being able to change them',
+            'roles' => ['owner', 'admin', 'treasurer', 'examiner'],
+        ],
         'manage_communications' => [
             'label' => 'Communications',
             'description' => 'Create and publish community announcements, posts, and news updates',

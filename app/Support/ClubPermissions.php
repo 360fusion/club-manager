@@ -48,13 +48,66 @@ class ClubPermissions
     {
         $path = trim($path, '/');
 
-        if (! preg_match('#^[^/]+/admin(?:/([^/?]+))?#', $path, $matches)) {
+        if (! preg_match('#^[^/]+/admin(?:/([^/?]+)(?:/(.*))?)?#', $path, $matches)) {
             return null;
         }
 
         $segment = $matches[1] ?? '';
+        $rest = $matches[2] ?? '';
+
+        if ($segment === 'accounting' && self::isReadOnlyAccountingPath($rest)) {
+            return 'view_accounting';
+        }
 
         return config('club_permissions.route_map')[$segment] ?? null;
+    }
+
+    /**
+     * Some /admin/{club}/accounting/... paths are read-only despite living
+     * alongside billing-mutating ones under the same 'accounting' route_map
+     * entry, so an examiner (who only ever holds view_accounting, never
+     * manage_billing) can reach them. route_map can't express this — it only
+     * ever sees the first path segment ('accounting') — so it is resolved
+     * here instead, narrowly, by exact known path shape.
+     *
+     * 'contacts' is deliberately left out of the tab list below even though
+     * it is a read-only SPA tab: its path is byte-identical to the POST
+     * .../accounting/contacts route (create a contact), which has no capability
+     * check of its own beyond this one — including it here would let an
+     * examiner create contacts. Every path this returns false for keeps
+     * requiring manage_billing, unchanged.
+     */
+    private static function isReadOnlyAccountingPath(string $rest): bool
+    {
+        if ($rest === '') {
+            return true; // bare /admin/{club}/accounting
+        }
+
+        // AccountingAdminController::index()'s own SPA tabs; 'reporting' optionally
+        // carries a /{report} suffix.
+        $readOnlyTabs = ['home', 'sales', 'purchases', 'accounting', 'bank-accounts', 'chart-of-accounts', 'reconciliation', 'settings'];
+
+        if (in_array($rest, $readOnlyTabs, true) || preg_match('#^reporting(/[^/]+)?$#', $rest)) {
+            return true;
+        }
+
+        $readOnlyPatterns = [
+            '#^invoices/\d+/edit$#',
+            '#^bills/\d+/edit$#',
+            '#^attachments/\d+$#',
+            '#^reports/[^/]+/export(-pdf)?$#',
+            '#^activity/[^/]+/\d+$#',
+            '#^treasurer-report/export-(pdf|csv)$#',
+            '#^vat-return/export$#',
+        ];
+
+        foreach ($readOnlyPatterns as $pattern) {
+            if (preg_match($pattern, $rest)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

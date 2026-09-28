@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
@@ -11,6 +12,7 @@ use App\Models\Invoice;
 use App\Models\User;
 use App\Services\AccountingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -340,6 +342,62 @@ class AccountingErpTest extends TestCase
         );
     }
 
+    public function test_onboarding_checklist_reflects_real_progress_and_can_be_dismissed(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.index', $this->club->slug));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('onboarding.dismissed', false)
+            ->where('onboarding.steps.0.key', 'bank_account')
+            ->where('onboarding.steps.0.done', false)
+            ->where('onboarding.steps.1.key', 'opening_balance')
+            ->where('onboarding.steps.1.done', false)
+            ->where('onboarding.steps.2.key', 'financial_year_end')
+            ->where('onboarding.steps.2.done', false)
+            ->where('onboarding.steps.3.key', 'vat_settings')
+            ->where('onboarding.steps.3.done', false)
+            ->where('onboarding.steps.3.skippable', true)
+        );
+
+        $ledgerAcc = Account::where('club_id', $this->club->id)->where('code', '1000')->firstOrFail();
+        BankAccount::create([
+            'club_id' => $this->club->id,
+            'account_id' => $ledgerAcc->id,
+            'bank_name' => 'High Street Bank',
+            'account_name' => 'Main Operating Account',
+            'account_type' => 'current',
+            'currency' => 'GBP',
+            'opening_balance' => 0,
+            'is_active' => true,
+        ]);
+        $this->accountingService->setOpeningBalance($this->club, $ledgerAcc, 500.00);
+
+        $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.financial_year_end.update', $this->club->slug), ['financial_year_end_month' => 3])
+            ->assertRedirect();
+
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.index', $this->club->slug));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('onboarding.steps.0.done', true)
+            ->where('onboarding.steps.1.done', true)
+            ->where('onboarding.steps.2.done', true)
+            ->where('settings.financial_year_end_month', 3)
+        );
+
+        $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.onboarding.dismiss', $this->club->slug))
+            ->assertRedirect();
+
+        $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.index', $this->club->slug))
+            ->assertInertia(fn ($page) => $page->where('onboarding.dismissed', true));
+    }
+
     public function test_comparative_income_expenditure_reports_zero_not_fabricated_figures(): void
     {
         $data = $this->accountingService->getComparativeIncomeExpenditureData($this->club);
@@ -388,6 +446,81 @@ class AccountingErpTest extends TestCase
 
         $this->delete(route('admin.accounting.bills.destroy', ['clubSlug' => $this->club->slug, 'id' => $bill->id]))->assertRedirect();
         $this->assertDatabaseMissing('accounting_bills', ['id' => $bill->id]);
+    }
+
+    /**
+     * Regression test for a CHECK constraint on accounting_bills.status that only
+     * exists on Postgres (unpaid/paid/cancelled) — createVendorBill() writes 'draft'
+     * into it, which violated that constraint before the 2026_09_27_000000 migration
+     * dropped it. SQLite (used here) doesn't enforce the constraint at all, so this
+     * test can't reproduce the bug itself; it must be verified manually against a
+     * real Postgres database.
+     */
+    public function test_vendor_bill_can_be_created_as_draft_and_published(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+
+        $bill = $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Draft Supplies Ltd',
+            'category' => 'Facility Maintenance',
+            'amount' => 120.00,
+            'due_date' => '2026-11-01',
+            'is_draft' => true,
+        ]);
+
+        $this->assertEquals('draft', $bill->status);
+
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.bills.publish', ['clubSlug' => $this->club->slug, 'id' => $bill->id]));
+
+        $response->assertRedirect();
+        $this->assertEquals('unpaid', $bill->fresh()->status);
+    }
+
+    public function test_activity_log_returns_entity_history_in_order_and_is_forbidden_without_billing_role(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.bills.store', $this->club->slug), [
+                'vendor_name' => 'Activity Log Vendor',
+                'category' => 'Facility Maintenance',
+                'amount' => 200.00,
+                'due_date' => '2026-11-15',
+            ]);
+        $response->assertRedirect();
+        $bill = Bill::where('club_id', $this->club->id)->where('vendor_name', 'Activity Log Vendor')->firstOrFail();
+
+        $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.bills.pay', ['clubSlug' => $this->club->slug, 'id' => $bill->id]))
+            ->assertRedirect();
+
+        $this->actingAs($this->adminUser)
+            ->put(route('admin.accounting.bills.update', ['clubSlug' => $this->club->slug, 'id' => $bill->id]), [
+                'vendor_name' => 'Activity Log Vendor (renamed)',
+                'category' => 'Facility Maintenance',
+                'amount' => 200.00,
+                'due_date' => '2026-11-15',
+                'status' => 'paid',
+            ])
+            ->assertRedirect();
+
+        $activityResponse = $this->actingAs($this->adminUser)
+            ->getJson(route('admin.accounting.activity_log', ['clubSlug' => $this->club->slug, 'entityType' => 'bill', 'entityId' => $bill->id]));
+
+        $activityResponse->assertOk();
+        $entries = $activityResponse->json('entries');
+        $this->assertCount(2, $entries);
+        $this->assertEquals('updated', $entries[0]['action']);
+        $this->assertEquals('paid', $entries[1]['action']);
+        $this->assertEquals($this->adminUser->name, $entries[0]['user_name']);
+
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+
+        $this->actingAs($member)
+            ->getJson(route('admin.accounting.activity_log', ['clubSlug' => $this->club->slug, 'entityType' => 'bill', 'entityId' => $bill->id]))
+            ->assertForbidden();
     }
 
     public function test_vat_is_off_by_default_and_never_touches_amounts(): void
@@ -538,5 +671,299 @@ class AccountingErpTest extends TestCase
         $this->actingAs($this->adminUser)
             ->get(route('admin.accounting.reports.export', ['clubSlug' => $this->club->slug, 'report' => 'not_a_real_report']))
             ->assertNotFound();
+    }
+
+    public function test_admin_can_export_reports_as_pdf(): void
+    {
+        $this->accountingService->recordMemberDuesPayment($this->club, 100.00, 'Dues');
+
+        foreach (['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'budget_vs_actual'] as $report) {
+            $response = $this->actingAs($this->adminUser)
+                ->get(route('admin.accounting.reports.export_pdf', ['clubSlug' => $this->club->slug, 'report' => $report]));
+
+            $response->assertOk();
+            $response->assertHeader('content-type', 'application/pdf');
+        }
+    }
+
+    public function test_exporting_an_unknown_report_as_pdf_returns_404(): void
+    {
+        $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.reports.export_pdf', ['clubSlug' => $this->club->slug, 'report' => 'not_a_real_report']))
+            ->assertNotFound();
+    }
+
+    public function test_comparative_income_expenditure_has_no_standalone_pdf_export(): void
+    {
+        $this->actingAs($this->adminUser)
+            ->get(route('admin.accounting.reports.export_pdf', ['clubSlug' => $this->club->slug, 'report' => 'comparative_income_expenditure']))
+            ->assertNotFound();
+    }
+
+    public function test_examiner_role_can_view_but_not_change_the_accounting_records(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+
+        $examiner = User::factory()->create();
+        $this->club->users()->attach($examiner->id, ['role' => 'examiner', 'status' => 'active']);
+
+        $bill = Bill::create([
+            'club_id' => $this->club->id,
+            'bill_number' => 'BILL-EXAM-1',
+            'vendor_name' => 'Examiner Test Vendor',
+            'category' => 'General Expense',
+            'amount' => 75.00,
+            'due_date' => '2026-11-01',
+            'status' => 'unpaid',
+        ]);
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+        $invoice = Invoice::create([
+            'club_id' => $this->club->id,
+            'user_id' => $member->id,
+            'title' => 'Examiner Test Invoice',
+            'amount' => 40.00,
+            'status' => 'unpaid',
+            'invoice_number' => 'INV-EXAM-1',
+        ]);
+
+        // Explicitly reclassified GET routes: an examiner must see 200 on every one of them.
+        $getUrls = [
+            route('admin.accounting.index', $this->club->slug),
+            route('admin.accounting.index', ['clubSlug' => $this->club->slug, 'tab' => 'purchases']),
+            route('admin.accounting.index', ['clubSlug' => $this->club->slug, 'tab' => 'sales']),
+            route('admin.accounting.bills.edit', ['clubSlug' => $this->club->slug, 'id' => $bill->id]),
+            route('admin.accounting.invoices.edit', ['clubSlug' => $this->club->slug, 'id' => $invoice->id]),
+            route('admin.accounting.reports.export', ['clubSlug' => $this->club->slug, 'report' => 'account_summary']),
+            route('admin.accounting.reports.export_pdf', ['clubSlug' => $this->club->slug, 'report' => 'account_summary']),
+            route('admin.accounting.activity_log', ['clubSlug' => $this->club->slug, 'entityType' => 'bill', 'entityId' => $bill->id]),
+            route('admin.accounting.vat_return.export', $this->club->slug),
+            route('admin.accounting.treasurer_report.export_pdf', $this->club->slug),
+            route('admin.accounting.treasurer_report.export_csv', $this->club->slug),
+        ];
+
+        foreach ($getUrls as $url) {
+            $status = $this->actingAs($examiner)->get($url)->getStatusCode();
+            $this->assertEquals(200, $status, $url);
+        }
+
+        // Every mutating accounting route: an examiner must be refused, regardless of
+        // whether the referenced record exists — the capability check runs as route
+        // middleware, before the controller ever looks the record up.
+        $writeRoutes = [];
+        foreach (Route::getRoutes() as $route) {
+            $method = array_values(array_intersect($route->methods(), ['POST', 'PUT', 'PATCH', 'DELETE']))[0] ?? null;
+            if ($method && preg_match('#^\{clubSlug\}/admin/accounting#', $route->uri())) {
+                $writeRoutes[] = [$method, $route->uri()];
+            }
+        }
+        $this->assertNotEmpty($writeRoutes);
+
+        $leaks = [];
+        foreach ($writeRoutes as [$method, $uri]) {
+            $path = preg_replace(['#\{clubSlug\}#', '#\{[^}]+\??\}#'], [$this->club->slug, '1'], $uri);
+            $status = $this->actingAs($examiner)->call($method, '/'.$path)->getStatusCode();
+
+            if ($status !== 403) {
+                $leaks[] = $method.' '.$uri.' => '.$status;
+            }
+        }
+
+        $this->assertSame([], $leaks, "Mutating accounting routes an examiner did not get 403 on:\n".implode("\n", $leaks));
+    }
+
+    public function test_approval_threshold_disabled_leaves_bill_creation_unchanged(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+
+        $bill = $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Big Spend Vendor',
+            'category' => 'General Expense',
+            'amount' => 10000.00,
+            'due_date' => '2026-11-01',
+        ]);
+
+        $this->assertEquals('unpaid', $bill->status);
+        $this->assertDatabaseHas('accounting_journal_entries', ['source_type' => 'VendorBill', 'source_id' => $bill->id]);
+    }
+
+    public function test_bill_above_approval_threshold_is_held_pending_approval_with_no_journal_posted(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], [
+            'approval_threshold' => ['enabled' => true, 'amount' => 500.00],
+        ])]);
+
+        $bill = $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Big Spend Vendor',
+            'category' => 'General Expense',
+            'amount' => 750.00,
+            'due_date' => '2026-11-01',
+        ]);
+
+        $this->assertEquals('pending_approval', $bill->status);
+        $this->assertDatabaseMissing('accounting_journal_entries', ['source_type' => 'VendorBill', 'source_id' => $bill->id]);
+
+        // Below the threshold: unaffected.
+        $smallBill = $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Small Spend Vendor',
+            'category' => 'General Expense',
+            'amount' => 100.00,
+            'due_date' => '2026-11-01',
+        ]);
+        $this->assertEquals('unpaid', $smallBill->status);
+        $this->assertDatabaseHas('accounting_journal_entries', ['source_type' => 'VendorBill', 'source_id' => $smallBill->id]);
+    }
+
+    public function test_pending_approval_bill_can_be_approved_by_a_different_admin_and_posts_the_journal(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], [
+            'approval_threshold' => ['enabled' => true, 'amount' => 500.00],
+        ])]);
+
+        $bill = $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Big Spend Vendor',
+            'category' => 'General Expense',
+            'amount' => 750.00,
+            'due_date' => '2026-11-01',
+            'created_by' => $this->adminUser->id,
+        ]);
+
+        $approver = User::factory()->create();
+        $this->makeClubAdmin($approver, $this->club, 'treasurer');
+
+        $this->actingAs($approver)
+            ->post(route('admin.accounting.bills.approve', ['clubSlug' => $this->club->slug, 'id' => $bill->id]))
+            ->assertRedirect();
+
+        $bill->refresh();
+        $this->assertEquals('unpaid', $bill->status);
+        $this->assertDatabaseHas('accounting_journal_entries', ['source_type' => 'VendorBill', 'source_id' => $bill->id]);
+    }
+
+    public function test_pending_approval_bill_cannot_be_approved_by_its_own_creator(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], [
+            'approval_threshold' => ['enabled' => true, 'amount' => 500.00],
+        ])]);
+
+        $bill = $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Big Spend Vendor',
+            'category' => 'General Expense',
+            'amount' => 750.00,
+            'due_date' => '2026-11-01',
+            'created_by' => $this->adminUser->id,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.bills.approve', ['clubSlug' => $this->club->slug, 'id' => $bill->id]));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+        $bill->refresh();
+        $this->assertEquals('pending_approval', $bill->status);
+        $this->assertDatabaseMissing('accounting_journal_entries', ['source_type' => 'VendorBill', 'source_id' => $bill->id]);
+    }
+
+    public function test_publishing_a_draft_bill_above_threshold_holds_it_pending_approval_instead_of_bypassing_it(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], [
+            'approval_threshold' => ['enabled' => true, 'amount' => 500.00],
+        ])]);
+
+        $bill = $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Big Spend Vendor',
+            'category' => 'General Expense',
+            'amount' => 750.00,
+            'due_date' => '2026-11-01',
+            'is_draft' => true,
+        ]);
+        $this->assertEquals('draft', $bill->status);
+
+        $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.bills.publish', ['clubSlug' => $this->club->slug, 'id' => $bill->id]))
+            ->assertRedirect();
+
+        $bill->refresh();
+        $this->assertEquals('pending_approval', $bill->status);
+        $this->assertDatabaseMissing('accounting_journal_entries', ['source_type' => 'VendorBill', 'source_id' => $bill->id]);
+    }
+
+    public function test_invoice_above_approval_threshold_is_held_pending_approval_and_can_be_approved(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], [
+            'approval_threshold' => ['enabled' => true, 'amount' => 500.00],
+        ])]);
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+
+        $response = $this->actingAs($this->adminUser)
+            ->post(route('admin.accounting.invoices.store', $this->club->slug), [
+                'user_id' => $member->id,
+                'title' => 'Big Invoice',
+                'amount' => 900.00,
+            ]);
+        $response->assertRedirect();
+
+        $invoice = Invoice::where('club_id', $this->club->id)->where('title', 'Big Invoice')->firstOrFail();
+        $this->assertEquals('pending_approval', $invoice->status);
+        $this->assertDatabaseMissing('accounting_journal_entries', ['source_type' => 'Invoice', 'source_id' => $invoice->id]);
+
+        $approver = User::factory()->create();
+        $this->makeClubAdmin($approver, $this->club, 'treasurer');
+
+        $this->actingAs($approver)
+            ->post(route('admin.accounting.invoices.approve', ['clubSlug' => $this->club->slug, 'id' => $invoice->id]))
+            ->assertRedirect();
+
+        $invoice->refresh();
+        $this->assertEquals('unpaid', $invoice->status);
+        $this->assertDatabaseHas('accounting_journal_entries', ['source_type' => 'Invoice', 'source_id' => $invoice->id]);
+    }
+
+    public function test_pending_approval_bill_can_still_be_deleted(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], [
+            'approval_threshold' => ['enabled' => true, 'amount' => 500.00],
+        ])]);
+
+        $bill = $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Big Spend Vendor',
+            'category' => 'General Expense',
+            'amount' => 750.00,
+            'due_date' => '2026-11-01',
+        ]);
+
+        $this->actingAs($this->adminUser)
+            ->delete(route('admin.accounting.bills.destroy', ['clubSlug' => $this->club->slug, 'id' => $bill->id]))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('accounting_bills', ['id' => $bill->id]);
+    }
+
+    public function test_pending_approval_bills_appear_in_aged_payables_with_a_distinct_status(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $this->club->update(['settings' => array_merge($this->club->settings ?? [], [
+            'approval_threshold' => ['enabled' => true, 'amount' => 500.00],
+        ])]);
+
+        $this->accountingService->createVendorBill($this->club, [
+            'vendor_name' => 'Big Spend Vendor',
+            'category' => 'General Expense',
+            'amount' => 750.00,
+            'due_date' => now()->addDays(10)->format('Y-m-d'),
+        ]);
+
+        $reports = $this->accountingService->getReportsData($this->club);
+
+        $this->assertCount(1, $reports['aged_payables']['items']);
+        $this->assertEquals('pending_approval', $reports['aged_payables']['items'][0]['status']);
+        $this->assertEquals(750.00, $reports['aged_payables']['total']);
     }
 }

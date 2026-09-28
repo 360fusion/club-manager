@@ -287,6 +287,7 @@ class ClubSettingsController extends Controller
                 ['code' => 'coach', 'name' => 'Secretary', 'badge' => 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800/60'],
                 ['code' => 'treasurer', 'name' => 'Treasurer', 'badge' => 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800/60'],
                 ['code' => 'member', 'name' => 'Media Manager', 'badge' => 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-800'],
+                ['code' => 'examiner', 'name' => 'Examiner / Auditor', 'badge' => 'bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800/60'],
             ],
         ]);
     }
@@ -360,7 +361,7 @@ class ClubSettingsController extends Controller
             'enabled_modules.*' => 'string|max:100',
             'permission_matrix' => 'nullable|array|max:100',
             'permission_matrix.*.roles' => 'nullable|array|max:10',
-            'permission_matrix.*.roles.*' => ['string', Rule::in(['owner', 'admin', 'coach', 'treasurer', 'member'])],
+            'permission_matrix.*.roles.*' => ['string', Rule::in(['owner', 'admin', 'coach', 'treasurer', 'member', 'examiner'])],
 
             // Subscriptions & Dues
             'dues_grace_period_days' => 'nullable|integer|min:0|max:180',

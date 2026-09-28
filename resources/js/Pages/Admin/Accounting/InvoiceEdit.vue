@@ -70,9 +70,10 @@ const submit = () => {
                 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200': invoice.status === 'paid',
                 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200': invoice.status === 'unpaid',
                 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200': invoice.status === 'draft',
+                'bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200': invoice.status === 'pending_approval',
               }"
             >
-              {{ invoice.status }}
+              {{ invoice.status === 'pending_approval' ? 'pending approval' : invoice.status }}
             </span>
           </div>
           <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Update invoice details, assigned member, or status.</p>
@@ -168,10 +169,12 @@ const submit = () => {
                   class="w-full px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400"
                 >
                   <option value="draft">Draft</option>
-                  <option value="unpaid">Unpaid (Published)</option>
+                  <option v-if="invoice.status !== 'pending_approval'" value="unpaid">Unpaid (Published)</option>
+                  <option v-if="invoice.status === 'pending_approval'" value="pending_approval">Pending Approval</option>
                   <option value="paid" :disabled="invoice.status !== 'paid'">Paid</option>
                 </select>
                 <p v-if="form.errors.status" class="text-xs text-rose-500 font-semibold">{{ form.errors.status }}</p>
+                <p v-if="invoice.status === 'pending_approval'" class="text-xs text-slate-500 dark:text-slate-400">This invoice is over the approval threshold. Use the "Approve" action from the invoices list (by another admin or treasurer) to post it — it cannot be moved to Unpaid from here.</p>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Use the "Mark Paid" action from the invoices list to record a payment — it posts the settlement to the ledger.</p>
               </div>
             </div>

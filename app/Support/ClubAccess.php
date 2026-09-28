@@ -50,6 +50,8 @@ final class ClubAccess
     /**
      * Whether the actor may set a member to $newRole, given the member's current role.
      * Only an owner may grant, change or remove the owner role, and the last owner stays.
+     * Only an owner/admin/treasurer may grant or revoke the examiner role, since it
+     * grants read access to the club's full accounting records.
      */
     public static function canAssignRole(User $actor, Club $club, string $newRole, ?string $targetCurrentRole): bool
     {
@@ -63,6 +65,10 @@ final class ClubAccess
             $owners = $club->users()->wherePivot('status', 'active')->wherePivot('role', 'owner')->count();
 
             return ! ($targetCurrentRole === 'owner' && $newRole !== 'owner' && $owners <= 1);
+        }
+
+        if (($newRole === 'examiner' || $targetCurrentRole === 'examiner') && ! in_array($actorRole, ['admin', 'treasurer'], true)) {
+            return false;
         }
 
         return $actorRole !== null && $newRole !== 'owner' && $targetCurrentRole !== 'owner';

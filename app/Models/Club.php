@@ -663,4 +663,19 @@ class Club extends Model implements HasMedia
             ->where('financial_year', $year)
             ->exists();
     }
+
+    /**
+     * Off by default — a club that never sets this sees no change in behaviour.
+     * When enabled, a bill/invoice at or above the amount is held for a second
+     * admin's sign-off (see AccountingService::amountRequiresApproval()).
+     *
+     * @return array{enabled: bool, amount: ?float}
+     */
+    public function approvalThresholdSettings(): array
+    {
+        return array_merge([
+            'enabled' => false,
+            'amount' => null,
+        ], $this->settings['approval_threshold'] ?? []);
+    }
 }

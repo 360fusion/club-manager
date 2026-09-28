@@ -99,6 +99,8 @@ const roleBadgeClass = (role) => {
       return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60';
     case 'treasurer':
       return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60';
+    case 'examiner':
+      return 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/60';
     default:
       return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800';
   }
@@ -456,6 +458,7 @@ const submitAddMember = () => {
             <option value="admin">Admin / Owner</option>
             <option value="coach">Secretary</option>
             <option value="treasurer">Treasurer</option>
+            <option value="examiner">Examiner / Auditor</option>
             <option value="member">Media Manager</option>
           </select>
 
@@ -557,6 +560,7 @@ const submitAddMember = () => {
                     <option value="member">Media Manager</option>
                     <option value="coach">Secretary</option>
                     <option value="treasurer">Treasurer</option>
+                    <option value="examiner">Examiner / Auditor</option>
                     <option value="admin">Admin</option>
                   </select>
                 </td>
@@ -753,6 +757,7 @@ const submitAddMember = () => {
                 <option value="member">Media Manager</option>
                 <option value="coach">Secretary</option>
                 <option value="treasurer">Treasurer</option>
+                <option value="examiner">Examiner / Auditor</option>
                 <option value="admin">Admin</option>
               </select>
             </div>

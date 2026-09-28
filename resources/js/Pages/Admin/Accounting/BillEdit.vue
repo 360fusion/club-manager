@@ -56,9 +56,10 @@ const submit = () => {
                 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200': bill.status === 'paid',
                 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200': bill.status === 'unpaid',
                 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200': bill.status === 'draft',
+                'bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200': bill.status === 'pending_approval',
               }"
             >
-              {{ bill.status }}
+              {{ bill.status === 'pending_approval' ? 'pending approval' : bill.status }}
             </span>
           </div>
           <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Update vendor bill details, category, due date, or status.</p>
@@ -146,11 +147,13 @@ const submit = () => {
                   class="w-full px-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400"
                 >
                   <option value="draft">Draft</option>
-                  <option value="unpaid">Unpaid (Awaiting Payment)</option>
+                  <option v-if="bill.status !== 'pending_approval'" value="unpaid">Unpaid (Awaiting Payment)</option>
+                  <option v-if="bill.status === 'pending_approval'" value="pending_approval">Pending Approval</option>
                   <option value="paid" :disabled="bill.status !== 'paid'">Paid</option>
                 </select>
                 <p v-if="form.errors.status" class="text-xs text-rose-500 font-semibold">{{ form.errors.status }}</p>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Use the "Mark Paid" action from the bills list to record a payment — it posts the settlement to the ledger.</p>
+                <p v-if="bill.status === 'pending_approval'" class="text-xs text-slate-500 dark:text-slate-400">This bill is over the approval threshold. Use the "Approve" action from the bills list (by another admin or treasurer) to post it — it cannot be moved to Unpaid from here.</p>
               </div>
 
               <div class="space-y-1 sm:col-span-2">

@@ -96,6 +96,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  approvalThreshold: {
+    type: Object,
+    default: () => ({ enabled: false, amount: null }),
+  },
   fixedAssets: {
     type: Array,
     default: () => [],
@@ -120,6 +124,14 @@ const props = defineProps({
   recurringBillTemplates: {
     type: Array,
     default: () => [],
+  },
+  onboarding: {
+    type: Object,
+    default: () => ({ dismissed: false, steps: [] }),
+  },
+  canManageBilling: {
+    type: Boolean,
+    default: true,
   },
   initialTab: {
     type: String,
@@ -158,6 +170,8 @@ const props = defineProps({
 const validTabs = ['home', 'sales', 'purchases', 'reporting', 'accounting', 'bank-accounts', 'chart-of-accounts', 'reconciliation', 'contacts', 'settings'];
 const validReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'reconciliation_summary', 'vat_return', 'fixed_assets', 'budget_vs_actual', 'treasurer_report', 'recurring_bills'];
 const exportableReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'comparative_income_expenditure', 'budget_vs_actual'];
+// Comparative I&E already has its own PDF via the Annual Treasurer's Report.
+const pdfExportableReports = ['account_summary', 'aged_payables', 'aged_receivables', 'balance_sheet', 'cash_summary', 'executive_summary', 'profit_and_loss', 'budget_vs_actual'];
 
 const parseUrlState = () => {
   if (typeof window === 'undefined') {
@@ -279,6 +293,18 @@ const navigateTo = (tabName, reportName = null, bankAccountId = null) => {
       history.pushState({ tab: tabName, report: reportName }, '', targetUrl);
     }
   }
+};
+
+// ── Guided First-Run Setup Checklist ─────────────────────────────────────────
+const onboardingDismissedLocally = ref(false);
+const showOnboarding = computed(() => {
+  if (props.onboarding.dismissed || onboardingDismissedLocally.value) return false;
+  return props.onboarding.steps.some((step) => !step.done && !step.skippable);
+});
+
+const dismissOnboarding = () => {
+  onboardingDismissedLocally.value = true;
+  router.post(route('admin.accounting.onboarding.dismiss', props.club.slug), {}, { preserveState: true, preserveScroll: true });
 };
 
 const activeDetailsTxId = ref(null);
@@ -1237,6 +1263,29 @@ const submitVatSettings = () => {
   });
 };
 
+// Financial Year End Form
+const financialYearEndForm = useForm({
+  financial_year_end_month: props.settings.financial_year_end_month || 4,
+});
+
+const submitFinancialYearEnd = () => {
+  financialYearEndForm.post(route('admin.accounting.financial_year_end.update', props.club.slug), {
+    preserveScroll: true,
+  });
+};
+
+// Approval Threshold Form
+const approvalThresholdForm = useForm({
+  enabled: props.approvalThreshold.enabled,
+  amount: props.approvalThreshold.amount,
+});
+
+const submitApprovalThreshold = () => {
+  approvalThresholdForm.post(route('admin.accounting.approval_threshold.update', props.club.slug), {
+    preserveScroll: true,
+  });
+};
+
 // Fixed Asset Register
 const showAddAssetForm = ref(false);
 const fixedAssetForm = useForm({
@@ -1624,6 +1673,27 @@ const deleteAttachment = () => {
   });
 };
 
+// ── Activity Log Modal (LedgerAuditLog history for one bill/invoice/asset) ──
+const activityModal = ref({
+  show: false,
+  label: '',
+  loading: false,
+  entries: [],
+});
+
+const openActivityLog = async (entityType, entityId, label) => {
+  activityModal.value = { show: true, label, loading: true, entries: [] };
+  try {
+    const res = await fetch(route('admin.accounting.activity_log', { clubSlug: props.club.slug, entityType, entityId }));
+    if (res.ok) {
+      const data = await res.json();
+      activityModal.value.entries = data.entries || [];
+    }
+  } finally {
+    activityModal.value.loading = false;
+  }
+};
+
 const markInvoicePaid = (id) => {
   if (confirm('Mark this invoice as paid? This will automatically deposit funds to Operating Bank Account.')) {
     router.post(route('admin.accounting.invoices.pay', { clubSlug: props.club.slug, id }));
@@ -1633,6 +1703,18 @@ const markInvoicePaid = (id) => {
 const markBillPaid = (id) => {
   if (confirm('Mark this vendor bill as paid? This will automatically clear Accounts Payable.')) {
     router.post(route('admin.accounting.bills.pay', { clubSlug: props.club.slug, id }));
+  }
+};
+
+const approveInvoice = (id) => {
+  if (confirm('Approve this invoice? It will be posted to Accounts Receivable.')) {
+    router.post(route('admin.accounting.invoices.approve', { clubSlug: props.club.slug, id }));
+  }
+};
+
+const approveBill = (id) => {
+  if (confirm('Approve this vendor bill? It will be posted to Accounts Payable.')) {
+    router.post(route('admin.accounting.bills.approve', { clubSlug: props.club.slug, id }));
   }
 };
 
@@ -1840,6 +1922,7 @@ const getTypeBadge = (type) => {
               </button>
 
               <button
+                v-if="canManageBilling"
                 type="button"
                 @click="showAccountingDropdown = false; openOpeningBalanceModal()"
                 class="w-full text-left px-4 py-2.5 hover:bg-slate-800 dark:hover:bg-slate-600 hover:text-white flex items-center gap-2 cursor-pointer transition-colors"
@@ -1862,6 +1945,7 @@ const getTypeBadge = (type) => {
           </button>
 
           <button
+            v-if="canManageBilling"
             type="button"
             @click="navigateTo('reconciliation')"
             :class="[
@@ -1880,7 +1964,7 @@ const getTypeBadge = (type) => {
         <!-- Quick Action Dropdown and Settings Link in Header Bar -->
         <div class="flex items-center gap-2 px-2 py-1 shrink-0">
           <!-- + Add Pop-Out Menu -->
-          <div class="relative add-menu-container">
+          <div v-if="canManageBilling" class="relative add-menu-container">
             <button
               type="button"
               @click.stop="showAddMenu = !showAddMenu"
@@ -1928,6 +2012,44 @@ const getTypeBadge = (type) => {
           >
             <span>⚙️ Settings</span>
           </Link>
+        </div>
+      </div>
+
+      <!-- Read-Only Access Notice (examiner role) -->
+      <div v-if="!canManageBilling" class="bg-purple-50 dark:bg-purple-950/30 rounded-2xl border border-purple-200 dark:border-purple-800/60 px-4 py-3 flex items-center gap-2.5 text-xs">
+        <span class="text-base">🔎</span>
+        <span class="font-semibold text-purple-800 dark:text-purple-200">You have read-only access to this club's accounting records. Actions that change the books are hidden.</span>
+      </div>
+
+      <!-- Guided First-Run Setup Checklist -->
+      <div v-if="activeTab === 'home' && showOnboarding" class="bg-blue-50 dark:bg-blue-950/30 rounded-3xl border border-blue-200 dark:border-blue-800/60 shadow-sm p-6 space-y-4">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h3 class="text-sm font-black text-blue-900 dark:text-blue-100">Get your accounting set up</h3>
+            <p class="text-xs text-blue-700 dark:text-blue-300 mt-0.5">A few quick steps before the figures above mean anything.</p>
+          </div>
+          <button
+            type="button"
+            @click="dismissOnboarding"
+            class="text-[11px] font-bold text-blue-500 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 cursor-pointer whitespace-nowrap"
+          >
+            Dismiss ✕
+          </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            v-for="step in onboarding.steps"
+            :key="step.key"
+            type="button"
+            @click="navigateTo(step.tab)"
+            class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-blue-100 dark:border-blue-900/60 text-left hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer"
+          >
+            <span class="text-lg shrink-0">{{ step.done ? '✅' : '⬜️' }}</span>
+            <span class="min-w-0">
+              <span class="block text-xs font-extrabold text-slate-900 dark:text-white">{{ step.label }}</span>
+              <span v-if="step.skippable" class="block text-[10px] text-slate-400 dark:text-slate-500 font-semibold">Optional</span>
+            </span>
+          </button>
         </div>
       </div>
 
@@ -2120,6 +2242,7 @@ const getTypeBadge = (type) => {
             <p class="text-xs text-slate-500 dark:text-slate-400">Track member dues, locker fees, and ticket invoices.</p>
           </div>
           <Link
+            v-if="canManageBilling"
             :href="route('admin.accounting.invoices.create', club.slug)"
             class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer flex items-center gap-1.5"
           >
@@ -2227,8 +2350,8 @@ const getTypeBadge = (type) => {
                 </td>
                 <td class="py-3 px-4 text-slate-500 dark:text-slate-400">{{ inv.created_at }}</td>
                 <td class="py-3 px-4">
-                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', inv.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : inv.status === 'draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']">
-                    {{ inv.status }}
+                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', inv.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : inv.status === 'draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700' : inv.status === 'pending_approval' ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']">
+                    {{ inv.status === 'pending_approval' ? 'pending approval' : inv.status }}
                   </span>
                   <span v-if="inv.reconciled_at" title="Confirmed against a bank statement line" class="ml-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/60">
                     🔗 Reconciled
@@ -2238,7 +2361,7 @@ const getTypeBadge = (type) => {
                 <td class="py-3 px-4 text-center">
                   <div class="flex items-center justify-center gap-1.5">
                     <button
-                      v-if="inv.status === 'draft'"
+                      v-if="canManageBilling && inv.status === 'draft'"
                       type="button"
                       @click="publishInvoice(inv.id)"
                       title="Issue/Publish Invoice & Post to Ledger"
@@ -2247,17 +2370,36 @@ const getTypeBadge = (type) => {
                       🚀 Issue
                     </button>
                     <button
-                      v-else-if="inv.status !== 'paid'"
+                      v-else-if="canManageBilling && inv.status === 'pending_approval'"
+                      type="button"
+                      :disabled="inv.can_approve === false"
+                      :title="inv.can_approve === false ? 'You raised this invoice, so you cannot also approve it — ask another admin or treasurer.' : 'Approve & Post Invoice to Accounts Receivable'"
+                      @click="approveInvoice(inv.id)"
+                      class="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white border border-purple-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      ✅ Approve
+                    </button>
+                    <button
+                      v-else-if="canManageBilling && inv.status === 'unpaid'"
                       type="button"
                       @click="markInvoicePaid(inv.id)"
                       class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
                     >
                       ✓ Mark Paid
                     </button>
-                    <span v-else class="text-[10px] font-bold text-slate-400">
+                    <span v-else-if="inv.status === 'paid'" class="text-[10px] font-bold text-slate-400">
                       Paid {{ inv.paid_at }}
                       <span v-if="!inv.reconciled_at" class="block text-slate-400 dark:text-slate-500 normal-case font-semibold">Not yet reconciled</span>
                     </span>
+                    <span v-else class="text-[10px] font-bold text-slate-400 uppercase">{{ inv.status === 'pending_approval' ? 'pending approval' : inv.status }}</span>
+                    <button
+                      type="button"
+                      @click="openActivityLog('invoice', inv.id, `Invoice ${inv.invoice_number}`)"
+                      title="View Activity Log"
+                      class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    >
+                      🕘
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -2276,6 +2418,7 @@ const getTypeBadge = (type) => {
             <p class="text-xs text-slate-500 dark:text-slate-400">Track equipment purchases, facility bills, and accounts payable.</p>
           </div>
           <Link
+            v-if="canManageBilling"
             :href="route('admin.accounting.bills.create', club.slug)"
             class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm flex items-center gap-1.5 transition-colors"
           >
@@ -2385,8 +2528,8 @@ const getTypeBadge = (type) => {
                 </td>
                 <td class="py-3 px-4 text-slate-500 dark:text-slate-400">{{ b.due_date }}</td>
                 <td class="py-3 px-4">
-                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', b.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : b.status === 'draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60']">
-                    {{ b.status }}
+                  <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', b.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : b.status === 'draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700' : b.status === 'pending_approval' ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/60' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60']">
+                    {{ b.status === 'pending_approval' ? 'pending approval' : b.status }}
                   </span>
                   <span v-if="b.reconciled_at" title="Confirmed against a bank statement line" class="ml-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/60">
                     🔗 Reconciled
@@ -2396,7 +2539,7 @@ const getTypeBadge = (type) => {
                 <td class="py-3 px-4 text-center">
                   <div class="flex items-center justify-center gap-1.5">
                     <button
-                      v-if="b.status === 'draft'"
+                      v-if="canManageBilling && b.status === 'draft'"
                       type="button"
                       @click="publishBill(b.id)"
                       title="Approve & Post Bill to Accounts Payable"
@@ -2405,17 +2548,36 @@ const getTypeBadge = (type) => {
                       🚀 Approve
                     </button>
                     <button
-                      v-else-if="b.status !== 'paid'"
+                      v-else-if="canManageBilling && b.status === 'pending_approval'"
+                      type="button"
+                      :disabled="b.can_approve === false"
+                      :title="b.can_approve === false ? 'You raised this bill, so you cannot also approve it — ask another admin or treasurer.' : 'Sign Off & Post Bill to Accounts Payable'"
+                      @click="approveBill(b.id)"
+                      class="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white border border-purple-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      ✅ Sign Off
+                    </button>
+                    <button
+                      v-else-if="canManageBilling && b.status === 'unpaid'"
                       type="button"
                       @click="markBillPaid(b.id)"
                       class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
                     >
                       ✓ Pay Bill
                     </button>
-                    <span v-else class="text-[10px] font-bold text-slate-400">
+                    <span v-else-if="b.status === 'paid'" class="text-[10px] font-bold text-slate-400">
                       Paid {{ b.paid_at }}
                       <span v-if="!b.reconciled_at" class="block text-slate-400 dark:text-slate-500 normal-case font-semibold">Not yet reconciled</span>
                     </span>
+                    <span v-else class="text-[10px] font-bold text-slate-400 uppercase">{{ b.status === 'pending_approval' ? 'pending approval' : b.status }}</span>
+                    <button
+                      type="button"
+                      @click="openActivityLog('bill', b.id, `Bill ${b.bill_number}`)"
+                      title="View Activity Log"
+                      class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    >
+                      🕘
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -2438,6 +2600,13 @@ const getTypeBadge = (type) => {
               class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
             >
               ⬇️ Export CSV
+            </a>
+            <a
+              v-if="pdfExportableReports.includes(selectedReport)"
+              :href="route('admin.accounting.reports.export_pdf', { clubSlug: club.slug, report: selectedReport })"
+              class="px-3.5 py-1.5 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
+            >
+              📄 Export PDF
             </a>
             <button
               v-if="selectedReport && selectedReport !== 'reconciliation_summary'"
@@ -2842,6 +3011,9 @@ const getTypeBadge = (type) => {
                       <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60">
                         {{ b.bucket }}
                       </span>
+                      <span v-if="b.status === 'pending_approval'" class="ml-1 px-2 py-0.5 rounded text-[10px] font-black bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800/60">
+                        ⏳ Pending Approval
+                      </span>
                     </td>
                     <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900 dark:text-white">{{ formatCurrency(b.amount) }}</td>
                   </tr>
@@ -2900,6 +3072,9 @@ const getTypeBadge = (type) => {
                     <td class="py-2.5 px-4">
                       <span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60">
                         {{ inv.bucket }}
+                      </span>
+                      <span v-if="inv.status === 'pending_approval'" class="ml-1 px-2 py-0.5 rounded text-[10px] font-black bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800/60">
+                        ⏳ Pending Approval
                       </span>
                     </td>
                     <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900 dark:text-white">{{ formatCurrency(inv.amount) }}</td>
@@ -3282,7 +3457,7 @@ const getTypeBadge = (type) => {
                 <h3 class="text-xl font-black text-slate-900 dark:text-white">Fixed Asset Register</h3>
                 <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">Cost, accumulated depreciation and net book value.</p>
               </div>
-              <div class="flex items-center gap-2">
+              <div v-if="canManageBilling" class="flex items-center gap-2">
                 <input v-model="depreciationForm.period" placeholder="Period e.g. 2026" class="w-28 px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl" />
                 <button type="button" @click="runDepreciation" class="px-3 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer">
                   📉 Run Depreciation
@@ -3293,7 +3468,7 @@ const getTypeBadge = (type) => {
               </div>
             </div>
 
-            <form v-if="showAddAssetForm" @submit.prevent="submitFixedAsset" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <form v-if="canManageBilling && showAddAssetForm" @submit.prevent="submitFixedAsset" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
               <input v-model="fixedAssetForm.name" placeholder="Asset name (e.g. Racing Eight)" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl sm:col-span-2" />
               <input v-model="fixedAssetForm.category" placeholder="Category" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
               <input v-model="fixedAssetForm.purchase_date" type="date" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
@@ -3338,9 +3513,19 @@ const getTypeBadge = (type) => {
                         <span v-else class="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-black uppercase">Active</span>
                       </td>
                       <td class="py-2 px-3 text-right">
-                        <button v-if="!asset.is_disposed" type="button" @click="disposingAssetId = disposingAssetId === asset.id ? null : asset.id" class="text-[10px] font-extrabold text-rose-700 dark:text-rose-300 hover:underline cursor-pointer">
-                          Dispose
-                        </button>
+                        <div class="flex items-center justify-end gap-2">
+                          <button v-if="canManageBilling && !asset.is_disposed" type="button" @click="disposingAssetId = disposingAssetId === asset.id ? null : asset.id" class="text-[10px] font-extrabold text-rose-700 dark:text-rose-300 hover:underline cursor-pointer">
+                            Dispose
+                          </button>
+                          <button
+                            type="button"
+                            @click="openActivityLog('fixed_asset', asset.id, `Asset: ${asset.name}`)"
+                            title="View Activity Log"
+                            class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                          >
+                            🕘
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     <tr v-if="disposingAssetId === asset.id">
@@ -3396,7 +3581,7 @@ const getTypeBadge = (type) => {
                     <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">{{ acc.code }} — {{ acc.name }}</td>
                     <td class="py-2 px-3 capitalize">{{ acc.type }}</td>
                     <td class="py-2 px-3 text-right">
-                      <input v-model="budgetForm.lines[acc.id]" type="number" step="0.01" min="0" class="w-28 px-2 py-1 text-right bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg" />
+                      <input v-model="budgetForm.lines[acc.id]" :disabled="!canManageBilling" type="number" step="0.01" min="0" class="w-28 px-2 py-1 text-right bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg disabled:opacity-60" />
                     </td>
                     <td class="py-2 px-3 text-right font-mono">{{ formatCurrency((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).actual || 0) }}</td>
                     <td
@@ -3416,7 +3601,7 @@ const getTypeBadge = (type) => {
                   </tr>
                 </tfoot>
               </table>
-              <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
+              <div v-if="canManageBilling" class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
                 <button type="submit" :disabled="budgetForm.processing" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-50">
                   Save Budget
                 </button>
@@ -3640,7 +3825,7 @@ const getTypeBadge = (type) => {
               </div>
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Multi-Bank &amp; Payment Gateway Management (High Street Banks, Stripe, PayPal, SumUp)</p>
             </div>
-            <div class="relative connect-bank-dropdown-container">
+            <div v-if="canManageBilling" class="relative connect-bank-dropdown-container">
               <button
                 type="button"
                 @click.stop="showConnectBankDropdown = !showConnectBankDropdown"
@@ -4017,6 +4202,7 @@ const getTypeBadge = (type) => {
             <p class="text-xs text-slate-500 dark:text-slate-400">Manage billing contacts for individual persons, contractors, vendors, sponsors, and club members.</p>
           </div>
           <Link
+            v-if="canManageBilling"
             :href="route('admin.accounting.contacts.create', club.slug)"
             class="px-4 py-2 bg-[#007bce] hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 shrink-0"
           >
@@ -4143,7 +4329,7 @@ const getTypeBadge = (type) => {
       </div>
 
       <!-- VIEW 8: BANK RECONCILIATION WORKSPACE (XERO COMPLETE DESIGN) -->
-      <div v-if="activeTab === 'reconciliation'" class="space-y-4">
+      <div v-if="activeTab === 'reconciliation' && canManageBilling" class="space-y-4">
         
         <!-- Top Bank Account Balance Header Bar -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -5341,6 +5527,28 @@ const getTypeBadge = (type) => {
                 <span class="block font-mono">{{ settings.contact_email || 'Not set' }}</span>
                 <span class="block font-mono text-slate-500 dark:text-slate-400">{{ settings.phone || 'Not set' }}</span>
               </div>
+              <form v-if="canManageBilling" @submit.prevent="submitFinancialYearEnd" class="pt-2 border-t border-slate-200 dark:border-slate-800">
+                <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">Financial Year End</span>
+                <div class="flex items-center gap-2">
+                  <select
+                    v-model.number="financialYearEndForm.financial_year_end_month"
+                    class="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option v-for="(name, idx) in ['January','February','March','April','May','June','July','August','September','October','November','December']" :key="idx" :value="idx + 1">{{ name }}</option>
+                  </select>
+                  <button
+                    type="submit"
+                    :disabled="financialYearEndForm.processing"
+                    class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+              <div v-else class="pt-2 border-t border-slate-200 dark:border-slate-800">
+                <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Financial Year End</span>
+                <span class="font-bold text-slate-900 dark:text-white">{{ ['January','February','March','April','May','June','July','August','September','October','November','December'][(settings.financial_year_end_month || 4) - 1] }}</span>
+              </div>
             </div>
           </div>
 
@@ -5355,7 +5563,7 @@ const getTypeBadge = (type) => {
                 <input
                   type="checkbox"
                   v-model="vatSettingsForm.enabled"
-                  :disabled="vatLocked"
+                  :disabled="vatLocked || !canManageBilling"
                   class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
                 />
                 <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">This club is VAT registered</span>
@@ -5367,7 +5575,7 @@ const getTypeBadge = (type) => {
                   <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">VAT Scheme</span>
                   <select
                     v-model="vatSettingsForm.scheme"
-                    :disabled="vatLocked"
+                    :disabled="vatLocked || !canManageBilling"
                     class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="standard">Standard VAT Accounting</option>
@@ -5381,7 +5589,7 @@ const getTypeBadge = (type) => {
                   <input
                     type="number" step="0.01" min="0" max="100"
                     v-model="vatSettingsForm.flat_rate_percent"
-                    :disabled="vatLocked"
+                    :disabled="vatLocked || !canManageBilling"
                     class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -5390,6 +5598,7 @@ const getTypeBadge = (type) => {
                   <input
                     type="text"
                     v-model="vatSettingsForm.vat_number"
+                    :disabled="!canManageBilling"
                     placeholder="GB 123 4567 89"
                     class="w-full px-3 py-2 text-sm font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -5399,7 +5608,7 @@ const getTypeBadge = (type) => {
                   <input
                     type="number" step="0.01" min="0" max="100"
                     v-model="vatSettingsForm.default_rate"
-                    :disabled="vatLocked"
+                    :disabled="vatLocked || !canManageBilling"
                     class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -5408,6 +5617,7 @@ const getTypeBadge = (type) => {
               <p v-if="vatLocked" class="text-[10px] text-amber-700 dark:text-amber-300 font-semibold">This club already has VAT-inclusive bills or invoices on its books, so whether VAT is on and which scheme is used are locked.</p>
 
               <button
+                v-if="canManageBilling"
                 type="submit"
                 :disabled="vatSettingsForm.processing"
                 class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-lg transition-all cursor-pointer disabled:opacity-50"
@@ -5441,6 +5651,47 @@ const getTypeBadge = (type) => {
                 <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Receipt & Invoice Notes</span>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400 italic">"{{ settings.receipt_footer_notes || 'Thank you for supporting our club.' }}"</p>
               </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Approval Threshold -->
+          <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🔏</span>
+              <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">Approval Threshold</h4>
+            </div>
+            <form v-if="canManageBilling" @submit.prevent="submitApprovalThreshold" class="space-y-3 text-slate-600 dark:text-slate-300">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="approvalThresholdForm.enabled"
+                  class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">Hold large bills/invoices for a second sign-off</span>
+              </label>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400">A bill or invoice at or above the amount is held as "Pending Approval" — no ledger entry is posted — until a different admin or treasurer approves it.</p>
+              <div v-if="approvalThresholdForm.enabled">
+                <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">Threshold Amount ({{ $cs }})</span>
+                <input
+                  type="number" step="0.01" min="0.01"
+                  v-model="approvalThresholdForm.amount"
+                  placeholder="e.g. 500.00"
+                  class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p v-if="approvalThresholdForm.errors.amount" class="text-[10px] text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ approvalThresholdForm.errors.amount }}</p>
+              </div>
+              <button
+                type="submit"
+                :disabled="approvalThresholdForm.processing"
+                class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-lg transition-all cursor-pointer disabled:opacity-50"
+              >
+                Save
+              </button>
+            </form>
+            <div v-else class="space-y-2 text-slate-600 dark:text-slate-300">
+              <span class="font-bold text-slate-900 dark:text-white block">
+                {{ approvalThreshold.enabled ? `Enabled — ${$cs}${number_format(approvalThreshold.amount, 2)} and above` : 'Off' }}
+              </span>
             </div>
           </div>
         </div>
@@ -6844,6 +7095,32 @@ const getTypeBadge = (type) => {
             :style="{ transform: `scale(${zoomLevel})` }"
           ></iframe>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal 13: Activity Log -->
+    <div v-if="activityModal.show" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="activityModal.show = false">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 my-8" @click.stop>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <h3 class="text-base font-black text-slate-900 dark:text-white">Activity Log</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ activityModal.label }}</p>
+          </div>
+          <button type="button" @click="activityModal.show = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold text-sm cursor-pointer">✕</button>
+        </div>
+
+        <div v-if="activityModal.loading" class="text-center py-8 text-xs font-bold text-slate-400">Loading…</div>
+        <div v-else-if="!activityModal.entries.length" class="text-center py-8 text-xs font-bold text-slate-400">No activity recorded yet.</div>
+        <ul v-else class="space-y-3 max-h-[60vh] overflow-y-auto">
+          <li v-for="entry in activityModal.entries" :key="entry.id" class="border border-slate-100 dark:border-slate-800 rounded-xl p-3">
+            <div class="flex items-center justify-between gap-2">
+              <span class="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">{{ entry.action }}</span>
+              <span class="text-[10px] font-mono text-slate-400">{{ entry.created_at }}</span>
+            </div>
+            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 mt-1.5">{{ entry.summary }}</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">by {{ entry.user_name }}</p>
+          </li>
+        </ul>
       </div>
     </div>
 

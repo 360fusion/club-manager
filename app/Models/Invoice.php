@@ -14,6 +14,7 @@ class Invoice extends Model
     protected $fillable = [
         'invoice_number',
         'club_id',
+        'created_by',
         'user_id',
         'title',
         'amount',
@@ -87,6 +88,14 @@ class Invoice extends Model
     public function paidByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'paid_by_user_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /**

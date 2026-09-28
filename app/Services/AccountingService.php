@@ -285,6 +285,29 @@ class AccountingService
     }
 
     /**
+     * Whether a bill/invoice of this amount must be held for a second admin's
+     * sign-off before it can be posted (see Club::approvalThresholdSettings()).
+     * Off by default, so a club that never sets a threshold sees no change.
+     */
+    public function amountRequiresApproval(Club $club, float $amount): bool
+    {
+        $threshold = $club->approvalThresholdSettings();
+
+        return $threshold['enabled'] && $threshold['amount'] !== null && $amount >= (float) $threshold['amount'];
+    }
+
+    /**
+     * The status a newly-issued (non-draft) bill/invoice should carry: 'pending_approval'
+     * if it meets the club's approval threshold, else 'unpaid'. Callers only post the
+     * issued journal entry when this returns 'unpaid' — a pending_approval item is not
+     * on the ledger until AccountingService::approveBill()/approveInvoice() runs.
+     */
+    public function issuedStatusFor(Club $club, float $amount): string
+    {
+        return $this->amountRequiresApproval($club, $amount) ? 'pending_approval' : 'unpaid';
+    }
+
+    /**
      * Create Vendor Bill (Accounts Payable) & Post to Ledger
      */
     public function createVendorBill(Club $club, array $data, $attachmentFile = null): Bill
@@ -306,11 +329,12 @@ class AccountingService
                 $mediaId = $media->id;
             }
 
-            $status = ! empty($data['is_draft']) ? 'draft' : 'unpaid';
+            $status = ! empty($data['is_draft']) ? 'draft' : $this->issuedStatusFor($club, (float) $data['amount']);
             $vat = $this->resolveVatFields($club, (float) $data['amount'], isset($data['vat_rate']) ? (float) $data['vat_rate'] : null);
 
             $bill = Bill::create([
                 'club_id' => $club->id,
+                'created_by' => $data['created_by'] ?? auth()->id(),
                 'bill_number' => $billNum,
                 'vendor_name' => $data['vendor_name'],
                 'category' => $data['category'] ?? 'General Expense',
@@ -324,7 +348,7 @@ class AccountingService
                 'media_id' => $mediaId,
             ]);
 
-            if ($status !== 'draft') {
+            if ($status === 'unpaid') {
                 $this->postVendorBillIssuedJournal($club, $bill);
             }
 
@@ -387,6 +411,54 @@ class AccountingService
             'source_id' => $invoice->id,
             'items' => $items,
         ]);
+    }
+
+    /**
+     * Approve a bill that was held for a second sign-off (status pending_approval,
+     * at or above the club's approval threshold): posts the issued journal entry
+     * only now — it was deliberately skipped at creation — and logs the approval.
+     * The approver must not be the person who raised it.
+     */
+    public function approveBill(Bill $bill, User $approver): void
+    {
+        if ($bill->status !== 'pending_approval') {
+            throw new InvalidArgumentException("Vendor bill {$bill->bill_number} is not awaiting approval.");
+        }
+
+        if ($bill->created_by !== null && (int) $bill->created_by === $approver->id) {
+            throw new InvalidArgumentException('You raised this bill, so you cannot also approve it — ask another admin or treasurer.');
+        }
+
+        DB::transaction(function () use ($bill, $approver) {
+            $bill->update(['status' => 'unpaid']);
+
+            $club = $bill->club;
+            $this->postVendorBillIssuedJournal($club, $bill);
+            $this->log($club, 'bill', $bill->id, 'approved', "Vendor bill {$bill->bill_number} ({$bill->vendor_name}) approved by {$approver->name} and posted to Accounts Payable.", userId: $approver->id);
+        });
+    }
+
+    /**
+     * Approve an invoice held for a second sign-off. See approveBill() — same
+     * deferred-posting, different-approver semantics.
+     */
+    public function approveInvoice(Invoice $invoice, User $approver): void
+    {
+        if ($invoice->status !== 'pending_approval') {
+            throw new InvalidArgumentException("Invoice {$invoice->invoice_number} is not awaiting approval.");
+        }
+
+        if ($invoice->created_by !== null && (int) $invoice->created_by === $approver->id) {
+            throw new InvalidArgumentException('You raised this invoice, so you cannot also approve it — ask another admin or treasurer.');
+        }
+
+        DB::transaction(function () use ($invoice, $approver) {
+            $invoice->update(['status' => 'unpaid']);
+
+            $club = $invoice->club;
+            $this->postMemberInvoiceIssuedJournal($club, $invoice);
+            $this->log($club, 'invoice', $invoice->id, 'approved', "Invoice {$invoice->invoice_number} approved by {$approver->name} and posted to Accounts Receivable.", userId: $approver->id);
+        });
     }
 
     /**
@@ -579,8 +651,10 @@ class AccountingService
             ];
         });
 
-        // 2. Aged Payables Summary
-        $bills = Bill::where('club_id', $club->id)->where('status', 'unpaid')->get();
+        // 2. Aged Payables Summary — includes bills pending a second sign-off (not yet
+        // on the ledger) alongside unpaid ones, since both are genuinely owed; the
+        // 'pending_approval' status on each item lets the UI label them distinctly.
+        $bills = Bill::where('club_id', $club->id)->whereIn('status', ['unpaid', 'pending_approval'])->get();
         $agedPayables = [
             'current' => 0.0,
             '1_30' => 0.0,
@@ -620,11 +694,12 @@ class AccountingService
                 'days_overdue' => $daysOverdue,
                 'bucket' => $bucket,
                 'amount' => $amt,
+                'status' => $b->status,
             ];
         }
 
-        // 3. Aged Receivables Summary
-        $invoices = Invoice::where('club_id', $club->id)->where('status', 'unpaid')->with('user')->get();
+        // 3. Aged Receivables Summary — see the Payables comment above; same reasoning.
+        $invoices = Invoice::where('club_id', $club->id)->whereIn('status', ['unpaid', 'pending_approval'])->with('user')->get();
         $agedReceivables = [
             'current' => 0.0,
             '1_30' => 0.0,
@@ -664,6 +739,7 @@ class AccountingService
                 'days_overdue' => $daysOverdue,
                 'bucket' => $bucket,
                 'amount' => $amt,
+                'status' => $inv->status,
             ];
         }
 
@@ -1229,8 +1305,8 @@ class AccountingService
                 collect($report)->map(fn ($r) => [$r['code'], $r['name'], $r['type'], $r['total_debit'], $r['total_credit'], $r['net_balance']])
             ),
             'aged_payables', 'aged_receivables' => $this->csvFromRows(
-                ['Reference', 'Name', 'Days Overdue', 'Bucket', 'Amount'],
-                collect($report['items'])->map(fn ($r) => [$r['bill_number'] ?? $r['invoice_number'] ?? '', $r['vendor_name'] ?? $r['recipient_name'] ?? '', $r['days_overdue'], $r['bucket'], $r['amount']])
+                ['Reference', 'Name', 'Days Overdue', 'Bucket', 'Amount', 'Status'],
+                collect($report['items'])->map(fn ($r) => [$r['bill_number'] ?? $r['invoice_number'] ?? '', $r['vendor_name'] ?? $r['recipient_name'] ?? '', $r['days_overdue'], $r['bucket'], $r['amount'], $r['status'] === 'pending_approval' ? 'Pending Approval' : 'Unpaid'])
             ),
             'balance_sheet' => $this->csvFromRows(
                 ['Section', 'Code', 'Name', 'Balance'],
@@ -1263,6 +1339,43 @@ class AccountingService
             ),
             default => throw new InvalidArgumentException("No CSV export defined for report: {$reportKey}"),
         };
+    }
+
+    /**
+     * The Blade view + data for a report's PDF, shared by exportReportPdf(). Covers the
+     * 8 reports that only had CSV export before (Comparative I&E and the VAT Return
+     * already have their own bespoke PDF templates).
+     *
+     * @return array{0: string, 1: array}
+     */
+    public function getReportPdfView(Club $club, string $reportKey, ?int $budgetYear = null): array
+    {
+        $titles = [
+            'account_summary' => 'Account Summary',
+            'aged_payables' => 'Aged Payables',
+            'aged_receivables' => 'Aged Receivables',
+            'balance_sheet' => 'Balance Sheet',
+            'cash_summary' => 'Cash Summary',
+            'executive_summary' => 'Executive Summary',
+            'profit_and_loss' => 'Profit & Loss',
+            'budget_vs_actual' => 'Budget vs Actual',
+        ];
+
+        if (! isset($titles[$reportKey])) {
+            throw new InvalidArgumentException("No PDF export defined for report: {$reportKey}");
+        }
+
+        $report = $reportKey === 'budget_vs_actual'
+            ? app(BudgetService::class)->getBudgetVsActual($club, $budgetYear ?? (int) now()->year)
+            : $this->getReportsData($club)[$reportKey];
+
+        return ['pdf.accounting.report', [
+            'reportKey' => $reportKey,
+            'reportTitle' => $titles[$reportKey],
+            'report' => $report,
+            'club' => $club,
+            'cs' => $club->currencySymbol(),
+        ]];
     }
 
     /**

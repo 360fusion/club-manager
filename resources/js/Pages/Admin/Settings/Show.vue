@@ -1576,6 +1576,7 @@ const moveOfficerDown = (index) => {
                   <option value="member">Media Manager</option>
                   <option value="coach">Secretary</option>
                   <option value="treasurer">Treasurer</option>
+                  <option value="examiner">Examiner / Auditor</option>
                   <option value="admin">Admin</option>
                   <option v-if="isSuperAdmin || m.role === 'owner'" value="owner">Owner</option>
                 </select>

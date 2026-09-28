@@ -424,6 +424,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/toggle', [AccountingAdminController::class, 'toggleBankAccount'])->name('admin.accounting.bank_accounts.toggle');
     Route::post('/{clubSlug}/admin/accounting/opening-balance', [AccountingAdminController::class, 'storeOpeningBalance'])->name('admin.accounting.opening_balance.store');
     Route::post('/{clubSlug}/admin/accounting/vat-settings', [AccountingAdminController::class, 'updateVatSettings'])->name('admin.accounting.vat_settings.update');
+    Route::post('/{clubSlug}/admin/accounting/approval-threshold', [AccountingAdminController::class, 'updateApprovalThreshold'])->name('admin.accounting.approval_threshold.update');
+    Route::post('/{clubSlug}/admin/accounting/financial-year-end', [AccountingAdminController::class, 'updateFinancialYearEndMonth'])->name('admin.accounting.financial_year_end.update');
+    Route::post('/{clubSlug}/admin/accounting/onboarding/dismiss', [AccountingAdminController::class, 'dismissOnboarding'])->name('admin.accounting.onboarding.dismiss');
+    // GET; resolved to view_accounting (not manage_billing) via the path override in ClubPermissions::capabilityForPath().
     Route::get('/{clubSlug}/admin/accounting/vat-return/export', [AccountingAdminController::class, 'exportVatReturn'])->name('admin.accounting.vat_return.export');
     Route::post('/{clubSlug}/admin/accounting/fixed-assets', [AccountingAdminController::class, 'storeFixedAsset'])->name('admin.accounting.fixed_assets.store');
     Route::post('/{clubSlug}/admin/accounting/fixed-assets/{id}/dispose', [AccountingAdminController::class, 'disposeFixedAsset'])->name('admin.accounting.fixed_assets.dispose');
@@ -437,6 +441,8 @@ Route::middleware(['auth'])->group(function () {
     // Under /admin/accounting so it inherits the manage_billing capability from the route map, like every other accounting page.
     Route::get('/{clubSlug}/admin/accounting/signatures/{id}/pdf', [SignatureAdminController::class, 'downloadPdf'])->name('admin.accounting.signatures.pdf');
     Route::get('/{clubSlug}/admin/accounting/reports/{report}/export', [AccountingAdminController::class, 'exportReport'])->name('admin.accounting.reports.export');
+    Route::get('/{clubSlug}/admin/accounting/reports/{report}/export-pdf', [AccountingAdminController::class, 'exportReportPdf'])->name('admin.accounting.reports.export_pdf');
+    Route::get('/{clubSlug}/admin/accounting/activity/{entityType}/{entityId}', [AccountingAdminController::class, 'activityLog'])->name('admin.accounting.activity_log');
     Route::get('/{clubSlug}/admin/accounting/treasurer-report/export-pdf', [AccountingAdminController::class, 'exportAnnualTreasurerReportPdf'])->name('admin.accounting.treasurer_report.export_pdf');
     Route::get('/{clubSlug}/admin/accounting/treasurer-report/export-csv', [AccountingAdminController::class, 'exportAnnualTreasurerReportCsv'])->name('admin.accounting.treasurer_report.export_csv');
     Route::post('/{clubSlug}/admin/accounting/recurring-bills', [AccountingAdminController::class, 'storeRecurringBillTemplate'])->name('admin.accounting.recurring_bills.store');
@@ -453,6 +459,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/{clubSlug}/admin/accounting/invoices/{id}', [AccountingAdminController::class, 'destroyInvoice'])->name('admin.accounting.invoices.destroy');
     Route::post('/{clubSlug}/admin/accounting/invoices/{id}/publish', [AccountingAdminController::class, 'publishInvoice'])->name('admin.accounting.invoices.publish');
     Route::post('/{clubSlug}/admin/accounting/invoices/{id}/pay', [AccountingAdminController::class, 'markInvoicePaid'])->name('admin.accounting.invoices.pay');
+    Route::post('/{clubSlug}/admin/accounting/invoices/{id}/approve', [AccountingAdminController::class, 'approveInvoice'])->name('admin.accounting.invoices.approve');
     Route::get('/{clubSlug}/admin/accounting/attachments/{mediaId}', [AccountingAdminController::class, 'showAttachment'])->name('admin.accounting.attachments.show');
     Route::delete('/{clubSlug}/admin/accounting/invoices/{id}/attachment', [AccountingAdminController::class, 'deleteInvoiceAttachment'])->name('admin.accounting.invoices.attachment.destroy');
     Route::get('/{clubSlug}/admin/accounting/bills/create', [AccountingAdminController::class, 'createBill'])->name('admin.accounting.bills.create');
@@ -461,6 +468,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/{clubSlug}/admin/accounting/bills/{id}', [AccountingAdminController::class, 'updateBill'])->name('admin.accounting.bills.update');
     Route::post('/{clubSlug}/admin/accounting/bills/{id}/publish', [AccountingAdminController::class, 'publishBill'])->name('admin.accounting.bills.publish');
     Route::post('/{clubSlug}/admin/accounting/bills/{id}/pay', [AccountingAdminController::class, 'markBillPaid'])->name('admin.accounting.bills.pay');
+    Route::post('/{clubSlug}/admin/accounting/bills/{id}/approve', [AccountingAdminController::class, 'approveBill'])->name('admin.accounting.bills.approve');
     Route::delete('/{clubSlug}/admin/accounting/bills/{id}/attachment', [AccountingAdminController::class, 'deleteBillAttachment'])->name('admin.accounting.bills.attachment.destroy');
     Route::delete('/{clubSlug}/admin/accounting/bills/{id}', [AccountingAdminController::class, 'destroyBill'])->name('admin.accounting.bills.destroy');
     Route::get('/{clubSlug}/admin/accounting/contacts/create', [AccountingAdminController::class, 'createContact'])->name('admin.accounting.contacts.create');
