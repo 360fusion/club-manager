@@ -245,6 +245,18 @@ export const paletteForScheme = (scheme) => completePalette(scheme.vars);
 
 const cssVarsFor = (scheme) => cssVarsFromPalette(paletteForScheme(scheme));
 
+// Tailwind's own font and corner values, which websites were designed against. `--font-display` (the app's heading
+// face) follows the site's sans, so an unstyled h1 keeps the wrapper's font.
+const SITE_BASE_VARS = {
+    '--font-sans': '"Instrument Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+    '--font-display': 'var(--font-sans)',
+    '--radius-md': '0.375rem',
+    '--radius-lg': '0.5rem',
+    '--radius-xl': '0.75rem',
+    '--radius-2xl': '1rem',
+    '--radius-3xl': '1.5rem',
+};
+
 /**
  * Resolves a stored `website_theme` value (`masonic`, or `${layoutId}:${colorSchemeId}`) into the
  * merged Tailwind class table BlockRenderer/PublicHeader/PublicFooter consume, plus the `cssVars`
@@ -267,6 +279,8 @@ export function themeClasses(key, customSchemes = []) {
         container: layout.wrapper,
         nav: layout.header,
         cssVars: {
+            // The app's design system (app.css @theme) is not a website's look: keep Tailwind's stock fonts and corners.
+            ...SITE_BASE_VARS,
             ...cssVarsFor(scheme),
             // A layout can bring its own typefaces (a lodge pairing overrides these again in withSiteStyle).
             ...(layout.fonts ? { '--font-sans': layout.fonts.sans, '--font-serif': layout.fonts.serif } : {}),

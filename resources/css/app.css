@@ -8,10 +8,65 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* The Club Manager design system (https://claude.ai/artifact/UGtfNAY5wi6pJKf4c8bdkM). Its warm greys and lodge blue
+   replace Tailwind's slate and blue step for step, so the existing slate-* and blue-* classes take the new palette.
+   Club websites keep Tailwind's stock fonts and corners: withSiteStyle (Support/siteThemes.js) resets them. */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+    --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
     --font-signature: 'Dancing Script', cursive;
+
+    --radius-md: 0.25rem;
+    --radius-lg: 0.375rem;
+    --radius-xl: 0.5rem;
+    --radius-2xl: 0.75rem;
+    --radius-3xl: 1rem;
+
+    --color-slate-50: oklch(98.5% 0.003 75);
+    --color-slate-100: oklch(96.5% 0.005 75);
+    --color-slate-200: oklch(92.5% 0.007 75);
+    --color-slate-300: oklch(86.5% 0.009 75);
+    --color-slate-400: oklch(64% 0.012 75);
+    --color-slate-500: oklch(53% 0.013 75);
+    --color-slate-600: oklch(44.6% 0.013 75);
+    --color-slate-700: oklch(37.2% 0.012 75);
+    --color-slate-800: oklch(27.9% 0.01 75);
+    --color-slate-900: oklch(20.8% 0.008 75);
+    --color-slate-950: oklch(13.5% 0.006 75);
+
+    --color-blue-50: oklch(97% 0.014 266);
+    --color-blue-100: oklch(93.2% 0.032 266);
+    --color-blue-200: oklch(87.5% 0.06 266);
+    --color-blue-300: oklch(79% 0.1 266);
+    --color-blue-400: oklch(68% 0.15 266);
+    --color-blue-500: oklch(57% 0.19 266);
+    --color-blue-600: oklch(48% 0.19 266);
+    --color-blue-700: oklch(41% 0.17 266);
+    --color-blue-800: oklch(35% 0.14 266);
+    --color-blue-900: oklch(30% 0.11 266);
+    --color-blue-950: oklch(22% 0.08 266);
+
+    --color-gold-50: oklch(98% 0.014 82);
+    --color-gold-100: oklch(95.2% 0.045 82);
+    --color-gold-200: oklch(90.5% 0.08 82);
+    --color-gold-300: oklch(84.5% 0.11 82);
+    --color-gold-400: oklch(77.5% 0.13 82);
+    --color-gold-500: oklch(70.5% 0.13 82);
+    --color-gold-600: oklch(60% 0.12 82);
+    --color-gold-700: oklch(50% 0.1 82);
+    --color-gold-800: oklch(42% 0.08 82);
+    --color-gold-900: oklch(36% 0.065 82);
+    --color-gold-950: oklch(25% 0.045 82);
+}
+
+/* Page titles and section titles are set in Playfair Display; smaller headings stay in Inter. */
+@layer base {
+    h1,
+    h2.text-xl,
+    h2.text-2xl {
+        font-family: var(--font-display);
+    }
 }
 
 /* Self-hosted fonts for the "Traditional Lodge" website theme (latin subset, no visitor data goes to a font service).
