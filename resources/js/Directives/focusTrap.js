@@ -19,7 +19,15 @@ const FOCUSABLE_SELECTOR = [
 const focusableWithin = (el) => Array.from(el.querySelectorAll(FOCUSABLE_SELECTOR))
     .filter((node) => node.offsetParent !== null || node === document.activeElement);
 
+// Dialogs can open on top of one another (the media library over a form); only the topmost one takes the keys, so
+// Escape closes one dialog at a time.
+const openTraps = [];
+
 const handleKeydown = (el, onClose) => (event) => {
+    if (openTraps[openTraps.length - 1] !== el) {
+        return;
+    }
+
     if (event.key === 'Escape' && typeof onClose === 'function') {
         event.stopPropagation();
         onClose();
@@ -59,6 +67,7 @@ export default {
             el.setAttribute('tabindex', '-1');
         }
 
+        openTraps.push(el);
         document.addEventListener('keydown', el.__focusTrap.listener, true);
 
         // Vue has already patched this element's whole subtree into the DOM by the time `mounted`
@@ -73,6 +82,7 @@ export default {
         }
 
         document.removeEventListener('keydown', el.__focusTrap.listener, true);
+        openTraps.splice(openTraps.indexOf(el), 1);
 
         const { previouslyFocused } = el.__focusTrap;
         if (previouslyFocused && document.body.contains(previouslyFocused)) {

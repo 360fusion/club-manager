@@ -1,4 +1,5 @@
 <script setup>
+import { useClipboard } from '@/Composables/useClipboard';
 import { ref, computed } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -29,7 +30,7 @@ const rankFilter = ref('');
 const statusFilter = ref('');
 const committeeRoleFilter = ref('');
 const activeRosterTab = ref('all'); // 'all', 'active', 'invited_pending', 'deactivated', 'past'
-const inviteCopied = ref(false);
+const { copied: inviteCopied, copy } = useClipboard({ resetAfter: 2500 });
 
 const registrationUrl = computed(() => {
   if (typeof window !== 'undefined') {
@@ -38,40 +39,9 @@ const registrationUrl = computed(() => {
   return `/register?club=${props.club.slug}`;
 });
 
-const copyRegistrationLink = () => {
-  const url = registrationUrl.value;
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(url).then(() => {
-      inviteCopied.value = true;
-      setTimeout(() => (inviteCopied.value = false), 2500);
-    }).catch(() => {
-      fallbackCopyText(url);
-    });
-  } else {
-    fallbackCopyText(url);
-  }
-};
-
-const fallbackCopyText = (text) => {
-  try {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    const successful = document.execCommand('copy');
-    document.body.removeChild(textArea);
-    if (successful) {
-      inviteCopied.value = true;
-      setTimeout(() => (inviteCopied.value = false), 2500);
-    } else {
-      prompt('Copy your public registration link:', text);
-    }
-  } catch (err) {
-    prompt('Copy your public registration link:', text);
+const copyRegistrationLink = async () => {
+  if (!(await copy(registrationUrl.value))) {
+    prompt('Copy your public registration link:', registrationUrl.value);
   }
 };
 

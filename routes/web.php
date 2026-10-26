@@ -423,7 +423,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/accounting/giftaid/reconcile-auto', [AccountingAdminController::class, 'autoReconcileGiftAid'])->name('admin.accounting.giftaid.reconcile_auto');
     Route::get('/{clubSlug}/admin/accounting/giftaid/export-schedule', [AccountingAdminController::class, 'exportGiftAidSchedule'])->name('admin.accounting.giftaid.export_schedule');
     Route::get('/{clubSlug}/admin/accounting/giftaid/reconciled-donations', [AccountingAdminController::class, 'filterReconciledDonations'])->name('admin.accounting.giftaid.reconciled_donations');
-    Route::get('/{clubSlug}/admin/accounting/giftaid/transactions', [CharityAdminController::class, 'giftAidTransactionsPage'])->name('admin.accounting.giftaid.transactions_page');
+    // The Gift Aid ledger lives under Charity; the old Accounting address still works.
+    Route::redirect('/{clubSlug}/admin/accounting/giftaid/transactions', '/{clubSlug}/admin/charity/gift-aid-transactions');
     Route::get('/{clubSlug}/admin/charity/gift-aid-transactions', [CharityAdminController::class, 'giftAidTransactionsPage'])->name('admin.charity.giftaid.transactions_page');
     Route::post('/{clubSlug}/admin/accounting/bank-accounts/{id}/toggle', [AccountingAdminController::class, 'toggleBankAccount'])->name('admin.accounting.bank_accounts.toggle');
     Route::post('/{clubSlug}/admin/accounting/opening-balance', [AccountingAdminController::class, 'storeOpeningBalance'])->name('admin.accounting.opening_balance.store');

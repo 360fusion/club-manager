@@ -94,8 +94,8 @@ class EventAdminController extends Controller
                 'total' => number_format((float) $registration->total, 2, '.', ''),
                 'balance' => number_format($registration->balanceDue(), 2, '.', ''),
                 'amount_paid' => number_format((float) $registration->amount_paid, 2),
-                'checked_in_at' => $attendee->checked_in_at?->format('M d, Y @ H:i'),
-                'registered_at' => $registration->updated_at?->format('M d, Y @ H:i') ?? '',
+                'checked_in_at' => $attendee->checked_in_at?->format('j M Y, H:i'),
+                'registered_at' => $registration->updated_at?->format('j M Y, H:i') ?? '',
                 'table_label' => $attendee->table_label,
                 'ticket_tier' => $attendee->ticketTier ? [
                     'name' => $attendee->ticketTier->name,
@@ -109,7 +109,7 @@ class EventAdminController extends Controller
             'event' => [
                 'id' => $event->id,
                 'title' => $event->title,
-                'starts_at' => $event->starts_at?->format('M d, Y @ H:i'),
+                'starts_at' => $event->starts_at?->format('j M Y, H:i'),
                 'location' => $event->formatted_location ?: $event->location,
                 'has_dining' => $event->has_dining,
                 'dining_price' => number_format((float) $event->dining_price, 2),

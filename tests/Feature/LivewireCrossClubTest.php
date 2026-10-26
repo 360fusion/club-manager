@@ -7,8 +7,6 @@ use App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex;
 use App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace;
 use App\Domains\ClubAccounting\Livewire\Candidates\CandidateDetail;
 use App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline;
-use App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard;
-use App\Domains\ClubAccounting\Livewire\Charity\CharityFestival;
 use App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal;
 use App\Domains\ClubAccounting\Livewire\Committee\LiveMinuteTaker;
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingIndex;
@@ -68,8 +66,6 @@ class LivewireCrossClubTest extends TestCase
             [BankReconciliationWorkspace::class, $slug, null, null],
             [CandidatePipeline::class, $slug, null, null],
             [CandidateDetail::class, $slug, 'candidateId', 'club_acc_candidates'],
-            [CharityDashboard::class, $slug, null, null],
-            [CharityFestival::class, $slug, null, null],
             [MeetingIndex::class, $slug, null, null],
             [MeetingWorkspace::class, $slug, 'meetingId', 'club_acc_committee_meetings'],
             [LiveMinuteTaker::class, $slug, 'meetingId', 'club_acc_committee_meetings'],
@@ -295,39 +291,6 @@ class LivewireCrossClubTest extends TestCase
         $this->assertGreaterThan(50, $found['tested'], 'The harness exercised suspiciously little.');
         $this->assertSame([], $found['leaks'], "Livewire renders that exposed another club's content:\n".implode("\n", $found['leaks']));
         $this->assertSame([], $found['changes'], "Livewire calls that changed another club's data:\n".implode("\n", $found['changes']));
-    }
-
-    /**
-     * The harness only notices text, so this checks the numbers: another club's member giving figures must
-     * not be loaded into the modal, on either charity screen.
-     */
-    public function test_charity_giving_modal_refuses_another_clubs_member(): void
-    {
-        $this->actAsAttackerWithForeignRecords();
-
-        $foreignMember = (int) DB::table('club_acc_members')->whereIn('club_id', $this->foreignClubIds())->value('id');
-        DB::table('club_acc_member_festival_giving')->insert([
-            'member_id' => $foreignMember,
-            'regular_giving_amount' => 4321.00,
-            'total_donated_to_date' => 8765.00,
-            'qualifies_for_jewel' => 1,
-            'qualifies_for_bar' => 1,
-            'created_at' => '2026-06-01 12:00:00',
-            'updated_at' => '2026-06-01 12:00:00',
-        ]);
-
-        foreach ([CharityFestival::class, CharityDashboard::class] as $class) {
-            $component = Livewire::test($class, ['clubSlug' => $this->attackerClub->slug]);
-
-            try {
-                $component->call('openGivingModal', $foreignMember);
-            } catch (\Throwable) {
-                // refused
-            }
-
-            $this->assertNotSame('4321.00', (string) $component->get('regular_giving_amount'), "{$class} loaded another club's giving amount");
-            $this->assertNotSame($foreignMember, $component->get('givingMemberId'), "{$class} accepted another club's member");
-        }
     }
 
     /**

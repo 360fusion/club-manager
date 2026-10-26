@@ -44,28 +44,28 @@ class BillingController extends Controller
             'status' => 'active',
             'price' => '£29.00 / month',
             'billing_cycle' => 'Monthly (Renews on 1st of each month)',
-            'next_billing_date' => now()->addDays(12)->format('M d, Y'),
+            'next_billing_date' => now()->addDays(12)->format('j M Y'),
             'modules' => ['Accounting ERP', 'Summonses & Meetings', 'Communications Hub', 'Member Portal', 'File Manager'],
         ];
 
         $billingHistory = [
             [
                 'id' => 'INV-2026-009',
-                'date' => now()->subDays(18)->format('M d, Y'),
+                'date' => now()->subDays(18)->format('j M Y'),
                 'description' => 'Pro Suite Monthly Subscription',
                 'amount' => '£29.00',
                 'status' => 'paid',
             ],
             [
                 'id' => 'INV-2026-008',
-                'date' => now()->subDays(48)->format('M d, Y'),
+                'date' => now()->subDays(48)->format('j M Y'),
                 'description' => 'Pro Suite Monthly Subscription',
                 'amount' => '£29.00',
                 'status' => 'paid',
             ],
             [
                 'id' => 'INV-2026-007',
-                'date' => now()->subDays(78)->format('M d, Y'),
+                'date' => now()->subDays(78)->format('j M Y'),
                 'description' => 'Pro Suite Monthly Subscription',
                 'amount' => '£29.00',
                 'status' => 'paid',

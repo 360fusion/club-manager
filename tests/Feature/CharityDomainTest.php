@@ -5,10 +5,8 @@ namespace Tests\Feature;
 use App\Domains\ClubAccounting\Enums\CollectionType;
 use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
-use App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard;
 use App\Domains\ClubAccounting\Models\CharityCollection;
 use App\Domains\ClubAccounting\Models\CharityGrant;
-use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Models\FestivalTarget;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\ReliefChestExportService;
@@ -18,7 +16,6 @@ use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 class CharityDomainTest extends TestCase
@@ -176,54 +173,26 @@ class CharityDomainTest extends TestCase
         $this->assertStringContainsString('350.00', $csvContent);
     }
 
-    public function test_livewire_charity_dashboard_records_collection(): void
+    public function test_admin_records_dual_custody_collection(): void
     {
-        Livewire::actingAs($this->user)
-            ->test(CharityDashboard::class, ['clubSlug' => $this->club->slug])
-            ->set('collection_type', CollectionType::Raffle->value)
-            ->set('cash_amount', '120.00')
-            ->set('cheque_amount', '30.00')
-            ->set('counted_by_member_id', $this->counterMember->id)
-            ->set('witnessed_by_member_id', $this->witnessMember->id)
-            ->call('recordCollection')
-            ->assertHasNoErrors()
-            ->assertSee('Dual-custody meeting collection');
+        $this->actingAs($this->user)
+            ->post(route('admin.charity.collections.store', $this->club->slug), [
+                'collection_type' => CollectionType::Raffle->value,
+                'cash_amount' => '120.00',
+                'cheque_amount' => '30.00',
+                'counted_by_member_id' => $this->counterMember->id,
+                'witnessed_by_member_id' => $this->witnessMember->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
 
         $this->assertDatabaseHas('club_acc_charity_collections', [
             'club_id' => $this->club->id,
             'collection_type' => CollectionType::Raffle->value,
             'cash_amount' => 120.00,
             'cheque_amount' => 30.00,
-        ]);
-    }
-
-    public function test_can_propose_grant_with_proposer_seconder_and_committee_meeting(): void
-    {
-        $meeting = ClubCommitteeMeeting::create([
-            'club_id' => $this->club->id,
-            'title' => 'Lodge Committee Q3 Meeting',
-            'meeting_date' => now()->addDays(5),
-            'status' => 'scheduled',
-        ]);
-
-        Livewire::actingAs($this->user)
-            ->test(CharityDashboard::class, ['clubSlug' => $this->club->slug])
-            ->set('recipient_name', 'Local Hospices Care Fund')
-            ->set('purpose', 'Annual Equipment Grant')
-            ->set('grant_amount', '450.00')
-            ->set('proposer_member_id', $this->counterMember->id)
-            ->set('seconder_member_id', $this->witnessMember->id)
-            ->set('committee_meeting_id', $meeting->id)
-            ->call('saveGrant')
-            ->assertHasNoErrors();
-
-        $this->assertDatabaseHas('club_acc_charity_grants', [
-            'club_id' => $this->club->id,
-            'recipient_name' => 'Local Hospices Care Fund',
-            'amount' => 450.00,
-            'proposer_member_id' => $this->counterMember->id,
-            'seconder_member_id' => $this->witnessMember->id,
-            'committee_meeting_id' => $meeting->id,
+            'counted_by_member_id' => $this->counterMember->id,
+            'witnessed_by_member_id' => $this->witnessMember->id,
         ]);
     }
 
@@ -257,6 +226,8 @@ class CharityDomainTest extends TestCase
             'recipient_name' => 'Children Hospice UK',
             'amount' => 600.00,
             'meeting_id' => $meeting->id,
+            'proposer_member_id' => $this->counterMember->id,
+            'seconder_member_id' => $this->witnessMember->id,
         ]);
 
         $this->assertDatabaseHas('agenda_items', [

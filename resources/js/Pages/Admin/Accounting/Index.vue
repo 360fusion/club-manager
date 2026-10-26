@@ -1,9 +1,11 @@
 <script setup>
+import { localDate } from '@/Utils/localDateTime';
+import { formatDate } from '@/Utils/lodgeDates';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
-import { currencyCode, currencySymbol } from '@/Utils/currency';
+import { currencyCode, formatMoney } from '@/Utils/currency';
 const props = defineProps({
   club: {
     type: Object,
@@ -169,11 +171,11 @@ const props = defineProps({
         reconciled_gift_aid: 0,
         pending_bank_reconciliation_count: 0,
         total_eligible_count: 0,
-        formatted_total_donations: (currencySymbol() + '0.00'),
-        formatted_claimable_gift_aid: (currencySymbol() + '0.00'),
-        formatted_unclaimed_gift_aid: (currencySymbol() + '0.00'),
-        formatted_claimed_gift_aid: (currencySymbol() + '0.00'),
-        formatted_reconciled_gift_aid: (currencySymbol() + '0.00'),
+        formatted_total_donations: formatMoney(0),
+        formatted_claimable_gift_aid: formatMoney(0),
+        formatted_unclaimed_gift_aid: formatMoney(0),
+        formatted_claimed_gift_aid: formatMoney(0),
+        formatted_reconciled_gift_aid: formatMoney(0),
       },
     }),
   },
@@ -384,8 +386,8 @@ onUnmounted(() => {
 });
 
 const now = new Date();
-const firstDayOfMonthStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-const lastDayOfMonthStr = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+const firstDayOfMonthStr = localDate(new Date(now.getFullYear(), now.getMonth(), 1));
+const lastDayOfMonthStr = localDate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
 
 const reportStartDate = ref(firstDayOfMonthStr);
 const reportEndDate = ref(lastDayOfMonthStr);
@@ -398,36 +400,25 @@ const setQuickRange = (preset) => {
   const m = today.getMonth();
 
   if (preset === 'this_month') {
-    reportStartDate.value = new Date(y, m, 1).toISOString().slice(0, 10);
-    reportEndDate.value = new Date(y, m + 1, 0).toISOString().slice(0, 10);
+    reportStartDate.value = localDate(new Date(y, m, 1));
+    reportEndDate.value = localDate(new Date(y, m + 1, 0));
   } else if (preset === 'last_month') {
-    reportStartDate.value = new Date(y, m - 1, 1).toISOString().slice(0, 10);
-    reportEndDate.value = new Date(y, m, 0).toISOString().slice(0, 10);
+    reportStartDate.value = localDate(new Date(y, m - 1, 1));
+    reportEndDate.value = localDate(new Date(y, m, 0));
   } else if (preset === 'this_year') {
-    reportStartDate.value = new Date(y, 0, 1).toISOString().slice(0, 10);
-    reportEndDate.value = new Date(y, 11, 31).toISOString().slice(0, 10);
+    reportStartDate.value = localDate(new Date(y, 0, 1));
+    reportEndDate.value = localDate(new Date(y, 11, 31));
   } else if (preset === 'all_time') {
     reportStartDate.value = '2020-01-01';
-    reportEndDate.value = new Date().toISOString().slice(0, 10);
+    reportEndDate.value = localDate();
   }
 };
 
-const formatDateFormatted = (dateStr) => {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-};
-
 const showAccountModal = ref(false);
-const showJournalModal = ref(false);
-const showInvoiceModal = ref(false);
-const showBillModal = ref(false);
-const showContactModal = ref(false);
 const showImportModal = ref(false);
 const showManualModal = ref(false);
 const showDifferentBalancesModal = ref(false);
 const showWhatsThisModal = ref(false);
-const editingContactId = ref(null);
 
 const selectedTx = ref(null);
 const reconSearch = ref('');
@@ -711,8 +702,8 @@ const openGatewaySyncModal = (accId, type = 'paypal') => {
   gatewaySyncType.value = type;
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  gatewaySyncForm.start_date = thirtyDaysAgo.toISOString().slice(0, 10);
-  gatewaySyncForm.end_date = new Date().toISOString().slice(0, 10);
+  gatewaySyncForm.start_date = localDate(thirtyDaysAgo);
+  gatewaySyncForm.end_date = localDate();
   showGatewaySyncModal.value = true;
 };
 
@@ -1092,82 +1083,6 @@ const submitStatementImport = () => {
 
 const contactFilter = ref('all');
 
-const contactForm = useForm({
-  type: 'person',
-  name: '',
-  contact_person: '',
-  email: '',
-  phone: '',
-  role: 'Contractor / Coach',
-  tax_id: '',
-  address_line_1: '',
-  address_line_2: '',
-  city: '',
-  postcode: '',
-  country: 'United Kingdom',
-  notes: '',
-});
-
-const openAddContactModal = () => {
-  editingContactId.value = null;
-  contactForm.clearErrors();
-  contactForm.reset({
-    type: 'person',
-    name: '',
-    contact_person: '',
-    email: '',
-    phone: '',
-    role: 'Contractor / Coach',
-    tax_id: '',
-    address_line_1: '',
-    address_line_2: '',
-    city: '',
-    postcode: '',
-    country: 'United Kingdom',
-    notes: '',
-  });
-  showContactModal.value = true;
-};
-
-const openEditContactModal = (c) => {
-  if (c.kind === 'member') return;
-  editingContactId.value = c.contact_db_id;
-  contactForm.clearErrors();
-  contactForm.type = c.type || 'person';
-  contactForm.name = c.name || '';
-  contactForm.contact_person = (c.contact_person && c.contact_person !== c.name) ? c.contact_person : '';
-  contactForm.email = (c.email && c.email !== '—') ? c.email : '';
-  contactForm.phone = (c.phone && c.phone !== '—') ? c.phone : '';
-  contactForm.role = c.role || 'Contractor / Coach';
-  contactForm.tax_id = (c.tax_id && c.tax_id !== '—') ? c.tax_id : '';
-  contactForm.address_line_1 = c.address_line_1 || '';
-  contactForm.address_line_2 = c.address_line_2 || '';
-  contactForm.city = c.city || '';
-  contactForm.postcode = c.postcode || '';
-  contactForm.country = c.country || 'United Kingdom';
-  contactForm.notes = c.notes || '';
-  showContactModal.value = true;
-};
-
-const submitContact = () => {
-  if (editingContactId.value) {
-    contactForm.put(route('admin.accounting.contacts.update', [props.club.slug, editingContactId.value]), {
-      onSuccess: () => {
-        showContactModal.value = false;
-        editingContactId.value = null;
-        contactForm.reset();
-      },
-    });
-  } else {
-    contactForm.post(route('admin.accounting.contacts.store', props.club.slug), {
-      onSuccess: () => {
-        showContactModal.value = false;
-        contactForm.reset();
-      },
-    });
-  }
-};
-
 const filteredContacts = computed(() => {
   const all = [];
 
@@ -1225,13 +1140,13 @@ const showOpeningBalanceModal = ref(false);
 const openingBalanceForm = useForm({
   account_id: '',
   opening_balance: '',
-  as_of_date: new Date().toISOString().split('T')[0],
+  as_of_date: localDate(),
 });
 
 const openOpeningBalanceModal = (accId = '') => {
   openingBalanceForm.reset();
   openingBalanceForm.account_id = accId || (props.accounts[0]?.id || '');
-  openingBalanceForm.as_of_date = new Date().toISOString().split('T')[0];
+  openingBalanceForm.as_of_date = localDate();
   showOpeningBalanceModal.value = true;
 };
 
@@ -1316,7 +1231,7 @@ const showAddAssetForm = ref(false);
 const fixedAssetForm = useForm({
   name: '',
   category: 'Equipment',
-  purchase_date: new Date().toISOString().split('T')[0],
+  purchase_date: localDate(),
   purchase_cost: '',
   depreciation_method: 'straight_line',
   useful_life_years: 5,
@@ -1340,7 +1255,7 @@ const runDepreciation = () => {
   depreciationForm.post(route('admin.accounting.fixed_assets.run_depreciation', props.club.slug), { preserveScroll: true });
 };
 
-const disposalForm = useForm({ disposal_date: new Date().toISOString().split('T')[0], disposal_proceeds: 0 });
+const disposalForm = useForm({ disposal_date: localDate(), disposal_proceeds: 0 });
 const disposingAssetId = ref(null);
 const disposeAsset = (assetId) => {
   disposalForm.post(route('admin.accounting.fixed_assets.dispose', { clubSlug: props.club.slug, id: assetId }), {
@@ -1438,7 +1353,7 @@ const recurringBillForm = useForm({
   category: 'General Expense',
   amount: '',
   frequency: 'monthly',
-  next_run_date: new Date().toISOString().split('T')[0],
+  next_run_date: localDate(),
   notes: '',
 });
 const submitRecurringBill = () => {
@@ -1464,7 +1379,7 @@ const accountForm = useForm({
   name: '',
   type: 'asset',
   opening_balance: '',
-  as_of_date: new Date().toISOString().split('T')[0],
+  as_of_date: localDate(),
 });
 
 const submitAccount = () => {
@@ -1472,101 +1387,6 @@ const submitAccount = () => {
     onSuccess: () => {
       showAccountModal.value = false;
       accountForm.reset();
-    },
-  });
-};
-
-// Double-Entry Journal Posting Form
-const journalForm = useForm({
-  description: '',
-  entry_date: new Date().toISOString().split('T')[0],
-  items: [
-    { account_id: '', debit: 0, credit: 0, memo: '' },
-    { account_id: '', debit: 0, credit: 0, memo: '' },
-  ],
-});
-
-const addJournalLine = () => {
-  journalForm.items.push({ account_id: '', debit: 0, credit: 0, memo: '' });
-};
-
-const removeJournalLine = (index) => {
-  if (journalForm.items.length > 2) {
-    journalForm.items.splice(index, 1);
-  }
-};
-
-const totalJournalDebit = computed(() => {
-  return journalForm.items.reduce((sum, i) => sum + (parseFloat(i.debit) || 0), 0);
-});
-
-const totalJournalCredit = computed(() => {
-  return journalForm.items.reduce((sum, i) => sum + (parseFloat(i.credit) || 0), 0);
-});
-
-const isJournalBalanced = computed(() => {
-  return Math.abs(totalJournalDebit.value - totalJournalCredit.value) < 0.01 && totalJournalDebit.value > 0;
-});
-
-const submitJournal = () => {
-  if (!isJournalBalanced.value) return;
-
-  journalForm.post(route('admin.accounting.journal.store', props.club.slug), {
-    onSuccess: () => {
-      showJournalModal.value = false;
-      journalForm.reset();
-      journalForm.items = [
-        { account_id: '', debit: 0, credit: 0, memo: '' },
-        { account_id: '', debit: 0, credit: 0, memo: '' },
-      ];
-    },
-  });
-};
-
-// New Invoice Form
-const invoiceForm = useForm({
-  user_id: '',
-  title: '',
-  amount: '',
-});
-
-const submitInvoice = (isDraft = false) => {
-  invoiceForm.transform((data) => ({
-    ...data,
-    title: data.title || (isDraft ? 'Draft Invoice' : ''),
-    amount: data.amount !== '' && data.amount !== null && data.amount !== undefined ? data.amount : (isDraft ? 0 : data.amount),
-    is_draft: isDraft,
-  })).post(route('admin.accounting.invoices.store', props.club.slug), {
-    onSuccess: () => {
-      showInvoiceModal.value = false;
-      invoiceForm.reset();
-    },
-  });
-};
-
-// New Vendor Bill Form
-const billForm = useForm({
-  vendor_name: '',
-  category: 'Facility & Clubhouse Maintenance',
-  amount: '',
-  due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-  notes: '',
-  attachment: null,
-  is_draft: false,
-});
-
-const handleBillFileChange = (e) => {
-  billForm.attachment = e.target.files[0] || null;
-};
-
-const submitBill = (isDraft = false) => {
-  billForm.transform((data) => ({
-    ...data,
-    is_draft: isDraft,
-  })).post(route('admin.accounting.bills.store', props.club.slug), {
-    onSuccess: () => {
-      showBillModal.value = false;
-      billForm.reset();
     },
   });
 };
@@ -1790,11 +1610,6 @@ const filteredBills = computed(() => {
   return list;
 });
 // ────────────────────────────────────────────────────────────────────────────
-
-const formatCurrency = (val) => {
-  const num = parseFloat(val) || 0;
-  return currencySymbol() + num.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
 
 const getTypeBadge = (type) => {
   switch (type) {
@@ -2043,35 +1858,35 @@ const getTypeBadge = (type) => {
         <!-- 1. Total Assets -->
         <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Assets</span>
-          <span class="text-lg font-black text-emerald-700 dark:text-emerald-300 block">{{ formatCurrency(summary.total_assets) }}</span>
+          <span class="text-lg font-black text-emerald-700 dark:text-emerald-300 block">{{ formatMoney(summary.total_assets) }}</span>
           <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Bank & Receivables</span>
         </div>
 
         <!-- 2. Total Liabilities -->
         <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Liabilities</span>
-          <span class="text-lg font-black text-amber-700 dark:text-amber-300 block">{{ formatCurrency(summary.total_liabilities) }}</span>
+          <span class="text-lg font-black text-amber-700 dark:text-amber-300 block">{{ formatMoney(summary.total_liabilities) }}</span>
           <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Payables & Prepayments</span>
         </div>
 
         <!-- 3. Total Equity -->
         <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Club Equity</span>
-          <span class="text-lg font-black text-blue-700 dark:text-blue-300 block">{{ formatCurrency(summary.total_equity) }}</span>
+          <span class="text-lg font-black text-blue-700 dark:text-blue-300 block">{{ formatMoney(summary.total_equity) }}</span>
           <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Retained Reserves</span>
         </div>
 
         <!-- 4. Total Revenue -->
         <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Income</span>
-          <span class="text-lg font-black text-blue-700 dark:text-blue-300 block">{{ formatCurrency(summary.total_revenue) }}</span>
+          <span class="text-lg font-black text-blue-700 dark:text-blue-300 block">{{ formatMoney(summary.total_revenue) }}</span>
           <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Dues & Tickets</span>
         </div>
 
         <!-- 5. Total Expenses -->
         <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
           <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Expenses</span>
-          <span class="text-lg font-black text-rose-700 dark:text-rose-300 block">{{ formatCurrency(summary.total_expenses) }}</span>
+          <span class="text-lg font-black text-rose-700 dark:text-rose-300 block">{{ formatMoney(summary.total_expenses) }}</span>
           <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Operational Costs</span>
         </div>
 
@@ -2079,7 +1894,7 @@ const getTypeBadge = (type) => {
         <div class="bg-slate-900 dark:bg-slate-700 text-white p-4 rounded-2xl border border-slate-800 shadow-md space-y-1">
           <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Net Income</span>
           <span class="text-lg font-black block" :class="summary.net_income >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-            {{ formatCurrency(summary.net_income) }}
+            {{ formatMoney(summary.net_income) }}
           </span>
           <span class="text-[10px] text-slate-400 block font-medium">Surplus / (Deficit)</span>
         </div>
@@ -2097,17 +1912,17 @@ const getTypeBadge = (type) => {
           <div class="space-y-3 text-xs">
             <div class="flex items-center justify-between p-3 bg-emerald-50/50 dark:bg-emerald-950/50 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
               <span class="font-bold text-slate-800 dark:text-slate-100">Total Assets</span>
-              <span class="font-black text-emerald-700 dark:text-emerald-300 text-sm">{{ formatCurrency(summary.total_assets) }}</span>
+              <span class="font-black text-emerald-700 dark:text-emerald-300 text-sm">{{ formatMoney(summary.total_assets) }}</span>
             </div>
 
             <div class="flex items-center justify-between p-3 bg-amber-50/50 dark:bg-amber-950/50 rounded-xl border border-amber-100 dark:border-amber-900/40">
               <span class="font-bold text-slate-800 dark:text-slate-100">Total Liabilities</span>
-              <span class="font-black text-amber-700 dark:text-amber-300 text-sm">{{ formatCurrency(summary.total_liabilities) }}</span>
+              <span class="font-black text-amber-700 dark:text-amber-300 text-sm">{{ formatMoney(summary.total_liabilities) }}</span>
             </div>
 
             <div class="flex items-center justify-between p-3 bg-blue-50/50 dark:bg-blue-950/50 rounded-xl border border-blue-100 dark:border-blue-900/40">
               <span class="font-bold text-slate-800 dark:text-slate-100">Total Club Equity</span>
-              <span class="font-black text-blue-700 dark:text-blue-300 text-sm">{{ formatCurrency(summary.total_equity) }}</span>
+              <span class="font-black text-blue-700 dark:text-blue-300 text-sm">{{ formatMoney(summary.total_equity) }}</span>
             </div>
 
             <div class="p-3.5 bg-slate-900 dark:bg-slate-700 text-white rounded-2xl flex items-center justify-between mt-4">
@@ -2132,12 +1947,12 @@ const getTypeBadge = (type) => {
           <div class="space-y-3 text-xs">
             <div class="flex items-center justify-between p-3 bg-blue-50/50 dark:bg-blue-950/50 rounded-xl border border-blue-100 dark:border-blue-900/40">
               <span class="font-bold text-slate-800 dark:text-slate-100">Operating Income / Dues</span>
-              <span class="font-black text-blue-700 dark:text-blue-300 text-sm">{{ formatCurrency(summary.total_revenue) }}</span>
+              <span class="font-black text-blue-700 dark:text-blue-300 text-sm">{{ formatMoney(summary.total_revenue) }}</span>
             </div>
 
             <div class="flex items-center justify-between p-3 bg-rose-50/50 dark:bg-rose-950/50 rounded-xl border border-rose-100 dark:border-rose-900/40">
               <span class="font-bold text-slate-800 dark:text-slate-100">Operating Expenses</span>
-              <span class="font-black text-rose-700 dark:text-rose-300 text-sm">{{ formatCurrency(summary.total_expenses) }}</span>
+              <span class="font-black text-rose-700 dark:text-rose-300 text-sm">{{ formatMoney(summary.total_expenses) }}</span>
             </div>
 
             <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between mt-4">
@@ -2146,7 +1961,7 @@ const getTypeBadge = (type) => {
                 <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Revenue minus Expenses</span>
               </div>
               <span class="text-base font-black" :class="summary.net_income >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-                {{ formatCurrency(summary.net_income) }}
+                {{ formatMoney(summary.net_income) }}
               </span>
             </div>
           </div>
@@ -2709,7 +2524,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Outstanding vendor bills grouped by 0-30, 31-60, 61-90, 90+ days.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-amber-700 dark:text-amber-300">
-              <span>Total: {{ formatCurrency(reports.aged_payables ? reports.aged_payables.total : 0) }}</span>
+              <span>Total: {{ formatMoney(reports.aged_payables ? reports.aged_payables.total : 0) }}</span>
               <span>View Report →</span>
             </div>
           </div>
@@ -2740,7 +2555,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Per-capita dues and Festival contribution for your active members.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-300">
-              <span>{{ reports.provincial_due?.total_due != null ? formatCurrency(reports.provincial_due.total_due) : 'Rate not set' }}</span>
+              <span>{{ reports.provincial_due?.total_due != null ? formatMoney(reports.provincial_due.total_due) : 'Rate not set' }}</span>
               <span>View Report →</span>
             </div>
           </div>
@@ -2756,7 +2571,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Outstanding member dues & invoices grouped by aging buckets.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-300">
-              <span>Total: {{ formatCurrency(reports.aged_receivables ? reports.aged_receivables.total : 0) }}</span>
+              <span>Total: {{ formatMoney(reports.aged_receivables ? reports.aged_receivables.total : 0) }}</span>
               <span>View Report →</span>
             </div>
           </div>
@@ -2772,7 +2587,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Assets, liabilities, and retained club equity balance statement.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-300">
-              <span>Assets: {{ formatCurrency(summary.total_assets) }}</span>
+              <span>Assets: {{ formatMoney(summary.total_assets) }}</span>
               <span>View Report →</span>
             </div>
           </div>
@@ -2788,7 +2603,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Net cash position in bank and petty cash operating accounts.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-300">
-              <span>Cash: {{ formatCurrency(reports.cash_summary ? reports.cash_summary.total_cash_on_hand : 0) }}</span>
+              <span>Cash: {{ formatMoney(reports.cash_summary ? reports.cash_summary.total_cash_on_hand : 0) }}</span>
               <span>View Report →</span>
             </div>
           </div>
@@ -2820,7 +2635,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Detailed revenue income minus operating expenses statement.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-300">
-              <span>Net: {{ formatCurrency(summary.net_income) }}</span>
+              <span>Net: {{ formatMoney(summary.net_income) }}</span>
               <span>View Report →</span>
             </div>
           </div>
@@ -2852,7 +2667,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Audit verification comparing General Ledger vs actual bank feed balance.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-blue-800 dark:text-blue-200">
-              <span>System {{ formatCurrency(reconciliationSummary.ledgerBalance) }} vs Feed {{ formatCurrency(reconciliationSummary.statementBalance) }}</span>
+              <span>System {{ formatMoney(reconciliationSummary.ledgerBalance) }} vs Feed {{ formatMoney(reconciliationSummary.statementBalance) }}</span>
               <span>View Audit Report →</span>
             </div>
           </div>
@@ -2868,7 +2683,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Output VAT minus input VAT for the current quarter, exportable for HMRC filing.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-purple-800 dark:text-purple-200">
-              <span>{{ reports.vat_return?.quarter_label }}: {{ formatCurrency(reports.vat_return?.net_vat_due) }} due</span>
+              <span>{{ reports.vat_return?.quarter_label }}: {{ formatMoney(reports.vat_return?.net_vat_due) }} due</span>
               <span>View Return →</span>
             </div>
           </div>
@@ -2900,7 +2715,7 @@ const getTypeBadge = (type) => {
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Set an annual budget per account and track variance against real income/expenditure.</p>
             </div>
             <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-indigo-800 dark:text-indigo-200">
-              <span>{{ budgetVsActual.financial_year }}: {{ formatCurrency(budgetVsActual.total_actual) }} of {{ formatCurrency(budgetVsActual.total_budgeted) }}</span>
+              <span>{{ budgetVsActual.financial_year }}: {{ formatMoney(budgetVsActual.total_actual) }} of {{ formatMoney(budgetVsActual.total_budgeted) }}</span>
               <span>View Budget →</span>
             </div>
           </div>
@@ -2967,9 +2782,9 @@ const getTypeBadge = (type) => {
                         {{ acc.type }}
                       </span>
                     </td>
-                    <td class="py-2.5 px-4 text-right font-mono">{{ formatCurrency(acc.total_debit) }}</td>
-                    <td class="py-2.5 px-4 text-right font-mono">{{ formatCurrency(acc.total_credit) }}</td>
-                    <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900 dark:text-white">{{ formatCurrency(acc.net_balance) }}</td>
+                    <td class="py-2.5 px-4 text-right font-mono">{{ formatMoney(acc.total_debit) }}</td>
+                    <td class="py-2.5 px-4 text-right font-mono">{{ formatMoney(acc.total_credit) }}</td>
+                    <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900 dark:text-white">{{ formatMoney(acc.net_balance) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -2980,28 +2795,28 @@ const getTypeBadge = (type) => {
           <div v-if="selectedReport === 'aged_payables'" class="space-y-4">
             <div class="flex items-center justify-between">
               <h4 class="text-base font-extrabold text-slate-900 dark:text-white">Aged Payables Summary</h4>
-              <span class="text-xs font-semibold text-amber-700 dark:text-amber-300 font-mono">Total Outstanding: {{ formatCurrency(reports.aged_payables.total) }}</span>
+              <span class="text-xs font-semibold text-amber-700 dark:text-amber-300 font-mono">Total Outstanding: {{ formatMoney(reports.aged_payables.total) }}</span>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs">
               <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span class="text-[10px] font-bold text-slate-400 block uppercase">Current</span>
-                <span class="font-black text-slate-800 dark:text-slate-100 text-sm block">{{ formatCurrency(reports.aged_payables.current) }}</span>
+                <span class="font-black text-slate-800 dark:text-slate-100 text-sm block">{{ formatMoney(reports.aged_payables.current) }}</span>
               </div>
               <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span class="text-[10px] font-bold text-slate-400 block uppercase">1 - 30 Days</span>
-                <span class="font-black text-amber-700 dark:text-amber-300 text-sm block">{{ formatCurrency(reports.aged_payables['1_30']) }}</span>
+                <span class="font-black text-amber-700 dark:text-amber-300 text-sm block">{{ formatMoney(reports.aged_payables['1_30']) }}</span>
               </div>
               <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span class="text-[10px] font-bold text-slate-400 block uppercase">31 - 60 Days</span>
-                <span class="font-black text-amber-800 dark:text-amber-200 text-sm block">{{ formatCurrency(reports.aged_payables['31_60']) }}</span>
+                <span class="font-black text-amber-800 dark:text-amber-200 text-sm block">{{ formatMoney(reports.aged_payables['31_60']) }}</span>
               </div>
               <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span class="text-[10px] font-bold text-slate-400 block uppercase">61 - 90 Days</span>
-                <span class="font-black text-rose-700 dark:text-rose-300 text-sm block">{{ formatCurrency(reports.aged_payables['61_90']) }}</span>
+                <span class="font-black text-rose-700 dark:text-rose-300 text-sm block">{{ formatMoney(reports.aged_payables['61_90']) }}</span>
               </div>
               <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span class="text-[10px] font-bold text-slate-400 block uppercase">90+ Days</span>
-                <span class="font-black text-rose-900 dark:text-rose-200 text-sm block">{{ formatCurrency(reports.aged_payables['90_plus']) }}</span>
+                <span class="font-black text-rose-900 dark:text-rose-200 text-sm block">{{ formatMoney(reports.aged_payables['90_plus']) }}</span>
               </div>
             </div>
             <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
@@ -3031,7 +2846,7 @@ const getTypeBadge = (type) => {
                         ⏳ Pending Approval
                       </span>
                     </td>
-                    <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900 dark:text-white">{{ formatCurrency(b.amount) }}</td>
+                    <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900 dark:text-white">{{ formatMoney(b.amount) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -3042,28 +2857,28 @@ const getTypeBadge = (type) => {
           <div v-if="selectedReport === 'aged_receivables'" class="space-y-4">
             <div class="flex items-center justify-between">
               <h4 class="text-base font-extrabold text-slate-900 dark:text-white">Aged Receivables Summary</h4>
-              <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 font-mono">Total Outstanding: {{ formatCurrency(reports.aged_receivables.total) }}</span>
+              <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 font-mono">Total Outstanding: {{ formatMoney(reports.aged_receivables.total) }}</span>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs">
               <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span class="text-[10px] font-bold text-slate-400 block uppercase">Current</span>
-                <span class="font-black text-slate-800 dark:text-slate-100 text-sm block">{{ formatCurrency(reports.aged_receivables.current) }}</span>
+                <span class="font-black text-slate-800 dark:text-slate-100 text-sm block">{{ formatMoney(reports.aged_receivables.current) }}</span>
               </div>
               <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span class="text-[10px] font-bold text-slate-400 block uppercase">1 - 30 Days</span>
-                <span class="font-black text-emerald-700 dark:text-emerald-300 text-sm block">{{ formatCurrency(reports.aged_receivables['1_30']) }}</span>
+                <span class="font-black text-emerald-700 dark:text-emerald-300 text-sm block">{{ formatMoney(reports.aged_receivables['1_30']) }}</span>
               </div>
               <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span class="text-[10px] font-bold text-slate-400 block uppercase">31 - 60 Days</span>
-                <span class="font-black text-amber-700 dark:text-amber-300 text-sm block">{{ formatCurrency(reports.aged_receivables['31_60']) }}</span>
+                <span class="font-black text-amber-700 dark:text-amber-300 text-sm block">{{ formatMoney(reports.aged_receivables['31_60']) }}</span>
               </div>
               <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span class="text-[10px] font-bold text-slate-400 block uppercase">61 - 90 Days</span>
-                <span class="font-black text-rose-700 dark:text-rose-300 text-sm block">{{ formatCurrency(reports.aged_receivables['61_90']) }}</span>
+                <span class="font-black text-rose-700 dark:text-rose-300 text-sm block">{{ formatMoney(reports.aged_receivables['61_90']) }}</span>
               </div>
               <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span class="text-[10px] font-bold text-slate-400 block uppercase">90+ Days</span>
-                <span class="font-black text-rose-900 dark:text-rose-200 text-sm block">{{ formatCurrency(reports.aged_receivables['90_plus']) }}</span>
+                <span class="font-black text-rose-900 dark:text-rose-200 text-sm block">{{ formatMoney(reports.aged_receivables['90_plus']) }}</span>
               </div>
             </div>
             <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
@@ -3093,7 +2908,7 @@ const getTypeBadge = (type) => {
                         ⏳ Pending Approval
                       </span>
                     </td>
-                    <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900 dark:text-white">{{ formatCurrency(inv.amount) }}</td>
+                    <td class="py-2.5 px-4 text-right font-mono font-black text-slate-900 dark:text-white">{{ formatMoney(inv.amount) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -3112,12 +2927,12 @@ const getTypeBadge = (type) => {
                 <div class="space-y-1.5">
                   <div v-for="a in reports.balance_sheet.assets" :key="a.code" class="flex justify-between border-b border-emerald-100 dark:border-emerald-900/40 pb-1">
                     <span class="font-semibold text-slate-700 dark:text-slate-200">{{ a.code }} - {{ a.name }}</span>
-                    <span class="font-mono font-bold">{{ formatCurrency(a.balance) }}</span>
+                    <span class="font-mono font-bold">{{ formatMoney(a.balance) }}</span>
                   </div>
                 </div>
                 <div class="pt-2 flex justify-between font-black text-emerald-900 dark:text-emerald-200 text-sm border-t border-emerald-200 dark:border-emerald-800/60">
                   <span>Total Assets</span>
-                  <span>{{ formatCurrency(reports.balance_sheet.total_assets) }}</span>
+                  <span>{{ formatMoney(reports.balance_sheet.total_assets) }}</span>
                 </div>
               </div>
 
@@ -3126,12 +2941,12 @@ const getTypeBadge = (type) => {
                 <div class="space-y-1.5">
                   <div v-for="l in reports.balance_sheet.liabilities" :key="l.code" class="flex justify-between border-b border-amber-100 dark:border-amber-900/40 pb-1">
                     <span class="font-semibold text-slate-700 dark:text-slate-200">{{ l.code }} - {{ l.name }}</span>
-                    <span class="font-mono font-bold">{{ formatCurrency(l.balance) }}</span>
+                    <span class="font-mono font-bold">{{ formatMoney(l.balance) }}</span>
                   </div>
                 </div>
                 <div class="pt-2 flex justify-between font-black text-amber-900 dark:text-amber-200 text-sm border-t border-amber-200 dark:border-amber-800/60">
                   <span>Total Liabilities</span>
-                  <span>{{ formatCurrency(reports.balance_sheet.total_liabilities) }}</span>
+                  <span>{{ formatMoney(reports.balance_sheet.total_liabilities) }}</span>
                 </div>
               </div>
 
@@ -3140,12 +2955,12 @@ const getTypeBadge = (type) => {
                 <div class="space-y-1.5">
                   <div v-for="e in reports.balance_sheet.equity" :key="e.code" class="flex justify-between border-b border-blue-100 dark:border-blue-900/40 pb-1">
                     <span class="font-semibold text-slate-700 dark:text-slate-200">{{ e.code }} - {{ e.name }}</span>
-                    <span class="font-mono font-bold">{{ formatCurrency(e.balance) }}</span>
+                    <span class="font-mono font-bold">{{ formatMoney(e.balance) }}</span>
                   </div>
                 </div>
                 <div class="pt-2 flex justify-between font-black text-blue-900 dark:text-blue-200 text-sm border-t border-blue-200 dark:border-blue-800/60">
                   <span>Total Equity</span>
-                  <span>{{ formatCurrency(reports.balance_sheet.total_equity) }}</span>
+                  <span>{{ formatMoney(reports.balance_sheet.total_equity) }}</span>
                 </div>
               </div>
             </div>
@@ -3155,7 +2970,7 @@ const getTypeBadge = (type) => {
           <div v-if="selectedReport === 'cash_summary'" class="space-y-4">
             <div class="flex items-center justify-between">
               <h4 class="text-base font-extrabold text-slate-900 dark:text-white">Cash & Bank Accounts Summary</h4>
-              <span class="text-xs font-black text-blue-800 dark:text-blue-200 font-mono">Net Cash Reserve: {{ formatCurrency(reports.cash_summary.total_cash_on_hand) }}</span>
+              <span class="text-xs font-black text-blue-800 dark:text-blue-200 font-mono">Net Cash Reserve: {{ formatMoney(reports.cash_summary.total_cash_on_hand) }}</span>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div v-for="acc in reports.cash_summary.accounts" :key="acc.code" class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -3163,7 +2978,7 @@ const getTypeBadge = (type) => {
                   <span class="font-mono font-bold text-blue-700 dark:text-blue-300 block">{{ acc.code }}</span>
                   <span class="font-bold text-slate-900 dark:text-white text-sm block">{{ acc.name }}</span>
                 </div>
-                <span class="text-base font-black font-mono text-emerald-700 dark:text-emerald-300">{{ formatCurrency(acc.balance) }}</span>
+                <span class="text-base font-black font-mono text-emerald-700 dark:text-emerald-300">{{ formatMoney(acc.balance) }}</span>
               </div>
             </div>
           </div>
@@ -3185,11 +3000,11 @@ const getTypeBadge = (type) => {
               </div>
               <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
                 <span class="text-[10px] font-bold text-slate-400 uppercase block">Total Receivables (A/R)</span>
-                <span class="text-xl font-black text-amber-700 dark:text-amber-300 block">{{ formatCurrency(reports.executive_summary.outstanding_ar) }}</span>
+                <span class="text-xl font-black text-amber-700 dark:text-amber-300 block">{{ formatMoney(reports.executive_summary.outstanding_ar) }}</span>
               </div>
               <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
                 <span class="text-[10px] font-bold text-slate-400 uppercase block">Total Payables (A/P)</span>
-                <span class="text-xl font-black text-rose-700 dark:text-rose-300 block">{{ formatCurrency(reports.executive_summary.outstanding_ap) }}</span>
+                <span class="text-xl font-black text-rose-700 dark:text-rose-300 block">{{ formatMoney(reports.executive_summary.outstanding_ap) }}</span>
               </div>
             </div>
           </div>
@@ -3199,7 +3014,7 @@ const getTypeBadge = (type) => {
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <h4 class="text-base font-extrabold text-slate-900 dark:text-white">Profit and Loss (Income Statement)</h4>
               <span class="text-xs font-black font-mono" :class="reports.profit_and_loss.net_income >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'">
-                Net Income: {{ formatCurrency(reports.profit_and_loss.net_income) }}
+                Net Income: {{ formatMoney(reports.profit_and_loss.net_income) }}
               </span>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
@@ -3209,12 +3024,12 @@ const getTypeBadge = (type) => {
                 <div class="space-y-1.5">
                   <div v-for="r in reports.profit_and_loss.revenues" :key="r.code" class="flex justify-between border-b border-blue-100 dark:border-blue-900/40 pb-1">
                     <span class="font-semibold text-slate-700 dark:text-slate-200">{{ r.code }} - {{ r.name }}</span>
-                    <span class="font-mono font-bold">{{ formatCurrency(r.amount) }}</span>
+                    <span class="font-mono font-bold">{{ formatMoney(r.amount) }}</span>
                   </div>
                 </div>
                 <div class="pt-2 flex justify-between font-black text-blue-900 dark:text-blue-200 text-sm border-t border-blue-200 dark:border-blue-800/60">
                   <span>Total Revenue</span>
-                  <span>{{ formatCurrency(reports.profit_and_loss.total_revenue) }}</span>
+                  <span>{{ formatMoney(reports.profit_and_loss.total_revenue) }}</span>
                 </div>
               </div>
 
@@ -3224,12 +3039,12 @@ const getTypeBadge = (type) => {
                 <div class="space-y-1.5">
                   <div v-for="ex in reports.profit_and_loss.expenses" :key="ex.code" class="flex justify-between border-b border-rose-100 dark:border-rose-900/40 pb-1">
                     <span class="font-semibold text-slate-700 dark:text-slate-200">{{ ex.code }} - {{ ex.name }}</span>
-                    <span class="font-mono font-bold">{{ formatCurrency(ex.amount) }}</span>
+                    <span class="font-mono font-bold">{{ formatMoney(ex.amount) }}</span>
                   </div>
                 </div>
                 <div class="pt-2 flex justify-between font-black text-rose-900 dark:text-rose-200 text-sm border-t border-rose-200 dark:border-rose-800/60">
                   <span>Total Expenses</span>
-                  <span>{{ formatCurrency(reports.profit_and_loss.total_expenses) }}</span>
+                  <span>{{ formatMoney(reports.profit_and_loss.total_expenses) }}</span>
                 </div>
               </div>
             </div>
@@ -3262,37 +3077,37 @@ const getTypeBadge = (type) => {
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-800 font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900">
                   <tr v-for="(row, idx) in (reports.comparative_income_expenditure?.rows || [])" :key="idx" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">{{ row.category }}</td>
-                    <td class="py-3 px-4 text-right font-mono">{{ row.prior_income > 0 ? formatCurrency(row.prior_income) : '—' }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-slate-600 dark:text-slate-300">{{ row.prior_expenditure > 0 ? formatCurrency(row.prior_expenditure) : '—' }}</td>
-                    <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300 border-l border-slate-100 dark:border-slate-800">{{ row.current_income > 0 ? formatCurrency(row.current_income) : '—' }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-slate-600 dark:text-slate-300">{{ row.current_expenditure > 0 ? formatCurrency(row.current_expenditure) : '—' }}</td>
+                    <td class="py-3 px-4 text-right font-mono">{{ row.prior_income > 0 ? formatMoney(row.prior_income) : '—' }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-600 dark:text-slate-300">{{ row.prior_expenditure > 0 ? formatMoney(row.prior_expenditure) : '—' }}</td>
+                    <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300 border-l border-slate-100 dark:border-slate-800">{{ row.current_income > 0 ? formatMoney(row.current_income) : '—' }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-600 dark:text-slate-300">{{ row.current_expenditure > 0 ? formatMoney(row.current_expenditure) : '—' }}</td>
                   </tr>
 
                   <!-- TOTALS -->
                   <tr class="bg-slate-100 dark:bg-slate-800 font-extrabold text-slate-900 dark:text-white border-t-2 border-slate-300 dark:border-slate-700">
                     <td class="py-3 px-4 uppercase font-black">TOTALS</td>
-                    <td class="py-3 px-4 text-right font-mono text-emerald-800 dark:text-emerald-200">{{ formatCurrency(reports.comparative_income_expenditure?.prior_totals?.income) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-rose-800 dark:text-rose-200">{{ formatCurrency(reports.comparative_income_expenditure?.prior_totals?.expenditure) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-emerald-800 dark:text-emerald-200 border-l border-slate-200 dark:border-slate-800">{{ formatCurrency(reports.comparative_income_expenditure?.current_totals?.income) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-rose-800 dark:text-rose-200">{{ formatCurrency(reports.comparative_income_expenditure?.current_totals?.expenditure) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-emerald-800 dark:text-emerald-200">{{ formatMoney(reports.comparative_income_expenditure?.prior_totals?.income) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-rose-800 dark:text-rose-200">{{ formatMoney(reports.comparative_income_expenditure?.prior_totals?.expenditure) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-emerald-800 dark:text-emerald-200 border-l border-slate-200 dark:border-slate-800">{{ formatMoney(reports.comparative_income_expenditure?.current_totals?.income) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-rose-800 dark:text-rose-200">{{ formatMoney(reports.comparative_income_expenditure?.current_totals?.expenditure) }}</td>
                   </tr>
 
                   <!-- BALANCE CARRIED FORWARD (CASH AT BANK) -->
                   <tr class="bg-amber-50/70 dark:bg-amber-950/70 font-extrabold text-amber-900 dark:text-amber-200">
                     <td class="py-3 px-4 italic font-bold">BALANCE CARRIED FORWARD – i.e. cash at Bank 31/03</td>
                     <td class="py-3 px-4 text-right font-mono text-slate-400">—</td>
-                    <td class="py-3 px-4 text-right font-mono font-black text-amber-900 dark:text-amber-200">{{ formatCurrency(reports.comparative_income_expenditure?.prior_balance_carried_forward) }}</td>
+                    <td class="py-3 px-4 text-right font-mono font-black text-amber-900 dark:text-amber-200">{{ formatMoney(reports.comparative_income_expenditure?.prior_balance_carried_forward) }}</td>
                     <td class="py-3 px-4 text-right font-mono text-slate-400 border-l border-amber-200 dark:border-amber-800/60">—</td>
-                    <td class="py-3 px-4 text-right font-mono font-black text-amber-900 dark:text-amber-200">{{ formatCurrency(reports.comparative_income_expenditure?.current_balance_carried_forward) }}</td>
+                    <td class="py-3 px-4 text-right font-mono font-black text-amber-900 dark:text-amber-200">{{ formatMoney(reports.comparative_income_expenditure?.current_balance_carried_forward) }}</td>
                   </tr>
 
                   <!-- CASH AT BANK - PLUS EXPENDITURE (RECONCILED TOTALS) -->
                   <tr class="bg-slate-900 dark:bg-slate-700 text-white font-black text-xs">
                     <td class="py-3 px-4 uppercase font-black tracking-wider">CASH AT BANK – PLUS EXPENDITURE</td>
-                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.prior_reconciled) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.prior_reconciled) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-amber-400 border-l border-slate-800">{{ formatCurrency(reports.comparative_income_expenditure?.current_reconciled) }}</td>
-                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatCurrency(reports.comparative_income_expenditure?.current_reconciled) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatMoney(reports.comparative_income_expenditure?.prior_reconciled) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatMoney(reports.comparative_income_expenditure?.prior_reconciled) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400 border-l border-slate-800">{{ formatMoney(reports.comparative_income_expenditure?.current_reconciled) }}</td>
+                    <td class="py-3 px-4 text-right font-mono text-amber-400">{{ formatMoney(reports.comparative_income_expenditure?.current_reconciled) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -3308,7 +3123,7 @@ const getTypeBadge = (type) => {
                 </span>
                 <h3 class="text-xl font-black text-slate-900 dark:text-white mt-2">Bank Reconciliation Summary</h3>
                 <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">
-                  {{ reconciliationSummary.accountLabel }} — As at {{ formatDateFormatted(reportEndDate) }} <span class="text-slate-400">|</span> Period: <span class="text-blue-900 dark:text-blue-200 font-extrabold">{{ formatDateFormatted(reportStartDate) }} – {{ formatDateFormatted(reportEndDate) }}</span>
+                  {{ reconciliationSummary.accountLabel }} — As at {{ formatDate(reportEndDate) }} <span class="text-slate-400">|</span> Period: <span class="text-blue-900 dark:text-blue-200 font-extrabold">{{ formatDate(reportStartDate) }} – {{ formatDate(reportEndDate) }}</span>
                 </p>
               </div>
               <div class="flex items-center gap-2">
@@ -3325,7 +3140,7 @@ const getTypeBadge = (type) => {
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
                 <div class="flex justify-between items-center text-sm font-extrabold text-slate-900 dark:text-white">
                   <span>Balance in System (General Ledger)</span>
-                  <span class="font-mono text-lg text-slate-900 dark:text-white">{{ formatCurrency(reconciliationSummary.ledgerBalance) }}</span>
+                  <span class="font-mono text-lg text-slate-900 dark:text-white">{{ formatMoney(reconciliationSummary.ledgerBalance) }}</span>
                 </div>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400">Total cleared balance across all approved transactions in your books.</p>
               </div>
@@ -3334,7 +3149,7 @@ const getTypeBadge = (type) => {
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <div class="flex justify-between items-center text-xs font-black text-emerald-800 dark:text-emerald-200 border-b border-emerald-200 dark:border-emerald-800/60 pb-2">
                   <span class="uppercase tracking-wider">PLUS: Outstanding Receipts (Unreconciled Receive Money)</span>
-                  <span class="font-mono text-sm">+{{ formatCurrency(reconciliationSummary.receiptsTotal) }}</span>
+                  <span class="font-mono text-sm">+{{ formatMoney(reconciliationSummary.receiptsTotal) }}</span>
                 </div>
                 <div class="overflow-x-auto">
                   <table class="w-full text-left text-xs">
@@ -3363,7 +3178,7 @@ const getTypeBadge = (type) => {
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <div class="flex justify-between items-center text-xs font-black text-rose-800 dark:text-rose-200 border-b border-rose-200 dark:border-rose-800/60 pb-2">
                   <span class="uppercase tracking-wider">LESS: Outstanding Payments (Unreconciled Spend Money)</span>
-                  <span class="font-mono text-sm">-{{ formatCurrency(reconciliationSummary.paymentsTotal) }}</span>
+                  <span class="font-mono text-sm">-{{ formatMoney(reconciliationSummary.paymentsTotal) }}</span>
                 </div>
                 <div class="overflow-x-auto">
                   <table class="w-full text-left text-xs">
@@ -3378,7 +3193,7 @@ const getTypeBadge = (type) => {
                       <tr v-for="tx in reconciliationSummary.outstandingPayments" :key="tx.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <td class="py-2 px-3 font-mono">{{ tx.transaction_date }}</td>
                         <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">{{ tx.raw_description }}</td>
-                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">{{ formatCurrency(Math.abs(tx.amount)) }}</td>
+                        <td class="py-2 px-3 text-right font-mono font-bold text-rose-700 dark:text-rose-300">{{ formatMoney(Math.abs(tx.amount)) }}</td>
                       </tr>
                       <tr v-if="!reconciliationSummary.outstandingPayments.length">
                         <td colspan="3" class="py-4 px-3 text-center text-slate-400 italic">No outstanding payments.</td>
@@ -3392,11 +3207,11 @@ const getTypeBadge = (type) => {
               <div class="bg-gradient-to-br from-blue-50 dark:from-blue-950/40 to-blue-50/50 dark:to-blue-950/50 rounded-2xl p-5 border border-blue-200 dark:border-blue-800/60 shadow-sm space-y-4">
                 <div class="flex justify-between items-center text-sm font-extrabold text-blue-950 dark:text-blue-100">
                   <span>Calculated Bank Statement Balance</span>
-                  <span class="font-mono text-lg text-blue-950 dark:text-blue-100">{{ formatCurrency(reconciliationSummary.calculatedStatementBalance) }}</span>
+                  <span class="font-mono text-lg text-blue-950 dark:text-blue-100">{{ formatMoney(reconciliationSummary.calculatedStatementBalance) }}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm font-extrabold text-slate-900 dark:text-white border-t border-blue-200 dark:border-blue-800/60 pt-3">
                   <span>Actual Bank Statement Feed Balance</span>
-                  <span class="font-mono text-lg text-slate-900 dark:text-white">{{ formatCurrency(reconciliationSummary.statementBalance) }}</span>
+                  <span class="font-mono text-lg text-slate-900 dark:text-white">{{ formatMoney(reconciliationSummary.statementBalance) }}</span>
                 </div>
                 <div
                   :class="['flex justify-between items-center text-xs font-black px-4 py-2.5 rounded-xl border', Math.abs(reconciliationSummary.discrepancy) < 0.01 ? 'text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-900/40 border-emerald-300 dark:border-emerald-700/60' : 'text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-700/60']"
@@ -3405,7 +3220,7 @@ const getTypeBadge = (type) => {
                     <span>{{ Math.abs(reconciliationSummary.discrepancy) < 0.01 ? '✅' : '⚠️' }}</span>
                     <span>Unreconciled Difference / Discrepancy</span>
                   </span>
-                  <span class="font-mono text-sm">{{ formatCurrency(reconciliationSummary.discrepancy) }} {{ Math.abs(reconciliationSummary.discrepancy) < 0.01 ? '(Fully Reconciled)' : '' }}</span>
+                  <span class="font-mono text-sm">{{ formatMoney(reconciliationSummary.discrepancy) }} {{ Math.abs(reconciliationSummary.discrepancy) < 0.01 ? '(Fully Reconciled)' : '' }}</span>
                 </div>
               </div>
 
@@ -3473,18 +3288,18 @@ const getTypeBadge = (type) => {
                     <tr>
                       <td class="py-2.5 px-4">Per-capita dues</td>
                       <td class="py-2.5 px-4 text-right font-mono">{{ reports.provincial_due.member_count }}</td>
-                      <td class="py-2.5 px-4 text-right font-mono">{{ reports.provincial_due.per_capita_rate != null ? formatCurrency(reports.provincial_due.per_capita_rate) : 'Rate not set' }}</td>
-                      <td class="py-2.5 px-4 text-right font-mono font-black">{{ reports.provincial_due.per_capita_amount != null ? formatCurrency(reports.provincial_due.per_capita_amount) : '—' }}</td>
+                      <td class="py-2.5 px-4 text-right font-mono">{{ reports.provincial_due.per_capita_rate != null ? formatMoney(reports.provincial_due.per_capita_rate) : 'Rate not set' }}</td>
+                      <td class="py-2.5 px-4 text-right font-mono font-black">{{ reports.provincial_due.per_capita_amount != null ? formatMoney(reports.provincial_due.per_capita_amount) : '—' }}</td>
                     </tr>
                     <tr>
                       <td class="py-2.5 px-4">Festival contribution</td>
                       <td class="py-2.5 px-4 text-right font-mono">{{ reports.provincial_due.member_count }}</td>
-                      <td class="py-2.5 px-4 text-right font-mono">{{ reports.provincial_due.festival_rate != null ? formatCurrency(reports.provincial_due.festival_rate) : 'Rate not set' }}</td>
-                      <td class="py-2.5 px-4 text-right font-mono font-black">{{ reports.provincial_due.festival_amount != null ? formatCurrency(reports.provincial_due.festival_amount) : '—' }}</td>
+                      <td class="py-2.5 px-4 text-right font-mono">{{ reports.provincial_due.festival_rate != null ? formatMoney(reports.provincial_due.festival_rate) : 'Rate not set' }}</td>
+                      <td class="py-2.5 px-4 text-right font-mono font-black">{{ reports.provincial_due.festival_amount != null ? formatMoney(reports.provincial_due.festival_amount) : '—' }}</td>
                     </tr>
                     <tr class="bg-slate-50 dark:bg-slate-800/50">
                       <td colspan="3" class="py-2.5 px-4 font-black">Total due to Province</td>
-                      <td class="py-2.5 px-4 text-right font-mono font-black">{{ reports.provincial_due.total_due != null ? formatCurrency(reports.provincial_due.total_due) : '—' }}</td>
+                      <td class="py-2.5 px-4 text-right font-mono font-black">{{ reports.provincial_due.total_due != null ? formatMoney(reports.provincial_due.total_due) : '—' }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -3508,15 +3323,15 @@ const getTypeBadge = (type) => {
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
                 <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Output VAT (on sales)</span>
-                <span class="text-lg font-black text-emerald-700 dark:text-emerald-300">{{ formatCurrency(reports.vat_return?.output_vat) }}</span>
+                <span class="text-lg font-black text-emerald-700 dark:text-emerald-300">{{ formatMoney(reports.vat_return?.output_vat) }}</span>
               </div>
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
                 <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Input VAT (on purchases)</span>
-                <span class="text-lg font-black text-rose-700 dark:text-rose-300">{{ formatCurrency(reports.vat_return?.input_vat) }}</span>
+                <span class="text-lg font-black text-rose-700 dark:text-rose-300">{{ formatMoney(reports.vat_return?.input_vat) }}</span>
               </div>
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
                 <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Net VAT Due to HMRC</span>
-                <span class="text-lg font-black text-slate-900 dark:text-white">{{ formatCurrency(reports.vat_return?.net_vat_due) }}</span>
+                <span class="text-lg font-black text-slate-900 dark:text-white">{{ formatMoney(reports.vat_return?.net_vat_due) }}</span>
               </div>
             </div>
             <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
@@ -3536,9 +3351,9 @@ const getTypeBadge = (type) => {
                     <td class="py-2 px-3 font-mono">{{ row.date }}</td>
                     <td class="py-2 px-3">{{ row.type === 'sale' ? 'Sale' : 'Purchase' }}</td>
                     <td class="py-2 px-3">{{ row.reference }} — {{ row.description }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(row.net_amount) }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(row.vat_amount) }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(row.gross_amount) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney(row.net_amount) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney(row.vat_amount) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney(row.gross_amount) }}</td>
                   </tr>
                   <tr v-if="!(reports.vat_return?.rows || []).length">
                     <td colspan="6" class="py-4 px-3 text-center text-slate-400 italic">No VAT-inclusive transactions this quarter.</td>
@@ -3681,21 +3496,21 @@ const getTypeBadge = (type) => {
                     <td class="py-2 px-3 text-right">
                       <input v-model="budgetForm.lines[acc.id]" :disabled="!canManageBilling" type="number" step="0.01" min="0" class="w-28 px-2 py-1 text-right bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg disabled:opacity-60" />
                     </td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).actual || 0) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).actual || 0) }}</td>
                     <td
                       class="py-2 px-3 text-right font-mono"
                       :class="((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).variance || 0) > 0 ? (acc.type === 'expense' ? 'text-rose-600' : 'text-emerald-600') : 'text-slate-500'"
                     >
-                      {{ formatCurrency((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).variance || 0) }}
+                      {{ formatMoney((budgetVsActual.rows.find(r => r.account_id === acc.id) || {}).variance || 0) }}
                     </td>
                   </tr>
                 </tbody>
                 <tfoot>
                   <tr class="bg-slate-100 dark:bg-slate-800 font-extrabold text-slate-900 dark:text-white">
                     <td colspan="2" class="py-2 px-3 uppercase">Totals</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(budgetVsActual.total_budgeted) }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(budgetVsActual.total_actual) }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(budgetVsActual.total_actual - budgetVsActual.total_budgeted) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney(budgetVsActual.total_budgeted) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney(budgetVsActual.total_actual) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney(budgetVsActual.total_actual - budgetVsActual.total_budgeted) }}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -3732,11 +3547,11 @@ const getTypeBadge = (type) => {
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
                 <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">General Fund Net Surplus</span>
-                <span class="text-lg font-black text-slate-900 dark:text-white">{{ formatCurrency(annualTreasurerReport.general_fund.net_surplus) }}</span>
+                <span class="text-lg font-black text-slate-900 dark:text-white">{{ formatMoney(annualTreasurerReport.general_fund.net_surplus) }}</span>
               </div>
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
                 <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Charity Fund Movement</span>
-                <span class="text-lg font-black text-slate-900 dark:text-white">{{ formatCurrency(annualTreasurerReport.charity_fund.collections_total - annualTreasurerReport.charity_fund.grants_disbursed_total) }}</span>
+                <span class="text-lg font-black text-slate-900 dark:text-white">{{ formatMoney(annualTreasurerReport.charity_fund.collections_total - annualTreasurerReport.charity_fund.grants_disbursed_total) }}</span>
               </div>
               <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
                 <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Members in Arrears</span>
@@ -3750,12 +3565,12 @@ const getTypeBadge = (type) => {
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900">
                   <tr v-for="row in annualTreasurerReport.general_fund.rows" :key="row.code">
                     <td class="py-2 px-3">{{ row.code }} — {{ row.name }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(row.amount) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney(row.amount) }}</td>
                   </tr>
                   <tr v-if="!annualTreasurerReport.general_fund.rows.length"><td colspan="2" class="py-4 px-3 text-center text-slate-400 italic">No General Fund activity this year.</td></tr>
                 </tbody>
                 <tfoot>
-                  <tr class="bg-slate-100 dark:bg-slate-800 font-extrabold text-slate-900 dark:text-white"><td class="py-2 px-3">Net Surplus / (Deficit)</td><td class="py-2 px-3 text-right font-mono">{{ formatCurrency(annualTreasurerReport.general_fund.net_surplus) }}</td></tr>
+                  <tr class="bg-slate-100 dark:bg-slate-800 font-extrabold text-slate-900 dark:text-white"><td class="py-2 px-3">Net Surplus / (Deficit)</td><td class="py-2 px-3 text-right font-mono">{{ formatMoney(annualTreasurerReport.general_fund.net_surplus) }}</td></tr>
                 </tfoot>
               </table>
             </div>
@@ -3766,9 +3581,9 @@ const getTypeBadge = (type) => {
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900">
                   <tr v-for="(b, idx) in annualTreasurerReport.bank_accounts" :key="idx">
                     <td class="py-2 px-3">{{ b.bank_name }} — {{ b.account_name }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(b.opening_balance) }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(b.closing_ledger_balance) }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(b.closing_statement_balance) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney(b.opening_balance) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney(b.closing_ledger_balance) }}</td>
+                    <td class="py-2 px-3 text-right font-mono">{{ formatMoney(b.closing_statement_balance) }}</td>
                   </tr>
                   <tr v-if="!annualTreasurerReport.bank_accounts.length"><td colspan="4" class="py-4 px-3 text-center text-slate-400 italic">No bank accounts connected.</td></tr>
                 </tbody>
@@ -4212,10 +4027,10 @@ const getTypeBadge = (type) => {
                           <span v-if="item.memo" class="text-slate-400 ml-2 italic text-[10px]">({{ item.memo }})</span>
                         </td>
                         <td class="py-1.5 text-right font-mono text-slate-900 dark:text-white">
-                          {{ item.debit > 0 ? formatCurrency(item.debit) : '-' }}
+                          {{ item.debit > 0 ? formatMoney(item.debit) : '-' }}
                         </td>
                         <td class="py-1.5 text-right font-mono text-slate-900 dark:text-white">
-                          {{ item.credit > 0 ? formatCurrency(item.credit) : '-' }}
+                          {{ item.credit > 0 ? formatMoney(item.credit) : '-' }}
                         </td>
                       </tr>
                     </tbody>
@@ -4396,14 +4211,13 @@ const getTypeBadge = (type) => {
                   <span v-if="c.tax_id && c.tax_id !== '—'" class="font-mono text-[10px] text-slate-400 block">Tax ID: {{ c.tax_id }}</span>
                 </td>
                 <td class="py-3 px-4 text-center">
-                  <button
+                  <Link
                     v-if="c.kind === 'member'"
-                    type="button"
-                    @click="showInvoiceModal = true; invoiceForm.user_id = c.user_id"
-                    class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    :href="route('admin.accounting.invoices.create', { clubSlug: club.slug, user: c.user_id })"
+                    class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-extrabold rounded-lg transition-all"
                   >
                     + Issue Invoice
-                  </button>
+                  </Link>
                   <div v-else class="flex items-center justify-center gap-1.5">
                     <Link
                       :href="route('admin.accounting.contacts.edit', [club.slug, c.contact_db_id])"
@@ -5411,7 +5225,7 @@ const getTypeBadge = (type) => {
 
               <div class="flex flex-wrap items-center gap-2 text-xs">
                 <span class="px-3 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 font-extrabold rounded-xl border border-blue-200/60 dark:border-blue-800/60">
-                  Total Filtered Gift Aid: {{ formatCurrency(filteredReconciledGiftAidTotal) }}
+                  Total Filtered Gift Aid: {{ formatMoney(filteredReconciledGiftAidTotal) }}
                 </span>
                 <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl border border-slate-200 dark:border-slate-800">
                   Showing {{ filteredReconciledDonations.length }} transaction(s)
@@ -6379,320 +6193,6 @@ const getTypeBadge = (type) => {
         </form>
       </div>
     </div>
-
-    <!-- Modal 2: Double-Entry Journal Entry Builder -->
-    <div v-if="showJournalModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="showJournalModal = false">
-      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5" @click.stop>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div>
-            <h3 class="text-base font-black text-slate-900 dark:text-white">Add Journal Entry (Manual Ledger Adjustment)</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Record a manual double-entry ledger adjustment. (To add a vendor bill, click "+ Add Bill" above).</p>
-          </div>
-          <button type="button" @click="showJournalModal = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold text-sm">✕</button>
-        </div>
-
-        <form @submit.prevent="submitJournal" class="space-y-4 text-xs">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Transaction Description</label>
-              <input
-                v-model="journalForm.description"
-                type="text"
-                placeholder="e.g. Purchased regatta boat equipment"
-                class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500"
-                required
-              />
-            </div>
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Posting Date</label>
-              <input
-                v-model="journalForm.entry_date"
-                type="date"
-                class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500"
-                required
-              />
-            </div>
-          </div>
-
-          <!-- Dynamic Line Items Builder -->
-          <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div class="flex items-center justify-between">
-              <span class="font-extrabold text-slate-800 dark:text-slate-100">Ledger Line Items</span>
-              <button
-                type="button"
-                @click="addJournalLine"
-                class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-bold text-xs"
-              >
-                + Add Row
-              </button>
-            </div>
-
-            <div v-for="(item, idx) in journalForm.items" :key="idx" class="grid grid-cols-12 gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
-              <div class="col-span-5">
-                <select
-                  v-model="item.account_id"
-                  class="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-semibold focus:outline-none"
-                  required
-                >
-                  <option value="" disabled>Select Account...</option>
-                  <option v-for="acc in accounts" :key="acc.id" :value="acc.id">
-                    {{ acc.code }} - {{ acc.name }} ({{ acc.type }})
-                  </option>
-                </select>
-              </div>
-              <div class="col-span-3">
-                <input
-                  v-model.number="item.debit"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  :placeholder="'Debit (' + $cs + ')'"
-                  class="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono focus:outline-none"
-                />
-              </div>
-              <div class="col-span-3">
-                <input
-                  v-model.number="item.credit"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  :placeholder="'Credit (' + $cs + ')'"
-                  class="w-full px-2 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono focus:outline-none"
-                />
-              </div>
-              <div class="col-span-1 text-center">
-                <button
-                  type="button"
-                  @click="removeJournalLine(idx)"
-                  class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold"
-                  title="Remove row"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Real-Time Double-Entry Balancing Bar -->
-          <div class="p-3 rounded-xl border flex items-center justify-between" :class="isJournalBalanced ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 text-rose-900 dark:text-rose-200'">
-            <div class="flex items-center gap-4 text-xs font-mono font-bold">
-              <span>Debits: {{ formatCurrency(totalJournalDebit) }}</span>
-              <span>Credits: {{ formatCurrency(totalJournalCredit) }}</span>
-            </div>
-            <span class="text-xs font-black">
-              {{ isJournalBalanced ? 'BALANCED ✓' : 'UNBALANCED ✕' }}
-            </span>
-          </div>
-
-          <div class="pt-2 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              @click="showJournalModal = false"
-              class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="!isJournalBalanced || journalForm.processing"
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-sm disabled:opacity-50 cursor-pointer"
-            >
-              Post Journal Entry
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal 3: Create Member Invoice -->
-    <div v-if="showInvoiceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showInvoiceModal = false">
-      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5" @click.stop>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-          <h3 class="text-base font-black text-slate-900 dark:text-white">Create Member Invoice</h3>
-          <button type="button" @click="showInvoiceModal = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold text-sm">✕</button>
-        </div>
-
-        <form @submit.prevent="submitInvoice" class="space-y-4 text-xs">
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700 dark:text-slate-200">Select Member</label>
-            <select
-              v-model="invoiceForm.user_id"
-              class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-500"
-              required
-            >
-              <option value="" disabled>Select Member...</option>
-              <option v-for="m in members" :key="m.id" :value="m.id">
-                {{ m.name }} ({{ m.email }})
-              </option>
-            </select>
-          </div>
-
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700 dark:text-slate-200">Invoice Title / Description</label>
-            <input
-              v-model="invoiceForm.title"
-              type="text"
-              placeholder="e.g. Annual Boating Dues 2026"
-              class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700 dark:text-slate-200">Amount ({{ $cs }})</label>
-            <input
-              v-model.number="invoiceForm.amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              placeholder="150.00"
-              class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-xs focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-
-          <div class="pt-2 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              @click="showInvoiceModal = false"
-              class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs"
-            >
-              Cancel
-            </button>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                @click="submitInvoice(true)"
-                :disabled="invoiceForm.processing"
-                class="px-3.5 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-100 font-extrabold rounded-xl text-xs transition-colors cursor-pointer"
-              >
-                📝 Save Draft
-              </button>
-              <button
-                type="button"
-                @click="submitInvoice(false)"
-                :disabled="invoiceForm.processing"
-                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
-              >
-                Issue Invoice
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal 4: Add Vendor Bill -->
-    <div v-if="showBillModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showBillModal = false">
-      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5" @click.stop>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-          <h3 class="text-base font-black text-slate-900 dark:text-white">Add Vendor Bill (A/P)</h3>
-          <button type="button" @click="showBillModal = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold text-sm">✕</button>
-        </div>
-
-        <form @submit.prevent="submitBill" class="space-y-4 text-xs">
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700 dark:text-slate-200">Vendor Name</label>
-            <input
-              v-model="billForm.vendor_name"
-              type="text"
-              placeholder="e.g. Boat Yard Supplies Ltd"
-              class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700 dark:text-slate-200">Expense Category</label>
-            <input
-              v-model="billForm.category"
-              type="text"
-              placeholder="e.g. Facility Maintenance"
-              class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Amount ({{ $cs }})</label>
-              <input
-                v-model.number="billForm.amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                placeholder="450.00"
-                class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-xs focus:outline-none focus:border-blue-500"
-                required
-              />
-            </div>
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Due Date</label>
-              <input
-                v-model="billForm.due_date"
-                type="date"
-                class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500"
-                required
-              />
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700 dark:text-slate-200">Notes / Reference</label>
-            <textarea
-              v-model="billForm.notes"
-              rows="2"
-              placeholder="Optional notes or PO number..."
-              class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 resize-none"
-            ></textarea>
-          </div>
-
-          <div class="space-y-1">
-            <label class="block font-bold text-slate-700 dark:text-slate-200">Receipt / Invoice File (PDF, PNG, JPG, WEBP)</label>
-            <input
-              type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.webp"
-              @change="handleBillFileChange"
-              class="w-full text-xs text-slate-600 dark:text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-100 dark:file:bg-slate-800 file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-200 dark:hover:file:bg-slate-700 cursor-pointer"
-            />
-            <p v-if="billForm.errors.attachment" class="text-[11px] text-red-600 dark:text-red-400 font-semibold mt-0.5">{{ billForm.errors.attachment }}</p>
-            <p v-if="billForm.attachment" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">
-              Attached: {{ billForm.attachment.name }}
-            </p>
-          </div>
-
-          <div class="pt-2 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              @click="showBillModal = false"
-              class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs"
-            >
-              Cancel
-            </button>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                @click="submitBill(true)"
-                :disabled="billForm.processing"
-                class="px-3.5 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-100 font-extrabold rounded-xl text-xs transition-colors cursor-pointer"
-              >
-                📝 Save Draft
-              </button>
-              <button
-                type="button"
-                @click="submitBill(false)"
-                :disabled="billForm.processing"
-                class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
-              >
-                Record & Post Bill
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-
-
 
     <!-- Modal 6: Set Account Opening / Carry Over Balance -->
     <div v-if="showOpeningBalanceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4" @click="showOpeningBalanceModal = false">

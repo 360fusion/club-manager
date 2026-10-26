@@ -1,8 +1,16 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import CommunicationsTabs from '@/Components/CommunicationsTabs.vue';
+import Card from '@/Components/Ui/Card.vue';
+import StatCard from '@/Components/Ui/StatCard.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
+import { formatLocal } from '@/Utils/localDateTime';
 
 const props = defineProps({
   club: Object,
@@ -17,9 +25,9 @@ const selectedRole = ref('all');
 const selectedDateRange = ref('all');
 
 const availableRoles = [
-  { id: 'member', label: 'Members / Brethren' },
-  { id: 'coach', label: 'Coaches & Officers' },
-  { id: 'admin', label: 'Admins & Board' },
+  { id: 'member', label: 'Members and brethren' },
+  { id: 'coach', label: 'Coaches and officers' },
+  { id: 'admin', label: 'Admins and board' },
   { id: 'treasurer', label: 'Treasurers' },
 ];
 
@@ -50,8 +58,8 @@ const filteredNewsletters = computed(() => {
     }
 
     // 5. Date Range Filter
-    if (selectedDateRange.value !== 'all' && item.sent_at) {
-      const sentDate = new Date(item.sent_at);
+    if (selectedDateRange.value !== 'all' && item.sent_at_iso) {
+      const sentDate = new Date(item.sent_at_iso);
       const now = new Date();
       if (selectedDateRange.value === '30_days') {
         const thirtyDaysAgo = new Date();
@@ -66,214 +74,158 @@ const filteredNewsletters = computed(() => {
   });
 });
 
-const sendBroadcast = (item) => {
-  if (confirm(`Email "${item.subject}" to ${item.recipient_count} ${item.recipient_count === 1 ? 'person' : 'people'} now? It cannot be changed or sent again afterwards.`)) {
-    router.post(route('admin.newsletters.send', { clubSlug: props.club.slug, id: item.id }));
-  }
+// Sending emails everyone once and cannot be undone, so it waits for the confirm dialog.
+const newsletterToSend = ref(null);
+const sending = ref(false);
+const sendBroadcast = () => {
+  sending.value = true;
+  router.post(route('admin.newsletters.send', { clubSlug: props.club.slug, id: newsletterToSend.value.id }), {}, {
+    onFinish: () => { sending.value = false; newsletterToSend.value = null; },
+  });
 };
 
 const duplicateNewsletter = (id) => router.post(route('admin.newsletters.duplicate', { clubSlug: props.club.slug, id }));
 const retryFailed = (id) => router.post(route('admin.newsletters.retry', { clubSlug: props.club.slug, id }), {}, { preserveScroll: true });
 
-const deleteNewsletter = (id) => {
-  if (confirm('Are you sure you want to delete this newsletter?')) {
-    router.delete(route('admin.newsletters.destroy', { clubSlug: props.club.slug, id }));
-  }
+const newsletterToDelete = ref(null);
+const deleteNewsletter = () => {
+  router.delete(route('admin.newsletters.destroy', { clubSlug: props.club.slug, id: newsletterToDelete.value.id }), {
+    onFinish: () => { newsletterToDelete.value = null; },
+  });
 };
+
+const people = (count) => `${count} ${count === 1 ? 'person' : 'people'}`;
+const sentCount = computed(() => (props.newsletters || []).filter(n => n.status === 'sent').length);
+const draftCount = computed(() => (props.newsletters || []).filter(n => n.status === 'draft').length);
+
+const statusOptions = computed(() => [
+  { value: 'all', label: `All statuses (${props.newsletters.length})` },
+  { value: 'sent', label: `Sent (${sentCount.value})` },
+  { value: 'draft', label: `Drafts (${draftCount.value})` },
+]);
+const channelOptions = computed(() => [{ value: 'all', label: 'All channels' }, ...(props.types || []).map((t) => ({ value: t.id, label: `${t.icon} ${t.name}` }))]);
+const roleOptions = [{ value: 'all', label: 'All roles' }, ...availableRoles.map((r) => ({ value: r.id, label: r.label }))];
+const DATE_OPTIONS = [
+  { value: 'all', label: 'All time' },
+  { value: '30_days', label: 'Last 30 days' },
+  { value: 'this_year', label: 'This year' },
+];
+const roleLabel = (role) => availableRoles.find((r) => r.id === role)?.label ?? role;
 </script>
 
 <template>
-  <AdminLayout title="Newsletters & Email Broadcasts" :club="club" active-tab="newsletters">
-    <Head title="Newsletters & Email Broadcasts" />
+  <AdminLayout title="Newsletters and email broadcasts" :club="club" active-tab="newsletters">
+    <Head title="Newsletters and email broadcasts" />
 
-    <div class="max-w-6xl mx-auto space-y-6">
+    <div class="mx-auto max-w-6xl space-y-6">
       <CommunicationsTabs :club="club" active-tab="newsletters" />
-      
-      <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Club Newsletters & Targeted Broadcasts</h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Compose and send email broadcasts targeted by channel, role, or visiting subscribers.</p>
+
+      <Card>
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Newsletters and broadcasts</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Write and send emails to a channel, to chosen roles, or to visiting subscribers.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" :href="route('admin.newsletters.subscribers', { clubSlug: club.slug })">Manage subscribers</Button>
+            <Button variant="secondary" size="sm" :href="route('admin.newsletters.types', { clubSlug: club.slug })">Channels and settings</Button>
+            <Button size="sm" :href="route('admin.newsletters.create', { clubSlug: club.slug })">Write a newsletter</Button>
+          </div>
         </div>
-        <div class="flex items-center gap-3">
-          <Link :href="route('admin.newsletters.subscribers', { clubSlug: club.slug })" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all text-center flex items-center gap-1">
-            👥 Manage Subscribers
-          </Link>
-          <Link :href="route('admin.newsletters.types', { clubSlug: club.slug })" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all text-center flex items-center gap-1">
-            ⚙️ Channels & Settings
-          </Link>
-          <Link :href="route('admin.newsletters.create', { clubSlug: club.slug })" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all text-center">
-            + Compose Broadcast
-          </Link>
-        </div>
+      </Card>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Sent" :value="sentCount" />
+        <StatCard label="Drafts" :value="draftCount" />
+        <StatCard label="Channels" :value="(types || []).length" />
       </div>
 
-      <!-- Stats Cards Row -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-1">
-          <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Broadcasts Sent</div>
-          <div class="text-2xl font-black text-slate-900 dark:text-white">
-            {{ newsletters.filter(n => n.status === 'sent').length }}
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-1">
-          <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Drafts Pending</div>
-          <div class="text-2xl font-black text-amber-600 dark:text-amber-400">
-            {{ newsletters.filter(n => n.status === 'draft').length }}
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-1">
-          <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Channels</div>
-          <div class="text-2xl font-black text-blue-600 dark:text-blue-400">
-            {{ (types || []).length }} Channels
-          </div>
-        </div>
-      </div>
-
-      <!-- Filter Toolbar Card -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <!-- Prominent Search Bar (Left) -->
-          <div class="relative w-full lg:w-96">
-            <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-700 dark:text-slate-200 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search broadcasts by subject line or content..."
-              class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-600 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all shadow-sm"
-            />
+      <Card>
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 items-end gap-3 border-b border-slate-100 pb-4 dark:border-slate-800 sm:grid-cols-2 lg:grid-cols-5">
+            <Input v-model="searchQuery" class="sm:col-span-2 lg:col-span-1" type="search" label="Search" placeholder="Subject or content" />
+            <Select v-model="selectedStatus" label="Status" :options="statusOptions" />
+            <Select v-model="selectedTypeId" label="Channel" :options="channelOptions" />
+            <Select v-model="selectedRole" label="Role" :options="roleOptions" />
+            <Select v-model="selectedDateRange" label="Sent" :options="DATE_OPTIONS" />
           </div>
 
-          <!-- Dropdown Filters (Right) -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs w-full lg:w-auto">
-            <!-- Status Dropdown -->
-            <select
-              v-model="selectedStatus"
-              class="px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer shadow-sm"
-            >
-              <option value="all">All Statuses ({{ newsletters.length }})</option>
-              <option value="sent">🚀 Sent ({{ newsletters.filter(n => n.status === 'sent').length }})</option>
-              <option value="draft">✏️ Drafts ({{ newsletters.filter(n => n.status === 'draft').length }})</option>
-            </select>
+          <div v-if="filteredNewsletters.length" class="space-y-4">
+            <div v-for="item in filteredNewsletters" :key="item.id" class="flex flex-col justify-between gap-6 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/50 md:flex-row md:items-center">
+              <div class="min-w-0 space-y-3">
+                <div class="flex flex-wrap items-center gap-2">
+                  <Badge v-if="item.status === 'sent'" variant="success">Sent {{ item.sent_at_iso ? formatLocal(item.sent_at_iso) : item.sent_at }}</Badge>
+                  <Badge v-else variant="warning">Draft</Badge>
 
-            <!-- Channel Filter -->
-            <select
-              v-model="selectedTypeId"
-              class="px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer shadow-sm"
-            >
-              <option value="all">All Channels</option>
-              <option v-for="t in types" :key="t.id" :value="t.id">{{ t.icon }} {{ t.name }}</option>
-            </select>
+                  <Badge>
+                    <span :style="{ backgroundColor: item.type_color }" class="inline-block h-2 w-2 rounded-full" aria-hidden="true"></span>
+                    {{ item.type_icon }} {{ item.type_name }}
+                  </Badge>
 
-            <!-- Target Role Filter -->
-            <select
-              v-model="selectedRole"
-              class="px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer shadow-sm"
-            >
-              <option value="all">All Target Roles</option>
-              <option v-for="r in availableRoles" :key="r.id" :value="r.id">{{ r.label }}</option>
-            </select>
+                  <Badge v-for="role in item.target_roles" :key="role">{{ roleLabel(role) }}</Badge>
 
-            <!-- Date Range Filter -->
-            <select
-              v-model="selectedDateRange"
-              class="px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer shadow-sm"
-            >
-              <option value="all">All Time</option>
-              <option value="30_days">Last 30 Days</option>
-              <option value="this_year">This Year</option>
-            </select>
-          </div>
-        </div>
+                  <Badge>
+                    To {{ people(item.recipient_count) }}<template v-if="item.external_recipient_count > 0">, {{ item.external_recipient_count }} visiting</template>
+                  </Badge>
 
-        <!-- Newsletters List Grid -->
-        <div v-if="filteredNewsletters.length" class="grid grid-cols-1 gap-4 pt-2">
-          <div v-for="item in filteredNewsletters" :key="item.id" class="bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div class="space-y-3">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span :class="['px-2.5 py-0.5 rounded text-xs font-bold border uppercase tracking-wider', item.status === 'sent' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']">
-                  {{ item.status === 'sent' ? `SENT (${item.sent_at})` : 'DRAFT' }}
-                </span>
+                  <template v-if="item.status === 'sent'">
+                    <Badge variant="success">{{ item.deliveries.sent }} delivered</Badge>
+                    <Badge v-if="item.deliveries.queued">{{ item.deliveries.queued }} waiting</Badge>
+                    <Badge v-if="item.deliveries.failed" variant="danger">{{ item.deliveries.failed }} failed</Badge>
+                  </template>
 
-                <span
-                  :style="{ backgroundColor: item.type_color + '15', color: item.type_color, borderColor: item.type_color + '30' }"
-                  class="px-2 py-0.5 rounded text-[10px] font-bold uppercase border tracking-wider flex items-center gap-1"
-                >
-                  {{ item.type_icon }} {{ item.type_name }}
-                </span>
+                  <Badge v-if="item.attachments && item.attachments.length" variant="info">
+                    {{ item.attachments.length }} {{ item.attachments.length === 1 ? 'attachment' : 'attachments' }}
+                  </Badge>
+                </div>
 
-                <!-- Target Roles Badges -->
-                <span v-for="role in item.target_roles" :key="role" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                  {{ role }}
-                </span>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ item.subject }}</h3>
 
-                <!-- Audience Badge -->
-                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-center gap-1">
-                  <span>Audience: <strong class="text-slate-900 dark:text-white">{{ item.recipient_count }} {{ item.recipient_count === 1 ? 'person' : 'people' }}</strong></span>
-                  <span v-if="item.external_recipient_count > 0" class="text-blue-600 dark:text-blue-400 font-bold">({{ item.external_recipient_count }} visiting)</span>
-                </span>
-
-                <!-- Delivery progress once sent -->
-                <span v-if="item.status === 'sent'" class="flex items-center gap-1.5 rounded border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold dark:border-slate-800 dark:bg-slate-900">
-                  <span class="text-emerald-600">✓ {{ item.deliveries.sent }} delivered</span>
-                  <span v-if="item.deliveries.queued" class="text-slate-500">· {{ item.deliveries.queued }} waiting</span>
-                  <span v-if="item.deliveries.failed" class="text-rose-600">· {{ item.deliveries.failed }} failed</span>
-                </span>
-
-                <!-- Attachments Count Badge -->
-                <span v-if="item.attachments && item.attachments.length" class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 flex items-center gap-1">
-                  📎 {{ item.attachments.length }} {{ item.attachments.length === 1 ? 'Attachment' : 'Attachments' }}
-                </span>
+                <div v-if="item.attachments && item.attachments.length" class="flex flex-wrap gap-2">
+                  <a
+                    v-for="(att, aIdx) in item.attachments"
+                    :key="aIdx"
+                    :href="att.url"
+                    target="_blank"
+                    rel="noopener"
+                    class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    {{ att.name }}
+                    <span v-if="att.size" class="text-slate-500 dark:text-slate-400">({{ att.size }})</span>
+                  </a>
+                </div>
               </div>
 
-              <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ item.subject }}</h3>
-
-              <!-- Attached Files Pills -->
-              <div v-if="item.attachments && item.attachments.length" class="flex flex-wrap gap-2 pt-1">
-                <a
-                  v-for="(att, aIdx) in item.attachments"
-                  :key="aIdx"
-                  :href="att.url"
-                  target="_blank"
-                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm transition-all"
-                >
-                  <span>📎</span>
-                  <span>{{ att.name }}</span>
-                  <span class="text-[9px] text-slate-400 font-normal">({{ att.size }})</span>
-                </a>
+              <div class="flex flex-wrap items-center gap-2 md:shrink-0">
+                <Button v-if="item.status === 'draft'" size="sm" @click="newsletterToSend = item">Send</Button>
+                <Button v-if="item.status === 'sent' && item.deliveries.failed" variant="secondary" size="sm" @click="retryFailed(item.id)">Retry {{ item.deliveries.failed }} failed</Button>
+                <Button v-if="item.status === 'sent'" variant="secondary" size="sm" @click="duplicateNewsletter(item.id)">Duplicate</Button>
+                <Button v-if="item.status === 'draft'" variant="secondary" size="sm" :href="route('admin.newsletters.edit', { clubSlug: club.slug, id: item.id })">Edit draft</Button>
+                <Button variant="ghost" size="sm" @click="newsletterToDelete = item">Delete</Button>
               </div>
             </div>
-
-            <div class="flex items-center gap-3 self-start md:self-auto">
-              <button v-if="item.status === 'draft'" @click="sendBroadcast(item)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
-                🚀 Send Broadcast
-              </button>
-              <button v-if="item.status === 'sent' && item.deliveries.failed" @click="retryFailed(item.id)" class="px-4 py-2 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-800 dark:text-amber-200 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800/60 transition-all cursor-pointer">
-                ↻ Retry {{ item.deliveries.failed }} failed
-              </button>
-              <button v-if="item.status === 'sent'" @click="duplicateNewsletter(item.id)" class="px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 transition-all cursor-pointer">
-                ⧉ Duplicate
-              </button>
-              <Link v-if="item.status === 'draft'" :href="route('admin.newsletters.edit', { clubSlug: club.slug, id: item.id })" class="px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 transition-all">
-                ✏️ Edit Draft
-              </Link>
-              <button @click="deleteNewsletter(item.id)" class="px-3 py-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer">
-                🗑️ Delete
-              </button>
-            </div>
           </div>
-        </div>
 
-        <div v-else class="p-12 text-center text-slate-500 dark:text-slate-400 text-sm font-medium">
-          No broadcasts found matching your filter criteria.
+          <p v-else class="p-12 text-center text-sm text-slate-500 dark:text-slate-400">No newsletters match these filters.</p>
         </div>
-      </div>
-
+      </Card>
     </div>
 
+    <ConfirmDialog
+      :open="Boolean(newsletterToSend)"
+      title="Send this newsletter now?"
+      confirm-label="Send now"
+      cancel-label="Not yet"
+      variant="primary"
+      :processing="sending"
+      @confirm="sendBroadcast"
+      @close="newsletterToSend = null"
+    >
+      "{{ newsletterToSend?.subject }}" will be emailed to {{ people(newsletterToSend?.recipient_count ?? 0) }} now. It cannot be changed or sent again afterwards.
+    </ConfirmDialog>
+
+    <ConfirmDialog :open="Boolean(newsletterToDelete)" title="Delete this newsletter?" confirm-label="Delete newsletter" @confirm="deleteNewsletter" @close="newsletterToDelete = null">
+      "{{ newsletterToDelete?.subject }}" will be deleted.
+    </ConfirmDialog>
   </AdminLayout>
 </template>

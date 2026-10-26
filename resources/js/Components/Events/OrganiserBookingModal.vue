@@ -1,7 +1,9 @@
 <script setup>
+import { localDate } from '@/Utils/localDateTime';
 import { computed, reactive, ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import Modal from '@/Components/Ui/Modal.vue';
+import Button from '@/Components/Ui/Button.vue';
 import { useEventQuote } from '@/Composables/useEventQuote';
 import { formatMoney } from '@/Utils/currency';
 
@@ -25,8 +27,10 @@ const COURSES = [
     { key: 'dessert', column: 'dessert_item_id', label: 'Dessert' },
 ];
 
-const field = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white';
-const label = 'mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400';
+const field = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
+const label = 'mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300';
+// The two-way switches (member or visitor, attending or waiting list).
+const segment = (on) => ['rounded-lg px-3 py-1.5 text-sm font-medium', on ? 'bg-slate-900 text-white dark:bg-slate-700' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'];
 const errorText = 'mt-1 text-[11px] font-semibold text-rose-600';
 
 const blankPerson = (isGuest = false) => ({
@@ -42,7 +46,7 @@ const blankPerson = (isGuest = false) => ({
     dietary_requirements: '',
 });
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => localDate();
 
 const form = useForm({
     member_id: null,
@@ -244,7 +248,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
         <p v-if="loading" class="py-8 text-center text-xs text-slate-500">Loading booking...</p>
         <p v-else-if="loadError" class="rounded-lg bg-rose-500/10 p-3 text-xs font-semibold text-rose-600" role="alert">{{ loadError }}</p>
 
-        <form v-else class="space-y-6 text-xs" @submit.prevent="submit">
+        <form v-else class="space-y-6 text-sm" @submit.prevent="submit">
             <div v-if="topErrors.length" class="space-y-1 rounded-lg bg-rose-500/10 p-3 font-semibold text-rose-600" role="alert">
                 <p v-for="message in topErrors" :key="message">{{ message }}</p>
             </div>
@@ -254,9 +258,9 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
             <section class="space-y-3">
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">1. Who is booking?</h3>
 
-                <div v-if="!editing" class="inline-flex rounded-lg border border-slate-300 p-0.5 dark:border-slate-700" role="tablist">
-                    <button type="button" role="tab" :aria-selected="who === 'member'" :class="['rounded-md px-3 py-1.5 font-bold', who === 'member' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300']" @click="who = 'member'">A member</button>
-                    <button type="button" role="tab" :aria-selected="who === 'visitor'" :class="['rounded-md px-3 py-1.5 font-bold', who === 'visitor' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300']" @click="who = 'visitor'">Visitor or non-member</button>
+                <div v-if="!editing" class="inline-flex gap-1 rounded-xl border border-slate-300 p-1 dark:border-slate-700" role="tablist">
+                    <button type="button" role="tab" :aria-selected="who === 'member'" :class="segment(who === 'member')" @click="who = 'member'">A member</button>
+                    <button type="button" role="tab" :aria-selected="who === 'visitor'" :class="segment(who === 'visitor')" @click="who = 'visitor'">Visitor or non-member</button>
                 </div>
 
                 <template v-if="who === 'member'">
@@ -269,7 +273,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                                 <span v-if="(member ?? booking.member).member_number">Member #{{ (member ?? booking.member).member_number }}</span>
                             </div>
                         </div>
-                        <button v-if="!editing" type="button" class="font-bold text-blue-600 hover:underline dark:text-blue-400" @click="clearMember">Change</button>
+                        <Button v-if="!editing" variant="ghost" size="sm" @click="clearMember">Change</Button>
                     </div>
 
                     <div v-else class="relative">
@@ -296,10 +300,10 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                 </template>
 
                 <div class="grid gap-3 sm:grid-cols-2">
-                    <div v-if="who === 'visitor' || editing"><label :class="label">Name</label><input v-model="form.attendees[0].name" type="text" maxlength="150" :readonly="isMember" :class="field" /><p v-if="errorFor(0, 'name')" :class="errorText">{{ errorFor(0, 'name') }}</p></div>
-                    <div><label :class="label">Lodge / organisation</label><input v-model="form.attendees[0].organisation" type="text" maxlength="150" placeholder="e.g. Fraternity Lodge No 1418" :class="field" /></div>
-                    <div><label :class="label">Email</label><input v-model="form.contact_email" type="email" maxlength="255" placeholder="For their confirmation" :class="field" /><p v-if="form.errors.contact_email" :class="errorText">{{ form.errors.contact_email }}</p></div>
-                    <div><label :class="label">Phone</label><input v-model="form.contact_phone" type="text" maxlength="50" :class="field" /></div>
+                    <label v-if="who === 'visitor' || editing" class="block"><span :class="label">Name</span><input v-model="form.attendees[0].name" type="text" maxlength="150" :readonly="isMember" :class="field" /><p v-if="errorFor(0, 'name')" :class="errorText">{{ errorFor(0, 'name') }}</p></label>
+                    <label class="block"><span :class="label">Lodge / organisation</span><input v-model="form.attendees[0].organisation" type="text" maxlength="150" placeholder="Fraternity Lodge No 1418" :class="field" /></label>
+                    <label class="block"><span :class="label">Email</span><input v-model="form.contact_email" type="email" maxlength="255" placeholder="For their confirmation" :class="field" /><p v-if="form.errors.contact_email" :class="errorText">{{ form.errors.contact_email }}</p></label>
+                    <label class="block"><span :class="label">Phone</span><input v-model="form.contact_phone" type="text" maxlength="50" :class="field" /></label>
                 </div>
             </section>
 
@@ -311,47 +315,47 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                 <div v-if="index > 0 || bookerNeedsCard" class="space-y-3 rounded-xl border border-slate-200 p-3 dark:border-slate-800">
                     <div class="flex items-center justify-between gap-2">
                         <span class="font-bold text-slate-900 dark:text-white">{{ index === 0 ? (form.attendees[0].name || 'The booker') : `Guest ${index}` }}</span>
-                        <button v-if="index > 0" type="button" class="font-bold text-rose-600 hover:underline" @click="removeGuest(index)">Remove</button>
+                        <Button v-if="index > 0" variant="ghost" size="sm" @click="removeGuest(index)">Remove</Button>
                     </div>
 
                     <div v-if="index > 0" class="grid gap-3 sm:grid-cols-3">
-                        <div><label :class="label">Guest's name</label><input v-model="person.name" type="text" maxlength="150" :class="field" /><p v-if="errorFor(index, 'name')" :class="errorText">{{ errorFor(index, 'name') }}</p></div>
-                        <div><label :class="label">Lodge / organisation</label><input v-model="person.organisation" type="text" maxlength="150" :class="field" /></div>
-                        <div><label :class="label">Guest's email (optional)</label><input v-model="person.email" type="email" maxlength="255" :class="field" /><p v-if="errorFor(index, 'email')" :class="errorText">{{ errorFor(index, 'email') }}</p></div>
+                        <label class="block"><span :class="label">Guest's name</span><input v-model="person.name" type="text" maxlength="150" :class="field" /><p v-if="errorFor(index, 'name')" :class="errorText">{{ errorFor(index, 'name') }}</p></label>
+                        <label class="block"><span :class="label">Lodge / organisation</span><input v-model="person.organisation" type="text" maxlength="150" :class="field" /></label>
+                        <label class="block"><span :class="label">Guest's email (optional)</span><input v-model="person.email" type="email" maxlength="255" :class="field" /><p v-if="errorFor(index, 'email')" :class="errorText">{{ errorFor(index, 'email') }}</p></label>
                     </div>
 
-                    <div v-if="tiersFor(person).length > 1">
-                        <label :class="label">Ticket type</label>
+                    <label v-if="tiersFor(person).length > 1" class="block">
+                        <span :class="label">Ticket type</span>
                         <select v-model="person.ticket_tier_id" :class="field">
                             <option :value="null" disabled>Choose a ticket type</option>
-                            <option v-for="tier in tiersFor(person)" :key="tier.id" :value="tier.id">{{ tier.name }} ({{ $cs }}{{ tier.price }})</option>
+                            <option v-for="tier in tiersFor(person)" :key="tier.id" :value="tier.id">{{ tier.name }} ({{ $money(tier.price) }})</option>
                         </select>
                         <p v-if="errorFor(index, 'ticket_tier_id')" :class="errorText">{{ errorFor(index, 'ticket_tier_id') }}</p>
-                    </div>
+                    </label>
 
                     <template v-if="hasMenu">
                         <label class="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
                             <input type="checkbox" :checked="person.attending_dining" class="h-4 w-4 rounded" @change="setDining(person, $event.target.checked)" />
                             Having dinner
-                            <span v-if="Number(event.dining_price) > 0" class="font-normal text-slate-500">({{ $cs }}{{ event.dining_price }})</span>
+                            <span v-if="Number(event.dining_price) > 0" class="font-normal text-slate-500 dark:text-slate-400">({{ $money(event.dining_price) }})</span>
                         </label>
                         <div v-if="person.attending_dining" class="grid gap-3 sm:grid-cols-3">
-                            <div v-for="course in COURSES.filter((c) => event.menu?.[c.key]?.length)" :key="course.key">
-                                <label :class="label">{{ course.label }}</label>
+                            <label v-for="course in COURSES.filter((c) => event.menu?.[c.key]?.length)" :key="course.key" class="block">
+                                <span :class="label">{{ course.label }}</span>
                                 <select v-model="person[course.column]" :class="field">
                                     <option :value="null">Choose...</option>
                                     <option v-for="item in event.menu[course.key]" :key="item.id" :value="item.id">{{ item.name }}</option>
                                 </select>
                                 <p v-if="errorFor(index, course.column)" :class="errorText">{{ errorFor(index, course.column) }}</p>
-                            </div>
+                            </label>
                         </div>
                     </template>
 
-                    <div v-if="hasMenu"><label :class="label">Dietary needs</label><input v-model="person.dietary_requirements" type="text" maxlength="1000" placeholder="Allergies, vegetarian..." :class="field" /></div>
+                    <label v-if="hasMenu" class="block"><span :class="label">Dietary needs</span><input v-model="person.dietary_requirements" type="text" maxlength="1000" placeholder="Allergies, vegetarian..." :class="field" /></label>
                 </div>
                 </template>
 
-                <button type="button" class="rounded-lg border border-dashed border-slate-300 px-3 py-2 font-bold text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:text-blue-400 dark:hover:bg-slate-800" @click="addGuest">+ Add another person</button>
+                <Button variant="secondary" size="sm" @click="addGuest">Add another person</Button>
             </section>
 
             <!-- 3. Status and payment -->
@@ -359,9 +363,9 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">3. Place and payment</h3>
 
                 <div class="flex flex-wrap items-center gap-3">
-                    <div class="inline-flex rounded-lg border border-slate-300 p-0.5 dark:border-slate-700">
-                        <button type="button" :class="['rounded-md px-3 py-1.5 font-bold', form.status === 'attending' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300']" @click="form.status = 'attending'">Attending</button>
-                        <button type="button" :class="['rounded-md px-3 py-1.5 font-bold', form.status === 'waitlisted' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300']" @click="form.status = 'waitlisted'">Waiting list</button>
+                    <div class="inline-flex gap-1 rounded-xl border border-slate-300 p-1 dark:border-slate-700">
+                        <button type="button" :aria-pressed="form.status === 'attending'" :class="segment(form.status === 'attending')" @click="form.status = 'attending'">Attending</button>
+                        <button type="button" :aria-pressed="form.status === 'waitlisted'" :class="segment(form.status === 'waitlisted')" @click="form.status = 'waitlisted'">Waiting list</button>
                     </div>
                     <span v-if="event.capacity" class="text-slate-500 dark:text-slate-400">{{ event.places_taken }} of {{ event.capacity }} places taken</span>
                 </div>
@@ -372,7 +376,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
 
                 <template v-if="charged">
                     <div v-if="event.payment_options?.length" class="space-y-2" role="radiogroup" aria-label="How will they pay?">
-                        <label :class="label">How will they pay?</label>
+                        <p :class="label">How will they pay?</p>
                         <label v-for="option in event.payment_options" :key="option.id" :class="['flex cursor-pointer items-center justify-between gap-2 rounded-xl border p-3', form.payment_method === option.id ? 'border-blue-500 ring-1 ring-blue-500/40' : 'border-slate-200 dark:border-slate-800']">
                             <span class="flex items-center gap-2"><input v-model="form.payment_method" type="radio" :value="option.id" name="organiser-payment-option" /><span class="font-bold text-slate-900 dark:text-white">{{ option.label }}</span></span>
                             <span class="font-mono">{{ formatMoney(optionQuotes.find((o) => o.id === option.id)?.total ?? 0) }}</span>
@@ -390,14 +394,14 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                     <p v-if="quoteError" :class="errorText">{{ quoteError }}</p>
                     <p v-if="paidAlready" class="rounded-lg bg-blue-500/10 p-3 font-semibold text-blue-700 dark:text-blue-300">{{ formatMoney(booking.payment.amount_paid) }} has already been paid on this booking, so a change that alters the price will be refused.</p>
 
-                    <div><label :class="label">Promo code (optional)</label><input v-model="form.promo_code" type="text" maxlength="40" :class="[field, 'sm:max-w-xs']" /></div>
+                    <label class="block"><span :class="label">Promo code (optional)</span><input v-model="form.promo_code" type="text" maxlength="40" :class="[field, 'sm:max-w-xs']" /></label>
 
                     <div v-if="canRecordPayment" class="space-y-2 rounded-xl border border-emerald-300 p-3 dark:border-emerald-800/60">
                         <label class="flex items-center gap-2 font-bold text-slate-900 dark:text-white"><input v-model="form.mark_paid.enabled" type="checkbox" class="rounded" /> They have already paid</label>
                         <div v-if="form.mark_paid.enabled" class="grid gap-3 sm:grid-cols-3">
-                            <div><label :class="label">Amount received</label><input v-model="form.mark_paid.amount" type="number" step="0.01" min="0.01" :class="field" @input="amountTouched = true" /><p v-if="form.errors['mark_paid.amount']" :class="errorText">{{ form.errors['mark_paid.amount'] }}</p></div>
-                            <div><label :class="label">Date received</label><input v-model="form.mark_paid.received_on" type="date" :class="field" /></div>
-                            <div><label :class="label">Comment</label><input v-model="form.mark_paid.comment" type="text" maxlength="500" placeholder="e.g. cash at the door" :class="field" /></div>
+                            <label class="block"><span :class="label">Amount received</span><input v-model="form.mark_paid.amount" type="number" step="0.01" min="0.01" :class="field" @input="amountTouched = true" /><p v-if="form.errors['mark_paid.amount']" :class="errorText">{{ form.errors['mark_paid.amount'] }}</p></label>
+                            <label class="block"><span :class="label">Date received</span><input v-model="form.mark_paid.received_on" type="date" :class="field" /></label>
+                            <label class="block"><span :class="label">Comment</span><input v-model="form.mark_paid.comment" type="text" maxlength="500" placeholder="Cash at the door" :class="field" /></label>
                         </div>
                         <p v-if="form.mark_paid.enabled" class="text-slate-500 dark:text-slate-400">The full total is filled in. Change it if they only paid part. It is recorded in the payment history under your name.</p>
                     </div>
@@ -407,7 +411,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
             <!-- 4. Notes and confirmation -->
             <section class="space-y-3 pb-6">
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">4. Notes and confirmation</h3>
-                <div><label :class="label">Internal note (only organisers see this)</label><textarea v-model="form.internal_note" rows="2" maxlength="2000" placeholder="e.g. seat with the Master, phoned in on Tuesday" :class="field"></textarea></div>
+                <label class="block"><span :class="label">Internal note (only organisers see this)</span><textarea v-model="form.internal_note" rows="2" maxlength="2000" placeholder="Seat with the Master, phoned in on Tuesday" :class="field"></textarea></label>
                 <label class="flex flex-wrap items-center gap-2.5 py-1 text-sm font-semibold text-slate-800 dark:text-slate-100">
                     <input v-model="form.send_confirmation" type="checkbox" :disabled="!hasEmail" class="h-4 w-4 rounded" />
                     Email them a confirmation <span v-if="!hasEmail" class="text-xs font-normal text-slate-500 dark:text-slate-400">(add an email address first)</span>
@@ -418,8 +422,8 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
             <div class="sticky bottom-0 -mx-6 -mb-6 flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-900">
                 <span class="font-mono text-sm font-bold text-slate-900 dark:text-white">{{ charged && chosenQuote ? `Total ${formatMoney(chosenQuote.total)}` : '' }}</span>
                 <div class="flex gap-2">
-                    <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200" @click="emit('close')">Cancel</button>
-                    <button type="submit" :disabled="!canSubmit" class="rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-500 disabled:opacity-50">{{ form.processing ? 'Saving...' : editing ? 'Save changes' : 'Add booking' }}</button>
+                    <Button variant="secondary" @click="emit('close')">Cancel</Button>
+                    <Button type="submit" :disabled="!canSubmit" :loading="form.processing">{{ editing ? 'Save changes' : 'Add booking' }}</Button>
                 </div>
             </div>
         </form>

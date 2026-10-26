@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
@@ -8,17 +7,6 @@ const props = defineProps({
   metrics: Object,
   upcomingMeetings: Array,
 });
-
-const inviteCopied = ref(false);
-
-const copyInviteLink = () => {
-  const url = `${window.location.origin}/register?club=${props.club.slug}`;
-  navigator.clipboard.writeText(url);
-  inviteCopied.value = true;
-  setTimeout(() => {
-    inviteCopied.value = false;
-  }, 2000);
-};
 </script>
 
 <template>

@@ -19,8 +19,9 @@ const href = computed(() => (props.clubSlug ? route('member.news', { slug: props
     <Link
         :href="href"
         :data="{ tags: [tag.slug] }"
-        :class="['inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-shadow hover:shadow-sm', orderColour(tag.color).soft, active ? 'ring-2 ring-blue-500' : '']"
+        :aria-current="active ? 'true' : undefined"
+        :class="['inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950', orderColour(tag.color).soft, active ? 'ring-2 ring-blue-500' : '']"
     >
-        {{ tag.name }}<span v-if="count !== null" class="opacity-70">{{ count }}</span>
+        {{ tag.name }}<span v-if="count !== null" class="opacity-70"><span class="sr-only">, </span>{{ count }}</span>
     </Link>
 </template>

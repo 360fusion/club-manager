@@ -2,8 +2,14 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useForm, Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
 
-import { currencySymbol } from '@/Utils/currency';
+import { formatMoney } from '@/Utils/currency';
 const props = defineProps({
   club: Object,
   meeting: Object,
@@ -284,12 +290,12 @@ const addAgendaItem = () => {
 const addGrantToAgenda = (grant) => {
   const proposerName = grant.proposer ? `${grant.proposer.first_name} ${grant.proposer.last_name}` : '';
   const seconderName = grant.seconder ? `${grant.seconder.first_name} ${grant.seconder.last_name}` : '';
-  let desc = `To consider and, if approved, pass a resolution proposing a Charity Grant of ${currencySymbol()}${parseFloat(grant.amount).toFixed(2)} to ${grant.recipient_name} (${grant.purpose}).`;
+  let desc = `To consider and, if approved, pass a resolution proposing a Charity Grant of ${formatMoney(grant.amount)} to ${grant.recipient_name} (${grant.purpose}).`;
   if (proposerName) desc += ` Proposed by ${proposerName}.`;
   if (seconderName) desc += ` Seconded by ${seconderName}.`;
 
   form.agenda_items.push({
-    title: `Charity Grant Proposition: ${currencySymbol()}${parseFloat(grant.amount).toFixed(2)} to ${grant.recipient_name}`,
+    title: `Charity Grant Proposition: ${formatMoney(grant.amount)} to ${grant.recipient_name}`,
     description: desc,
   });
 };
@@ -301,221 +307,123 @@ const removeAgendaItem = (index) => {
 const submit = () => {
   form.post(route('admin.meetings.store', { clubSlug: props.club.slug }));
 };
+
+const SECTIONS = [
+  { value: 'general', label: 'General and intro letter', short: 'General and intro' },
+  { value: 'agenda', label: 'Order of business (agenda)', short: 'Order of business' },
+  { value: 'festive', label: 'Festive board and banking', short: 'Festive board' },
+  { value: 'visits', label: 'Fraternal visits and honorary', short: 'Fraternal and honorary' },
+  { value: 'front_page', label: 'Front page', short: 'Front page' },
+  { value: 'officers', label: 'Officers for the year', short: 'Officers for the year' },
+];
+
+// Fields in repeating rows (agenda items, officers) stay native but take the kit's field look.
+const cell = 'rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
 </script>
 
 <template>
-  <AdminLayout :title="`${meeting.id ? 'Edit Summons' : 'Create Summons'}`" :club="club" active-tab="meetings">
-    
-    <div class="max-w-6xl mx-auto space-y-6">
-      
-      <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Edit Summons</h2>
-          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Customize formal summons sections, business agenda, officers, festive board, and fraternal visits.</p>
-        </div>
-        
-        <div class="flex flex-wrap items-center gap-3">
-          <a v-if="meeting.id" :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" class="px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
-            🖨️ Preview PDF
-          </a>
-          <button @click="submit" :disabled="form.processing" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-2 cursor-pointer">
-            Save Changes
-          </button>
-        </div>
-      </div>
-
-      <!-- 2-Column Settings-Style Responsive Layout -->
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        
-        <!-- Left Sidebar Navigation -->
-        <div class="lg:col-span-1 space-y-4">
-          <!-- Mobile Dropdown Selector -->
-          <div class="lg:hidden bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-2">
-            <label class="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Summons Section</label>
-            <select v-model="activeSection" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-              <option value="general">📜 1. General & Intro Letter</option>
-              <option value="agenda">📋 2. Order of Business (Agenda)</option>
-              <option value="festive">🍽️ 3. Festive Board & Banking</option>
-              <option value="visits">🏛️ 4. Fraternal Visits & Honorary</option>
-              <option value="front_page">🏛️ 5. Front page</option>
-              <option value="officers">👔 6. Officers for Year</option>
-            </select>
+  <AdminLayout :title="`${meeting.id ? 'Edit summons' : 'Create summons'}`" :club="club" active-tab="meetings">
+    <div class="mx-auto max-w-6xl space-y-6">
+      <Card>
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Edit summons</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Customise the formal summons sections, business agenda, officers, festive board and fraternal visits.</p>
           </div>
-
-          <!-- Desktop Vertical Sidebar Navigation Card -->
-          <div class="hidden lg:block bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-5 sticky top-6">
-            <div>
-              <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Summons Sections</div>
-              <div class="space-y-0.5 text-xs font-bold">
-                
-                <button
-                  type="button"
-                  @click="activeSection = 'general'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'general' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>📜</span> General & Intro</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="activeSection = 'agenda'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'agenda' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>📋</span> Order of Business</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="activeSection = 'festive'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'festive' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🍽️</span> Festive Board</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="activeSection = 'visits'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'visits' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🏛️</span> Fraternal & Honorary</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="activeSection = 'front_page'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'front_page' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🏛️</span> Front page</span>
-                </button>
-
-                <button
-                  type="button"
-                  @click="activeSection = 'officers'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeSection === 'officers' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>👔</span> Officers for Year</span>
-                </button>
-
-              </div>
-            </div>
+          <div class="flex flex-wrap gap-2">
+            <Button v-if="meeting.id" variant="secondary" size="sm" :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank">Preview PDF</Button>
+            <Button size="sm" :loading="form.processing" @click="submit">Save changes</Button>
           </div>
         </div>
+      </Card>
 
-        <!-- Right Main Form Body -->
-        <div class="lg:col-span-3 space-y-6">
-          <form @submit.prevent="submit" class="space-y-6">
-            
-            <!-- SECTION 0: Front Page Cover Page -->
-            <div v-show="activeSection === 'front_page'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div>
-                  <h3 class="text-base font-bold text-slate-900 dark:text-white">🏛️ Front Page — PDF Cover Configuration</h3>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">Configure the emblem, province header, lodge title, motto, and Worshipful Master details rendered on Page 1 (Cover Page).</p>
-                </div>
+      <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-4">
+        <div class="space-y-4 lg:col-span-1">
+          <Card padding="sm" class="lg:hidden">
+            <Select v-model="activeSection" label="Summons section" :options="SECTIONS.map((s, i) => ({ value: s.value, label: `${i + 1}. ${s.label}` }))" />
+          </Card>
+
+          <Card padding="sm" class="sticky top-6 hidden lg:block">
+            <nav aria-label="Summons sections">
+              <p class="mb-1.5 px-3 text-xs font-medium text-slate-500 dark:text-slate-400">Summons sections</p>
+              <div class="space-y-0.5">
                 <button
+                  v-for="section in SECTIONS"
+                  :key="section.value"
                   type="button"
-                  @click="importProvincialRulersFromSettings"
-                  class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-start sm:self-auto"
+                  :aria-current="activeSection === section.value ? 'true' : undefined"
+                  :class="['w-full rounded-xl px-3.5 py-2.5 text-left text-sm font-medium transition-colors', activeSection === section.value ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/50 dark:hover:text-white']"
+                  @click="activeSection = section.value"
                 >
-                  👔 Import Provincial Rulers
+                  {{ section.short }}
                 </button>
               </div>
+            </nav>
+          </Card>
+        </div>
 
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Logo / Emblem Image Upload</label>
-                
-                <div class="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <div class="w-16 h-16 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
-                    <img v-if="logoPreview" :src="logoPreview" class="w-full h-full object-contain p-1" alt="Logo Preview" />
-                    <span v-else class="text-2xl text-slate-400">🏛️</span>
+        <div class="space-y-6 lg:col-span-3">
+          <form class="space-y-6" @submit.prevent="submit">
+            <Card v-show="activeSection === 'front_page'">
+              <template #header>
+                <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                  <div>
+                    <h3 class="text-base font-semibold text-slate-900 dark:text-white">Front page: PDF cover</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Configure the emblem, province header, lodge title, motto and Worshipful Master details shown on page 1 (the cover).</p>
                   </div>
+                  <Button variant="secondary" size="sm" class="self-start whitespace-nowrap sm:self-auto" @click="importProvincialRulersFromSettings">Import provincial rulers</Button>
+                </div>
+              </template>
 
-                  <div class="space-y-1.5 flex-1">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      @change="handleLogoUpload"
-                      class="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
-                    />
-                    <div class="flex items-center gap-3 text-[11px] text-slate-400">
-                      <span>Upload logo image (PNG, JPG, SVG, WEBP up to 5MB)</span>
-                      <button v-if="logoPreview" type="button" @click="clearLogo" class="text-rose-600 dark:text-rose-400 font-bold hover:underline">
-                        Remove Logo
-                      </button>
+              <div class="space-y-4">
+                <div>
+                  <label for="front-page-logo" class="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">Logo or emblem image</label>
+                  <div class="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                    <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900">
+                      <img v-if="logoPreview" :src="logoPreview" class="h-full w-full object-contain p-1" alt="Logo preview" />
+                      <span v-else class="text-xs text-slate-400">No logo</span>
+                    </div>
+                    <div class="flex-1 space-y-1.5">
+                      <input
+                        id="front-page-logo"
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.gif,.webp"
+                        class="block w-full cursor-pointer text-sm text-slate-500 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-600 file:px-3.5 file:py-2 file:text-xs file:font-medium file:text-white hover:file:bg-blue-500 dark:text-slate-400"
+                        @change="handleLogoUpload"
+                      />
+                      <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                        <span>Upload a logo (PNG, JPG, GIF or WEBP, up to 5 MB)</span>
+                        <Button v-if="logoPreview" variant="ghost" size="sm" @click="clearLogo">Remove logo</Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Title (Province / Organization Header)</label>
-                  <input v-model="form.front_page_title" type="text" placeholder="PROVINCIAL GRAND LODGE" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Provincial Grand Master</label>
-                  <input v-model="form.provincial_grand_master" type="text" placeholder="R WBro John David Watts" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Input v-model="form.front_page_title" label="Title (province or organisation header)" placeholder="PROVINCIAL GRAND LODGE" />
                 </div>
 
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Deputy Provincial Grand Master</label>
-                  <input v-model="form.deputy_provincial_grand_master" type="text" placeholder="WBro Andrew Peter Faul Foster PSGD" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Input v-model="form.provincial_grand_master" label="Provincial Grand Master" placeholder="R WBro John David Watts" />
+                  <Input v-model="form.deputy_provincial_grand_master" label="Deputy Provincial Grand Master" placeholder="WBro Andrew Peter Faul Foster PSGD" />
                 </div>
-              </div>
 
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Assistant Provincial Grand Masters (One per line)</label>
-                <textarea v-model="form.assistant_provincial_grand_masters" rows="4" placeholder="WBro Dr. Rakesh Bhalla PSGD..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono"></textarea>
-              </div>
+                <Textarea v-model="form.assistant_provincial_grand_masters" label="Assistant Provincial Grand Masters" hint="One per line." :rows="4" placeholder="WBro Dr. Rakesh Bhalla PSGD..." class="font-mono" />
 
-              <div class="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-4">
-                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Lodge / Club Branding Header</h4>
+                <div class="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-800">
+                  <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Lodge or club branding header</h4>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Club Name (Large Text)</label>
-                    <input v-model="form.cover_club_name" type="text" placeholder="LODGE OF FRATERNITY" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold" />
+                  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <Input v-model="form.cover_club_name" label="Club name (large text)" placeholder="LODGE OF FRATERNITY" />
+                    <Input v-model="form.cover_club_number" label="Club number (smaller text)" placeholder="1418" />
                   </div>
 
-                  <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Club Number (Smaller Text)</label>
-                    <input v-model="form.cover_club_number" type="text" placeholder="1418" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-                  </div>
-                </div>
+                  <Input v-model="form.cover_motto" label="Club motto" placeholder="Fraternus Amor Maneto" />
 
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Club Motto</label>
-                  <input v-model="form.cover_motto" type="text" placeholder="Fraternus Amor Maneto" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs italic" />
-                </div>
-
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Worshipful Master (Pull from Rank / Master Name)</label>
-                  <div class="flex items-center gap-2">
-                    <input v-model="form.cover_worshipful_master" type="text" placeholder="WBro KD Lord" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold" />
-                    <select @change="e => form.cover_worshipful_master = e.target.value" class="px-3 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium cursor-pointer">
-                      <option value="">Pull from Member Rank...</option>
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <Input v-model="form.cover_worshipful_master" class="flex-1" label="Worshipful Master" placeholder="WBro KD Lord" />
+                    <select aria-label="Pull the Worshipful Master from a member's rank" :class="cell" class="sm:w-auto" @change="e => form.cover_worshipful_master = e.target.value">
+                      <option value="">Pull from member rank...</option>
                       <option v-for="m in members" :key="m.id" :value="`${m.pivot?.rank_prefix || 'WBro'} ${m.name}`">
                         {{ m.pivot?.rank_prefix || 'WBro' }} {{ m.name }} ({{ m.pivot?.rank || 'Member' }})
                       </option>
@@ -523,315 +431,180 @@ const submit = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
 
-            <!-- SECTION 1: General & Intro Letter -->
-            <div v-show="activeSection === 'general'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-              <h3 class="text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">📜 Meeting Intro & Schedule Details</h3>
+            <Card v-show="activeSection === 'general'">
+              <template #header>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">Meeting intro and schedule details</h3>
+              </template>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Meeting Title</label>
-                  <input v-model="form.title" type="text" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
+              <div class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Input v-model="form.title" label="Meeting title" required :error="form.errors.title" />
+                  <Input v-model="form.meeting_date" type="date" label="Meeting date" required :error="form.errors.meeting_date" />
                 </div>
 
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Meeting Date</label>
-                  <input v-model="form.meeting_date" type="date" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Meeting Start Time</label>
-                  <input v-model="form.starts_at" type="text" required placeholder="7:00pm" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <Input v-model="form.starts_at" label="Meeting start time" required placeholder="7:00pm" :error="form.errors.starts_at" />
+                  <Input v-model="form.rehearsal_starts_at" label="Rehearsal time" placeholder="6:00pm" :error="form.errors.rehearsal_starts_at" />
+                  <Input v-model="form.dress_code" label="Dress code" required placeholder="Dinner Jacket, White Gloves" :error="form.errors.dress_code" />
                 </div>
 
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Rehearsal Time</label>
-                  <input v-model="form.rehearsal_starts_at" type="text" placeholder="6:00pm" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
+                <Input v-model="form.venue" label="Venue address" required :error="form.errors.venue" />
+                <Input v-model="form.salutation" label="Formal salutation" placeholder="Dear Sir and Brother," />
+                <Textarea v-model="form.intro_text" label="Intro request text (page 2)" :rows="3" />
+                <Input v-model="form.rehearsal_text" label="Rehearsal notice text" placeholder="The rehearsal should it be necessary will be at 6:00pm on Friday..." />
+              </div>
+            </Card>
+
+            <Card v-show="activeSection === 'agenda'">
+              <template #header>
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 class="text-base font-semibold text-slate-900 dark:text-white">Order of business</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Numbered items shown directly under the BUSINESS header on page 2.</p>
+                  </div>
+                  <Button variant="secondary" size="sm" @click="addAgendaItem">Add an agenda item</Button>
+                </div>
+              </template>
+
+              <div class="space-y-4">
+                <div v-for="(item, idx) in form.agenda_items" :key="idx" class="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">Item {{ idx + 1 }}</span>
+                    <Button variant="ghost" size="sm" @click="removeAgendaItem(idx)">Delete item</Button>
+                  </div>
+                  <input v-model="item.title" type="text" required :aria-label="`Item ${idx + 1} title`" placeholder="To confirm the minutes / ballot for candidate..." :class="[cell, 'w-full font-medium']" />
+                  <textarea v-model="item.description" rows="2" :aria-label="`Item ${idx + 1} notes`" placeholder="Optional notes or details..." :class="[cell, 'w-full']"></textarea>
                 </div>
 
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Dress Code</label>
-                  <input v-model="form.dress_code" type="text" required placeholder="Dinner Jacket, White Gloves" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Venue Address</label>
-                <input v-model="form.venue" type="text" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Formal Salutation</label>
-                <input v-model="form.salutation" type="text" placeholder="Dear Sir and Brother," class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Intro Request Text (Page 2)</label>
-                <textarea v-model="form.intro_text" rows="3" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Rehearsal Notice Text</label>
-                <input v-model="form.rehearsal_text" type="text" placeholder="The rehearsal should it be necessary will be at 6:00pm on Friday..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-              </div>
-            </div>
-
-            <!-- SECTION 2: Order of Business (Agenda) -->
-            <div v-show="activeSection === 'agenda'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div>
-                  <h3 class="text-base font-bold text-slate-900 dark:text-white">📋 BUSINESS — Order of Business</h3>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">Numbered items rendered directly under the BUSINESS header on Page 2.</p>
-                </div>
-                <button type="button" @click="addAgendaItem" class="px-3.5 py-2 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-xs rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all cursor-pointer">
-                  + Add Agenda Item
-                </button>
-              </div>
-
-              <div v-for="(item, idx) in form.agenda_items" :key="idx" class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Item #{{ idx + 1 }}</span>
-                  <button type="button" @click="removeAgendaItem(idx)" class="text-xs font-bold text-rose-600 dark:text-rose-400 cursor-pointer">Delete Item</button>
-                </div>
-                <input v-model="item.title" type="text" required placeholder="To confirm the minutes / ballot for candidate..." class="w-full px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold" />
-                <textarea v-model="item.description" rows="2" placeholder="Optional notes or details..." class="w-full px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
-              </div>
-
-              <!-- Charitable Grants linked or active for this club -->
-              <div v-if="charityGrants && charityGrants.length > 0" class="mt-6 pt-6 border-t border-slate-200/80 dark:border-slate-800/80 space-y-3">
-                <div class="flex items-center justify-between">
-                  <h4 class="text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-wider flex items-center gap-1.5">
-                    <span>❤️</span> Charitable Donation Proposals & Alms Voting
-                  </h4>
-                  <span class="text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-200 dark:border-amber-800/60">
-                    {{ charityGrants.length }} Proposal(s) Logged
-                  </span>
-                </div>
-                <div class="space-y-2">
-                  <div v-for="grant in charityGrants" :key="grant.id" class="p-3.5 bg-amber-50/70 dark:bg-amber-950/70 rounded-2xl border border-amber-200/80 dark:border-amber-800/80 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <div class="font-bold text-slate-900 dark:text-white">
-                        {{ $cs }}{{ parseFloat(grant.amount).toFixed(2) }} — {{ grant.recipient_name }}
+                <div v-if="charityGrants && charityGrants.length > 0" class="space-y-3 border-t border-slate-200 pt-6 dark:border-slate-800">
+                  <div class="flex items-center justify-between gap-3">
+                    <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Charitable donation proposals and alms voting</h4>
+                    <Badge>{{ charityGrants.length }} proposal(s) logged</Badge>
+                  </div>
+                  <div class="space-y-2">
+                    <div v-for="grant in charityGrants" :key="grant.id" class="flex flex-col justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm dark:border-slate-800 dark:bg-slate-800/50 sm:flex-row sm:items-center">
+                      <div>
+                        <div class="font-semibold text-slate-900 dark:text-white">{{ $money(grant.amount) }} — {{ grant.recipient_name }}</div>
+                        <div class="mt-0.5 text-xs text-slate-600 dark:text-slate-300">{{ grant.purpose }}</div>
+                        <div class="mt-1 flex flex-wrap items-center gap-x-3 text-xs text-slate-500 dark:text-slate-400">
+                          <span v-if="grant.proposer">Proposed by: <strong class="font-semibold">{{ grant.proposer.first_name }} {{ grant.proposer.last_name }}</strong></span>
+                          <span v-if="grant.seconder">Seconded by: <strong class="font-semibold">{{ grant.seconder.first_name }} {{ grant.seconder.last_name }}</strong></span>
+                        </div>
                       </div>
-                      <div class="text-slate-600 dark:text-slate-300 text-[11px] mt-0.5">{{ grant.purpose }}</div>
-                      <div class="flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                        <span v-if="grant.proposer">Proposed by: <strong>{{ grant.proposer.first_name }} {{ grant.proposer.last_name }}</strong></span>
-                        <span v-if="grant.seconder">Seconded by: <strong>{{ grant.seconder.first_name }} {{ grant.seconder.last_name }}</strong></span>
+                      <div class="flex items-center gap-2 self-start sm:self-center">
+                        <Badge variant="warning" class="capitalize">{{ (grant.approval_status || 'proposed').replace('_', ' ') }}</Badge>
+                        <Button variant="secondary" size="sm" @click="addGrantToAgenda(grant)">Add to agenda</Button>
                       </div>
-                    </div>
-                    <div class="flex items-center gap-2 self-start sm:self-center">
-                      <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/60">
-                        {{ (grant.approval_status || 'proposed').replace('_', ' ') }}
-                      </span>
-                      <button
-                        type="button"
-                        @click="addGrantToAgenda(grant)"
-                        class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[10px] rounded-lg shadow-2xs transition cursor-pointer"
-                      >
-                        + Add to Agenda
-                      </button>
                     </div>
                   </div>
                 </div>
               </div>
+            </Card>
+
+            <Card v-show="activeSection === 'officers'">
+              <template #header>
+                <div class="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+                  <div>
+                    <h3 class="text-base font-semibold text-slate-900 dark:text-white">Officers for the year</h3>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Officers listed below will appear on the summons PDF. You can manage and edit officers on the club settings page.</p>
+                  </div>
+                  <Button variant="secondary" size="sm" :href="route('admin.settings.show', { clubSlug: club.slug }) + '#officers'" title="Go to club settings to manage officers">Manage officers in settings</Button>
+                </div>
+              </template>
+
+              <div class="space-y-6">
+                <Input v-model="form.officers_year_label" class="sm:w-96" label="Section header label" placeholder="OFFICERS FOR 2025-2026" />
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                  <table class="w-full border-collapse text-left text-sm">
+                    <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                      <tr>
+                        <th scope="col" class="w-12 px-3 py-3 text-center font-medium">#</th>
+                        <th scope="col" class="px-4 py-3 font-medium">Officer role</th>
+                        <th scope="col" class="px-4 py-3 font-medium">Member or officer name</th>
+                        <th v-if="isEditingRoster" scope="col" class="w-28 px-3 py-3 text-right font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                      <tr v-for="(item, idx) in form.officers_roster" :key="idx" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                        <td class="px-3 py-2.5 text-center font-medium text-slate-400">{{ idx + 1 }}</td>
+
+                        <td class="px-4 py-2.5">
+                          <input v-if="isEditingRoster" v-model="item.role" type="text" :aria-label="`Officer ${idx + 1} role`" placeholder="e.g. Worshipful Master" :class="[cell, 'w-full']" />
+                          <span v-else class="font-semibold text-slate-800 dark:text-slate-100">{{ item.role }}</span>
+                        </td>
+
+                        <td class="px-4 py-2.5">
+                          <div v-if="isEditingRoster" class="flex items-center gap-2">
+                            <input v-model="item.name" type="text" :aria-label="`Officer ${idx + 1} name`" placeholder="e.g. W. Bro. K. D. Lord" :class="[cell, 'w-full']" />
+                            <select :aria-label="`Pick a member for officer ${idx + 1}`" :class="cell" @change="e => { if (e.target.value) item.name = e.target.value }">
+                              <option value="">Quick select...</option>
+                              <option v-for="m in members" :key="m.id" :value="`${m.pivot?.rank_prefix || 'W. Bro.'} ${m.name}`">
+                                {{ m.name }} ({{ m.pivot?.rank || 'Member' }})
+                              </option>
+                            </select>
+                          </div>
+                          <span v-else class="text-slate-600 dark:text-slate-300">{{ item.name }}</span>
+                        </td>
+
+                        <td v-if="isEditingRoster" class="whitespace-nowrap px-3 py-2.5 text-right">
+                          <Button variant="ghost" size="sm" :disabled="idx === 0" aria-label="Move up" title="Move up" @click="moveOfficerUp(idx)">↑</Button>
+                          <Button variant="ghost" size="sm" :disabled="idx === form.officers_roster.length - 1" aria-label="Move down" title="Move down" @click="moveOfficerDown(idx)">↓</Button>
+                          <Button variant="ghost" size="sm" @click="removeOfficerRow(idx)">Remove</Button>
+                        </td>
+                      </tr>
+                      <tr v-if="!form.officers_roster.length">
+                        <td :colspan="isEditingRoster ? 4 : 3" class="py-6 text-center text-slate-500 dark:text-slate-400">
+                          No officers added yet. Click "Reload from settings" to import the master roster.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </Card>
+
+            <Card v-show="activeSection === 'festive'">
+              <template #header>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">Festive board and payment information</h3>
+              </template>
+
+              <div class="space-y-4">
+                <Textarea v-model="form.festive_board_theme" label="Festive board theme or notice text" :rows="2" placeholder="The Lodge of Fraternity will be holding their Annual Burns Night..." />
+                <Textarea v-model="form.festive_board_menu" label="Menu" hint="Optional. If entered, this menu is listed on the summons PDF under the festive board section." :rows="3" :placeholder="'Starter: Tomato Soup\nMain: Roast Beef & Seasonal Vegetables\nDessert: Apple Crumble & Custard'" class="font-mono" />
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <Input v-model.number="form.dining_cost_member" type="number" step="0.01" required label="Price per head" :prefix="$cs" :error="form.errors.dining_cost_member" />
+                  <Input v-model="form.bank_sort_code" label="Bank sort code" placeholder="20-82-18" />
+                  <Input v-model="form.bank_account_number" label="Bank account number" placeholder="80288373" />
+                  <Input v-model="form.payment_reference_prefix" label="Payment reference convention" placeholder="your name or names" />
+                </div>
+
+                <Input v-model="form.payment_link" type="url" label="Direct online payment link" hint='Optional. If provided, members will see a direct "Pay online now" button on their passwordless RSVP page.' placeholder="https://buy.stripe.com/..." :error="form.errors.payment_link" />
+              </div>
+            </Card>
+
+            <Card v-show="activeSection === 'visits'">
+              <template #header>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">Fraternal visits and honorary members</h3>
+              </template>
+
+              <div class="space-y-4">
+                <Textarea v-model="form.fraternal_visits_text" label="Fraternal visits text (page 2, right)" :rows="3" placeholder="The Worshipful Master and Brethren of Haven of Rest Lodge No 4350..." />
+                <Textarea v-model="form.honorary_members_text" label="Honorary member text (page 2, left)" :rows="2" placeholder="RW Bro Sir David Hugh Wootton Past Deputy Grand Master" />
+                <Textarea v-model="form.sick_distressed_notes" label="Pastoral or almoner emergency contact notice" :rows="2" placeholder="Should you be aware of any illness..." />
+              </div>
+            </Card>
+
+            <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+              <Button variant="secondary" :href="route('admin.meetings.index', { clubSlug: club.slug })">Cancel</Button>
+              <Button type="submit" :loading="form.processing">Save summons changes</Button>
             </div>
-
-            <!-- SECTION 3: Officers for Year -->
-            <div v-show="activeSection === 'officers'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-                <div>
-                  <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>👔</span> OFFICERS FOR THE YEAR
-                  </h3>
-                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Officers listed below will appear on the summons PDF. You can manage and edit officers on the Club Settings page.
-                  </p>
-                </div>
-                
-                <div class="flex flex-wrap items-center gap-2">
-                  <Link
-                    :href="route('admin.settings.show', { clubSlug: club.slug }) + '#officers'"
-                    class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200 dark:border-slate-800"
-                    title="Go to Club Settings to manage officers"
-                  >
-                    ⚙️ Manage Officers in Settings
-                  </Link>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Section Header Label</label>
-                <input v-model="form.officers_year_label" type="text" placeholder="OFFICERS FOR 2025-2026" class="w-full sm:w-96 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold" />
-              </div>
-
-              <!-- Officers Table -->
-              <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
-                <table class="w-full text-left border-collapse">
-                  <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                      <th class="py-3 px-3 w-12 text-center">#</th>
-                      <th class="py-3 px-4">Officer Role Title</th>
-                      <th class="py-3 px-4">Assigned Member / Officer Name</th>
-                      <th v-if="isEditingRoster" class="py-3 px-3 text-right w-28">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                    <tr v-for="(item, idx) in form.officers_roster" :key="idx" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                      <td class="py-2.5 px-3 text-center font-bold text-slate-400">
-                        {{ idx + 1 }}
-                      </td>
-
-                      <td class="py-2.5 px-4">
-                        <input
-                          v-if="isEditingRoster"
-                          v-model="item.role"
-                          type="text"
-                          placeholder="e.g. Worshipful Master"
-                          class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <span v-else class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ item.role }}</span>
-                      </td>
-
-                      <td class="py-2.5 px-4">
-                        <div v-if="isEditingRoster" class="flex items-center gap-2">
-                          <input
-                            v-model="item.name"
-                            type="text"
-                            placeholder="e.g. W. Bro. K. D. Lord"
-                            class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          <select
-                            @change="e => { if (e.target.value) item.name = e.target.value }"
-                            class="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-[11px] font-medium cursor-pointer text-slate-600 dark:text-slate-300"
-                          >
-                            <option value="">Quick Select...</option>
-                            <option v-for="m in members" :key="m.id" :value="`${m.pivot?.rank_prefix || 'W. Bro.'} ${m.name}`">
-                              {{ m.name }} ({{ m.pivot?.rank || 'Member' }})
-                            </option>
-                          </select>
-                        </div>
-                        <span v-else class="text-xs font-semibold text-slate-600 dark:text-slate-300">{{ item.name }}</span>
-                      </td>
-
-                      <td v-if="isEditingRoster" class="py-2.5 px-3 text-right space-x-1">
-                        <button
-                          type="button"
-                          @click="moveOfficerUp(idx)"
-                          :disabled="idx === 0"
-                          class="px-1.5 py-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer font-bold"
-                          title="Move Up"
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          @click="moveOfficerDown(idx)"
-                          :disabled="idx === form.officers_roster.length - 1"
-                          class="px-1.5 py-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer font-bold"
-                          title="Move Down"
-                        >
-                          ↓
-                        </button>
-                        <button
-                          type="button"
-                          @click="removeOfficerRow(idx)"
-                          class="px-1.5 py-1 text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 font-bold cursor-pointer"
-                          title="Remove"
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
-                    <tr v-if="!form.officers_roster.length">
-                      <td :colspan="isEditingRoster ? 4 : 3" class="py-6 text-center text-slate-400 italic">
-                        No officers added yet. Click "Reload from Settings" to import the master roster.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- SECTION 4: Festive Board & Banking -->
-            <div v-show="activeSection === 'festive'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-              <h3 class="text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">🍽️ FESTIVE BOARD & Payment Information</h3>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Festive Board Theme / Notice Text</label>
-                <textarea v-model="form.festive_board_theme" rows="2" placeholder="The Lodge of Fraternity will be holding their Annual Burns Night..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Menu (Optional)</label>
-                <textarea v-model="form.festive_board_menu" rows="3" placeholder="Starter: Tomato Soup&#10;Main: Roast Beef & Seasonal Vegetables&#10;Dessert: Apple Crumble & Custard" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono"></textarea>
-                <p class="text-[11px] text-slate-400 mt-1">If entered, this menu will be listed on the summons PDF under the Festive Board section.</p>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Price Per Head ({{ $cs }})</label>
-                  <input v-model="form.dining_cost_member" type="number" step="0.01" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-                </div>
-
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Bank Sort Code</label>
-                  <input v-model="form.bank_sort_code" type="text" placeholder="20-82-18" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-                </div>
-
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Bank Account Number</label>
-                  <input v-model="form.bank_account_number" type="text" placeholder="80288373" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-                </div>
-
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Payment Reference Convention</label>
-                  <input v-model="form.payment_reference_prefix" type="text" placeholder="your name or names" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Direct Online Payment Link / URL (Optional)</label>
-                <input v-model="form.payment_link" type="url" placeholder="https://buy.stripe.com/..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs" />
-                <p class="text-[11px] text-slate-400 mt-1">If provided, members will see a direct "💳 Pay Online Now" button on their passwordless RSVP page.</p>
-              </div>
-            </div>
-
-            <!-- SECTION 5: Fraternal Visits & Honorary Members -->
-            <div v-show="activeSection === 'visits'" class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-              <h3 class="text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">🏛️ FRATERNAL VISITS & HONORARY MEMBERS</h3>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">FRATERNAL VISITS Text (Page 2 Right)</label>
-                <textarea v-model="form.fraternal_visits_text" rows="3" placeholder="The Worshipful Master and Brethren of Haven of Rest Lodge No 4350..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">HONORARY MEMBER Text (Page 2 Left)</label>
-                <textarea v-model="form.honorary_members_text" rows="2" placeholder="RW Bro Sir David Hugh Wootton Past Deputy Grand Master" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Pastoral / Almoner Emergency Contact Notice</label>
-                <textarea v-model="form.sick_distressed_notes" rows="2" placeholder="Should you be aware of any illness..." class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
-              </div>
-            </div>
-
-            <!-- Action Footer -->
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-              <Link :href="route('admin.meetings.index', { clubSlug: club.slug })" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">Cancel</Link>
-              <button type="submit" :disabled="form.processing" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer">
-                Save Summons Changes
-              </button>
-            </div>
-
           </form>
         </div>
-
       </div>
-
     </div>
   </AdminLayout>
 </template>

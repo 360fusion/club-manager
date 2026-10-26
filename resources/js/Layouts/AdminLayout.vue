@@ -4,6 +4,7 @@ import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
+import FlashMessages from '@/Components/Ui/FlashMessages.vue';
 
 const showNavMediaModal = ref(false);
 
@@ -48,12 +49,6 @@ const switchWorkspace = (targetClub) => {
   }
 };
 
-const copyInviteLink = () => {
-  const inviteUrl = `${window.location.origin}/register?club=${clubSlug}`;
-  navigator.clipboard.writeText(inviteUrl);
-  alert('Invite link copied to clipboard: ' + inviteUrl);
-};
-
 const currentActiveTab = computed(() => {
   if (typeof window !== 'undefined') {
     const path = window.location.pathname;
@@ -86,7 +81,7 @@ const currentActiveTab = computed(() => {
   <div class="min-h-screen bg-slate-100 text-slate-800 font-sans flex flex-col md:flex-row dark:bg-slate-950 dark:text-slate-200">
     
     <!-- Mobile Sidebar Toggle Header -->
-    <div class="md:hidden bg-slate-800 text-white p-4 flex items-center justify-between border-b border-slate-700">
+    <div class="cm-nav md:hidden bg-slate-800 text-white p-4 flex items-center justify-between border-b border-slate-700">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-xs shadow-md">
           CA
@@ -103,7 +98,7 @@ const currentActiveTab = computed(() => {
     <!-- Left Sidebar Navigation -->
     <aside 
       :class="[
-        'w-full md:w-64 bg-slate-800 text-slate-300 flex-shrink-0 flex flex-col justify-between transition-all duration-200 z-30',
+        'cm-nav w-full md:w-64 bg-slate-800 text-slate-300 flex-shrink-0 flex flex-col justify-between transition-all duration-200 z-30',
         sidebarOpen ? 'block' : 'hidden md:flex'
       ]"
     >
@@ -499,6 +494,7 @@ const currentActiveTab = computed(() => {
 
       <!-- Main Slot Content -->
       <div class="p-6 md:p-10 max-w-7xl w-full mx-auto space-y-8">
+        <FlashMessages />
         <slot />
       </div>
 

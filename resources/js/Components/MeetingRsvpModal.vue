@@ -1,8 +1,15 @@
 <script setup>
+import { useId } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import Modal from '@/Components/Ui/Modal.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
+import { formatMeetingDate } from '@/Utils/lodgeDates';
 
 const props = defineProps({
-  // { id, title }
+  // { id, title, meeting_date? }
   meeting: { type: Object, required: true },
   clubSlug: { type: String, required: true },
   // Existing reply: { attendance_status, dietary_requirements, apology_reason, guests }
@@ -10,6 +17,14 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close']);
+
+const formId = useId();
+
+const CHOICES = [
+  ['attending_dining', 'Meeting and dining'],
+  ['attending_meeting_only', 'Meeting only'],
+  ['apologies', 'Apologies'],
+];
 
 const form = useForm({
   attendance_status: props.rsvp?.attendance_status || 'attending_dining',
@@ -36,76 +51,49 @@ const submit = () => {
     onSuccess: () => emit('close'),
   });
 };
+
+const fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8">
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-        <h3 class="text-base font-bold text-slate-900 dark:text-white">
-          ✍️ Respond to Summons — {{ meeting.title }}
-        </h3>
-        <button type="button" @click="emit('close')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold cursor-pointer" aria-label="Close">&times;</button>
+  <Modal :open="true" title="Respond to summons" :subtitle="meeting.title || formatMeetingDate(meeting.meeting_date)" @close="emit('close')">
+    <form :id="formId" class="space-y-4" @submit.prevent="submit">
+      <Alert v-if="form.errors.cutoff" variant="danger" role="alert">{{ form.errors.cutoff }}</Alert>
+
+      <div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Your attendance">
+        <label v-for="choice in CHOICES" :key="choice[0]"
+          :class="['flex cursor-pointer items-center justify-center rounded-xl border p-3 text-center text-sm font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-500', form.attendance_status === choice[0] ? 'border-blue-500 bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300']">
+          <input v-model="form.attendance_status" type="radio" :value="choice[0]" class="sr-only" />
+          {{ choice[1] }}
+        </label>
       </div>
 
-      <form @submit.prevent="submit" class="space-y-4">
-        <p v-if="form.errors.cutoff" class="rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 p-2.5 text-xs font-semibold text-rose-700 dark:text-rose-300">{{ form.errors.cutoff }}</p>
+      <Input v-if="form.attendance_status === 'attending_dining'" v-model="form.dietary_requirements" label="Your dietary requirements" placeholder="Vegetarian, gluten free, nut allergy" />
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Select Attendance</label>
-          <div class="grid grid-cols-3 gap-2">
-            <label :class="['flex items-center justify-center p-3 rounded-xl border text-xs font-bold cursor-pointer transition-all', form.attendance_status === 'attending_dining' ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
-              <input type="radio" v-model="form.attendance_status" value="attending_dining" class="sr-only" />
-              🟢 Dining & Meeting
-            </label>
-            <label :class="['flex items-center justify-center p-3 rounded-xl border text-xs font-bold cursor-pointer transition-all', form.attendance_status === 'attending_meeting_only' ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 text-blue-800 dark:text-blue-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
-              <input type="radio" v-model="form.attendance_status" value="attending_meeting_only" class="sr-only" />
-              🔵 Meeting Only
-            </label>
-            <label :class="['flex items-center justify-center p-3 rounded-xl border text-xs font-bold cursor-pointer transition-all', form.attendance_status === 'apologies' ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-800 dark:text-rose-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
-              <input type="radio" v-model="form.attendance_status" value="apologies" class="sr-only" />
-              🔴 Apologies
-            </label>
-          </div>
+      <Textarea v-if="form.attendance_status === 'apologies'" v-model="form.apology_reason" :rows="2" label="Reason for apologies" placeholder="Away on business, unwell" />
+
+      <div v-if="form.attendance_status === 'attending_dining'" class="space-y-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-medium text-slate-700 dark:text-slate-300">Guests coming with you</h3>
+          <Button variant="secondary" size="sm" @click="addGuestRow">Add a guest</Button>
         </div>
 
-        <div v-if="form.attendance_status === 'attending_dining'">
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Your Dietary Requirements</label>
-          <input type="text" v-model="form.dietary_requirements" placeholder="e.g. Vegetarian, Gluten-free, Nut allergy" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500 p-2.5" />
-        </div>
-
-        <div v-if="form.attendance_status === 'apologies'">
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Apology Reason / Notes</label>
-          <textarea v-model="form.apology_reason" rows="2" placeholder="e.g. Away on business, unwell" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500 p-2.5"></textarea>
-        </div>
-
-        <div v-if="form.attendance_status === 'attending_dining'" class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div v-for="(g, idx) in form.guests" :key="idx" class="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/40">
           <div class="flex items-center justify-between">
-            <label class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Accompanying Guests</label>
-            <button type="button" @click="addGuestRow" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800/60 cursor-pointer">
-              + Add Guest
-            </button>
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Guest {{ idx + 1 }}</span>
+            <Button variant="ghost" size="sm" :aria-label="`Remove guest ${idx + 1}`" @click="removeGuestRow(idx)">Remove</Button>
           </div>
-
-          <div v-for="(g, idx) in form.guests" :key="idx" class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Guest #{{ idx + 1 }}</span>
-              <button type="button" @click="removeGuestRow(idx)" class="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 text-xs font-bold cursor-pointer">Remove</button>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <input type="text" v-model="g.guest_name" placeholder="Guest Full Name" class="text-xs rounded-lg border-slate-300 dark:border-slate-700 p-2" required />
-              <input type="text" v-model="g.dietary_requirements" placeholder="Dietary notes (optional)" class="text-xs rounded-lg border-slate-300 dark:border-slate-700 p-2" />
-            </div>
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <input v-model="g.guest_name" type="text" placeholder="Guest's full name" :aria-label="`Guest ${idx + 1} full name`" :class="fieldClass" required />
+            <input v-model="g.dietary_requirements" type="text" placeholder="Dietary notes (optional)" :aria-label="`Guest ${idx + 1} dietary notes`" :class="fieldClass" />
           </div>
         </div>
+      </div>
+    </form>
 
-        <div class="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-          <button type="button" @click="emit('close')" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl cursor-pointer">Cancel</button>
-          <button type="submit" :disabled="form.processing" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50">
-            Save Response
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+    <template #footer>
+      <Button variant="secondary" @click="emit('close')">Cancel</Button>
+      <Button type="submit" :form="formId" :loading="form.processing">Save response</Button>
+    </template>
+  </Modal>
 </template>

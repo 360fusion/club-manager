@@ -1,48 +1,22 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import Tabs from '@/Components/Ui/Tabs.vue';
 
-defineProps({
+const props = defineProps({
   club: Object,
   activeTab: {
     type: String,
     required: true, // 'posts', 'newsletters', 'updates'
   },
 });
+
+const items = computed(() => [
+  { key: 'posts', label: 'News articles & posts', href: route('admin.posts.index', { clubSlug: props.club.slug }) },
+  { key: 'newsletters', label: 'Newsletters & broadcasts', href: route('admin.newsletters.index', { clubSlug: props.club.slug }) },
+  { key: 'updates', label: 'Updates & weekly digest', href: route('admin.updates.index', { clubSlug: props.club.slug }) },
+]);
 </script>
 
 <template>
-  <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 dark:border-slate-700/60 mb-6 shadow-inner">
-    <Link
-      :href="route('admin.posts.index', { clubSlug: club.slug })"
-      :class="[
-        'px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer',
-        activeTab === 'posts' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60'
-      ]"
-    >
-      <span>📰</span>
-      <span>News Articles & Posts</span>
-    </Link>
-
-    <Link
-      :href="route('admin.newsletters.index', { clubSlug: club.slug })"
-      :class="[
-        'px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer',
-        activeTab === 'newsletters' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60'
-      ]"
-    >
-      <span>✉️</span>
-      <span>Newsletters & Broadcasts</span>
-    </Link>
-
-    <Link
-      :href="route('admin.updates.index', { clubSlug: club.slug })"
-      :class="[
-        'px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer',
-        activeTab === 'updates' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60'
-      ]"
-    >
-      <span>📜</span>
-      <span>Updates & Weekly Digest</span>
-    </Link>
-  </div>
+  <Tabs :items="items" :active="activeTab" label="Communications" class="mb-6" />
 </template>

@@ -1,4 +1,5 @@
 <script setup>
+import { debounce } from '@/Utils/debounce';
 import { reactive, watch } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
@@ -15,17 +16,13 @@ const props = defineProps({
 });
 
 const form = reactive({ ...props.filters });
-let timer = null;
 
 function search() {
     const query = Object.fromEntries(Object.entries(form).filter(([, value]) => value));
     router.get(route('lodges.index'), query, { preserveState: true, preserveScroll: true, replace: true });
 }
 
-watch(() => form.q, () => {
-    clearTimeout(timer);
-    timer = setTimeout(search, 300);
-});
+watch(() => form.q, debounce(() => search(), 300));
 
 const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900';
 </script>

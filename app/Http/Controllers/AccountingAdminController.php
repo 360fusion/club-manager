@@ -1107,7 +1107,7 @@ class AccountingAdminController extends Controller
                 'type' => $a->type,
             ]);
 
-        return Inertia::render('Admin/Accounting/JournalCreate', [
+        return Inertia::render('Admin/Accounting/JournalForm', [
             'club' => [
                 'id' => $club->id,
                 'name' => $club->name,
@@ -1137,7 +1137,7 @@ class AccountingAdminController extends Controller
             ->with('success', 'Double-entry journal entry posted successfully.');
     }
 
-    public function createInvoice(string $clubSlug): Response
+    public function createInvoice(Request $request, string $clubSlug): Response
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
@@ -1153,13 +1153,15 @@ class AccountingAdminController extends Controller
                 'email' => $u->email,
             ]);
 
-        return Inertia::render('Admin/Accounting/InvoiceCreate', [
+        return Inertia::render('Admin/Accounting/InvoiceForm', [
             'club' => [
                 'id' => $club->id,
                 'name' => $club->name,
                 'slug' => $club->slug,
             ],
             'members' => $members,
+            // "Invoice this contact" on the contacts list opens the form with that member chosen.
+            'initialUserId' => $members->firstWhere('id', $request->integer('user'))['id'] ?? null,
         ]);
     }
 
@@ -1172,6 +1174,8 @@ class AccountingAdminController extends Controller
             'user_id' => ['required', Rule::exists('club_user', 'user_id')->where('club_id', $club->id)],
             'title' => [$isDraft ? 'nullable' : 'required', 'string', 'max:255'],
             'amount' => [$isDraft ? 'nullable' : 'required', 'numeric', 'min:0'],
+            'due_date' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
             'is_draft' => ['nullable', 'boolean'],
         ]);
@@ -1209,6 +1213,8 @@ class AccountingAdminController extends Controller
             'vat_amount' => $vat['vat_amount'],
             'status' => $status,
             'media_id' => $mediaId,
+            'due_date' => $validated['due_date'] ?? null,
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         if ($status === 'unpaid') {
@@ -1250,7 +1256,7 @@ class AccountingAdminController extends Controller
     {
         $club = Club::where('slug', $clubSlug)->firstOrFail();
 
-        return Inertia::render('Admin/Accounting/BillCreate', [
+        return Inertia::render('Admin/Accounting/BillForm', [
             'club' => [
                 'id' => $club->id,
                 'name' => $club->name,
@@ -1393,6 +1399,8 @@ class AccountingAdminController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'status' => ['required', 'string', Rule::in($invoiceStatusOptions)],
+            'due_date' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
         ]);
 
@@ -1431,6 +1439,9 @@ class AccountingAdminController extends Controller
             'vat_amount' => $vat['vat_amount'],
             'status' => $finalStatus,
             'media_id' => $validated['media_id'] ?? $invoice->media_id,
+            // Left out of the request: kept. Sent empty: cleared.
+            'due_date' => array_key_exists('due_date', $validated) ? $validated['due_date'] : $invoice->due_date,
+            'notes' => array_key_exists('notes', $validated) ? $validated['notes'] : $invoice->notes,
         ]);
 
         $this->accountingService->log($club, 'invoice', $invoice->id, 'updated', "Invoice {$invoice->invoice_number} updated.", before: $before, after: $invoice->only(['title', 'amount', 'status']));
@@ -1584,7 +1595,7 @@ class AccountingAdminController extends Controller
                 'email' => $u->email,
             ]);
 
-        return Inertia::render('Admin/Accounting/InvoiceEdit', [
+        return Inertia::render('Admin/Accounting/InvoiceForm', [
             'club' => [
                 'id' => $club->id,
                 'name' => $club->name,
@@ -1596,6 +1607,8 @@ class AccountingAdminController extends Controller
                 'title' => $invoice->title,
                 'amount' => (float) $invoice->amount,
                 'status' => $invoice->status,
+                'due_date' => $invoice->due_date?->format('Y-m-d') ?? '',
+                'notes' => $invoice->notes ?? '',
                 'invoice_number' => $invoice->invoice_number,
                 'attachment_url' => $invoice->media_id && $invoice->media ? $this->attachmentUrl($club, $invoice->media) : null,
                 'created_at' => $invoice->created_at->format('d M Y'),
@@ -1609,7 +1622,7 @@ class AccountingAdminController extends Controller
         $club = Club::where('slug', $clubSlug)->firstOrFail();
         $bill = Bill::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
-        return Inertia::render('Admin/Accounting/BillEdit', [
+        return Inertia::render('Admin/Accounting/BillForm', [
             'club' => [
                 'id' => $club->id,
                 'name' => $club->name,
@@ -1648,7 +1661,7 @@ class AccountingAdminController extends Controller
                 'type' => $a->type,
             ]);
 
-        return Inertia::render('Admin/Accounting/JournalEdit', [
+        return Inertia::render('Admin/Accounting/JournalForm', [
             'club' => [
                 'id' => $club->id,
                 'name' => $club->name,
@@ -2673,22 +2686,6 @@ class AccountingAdminController extends Controller
         $data = $service->getReconciledDonations($club, $request->all());
 
         return response()->json($data);
-    }
-
-    public function giftAidTransactionsPage(Request $request, string $clubSlug): Response
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $service = app(ReliefChestReconciliationService::class);
-
-        $giftAidSummary = $service->getGiftAidSummary($club);
-        $reconciledDonations = $service->getReconciledDonations($club, $request->all());
-
-        return Inertia::render('Admin/Accounting/GiftAidTransactions', [
-            'club' => $club,
-            'giftAidSummary' => $giftAidSummary,
-            'reconciledDonations' => $reconciledDonations,
-            'filters' => $request->only(['date_from', 'date_to', 'person_id', 'status', 'search']),
-        ]);
     }
 
     /**

@@ -57,7 +57,7 @@ class PostAdminController extends Controller
                 'attachments' => $post->attachments ?? [],
                 'cover_image_url' => $post->cover_image_url,
                 'status' => $post->status,
-                'published_at' => ($post->published_at ?? $post->created_at)?->format('M d, Y'),
+                'published_at' => ($post->published_at ?? $post->created_at)?->format('j M Y'),
                 'author_name' => $post->author?->name ?? 'Club Admin',
             ],
         ]);

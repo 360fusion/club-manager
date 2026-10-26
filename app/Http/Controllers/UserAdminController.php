@@ -48,9 +48,9 @@ class UserAdminController extends Controller
                     'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
                     'status' => $u->pivot->status ?? 'active',
                     'invitation_token' => ! empty($u->pivot->invitation_token),
-                    'invited_at' => $u->pivot->invited_at ? Carbon::parse($u->pivot->invited_at)->format('M d, Y') : null,
-                    'invitation_accepted_at' => $u->pivot->invitation_accepted_at ? Carbon::parse($u->pivot->invitation_accepted_at)->format('M d, Y') : null,
-                    'joined_at' => $u->pivot->created_at ? Carbon::parse($u->pivot->created_at)->format('M d, Y') : 'Recent',
+                    'invited_at' => $u->pivot->invited_at ? Carbon::parse($u->pivot->invited_at)->format('j M Y') : null,
+                    'invitation_accepted_at' => $u->pivot->invitation_accepted_at ? Carbon::parse($u->pivot->invitation_accepted_at)->format('j M Y') : null,
+                    'joined_at' => $u->pivot->created_at ? Carbon::parse($u->pivot->created_at)->format('j M Y') : 'Recent',
                 ];
             });
 
@@ -106,7 +106,7 @@ class UserAdminController extends Controller
                 'number' => $i->invoice_number,
                 'amount_formatted' => Currencies::format($i->amount, $club),
                 'status' => $i->status,
-                'due_date' => $i->due_date?->format('M d, Y') ?? 'Immediate',
+                'due_date' => $i->due_date?->format('j M Y') ?? 'Immediate',
             ]);
 
         $rsvps = EventRegistration::with(['event', 'attendees'])
@@ -117,7 +117,7 @@ class UserAdminController extends Controller
             ->values()
             ->map(fn (EventRegistration $r) => [
                 'event_title' => $r->event->title,
-                'event_date' => $r->event->starts_at ? $r->event->starts_at->format('M d, Y @ H:i') : 'TBD',
+                'event_date' => $r->event->starts_at ? $r->event->starts_at->format('j M Y, H:i') : 'TBD',
                 'location' => $r->event->location,
                 'rsvp_status' => $r->status ?? 'attending',
                 'attended' => $r->booker()?->checked_in_at !== null,
@@ -145,9 +145,9 @@ class UserAdminController extends Controller
             'emergency_contact' => $memberPivot->emergency_contact ?? '',
             'dietary_notes' => $memberPivot->dietary_notes ?? '',
             'invitation_token' => ! empty($memberPivot->invitation_token),
-            'invited_at' => $memberPivot->invited_at ? Carbon::parse($memberPivot->invited_at)->format('M d, Y') : null,
-            'invitation_accepted_at' => $memberPivot->invitation_accepted_at ? Carbon::parse($memberPivot->invitation_accepted_at)->format('M d, Y') : null,
-            'joined_at' => $memberPivot->created_at ? Carbon::parse($memberPivot->created_at)->format('M d, Y') : 'Recent',
+            'invited_at' => $memberPivot->invited_at ? Carbon::parse($memberPivot->invited_at)->format('j M Y') : null,
+            'invitation_accepted_at' => $memberPivot->invitation_accepted_at ? Carbon::parse($memberPivot->invitation_accepted_at)->format('j M Y') : null,
+            'joined_at' => $memberPivot->created_at ? Carbon::parse($memberPivot->created_at)->format('j M Y') : 'Recent',
             'two_factor_enabled' => ! empty($user->two_factor_secret),
         ];
 

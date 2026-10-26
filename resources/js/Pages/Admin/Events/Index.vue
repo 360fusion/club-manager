@@ -1,91 +1,81 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
+import { formatEventTime } from '@/Utils/localDateTime';
 
 const props = defineProps({
   club: Object,
   events: Array,
 });
 
-const deleteEvent = (eventId) => {
-  if (confirm('Are you sure you want to delete this event?')) {
-    router.delete(route('admin.events.destroy', { clubSlug: props.club.slug, id: eventId }));
-  }
+const eventToDelete = ref(null);
+const deleting = ref(false);
+
+const deleteEvent = () => {
+  deleting.value = true;
+  router.delete(route('admin.events.destroy', { clubSlug: props.club.slug, id: eventToDelete.value.id }), {
+    onFinish: () => {
+      deleting.value = false;
+      eventToDelete.value = null;
+    },
+  });
 };
 </script>
 
 <template>
   <AdminLayout title="Events" :club="club" active-tab="events">
-    
     <div class="space-y-6">
-      
-      <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Manage Club Events & Ticketing</h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Create and manage event ticketing tiers, promo codes, and 3-course dining menus.</p>
+      <Card>
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Events and tickets</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Create events with ticket types and dining menus, and see who has booked.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" :href="route('admin.payment_options.index', { clubSlug: club.slug })">Payment options</Button>
+            <Button variant="secondary" size="sm" :href="route('admin.email_templates.index', { clubSlug: club.slug })">Email wording</Button>
+            <Button size="sm" :href="route('admin.events.create', { clubSlug: club.slug })">Create an event</Button>
+          </div>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <Link :href="route('admin.payment_options.index', { clubSlug: club.slug })" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all text-center">
-            💳 Payment options
-          </Link>
-          <Link :href="route('admin.email_templates.index', { clubSlug: club.slug })" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all text-center">
-            ✉️ Email wording
-          </Link>
-          <Link :href="route('admin.events.create', { clubSlug: club.slug })" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all text-center">
-            + Create New Event
-          </Link>
-        </div>
-      </div>
+      </Card>
 
-      <!-- Events List Grid -->
-      <div v-if="events.length" class="grid grid-cols-1 gap-4">
-        <div v-for="event in events" :key="event.id" class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="space-y-3">
-            <div class="flex items-center gap-2">
-              <span :class="['px-2.5 py-0.5 rounded text-xs font-bold border uppercase tracking-wider', event.status === 'upcoming' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800']">
-                {{ event.status }}
-              </span>
-              <span v-if="event.ticket_tiers?.length" class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                🎟️ {{ event.ticket_tiers.length }} Tiers
-              </span>
-              <span v-if="event.has_dining" class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                🍽️ 3-Course Dining
-              </span>
-              <span v-if="event.booking_cutoff_days" class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60">
-                ⏰ Cutoff: {{ event.booking_cutoff_days }} days before
-              </span>
+      <div v-if="events.length" class="space-y-4">
+        <Card v-for="event in events" :key="event.id">
+          <div class="flex flex-col justify-between gap-6 md:flex-row md:items-center">
+            <div class="min-w-0 space-y-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <Badge :variant="event.status === 'upcoming' ? 'success' : 'neutral'" class="capitalize">{{ event.status }}</Badge>
+                <Badge v-if="event.ticket_tiers?.length" variant="info">{{ event.ticket_tiers.length }} ticket types</Badge>
+                <Badge v-if="event.has_dining" variant="info">Dining</Badge>
+                <Badge v-if="event.booking_cutoff_days" variant="warning">Booking closes {{ event.booking_cutoff_days }} days before</Badge>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ event.title }}</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">{{ [event.location, formatEventTime(event.starts_at)].filter(Boolean).join(' · ') }}</p>
             </div>
 
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ event.title }}</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">📍 {{ event.location }} • 🕒 {{ event.starts_at }}</p>
+            <div class="flex flex-wrap items-center gap-2 md:shrink-0">
+              <Button variant="secondary" size="sm" :href="route('admin.events.checkin', { clubSlug: club.slug, id: event.id })">Check-in</Button>
+              <Button variant="secondary" size="sm" :href="route('admin.events.subscribers', { clubSlug: club.slug, id: event.id })">Bookings ({{ event.attendees_count || 0 }})</Button>
+              <Button variant="secondary" size="sm" :href="route('admin.events.edit', { clubSlug: club.slug, id: event.id })">Edit</Button>
+              <Button variant="secondary" size="sm" @click="eventToDelete = event">Delete</Button>
+            </div>
           </div>
-
-          <div class="flex items-center gap-3 self-start md:self-auto">
-            <Link :href="route('admin.events.checkin', { clubSlug: club.slug, id: event.id })" class="px-4 py-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-semibold rounded-xl border border-emerald-200 dark:border-emerald-800/60 transition-all">
-              Check-in
-            </Link>
-            <Link :href="route('admin.events.subscribers', { clubSlug: club.slug, id: event.id })" class="px-4 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all">
-              👥 View Subscriptions ({{ event.attendees_count || 0 }})
-            </Link>
-            <Link :href="route('admin.events.edit', { clubSlug: club.slug, id: event.id })" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 transition-all">
-              ✏️ Edit Event & Tiers
-            </Link>
-            <button @click="deleteEvent(event.id)" class="px-3 py-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 text-xs font-semibold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all">
-              🗑️ Delete
-            </button>
-          </div>
-        </div>
+        </Card>
       </div>
 
-      <div v-else class="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-        <p class="text-slate-500 dark:text-slate-400 text-sm">No events found for this club.</p>
-        <Link :href="route('admin.events.create', { clubSlug: club.slug })" class="inline-block px-5 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20">
-          Create First Event
-        </Link>
-      </div>
-
+      <Card v-else class="text-center">
+        <p class="text-sm text-slate-500 dark:text-slate-400">No events yet.</p>
+        <Button class="mt-4" :href="route('admin.events.create', { clubSlug: club.slug })">Create your first event</Button>
+      </Card>
     </div>
 
+    <ConfirmDialog :open="Boolean(eventToDelete)" title="Delete this event?" confirm-label="Delete event" :processing="deleting" @confirm="deleteEvent" @close="eventToDelete = null">
+      "{{ eventToDelete?.title }}" will be deleted.
+    </ConfirmDialog>
   </AdminLayout>
 </template>

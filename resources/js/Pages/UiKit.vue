@@ -7,6 +7,10 @@ import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Input from '@/Components/Ui/Input.vue';
 import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
+import Tabs from '@/Components/Ui/Tabs.vue';
+import Modal from '@/Components/Ui/Modal.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 import StatCard from '@/Components/Ui/StatCard.vue';
 import ClubChip from '@/Components/Ui/ClubChip.vue';
 import DateTile from '@/Components/Ui/DateTile.vue';
@@ -15,6 +19,16 @@ import ThemeToggle from '@/Components/ThemeToggle.vue';
 
 const text = ref('');
 const choice = ref('treasurer');
+const notes = ref('');
+const showModal = ref(false);
+const showConfirm = ref(false);
+
+// Tabs link to pages; here they all point back at this page.
+const tabItems = [
+    { key: 'roster', label: 'Members roster', href: '#' },
+    { key: 'officers', label: 'Officer rosters', href: '#' },
+    { key: 'dues', label: 'Subscriptions & dues', href: '#' },
+];
 
 const roles = [
     { value: 'owner', label: 'Owner' },
@@ -130,8 +144,36 @@ const orders = [
                         <Input label="Email" type="email" placeholder="secretary@lodge.org" error="That address is already in use." />
                         <Select v-model="choice" label="Role" :options="roles" hint="Controls which admin areas they reach." />
                         <Input label="Disabled" placeholder="Not editable" disabled />
+                        <Textarea v-model="notes" label="Notes" hint="Only officers can see these." class="sm:col-span-2" />
                     </div>
                 </Card>
+            </section>
+
+            <section class="space-y-3">
+                <h2 class="text-sm font-medium text-slate-500 dark:text-slate-400">Tabs</h2>
+                <Tabs :items="tabItems" active="officers" label="Example" />
+            </section>
+
+            <section class="space-y-3">
+                <h2 class="text-sm font-medium text-slate-500 dark:text-slate-400">Dialogs</h2>
+                <Card>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <Button variant="secondary" @click="showModal = true">Open a modal</Button>
+                        <Button variant="danger" @click="showConfirm = true">Delete a member</Button>
+                    </div>
+                </Card>
+
+                <Modal :open="showModal" title="Add a visitor" subtitle="Focus stays inside until you close it." @close="showModal = false">
+                    <Input label="Name" placeholder="WBro John Smith" />
+                    <template #footer>
+                        <Button variant="secondary" @click="showModal = false">Cancel</Button>
+                        <Button @click="showModal = false">Add visitor</Button>
+                    </template>
+                </Modal>
+
+                <ConfirmDialog :open="showConfirm" title="Delete this member?" confirm-label="Delete member" @confirm="showConfirm = false" @close="showConfirm = false">
+                    Their dues history stays in the accounts. This cannot be undone.
+                </ConfirmDialog>
             </section>
 
             <section class="space-y-3">

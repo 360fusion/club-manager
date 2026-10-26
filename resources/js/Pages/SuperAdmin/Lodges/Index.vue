@@ -1,4 +1,5 @@
 <script setup>
+import { debounce } from '@/Utils/debounce';
 import { ref, reactive, computed, watch } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
@@ -22,17 +23,13 @@ const props = defineProps({
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const search = reactive({ ...props.filters });
-let timer = null;
 
 function applyFilters() {
     const query = Object.fromEntries(Object.entries(search).filter(([, value]) => value));
     router.get(route('superadmin.lodges.index'), query, { preserveState: true, preserveScroll: true, replace: true });
 }
 
-watch(() => search.q, () => {
-    clearTimeout(timer);
-    timer = setTimeout(applyFilters, 300);
-});
+watch(() => search.q, debounce(() => applyFilters(), 300));
 
 const showModal = ref(false);
 const editingId = ref(null);

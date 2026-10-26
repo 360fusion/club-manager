@@ -205,7 +205,7 @@ class NewsletterTypeAdminController extends Controller
                     'home_club_number' => $sub->home_club_number ?: '',
                     'is_internal_member' => (bool) $sub->user_id,
                     'status' => $sub->status,
-                    'subscribed_at' => $sub->subscribed_at?->format('M d, Y') ?? $sub->created_at->format('M d, Y'),
+                    'subscribed_at' => $sub->subscribed_at?->format('j M Y') ?? $sub->created_at->format('j M Y'),
                 ];
             });
 

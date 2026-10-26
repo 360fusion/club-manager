@@ -1,4 +1,5 @@
 <script setup>
+import { debounce } from '@/Utils/debounce';
 import { computed, ref, watch } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
@@ -63,11 +64,8 @@ watch(() => props.filters, (next) => {
     tags.value = [...(next.tags ?? [])];
 });
 
-let timer;
-watch(search, () => {
-    clearTimeout(timer);
-    timer = setTimeout(apply, 300);
-});
+const applySoon = debounce(() => apply(), 300);
+watch(search, () => applySoon());
 watch([from, to, club], apply);
 
 const toggleTag = (slug) => {
@@ -76,7 +74,7 @@ const toggleTag = (slug) => {
 };
 
 const clearFilters = () => {
-    clearTimeout(timer);
+    applySoon.cancel();
     search.value = '';
     from.value = '';
     to.value = '';

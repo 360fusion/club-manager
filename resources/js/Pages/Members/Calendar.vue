@@ -1,4 +1,5 @@
 <script setup>
+import { useClipboard } from '@/Composables/useClipboard';
 import { ref, computed } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
@@ -63,16 +64,9 @@ const shiftMonth = (delta) => {
 const time = (iso) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 const longDate = (iso) => new Date(iso).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
-const copied = ref(false);
-const copy = async () => {
-    try {
-        await navigator.clipboard.writeText(props.feedUrl);
-        copied.value = true;
-        setTimeout(() => { copied.value = false; }, 2000);
-    } catch (e) {
-        // Clipboard unavailable; the field is selectable instead.
-    }
-};
+const { copied, copy: copyText } = useClipboard();
+// Where the browser refuses, the link stays in the field to select by hand.
+const copy = () => copyText(props.feedUrl);
 
 const replaceLink = () => {
     if (confirm('Replace your calendar link? Calendars using the old link will stop updating.')) {

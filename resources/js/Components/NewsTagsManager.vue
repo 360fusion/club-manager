@@ -2,6 +2,9 @@
 import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import OrderColourPicker from '@/Components/OrderColourPicker.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 import { orderColour } from '@/Utils/orderColour';
 
 const props = defineProps({
@@ -54,62 +57,54 @@ const saveEdit = (tag) => {
     });
 };
 
-const removeTag = (tag) => {
-    const used = tag.posts_count > 0 ? ` It will be removed from ${tag.posts_count} news item${tag.posts_count === 1 ? '' : 's'}.` : '';
-    if (!confirm(`Delete the tag "${tag.name}"?${used}`)) return;
-    router.delete(route('admin.settings.news_tags.destroy', { clubSlug: props.clubSlug, id: tag.id }), options);
+const tagToDelete = ref(null);
+const removeTag = () => {
+    router.delete(route('admin.settings.news_tags.destroy', { clubSlug: props.clubSlug, id: tagToDelete.value.id }), {
+        ...options,
+        onFinish: () => { busy.value = false; tagToDelete.value = null; },
+    });
 };
+
+const usedOn = (count) => `${count} news item${count === 1 ? '' : 's'}`;
 </script>
 
 <template>
     <div class="space-y-6">
-        <ul v-if="tags.length" class="divide-y divide-slate-100 rounded-2xl border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+        <ul v-if="tags.length" class="divide-y divide-slate-200 rounded-2xl border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
             <li v-for="tag in tags" :key="tag.id" class="p-4">
                 <div v-if="editingId !== tag.id" class="flex flex-wrap items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
-                        <span :class="['rounded-full px-3 py-1 text-xs font-bold', orderColour(tag.color).soft]">{{ tag.name }}</span>
-                        <span class="text-[11px] text-slate-400">Used on {{ tag.posts_count }} news item{{ tag.posts_count === 1 ? '' : 's' }}</span>
+                        <span :class="['rounded-full px-3 py-1 text-xs font-medium', orderColour(tag.color).soft]">{{ tag.name }}</span>
+                        <span class="text-xs text-slate-500 dark:text-slate-400">Used on {{ usedOn(tag.posts_count) }}</span>
                     </div>
-                    <div class="flex items-center gap-2 text-xs font-bold">
-                        <button type="button" class="rounded-lg px-3 py-1.5 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40" @click="startEdit(tag)">Edit</button>
-                        <button type="button" class="rounded-lg px-3 py-1.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40" @click="removeTag(tag)">Delete</button>
+                    <div class="flex items-center gap-2">
+                        <Button variant="secondary" size="sm" :aria-label="`Edit ${tag.name}`" @click="startEdit(tag)">Edit</Button>
+                        <Button variant="ghost" size="sm" :aria-label="`Delete ${tag.name}`" @click="tagToDelete = tag">Delete</Button>
                     </div>
                 </div>
 
                 <form v-else class="space-y-3" @submit.prevent="saveEdit(tag)">
-                    <input
-                        v-model="editName"
-                        type="text"
-                        maxlength="60"
-                        aria-label="Tag name"
-                        class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-800 dark:bg-slate-800/50"
-                    />
-                    <OrderColourPicker v-model="editColour" />
-                    <p v-if="errors.name" class="text-xs font-semibold text-red-600">{{ errors.name }}</p>
-                    <div class="flex gap-2 text-xs font-bold">
-                        <button type="submit" :disabled="busy" class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60">Save tag</button>
-                        <button type="button" class="rounded-lg px-4 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" @click="editingId = null; errors = {}">Cancel</button>
+                    <Input v-model="editName" label="Tag name" maxlength="60" :error="errors.name" />
+                    <OrderColourPicker v-model="editColour" label="Tag colour" />
+                    <div class="flex gap-2">
+                        <Button type="submit" size="sm" :loading="busy">Save tag</Button>
+                        <Button variant="secondary" size="sm" @click="editingId = null; errors = {}">Cancel</Button>
                     </div>
                 </form>
             </li>
         </ul>
-        <div v-else class="rounded-2xl border border-dashed border-slate-200 p-4 text-center text-xs text-slate-400 dark:border-slate-800">
+        <p v-else class="rounded-2xl border border-dashed border-slate-300 p-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
             No tags yet. Add your first tag below.
-        </div>
+        </p>
 
-        <form class="space-y-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/40" @submit.prevent="addTag">
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200" for="new-news-tag">Add a tag</label>
-            <input
-                id="new-news-tag"
-                v-model="newName"
-                type="text"
-                maxlength="60"
-                placeholder="e.g. Masonic Charitable Foundation"
-                class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-800 dark:bg-slate-900"
-            />
-            <OrderColourPicker v-model="newColour" />
-            <p v-if="errors.name && editingId === null" class="text-xs font-semibold text-red-600">{{ errors.name }}</p>
-            <button type="submit" :disabled="busy || !newName.trim()" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60">Add tag</button>
+        <form class="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-800" @submit.prevent="addTag">
+            <Input v-model="newName" label="Add a tag" maxlength="60" placeholder="e.g. Masonic Charitable Foundation" :error="editingId === null ? errors.name : ''" />
+            <OrderColourPicker v-model="newColour" label="Tag colour" />
+            <Button type="submit" size="sm" :loading="busy" :disabled="!newName.trim()">Add tag</Button>
         </form>
+
+        <ConfirmDialog :open="Boolean(tagToDelete)" title="Delete this tag?" confirm-label="Delete tag" :processing="busy" @confirm="removeTag" @close="tagToDelete = null">
+            The tag "{{ tagToDelete?.name }}" will be deleted.<template v-if="tagToDelete?.posts_count > 0"> It will be removed from {{ usedOn(tagToDelete.posts_count) }}.</template>
+        </ConfirmDialog>
     </div>
 </template>

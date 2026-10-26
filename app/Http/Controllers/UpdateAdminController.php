@@ -50,7 +50,7 @@ class UpdateAdminController extends Controller
             ->map(fn ($m) => [
                 'id' => $m->id,
                 'title' => $m->title,
-                'date' => Carbon::parse($m->meeting_date)->format('M d, Y g:i A'),
+                'date' => Carbon::parse($m->meeting_date)->format('j M Y, H:i'),
                 'room' => $m->location ?? 'Main Lodge Room',
             ]);
 
@@ -62,7 +62,7 @@ class UpdateAdminController extends Controller
             ->map(fn ($e) => [
                 'id' => $e->id,
                 'title' => $e->title,
-                'date' => Carbon::parse($e->starts_at)->format('M d, Y g:i A'),
+                'date' => Carbon::parse($e->starts_at)->format('j M Y, H:i'),
                 'price' => $e->price ? Currencies::format($e->price, $club) : 'Free',
             ]);
 
@@ -74,7 +74,7 @@ class UpdateAdminController extends Controller
             ->map(fn ($p) => [
                 'id' => $p->id,
                 'title' => $p->title,
-                'date' => $p->published_at ? Carbon::parse($p->published_at)->format('M d, Y') : $p->created_at->format('M d, Y'),
+                'date' => $p->published_at ? Carbon::parse($p->published_at)->format('j M Y') : $p->created_at->format('j M Y'),
                 'excerpt' => $p->excerpt ?? '',
             ]);
 

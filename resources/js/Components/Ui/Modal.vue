@@ -1,7 +1,9 @@
 <script setup>
-import { watch, onBeforeUnmount } from 'vue';
+// A dialog over the page. While open, keyboard focus stays inside it (v-focus-trap), Escape and a click on the backdrop
+// close it, and focus goes back to whatever opened it.
+import { useId } from 'vue';
 
-const props = defineProps({
+defineProps({
     open: { type: Boolean, default: false },
     title: { type: String, required: true },
     subtitle: { type: String, default: '' },
@@ -10,28 +12,14 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
+const titleId = useId();
+
 const SIZES = {
     sm: 'max-w-sm',
     md: 'max-w-md',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
 };
-
-const onKeydown = (event) => {
-    if (event.key === 'Escape') {
-        emit('close');
-    }
-};
-
-watch(() => props.open, (open) => {
-    if (open) {
-        window.addEventListener('keydown', onKeydown);
-    } else {
-        window.removeEventListener('keydown', onKeydown);
-    }
-}, { immediate: true });
-
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>
@@ -41,14 +29,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
         @mousedown.self="emit('close')"
     >
         <div
+            v-focus-trap="() => emit('close')"
             role="dialog"
             aria-modal="true"
-            :aria-label="title"
-            :class="['max-h-[calc(100vh-2rem)] w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900', SIZES[size] ?? SIZES.md]"
+            :aria-labelledby="titleId"
+            :class="['max-h-[calc(100vh-2rem)] w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl outline-none dark:border-slate-800 dark:bg-slate-900', SIZES[size] ?? SIZES.md]"
         >
             <div class="mb-4 flex items-start justify-between gap-4 border-b border-slate-200 pb-4 dark:border-slate-800">
                 <div class="min-w-0">
-                    <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ title }}</h2>
+                    <h2 :id="titleId" class="text-base font-semibold text-slate-900 dark:text-white">{{ title }}</h2>
                     <p v-if="subtitle" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ subtitle }}</p>
                 </div>
                 <button

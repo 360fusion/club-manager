@@ -1,5 +1,5 @@
-@import 'tailwindcss';
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap');
+@import 'tailwindcss';
 
 @source '../views/**/*.blade.php';
 @source '../js/**/*.{vue,js,ts,jsx,tsx}';
@@ -60,12 +60,37 @@
     --color-gold-950: oklch(25% 0.045 82);
 }
 
+/* The app's side nav and top bar are lodge navy: inside them the greys take a navy tint, so the background, hovers,
+   active items and borders all match without each layout restyling its nav. */
+.cm-nav {
+    --color-slate-200: oklch(92.9% 0.013 266);
+    --color-slate-300: oklch(86.9% 0.022 266);
+    --color-slate-400: oklch(70.4% 0.04 266);
+    --color-slate-700: oklch(37.2% 0.075 266);
+    --color-slate-800: oklch(27.9% 0.075 266);
+    --color-slate-900: oklch(20.8% 0.065 266);
+    --color-slate-950: oklch(12.9% 0.05 266);
+}
+
+/* Every control shows a focus ring. Controls that draw their own Tailwind focus ring keep it; the rest (many only turned
+   the outline off, or tinted the border) get a 2px outline: lodge blue in the app, the club's accent on a website.
+   Unlayered on purpose, so it beats a `focus:outline-none` utility. */
+:is(input, select, textarea, button, a, summary, [tabindex], [contenteditable='true']):focus-visible:not(
+        [class*='focus:ring'],
+        [class*='focus-visible:ring']
+    ) {
+    outline: 2px solid var(--cm-accent, var(--color-blue-500));
+    outline-offset: 2px;
+}
+
 /* Page titles and section titles are set in Playfair Display; smaller headings stay in Inter. */
 @layer base {
     h1,
     h2.text-xl,
     h2.text-2xl {
         font-family: var(--font-display);
+        /* Playfair's default old-style figures make a 0 look like an O. */
+        font-variant-numeric: lining-nums;
     }
 }
 

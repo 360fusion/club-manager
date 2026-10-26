@@ -77,6 +77,7 @@ class HandleInertiaRequests extends Middleware
             'pendingLodgeCorrections' => fn () => $user?->is_super_admin ? LodgeCorrection::open()->count() : 0,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                'info' => fn () => $request->session()->get('info'),
                 'error' => fn () => $request->session()->get('error'),
             ],
         ];

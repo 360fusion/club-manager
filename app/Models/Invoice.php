@@ -27,6 +27,8 @@ class Invoice extends Model
         'reconciled_at',
         'reconciled_bank_transaction_id',
         'media_id',
+        'due_date',
+        'notes',
     ];
 
     protected function casts(): array
@@ -36,6 +38,7 @@ class Invoice extends Model
             'net_amount' => 'decimal:2',
             'vat_rate' => 'decimal:2',
             'vat_amount' => 'decimal:2',
+            'due_date' => 'date',
             'paid_at' => 'datetime',
             'reconciled_at' => 'datetime',
         ];

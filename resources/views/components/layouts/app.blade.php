@@ -35,7 +35,7 @@
         class="min-h-screen bg-[#f1f5f9] dark:bg-slate-950 text-slate-800 font-sans flex flex-col md:flex-row"
     >
         <!-- Mobile Sidebar Toggle Header -->
-        <div class="md:hidden bg-[#1e293b] text-white p-4 flex items-center justify-between border-b border-slate-700 sticky top-0 z-40">
+        <div class="cm-nav md:hidden bg-slate-800 text-white p-4 flex items-center justify-between border-b border-slate-700 sticky top-0 z-40">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-xs shadow-md">
                     CA
@@ -52,7 +52,7 @@
         <!-- Left Sidebar Navigation -->
         <aside
             :class="sidebarOpen ? 'block' : 'hidden md:flex'"
-            class="w-full md:w-64 bg-[#1e293b] text-slate-300 flex-shrink-0 flex-col justify-between transition-all duration-200 z-30"
+            class="cm-nav w-full md:w-64 bg-slate-800 text-slate-300 flex-shrink-0 flex-col justify-between transition-all duration-200 z-30"
         >
             <div>
                 <!-- Interactive Workspace Switcher Header -->

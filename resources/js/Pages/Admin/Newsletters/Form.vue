@@ -1,8 +1,16 @@
 <script setup>
+import { formatBytes } from '@/Utils/fileSize';
 import Modal from '@/Components/Ui/Modal.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
 import { postJson } from '@/Utils/postJson';
 import { ref, computed } from 'vue';
-import { useForm, Head, Link, router } from '@inertiajs/vue3';
+import { useForm, Head, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 import ContentPickerModal from '@/Components/ContentPickerModal.vue';
@@ -201,9 +209,9 @@ const openPreview = async () => {
 const sendTest = () => router.post(route('admin.newsletters.test', { clubSlug: props.club.slug }), draftPayload(), { preserveScroll: true });
 
 const availableRoles = [
-  { id: 'member', label: 'Members / Brethren' },
-  { id: 'coach', label: 'Coaches & Officers' },
-  { id: 'admin', label: 'Admins & Executive Board' },
+  { id: 'member', label: 'Members and brethren' },
+  { id: 'coach', label: 'Coaches and officers' },
+  { id: 'admin', label: 'Admins and executive board' },
   { id: 'treasurer', label: 'Treasurers' },
 ];
 
@@ -312,22 +320,6 @@ const removeExistingAttachment = (index) => {
   form.existing_attachments = existingAttachments.value;
 };
 
-const getFileIcon = (mimeOrName) => {
-  const name = (mimeOrName || '').toLowerCase();
-  if (name.includes('pdf')) return '📄';
-  if (name.includes('image') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) return '🖼️';
-  if (name.includes('sheet') || name.endsWith('.xls') || name.endsWith('.xlsx') || name.endsWith('.csv')) return '📊';
-  if (name.includes('word') || name.endsWith('.doc') || name.endsWith('.docx')) return '📝';
-  if (name.endsWith('.zip') || name.endsWith('.rar')) return '📦';
-  return '📎';
-};
-
-const formatBytes = (bytes) => {
-  if (!bytes) return '';
-  if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
-  return (bytes / 1024).toFixed(1) + ' KB';
-};
-
 const submitForm = (targetStatus) => {
   form.status = targetStatus;
   form.existing_attachments = existingAttachments.value;
@@ -342,349 +334,257 @@ const saveDraft = () => {
   submitForm('draft');
 };
 
+// Sending emails everyone once and cannot be undone, so it waits for the confirm dialog.
+const confirmingSend = ref(false);
 const sendBroadcast = () => {
-  if (confirm('Send this email broadcast to all targeted members and external subscribers now?')) {
-    submitForm('sent');
-  }
+  confirmingSend.value = false;
+  submitForm('sent');
 };
+
+const channelOptions = computed(() => (props.types || []).map((t) => ({ value: t.id, label: `${t.icon} ${t.name}` })));
+const postOptions = computed(() => [
+  { value: '', label: 'Choose a published post to import' },
+  ...(props.posts || []).map((post) => ({ value: post.id, label: `${post.title} (${post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Published'})` })),
+]);
+const IMAGE_POSITION_OPTIONS = [
+  { value: 'left', label: 'Image on the left, text on the right' },
+  { value: 'right', label: 'Image on the right, text on the left' },
+];
+const rowBox = 'rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50';
+const checkbox = 'h-4 w-4 rounded accent-blue-600';
+const sectionTitle = 'text-sm font-semibold text-slate-900 dark:text-white';
 </script>
 
 <template>
-  <AdminLayout :title="`${newsletter.id ? 'Edit' : 'Compose'} Newsletter`" :club="club" active-tab="newsletters">
-    
-    <div class="max-w-4xl mx-auto space-y-6">
-      
-      <!-- Top Action Bar -->
-      <div class="flex items-center justify-between bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ newsletter.id ? 'Edit Newsletter Broadcast' : 'Compose New Email Broadcast' }}</h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Target specific channels, member roles, visiting subscribers, and attach downloadable files.</p>
-        </div>
-        <Link :href="route('admin.newsletters.index', { clubSlug: club.slug })" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all">
-          &larr; Back to Newsletters
-        </Link>
-      </div>
+  <AdminLayout :title="newsletter.id ? 'Edit newsletter' : 'Write a newsletter'" :club="club" active-tab="newsletters">
+    <Head :title="newsletter.id ? 'Edit newsletter' : 'Write a newsletter'" />
 
-      <!-- Form -->
-      <form @submit.prevent class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="col-span-1">
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Newsletter Channel *</label>
-            <select v-model="form.newsletter_type_id" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
-              <option v-for="t in types" :key="t.id" :value="t.id">
-                {{ t.icon }} {{ t.name }}
-              </option>
-            </select>
-          </div>
-
-          <div class="col-span-2">
-            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Email Subject Line *</label>
-            <input v-model="form.subject" type="text" required placeholder="Summer Regatta Schedule & Summons Circular" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500" />
-          </div>
-        </div>
-
-        <!-- Target Roles Selector -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Target Internal Member Roles</label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div 
-              v-for="role in availableRoles" 
-              :key="role.id"
-              @click="toggleRole(role.id)"
-              :class="[
-                'p-3 rounded-xl border text-xs font-bold cursor-pointer transition-all flex items-center justify-between',
-                form.target_roles.includes(role.id)
-                  ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 text-blue-900 dark:text-blue-200 shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
-              ]"
-            >
-              <span>{{ role.label }}</span>
-              <span v-if="form.target_roles.includes(role.id)" class="text-blue-600 dark:text-blue-400">✓</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- System Content Picker Trigger Card -->
-        <div class="bg-emerald-50/70 dark:bg-emerald-950/70 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 flex items-center justify-between">
+    <div class="mx-auto max-w-4xl space-y-6">
+      <Card>
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h4 class="text-xs font-bold text-emerald-950 dark:text-emerald-100 flex items-center gap-1.5">
-              <span>🧩</span> Select & Insert System Content
-            </h4>
-            <p class="text-[11px] text-emerald-800/80 dark:text-emerald-200/80 mt-0.5">Select approved summonses, upcoming meetings, events, or news posts to automatically embed into your email body.</p>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ newsletter.id ? 'Edit the newsletter' : 'Write a newsletter' }}</h2>
+            <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Choose the channel, member roles and visiting subscribers it goes to, and attach files to download.</p>
           </div>
-          <button
-            type="button"
-            @click="showContentPicker = true"
-            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
-          >
-            <span>🧩</span> Select Content Items
-          </button>
+          <Button variant="ghost" size="sm" :href="route('admin.newsletters.index', { clubSlug: club.slug })">Back to newsletters</Button>
+        </div>
+      </Card>
+
+      <Card>
+      <form class="space-y-6" @submit.prevent>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Select v-model="form.newsletter_type_id" label="Channel" required :options="channelOptions" :error="form.errors.newsletter_type_id" />
+          <Input v-model="form.subject" class="md:col-span-2" label="Subject line" required placeholder="Summer regatta schedule and summons" :error="form.errors.subject" />
         </div>
 
-        <!-- News Items Builder Toggle Bar -->
-        <div class="bg-blue-50/60 dark:bg-blue-950/60 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/40 flex items-center justify-between">
-          <div>
-            <h4 class="text-xs font-bold text-blue-950 dark:text-blue-100 flex items-center gap-1.5">
-              <span>📰</span> Add News Items List to Newsletter
-            </h4>
-            <p class="text-[11px] text-blue-700/80 dark:text-blue-300/80 mt-0.5">Format and embed published club news or custom stories with images, headlines, and teaser text.</p>
+        <fieldset>
+          <legend class="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">Member roles to send to</legend>
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <label v-for="role in availableRoles" :key="role.id" :class="[rowBox, 'flex cursor-pointer items-center gap-2 p-3 text-sm font-medium text-slate-900 dark:text-white']">
+              <input type="checkbox" :checked="form.target_roles.includes(role.id)" :class="checkbox" @change="toggleRole(role.id)" />
+              {{ role.label }}
+            </label>
           </div>
-          <button
-            type="button"
-            @click="showNewsBuilder = !showNewsBuilder"
-            class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1"
-          >
-            {{ showNewsBuilder ? 'Hide News Builder' : '⚡ Open News Items Builder' }}
-          </button>
+          <p v-if="form.errors.target_roles" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ form.errors.target_roles }}</p>
+        </fieldset>
+
+        <div :class="[rowBox, 'flex flex-col justify-between gap-3 sm:flex-row sm:items-center']">
+          <div>
+            <h3 :class="sectionTitle">Insert content from the site</h3>
+            <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Choose approved summonses, upcoming meetings, events or news posts to add to the email.</p>
+          </div>
+          <Button variant="secondary" size="sm" class="shrink-0" @click="showContentPicker = true">Choose content</Button>
+        </div>
+
+        <div :class="[rowBox, 'flex flex-col justify-between gap-3 sm:flex-row sm:items-center']">
+          <div>
+            <h3 :class="sectionTitle">Add a list of news items</h3>
+            <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Lay out published club news or your own stories with images, headlines and teaser text.</p>
+          </div>
+          <Button variant="secondary" size="sm" class="shrink-0" :aria-expanded="showNewsBuilder" @click="showNewsBuilder = !showNewsBuilder">
+            {{ showNewsBuilder ? 'Hide the news builder' : 'Open the news builder' }}
+          </Button>
         </div>
 
         <!-- News Items Builder Card -->
-        <div v-if="showNewsBuilder" class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4 text-xs">
-          <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-3">
-            <span class="font-bold text-slate-900 dark:text-white text-sm">📰 Construct News Items List</span>
-            <span class="text-slate-500 dark:text-slate-400 text-[11px]">Format: Thumbnail image side-by-side with headline & teaser text</span>
+        <div v-if="showNewsBuilder" :class="[rowBox, 'space-y-4']">
+          <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200 pb-3 dark:border-slate-800">
+            <h3 :class="sectionTitle">Build a list of news items</h3>
+            <span class="text-xs text-slate-500 dark:text-slate-400">Each item shows a thumbnail beside its headline and teaser.</span>
           </div>
 
-          <!-- Select from Published Posts -->
-          <div v-if="posts && posts.length" class="space-y-1">
-            <label class="block font-bold text-slate-700 dark:text-slate-200">Import from Published Club Posts</label>
-            <select v-model="selectedPostId" @change="onSelectPost" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-800 dark:text-slate-100">
-              <option value="">-- Choose a published news post to import --</option>
-              <option v-for="post in posts" :key="post.id" :value="post.id">
-                {{ post.title }} ({{ post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Published' }})
-              </option>
-            </select>
+          <Select
+            v-if="posts && posts.length"
+            :model-value="selectedPostId"
+            label="Import a published club post"
+            :options="postOptions"
+            @update:model-value="(value) => { selectedPostId = value; onSelectPost(); }"
+          />
+
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <Input v-model="customHeadline" label="Headline" placeholder="For example: annual regatta trophies awarded" />
+            <Input v-model="customImageUrl" label="Cover image URL" hint="Optional." placeholder="https://example.com/image.jpg" />
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Headline Title *</label>
-              <input v-model="customHeadline" type="text" placeholder="e.g. Annual Regatta Trophies Awarded" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold" />
+          <Textarea v-model="customTeaser" label="Teaser text" :rows="2" placeholder="A short summary shown below the headline" />
+
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <Input v-model="customLinkUrl" label="Link to the full story" hint="Optional." placeholder="https://..." />
+            <Select v-model="imagePosition" label="Thumbnail layout" :options="IMAGE_POSITION_OPTIONS" />
+          </div>
+
+          <div class="flex justify-end">
+            <Button size="sm" :disabled="!customHeadline.trim()" @click="addNewsItemToList">Add to the list</Button>
+          </div>
+
+          <div v-if="stagedNewsItems.length" class="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h4 :class="sectionTitle">News list ({{ stagedNewsItems.length }} {{ stagedNewsItems.length === 1 ? 'item' : 'items' }})</h4>
+              <Button size="sm" @click="insertNewsListIntoContent">Insert the list into the content</Button>
             </div>
 
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Cover Image URL (Optional)</label>
-              <input v-model="customImageUrl" type="text" placeholder="https://example.com/image.jpg" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
-            </div>
-          </div>
-
-          <div>
-            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Teaser Text Excerpt</label>
-            <textarea v-model="customTeaser" rows="2" placeholder="Short teaser summary that appears below the headline..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl"></textarea>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Story Link URL (Optional)</label>
-              <input v-model="customLinkUrl" type="text" placeholder="https://..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Thumbnail Layout</label>
-              <select v-model="imagePosition" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
-                <option value="left">Image on Left (Headline & Teaser on Right)</option>
-                <option value="right">Image on Right (Headline & Teaser on Left)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-end gap-2 pt-2">
-            <button
-              type="button"
-              @click="addNewsItemToList"
-              :disabled="!customHeadline.trim()"
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all cursor-pointer"
-            >
-              + Add News Item to List
-            </button>
-          </div>
-
-          <!-- Staged Items Preview List -->
-          <div v-if="stagedNewsItems.length" class="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-            <div class="font-bold text-slate-900 dark:text-white flex items-center justify-between">
-              <span>Staged News List ({{ stagedNewsItems.length }} {{ stagedNewsItems.length === 1 ? 'item' : 'items' }})</span>
-              <button
-                type="button"
-                @click="insertNewsListIntoContent"
-                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1"
-              >
-                📥 Insert Formatted List into Content
-              </button>
-            </div>
-
-            <div class="space-y-2">
-              <div
+            <ul class="space-y-2">
+              <li
                 v-for="(item, idx) in stagedNewsItems"
                 :key="idx"
-                class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3"
+                class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
               >
-                <div class="flex items-center gap-3 overflow-hidden">
-                  <img v-if="item.imageUrl" :src="item.imageUrl" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                  <div v-else class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center font-bold flex-shrink-0">📰</div>
-                  <div class="truncate">
-                    <h5 class="font-bold text-slate-900 dark:text-white truncate">{{ item.headline }}</h5>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ item.teaser || 'No teaser text' }}</p>
+                <div class="flex min-w-0 items-center gap-3">
+                  <img v-if="item.imageUrl" :src="item.imageUrl" alt="" class="h-12 w-12 shrink-0 rounded-lg object-cover" />
+                  <div v-else class="h-12 w-12 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800" aria-hidden="true"></div>
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">{{ item.headline }}</p>
+                    <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ item.teaser || 'No teaser text' }}</p>
                   </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex shrink-0 items-center gap-2">
                   <a
                     v-if="item.linkUrl"
                     :href="item.linkUrl"
                     target="_blank"
-                    class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded-lg border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1"
-                    title="Preview Target Link"
+                    rel="noopener"
+                    class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
-                    👁️ Preview
+                    Open link
                   </a>
-                  <button
-                    type="button"
-                    @click="removeStagedNewsItem(idx)"
-                    class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold p-1 rounded cursor-pointer"
-                    title="Remove item"
-                  >
-                    ✕
-                  </button>
+                  <Button variant="ghost" size="sm" :aria-label="`Remove ${item.headline}`" @click="removeStagedNewsItem(idx)">Remove</Button>
                 </div>
-              </div>
-            </div>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <!-- Newsletter Content -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">Newsletter Content (WYSIWYG)</label>
-          <div class="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+          <p class="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">Content</p>
+          <div class="mb-2 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span>Personalise:</span>
-            <button v-for="[tag, name] in MERGE_TAGS" :key="tag" type="button" class="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 font-mono text-blue-700 hover:bg-blue-100 dark:border-blue-800/60 dark:bg-blue-950/60 dark:text-blue-300" :title="`Adds ${name}`" @click="insertTag(tag)">{{ tag }}</button>
+            <Button v-for="[tag, name] in MERGE_TAGS" :key="tag" variant="secondary" size="sm" class="font-mono" :title="`Adds ${name}`" @click="insertTag(tag)">{{ tag }}</Button>
           </div>
-          <RichTextEditor v-model="form.content" placeholder="Write rich email newsletter content here..." />
+          <RichTextEditor v-model="form.content" placeholder="Write the newsletter here" />
+          <p v-if="form.errors.content" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ form.errors.content }}</p>
         </div>
 
         <!-- Attachments Section -->
-        <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-          <div class="flex items-center justify-between">
+        <div class="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+          <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">📎 Attachments & Downloads</label>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400">Attach Summons PDFs, meeting agendas, financial reports, or image circulars for recipients.</p>
+              <h3 :class="sectionTitle">Attachments and downloads</h3>
+              <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Attach summons PDFs, meeting agendas, financial reports or image circulars for the people it goes to.</p>
             </div>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                @click="showMediaModal = true"
-                class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800/60 transition-all flex items-center gap-1 cursor-pointer"
-              >
-                📁 Select from File Manager
-              </button>
-              <button
-                type="button"
-                @click="triggerFileInput"
-                class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all flex items-center gap-1 cursor-pointer"
-              >
-                + Upload New Attachment
-              </button>
+            <div class="flex shrink-0 flex-wrap items-center gap-2">
+              <Button variant="secondary" size="sm" @click="showMediaModal = true">Choose from the file manager</Button>
+              <Button variant="secondary" size="sm" @click="triggerFileInput">Upload a file</Button>
             </div>
             <input
               ref="fileInput"
               type="file"
               multiple
               class="hidden"
+              aria-label="Upload attachments"
               accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.zip"
               @change="onFileSelect"
             />
           </div>
 
-          <!-- Attachments List Grid -->
-          <div v-if="existingAttachments.length || newFiles.length" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            
-            <!-- Existing Saved Attachments -->
-            <div
+          <ul v-if="existingAttachments.length || newFiles.length" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <li
               v-for="(att, idx) in existingAttachments"
               :key="'existing-' + idx"
-              class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/80 text-xs"
+              :class="[rowBox, 'flex items-center justify-between gap-2 p-3']"
             >
-              <div class="flex items-center gap-2.5 overflow-hidden">
-                <span class="text-lg">{{ getFileIcon(att.mime_type || att.name) }}</span>
-                <div class="truncate">
-                  <a :href="att.url" target="_blank" class="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 truncate block">
-                    {{ att.name }}
-                  </a>
-                  <span class="text-[10px] text-slate-500 dark:text-slate-400">{{ att.size || 'Saved File' }}</span>
-                </div>
+              <div class="min-w-0">
+                <a :href="att.url" target="_blank" rel="noopener" class="block truncate text-sm font-medium text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400">{{ att.name }}</a>
+                <span class="text-xs text-slate-500 dark:text-slate-400">{{ att.size || 'Saved file' }}</span>
               </div>
-              <button
-                type="button"
-                @click="removeExistingAttachment(idx)"
-                class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold p-1 rounded transition-colors cursor-pointer"
-                title="Remove attachment"
-              >
-                ✕
-              </button>
-            </div>
+              <Button variant="ghost" size="sm" :aria-label="`Remove ${att.name}`" @click="removeExistingAttachment(idx)">Remove</Button>
+            </li>
 
-            <!-- Newly Selected Files -->
-            <div
+            <li
               v-for="(file, idx) in newFiles"
               :key="'new-' + idx"
-              class="flex items-center justify-between bg-blue-50/50 dark:bg-blue-950/50 p-3 rounded-xl border border-blue-200/80 dark:border-blue-800/80 text-xs"
+              :class="[rowBox, 'flex items-center justify-between gap-2 p-3']"
             >
-              <div class="flex items-center gap-2.5 overflow-hidden">
-                <span class="text-lg">{{ getFileIcon(file.name) }}</span>
-                <div class="truncate">
-                  <span class="font-bold text-blue-900 dark:text-blue-200 truncate block">{{ file.name }}</span>
-                  <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">{{ formatBytes(file.size) }} (Pending upload)</span>
-                </div>
+              <div class="min-w-0">
+                <span class="block truncate text-sm font-medium text-slate-900 dark:text-white">{{ file.name }}</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">{{ formatBytes(file.size) }}, uploads when you save</span>
               </div>
-              <button
-                type="button"
-                @click="removeNewFile(idx)"
-                class="text-blue-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold p-1 rounded transition-colors cursor-pointer"
-                title="Remove file"
-              >
-                ✕
-              </button>
-            </div>
+              <Button variant="ghost" size="sm" :aria-label="`Remove ${file.name}`" @click="removeNewFile(idx)">Remove</Button>
+            </li>
+          </ul>
 
-          </div>
-
-          <div v-else @click="triggerFileInput" class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center hover:border-blue-300 dark:hover:border-blue-700/60 transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-800/50">
-            <span class="text-2xl block mb-1">📁</span>
-            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Click to upload attachments</span>
-            <span class="text-[11px] text-slate-400">PDFs, Word Documents, Excel sheets, Images, or Zip files (up to 10MB per file)</span>
-          </div>
-        </div>
-
-        <p v-if="isSent" class="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">This newsletter has been sent, so it can no longer be changed. Go back and use Duplicate to send something similar.</p>
-
-        <div v-if="!isSent" class="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-          <button type="button" @click="openPreview" class="px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
-            👁 Preview
-          </button>
-          <button type="button" @click="sendTest" class="px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
-            ✉️ Send test to me
+          <button
+            v-else
+            type="button"
+            class="block w-full rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-6 text-center transition-colors hover:border-blue-300 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-blue-700/60"
+            @click="triggerFileInput"
+          >
+            <span class="block text-sm font-medium text-slate-700 dark:text-slate-200">Click to upload attachments</span>
+            <span class="block text-xs text-slate-500 dark:text-slate-400">PDFs, Word documents, Excel sheets, images or zip files (up to 10MB each)</span>
           </button>
         </div>
 
-        <div v-if="!isSent" class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-          <button type="button" @click="saveDraft" :disabled="form.processing" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
-            💾 Save as Draft
-          </button>
-          <button type="button" @click="sendBroadcast" :disabled="form.processing" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer">
-            🚀 Send Email Broadcast Now
-          </button>
+        <Alert v-if="isSent" variant="warning">This newsletter has been sent, so it can no longer be changed. Go back and use Duplicate to send something similar.</Alert>
+
+        <div v-if="!isSent" class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+          <Button variant="secondary" size="sm" @click="openPreview">Preview</Button>
+          <Button variant="secondary" size="sm" @click="sendTest">Send a test to me</Button>
         </div>
 
+        <div v-if="!isSent" class="flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-800 sm:flex-row">
+          <Button variant="secondary" size="lg" class="flex-1" :loading="form.processing" @click="saveDraft">Save as draft</Button>
+          <Button size="lg" class="flex-1" :disabled="form.processing" @click="confirmingSend = true">Send now</Button>
+        </div>
       </form>
-
+      </Card>
     </div>
 
-    <!-- Email preview -->
+    <ConfirmDialog
+      :open="confirmingSend"
+      title="Send this newsletter now?"
+      confirm-label="Send now"
+      cancel-label="Not yet"
+      variant="primary"
+      :processing="form.processing"
+      @confirm="sendBroadcast"
+      @close="confirmingSend = false"
+    >
+      It will be emailed to all the targeted members and external subscribers now. It cannot be changed or sent again afterwards.
+    </ConfirmDialog>
+
     <Modal :open="previewOpen" size="xl" title="Email preview" subtitle="How it will look in an inbox, with a sample name filled in" @close="previewOpen = false">
-      <div class="mb-3 flex gap-2 text-xs">
-        <button type="button" :class="['rounded-lg px-3 py-1.5 font-bold', !previewMobile ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-300']" @click="previewMobile = false">Desktop</button>
-        <button type="button" :class="['rounded-lg px-3 py-1.5 font-bold', previewMobile ? 'bg-blue-600 text-white' : 'border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-300']" @click="previewMobile = true">Mobile</button>
+      <div class="mb-3 flex gap-1" role="group" aria-label="Preview size">
+        <button
+          v-for="[mobile, label] in [[false, 'Desktop'], [true, 'Mobile']]"
+          :key="label"
+          type="button"
+          :aria-pressed="previewMobile === mobile"
+          :class="['rounded-full px-3 py-1.5 text-xs font-medium transition-colors', previewMobile === mobile ? 'bg-slate-900 text-white dark:bg-slate-700' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800']"
+          @click="previewMobile = mobile"
+        >
+          {{ label }}
+        </button>
       </div>
-      <p v-if="previewError" class="rounded-lg bg-rose-500/10 p-3 text-xs font-semibold text-rose-600">{{ previewError }}</p>
+      <Alert v-if="previewError" variant="danger">{{ previewError }}</Alert>
       <div v-else class="flex justify-center rounded-xl bg-slate-100 p-3 dark:bg-slate-800">
         <iframe sandbox="" :srcdoc="previewHtml" title="Email preview" :class="['h-[60vh] rounded-lg border-0 bg-white', previewMobile ? 'w-[375px]' : 'w-full']"></iframe>
       </div>

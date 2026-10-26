@@ -76,13 +76,13 @@ class MemberPortalController extends Controller
                 return [
                     'id' => $meeting->id,
                     'title' => $meeting->title,
-                    'meeting_date' => $meeting->meeting_date ? Carbon::parse($meeting->meeting_date)->format('M d, Y') : '',
+                    'meeting_date' => $meeting->meeting_date ? Carbon::parse($meeting->meeting_date)->format('j M Y') : '',
                     'raw_meeting_date' => $meeting->meeting_date,
                     'starts_at' => $meeting->starts_at,
                     'rehearsal_starts_at' => $meeting->rehearsal_starts_at,
                     'venue' => $meeting->venue,
                     'dress_code' => $meeting->dress_code,
-                    'rsvp_cutoff_at' => $meeting->rsvp_cutoff_at ? Carbon::parse($meeting->rsvp_cutoff_at)->format('M d, Y @ H:i') : null,
+                    'rsvp_cutoff_at' => $meeting->rsvp_cutoff_at ? Carbon::parse($meeting->rsvp_cutoff_at)->format('j M Y, H:i') : null,
                     'is_cutoff_passed' => $meeting->rsvp_cutoff_at ? Carbon::now()->isAfter($meeting->rsvp_cutoff_at) : false,
                     'dining_cost_member' => number_format($meeting->dining_cost_member, 2),
                     'user_rsvp' => $userRsvp ? [
@@ -121,7 +121,7 @@ class MemberPortalController extends Controller
                 'id' => $n->id,
                 'subject' => $n->subject,
                 'content' => $n->content,
-                'sent_at' => $n->sent_at?->format('M d, Y @ H:i'),
+                'sent_at' => $n->sent_at?->format('j M Y, H:i'),
             ])
             ->values();
 
@@ -169,13 +169,13 @@ class MemberPortalController extends Controller
                 return [
                     'id' => $meeting->id,
                     'title' => $meeting->title,
-                    'meeting_date' => $meeting->meeting_date ? Carbon::parse($meeting->meeting_date)->format('M d, Y') : '',
+                    'meeting_date' => $meeting->meeting_date ? Carbon::parse($meeting->meeting_date)->format('j M Y') : '',
                     'raw_meeting_date' => $meeting->meeting_date,
                     'starts_at' => $meeting->starts_at,
                     'rehearsal_starts_at' => $meeting->rehearsal_starts_at,
                     'venue' => $meeting->venue,
                     'dress_code' => $meeting->dress_code,
-                    'rsvp_cutoff_at' => $meeting->rsvp_cutoff_at ? Carbon::parse($meeting->rsvp_cutoff_at)->format('M d, Y @ H:i') : null,
+                    'rsvp_cutoff_at' => $meeting->rsvp_cutoff_at ? Carbon::parse($meeting->rsvp_cutoff_at)->format('j M Y, H:i') : null,
                     'is_cutoff_passed' => $meeting->rsvp_cutoff_at ? Carbon::now()->isAfter($meeting->rsvp_cutoff_at) : false,
                     'dining_cost_member' => number_format($meeting->dining_cost_member, 2),
                     'user_rsvp' => $userRsvp ? [
@@ -231,8 +231,8 @@ class MemberPortalController extends Controller
                 'title' => $inv->title,
                 'amount' => number_format($inv->amount, 2),
                 'status' => $inv->status,
-                'paid_at' => $inv->paid_at?->format('M d, Y'),
-                'created_at' => $inv->created_at?->format('M d, Y'),
+                'paid_at' => $inv->paid_at?->format('j M Y'),
+                'created_at' => $inv->created_at?->format('j M Y'),
             ]) : [];
 
         $plans = $club->membershipPlans->map(fn ($p) => [
@@ -579,7 +579,7 @@ class MemberPortalController extends Controller
                 'blocks' => $post->blocks ?? [],
                 'attachments' => $post->attachments ?? [],
                 'cover_image_url' => $post->cover_image_url,
-                'published_at' => ($post->published_at ?? $post->created_at)?->format('M d, Y'),
+                'published_at' => ($post->published_at ?? $post->created_at)?->format('j M Y'),
                 'author_name' => $post->author?->name ?? 'Club Secretary',
                 'tags' => $post->tags->map(fn (NewsTag $tag) => ['name' => $tag->name, 'slug' => $tag->slug, 'color' => $tag->color])->values(),
             ],

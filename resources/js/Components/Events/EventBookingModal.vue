@@ -2,6 +2,8 @@
 import { computed, ref, watch } from 'vue';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import Modal from '@/Components/Ui/Modal.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Button from '@/Components/Ui/Button.vue';
 import PaymentChoice from '@/Components/Events/PaymentChoice.vue';
 import PaymentSummary from '@/Components/Events/PaymentSummary.vue';
 import { useEventQuote } from '@/Composables/useEventQuote';
@@ -131,114 +133,110 @@ const submit = () => {
     });
 };
 
-const fieldClass = 'w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500';
-const labelClass = 'block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1';
+const fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
+const labelClass = 'mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300';
 const generalError = computed(() => form.errors.capacity || form.errors.registration || form.errors.booking_closed || form.errors.attendees);
 </script>
 
 <template>
     <Modal :open="true" size="lg" :title="going ? 'Book your place' : 'Your reply'" :subtitle="event.title" @close="emit('close')">
         <form class="space-y-5" @submit.prevent="submit">
-            <div v-if="generalError" class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:border-rose-800/60 dark:bg-rose-950/40 dark:text-rose-300" role="alert">{{ generalError }}</div>
+            <Alert v-if="generalError" variant="danger" role="alert">{{ generalError }}</Alert>
 
             <div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Your reply">
                 <label v-for="option in [['attending', 'I\'m going'], ['tentative', 'Maybe'], ['declined', 'Can\'t go']]" :key="option[0]"
-                    :class="['flex cursor-pointer items-center justify-center rounded-xl border p-3 text-xs font-bold transition-all', form.attendance_status === option[0] ? 'border-blue-500 bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200' : 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-300']">
+                    :class="['flex cursor-pointer items-center justify-center rounded-xl border p-3 text-sm font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-500', form.attendance_status === option[0] ? 'border-blue-500 bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300']">
                     <input v-model="form.attendance_status" type="radio" :value="option[0]" class="sr-only" />
                     {{ option[1] }}
                 </label>
             </div>
 
             <template v-if="going">
-                <div v-if="event.places_left !== null" class="text-[11px] text-slate-500 dark:text-slate-400">
+                <div v-if="event.places_left !== null" class="text-xs text-slate-500 dark:text-slate-400">
                     <template v-if="event.places_left > 0">{{ event.places_left }} {{ event.places_left === 1 ? 'place' : 'places' }} left.</template>
                     <template v-else>This event is full.</template>
                 </div>
-                <div v-if="willWait" class="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-blue-200">
-                    There aren't enough places for everyone. You'll be added to the waiting list and moved up if places free up.
-                </div>
-                <div v-if="blocked" class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200">
-                    There aren't enough places for this many people. Try fewer guests.
-                </div>
-                <div v-if="wasWaitlisted" class="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-blue-200">You are on the waiting list for this event.</div>
+                <Alert v-if="willWait" variant="info">There aren't enough places for everyone. You'll be added to the waiting list and moved up if places free up.</Alert>
+                <Alert v-if="blocked" variant="warning">There aren't enough places for this many people. Try fewer guests.</Alert>
+                <Alert v-if="wasWaitlisted" variant="info">You are on the waiting list for this event.</Alert>
 
                 <div v-for="(person, index) in form.attendees" :key="index" class="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/40">
                     <div class="flex items-center justify-between gap-3">
-                        <div class="flex-1">
-                            <label :class="labelClass">{{ person.is_guest ? `Guest ${index}` : 'You' }}</label>
+                        <label class="block flex-1">
+                            <span :class="labelClass">{{ person.is_guest ? `Guest ${index}` : 'You' }}</span>
                             <input v-model="person.name" type="text" maxlength="150" :readonly="!person.is_guest" :placeholder="person.is_guest ? 'Guest\'s full name' : ''" :class="[fieldClass, !person.is_guest ? 'opacity-70' : '']" />
-                            <p v-if="errorFor(index, 'name')" class="mt-1 text-[11px] font-semibold text-rose-600">{{ errorFor(index, 'name') }}</p>
-                        </div>
-                        <button v-if="person.is_guest" type="button" class="self-end pb-2 text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400" @click="removeGuest(index)">Remove</button>
+                            <p v-if="errorFor(index, 'name')" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ errorFor(index, 'name') }}</p>
+                        </label>
+                        <Button v-if="person.is_guest" variant="ghost" size="sm" class="self-end" @click="removeGuest(index)">Remove</Button>
                     </div>
 
-                    <div v-if="person.is_guest">
-                        <label :class="labelClass">Guest's email (optional)</label>
+                    <label v-if="person.is_guest" class="block">
+                        <span :class="labelClass">Guest's email (optional)</span>
                         <input v-model="person.email" type="email" maxlength="255" placeholder="We'll email them a confirmation of their place" :class="fieldClass" />
-                        <p v-if="errorFor(index, 'email')" class="mt-1 text-[11px] font-semibold text-rose-600">{{ errorFor(index, 'email') }}</p>
-                    </div>
+                        <p v-if="errorFor(index, 'email')" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ errorFor(index, 'email') }}</p>
+                    </label>
 
-                    <div v-if="tiersFor(person).length > 1">
-                        <label :class="labelClass">Ticket type</label>
+                    <label v-if="tiersFor(person).length > 1" class="block">
+                        <span :class="labelClass">Ticket type</span>
                         <select v-model="person.ticket_tier_id" :class="fieldClass">
                             <option :value="null" disabled>Choose a ticket type</option>
-                            <option v-for="tier in tiersFor(person)" :key="tier.id" :value="tier.id">{{ tier.name }} ({{ $cs }}{{ tier.price }})</option>
+                            <option v-for="tier in tiersFor(person)" :key="tier.id" :value="tier.id">{{ tier.name }} ({{ $money(tier.price) }})</option>
                         </select>
-                        <p v-if="errorFor(index, 'ticket_tier_id')" class="mt-1 text-[11px] font-semibold text-rose-600">{{ errorFor(index, 'ticket_tier_id') }}</p>
-                    </div>
+                        <p v-if="errorFor(index, 'ticket_tier_id')" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ errorFor(index, 'ticket_tier_id') }}</p>
+                    </label>
 
                     <template v-if="hasMenu">
-                        <label class="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
-                            <input type="checkbox" :checked="person.attending_dining" class="h-4 w-4 rounded border-slate-300 text-blue-600 dark:border-slate-700" @change="setDining(person, $event.target.checked)" />
+                        <label class="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-white">
+                            <input type="checkbox" :checked="person.attending_dining" class="h-4 w-4 rounded accent-blue-600" @change="setDining(person, $event.target.checked)" />
                             {{ person.is_guest ? 'Having the meal' : 'I\'m having the meal' }}
-                            <span v-if="Number(event.dining_price) > 0" class="font-normal text-slate-500">({{ $cs }}{{ event.dining_price }})</span>
+                            <span v-if="Number(event.dining_price) > 0" class="font-normal text-slate-500 dark:text-slate-400">({{ $money(event.dining_price) }})</span>
                         </label>
 
                         <div v-if="person.attending_dining" class="grid gap-3 sm:grid-cols-3">
-                            <div v-for="course in COURSES.filter((c) => (event.menu?.[c.key] ?? []).length)" :key="course.key">
-                                <label :class="labelClass">{{ course.label }}</label>
+                            <label v-for="course in COURSES.filter((c) => (event.menu?.[c.key] ?? []).length)" :key="course.key" class="block">
+                                <span :class="labelClass">{{ course.label }}</span>
                                 <select v-model="person[course.column]" :class="fieldClass">
                                     <option :value="null" disabled>Choose</option>
                                     <option v-for="dish in event.menu[course.key]" :key="dish.id" :value="dish.id">{{ dish.name }}</option>
                                 </select>
-                                <p v-if="person[course.column] && dishNote(event.menu[course.key].find((d) => d.id === person[course.column]) ?? {})" class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">{{ dishNote(event.menu[course.key].find((d) => d.id === person[course.column])) }}</p>
-                                <p v-if="errorFor(index, course.column)" class="mt-1 text-[11px] font-semibold text-rose-600">{{ errorFor(index, course.column) }}</p>
-                            </div>
+                                <p v-if="person[course.column] && dishNote(event.menu[course.key].find((d) => d.id === person[course.column]) ?? {})" class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ dishNote(event.menu[course.key].find((d) => d.id === person[course.column])) }}</p>
+                                <p v-if="errorFor(index, course.column)" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ errorFor(index, course.column) }}</p>
+                            </label>
                         </div>
                     </template>
 
-                    <div>
-                        <label :class="labelClass">Dietary requirements or allergies</label>
-                        <input v-model="person.dietary_requirements" type="text" maxlength="1000" placeholder="e.g. gluten free, nut allergy" :class="fieldClass" />
-                    </div>
+                    <label class="block">
+                        <span :class="labelClass">Dietary requirements or allergies</span>
+                        <input v-model="person.dietary_requirements" type="text" maxlength="1000" placeholder="Gluten free, nut allergy" :class="fieldClass" />
+                    </label>
                 </div>
 
                 <PaymentSummary v-if="event.user_rsvp?.payment && Number(event.user_rsvp.payment.total) > 0" :payment="event.user_rsvp.payment" :paying="paying" @pay="payNow" />
 
-                <button v-if="event.max_guests > 0" type="button" :disabled="!canAddGuest" class="text-xs font-semibold text-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-blue-400" @click="addGuest">
-                    + Add a guest <span class="font-normal text-slate-500">({{ guestCount }} of {{ event.max_guests }})</span>
-                </button>
+                <Button v-if="event.max_guests > 0" variant="secondary" size="sm" :disabled="!canAddGuest" @click="addGuest">
+                    Add a guest <span class="font-normal text-slate-500 dark:text-slate-400">({{ guestCount }} of {{ event.max_guests }})</span>
+                </Button>
 
                 <div v-if="event.requires_payment" class="space-y-3">
                     <div>
-                        <button v-if="!showPromo" type="button" class="text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400" @click="showPromo = true">Have a promo code?</button>
-                        <div v-else class="max-w-xs">
-                            <label :class="labelClass">Promo code</label>
+                        <Button v-if="!showPromo" variant="ghost" size="sm" @click="showPromo = true">Have a promo code?</Button>
+                        <label v-else class="block max-w-xs">
+                            <span :class="labelClass">Promo code</span>
                             <input v-model="form.promo_code" type="text" maxlength="40" :class="[fieldClass, 'font-mono uppercase']" />
-                            <p v-if="form.errors.promo_code" class="mt-1 text-[11px] font-semibold text-rose-600">{{ form.errors.promo_code }}</p>
-                        </div>
+                            <p v-if="form.errors.promo_code" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ form.errors.promo_code }}</p>
+                        </label>
                     </div>
 
                     <PaymentChoice v-model="form.payment_method" :quote="quote" :error="quoteError" />
-                    <p v-if="form.errors.payment_method" class="text-[11px] font-semibold text-rose-600">{{ form.errors.payment_method }}</p>
+                    <p v-if="form.errors.payment_method" class="text-xs text-rose-600 dark:text-rose-400">{{ form.errors.payment_method }}</p>
                 </div>
             </template>
 
             <div class="flex items-center gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-                <button type="submit" :disabled="form.processing || blocked" class="flex-1 rounded-xl bg-blue-600 py-3 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition-all hover:bg-blue-700 disabled:opacity-50">
+                <Button type="submit" size="lg" class="flex-1" :disabled="blocked" :loading="form.processing">
                     {{ !going ? 'Save reply' : (willWait ? 'Join the waiting list' : (event.user_rsvp ? 'Update booking' : 'Confirm booking')) }}
-                </button>
-                <button type="button" class="rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200" @click="emit('close')">Close</button>
+                </Button>
+                <Button variant="secondary" size="lg" @click="emit('close')">Close</Button>
             </div>
         </form>
     </Modal>

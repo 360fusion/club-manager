@@ -1,4 +1,5 @@
 <script setup>
+import { formatBytes } from '@/Utils/fileSize';
 // Downloads: a list or cards of documents. Uploaded files are served by the site's own gated route, so a
 // members-only block never exposes a file address; link items open wherever they point.
 import { computed, ref } from 'vue';
@@ -27,12 +28,6 @@ const extension = (item) => {
 const kind = (item) => TYPES[extension(item)] || (item.source === 'link' ? ['LINK', '🔗'] : ['FILE', '📎']);
 const titleOf = (item) => item.title || item.file_name || 'Untitled document';
 const href = (item) => (item.source === 'upload' ? `/site/${props.club.slug}/files/${item.media_id}` : props.resolveUrl(item.url));
-const size = (bytes) => {
-    if (!bytes) return '';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
 const dateOf = (item) => (item.added_at ? new Date(`${item.added_at}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 
 const items = computed(() => {
@@ -88,9 +83,9 @@ const buttonLabel = computed(() => props.block.button_label || 'Download');
                             <div class="min-w-0 space-y-1">
                                 <p :class="['font-bold break-words', theme.headingText]">{{ titleOf(item) }}</p>
                                 <p v-if="item.description" :class="['text-sm whitespace-pre-line', theme.bodyText]">{{ item.description }}</p>
-                                <p v-if="(block.show_type !== false) || (block.show_size !== false && size(item.size)) || (block.show_date && dateOf(item))" :class="['text-xs opacity-70 flex flex-wrap gap-x-3', theme.bodyText]">
+                                <p v-if="(block.show_type !== false) || (block.show_size !== false && formatBytes(item.size)) || (block.show_date && dateOf(item))" :class="['text-xs opacity-70 flex flex-wrap gap-x-3', theme.bodyText]">
                                     <span v-if="block.show_type !== false" class="font-bold">{{ kind(item)[0] }}</span>
-                                    <span v-if="block.show_size !== false && size(item.size)">{{ size(item.size) }}</span>
+                                    <span v-if="block.show_size !== false && formatBytes(item.size)">{{ formatBytes(item.size) }}</span>
                                     <span v-if="block.show_date && dateOf(item)">Added {{ dateOf(item) }}</span>
                                 </p>
                             </div>

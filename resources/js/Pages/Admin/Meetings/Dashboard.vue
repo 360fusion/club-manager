@@ -1,7 +1,20 @@
 <script setup>
+import { localDate } from '@/Utils/localDateTime';
+import { formatDate } from '@/Utils/lodgeDates';
 import { ref, computed } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import StatCard from '@/Components/Ui/StatCard.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
+import Modal from '@/Components/Ui/Modal.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
+import { useClipboard } from '@/Composables/useClipboard';
 
 const props = defineProps({
   club: Object,
@@ -96,11 +109,46 @@ const filteredRsvps = computed(() => {
   return memberRsvps.value.filter(r => r.attendance_status === activeTab.value);
 });
 
+const confirmingPublish = ref(false);
+const publishing = ref(false);
+
 const publishSummons = () => {
-  if (confirm(`Publish summons and issue passwordless RSVP tokens to all ${props.stats.total_members} members?`)) {
-    router.post(route('admin.meetings.publish', { clubSlug: props.club.slug, id: props.meeting.id }));
-  }
+  publishing.value = true;
+  router.post(route('admin.meetings.publish', { clubSlug: props.club.slug, id: props.meeting.id }), {}, {
+    onFinish: () => {
+      publishing.value = false;
+      confirmingPublish.value = false;
+    },
+  });
 };
+
+const { copied, copy } = useClipboard();
+const copyApologiesText = () => copy(apologiesFormattedText.value);
+
+// The kit's small secondary button look, for the PDF link that has to open in a new tab (Button renders an Inertia Link).
+const secondaryButton = 'inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950';
+const fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
+const choiceClass = (selected) => ['flex cursor-pointer items-center justify-center rounded-xl border p-2.5 text-center text-xs font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-500', selected ? 'border-blue-500 bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'];
+
+const PAYMENT_BADGES = { paid: ['success', 'Paid'], waived: ['info', 'Waived'], refunded: ['danger', 'Refunded'] };
+const paymentBadge = (status) => PAYMENT_BADGES[status] ?? ['warning', 'Unpaid'];
+const ATTENDANCE_LABELS = { attending_dining: 'Attending dining', attending_meeting_only: 'Meeting only', apologies: 'Apologies' };
+const attendanceVariant = (status) => ({ attending_dining: 'success', apologies: 'danger' }[status] ?? 'info');
+const ATTENDANCE_CHOICES = [['attending_dining', 'Dining and meeting'], ['attending_meeting_only', 'Meeting only'], ['apologies', 'Apologies']];
+const PAYMENT_CHOICES = [['unpaid', 'Unpaid'], ['paid', 'Paid'], ['waived', 'Waived'], ['refunded', 'Refunded']];
+
+const userOptions = computed(() => [
+  { value: '', label: 'Choose a member or visitor' },
+  ...(props.allClubUsers || []).map(u => ({ value: u.id, label: `${u.name} (${u.email})${u.is_visitor ? ' · Visitor' : ''}` })),
+]);
+
+const filters = computed(() => [
+  ['all', 'All responses', memberRsvps.value.length],
+  ['attending_dining', 'Attending dining', props.stats.attending_dining],
+  ['attending_meeting_only', 'Meeting only', props.stats.attending_meeting_only],
+  ['apologies', 'Apologies', props.stats.apologies],
+  ['visitors', 'Visitors', props.stats.visiting_count || 0],
+]);
 
 const apologiesFormattedText = computed(() => {
   const list = memberRsvps.value.filter(r => r.attendance_status === 'apologies');
@@ -110,17 +158,9 @@ const apologiesFormattedText = computed(() => {
   return `APOLOGIES FOR ABSENCE:\nApologies were received and recorded from: ${names}.`;
 });
 
-const formattedMeetingDate = computed(() => {
-  if (!props.meeting?.meeting_date) return '';
-  const parts = String(props.meeting.meeting_date).split('T')[0].split('-');
-  if (parts.length === 3) {
-    const d = new Date(parts[0], parts[1] - 1, parts[2]);
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  }
-  return props.meeting.meeting_date;
-});
+const formattedMeetingDate = computed(() => formatDate(props.meeting?.meeting_date, { month: 'long' }));
 
-const todayStr = new Date().toISOString().split('T')[0];
+const todayStr = localDate();
 
 const isPastMeeting = computed(() => {
   if (!props.meeting?.meeting_date) return false;
@@ -130,443 +170,234 @@ const isPastMeeting = computed(() => {
 </script>
 
 <template>
-  <AdminLayout title="Secretary Meeting Dashboard" :club="club" active-tab="meetings">
-    
+  <AdminLayout title="Secretary meeting dashboard" :club="club" active-tab="meetings">
     <div class="space-y-6">
-      
-      <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">
-            {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formattedMeetingDate }} at {{ meeting.starts_at ? meeting.starts_at.substring(0, 5) : '18:30' }}
-          </h2>
-          <div class="flex items-center gap-3 text-xs mt-1.5 flex-wrap">
-            <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', meeting.status === 'published' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']">
-              {{ meeting.status }}
-            </span>
-            <span class="text-slate-500 dark:text-slate-400 font-medium">📅 {{ formattedMeetingDate }} • 📍 {{ meeting.venue }} • Rehearsal: {{ meeting.rehearsal_starts_at ? meeting.rehearsal_starts_at.substring(0, 5) : '-' }}</span>
+      <Card>
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-3">
+              <h2 class="text-xl font-bold text-slate-900 dark:text-white">
+                {{ meeting.title && !meeting.title.includes('Regular Meeting No.') ? meeting.title : 'Meeting - ' + formattedMeetingDate }} at {{ meeting.starts_at ? meeting.starts_at.substring(0, 5) : '18:30' }}
+              </h2>
+              <Badge :variant="meeting.status === 'published' ? 'success' : 'warning'" class="capitalize">{{ meeting.status }}</Badge>
+            </div>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              {{ formattedMeetingDate }} · {{ meeting.venue }} · Rehearsal: {{ meeting.rehearsal_starts_at ? meeting.rehearsal_starts_at.substring(0, 5) : '-' }}
+            </p>
+          </div>
+
+          <div class="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+            <div class="flex flex-wrap gap-2 sm:justify-end">
+              <Button v-if="isPastMeeting || meeting.financial_return" variant="secondary" size="sm" :href="route('admin.meetings.financial_return.show', { clubSlug: club.slug, id: meeting.id })">Financial return</Button>
+              <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" :class="secondaryButton">Summons PDF</a>
+              <Button variant="secondary" size="sm" :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })">Edit summons</Button>
+              <Button variant="secondary" size="sm" @click="openManualRsvpModal(null)">Record RSVP</Button>
+              <Button variant="secondary" size="sm" @click="showApologiesModal = true">Copy apologies for the minutes</Button>
+            </div>
+            <Button v-if="meeting.status !== 'published'" size="sm" @click="confirmingPublish = true">Publish and send summons</Button>
           </div>
         </div>
+      </Card>
 
-        <div class="flex flex-col items-end gap-2.5 shrink-0">
-          <div class="flex items-center gap-2.5 flex-wrap justify-end">
-            <div v-if="isPastMeeting || meeting.financial_return" class="relative group">
-              <Link
-                :href="route('admin.meetings.financial_return.show', { clubSlug: club.slug, id: meeting.id })"
-                title="Open Financial Return & Dining Calculator Page"
-                aria-label="Open Financial Return & Dining Calculator Page"
-                class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5"
-              >
-                <span>💰 Financial Return</span>
-              </Link>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-                Open Full Page Financial Return & Dining Calculator
-                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
-              </div>
-            </div>
+      <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <StatCard label="Total attending" :value="stats.total_attending ?? (stats.attending_dining + stats.attending_meeting_only + stats.visiting_attending + stats.guest_meals)" caption="Meeting attendees" />
+        <StatCard label="Total dining" :value="stats.total_dining ?? stats.total_caterer_headcount" :caption="`${stats.dining_members_and_visitors ?? (stats.attending_dining + stats.visiting_dining)} dining + ${stats.guest_meals} guests`" />
+        <StatCard label="Meeting only" :value="stats.attending_meeting_only" caption="Attending without dining" />
+        <StatCard label="Apologies received" :value="stats.apologies" caption="Formally recorded absence" />
+        <StatCard label="Visitors attending" :value="stats.visiting_attending" caption="Visiting brethren and guests" />
+        <StatCard label="Awaiting RSVP" :value="stats.awaiting" :caption="meeting.status === 'published' ? 'Emailed members pending' : 'Invites not sent yet'" />
+      </div>
 
-            <div class="relative group">
-              <a :href="route('admin.meetings.pdf', { clubSlug: club.slug, id: meeting.id })" target="_blank" title="Download or Print Summons PDF" aria-label="Download or Print Summons PDF" class="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-xl border border-emerald-200 dark:border-emerald-800/60 transition-all flex items-center gap-1">
-                🖨️ PDF
-              </a>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-                Download / Print PDF
-                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
-              </div>
-            </div>
-
-            <div class="relative group">
-              <Link :href="route('admin.meetings.edit', { clubSlug: club.slug, id: meeting.id })" title="Edit Summons Details" aria-label="Edit Summons Details" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1">
-                📜 Edit Summons
-              </Link>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-                Edit Summons Details
-                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
-              </div>
-            </div>
-
-            <div class="relative group">
-              <button @click="openManualRsvpModal(null)" title="Record or Update Member RSVP" aria-label="Record or Update Member RSVP" class="px-4 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer flex items-center gap-1">
-                ✍️ Record RSVP
-              </button>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-                Record / Edit Member RSVP
-                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
-              </div>
-            </div>
-
-            <div class="relative group">
-              <button @click="showApologiesModal = true" title="Copy Apologies for Minutes" aria-label="Copy Apologies for Minutes" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all cursor-pointer flex items-center gap-1">
-                📋 Copy Minutes Apologies
-              </button>
-              <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-                Copy Minutes Apologies
-                <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom Row: Publish & Dispatch Summons (Positioned under Copy Minutes Apologies) -->
-          <div v-if="meeting.status !== 'published'" class="relative group">
-            <button @click="publishSummons" title="Publish & Dispatch Passwordless RSVPs" aria-label="Publish & Dispatch Passwordless RSVPs" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5">
-              <span>✉️ Publish & Dispatch Summons</span>
+      <Card>
+        <div class="space-y-4">
+          <div class="flex items-center gap-1 overflow-x-auto border-b border-slate-100 pb-4 dark:border-slate-800" role="group" aria-label="Show">
+            <button
+              v-for="[key, label, count] in filters"
+              :key="key"
+              type="button"
+              :aria-pressed="activeTab === key"
+              :class="['whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors', activeTab === key ? 'bg-slate-900 text-white dark:bg-slate-700' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800']"
+              @click="activeTab = key"
+            >
+              {{ label }} ({{ count }})
             </button>
-            <div class="absolute top-full mt-2 right-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:translate-y-1 z-30 whitespace-nowrap bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-semibold py-1 px-2.5 rounded-lg shadow-xl border border-slate-800">
-              Publish & Dispatch Summons to All Members
-              <div class="absolute bottom-full right-4 -mb-1 border-4 border-transparent border-b-slate-900"></div>
-            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Live KPI Cards Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Attending</div>
-          <div class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ stats.total_attending ?? (stats.attending_dining + stats.attending_meeting_only + stats.visiting_attending + stats.guest_meals) }}</div>
-          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Meeting attendees</div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Dining</div>
-          <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ stats.total_dining ?? stats.total_caterer_headcount }}</div>
-          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ (stats.dining_members_and_visitors ?? (stats.attending_dining + stats.visiting_dining)) }} Dining + {{ stats.guest_meals }} Guests</div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Meeting Only</div>
-          <div class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ stats.attending_meeting_only }}</div>
-          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Attending without dining</div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Apologies Received</div>
-          <div class="text-2xl font-black text-rose-600 dark:text-rose-400">{{ stats.apologies }}</div>
-          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Formally recorded absence</div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visitors Attending</div>
-          <div class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ stats.visiting_attending }}</div>
-          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Visiting Brethren & Guests</div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Awaiting RSVP</div>
-          <div class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ stats.awaiting }}</div>
-          <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ meeting.status === 'published' ? 'Emailed members pending' : 'Invites not sent yet' }}</div>
-        </div>
-      </div>
-
-      <!-- Filter Tabs & RSVP Grid -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-        <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3 overflow-x-auto">
-          <button @click="activeTab = 'all'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'all' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
-            All Responses ({{ memberRsvps.length }})
-          </button>
-          <button @click="activeTab = 'attending_dining'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'attending_dining' ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
-            Attending Dining ({{ stats.attending_dining }})
-          </button>
-          <button @click="activeTab = 'attending_meeting_only'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'attending_meeting_only' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
-            Meeting Only ({{ stats.attending_meeting_only }})
-          </button>
-          <button @click="activeTab = 'apologies'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'apologies' ? 'bg-rose-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
-            Apologies ({{ stats.apologies }})
-          </button>
-          <button @click="activeTab = 'visitors'" :class="['px-3 py-1.5 text-xs font-bold rounded-xl transition-all', activeTab === 'visitors' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']">
-            Visitors ({{ stats.visiting_count || 0 }})
-          </button>
-        </div>
-
-        <div class="overflow-x-auto">
-          <!-- Invited Visitors Roster Table -->
-          <table v-if="activeTab === 'visitors'" class="w-full text-xs text-left text-slate-700 dark:text-slate-200">
-            <thead class="bg-blue-50/80 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 uppercase font-bold text-[10px] tracking-wider">
-              <tr>
-                <th class="p-3">Visitor Name & Rank</th>
-                <th class="p-3">Home Lodge / Club</th>
-                <th class="p-3">Email Address</th>
-                <th class="p-3">Summons & Attendance Status</th>
-                <th class="p-3">Dietary Notes</th>
-                <th class="p-3">Payment Status & Ref</th>
-                <th class="p-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr v-for="v in visitorsList" :key="v.id" class="hover:bg-blue-50/30 dark:hover:bg-blue-950/30 transition-all">
-                <td class="p-3 font-bold text-slate-900 dark:text-white">
-                  <span v-if="v.rank" class="text-slate-500 dark:text-slate-400 font-normal mr-1">{{ v.rank }}</span>
-                  {{ v.name }}
-                </td>
-                <td class="p-3 font-semibold text-blue-900 dark:text-blue-200">
-                  🏛️ {{ v.home_club_info || 'Visitor' }}
-                </td>
-                <td class="p-3 text-slate-600 dark:text-slate-300 font-mono text-[11px]">{{ v.email }}</td>
-                <td class="p-3">
-                  <span v-if="v.attendance_status === 'attending_dining'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
-                    🟢 Attending (Dining)
-                  </span>
-                  <span v-else-if="v.attendance_status === 'attending_meeting_only'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                    🔵 Attending (Meeting Only)
-                  </span>
-                  <span v-else-if="v.attendance_status === 'apologies'" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">
-                    🔴 Apologies Received
-                  </span>
-                  <span v-else-if="v.summons_sent" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                    ✉️ Summons Sent (Awaiting Response)
-                  </span>
-                  <span v-else class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                    Registered Visitor
-                  </span>
-                </td>
-                <td class="p-3 text-slate-600 dark:text-slate-300">{{ v.dietary_notes || 'Standard' }}</td>
-                <td class="p-3">
-                  <div v-if="v.attendance_status === 'attending_dining'">
-                    <button 
-                      @click="setPaymentStatus(v.id, v.payment_status === 'paid' ? 'unpaid' : 'paid')"
-                      :class="['px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border cursor-pointer transition-all flex items-center gap-1 w-fit', 
-                        v.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40' :
-                        v.payment_status === 'waived' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60 hover:bg-blue-100 dark:hover:bg-blue-900/40' :
-                        v.payment_status === 'refunded' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700/60 hover:bg-rose-100 dark:hover:bg-rose-900/40' :
-                        'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/40']"
-                      :title="'Click to toggle paid/unpaid status'"
-                    >
-                      <span v-if="v.payment_status === 'paid'">✅ Paid</span>
-                      <span v-else-if="v.payment_status === 'waived'">🎁 Waived</span>
-                      <span v-else-if="v.payment_status === 'refunded'">↩️ Refunded</span>
-                      <span v-else>💳 Unpaid</span>
-                    </button>
-                    <div class="font-mono text-[10px] text-slate-400 mt-0.5">{{ v.payment_reference || '-' }}</div>
-                  </div>
-                  <div v-else class="text-slate-400 text-[11px] italic">
-                    No Payment Due
-                  </div>
-                </td>
-                <td class="p-3 text-right">
-                  <button @click="openManualRsvpModal(v.id)" class="px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer">
-                    ✏️ Edit
-                  </button>
-                </td>
-              </tr>
-              <tr v-if="!visitorsList?.length">
-                <td colspan="7" class="p-6 text-center text-slate-400">No visitors have registered for this club yet.</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- Standard Responses Table -->
-          <table v-else class="w-full text-xs text-left text-slate-700 dark:text-slate-200">
-            <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase font-bold text-[10px] tracking-wider">
-              <tr>
-                <th class="p-3">Member Name</th>
-                <th class="p-3">Attendance</th>
-                <th class="p-3">Dietary Requirements</th>
-                <th class="p-3">Registered Visitors / Guests</th>
-                <th class="p-3">Payment Status & Ref</th>
-                <th class="p-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr v-for="r in filteredRsvps" :key="r.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-all">
-                <td class="p-3 font-bold text-slate-900 dark:text-white">
-                  {{ r.user ? r.user.name : 'Member' }}
-                </td>
-                <td class="p-3">
-                  <span :class="['px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border', r.attendance_status === 'attending_dining' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : r.attendance_status === 'apologies' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60' : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60']">
-                    {{ r.attendance_status ? r.attendance_status.replace('_', ' ') : 'awaiting' }}
-                  </span>
-                </td>
-                <td class="p-3 text-slate-600 dark:text-slate-300">{{ r.dietary_requirements || 'Standard' }}</td>
-                <td class="p-3">
-                  <div v-if="r.guests?.length" class="space-y-1">
-                    <div v-for="g in r.guests" :key="g.id" class="text-[11px] font-medium text-slate-800 dark:text-slate-100">
-                      👤 {{ g.guest_name }} <span class="text-slate-400">({{ g.home_club_lodge || 'Visitor' }})</span>
+          <div class="overflow-x-auto">
+            <table v-if="activeTab === 'visitors'" class="w-full text-left text-sm text-slate-700 dark:text-slate-200">
+              <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                <tr>
+                  <th scope="col" class="p-3 font-medium">Visitor name and rank</th>
+                  <th scope="col" class="p-3 font-medium">Home lodge or club</th>
+                  <th scope="col" class="p-3 font-medium">Email</th>
+                  <th scope="col" class="p-3 font-medium">Summons and attendance</th>
+                  <th scope="col" class="p-3 font-medium">Dietary notes</th>
+                  <th scope="col" class="p-3 font-medium">Payment and reference</th>
+                  <th scope="col" class="p-3 text-right font-medium"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr v-for="v in visitorsList" :key="v.id">
+                  <td class="p-3 font-medium text-slate-900 dark:text-white">
+                    <span v-if="v.rank" class="mr-1 font-normal text-slate-500 dark:text-slate-400">{{ v.rank }}</span>
+                    {{ v.name }}
+                  </td>
+                  <td class="p-3">{{ v.home_club_info || 'Visitor' }}</td>
+                  <td class="p-3 font-mono text-xs text-slate-600 dark:text-slate-300">{{ v.email }}</td>
+                  <td class="p-3">
+                    <Badge v-if="v.attendance_status === 'attending_dining'" variant="success">Attending (dining)</Badge>
+                    <Badge v-else-if="v.attendance_status === 'attending_meeting_only'" variant="info">Attending (meeting only)</Badge>
+                    <Badge v-else-if="v.attendance_status === 'apologies'" variant="danger">Apologies received</Badge>
+                    <Badge v-else-if="v.summons_sent" variant="info">Summons sent (awaiting response)</Badge>
+                    <Badge v-else>Registered visitor</Badge>
+                  </td>
+                  <td class="p-3 text-slate-600 dark:text-slate-300">{{ v.dietary_notes || 'Standard' }}</td>
+                  <td class="p-3">
+                    <div v-if="v.attendance_status === 'attending_dining'">
+                      <button type="button" class="cursor-pointer rounded-full" title="Click to toggle paid/unpaid status" @click="setPaymentStatus(v.id, v.payment_status === 'paid' ? 'unpaid' : 'paid')">
+                        <Badge :variant="paymentBadge(v.payment_status)[0]">{{ paymentBadge(v.payment_status)[1] }}</Badge>
+                      </button>
+                      <div class="mt-0.5 font-mono text-xs text-slate-400">{{ v.payment_reference || '-' }}</div>
                     </div>
-                  </div>
-                  <span v-else class="text-slate-400">-</span>
-                </td>
-                <td class="p-3">
-                  <div v-if="r.attendance_status === 'attending_dining' || r.guests?.some(g => g.attending_dining)">
-                    <button 
-                      @click="setPaymentStatus(r.user_id, r.payment_status === 'paid' ? 'unpaid' : 'paid')"
-                      :class="['px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border cursor-pointer transition-all flex items-center gap-1 w-fit', 
-                        r.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40' :
-                        r.payment_status === 'waived' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60 hover:bg-blue-100 dark:hover:bg-blue-900/40' :
-                        r.payment_status === 'refunded' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700/60 hover:bg-rose-100 dark:hover:bg-rose-900/40' :
-                        'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/40']"
-                      :title="'Click to toggle paid/unpaid status'"
-                    >
-                      <span v-if="r.payment_status === 'paid'">✅ Paid</span>
-                      <span v-else-if="r.payment_status === 'waived'">🎁 Waived</span>
-                      <span v-else-if="r.payment_status === 'refunded'">↩️ Refunded</span>
-                      <span v-else>💳 Unpaid</span>
-                    </button>
-                    <div class="font-mono text-[10px] text-slate-400 mt-0.5">{{ r.payment_reference || '-' }}</div>
-                  </div>
-                  <div v-else class="text-slate-400 text-[11px] italic">
-                    No Payment Due
-                  </div>
-                </td>
-                <td class="p-3 text-right">
-                  <button @click="openManualRsvpModal(r.user_id)" class="px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer">
-                    ✏️ Edit
-                  </button>
-                </td>
-              </tr>
-              <tr v-if="!filteredRsvps?.length">
-                <td colspan="6" class="p-6 text-center text-slate-400">No member responses in this filter.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    <span v-else class="text-xs text-slate-400">No payment due</span>
+                  </td>
+                  <td class="p-3 text-right">
+                    <Button variant="secondary" size="sm" @click="openManualRsvpModal(v.id)">Edit</Button>
+                  </td>
+                </tr>
+                <tr v-if="!visitorsList?.length">
+                  <td colspan="7" class="p-6 text-center text-slate-500 dark:text-slate-400">No visitors have registered for this club yet.</td>
+                </tr>
+              </tbody>
+            </table>
 
-      <!-- Caterer Breakdown Drawer -->
-      <div v-if="stats.dietary_constraints?.length" class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-6 space-y-3">
-        <h3 class="text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-2">
-          <span>🍽️ Itemized Caterer Dietary Breakdown</span>
-          <span class="px-2 py-0.5 bg-amber-200/80 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200 text-[10px] font-bold rounded-full">{{ stats.dietary_constraints.length }} Requests</span>
-        </h3>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div v-for="(d, idx) in stats.dietary_constraints" :key="idx" class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-amber-200 dark:border-amber-800/60 text-xs">
-            <div class="font-bold text-slate-900 dark:text-white">{{ d.person }}</div>
-            <div class="text-amber-700 dark:text-amber-300 font-semibold mt-0.5">⚠️ {{ d.requirement }}</div>
+            <table v-else class="w-full text-left text-sm text-slate-700 dark:text-slate-200">
+              <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                <tr>
+                  <th scope="col" class="p-3 font-medium">Member name</th>
+                  <th scope="col" class="p-3 font-medium">Attendance</th>
+                  <th scope="col" class="p-3 font-medium">Dietary requirements</th>
+                  <th scope="col" class="p-3 font-medium">Registered visitors and guests</th>
+                  <th scope="col" class="p-3 font-medium">Payment and reference</th>
+                  <th scope="col" class="p-3 text-right font-medium"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr v-for="r in filteredRsvps" :key="r.id">
+                  <td class="p-3 font-medium text-slate-900 dark:text-white">{{ r.user ? r.user.name : 'Member' }}</td>
+                  <td class="p-3">
+                    <Badge :variant="attendanceVariant(r.attendance_status)">{{ ATTENDANCE_LABELS[r.attendance_status] || (r.attendance_status ? r.attendance_status.replace('_', ' ') : 'Awaiting') }}</Badge>
+                  </td>
+                  <td class="p-3 text-slate-600 dark:text-slate-300">{{ r.dietary_requirements || 'Standard' }}</td>
+                  <td class="p-3">
+                    <div v-if="r.guests?.length" class="space-y-1 text-xs">
+                      <div v-for="g in r.guests" :key="g.id" class="text-slate-800 dark:text-slate-100">
+                        {{ g.guest_name }} <span class="text-slate-500 dark:text-slate-400">({{ g.home_club_lodge || 'Visitor' }})</span>
+                      </div>
+                    </div>
+                    <span v-else class="text-slate-400">-</span>
+                  </td>
+                  <td class="p-3">
+                    <div v-if="r.attendance_status === 'attending_dining' || r.guests?.some(g => g.attending_dining)">
+                      <button type="button" class="cursor-pointer rounded-full" title="Click to toggle paid/unpaid status" @click="setPaymentStatus(r.user_id, r.payment_status === 'paid' ? 'unpaid' : 'paid')">
+                        <Badge :variant="paymentBadge(r.payment_status)[0]">{{ paymentBadge(r.payment_status)[1] }}</Badge>
+                      </button>
+                      <div class="mt-0.5 font-mono text-xs text-slate-400">{{ r.payment_reference || '-' }}</div>
+                    </div>
+                    <span v-else class="text-xs text-slate-400">No payment due</span>
+                  </td>
+                  <td class="p-3 text-right">
+                    <Button variant="secondary" size="sm" @click="openManualRsvpModal(r.user_id)">Edit</Button>
+                  </td>
+                </tr>
+                <tr v-if="!filteredRsvps?.length">
+                  <td colspan="6" class="p-6 text-center text-slate-500 dark:text-slate-400">No member responses in this filter.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
+      </Card>
 
-      <!-- Apologies Modal for Minutes -->
-      <div v-if="showApologiesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <h3 class="text-base font-bold text-slate-900 dark:text-white">Formatted Minutes Apologies Export</h3>
-            <button @click="showApologiesModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold">✕</button>
+      <Card v-if="stats.dietary_constraints?.length">
+        <template #header>
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Itemised caterer dietary breakdown</h2>
+            <Badge variant="warning">{{ stats.dietary_constraints.length }} requests</Badge>
           </div>
-
-          <textarea :value="apologiesFormattedText" readonly rows="5" class="w-full p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-800 dark:text-slate-100 focus:outline-none"></textarea>
-
-          <div class="flex justify-end gap-3 pt-2">
-            <button @click="showApologiesModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">Close</button>
-            <button @click="copyApologiesText" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md">
-              📋 Copy to Clipboard
-            </button>
+        </template>
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+          <div v-for="(d, idx) in stats.dietary_constraints" :key="idx" class="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
+            <div class="font-medium text-slate-900 dark:text-white">{{ d.person }}</div>
+            <div class="mt-0.5 text-slate-600 dark:text-slate-300">{{ d.requirement }}</div>
           </div>
         </div>
-      </div>
-
-      <!-- Manual Admin RSVP Modal -->
-      <div v-if="showManualRsvpModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <h3 class="text-base font-bold text-slate-900 dark:text-white">
-              {{ selectedUserId ? '✏️ Edit Attendance & Dining RSVP' : '✍️ Record Manual RSVP' }}
-            </h3>
-            <button @click="showManualRsvpModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold">✕</button>
-          </div>
-
-          <form @submit.prevent="submitManualRsvp" class="space-y-4">
-            <!-- Member / Visitor Select -->
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Select Member / Visitor</label>
-              <select v-model="manualRsvpForm.user_id" :disabled="!!selectedUserId" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500 bg-slate-50 dark:bg-slate-800/50 p-2.5 font-medium">
-                <option value="" disabled>-- Select a member or visitor --</option>
-                <option v-for="u in allClubUsers" :key="u.id" :value="u.id">
-                  {{ u.name }} ({{ u.email }}) {{ u.is_visitor ? '• Visitor' : '' }}
-                </option>
-              </select>
-              <div v-if="manualRsvpForm.errors.user_id" class="text-rose-600 dark:text-rose-400 text-[11px] mt-1">{{ manualRsvpForm.errors.user_id }}</div>
-            </div>
-
-            <!-- Attendance Status -->
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Attendance Status</label>
-              <div class="grid grid-cols-3 gap-2">
-                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'attending_dining' ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
-                  <input type="radio" v-model="manualRsvpForm.attendance_status" value="attending_dining" class="sr-only" />
-                  🟢 Dining & Meeting
-                </label>
-                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'attending_meeting_only' ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 text-blue-800 dark:text-blue-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
-                  <input type="radio" v-model="manualRsvpForm.attendance_status" value="attending_meeting_only" class="sr-only" />
-                  🔵 Meeting Only
-                </label>
-                <label :class="['flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all', manualRsvpForm.attendance_status === 'apologies' ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-800 dark:text-rose-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
-                  <input type="radio" v-model="manualRsvpForm.attendance_status" value="apologies" class="sr-only" />
-                  🔴 Apologies
-                </label>
-              </div>
-            </div>
-
-            <!-- Payment Status (Only shown for Dining) -->
-            <div v-if="manualRsvpForm.attendance_status === 'attending_dining' || manualRsvpForm.guests?.some(g => g.attending_dining)">
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Dining Payment Status</label>
-              <div class="grid grid-cols-4 gap-2">
-                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'unpaid' ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 text-amber-800 dark:text-amber-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
-                  <input type="radio" v-model="manualRsvpForm.payment_status" value="unpaid" class="sr-only" />
-                  💳 Unpaid
-                </label>
-                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
-                  <input type="radio" v-model="manualRsvpForm.payment_status" value="paid" class="sr-only" />
-                  ✅ Paid
-                </label>
-                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'waived' ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 text-blue-800 dark:text-blue-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
-                  <input type="radio" v-model="manualRsvpForm.payment_status" value="waived" class="sr-only" />
-                  🎁 Waived
-                </label>
-                <label :class="['flex items-center justify-center p-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all', manualRsvpForm.payment_status === 'refunded' ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-800 dark:text-rose-200' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']">
-                  <input type="radio" v-model="manualRsvpForm.payment_status" value="refunded" class="sr-only" />
-                  ↩️ Refunded
-                </label>
-              </div>
-            </div>
-            <div v-else class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400 font-medium">
-              ℹ️ Payment is only required for Dining RSVPs. No payment due for Meeting-Only attendance or Apologies.
-            </div>
-
-            <!-- Dietary Requirements (if dining) -->
-            <div v-if="manualRsvpForm.attendance_status === 'attending_dining'">
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Member Dietary Requirements</label>
-              <input type="text" v-model="manualRsvpForm.dietary_requirements" placeholder="e.g. Vegetarian, Gluten-free, Nut allergy" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500 p-2.5" />
-            </div>
-
-            <!-- Apology Reason (if apologies) -->
-            <div v-if="manualRsvpForm.attendance_status === 'apologies'">
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Apology Reason / Notes</label>
-              <textarea v-model="manualRsvpForm.apology_reason" rows="2" placeholder="e.g. Away on business, unwell" class="w-full text-xs rounded-xl border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500 p-2.5"></textarea>
-            </div>
-
-            <!-- Guests Section (if dining) -->
-            <div v-if="manualRsvpForm.attendance_status === 'attending_dining'" class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div class="flex items-center justify-between">
-                <label class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Accompanying Guests</label>
-                <button type="button" @click="addGuestRow" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800/60">
-                  + Add Guest
-                </button>
-              </div>
-
-              <div v-for="(g, idx) in manualRsvpForm.guests" :key="idx" class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Guest #{{ idx + 1 }}</span>
-                  <button type="button" @click="removeGuestRow(idx)" class="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 text-xs font-bold">Remove</button>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input type="text" v-model="g.guest_name" placeholder="Guest Full Name" class="text-xs rounded-lg border-slate-300 dark:border-slate-700 p-2" required />
-                  <input type="text" v-model="g.dietary_requirements" placeholder="Dietary notes (optional)" class="text-xs rounded-lg border-slate-300 dark:border-slate-700 p-2" />
-                </div>
-              </div>
-            </div>
-
-            <!-- Submit buttons -->
-            <div class="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button type="button" @click="showManualRsvpModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">Cancel</button>
-              <button type="submit" :disabled="manualRsvpForm.processing" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50">
-                Save RSVP
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
+      </Card>
     </div>
+
+    <ConfirmDialog :open="confirmingPublish" title="Publish the summons?" confirm-label="Publish summons" variant="primary" :processing="publishing" @confirm="publishSummons" @close="confirmingPublish = false">
+      This publishes the summons and issues passwordless RSVP links to all {{ stats.total_members }} members.
+    </ConfirmDialog>
+
+    <Modal :open="showApologiesModal" title="Apologies for the minutes" @close="showApologiesModal = false">
+      <Textarea :model-value="apologiesFormattedText" readonly :rows="5" aria-label="Apologies text for the minutes" class="font-mono" />
+      <template #footer>
+        <Button variant="secondary" @click="showApologiesModal = false">Close</Button>
+        <Button @click="copyApologiesText">{{ copied ? 'Copied' : 'Copy to clipboard' }}</Button>
+      </template>
+    </Modal>
+
+    <Modal :open="showManualRsvpModal" :title="selectedUserId ? 'Edit attendance and dining RSVP' : 'Record an RSVP'" size="lg" @close="showManualRsvpModal = false">
+      <form id="manual-rsvp-form" class="space-y-4" @submit.prevent="submitManualRsvp">
+        <Select v-model.number="manualRsvpForm.user_id" label="Member or visitor" :options="userOptions" :disabled="!!selectedUserId" :error="manualRsvpForm.errors.user_id" />
+
+        <fieldset>
+          <legend class="mb-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">Attendance</legend>
+          <div class="grid grid-cols-3 gap-2">
+            <label v-for="[value, label] in ATTENDANCE_CHOICES" :key="value" :class="choiceClass(manualRsvpForm.attendance_status === value)">
+              <input v-model="manualRsvpForm.attendance_status" type="radio" :value="value" class="sr-only" />
+              {{ label }}
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset v-if="manualRsvpForm.attendance_status === 'attending_dining' || manualRsvpForm.guests?.some(g => g.attending_dining)">
+          <legend class="mb-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">Dining payment</legend>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <label v-for="[value, label] in PAYMENT_CHOICES" :key="value" :class="choiceClass(manualRsvpForm.payment_status === value)">
+              <input v-model="manualRsvpForm.payment_status" type="radio" :value="value" class="sr-only" />
+              {{ label }}
+            </label>
+          </div>
+        </fieldset>
+        <Alert v-else>Payment is only required for dining RSVPs. No payment is due for meeting-only attendance or apologies.</Alert>
+
+        <Input v-if="manualRsvpForm.attendance_status === 'attending_dining'" v-model="manualRsvpForm.dietary_requirements" label="Member dietary requirements" placeholder="e.g. Vegetarian, gluten-free, nut allergy" :error="manualRsvpForm.errors.dietary_requirements" />
+
+        <Textarea v-if="manualRsvpForm.attendance_status === 'apologies'" v-model="manualRsvpForm.apology_reason" label="Apology reason or notes" :rows="2" placeholder="e.g. Away on business, unwell" :error="manualRsvpForm.errors.apology_reason" />
+
+        <div v-if="manualRsvpForm.attendance_status === 'attending_dining'" class="space-y-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Accompanying guests</h3>
+            <Button variant="secondary" size="sm" @click="addGuestRow">Add guest</Button>
+          </div>
+
+          <div v-for="(g, idx) in manualRsvpForm.guests" :key="idx" class="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/50">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-medium text-slate-700 dark:text-slate-200">Guest {{ idx + 1 }}</span>
+              <Button variant="ghost" size="sm" :aria-label="`Remove guest ${idx + 1}`" @click="removeGuestRow(idx)">Remove</Button>
+            </div>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <input v-model="g.guest_name" type="text" placeholder="Guest full name" :aria-label="`Guest ${idx + 1} full name`" :class="fieldClass" required />
+              <input v-model="g.dietary_requirements" type="text" placeholder="Dietary notes (optional)" :aria-label="`Guest ${idx + 1} dietary notes`" :class="fieldClass" />
+            </div>
+          </div>
+        </div>
+      </form>
+      <template #footer>
+        <Button variant="secondary" @click="showManualRsvpModal = false">Cancel</Button>
+        <Button type="submit" form="manual-rsvp-form" :loading="manualRsvpForm.processing">Save RSVP</Button>
+      </template>
+    </Modal>
   </AdminLayout>
 </template>

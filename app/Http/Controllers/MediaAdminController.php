@@ -542,7 +542,7 @@ class MediaAdminController extends Controller
             return $quotaError;
         }
 
-        $this->snapshotVersion($media, 'Before restoring version from '.$version->created_at->format('M d, Y H:i'), auth()->id());
+        $this->snapshotVersion($media, 'Before restoring version from '.$version->created_at->format('j M Y, H:i'), auth()->id());
 
         $liveDisk = Storage::disk($media->disk);
         $directory = dirname($media->getPathRelativeToRoot());
@@ -928,8 +928,8 @@ class MediaAdminController extends Controller
             'is_variant' => (bool) $media->getCustomProperty('is_variant', false),
             'parent_media_id' => $media->getCustomProperty('parent_media_id', null),
             'is_trashed' => $media->trashed(),
-            'deleted_at' => $media->deleted_at ? $media->deleted_at->format('M d, Y H:i') : null,
-            'created_at' => $media->created_at->format('M d, Y H:i'),
+            'deleted_at' => $media->deleted_at ? $media->deleted_at->format('j M Y, H:i') : null,
+            'created_at' => $media->created_at->format('j M Y, H:i'),
             'is_accounting_protected' => $isAccountingProtected,
             'accounting_bill_number' => $media->getCustomProperty('bill_number', ''),
             'accounting_invoice_number' => $media->getCustomProperty('invoice_number', ''),
@@ -945,7 +945,7 @@ class MediaAdminController extends Controller
             'human_size' => Club::formatStorageBytes($version->size),
             'note' => $version->note,
             'uploaded_by' => $version->uploader?->name,
-            'created_at' => $version->created_at->format('M d, Y H:i'),
+            'created_at' => $version->created_at->format('j M Y, H:i'),
             'download_url' => route('admin.media.versions.download', [
                 'clubSlug' => Club::whereKey($media->model_id)->value('slug'),
                 'id' => $media->id,

@@ -97,7 +97,7 @@ class MemberSubscriptionsController extends Controller
                     'channel_icon' => $n->newsletterType?->icon ?? '✉️',
                     'subject' => $n->subject,
                     'content' => $n->content,
-                    'sent_at' => $n->sent_at?->format('M d, Y @ H:i'),
+                    'sent_at' => $n->sent_at?->format('j M Y, H:i'),
                 ];
             });
 

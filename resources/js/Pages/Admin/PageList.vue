@@ -1,4 +1,5 @@
 <script setup>
+import { useClipboard } from '@/Composables/useClipboard';
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -1255,7 +1256,7 @@ const discardDraft = () => {
     router.delete(route('admin.pages.draft.discard', { clubSlug: props.club.slug, id: form.id }), { preserveScroll: true, onSuccess: reloadFormFromServer });
 };
 
-const previewCopied = ref(false);
+const { copied: previewCopied, copy } = useClipboard({ resetAfter: 2500 });
 const previewError = ref('');
 
 const openPreviewPanel = async () => {
@@ -1269,7 +1270,7 @@ const fetchPreviewLink = async (renew) => {
     const { ok, data } = await postJson(route('admin.pages.preview_link', { clubSlug: props.club.slug, id: form.id }), { renew }, 'Could not make the link. Check your connection.');
     if (ok) {
         previewUrl.value = data.url;
-        previewCopied.value = false;
+        previewCopied.value = '';
     } else {
         previewError.value = data.message || 'Could not make the link.';
     }
@@ -1281,11 +1282,7 @@ const renewPreviewLink = async () => {
 };
 
 const copyPreviewLink = async () => {
-    try {
-        await navigator.clipboard.writeText(previewUrl.value);
-        previewCopied.value = true;
-        setTimeout(() => { previewCopied.value = false; }, 2500);
-    } catch {
+    if (!(await copy(previewUrl.value))) {
         previewError.value = 'Could not copy automatically. Select the link and copy it.';
     }
 };

@@ -1,6 +1,12 @@
 <script setup>
-import { useForm, Head, Link } from '@inertiajs/vue3';
+import { useForm, Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
 
 const props = defineProps({
   club: Object,
@@ -31,9 +37,9 @@ const form = useForm({
 });
 
 const availableRoles = [
-  { id: 'member', label: 'Members / Brethren' },
-  { id: 'coach', label: 'Coaches & Officers' },
-  { id: 'admin', label: 'Admins & Executive Board' },
+  { id: 'member', label: 'Members and brethren' },
+  { id: 'coach', label: 'Coaches and officers' },
+  { id: 'admin', label: 'Admins and executive board' },
   { id: 'treasurer', label: 'Treasurers' },
 ];
 
@@ -49,216 +55,145 @@ const toggleRole = (roleId) => {
 const saveChannel = () => {
   form.post(route('admin.newsletters.types.store', { clubSlug: props.club.slug }));
 };
+
+const FREQUENCY_OPTIONS = [
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'biweekly', label: 'Every two weeks' },
+  { value: 'monthly', label: 'Monthly' },
+];
+const DAY_OPTIONS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+  .map((day) => ({ value: day, label: day.charAt(0).toUpperCase() + day.slice(1) }));
+const DIGEST_CONTENT = [
+  ['include_updates', 'Approved updates and forwarded summonses'],
+  ['include_upcoming_meetings', 'Upcoming lodge and committee meetings'],
+  ['include_upcoming_events', 'Upcoming events and dining (next 30 days)'],
+  ['include_news_posts', 'Recent news articles'],
+];
+
+const checkbox = 'mt-0.5 h-4 w-4 rounded accent-blue-600';
+const optionBox = 'flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-800/50';
+const cardTitle = 'text-base font-semibold text-slate-900 dark:text-white';
 </script>
 
 <template>
-  <AdminLayout :title="`${type.id ? 'Edit' : 'Create'} Newsletter Channel`" :club="club" active-tab="newsletters">
-    <Head :title="`${type.id ? 'Edit' : 'Create'} Newsletter Channel`" />
+  <AdminLayout :title="type.id ? 'Edit newsletter channel' : 'Create a newsletter channel'" :club="club" active-tab="newsletters">
+    <Head :title="type.id ? 'Edit newsletter channel' : 'Create a newsletter channel'" />
 
-    <div class="max-w-4xl mx-auto space-y-6">
-      
-      <!-- Top Action Bar -->
-      <div class="flex items-center justify-between bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <div class="flex items-center gap-2 mb-1">
-            <Link
-              :href="route('admin.newsletters.types', club.slug)"
-              class="inline-flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              ← Back to Channels
-            </Link>
-          </div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">
-            {{ type.id ? '⚙️ Edit Channel Settings — ' + type.name : '✨ Create Newsletter Channel' }}
-          </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Configure channel identity, visiting brethren access, Secretary approval rules, and delivery settings.
-          </p>
-        </div>
-      </div>
+    <div class="mx-auto max-w-4xl space-y-6">
+      <Card>
+        <Button variant="ghost" size="sm" :href="route('admin.newsletters.types', club.slug)">Back to channels</Button>
+        <h2 class="mt-2 text-xl font-bold text-slate-900 dark:text-white">
+          {{ type.id ? `Edit channel settings: ${type.name}` : 'Create a newsletter channel' }}
+        </h2>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          Set the channel's name and look, whether visiting brethren can subscribe, Secretary approval, and delivery settings.
+        </p>
+      </Card>
 
-      <!-- Form Container -->
-      <form @submit.prevent="saveChannel" class="space-y-6">
-        
-        <!-- Section 1: Channel Identity & Branding -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-2">
-            1. Channel Identity & Branding
-          </h3>
-
-          <div class="grid grid-cols-4 gap-4">
-            <div class="col-span-1">
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Channel Icon *</label>
-              <input v-model="form.icon" type="text" class="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-center text-xl font-bold bg-slate-50 dark:bg-slate-800/50" required />
+      <form class="space-y-6" @submit.prevent="saveChannel">
+        <Card>
+          <template #header><h3 :class="cardTitle">Channel identity and branding</h3></template>
+          <div class="space-y-4">
+            <div class="grid grid-cols-4 gap-4">
+              <Input v-model="form.icon" class="col-span-1" label="Channel icon" required maxlength="10" :error="form.errors.icon" />
+              <Input v-model="form.name" class="col-span-3" label="Channel name" required maxlength="255" placeholder="For example: meeting summonses, general news, social bulletins" :error="form.errors.name" />
             </div>
-            <div class="col-span-3">
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Channel Name *</label>
-              <input v-model="form.name" type="text" placeholder="e.g. Meeting Summonses, General News, Social Bulletins" class="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800/50" required />
+
+            <Textarea v-model="form.description" label="Channel description" :rows="2" placeholder="Briefly describe what this channel is for" :error="form.errors.description" />
+
+            <div>
+              <label for="channel-colour" class="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">Badge colour</label>
+              <div class="flex flex-wrap items-center gap-3">
+                <input id="channel-colour" v-model="form.color" type="color" class="h-9 w-12 cursor-pointer rounded-xl border border-slate-300 dark:border-slate-700" />
+                <input v-model="form.color" type="text" aria-label="Badge colour code" class="w-32 rounded-xl border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
+                <Badge>
+                  <span :style="{ backgroundColor: form.color }" class="inline-block h-2 w-2 rounded-full" aria-hidden="true"></span>
+                  {{ form.icon }} {{ form.name || 'Sample badge' }}
+                </Badge>
+              </div>
+              <p v-if="form.errors.color" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ form.errors.color }}</p>
             </div>
           </div>
+        </Card>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Channel Description</label>
-            <textarea v-model="form.description" rows="2" placeholder="Briefly describe the purpose of this channel..." class="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs bg-slate-50 dark:bg-slate-800/50"></textarea>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Badge Theme Color</label>
-            <div class="flex items-center gap-3">
-              <input v-model="form.color" type="color" class="w-12 h-9 rounded-xl border border-slate-300 dark:border-slate-700 cursor-pointer" />
-              <input v-model="form.color" type="text" class="w-32 p-2 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-xs font-bold bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white" />
-              <span :style="{ backgroundColor: form.color }" class="px-3 py-1 rounded-lg text-white font-bold text-xs shadow-xs flex items-center gap-1">
-                {{ form.icon }} {{ form.name || 'Sample Badge' }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 2: Visibility & Visiting Brethren Access -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-2">
-            2. Visibility & External Subscriptions
-          </h3>
-
+        <Card>
+          <template #header><h3 :class="cardTitle">Visibility and external subscriptions</h3></template>
           <div class="space-y-3">
-            <label class="flex items-start gap-3 cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all">
-              <input v-model="form.is_external_subscribable" type="checkbox" class="mt-1 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 w-4 h-4" />
-              <div>
-                <span class="font-bold text-slate-900 dark:text-white text-sm">🌐 Allow External Subscriptions (Visiting Brethren / Other Lodges)</span>
-                <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">When enabled, this channel will be listed in the National Directory allowing brethren from other lodges to subscribe.</p>
-              </div>
+            <label :class="optionBox">
+              <input v-model="form.is_external_subscribable" type="checkbox" :class="checkbox" />
+              <span>
+                <span class="font-medium text-slate-900 dark:text-white">Allow external subscriptions (visiting brethren and other lodges)</span>
+                <span class="mt-0.5 block text-slate-500 dark:text-slate-400">When on, this channel is listed in the national directory so brethren from other lodges can subscribe.</span>
+              </span>
             </label>
 
-            <label v-if="form.is_external_subscribable" class="flex items-start gap-3 cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700/60 transition-all ml-4">
-              <input v-model="form.require_approval" type="checkbox" class="mt-1 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 w-4 h-4" />
-              <div>
-                <span class="font-bold text-slate-900 dark:text-white text-sm">⏳ Require Secretary Approval for Visiting Brethren</span>
-                <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">External subscription requests will enter a pending approval queue before receiving broadcasts.</p>
-              </div>
+            <label v-if="form.is_external_subscribable" :class="[optionBox, 'ml-4']">
+              <input v-model="form.require_approval" type="checkbox" :class="checkbox" />
+              <span>
+                <span class="font-medium text-slate-900 dark:text-white">Require Secretary approval for visiting brethren</span>
+                <span class="mt-0.5 block text-slate-500 dark:text-slate-400">Requests from outside the lodge wait for approval before they receive anything.</span>
+              </span>
             </label>
 
-            <label class="flex items-start gap-3 cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all">
-              <input v-model="form.is_mandatory" type="checkbox" class="mt-1 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 w-4 h-4" />
-              <div>
-                <span class="font-bold text-slate-900 dark:text-white text-sm">🔒 Mandatory Official Notice (No Member Unsubscribe)</span>
-                <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Enforces lodge bylaws compliance — active internal members cannot unsubscribe from official notices like Summonses.</p>
-              </div>
+            <label :class="optionBox">
+              <input v-model="form.is_mandatory" type="checkbox" :class="checkbox" />
+              <span>
+                <span class="font-medium text-slate-900 dark:text-white">Mandatory official notice (members cannot unsubscribe)</span>
+                <span class="mt-0.5 block text-slate-500 dark:text-slate-400">In line with the lodge by-laws, active members cannot unsubscribe from official notices such as summonses.</span>
+              </span>
             </label>
           </div>
-        </div>
+        </Card>
 
-        <!-- Section 3: Default Target Roles -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-2">
-            3. Default Recipient Roles
-          </h3>
-
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div 
-              v-for="role in availableRoles" 
-              :key="role.id"
-              @click="toggleRole(role.id)"
-              :class="[
-                'p-3.5 rounded-xl border text-xs font-bold cursor-pointer transition-all flex items-center justify-between',
-                form.default_roles.includes(role.id)
-                  ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 text-blue-900 dark:text-blue-200 shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
-              ]"
-            >
-              <span>{{ role.label }}</span>
-              <span v-if="form.default_roles.includes(role.id)" class="text-blue-600 dark:text-blue-400">✓</span>
+        <Card>
+          <template #header><h3 :class="cardTitle">Default recipient roles</h3></template>
+          <fieldset>
+            <legend class="sr-only">Default recipient roles</legend>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <label v-for="role in availableRoles" :key="role.id" :class="[optionBox, 'items-center p-3']">
+                <input type="checkbox" :checked="form.default_roles.includes(role.id)" :class="checkbox" @change="toggleRole(role.id)" />
+                <span class="font-medium text-slate-900 dark:text-white">{{ role.label }}</span>
+              </label>
             </div>
+          </fieldset>
+        </Card>
+
+        <Card>
+          <template #header><h3 :class="cardTitle">Automated digest and content sources</h3></template>
+          <div class="space-y-4">
+            <label :class="optionBox">
+              <input v-model="form.is_automated_digest" type="checkbox" :class="checkbox" />
+              <span>
+                <span class="font-medium text-slate-900 dark:text-white">Send an automated digest on a schedule</span>
+                <span class="mt-0.5 block text-slate-500 dark:text-slate-400">Puts together and sends one combined newsletter on a set day and time.</span>
+              </span>
+            </label>
+
+            <div v-if="form.is_automated_digest" class="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800 sm:grid-cols-3">
+              <Select v-model="form.digest_frequency" label="How often" :options="FREQUENCY_OPTIONS" :error="form.errors.digest_frequency" />
+              <Select v-model="form.digest_send_day" label="Send on" :options="DAY_OPTIONS" :error="form.errors.digest_send_day" />
+              <Input v-model="form.digest_send_time" type="time" label="Send at" :error="form.errors.digest_send_time" />
+            </div>
+
+            <fieldset class="space-y-2">
+              <legend class="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">Content to include</legend>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label v-for="[field, label] in DIGEST_CONTENT" :key="field" :class="[optionBox, 'items-center p-3']">
+                  <input v-model="form[field]" type="checkbox" :class="checkbox" />
+                  <span class="font-medium text-slate-900 dark:text-white">{{ label }}</span>
+                </label>
+              </div>
+            </fieldset>
           </div>
-        </div>
+        </Card>
 
-        <!-- Section 4: Automated Digest & Content Sources -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-2">
-            4. Automated Digest & Content Sources
-          </h3>
-
-          <label class="flex items-start gap-3 cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all">
-            <input v-model="form.is_automated_digest" type="checkbox" class="mt-1 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 w-4 h-4" />
-            <div>
-              <span class="font-bold text-slate-900 dark:text-white text-sm">🤖 Enable Automated Weekly Digest Schedule</span>
-              <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Automatically compiles and sends a consolidated newsletter on a scheduled day and time.</p>
-            </div>
-          </label>
-
-          <div v-if="form.is_automated_digest" class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-blue-50/50 dark:bg-blue-950/50 rounded-xl border border-blue-100 dark:border-blue-900/40">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Frequency</label>
-              <select v-model="form.digest_frequency" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold">
-                <option value="weekly">Weekly</option>
-                <option value="biweekly">Bi-Weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Dispatch Day</label>
-              <select v-model="form.digest_send_day" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold">
-                <option value="monday">Monday</option>
-                <option value="tuesday">Tuesday</option>
-                <option value="wednesday">Wednesday</option>
-                <option value="thursday">Thursday</option>
-                <option value="friday">Friday</option>
-                <option value="saturday">Saturday</option>
-                <option value="sunday">Sunday</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Dispatch Time</label>
-              <input v-model="form.digest_send_time" type="time" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono font-bold" />
-            </div>
+        <Card>
+          <div class="flex items-center justify-end gap-3">
+            <Button variant="secondary" :href="route('admin.newsletters.types', club.slug)">Cancel</Button>
+            <Button type="submit" :loading="form.processing">Save channel</Button>
           </div>
-
-          <div class="space-y-2 pt-2">
-            <span class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Automated Content Modules to Aggregate:</span>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
-                <input v-model="form.include_updates" type="checkbox" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">📜 Approved Updates & Forwarded Summonses</span>
-              </label>
-
-              <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
-                <input v-model="form.include_upcoming_meetings" type="checkbox" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">📅 Upcoming Lodge & Committee Meetings</span>
-              </label>
-
-              <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
-                <input v-model="form.include_upcoming_events" type="checkbox" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">🎟️ Upcoming Events & Dining (Next 30 Days)</span>
-              </label>
-
-              <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
-                <input v-model="form.include_news_posts" type="checkbox" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">📰 Recent News Articles</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Submit Bar -->
-        <div class="flex items-center justify-end gap-3 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-          <Link
-            :href="route('admin.newsletters.types', club.slug)"
-            class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition-all"
-          >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            :disabled="form.processing"
-            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer"
-          >
-            💾 Save Newsletter Channel
-          </button>
-        </div>
-
+        </Card>
       </form>
-
     </div>
   </AdminLayout>
 </template>

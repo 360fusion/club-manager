@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Tabs from '@/Components/Ui/Tabs.vue';
 
 const props = defineProps({
   club: Object,
@@ -12,6 +13,14 @@ const props = defineProps({
   grandRanks: { type: Array, default: () => [] },
   provincialRanks: { type: Array, default: () => [] },
 });
+
+// The other three pages are Livewire, so they need a full page load. The same list is in livewire/members/_tabs.
+const memberAreaTabs = [
+  { key: 'members', label: 'Members roster', href: route('admin.club_acc.members.index', { clubSlug: props.club.slug }), reload: true },
+  { key: 'officers', label: 'Annual officer rosters & history', href: route('admin.officers.index', { clubSlug: props.club.slug }) },
+  { key: 'candidates', label: 'Candidates (Form P vetting)', href: route('admin.club_acc.candidates.index', { clubSlug: props.club.slug }), reload: true },
+  { key: 'subscriptions', label: 'Subscriptions & dues', href: route('admin.club_acc.subscriptions.index', { clubSlug: props.club.slug }), reload: true },
+];
 
 const localMembers = ref([...(props.members || [])]);
 
@@ -559,40 +568,7 @@ const installCurrentRoster = () => {
   <AdminLayout title="Annual Officer Rosters & History" :club="club" active-tab="members">
     <div class="space-y-6">
 
-      <!-- Member Management Domain Unified Navigation -->
-      <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 dark:border-slate-700/60 shadow-inner">
-        <a
-          :href="route('admin.club_acc.members.index', { clubSlug: club.slug })"
-          class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60"
-        >
-          <span>👥</span>
-          <span>Members Roster</span>
-        </a>
-
-        <a
-          :href="route('admin.officers.index', { clubSlug: club.slug })"
-          class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black"
-        >
-          <span>👔</span>
-          <span>Annual Officer Rosters &amp; History</span>
-        </a>
-
-        <a
-          :href="route('admin.club_acc.candidates.index', { clubSlug: club.slug })"
-          class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60"
-        >
-          <span>📋</span>
-          <span>Candidates (Form P Vetting)</span>
-        </a>
-
-        <a
-          :href="route('admin.club_acc.subscriptions.index', { clubSlug: club.slug })"
-          class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60"
-        >
-          <span>💳</span>
-          <span>Subscriptions &amp; Dues</span>
-        </a>
-      </div>
+      <Tabs :items="memberAreaTabs" active="officers" label="Members" />
 
       <!-- Header Banner -->
       <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-4">

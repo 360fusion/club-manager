@@ -171,7 +171,7 @@ const submitGiving = () => {
               <tr v-for="m in activeMembers" :key="m.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
                 <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">{{ m.name }} ({{ m.rank }})</td>
                 <td class="py-3 px-4 text-right font-semibold text-slate-800 dark:text-slate-100">
-                  {{ m.regular_giving > 0 ? ($cs + '') + m.regular_giving.toFixed(2) : '—' }}
+                  {{ m.regular_giving > 0 ? $money(m.regular_giving) : '—' }}
                 </td>
                 <td class="py-3 px-4 text-right font-black text-blue-950 dark:text-blue-100">{{ m.formatted_donated }}</td>
                 <td class="py-3 px-4">

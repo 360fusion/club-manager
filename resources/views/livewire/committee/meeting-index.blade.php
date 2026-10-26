@@ -1,22 +1,11 @@
 <div class="space-y-6">
-    <!-- Meetings & Governance Tab Bar -->
-    <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 dark:border-slate-700/60 mb-6 shadow-inner">
-        <a
-            href="{{ route('admin.meetings.index', ['clubSlug' => $clubSlug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60"
-        >
-            <span>📅</span>
-            <span>Lodge Meetings & Summonses</span>
-        </a>
-
-        <a
-            href="{{ route('admin.committee.index', ['clubSlug' => $clubSlug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black"
-        >
-            <span>🏛️</span>
-            <span>Committee & Board Governance</span>
-        </a>
-    </div>
+    {{-- The same list as Components/MeetingsTabs.vue. --}}
+    <x-tabs label="Meetings" active="committee" class="mb-6" :items="[
+        ['key' => 'lodge', 'label' => 'Lodge meetings & summonses', 'href' => route('admin.meetings.index', ['clubSlug' => $clubSlug])],
+        ['key' => 'committee', 'label' => 'Committee & board governance', 'href' => route('admin.committee.index', ['clubSlug' => $clubSlug])],
+        ['key' => 'visitors', 'label' => 'Visitors', 'href' => route('admin.visitors.index', ['clubSlug' => $clubSlug])],
+        ['key' => 'officers', 'label' => 'Annual officers roster & board', 'href' => route('admin.officers.index', ['clubSlug' => $clubSlug])],
+    ]" />
 
     <!-- Top Header & Action Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">

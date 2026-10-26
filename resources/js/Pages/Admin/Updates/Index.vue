@@ -1,10 +1,18 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { useForm, Head, Link, router } from '@inertiajs/vue3';
+import { useForm, Head, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import ContentPickerModal from '@/Components/ContentPickerModal.vue';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
 import CommunicationsTabs from '@/Components/CommunicationsTabs.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
+import Modal from '@/Components/Ui/Modal.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 
 const props = defineProps({
   club: Object,
@@ -94,16 +102,18 @@ const updateStatus = (item, newStatus) => {
   });
 };
 
-const deleteUpdate = (item) => {
-  if (confirm(`Are you sure you want to delete "${item.title}"?`)) {
-    router.delete(route('admin.updates.destroy', { clubSlug: props.club.slug, id: item.id }));
-  }
+const updateToDelete = ref(null);
+const deleteUpdate = () => {
+  router.delete(route('admin.updates.destroy', { clubSlug: props.club.slug, id: updateToDelete.value.id }), {
+    onFinish: () => { updateToDelete.value = null; },
+  });
 };
 
+const confirmDigestOpen = ref(false);
 const triggerDigestDispatch = () => {
-  if (confirm(`Compile and send the Weekly Digest newsletter to members now? (${props.counts.approved} approved updates included)`)) {
-    router.post(route('admin.updates.dispatch_digest', { clubSlug: props.club.slug }));
-  }
+  router.post(route('admin.updates.dispatch_digest', { clubSlug: props.club.slug }), {}, {
+    onFinish: () => { confirmDigestOpen.value = false; },
+  });
 };
 
 const cleanTextInForm = () => {
@@ -213,431 +223,257 @@ const filteredUpdates = computed(() => {
   });
 });
 
-const getCategoryBadge = (cat) => {
-  switch (cat) {
-    case 'summons': return { label: '📜 Visiting Summons', color: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60' };
-    case 'provincial': return { label: '🏛️ Provincial News', color: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' };
-    case 'event_notice': return { label: '🎟️ Event Notice', color: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60' };
-    case 'charity': return { label: '❤️ Charity Notice', color: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60' };
-    default: return { label: '📣 General Notice', color: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60' };
-  }
+const CATEGORY_LABELS = {
+  summons: 'Visiting summons',
+  provincial: 'Provincial news',
+  event_notice: 'Event notice',
+  charity: 'Charity notice',
 };
+const categoryLabel = (cat) => CATEGORY_LABELS[cat] ?? 'General notice';
+
+const STATUS_FILTERS = [['all', 'All items'], ['draft', 'Drafts (needs review)'], ['approved', 'Approved (queued)'], ['sent', 'Sent']];
+const STATUS_BADGES = {
+  draft: { variant: 'warning', label: 'Draft (review required)' },
+  approved: { variant: 'success', label: 'Approved and queued' },
+  sent: { variant: 'info', label: 'Sent in digest' },
+};
+
+const categoryFilterOptions = [
+  { value: 'all', label: 'All categories' },
+  { value: 'summons', label: 'Visiting summonses' },
+  { value: 'provincial', label: 'Provincial news' },
+  { value: 'event_notice', label: 'Event notices' },
+  { value: 'general', label: 'General notices' },
+  { value: 'charity', label: 'Charity notices' },
+];
+const categoryOptions = [
+  { value: 'summons', label: 'Visiting summons' },
+  { value: 'provincial', label: 'Provincial news' },
+  { value: 'event_notice', label: 'Event notice' },
+  { value: 'general', label: 'General announcement' },
+  { value: 'charity', label: 'Charity notice' },
+];
+const statusOptions = [
+  { value: 'draft', label: 'Draft (review required)' },
+  { value: 'approved', label: 'Approved and queued for the mailer' },
+  { value: 'sent', label: 'Sent' },
+];
+
+const fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
+const fileInputClass = 'w-full text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:rounded-xl file:border file:border-slate-300 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-700 hover:file:bg-slate-50 dark:file:border-slate-700 dark:file:bg-slate-900 dark:file:text-slate-200 dark:hover:file:bg-slate-800';
+const smallSecondaryLink = 'inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800';
 </script>
 
 <template>
-  <AdminLayout title="Updates & Weekly Digest" :club="club" active-tab="updates">
-    <Head :title="`${club.name} - Updates & Weekly Digest`" />
+  <AdminLayout title="Updates and weekly digest" :club="club" active-tab="updates">
+    <Head :title="`${club.name} - Updates and weekly digest`" />
 
     <div class="max-w-6xl mx-auto space-y-6">
       <CommunicationsTabs :club="club" active-tab="updates" />
-      
-      <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <div class="flex items-center gap-2">
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Updates & Weekly Digest Hub</h2>
-            <span v-if="counts.approved > 0" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 animate-pulse">
-              {{ counts.approved }} Approved Ready
-            </span>
-          </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Collect forwarded summonses, provincial bulletins, and notices to automatically compile into weekly newsletters.</p>
-        </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            @click="showContentPicker = true"
-            class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            🧩 Content Picker
-          </button>
-
-          <button
-            type="button"
-            @click="openCreateModal"
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            + Log New Update Entry
-          </button>
-
-          <button
-            type="button"
-            @click="triggerDigestDispatch"
-            :disabled="!counts.approved"
-            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            🚀 Send Weekly Digest Now ({{ counts.approved }})
-          </button>
-        </div>
-      </div>
-
-      <!-- Inbound Forwarding Info Card -->
-      <div class="p-4 bg-gradient-to-r from-blue-900 to-slate-900 text-white rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <span class="w-10 h-10 rounded-xl bg-white/10 dark:bg-slate-900/10 flex items-center justify-center text-xl">📨</span>
+      <Card>
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h3 class="text-xs font-bold uppercase tracking-wider text-blue-200">Email Forwarding Address</h3>
-            <p class="text-sm font-mono font-bold text-white mt-0.5">updates-{{ club.slug }}@inbound.360fusionhosting.co.uk</p>
-            <p class="text-[11px] text-slate-300 mt-0.5">Forward emails here to automatically log drafts with PDF summonses & flyer attachments.</p>
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 class="text-xl font-bold text-slate-900 dark:text-white">Updates and weekly digest</h2>
+              <Badge v-if="counts.approved > 0" variant="success">{{ counts.approved }} approved, ready to send</Badge>
+            </div>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Collect forwarded summonses, provincial bulletins and notices to compile into the weekly newsletter automatically.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" @click="showContentPicker = true">Content picker</Button>
+            <Button variant="secondary" size="sm" @click="openCreateModal">Log new update</Button>
+            <Button size="sm" :disabled="!counts.approved" @click="confirmDigestOpen = true">Send weekly digest now ({{ counts.approved }})</Button>
           </div>
         </div>
-        <div class="text-xs text-blue-200 bg-white/10 dark:bg-slate-900/10 px-3 py-1.5 rounded-xl border border-white/10">
-          Status: <strong>Forwarded emails saved as Drafts</strong>
+      </Card>
+
+      <Card padding="sm">
+        <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div class="min-w-0">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Email forwarding address</h3>
+            <p class="mt-0.5 break-all font-mono text-sm text-slate-900 dark:text-white">updates-{{ club.slug }}@inbound.360fusionhosting.co.uk</p>
+            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Forward emails here to log drafts automatically, with PDF summonses and flyer attachments.</p>
+          </div>
+          <Badge>Forwarded emails are saved as drafts</Badge>
         </div>
-      </div>
+      </Card>
 
-      <!-- Main Filter Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800/80">
-        
-        <!-- Status Filter Tabs -->
-        <div class="flex items-center gap-1 overflow-x-auto">
-          <button
-            @click="activeTab = 'all'"
-            :class="[
-              'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer',
-              activeTab === 'all' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-            ]"
-          >
-            All Items ({{ counts.all }})
-          </button>
-          
-          <button
-            @click="activeTab = 'draft'"
-            :class="[
-              'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-              activeTab === 'draft' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-            ]"
-          >
-            <span>📄 Drafts (Needs Review)</span>
-            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200">{{ counts.draft }}</span>
-          </button>
+      <Card padding="sm">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div class="flex items-center gap-1 overflow-x-auto" role="group" aria-label="Show">
+            <button
+              v-for="[key, label] in STATUS_FILTERS"
+              :key="key"
+              type="button"
+              :aria-pressed="activeTab === key"
+              :class="['rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors', activeTab === key ? 'bg-slate-900 text-white dark:bg-slate-700' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800']"
+              @click="activeTab = key"
+            >
+              {{ label }} ({{ counts[key] }})
+            </button>
+          </div>
 
-          <button
-            @click="activeTab = 'approved'"
-            :class="[
-              'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-              activeTab === 'approved' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-            ]"
-          >
-            <span>✅ Approved (Queued)</span>
-            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-200">{{ counts.approved }}</span>
-          </button>
-
-          <button
-            @click="activeTab = 'sent'"
-            :class="[
-              'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-              activeTab === 'sent' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-            ]"
-          >
-            <span>✉️ Sent</span>
-            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200">{{ counts.sent }}</span>
-          </button>
+          <Select v-model="activeCategoryFilter" class="w-full sm:w-56" aria-label="Category" :options="categoryFilterOptions" />
         </div>
+      </Card>
 
-        <!-- Category Dropdown Filter -->
-        <select
-          v-model="activeCategoryFilter"
-          class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200"
-        >
-          <option value="all">Filter All Categories</option>
-          <option value="summons">📜 Visiting Summonses</option>
-          <option value="provincial">🏛️ Provincial News</option>
-          <option value="event_notice">🎟️ Event Notices</option>
-          <option value="general">📣 General Notices</option>
-        </select>
-      </div>
-
-      <!-- Item Grid Stack -->
       <div v-if="filteredUpdates.length" class="space-y-3">
-        <div
-          v-for="item in filteredUpdates"
-          :key="item.id"
-          class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
-        >
-          <div class="flex items-start gap-4 min-w-0 flex-1">
-            <img
-              v-if="item.cover_image_url"
-              :src="item.cover_image_url"
-              class="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shrink-0"
-            />
-            <div class="min-w-0 flex-1 space-y-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span :class="['px-2.5 py-0.5 text-[10px] font-bold rounded-full border', getCategoryBadge(item.category).color]">
-                  {{ getCategoryBadge(item.category).label }}
-                </span>
-
-                <!-- Status Badge -->
-                <span v-if="item.status === 'draft'" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60">
-                  📄 Draft (Review Required)
-                </span>
-                <span v-else-if="item.status === 'approved'" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60">
-                  ✅ Approved & Queued
-                </span>
-                <span v-else-if="item.status === 'sent'" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800/60">
-                  ✉️ Sent in Digest
-                </span>
-              </div>
-
-              <h3 class="text-sm font-bold text-slate-900 dark:text-white leading-snug">{{ item.title }}</h3>
-              <p v-if="item.summary" class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{{ item.summary }}</p>
-
-              <!-- Attachments -->
-              <div v-if="item.attachments && item.attachments.length" class="flex flex-wrap items-center gap-1.5 pt-1">
-                <span class="text-[10px] font-bold text-slate-400">Attachments:</span>
-                <a
-                  v-for="(att, aIdx) in item.attachments"
-                  :key="aIdx"
-                  :href="att.url"
-                  target="_blank"
-                  class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold rounded-md border border-slate-200 dark:border-slate-800 transition-all flex items-center gap-1"
-                >
-                  📄 {{ att.name }}
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Item Action Buttons -->
-          <div class="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-800">
-            <!-- Approve Button -->
-            <button
-              v-if="item.status === 'draft'"
-              type="button"
-              @click="updateStatus(item, 'approved')"
-              class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
-            >
-              ✅ Approve & Queue
-            </button>
-
-            <!-- Unapprove Back to Draft -->
-            <button
-              v-if="item.status === 'approved'"
-              type="button"
-              @click="updateStatus(item, 'draft')"
-              class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800/60 transition-all cursor-pointer"
-            >
-              ↩️ Revert to Draft
-            </button>
-
-            <!-- Edit Button -->
-            <button
-              type="button"
-              @click="editUpdate(item)"
-              class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all cursor-pointer"
-            >
-              ✏️ Edit
-            </button>
-
-            <!-- Delete Button -->
-            <button
-              type="button"
-              @click="deleteUpdate(item)"
-              class="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold transition-all cursor-pointer"
-              title="Delete"
-            >
-              🗑️
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div v-else class="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200/80 dark:border-slate-800/80 space-y-3">
-        <span class="text-4xl">📭</span>
-        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">No Update Entries Found</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400">Log forwarded summonses, provincial bulletins, or news items to get started.</p>
-        <button
-          type="button"
-          @click="openCreateModal"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all inline-block cursor-pointer"
-        >
-          + Log First Update Entry
-        </button>
-      </div>
-
-    </div>
-
-    <!-- Create / Edit Drawer Modal -->
-    <div v-if="showCreateDrawer" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-          <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ isEditing ? 'Edit Update Entry' : 'Log New Update Entry' }}</h3>
-          <button type="button" @click="showCreateDrawer = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-bold text-sm cursor-pointer">✕</button>
-        </div>
-
-        <form @submit.prevent="saveUpdate" class="p-6 overflow-y-auto space-y-4 text-xs">
-          <div>
-            <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Title / Subject *</label>
-            <input v-model="form.title" type="text" required placeholder="Visiting Summons - Lodge of Fidelity No. 452" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white" />
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Category *</label>
-              <select v-model="form.category" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-bold">
-                <option value="summons">📜 Visiting Summons</option>
-                <option value="provincial">🏛️ Provincial News</option>
-                <option value="event_notice">🎟️ Event Notice</option>
-                <option value="general">📣 General Announcement</option>
-                <option value="charity">❤️ Charity Notice</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">Approval Status *</label>
-              <select v-model="form.status" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-bold">
-                <option value="draft">📄 Draft (Review Required)</option>
-                <option value="approved">✅ Approved & Queued for Mailer</option>
-                <option value="sent">✉️ Sent</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Summary / Body Text</label>
-              <button
-                type="button"
-                @click="cleanTextInForm"
-                class="px-2.5 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer"
-                title="Strip email headers and forwarded signatures"
-              >
-                🧹 Clean Email Text
-              </button>
-            </div>
-            <textarea v-model="form.summary" rows="5" placeholder="Paste or clean forwarded email body here..." class="w-full p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"></textarea>
-          </div>
-
-          <!-- Cover Image Upload & URL Selection -->
-          <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
-            <div class="flex items-center justify-between">
-              <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">🖼️ Cover Photo / Banner</label>
-              <div class="flex items-center gap-2">
-                <button
-                  v-if="coverImagePreview || form.cover_image_url"
-                  type="button"
-                  @click="removeCoverImage"
-                  class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-lg border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer"
-                >
-                  🗑️ Remove
-                </button>
-                <button
-                  type="button"
-                  @click="openMediaLibrary('cover', 'updates')"
-                  class="px-2.5 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer flex items-center gap-1"
-                >
-                  📁 Choose from Media Library
-                </button>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Image URL</label>
-                <input v-model="form.cover_image_url" type="text" placeholder="https://..." class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono" />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Or Upload Image File</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  @change="onCoverFileSelect"
-                  class="w-full text-xs text-slate-600 dark:text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 dark:file:bg-blue-950/40 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40 cursor-pointer"
-                />
-              </div>
-            </div>
-
-            <div v-if="coverImagePreview || form.cover_image_url" class="relative max-w-xs rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 mt-2">
-              <img :src="coverImagePreview || form.cover_image_url" class="w-full h-28 object-cover" />
-              <button
-                type="button"
-                @click="removeCoverImage"
-                class="absolute top-1.5 right-1.5 px-2 py-0.5 bg-rose-600/90 text-white font-bold text-[10px] rounded-md shadow-md cursor-pointer"
-              >
-                ✕ Remove
-              </button>
-            </div>
-          </div>
-
-          <!-- Downloadable Attachments & Document Uploads -->
-          <div class="space-y-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
-            <div class="flex items-center justify-between">
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">📎 Downloadable Attachments & Documents</label>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400">Upload PDF summonses, agendas, spreadsheets, or flyers.</p>
-              </div>
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  @click="openMediaLibrary('attachment', 'updates')"
-                  class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-[10px] font-bold rounded-lg border border-amber-200 dark:border-amber-800/60 transition-all cursor-pointer flex items-center gap-1"
-                >
-                  📁 Select from Media Library
-                </button>
-                <button
-                  type="button"
-                  @click="triggerDocumentUpload"
-                  class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-lg shadow-xs transition-all cursor-pointer flex items-center gap-1"
-                >
-                  + Upload Document Files
-                </button>
-              </div>
-              <input
-                ref="documentFileInput"
-                type="file"
-                multiple
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip"
-                class="hidden"
-                @change="onDocumentFilesSelect"
+        <Card v-for="item in filteredUpdates" :key="item.id" padding="sm">
+          <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-4">
+              <img
+                v-if="item.cover_image_url"
+                :src="item.cover_image_url"
+                alt=""
+                class="h-16 w-16 shrink-0 rounded-xl border border-slate-200 object-cover dark:border-slate-800"
               />
-            </div>
-
-            <!-- Existing & Added Attachments List -->
-            <div v-if="form.attachments && form.attachments.length" class="space-y-1.5">
-              <div
-                v-for="(att, idx) in form.attachments"
-                :key="idx"
-                class="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-xs"
-              >
-                <div class="flex items-center gap-2 truncate pr-2">
-                  <span class="text-base">📄</span>
-                  <span class="font-bold text-slate-800 dark:text-slate-100 truncate">{{ att.name }}</span>
-                  <span v-if="att.isPendingFile" class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">New File Upload</span>
+              <div class="min-w-0 flex-1 space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <Badge>{{ categoryLabel(item.category) }}</Badge>
+                  <Badge v-if="STATUS_BADGES[item.status]" :variant="STATUS_BADGES[item.status].variant">{{ STATUS_BADGES[item.status].label }}</Badge>
                 </div>
-                <button
-                  type="button"
-                  @click="removeAttachment(idx)"
-                  class="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 font-bold px-2 py-0.5 text-xs cursor-pointer"
-                  title="Remove Attachment"
-                >
-                  ✕ Remove
-                </button>
-              </div>
-            </div>
 
-            <!-- Manual Attachment Link Fallback -->
-            <div class="pt-2 border-t border-slate-200/80 dark:border-slate-800/80">
-              <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Or Add Document by Web Link:</span>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <input v-model="newAttachmentName" type="text" placeholder="Document Label (e.g. Summons PDF)" class="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs" />
-                <div class="flex items-center gap-2">
-                  <input v-model="newAttachmentUrl" type="text" placeholder="URL (https://...)" class="flex-1 p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono" />
-                  <button type="button" @click="addAttachmentByUrl" class="px-3 py-2 bg-slate-700 text-white font-bold rounded-lg text-xs cursor-pointer">+ Link</button>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">{{ item.title }}</h3>
+                <p v-if="item.summary" class="line-clamp-2 text-sm text-slate-500 dark:text-slate-400">{{ item.summary }}</p>
+
+                <div v-if="item.attachments && item.attachments.length" class="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span class="text-xs text-slate-500 dark:text-slate-400">Attachments:</span>
+                  <a
+                    v-for="(att, aIdx) in item.attachments"
+                    :key="aIdx"
+                    :href="att.url"
+                    target="_blank"
+                    :class="smallSecondaryLink"
+                  >
+                    {{ att.name }}
+                  </a>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
-            <button type="button" @click="showCreateDrawer = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl cursor-pointer">Cancel</button>
-            <button type="submit" :disabled="form.processing" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm cursor-pointer">Save Update Item</button>
+            <div class="flex shrink-0 flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800 md:border-t-0 md:pt-0">
+              <Button v-if="item.status === 'draft'" size="sm" @click="updateStatus(item, 'approved')">Approve and queue</Button>
+              <Button v-if="item.status === 'approved'" variant="secondary" size="sm" @click="updateStatus(item, 'draft')">Revert to draft</Button>
+              <Button variant="secondary" size="sm" @click="editUpdate(item)">Edit</Button>
+              <Button variant="ghost" size="sm" :aria-label="`Delete ${item.title}`" @click="updateToDelete = item">Delete</Button>
+            </div>
           </div>
-        </form>
+        </Card>
       </div>
+
+      <Card v-else>
+        <div class="space-y-3 py-6 text-center">
+          <h3 class="text-base font-semibold text-slate-900 dark:text-white">No updates found</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Log forwarded summonses, provincial bulletins or news items to get started.</p>
+          <Button size="sm" @click="openCreateModal">Log your first update</Button>
+        </div>
+      </Card>
     </div>
 
-    <!-- Interactive Content Picker Modal -->
+    <Modal :open="showCreateDrawer" :title="isEditing ? 'Edit update' : 'Log new update'" size="lg" @close="showCreateDrawer = false">
+      <form id="update-form" class="space-y-5" @submit.prevent="saveUpdate">
+        <Input v-model="form.title" label="Title or subject" required placeholder="Visiting summons - Lodge of Fidelity No. 452" :error="form.errors.title" />
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Select v-model="form.category" label="Category" required :options="categoryOptions" :error="form.errors.category" />
+          <Select v-model="form.status" label="Approval status" required :options="statusOptions" :error="form.errors.status" />
+        </div>
+
+        <div class="space-y-2">
+          <Textarea v-model="form.summary" label="Summary or body text" :rows="5" placeholder="Paste or clean the forwarded email body here" :error="form.errors.summary" />
+          <div class="flex justify-end">
+            <Button variant="secondary" size="sm" title="Strip email headers and forwarded signatures" @click="cleanTextInForm">Clean email text</Button>
+          </div>
+        </div>
+
+        <section class="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Cover photo or banner</h3>
+            <div class="flex items-center gap-2">
+              <Button v-if="coverImagePreview || form.cover_image_url" variant="ghost" size="sm" @click="removeCoverImage">Remove</Button>
+              <Button variant="secondary" size="sm" @click="openMediaLibrary('cover', 'updates')">Choose from media library</Button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input v-model="form.cover_image_url" label="Image URL" placeholder="https://..." :error="form.errors.cover_image_url" />
+            <div class="space-y-1.5">
+              <label for="update-cover-file" class="block text-xs font-medium text-slate-700 dark:text-slate-300">Or upload an image file</label>
+              <input id="update-cover-file" type="file" accept="image/*" :class="fileInputClass" @change="onCoverFileSelect" />
+              <p v-if="form.errors.cover_image_file" class="text-xs text-rose-600 dark:text-rose-400">{{ form.errors.cover_image_file }}</p>
+            </div>
+          </div>
+
+          <div v-if="coverImagePreview || form.cover_image_url" class="max-w-xs overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+            <img :src="coverImagePreview || form.cover_image_url" alt="Cover image preview" class="h-28 w-full object-cover" />
+          </div>
+        </section>
+
+        <section class="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Downloadable attachments and documents</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Upload PDF summonses, agendas, spreadsheets or flyers.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <Button variant="secondary" size="sm" @click="openMediaLibrary('attachment', 'updates')">Select from media library</Button>
+              <Button variant="secondary" size="sm" @click="triggerDocumentUpload">Upload document files</Button>
+            </div>
+            <input
+              ref="documentFileInput"
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip"
+              class="hidden"
+              aria-label="Upload document files"
+              @change="onDocumentFilesSelect"
+            />
+          </div>
+
+          <ul v-if="form.attachments && form.attachments.length" class="space-y-1.5">
+            <li
+              v-for="(att, idx) in form.attachments"
+              :key="idx"
+              class="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-2.5 text-sm dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div class="flex min-w-0 items-center gap-2">
+                <span class="truncate font-medium text-slate-900 dark:text-white">{{ att.name }}</span>
+                <Badge v-if="att.isPendingFile" variant="info">New upload</Badge>
+              </div>
+              <Button variant="ghost" size="sm" :aria-label="`Remove ${att.name}`" @click="removeAttachment(idx)">Remove</Button>
+            </li>
+          </ul>
+          <p v-if="form.errors.attachment_files" class="text-xs text-rose-600 dark:text-rose-400">{{ form.errors.attachment_files }}</p>
+
+          <div class="space-y-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+            <p class="text-xs font-medium text-slate-700 dark:text-slate-300">Or add a document by web link</p>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <input v-model="newAttachmentName" type="text" aria-label="Document label" placeholder="Document label (for example, Summons PDF)" :class="fieldClass" />
+              <div class="flex items-center gap-2">
+                <input v-model="newAttachmentUrl" type="text" aria-label="Document web link" placeholder="URL (https://...)" :class="[fieldClass, 'flex-1 font-mono']" />
+                <Button variant="secondary" size="sm" @click="addAttachmentByUrl">Add link</Button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </form>
+
+      <template #footer>
+        <Button variant="secondary" @click="showCreateDrawer = false">Cancel</Button>
+        <Button type="submit" form="update-form" :loading="form.processing">Save update</Button>
+      </template>
+    </Modal>
+
+    <ConfirmDialog :open="Boolean(updateToDelete)" title="Delete this update?" confirm-label="Delete update" @confirm="deleteUpdate" @close="updateToDelete = null">
+      "{{ updateToDelete?.title }}" will be deleted.
+    </ConfirmDialog>
+
+    <ConfirmDialog :open="confirmDigestOpen" title="Send the weekly digest?" confirm-label="Send now" variant="primary" @confirm="triggerDigestDispatch" @close="confirmDigestOpen = false">
+      The weekly digest newsletter will be compiled and sent to members now, with {{ counts.approved }} approved update{{ counts.approved === 1 ? '' : 's' }}.
+    </ConfirmDialog>
+
     <ContentPickerModal
       :show="showContentPicker"
       :updates="updates.filter(u => u.status === 'approved')"
@@ -648,7 +484,6 @@ const getCategoryBadge = (cat) => {
       @select-content="showContentPicker = false"
     />
 
-    <!-- Spatie Media Library Selector Modal -->
     <MediaLibraryModal
       :show="showMediaModal"
       :club-slug="club.slug"

@@ -306,7 +306,7 @@ class WeeklyUpdateDigestService
         $newsletter = Newsletter::create([
             'club_id' => $club->id,
             'newsletter_type_id' => $digestType->id,
-            'subject' => $club->name.' - Weekly Digest ('.Carbon::now()->format('M d, Y').')',
+            'subject' => $club->name.' - Weekly Digest ('.Carbon::now()->format('j M Y').')',
             'content' => $htmlContent,
             'attachments' => $newsletterAttachments,
             'target_roles' => $recipientRoles ?? $digestType->default_roles ?? ['member', 'admin'],

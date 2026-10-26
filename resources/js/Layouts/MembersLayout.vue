@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AccountMenu from '@/Components/AccountMenu.vue';
 import Alert from '@/Components/Ui/Alert.vue';
+import FlashMessages from '@/Components/Ui/FlashMessages.vue';
 import ClubSwitcher from '@/Components/ClubSwitcher.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import { navMode } from '@/Utils/navMode';
@@ -25,7 +26,6 @@ const isStaff = computed(() => Boolean(props.club) && currentRole.value !== 'mem
 // Coaches are not allowed the analytics dashboard, so send them to events instead.
 const adminHome = computed(() => (currentRole.value === 'coach' ? route('admin.events.index', { slug: slug.value }) : route('admin.analytics', { slug: slug.value })));
 
-const flash = computed(() => page.props.flash ?? {});
 // Only the notices that no form field shows itself; field errors stay next to their fields.
 const NOTICE_KEYS = ['cutoff', 'booking_closed', 'rsvp'];
 const errors = computed(() => NOTICE_KEYS.map((key) => page.props.errors?.[key]).filter(Boolean));
@@ -80,7 +80,7 @@ const nav = computed(() => (slug.value
     </a>
 
     <div class="min-h-screen bg-slate-100 font-sans text-slate-800 dark:bg-slate-950 dark:text-slate-200 lg:flex">
-        <aside v-if="side" class="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-6 overflow-y-auto bg-slate-800 p-4 text-slate-300 lg:flex">
+        <aside v-if="side" class="cm-nav sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-6 overflow-y-auto bg-slate-800 p-4 text-slate-300 lg:flex">
             <Link :href="route('members.dashboard')" class="flex items-center gap-2.5 px-2 pt-1" aria-label="ClubManager home">
                 <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-sm font-black text-white shadow-md shadow-blue-600/30">CM</span>
                 <span class="text-base font-bold tracking-tight text-white">ClubManager</span>
@@ -109,7 +109,7 @@ const nav = computed(() => (slug.value
         </aside>
 
         <div class="min-w-0 flex-1">
-            <header :class="['sticky top-0 z-40 border-b border-slate-800 bg-slate-800 text-slate-200', side ? 'lg:hidden' : '']">
+            <header :class="['cm-nav sticky top-0 z-40 border-b border-slate-800 bg-slate-800 text-slate-200', side ? 'lg:hidden' : '']">
                 <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
                     <div class="flex min-w-0 items-center gap-3">
                         <Link :href="route('members.dashboard')" class="flex shrink-0 items-center gap-2" aria-label="ClubManager home">
@@ -154,8 +154,7 @@ const nav = computed(() => (slug.value
 
             <main id="main-content" class="mx-auto max-w-6xl space-y-4 px-4 py-8 sm:px-6">
                 <h1 class="sr-only">{{ title }}</h1>
-                <Alert v-if="flash.success" variant="success">{{ flash.success }}</Alert>
-                <Alert v-if="flash.error" variant="danger">{{ flash.error }}</Alert>
+                <FlashMessages />
                 <Alert v-if="errors.length" variant="danger" title="That didn't work"><ul class="list-disc pl-4"><li v-for="message in errors" :key="message">{{ message }}</li></ul></Alert>
 
                 <slot />

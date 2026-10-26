@@ -1,7 +1,9 @@
 <script setup>
+import { localDate } from '@/Utils/localDateTime';
 import { onMounted, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import Modal from '@/Components/Ui/Modal.vue';
+import Button from '@/Components/Ui/Button.vue';
 import { formatMoney } from '@/Utils/currency';
 
 const props = defineProps({
@@ -28,7 +30,7 @@ const load = async () => {
 
 onMounted(load);
 
-const today = new Date().toISOString().slice(0, 10);
+const today = localDate();
 const paid = ref({ amount: '', method: '', received_on: today, comment: '' });
 const reason = ref('');
 const refundAmount = ref('');
@@ -65,8 +67,8 @@ const ACTIONS = {
     reconciled: ['Matched to a bank line', 'text-emerald-600'],
 };
 
-const input = 'w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500';
-const label = 'block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1';
+const input = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
+const label = 'mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300';
 </script>
 
 <template>
@@ -111,29 +113,29 @@ const label = 'block text-[10px] font-semibold text-slate-500 dark:text-slate-40
             <form v-if="Number(data.payment.balance) > 0 && !['waived', 'refunded'].includes(data.payment.status)" class="space-y-3 rounded-xl border border-slate-200 dark:border-slate-800 p-3" @submit.prevent="submitPaid">
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">Record a payment</h3>
                 <div class="grid gap-3 sm:grid-cols-3">
-                    <div><label :class="label">Amount received</label><input v-model="paid.amount" type="number" step="0.01" min="0.01" :placeholder="data.payment.balance" :class="input" /></div>
-                    <div><label :class="label">How</label><input v-model="paid.method" type="text" maxlength="100" :placeholder="data.payment.method_label || 'Bank transfer'" :class="input" /></div>
-                    <div><label :class="label">Date received</label><input v-model="paid.received_on" type="date" :class="input" /></div>
+                    <div><label for="paid-amount" :class="label">Amount received</label><input id="paid-amount" v-model="paid.amount" type="number" step="0.01" min="0.01" :placeholder="data.payment.balance" :class="input" /></div>
+                    <div><label for="paid-method" :class="label">How</label><input id="paid-method" v-model="paid.method" type="text" maxlength="100" :placeholder="data.payment.method_label || 'Bank transfer'" :class="input" /></div>
+                    <div><label for="paid-on" :class="label">Date received</label><input id="paid-on" v-model="paid.received_on" type="date" :class="input" /></div>
                 </div>
-                <div><label :class="label">Comment (optional)</label><input v-model="paid.comment" type="text" maxlength="1000" placeholder="e.g. Checked the statement, reference J SMITH" :class="input" /></div>
-                <button type="submit" :disabled="busy" class="rounded-lg bg-emerald-600 px-4 py-2 font-bold text-white hover:bg-emerald-700 disabled:opacity-60">Mark as paid</button>
+                <div><label for="paid-comment" :class="label">Comment (optional)</label><input id="paid-comment" v-model="paid.comment" type="text" maxlength="1000" placeholder="For example: checked the statement, reference J SMITH" :class="input" /></div>
+                <Button type="submit" size="sm" :loading="busy">Mark as paid</Button>
                 <span class="ml-2 text-slate-500 dark:text-slate-400">Leave the amount blank to mark the whole balance as paid.</span>
             </form>
 
             <!-- Change it back -->
             <div class="space-y-2">
                 <div class="flex flex-wrap gap-2">
-                    <button v-if="Number(data.payment.amount_paid) > 0" type="button" class="rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 font-semibold" @click="mode = 'unpaid'">Take payment back</button>
-                    <button v-if="Number(data.payment.amount_paid) > 0 && data.can_refund" type="button" class="rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 font-semibold" @click="mode = 'refund'">Refund</button>
-                    <button v-if="Number(data.payment.amount_paid) === 0 && Number(data.payment.total) > 0 && data.payment.status === 'unpaid'" type="button" class="rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 font-semibold" @click="mode = 'waive'">Waive the charge</button>
+                    <Button v-if="Number(data.payment.amount_paid) > 0" variant="secondary" size="sm" @click="mode = 'unpaid'">Take payment back</Button>
+                    <Button v-if="Number(data.payment.amount_paid) > 0 && data.can_refund" variant="secondary" size="sm" @click="mode = 'refund'">Refund</Button>
+                    <Button v-if="Number(data.payment.amount_paid) === 0 && Number(data.payment.total) > 0 && data.payment.status === 'unpaid'" variant="secondary" size="sm" @click="mode = 'waive'">Waive the charge</Button>
                 </div>
                 <form v-if="mode" class="space-y-2 rounded-xl border border-amber-300/60 bg-amber-50/50 dark:bg-amber-950/20 p-3" @submit.prevent="submitReason">
-                    <label :class="label">Why? (kept in the history)</label>
-                    <input v-model="reason" type="text" required minlength="3" maxlength="1000" :class="input" placeholder="e.g. Recorded against the wrong booking" />
-                    <div v-if="mode === 'refund'"><label :class="label">Amount to refund (blank = everything paid)</label><input v-model="refundAmount" type="number" step="0.01" min="0.01" :class="input" /></div>
+                    <label for="payment-reason" :class="label">Why? (kept in the history)</label>
+                    <input id="payment-reason" v-model="reason" type="text" required minlength="3" maxlength="1000" :class="input" placeholder="For example: recorded against the wrong booking" />
+                    <div v-if="mode === 'refund'"><label for="refund-amount" :class="label">Amount to refund (leave empty for everything paid)</label><input id="refund-amount" v-model="refundAmount" type="number" step="0.01" min="0.01" :class="input" /></div>
                     <div class="flex gap-2">
-                        <button type="submit" :disabled="busy" class="rounded-lg bg-rose-600 px-4 py-2 font-bold text-white hover:bg-rose-700 disabled:opacity-60">{{ { unpaid: 'Take payment back', waive: 'Waive the charge', refund: 'Record refund' }[mode] }}</button>
-                        <button type="button" class="rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 font-semibold" @click="mode = null">Cancel</button>
+                        <Button type="submit" variant="danger" size="sm" :loading="busy">{{ { unpaid: 'Take payment back', waive: 'Waive the charge', refund: 'Record refund' }[mode] }}</Button>
+                        <Button variant="secondary" size="sm" @click="mode = null">Cancel</Button>
                     </div>
                 </form>
             </div>

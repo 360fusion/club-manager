@@ -1,8 +1,9 @@
 <script setup>
+import { useClipboard } from '@/Composables/useClipboard';
 // Step-by-step help for connecting a custom domain: exactly which DNS record to add at the domain's provider, worked
 // out from the domain typed in the box (a "www" or other subdomain gets a CNAME; a bare domain gets a warning and an
 // A record). The parent saves the domain and runs the DNS check; this only explains and shows the status.
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     domain: { type: String, default: '' },
@@ -36,14 +37,8 @@ const active = computed(() => props.status === 'active');
 const knownProvider = computed(() => props.provider && props.domain.trim().toLowerCase() === props.savedDomain ? props.provider : null);
 const unsaved = computed(() => props.domain.trim().toLowerCase() !== props.savedDomain);
 
-const copied = ref('');
-const copy = async (value) => {
-    try {
-        await navigator.clipboard.writeText(value);
-        copied.value = value;
-        setTimeout(() => { if (copied.value === value) copied.value = ''; }, 1500);
-    } catch { /* clipboard blocked: the value is still on screen to select */ }
-};
+// Where the browser refuses, the value is still on screen to select.
+const { copied, copy } = useClipboard({ resetAfter: 1500 });
 
 const CELL = 'px-3 py-2 font-mono text-[11px] font-bold text-slate-900 dark:text-slate-100';
 </script>

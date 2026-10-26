@@ -6,8 +6,6 @@ use App\Domains\ClubAccounting\Livewire\Banking\BankAccountsIndex;
 use App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex;
 use App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace;
 use App\Domains\ClubAccounting\Livewire\Candidates\CandidatePipeline;
-use App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard;
-use App\Domains\ClubAccounting\Livewire\Charity\CharityFestival;
 use App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal;
 use App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal;
 use App\Domains\ClubAccounting\Livewire\Members\MemberIndex;
@@ -130,14 +128,6 @@ class AppServiceProvider extends ServiceProvider
             Livewire::component(
                 'banking.bank-reconciliation-workspace',
                 BankReconciliationWorkspace::class
-            );
-            Livewire::component(
-                'charity.charity-dashboard',
-                CharityDashboard::class
-            );
-            Livewire::component(
-                'charity.charity-festival',
-                CharityFestival::class
             );
         }
 

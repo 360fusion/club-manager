@@ -1,61 +1,24 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import Tabs from '@/Components/Ui/Tabs.vue';
 
-defineProps({
+const props = defineProps({
   club: Object,
   activeTab: {
     type: String,
-    required: true, // 'lodge', 'committee', 'officers'
+    required: true, // 'lodge', 'committee', 'visitors', 'officers'
   },
 });
+
+// The committee page is Livewire, so it needs a full page load. The same list is in livewire/committee/meeting-index.
+const items = computed(() => [
+  { key: 'lodge', label: 'Lodge meetings & summonses', href: route('admin.meetings.index', { clubSlug: props.club.slug }) },
+  { key: 'committee', label: 'Committee & board governance', href: route('admin.committee.index', { clubSlug: props.club.slug }), reload: true },
+  { key: 'visitors', label: 'Visitors', href: route('admin.visitors.index', { clubSlug: props.club.slug }) },
+  { key: 'officers', label: 'Annual officers roster & board', href: route('admin.officers.index', { clubSlug: props.club.slug }) },
+]);
 </script>
 
 <template>
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-    <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 dark:border-slate-700/60 shadow-inner">
-      <Link
-        :href="route('admin.meetings.index', { clubSlug: club.slug })"
-        :class="[
-          'px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer',
-          activeTab === 'lodge' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60'
-        ]"
-      >
-        <span>📅</span>
-        <span>Lodge Meetings & Summonses</span>
-      </Link>
-
-      <a
-        :href="route('admin.committee.index', { clubSlug: club.slug })"
-        :class="[
-          'px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer',
-          activeTab === 'committee' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60'
-        ]"
-      >
-        <span>🏛️</span>
-        <span>Committee & Board Governance</span>
-      </a>
-
-      <Link
-        :href="route('admin.visitors.index', { clubSlug: club.slug })"
-        :class="[
-          'px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer',
-          activeTab === 'visitors' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60'
-        ]"
-      >
-        <span>🤝</span>
-        <span>Visitors</span>
-      </Link>
-    </div>
-
-    <a
-      :href="route('admin.officers.index', { clubSlug: club.slug })"
-      :class="[
-        'px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm border shrink-0',
-        activeTab === 'officers' ? 'bg-amber-500 text-white border-amber-600 shadow-amber-500/20' : 'bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60'
-      ]"
-    >
-      <span>👑</span>
-      <span>Annual Officers Roster & Board</span>
-    </a>
-  </div>
+  <Tabs :items="items" :active="activeTab" label="Meetings" class="mb-6" />
 </template>

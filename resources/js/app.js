@@ -3,7 +3,7 @@ import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
-import { currencySymbol } from './Utils/currency';
+import { currencySymbol, formatMoney } from './Utils/currency';
 import focusTrap from './Directives/focusTrap';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -14,8 +14,9 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         const app = createApp({ render: () => h(App, props) });
 
-        // $cs is the symbol of the current club's currency, for use in templates.
+        // $cs is the symbol of the current club's currency and $money(amount) a whole amount in it, for use in templates.
         Object.defineProperty(app.config.globalProperties, '$cs', { get: () => currencySymbol() });
+        app.config.globalProperties.$money = formatMoney;
 
         app.directive('focus-trap', focusTrap);
 

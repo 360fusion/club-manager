@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Domains\ClubAccounting\Enums\CollectionType;
-use App\Domains\ClubAccounting\Livewire\Charity\CharityDashboard;
 use App\Domains\ClubAccounting\Livewire\Committee\AgendaPackPreviewModal;
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingIndex;
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingWorkspace;
@@ -209,29 +208,6 @@ class CrossClubBodyIdsTest extends TestCase
         $this->assertSame(0, DB::table('club_acc_charity_grants')->where('club_id', $this->attackerClub->id)->where('recipient_name', 'Someone')->where(fn ($q) => $q->where('proposer_member_id', $foreignMember)->orWhere('seconder_member_id', $foreignMember)->orWhere('meeting_id', $foreignMeeting))->count(), "A grant names another club's member or meeting.");
     }
 
-    public function test_charity_dashboard_forms_cannot_name_another_clubs_members(): void
-    {
-        [$foreignMember] = $this->foreignIds('club_acc_members');
-        [$foreignMeeting] = $this->foreignIds('club_acc_committee_meetings');
-        [$ownMember, $ownOther] = $this->ownMembers();
-
-        $component = Livewire::test(CharityDashboard::class, ['clubSlug' => $this->attackerClub->slug]);
-
-        $component->set('cash_amount', '10.00')->set('counted_by_member_id', $foreignMember)->set('witnessed_by_member_id', $ownMember)->call('recordCollection');
-        $component->set('recipient_name', 'Someone')->set('purpose', 'Relief')->set('grant_amount', '50.00')->set('proposer_member_id', $foreignMember)->set('committee_meeting_id', $foreignMeeting)->call('saveGrant');
-
-        $this->assertSame(0, DB::table('club_acc_charity_collections')->where('club_id', $this->attackerClub->id)->where('counted_by_member_id', $foreignMember)->count(), "A collection names another club's member.");
-        $this->assertSame(0, DB::table('club_acc_charity_grants')->where('club_id', $this->attackerClub->id)->where('recipient_name', 'Someone')->count(), "A grant was saved naming another club's member or meeting.");
-
-        // The same forms do work with the club's own members, so the refusals above are down to the club check.
-        $collectionsBefore = DB::table('club_acc_charity_collections')->where('club_id', $this->attackerClub->id)->count();
-        $component->set('counted_by_member_id', $ownMember)->set('witnessed_by_member_id', $ownOther)->call('recordCollection');
-        $component->set('proposer_member_id', $ownMember)->set('committee_meeting_id', (int) DB::table('club_acc_committee_meetings')->where('club_id', $this->attackerClub->id)->value('id'))->call('saveGrant');
-
-        $this->assertSame($collectionsBefore + 1, DB::table('club_acc_charity_collections')->where('club_id', $this->attackerClub->id)->count(), 'The collection form no longer works for the own club.');
-        $this->assertSame(1, DB::table('club_acc_charity_grants')->where('club_id', $this->attackerClub->id)->where('recipient_name', 'Someone')->count(), 'The grant form no longer works for the own club.');
-    }
-
     public function test_meeting_workspace_grant_cannot_name_another_clubs_members(): void
     {
         [$foreignMember] = $this->foreignIds('club_acc_members');
@@ -250,6 +226,9 @@ class CrossClubBodyIdsTest extends TestCase
             ->call('saveCharityGrantFromMeeting');
 
         $this->assertSame(1, DB::table('club_acc_charity_grants')->where('club_id', $this->attackerClub->id)->where('recipient_name', 'Someone')->where('proposer_member_id', $ownMember)->count(), 'The meeting grant form no longer works for the own club.');
+
+        $grant = DB::table('club_acc_charity_grants')->where('club_id', $this->attackerClub->id)->where('recipient_name', 'Someone')->where('proposer_member_id', $ownMember)->first();
+        $this->assertSame('BACS-G'.sprintf('%04d', $grant->id), $grant->bacs_reference, 'The BACS reference should come from the grant id.');
     }
 
     public function test_agenda_pack_cannot_mark_another_clubs_committee_members_as_sent(): void

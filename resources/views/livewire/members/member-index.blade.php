@@ -1,40 +1,7 @@
 <div class="space-y-6">
     @include('livewire.members._notice')
 
-    <!-- Member Management Domain Unified Navigation -->
-    <div class="flex items-center gap-2 p-1.5 bg-slate-200/80 dark:bg-slate-700/80 rounded-2xl w-fit text-xs font-bold border border-slate-300/60 dark:border-slate-700/60 shadow-inner">
-        <a
-            href="{{ route('admin.club_acc.members.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 bg-slate-900 dark:bg-slate-700 text-white shadow-md font-black"
-        >
-            <span>👥</span>
-            <span>Members Roster</span>
-        </a>
-
-        <a
-            href="{{ route('admin.officers.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60"
-        >
-            <span>👔</span>
-            <span>Annual Officer Rosters &amp; History</span>
-        </a>
-
-        <a
-            href="{{ route('admin.club_acc.candidates.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60"
-        >
-            <span>📋</span>
-            <span>Candidates (Form P Vetting)</span>
-        </a>
-
-        <a
-            href="{{ route('admin.club_acc.subscriptions.index', ['clubSlug' => $club->slug]) }}"
-            class="px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/60"
-        >
-            <span>💳</span>
-            <span>Subscriptions &amp; Dues</span>
-        </a>
-    </div>
+    @include('livewire.members._tabs', ['active' => 'members'])
 
     <!-- Header & Action Toolbar -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-6">

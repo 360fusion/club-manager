@@ -1,4 +1,5 @@
 <script setup>
+import { useClipboard } from '@/Composables/useClipboard';
 import { ref, watch, onMounted, nextTick, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -304,8 +305,9 @@ const handleDrop = (e) => {
   }
 };
 
-const copyUrl = (item) => {
-  navigator.clipboard.writeText(item.original_url);
+const { copy } = useClipboard();
+const copyUrl = async (item) => {
+  if (!(await copy(item.original_url))) return;
   copyToast.value = `Copied URL for "${item.file_name}"!`;
   setTimeout(() => {
     copyToast.value = '';

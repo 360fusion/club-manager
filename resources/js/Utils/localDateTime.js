@@ -23,9 +23,25 @@ export function fromLocalInput(text) {
     return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+/** "2027-01-10" for a date (default today) in the browser's timezone, as a date input wants it. Never use toISOString() for
+ * this: that is the UTC date, which is a day out around midnight in summer time. */
+export function localDate(date = new Date()) {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/**
+ * "12 Apr 2027, 19:00" for an event time. Event times are stored as the organiser typed them (wall-clock time, in a
+ * UTC column), so they are shown as stored, never shifted to the browser's timezone.
+ */
+export function formatEventTime(iso) {
+    if (!iso) return '';
+
+    return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+}
+
 /** "12 Apr 2027, 09:00" for an ISO string, in the browser's timezone. */
 export function formatLocal(iso) {
     if (!iso) return '';
 
-    return new Date(iso).toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }

@@ -1,4 +1,5 @@
 <script setup>
+import { formatBytes } from '@/Utils/fileSize';
 // Edit form for the Downloads block. Uploaded files are stored privately and served by the site's download
 // route (which applies "Members only"); link items point anywhere and cannot be protected. Mutates `block` in place.
 import { ref } from 'vue';
@@ -24,12 +25,6 @@ const fileInput = ref(null);
 
 const newId = () => `file-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-const size = (bytes) => {
-    if (!bytes) return '';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
 
 const upload = async (event) => {
     const files = [...event.target.files];
@@ -132,7 +127,7 @@ const move = (i, by) => {
             <div class="flex items-center justify-between gap-2">
                 <span class="font-bold text-slate-500">
                     {{ item.source === 'upload' ? '📎 Uploaded file' : '🔗 Link' }}
-                    <span v-if="item.source === 'upload'" class="font-normal">· {{ item.file_name }} <span v-if="size(item.size)">({{ size(item.size) }})</span></span>
+                    <span v-if="item.source === 'upload'" class="font-normal">· {{ item.file_name }} <span v-if="formatBytes(item.size)">({{ formatBytes(item.size) }})</span></span>
                 </span>
                 <div class="flex items-center gap-1.5">
                     <button type="button" :class="MINI_BUTTON" :disabled="i === 0" aria-label="Move up" @click="move(i, -1)">▲</button>

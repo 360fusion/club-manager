@@ -4,7 +4,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import CharitySubNav from '@/Components/CharitySubNav.vue';
 
-import { currencySymbol } from '@/Utils/currency';
+import { formatMoney } from '@/Utils/currency';
 const props = defineProps({
   club: Object,
   giftAidSummary: Object,
@@ -54,10 +54,6 @@ const filteredTotalDonations = computed(() => {
 const filteredTotalGiftAid = computed(() => {
   return filteredCollections.value.reduce((acc, item) => acc + (item.gift_aid_amount || 0), 0);
 });
-
-const formatCurrency = (amount) => {
-  return currencySymbol() + Number(amount || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
 
 const resetFilters = () => {
   filterDateFrom.value = '';
@@ -146,10 +142,10 @@ const resetFilters = () => {
 
           <div class="flex flex-wrap items-center gap-2 text-xs">
             <span class="px-3.5 py-1.5 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 font-extrabold rounded-xl border border-blue-200/80 dark:border-blue-800/80">
-              Filtered Donations: {{ formatCurrency(filteredTotalDonations) }}
+              Filtered Donations: {{ formatMoney(filteredTotalDonations) }}
             </span>
             <span class="px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-extrabold rounded-xl border border-emerald-200/80 dark:border-emerald-800/80">
-              Filtered Gift Aid: {{ formatCurrency(filteredTotalGiftAid) }}
+              Filtered Gift Aid: {{ formatMoney(filteredTotalGiftAid) }}
             </span>
             <span class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl border border-slate-200 dark:border-slate-800">
               Showing {{ filteredCollections.length }} of {{ reconciledDonations?.totals?.total_count || 0 }} records

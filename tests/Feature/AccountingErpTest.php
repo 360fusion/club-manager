@@ -1173,4 +1173,50 @@ class AccountingErpTest extends TestCase
         $response->assertOk();
         $this->assertStringContainsString('zip', (string) $response->headers->get('content-type'));
     }
+
+    public function test_invoice_form_opens_with_the_member_named_in_the_link_only_if_they_belong_to_the_club(): void
+    {
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+        $outsider = User::factory()->create();
+
+        $this->actingAs($this->adminUser)->get(route('admin.accounting.invoices.create', ['clubSlug' => $this->club->slug, 'user' => $member->id]))
+            ->assertInertia(fn ($page) => $page->component('Admin/Accounting/InvoiceForm')->where('initialUserId', $member->id)->missing('invoice'));
+
+        $this->actingAs($this->adminUser)->get(route('admin.accounting.invoices.create', ['clubSlug' => $this->club->slug, 'user' => $outsider->id]))
+            ->assertInertia(fn ($page) => $page->where('initialUserId', null));
+    }
+
+    public function test_invoice_keeps_its_due_date_and_notes(): void
+    {
+        $this->actingAs($this->adminUser);
+        $member = User::factory()->create();
+        $this->club->users()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+
+        $this->post(route('admin.accounting.invoices.store', $this->club->slug), [
+            'user_id' => $member->id,
+            'title' => 'Annual subscription',
+            'amount' => 120,
+            'due_date' => '2026-12-01',
+            'notes' => 'Pay by bank transfer.',
+            'is_draft' => true,
+        ])->assertRedirect();
+
+        $invoice = Invoice::where('club_id', $this->club->id)->firstOrFail();
+        $this->assertSame('2026-12-01', $invoice->due_date->format('Y-m-d'));
+        $this->assertSame('Pay by bank transfer.', $invoice->notes);
+
+        $update = fn (array $extra) => $this->put(route('admin.accounting.invoices.update', ['clubSlug' => $this->club->slug, 'id' => $invoice->id]), [
+            'user_id' => $member->id, 'title' => 'Annual subscription', 'amount' => 120, 'status' => 'draft', ...$extra,
+        ])->assertRedirect();
+
+        // An update that does not send them leaves them alone; sending them empty clears them.
+        $update([]);
+        $this->assertSame('2026-12-01', $invoice->fresh()->due_date->format('Y-m-d'));
+        $this->assertSame('Pay by bank transfer.', $invoice->fresh()->notes);
+
+        $update(['due_date' => '', 'notes' => '']);
+        $this->assertNull($invoice->fresh()->due_date);
+        $this->assertNull($invoice->fresh()->notes);
+    }
 }

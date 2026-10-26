@@ -235,14 +235,14 @@ class CharityAdminController extends Controller
             'collection_type' => $validated['collection_type'],
             'cash_amount' => $validated['cash_amount'],
             'cheque_amount' => $validated['cheque_amount'],
-            'counted_by_member_id' => $validated['counted_by_member_id'],
-            'witnessed_by_member_id' => $validated['witnessed_by_member_id'],
+            'counted_by_member_id' => $validated['counted_by_member_id'] ?? null,
+            'witnessed_by_member_id' => $validated['witnessed_by_member_id'] ?? null,
             'donor_member_id' => $validated['donor_member_id'] ?? null,
             'donor_name' => $validated['donor_name'] ?? null,
             'is_gift_aid_eligible' => true,
             'gift_aid_status' => 'pending',
             'gift_aid_amount' => round(($validated['cash_amount'] + $validated['cheque_amount']) * 0.25, 2),
-            'notes' => $validated['notes'],
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         return redirect()->back()->with('success', 'Dual-custody meeting collection of '.Currencies::format($collection->total_amount, $club).' recorded.');

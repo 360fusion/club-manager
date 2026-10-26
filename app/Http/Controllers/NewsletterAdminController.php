@@ -56,7 +56,9 @@ class NewsletterAdminController extends Controller
                     'attachments' => $newsletter->attachments ?? [],
                     'target_roles' => $newsletter->target_roles ?? [],
                     'status' => $newsletter->status ?? 'draft',
-                    'sent_at' => $newsletter->sent_at?->format('M d, Y @ H:i'),
+                    'sent_at' => $newsletter->sent_at?->format('j M Y, H:i'),
+                    // The date-range filter compares this one; the text above is for display.
+                    'sent_at_iso' => $newsletter->sent_at?->toIso8601String(),
                     'recipient_count' => $total,
                     'external_recipient_count' => $counts['visitors'] ?? 0,
                     'deliveries' => $stats,
@@ -98,7 +100,7 @@ class NewsletterAdminController extends Controller
             ->map(fn ($m) => [
                 'id' => $m->id,
                 'title' => $m->title,
-                'date' => Carbon::parse($m->meeting_date)->format('M d, Y g:i A'),
+                'date' => Carbon::parse($m->meeting_date)->format('j M Y, H:i'),
                 'room' => $m->location ?? 'Main Lodge Room',
             ]);
 
@@ -109,7 +111,7 @@ class NewsletterAdminController extends Controller
             ->map(fn ($e) => [
                 'id' => $e->id,
                 'title' => $e->title,
-                'date' => Carbon::parse($e->starts_at)->format('M d, Y g:i A'),
+                'date' => Carbon::parse($e->starts_at)->format('j M Y, H:i'),
                 'price' => $e->price ? Currencies::format($e->price, $club) : 'Free',
             ]);
 

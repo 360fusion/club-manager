@@ -4,13 +4,14 @@ import { ORDER_COLOURS, orderColour } from '@/Utils/orderColour';
 defineProps({
     modelValue: { type: String, default: 'slate' },
     disabled: { type: Boolean, default: false },
+    label: { type: String, default: 'Order colour' },
 });
 
 defineEmits(['update:modelValue']);
 </script>
 
 <template>
-    <div role="radiogroup" aria-label="Order colour" class="flex flex-wrap gap-2">
+    <div role="radiogroup" :aria-label="label" class="flex flex-wrap gap-2">
         <button
             v-for="option in ORDER_COLOURS"
             :key="option.key"

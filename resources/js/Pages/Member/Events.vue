@@ -1,4 +1,5 @@
 <script setup>
+import { formatMeetingDate } from '@/Utils/lodgeDates';
 import EventBookingModal from '@/Components/Events/EventBookingModal.vue';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 import { formatMoney } from '@/Utils/currency';
@@ -37,26 +38,6 @@ const openMeetingRsvpModal = (meeting) => {
   showMeetingRsvpModal.value = true;
 };
 
-const formatDate = (dateVal) => {
-  if (!dateVal) return '';
-  const cleanStr = String(dateVal).split('T')[0];
-  const parts = cleanStr.split('-');
-  if (parts.length === 3) {
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const day = parseInt(parts[2], 10);
-    const d = new Date(year, month, day);
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString('en-GB', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      });
-    }
-  }
-  return dateVal;
-};
 
 const totalScheduleCount = computed(() => props.meetings.length + props.events.length);
 </script>
@@ -149,7 +130,7 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
 
                 <h4 class="text-lg font-bold text-slate-900 dark:text-white">{{ meeting.title || 'Regular Meeting' }}</h4>
                 <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-600 dark:text-slate-300">
-                  <span>📅 <strong>Date:</strong> {{ formatDate(meeting.raw_meeting_date || meeting.meeting_date) }}</span>
+                  <span>📅 <strong>Date:</strong> {{ formatMeetingDate(meeting.raw_meeting_date || meeting.meeting_date) }}</span>
                   <span>🕒 <strong>Start:</strong> {{ meeting.starts_at }} <span v-if="meeting.rehearsal_starts_at" class="text-slate-400">(Rehearsal: {{ meeting.rehearsal_starts_at }})</span></span>
                   <span>📍 <strong>Venue:</strong> {{ meeting.venue }}</span>
                   <span v-if="meeting.dress_code">👔 <strong>Dress:</strong> {{ meeting.dress_code }}</span>

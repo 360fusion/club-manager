@@ -949,14 +949,14 @@ class PageAdminController extends Controller
                 'content' => $p->content,
                 'cover_image_url' => $p->cover_image_url ?: ($p->getFirstMediaUrl('cover') ?: null),
                 'author_name' => $p->author?->name ?? 'Club Admin',
-                'published_at' => ($p->published_at ?? $p->created_at)?->format('M d, Y'),
+                'published_at' => ($p->published_at ?? $p->created_at)?->format('j M Y'),
             ]),
             'upcomingEvents' => $club->events->take(3)->values()->map(fn ($e) => [
                 'id' => $e->id,
                 'title' => $e->title,
                 'slug' => $e->slug,
                 'location' => $e->location,
-                'starts_at' => $e->starts_at?->format('M d, Y @ H:i'),
+                'starts_at' => $e->starts_at?->format('j M Y, H:i'),
                 'price' => number_format($e->price, 2),
             ]),
             'membershipPlans' => $club->membershipPlans->map(fn ($mp) => [

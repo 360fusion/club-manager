@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
+import FlashMessages from '@/Components/Ui/FlashMessages.vue';
 
 defineProps({
   title: {
@@ -214,6 +215,7 @@ const user = page.props.auth?.user;
 
     <!-- Main Content Area -->
     <main class="flex-1 min-w-0 p-6 md:p-10 space-y-8 overflow-y-auto">
+      <FlashMessages />
       <slot />
     </main>
   </div>
