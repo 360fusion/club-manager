@@ -8,6 +8,7 @@ import { formatMeetingDate } from '@/Utils/lodgeDates';
 
 defineProps({
     claims: { type: Array, default: () => [] },
+    corrections: { type: Array, default: () => [] },
     lodges: { type: Array, default: () => [] },
     limit: { type: Number, default: 100 },
 });
@@ -20,6 +21,12 @@ const STATUS = {
     rejected: { label: 'Not approved', variant: 'danger' },
     withdrawn: { label: 'Withdrawn', variant: 'neutral' },
     superseded: { label: 'Closed', variant: 'neutral' },
+};
+
+const CORRECTION_STATUS = {
+    pending: { label: 'Being checked', variant: 'info' },
+    applied: { label: 'Applied', variant: 'success' },
+    rejected: { label: 'Not applied', variant: 'danger' },
 };
 
 function reply(claim) {
@@ -110,6 +117,21 @@ function unfollow(lodge) {
                         </div>
 
                         <button v-if="claim.open" type="button" class="mt-3 text-sm text-slate-500 hover:text-rose-600 dark:text-slate-400" @click="withdraw(claim)">Withdraw this claim</button>
+                    </li>
+                </ul>
+            </section>
+
+            <section v-if="corrections.length" class="space-y-3" aria-labelledby="corrections-heading">
+                <h2 id="corrections-heading" class="text-lg font-semibold text-slate-900 dark:text-white">Your suggested fixes</h2>
+                <ul class="space-y-3">
+                    <li v-for="correction in corrections" :key="correction.id" class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <Link v-if="correction.lodge.slug" :href="route('lodges.show', correction.lodge.slug)" class="font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300">{{ correction.lodge.name }}</Link>
+                            <span v-else class="font-semibold text-slate-900 dark:text-white">{{ correction.lodge.name }}</span>
+                            <Badge :variant="CORRECTION_STATUS[correction.status]?.variant ?? 'neutral'">{{ CORRECTION_STATUS[correction.status]?.label ?? correction.status }}</Badge>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Sent {{ correction.created_at }}<span v-if="correction.what.length"> · {{ correction.what.join(', ') }}</span></p>
+                        <p v-if="correction.decision_note" class="mt-2 text-sm text-slate-700 dark:text-slate-300">{{ correction.decision_note }}</p>
                     </li>
                 </ul>
             </section>

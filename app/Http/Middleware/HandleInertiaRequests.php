@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Club;
 use App\Models\LodgeClaim;
+use App\Models\LodgeCorrection;
 use App\Support\Currencies;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -71,8 +72,9 @@ class HandleInertiaRequests extends Middleware
                     ...$n->data,
                 ])->all(),
             ] : null,
-            // The superadmin menu shows how many lodge claims are waiting for a decision.
+            // The superadmin menu shows how many lodge claims and suggested fixes are waiting for a decision.
             'pendingLodgeClaims' => fn () => $user?->is_super_admin ? LodgeClaim::open()->count() : 0,
+            'pendingLodgeCorrections' => fn () => $user?->is_super_admin ? LodgeCorrection::open()->count() : 0,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

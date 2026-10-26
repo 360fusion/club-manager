@@ -45,6 +45,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LegacyClubUrlController;
 use App\Http\Controllers\LodgeCalendarController;
 use App\Http\Controllers\LodgeClaimController;
+use App\Http\Controllers\LodgeCorrectionController;
 use App\Http\Controllers\LodgeDirectoryController;
 use App\Http\Controllers\LodgeFeedController;
 use App\Http\Controllers\LodgeFollowController;
@@ -83,6 +84,7 @@ use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SuperAdminLodgeClaimController;
 use App\Http\Controllers\SuperAdminLodgeController;
+use App\Http\Controllers\SuperAdminLodgeCorrectionController;
 use App\Http\Controllers\UpdateAdminController;
 use App\Http\Controllers\UserAdminController;
 use App\Http\Controllers\VisitorAccessAdminController;
@@ -372,6 +374,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/lodges/{slug}/claim', [LodgeClaimController::class, 'store'])->middleware('throttle:6,1')->name('lodges.claim.store');
     Route::post('/members/lodges/claims/{id}/respond', [LodgeClaimController::class, 'respond'])->middleware('throttle:20,1')->name('lodges.claim.respond');
     Route::delete('/members/lodges/claims/{id}', [LodgeClaimController::class, 'destroy'])->middleware('throttle:20,1')->name('lodges.claim.withdraw');
+    Route::get('/lodges/{slug}/suggest-fix', [LodgeCorrectionController::class, 'create'])->name('lodges.correction');
+    Route::post('/lodges/{slug}/suggest-fix', [LodgeCorrectionController::class, 'store'])->middleware('throttle:6,1')->name('lodges.correction.store');
     Route::post('/lodges/{slug}/follow', [LodgeFollowController::class, 'store'])->middleware('throttle:60,1')->name('lodges.follow');
     Route::patch('/lodges/{slug}/follow', [LodgeFollowController::class, 'update'])->middleware('throttle:60,1')->name('lodges.follow.update');
     Route::delete('/lodges/{slug}/follow', [LodgeFollowController::class, 'destroy'])->middleware('throttle:60,1')->name('lodges.unfollow');
@@ -670,6 +674,9 @@ Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
     Route::post('/superadmin/lodge-claims/{id}/approve', [SuperAdminLodgeClaimController::class, 'approve'])->name('superadmin.lodge_claims.approve');
     Route::post('/superadmin/lodge-claims/{id}/reject', [SuperAdminLodgeClaimController::class, 'reject'])->name('superadmin.lodge_claims.reject');
     Route::post('/superadmin/lodge-claims/{id}/request-info', [SuperAdminLodgeClaimController::class, 'requestInfo'])->name('superadmin.lodge_claims.request_info');
+    Route::get('/superadmin/lodge-corrections', [SuperAdminLodgeCorrectionController::class, 'index'])->name('superadmin.lodge_corrections.index');
+    Route::post('/superadmin/lodge-corrections/{id}/apply', [SuperAdminLodgeCorrectionController::class, 'apply'])->name('superadmin.lodge_corrections.apply');
+    Route::post('/superadmin/lodge-corrections/{id}/reject', [SuperAdminLodgeCorrectionController::class, 'reject'])->name('superadmin.lodge_corrections.reject');
     Route::delete('/superadmin/lodges/{id}', [SuperAdminLodgeController::class, 'destroy'])->name('superadmin.lodges.destroy');
 
     // Masonic halls

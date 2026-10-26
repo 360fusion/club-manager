@@ -8,7 +8,8 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Something happened to a lodge claim: a new claim or a reply for the superadmins, a decision or
- * a question for the person who made it. It lands in the bell and in an email.
+ * a question for the person who made it. It lands in the bell and in an email. Suggested fixes
+ * to a listing use it too, and can leave out the email.
  */
 class LodgeClaimNotification extends Notification
 {
@@ -25,6 +26,7 @@ class LodgeClaimNotification extends Notification
         public readonly array $params = [],
         public readonly string $actionLabel = 'Open',
         public readonly bool $important = false,
+        public readonly bool $mail = true,
     ) {}
 
     public static function submitted(LodgeClaim $claim): self
@@ -102,7 +104,7 @@ class LodgeClaimNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return $this->mail ? ['database', 'mail'] : ['database'];
     }
 
     /**

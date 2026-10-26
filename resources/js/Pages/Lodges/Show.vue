@@ -217,6 +217,19 @@ function setCalendar(event) {
                 </section>
 
                 <ReferenceLinks :groups="lodge.references" :checked-on="lodge.last_verified_at" />
+
+                <section class="rounded-xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Something wrong?</h2>
+                    <p v-if="lodge.correction_waiting" class="mt-2">
+                        Your suggestion is <strong>being checked</strong>.
+                        <Link :href="route('members.lodges')" class="text-blue-600 hover:underline dark:text-blue-400">See where it stands</Link>
+                    </p>
+                    <template v-else>
+                        <p class="mt-2 text-slate-600 dark:text-slate-400">These details come from public sources and can go out of date. Tell us what has changed and we will check it.</p>
+                        <Link v-if="signedIn" :href="route('lodges.correction', lodge.slug)" class="mt-3 inline-block rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Suggest a fix</Link>
+                        <Link v-else :href="route('login')" class="mt-3 inline-block rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Sign in to suggest a fix</Link>
+                    </template>
+                </section>
             </aside>
         </div>
     </PublicLayout>

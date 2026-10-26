@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Lodge;
 use App\Models\LodgeClaim;
+use App\Models\LodgeCorrection;
 use App\Models\LodgeSchedule;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -68,8 +69,21 @@ class MemberLodgesController extends Controller
                 'created_at' => $claim->created_at->toDateString(),
             ]);
 
+        $corrections = LodgeCorrection::where('user_id', $user->id)
+            ->with(['lodge:id,name,number,slug,status,club_type_id', 'lodge.clubType:id,code,name'])
+            ->latest('id')->limit(30)->get()
+            ->map(fn (LodgeCorrection $correction) => [
+                'id' => $correction->id,
+                'lodge' => ['name' => $correction->lodge->displayName(), 'slug' => $correction->lodge->status === 'active' ? $correction->lodge->slug : null],
+                'status' => $correction->status,
+                'what' => array_values(array_map(fn (string $field) => LodgeCorrection::FIELDS[$field] ?? $field, array_keys($correction->changes))),
+                'decision_note' => $correction->status === LodgeCorrection::REJECTED ? $correction->decision_note : null,
+                'created_at' => $correction->created_at->toDateString(),
+            ]);
+
         return Inertia::render('Members/Lodges', [
             'claims' => $claims->values(),
+            'corrections' => $corrections->values(),
             'lodges' => $lodges->values(),
             'limit' => LodgeFollowController::MAX_FOLLOWS,
         ]);

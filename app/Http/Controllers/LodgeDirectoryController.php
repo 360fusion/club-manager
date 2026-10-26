@@ -126,6 +126,7 @@ class LodgeDirectoryController extends Controller
                 'is_managed' => $lodge->isManaged(),
                 'can_claim' => ! $lodge->isManaged(),
                 'claim' => $request->user() ? $this->claimFor($lodge, $request->user()->id) : null,
+                'correction_waiting' => $viewer !== null && $lodge->corrections()->where('user_id', $viewer->id)->open()->exists(),
                 'last_verified_at' => $lodge->last_verified_at?->toDateString(),
                 'references' => LodgeReferenceLinks::forLodge($lodge),
                 'upcoming' => $expected,

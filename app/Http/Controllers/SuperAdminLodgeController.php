@@ -10,7 +10,6 @@ use App\Models\LodgeSource;
 use App\Models\MasonicHall;
 use App\Models\Province;
 use App\Services\Lodges\LodgeClaimService;
-use App\Support\MeetingScheduleParser;
 use App\Support\Months;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -221,16 +220,7 @@ class SuperAdminLodgeController extends Controller
         $schedule = $validated['schedule'] ?? null;
 
         if (! empty($validated['reparse'])) {
-            $patterns = $lodge->meets_text ? (new MeetingScheduleParser)->parseAll($lodge->meets_text) : [];
-            $lodge->schedules()->delete();
-
-            foreach ($patterns as $pattern) {
-                if (count($patterns) === 1) {
-                    $pattern['months'] = $this->withInstallationMonth($pattern['months'], $lodge);
-                }
-
-                $lodge->schedules()->create([...$pattern, 'masonic_hall_id' => $lodge->masonic_hall_id, 'source' => 'import']);
-            }
+            $lodge->rebuildSchedulesFromWording();
 
             return;
         }
@@ -242,7 +232,7 @@ class SuperAdminLodgeController extends Controller
         $lodge->schedules()->delete();
 
         if (! empty($schedule['occurrence']) && ! empty($schedule['day_of_week']) && ! empty($schedule['months'])) {
-            $months = $this->withInstallationMonth(array_values(array_unique(array_map('intval', $schedule['months']))), $lodge);
+            $months = $lodge->withInstallationMonth(array_values(array_unique(array_map('intval', $schedule['months']))));
 
             $lodge->schedules()->create([
                 'occurrence' => $schedule['occurrence'],
@@ -253,22 +243,5 @@ class SuperAdminLodgeController extends Controller
                 'source' => 'manual',
             ]);
         }
-    }
-
-    /**
-     * The installation is a meeting too, so its month is always one of the meeting months.
-     *
-     * @param  list<int>  $months
-     * @return list<int>
-     */
-    private function withInstallationMonth(array $months, Lodge $lodge): array
-    {
-        if ($lodge->installation_month && ! in_array((int) $lodge->installation_month, $months, true)) {
-            $months[] = (int) $lodge->installation_month;
-        }
-
-        sort($months);
-
-        return $months;
     }
 }

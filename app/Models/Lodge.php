@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\MeetingScheduleParser;
 use App\Support\Months;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -113,6 +114,52 @@ class Lodge extends Model
     public function claims(): HasMany
     {
         return $this->hasMany(LodgeClaim::class);
+    }
+
+    /**
+     * @return HasMany<LodgeCorrection, $this>
+     */
+    public function corrections(): HasMany
+    {
+        return $this->hasMany(LodgeCorrection::class);
+    }
+
+    /**
+     * Replace the meeting patterns with every one the parser reads from the meeting wording, so a
+     * lodge that meets on different days in different months is replaced whole. Returns how many
+     * it found (none leaves the lodge with no pattern, and the wording is shown instead).
+     */
+    public function rebuildSchedulesFromWording(string $source = 'import'): int
+    {
+        $patterns = $this->meets_text ? (new MeetingScheduleParser)->parseAll($this->meets_text) : [];
+        $this->schedules()->delete();
+
+        foreach ($patterns as $pattern) {
+            if (count($patterns) === 1) {
+                $pattern['months'] = $this->withInstallationMonth($pattern['months']);
+            }
+
+            $this->schedules()->create([...$pattern, 'masonic_hall_id' => $this->masonic_hall_id, 'source' => $source]);
+        }
+
+        return count($patterns);
+    }
+
+    /**
+     * The installation is a meeting too, so its month is always one of the meeting months.
+     *
+     * @param  list<int>  $months
+     * @return list<int>
+     */
+    public function withInstallationMonth(array $months): array
+    {
+        if ($this->installation_month && ! in_array((int) $this->installation_month, $months, true)) {
+            $months[] = (int) $this->installation_month;
+        }
+
+        sort($months);
+
+        return $months;
     }
 
     /**
