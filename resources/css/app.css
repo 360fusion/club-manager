@@ -85,6 +85,11 @@
 
 /* Page titles and section titles are set in Playfair Display; smaller headings stay in Inter. */
 @layer base {
+    /* Keep room for the scrollbar, so a page doesn't shift sideways when its content grows taller than the window. */
+    html {
+        scrollbar-gutter: stable;
+    }
+
     h1,
     h2.text-xl,
     h2.text-2xl {

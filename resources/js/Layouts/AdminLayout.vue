@@ -301,7 +301,7 @@ const currentActiveTab = computed(() => {
           </Link>
 
           <!-- 10. Charity Steward & Provincial Festival Hub -->
-          <a
+          <Link
             :href="route('admin.club_acc.charity.index', { clubSlug })"
             :class="[
               'flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all',
@@ -312,7 +312,7 @@ const currentActiveTab = computed(() => {
           >
             <span class="text-lg">🤝</span>
             <span>Charity</span>
-          </a>
+          </Link>
 
           <!-- 11. Club Settings -->
           <Link 

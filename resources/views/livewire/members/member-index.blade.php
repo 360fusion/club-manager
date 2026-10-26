@@ -110,9 +110,9 @@
                     wire:model.live="statusFilter"
                     class="min-w-0 max-w-44 truncate px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
-                    <option value="all">All Statuses</option>
+                    <option value="all" @selected($statusFilter === 'all')>All Statuses</option>
                     @foreach($statuses as $st)
-                        <option value="{{ $st->value }}">{{ $st->label() }}</option>
+                        <option value="{{ $st->value }}" @selected($statusFilter === $st->value)>{{ $st->label() }}</option>
                     @endforeach
                 </select>
 

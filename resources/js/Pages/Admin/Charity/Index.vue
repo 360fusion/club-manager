@@ -77,7 +77,7 @@ const updateGrantStatus = (grantId, status) => {
 <template>
   <Head :title="`Charity Dashboard — ${club.name}`" />
 
-  <AdminLayout :club="club" currentTab="charity">
+  <AdminLayout :club="club" title="Charity" active-tab="charity">
     <div class="max-w-7xl mx-auto space-y-6 pb-12">
       
       <!-- Top Horizontal Sub-Navigation Bar -->

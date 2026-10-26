@@ -64,7 +64,7 @@ const submitGiving = () => {
 <template>
   <Head :title="`Festival Information — ${club.name}`" />
 
-  <AdminLayout :club="club" currentTab="charity">
+  <AdminLayout :club="club" title="Festival" active-tab="charity">
     <div class="max-w-7xl mx-auto space-y-6 pb-12">
       
       <!-- Top Horizontal Sub-Navigation Bar -->

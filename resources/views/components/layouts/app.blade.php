@@ -51,8 +51,8 @@
 
         <!-- Left Sidebar Navigation -->
         <aside
-            :class="sidebarOpen ? 'block' : 'hidden md:flex'"
-            class="cm-nav w-full md:w-64 bg-slate-800 text-slate-300 flex-shrink-0 flex-col justify-between transition-all duration-200 z-30"
+            :class="{ '!flex': sidebarOpen }"
+            class="cm-nav hidden md:flex w-full md:w-64 bg-slate-800 text-slate-300 flex-shrink-0 flex-col justify-between transition-all duration-200 z-30"
         >
             <div>
                 <!-- Interactive Workspace Switcher Header -->
@@ -256,24 +256,21 @@
                     @click="toggle()"
                     class="group flex w-full items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl transition-all text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
                 >
+                    {{-- The look comes from the html "dark" class, which is set before the first paint, so the switch
+                         shows the right state at once instead of animating when Alpine starts. --}}
                     <span class="flex items-center gap-3">
-                        <svg x-show="dark" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <svg class="hidden dark:block w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                         </svg>
-                        <svg x-show="! dark" x-cloak class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <svg class="dark:hidden w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
-                        <span x-text="dark ? 'Dark mode' : 'Light mode'">Light mode</span>
+                        <span class="dark:hidden">Light mode</span>
+                        <span class="hidden dark:inline">Dark mode</span>
                     </span>
 
-                    <span
-                        :class="dark ? 'bg-blue-600' : 'bg-slate-600 group-hover:bg-slate-500'"
-                        class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200"
-                    >
-                        <span
-                            :class="dark ? 'translate-x-[1.125rem]' : 'translate-x-[0.1875rem]'"
-                            class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200"
-                        ></span>
+                    <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-slate-600 group-hover:bg-slate-500 dark:bg-blue-600 dark:group-hover:bg-blue-600 transition-colors duration-200">
+                        <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm translate-x-[0.1875rem] dark:translate-x-[1.125rem] transition-transform duration-200"></span>
                     </span>
                 </button>
             </div>

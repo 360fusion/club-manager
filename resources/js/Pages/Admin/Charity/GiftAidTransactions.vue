@@ -67,7 +67,7 @@ const resetFilters = () => {
 <template>
   <Head :title="`Gift Aid Page — ${club.name}`" />
 
-  <AdminLayout :club="club" currentTab="charity">
+  <AdminLayout :club="club" title="Gift Aid transactions" active-tab="charity">
     <div class="max-w-7xl mx-auto space-y-6 pb-12">
       
       <!-- Top Horizontal Sub-Navigation Bar -->
