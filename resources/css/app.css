@@ -72,6 +72,17 @@
     --color-slate-950: oklch(12.9% 0.05 266);
 }
 
+/* An admin page reached by a full page load (from a Livewire page, or a refresh) is empty until Vue mounts. Painting the
+   side nav's column into that first frame keeps the nav in place instead of it vanishing and coming back. It matches
+   AdminLayout's sidebar: 16rem (w-64) of lodge navy (.cm-nav's slate-800) from the md breakpoint. */
+@media (min-width: 48rem) {
+    html.cm-admin-shell {
+        /* An empty page's html box has no height, which would size the gradient to nothing; give it the window. */
+        min-height: 100%;
+        background-image: linear-gradient(to right, oklch(27.9% 0.075 266) 16rem, transparent 16rem);
+    }
+}
+
 /* Every control shows a focus ring. Controls that draw their own Tailwind focus ring keep it; the rest (many only turned
    the outline off, or tinted the border) get a 2px outline: lodge blue in the app, the club's accent on a website.
    Unlayered on purpose, so it beats a `focus:outline-none` utility. */

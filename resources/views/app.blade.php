@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 {{-- The app's own pages paint their background before Vue mounts, so a full page load shows the page colour, not white. Club
      websites (Public/*) keep the browser default: their theme sets the background. --}}
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['bg-slate-100 dark:bg-slate-950' => ! str_starts_with($page['component'] ?? '', 'Public/')])>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['bg-slate-100 dark:bg-slate-950' => ! str_starts_with($page['component'] ?? '', 'Public/'), 'cm-admin-shell' => str_starts_with($page['component'] ?? '', 'Admin/')])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
