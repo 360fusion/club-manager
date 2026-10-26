@@ -53,9 +53,9 @@ class VisitorRegistrationController extends Controller
             ]);
         }
 
-        // Attach or update visitor relationship in club_user pivot
-        $club->users()->syncWithoutDetaching([
-            $user->id => [
+        // Nobody is signed in here, so an existing membership (any role or status) is never changed.
+        if (! $club->users()->where('users.id', $user->id)->exists()) {
+            $club->users()->attach($user->id, [
                 'role' => 'visitor',
                 'rank' => $validated['rank'] ?? null,
                 'home_club_name' => $validated['home_club_name'],
@@ -63,8 +63,8 @@ class VisitorRegistrationController extends Controller
                 'phone' => $validated['phone'] ?? null,
                 'dietary_notes' => $validated['dietary_notes'] ?? null,
                 'status' => 'active',
-            ],
-        ]);
+            ]);
+        }
 
         return redirect()->back()->with('success', "Thank you! You have been registered as a Visitor for {$club->name}. You will receive meeting summonses and RSVP invites via email.");
     }

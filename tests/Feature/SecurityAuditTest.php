@@ -456,6 +456,19 @@ class SecurityAuditTest extends TestCase
         $this->assertSame($original, $this->member->fresh()->name);
     }
 
+    public function test_visitor_sign_up_cannot_change_an_existing_members_role_or_status(): void
+    {
+        foreach ([$this->owner, $this->pending] as $user) {
+            $this->post(route('clubs.visitor.store', ['slug' => 'club-a']), [
+                'name' => 'Anyone', 'email' => $user->email, 'home_club_name' => 'Elsewhere',
+            ])->assertSessionHasNoErrors();
+        }
+
+        $owner = $this->a->users()->where('users.id', $this->owner->id)->first()->pivot;
+        $this->assertSame(['owner', 'active'], [$owner->role, $owner->status]);
+        $this->assertSame('pending', $this->membershipStatus($this->a, $this->pending));
+    }
+
     public function test_sign_up_stays_open_while_mail_is_not_configured(): void
     {
         config(['mail.default' => 'log', 'auth.require_email_verification' => null]);
