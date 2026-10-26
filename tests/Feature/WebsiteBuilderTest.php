@@ -230,6 +230,28 @@ class WebsiteBuilderTest extends TestCase
         $this->assertSame('nullable', $rule[0]);
     }
 
+    public function test_the_dns_company_is_recognised_from_its_nameservers(): void
+    {
+        $this->assertSame('GoDaddy', ClubDomain::matchProvider(['ns01.domaincontrol.com', 'ns02.domaincontrol.com'])['name']);
+        $this->assertSame('Cloudflare', ClubDomain::matchProvider(['Ada.NS.Cloudflare.com.'])['name']);
+        $this->assertSame('IONOS', ClubDomain::matchProvider(['ns1045.ui-dns.de'])['name']);
+        $this->assertArrayNotHasKey('nameservers', ClubDomain::matchProvider(['dns1.registrar-servers.com']));
+
+        $this->assertNull(ClubDomain::matchProvider(['ns1.example-host.net']));
+        $this->assertNull(ClubDomain::matchProvider(['ns1.notdomaincontrol.com']));
+        $this->assertNull(ClubDomain::matchProvider([]));
+    }
+
+    public function test_the_website_settings_page_sends_the_dns_company_only_once_a_domain_is_saved(): void
+    {
+        $this->actingAs($this->admin)->get(route('admin.pages.settings', ['clubSlug' => 'club-a']))
+            ->assertInertia(fn ($p) => $p->where('websiteSettings.domain_provider', null));
+
+        $this->club->update(['custom_domain' => 'www.club-a-lodge.test', 'domain_status' => 'pending']);
+        $this->actingAs($this->admin)->get(route('admin.pages.settings', ['clubSlug' => 'club-a']))
+            ->assertInertia(fn ($p) => $p->where('websiteSettings.custom_domain', 'www.club-a-lodge.test')->has('websiteSettings.domain_provider'));
+    }
+
     // ---- permissions -----------------------------------------------------------------------------------------------
 
     public function test_only_someone_who_can_edit_the_website_may_manage_pages(): void

@@ -10,6 +10,9 @@ const props = defineProps({
     verifiedAt: { type: String, default: null },
     instructions: { type: Object, default: () => ({}) },
     checking: { type: Boolean, default: false },
+    // The company that runs the saved domain's DNS ({ name, url, help, steps }), when the server recognised it.
+    provider: { type: Object, default: null },
+    savedDomain: { type: String, default: '' },
 });
 
 defineEmits(['check']);
@@ -29,6 +32,9 @@ const parts = computed(() => {
 const target = computed(() => props.instructions?.target || '');
 const ips = computed(() => props.instructions?.ips || []);
 const active = computed(() => props.status === 'active');
+// The provider was looked up for the saved domain, so it only applies while the box still holds that domain.
+const knownProvider = computed(() => props.provider && props.domain.trim().toLowerCase() === props.savedDomain ? props.provider : null);
+const unsaved = computed(() => props.domain.trim().toLowerCase() !== props.savedDomain);
 
 const copied = ref('');
 const copy = async (value) => {
@@ -52,8 +58,13 @@ const CELL = 'px-3 py-2 font-mono text-[11px] font-bold text-slate-900 dark:text
         </div>
 
         <ol class="list-decimal space-y-4 pl-5 text-[11px] leading-relaxed">
-            <li>
-                <strong>Save the domain</strong> above, then sign in to wherever you manage <span class="font-mono font-bold">{{ parts.registrable || 'your domain' }}</span> (the company you bought it from, such as GoDaddy, 123 Reg, Namecheap or Cloudflare) and open its <strong>DNS settings</strong>.
+            <li v-if="knownProvider" class="space-y-1">
+                <div>The DNS for <span class="font-mono font-bold">{{ parts.registrable }}</span> is run by <strong>{{ knownProvider.name }}</strong>. <a :href="knownProvider.url" target="_blank" rel="noopener noreferrer" class="font-bold underline">Sign in to {{ knownProvider.name }}</a> and open its DNS settings:</div>
+                <div>{{ knownProvider.steps }}</div>
+                <a :href="knownProvider.help" target="_blank" rel="noopener noreferrer" class="inline-block font-bold underline">{{ knownProvider.name }}'s own guide to adding a record</a>
+            </li>
+            <li v-else>
+                <strong>Save the domain</strong> above, then sign in to wherever you manage <span class="font-mono font-bold">{{ parts.registrable || 'your domain' }}</span> (the company you bought it from, such as GoDaddy, 123 Reg, Namecheap or Cloudflare) and open its <strong>DNS settings</strong>.<template v-if="unsaved"> Once it is saved we will try to work out which company that is and show its own steps.</template>
             </li>
 
             <li v-if="!parts.bare" class="space-y-2">
@@ -70,7 +81,7 @@ const CELL = 'px-3 py-2 font-mono text-[11px] font-bold text-slate-900 dark:text
                         </tbody>
                     </table>
                 </div>
-                <p class="text-amber-800/90 dark:text-amber-200/80">Some providers want only the first part (<span class="font-mono font-bold">{{ parts.sub }}</span>) in the Name box and others want the whole address (<span class="font-mono font-bold">{{ domain }}</span>). If one is refused, try the other. If you use Cloudflare, set the record to <strong>DNS only</strong> (grey cloud) so it can be checked.</p>
+                <p class="text-amber-800/90 dark:text-amber-200/80">Some providers want only the first part (<span class="font-mono font-bold">{{ parts.sub }}</span>) in the Name box and others want the whole address (<span class="font-mono font-bold">{{ domain }}</span>). If one is refused, try the other.<template v-if="!knownProvider"> If you use Cloudflare, set the record to <strong>DNS only</strong> (grey cloud) so it can be checked.</template></p>
             </li>
 
             <li v-else class="space-y-2">

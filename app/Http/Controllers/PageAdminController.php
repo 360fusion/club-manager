@@ -1018,6 +1018,7 @@ class PageAdminController extends Controller
             'domain_status' => $club->domain_status,
             'domain_verified_at' => $club->domain_verified_at?->format('j M Y, H:i'),
             'domain_instructions' => ClubDomain::instructions(),
+            'domain_provider' => $club->custom_domain ? ClubDomain::provider($club->custom_domain) : null,
             'footer_copyright_holder' => FooterCopyright::parts($club)['holder'],
             'footer_copyright_text' => FooterCopyright::parts($club)['text'],
             'redirects' => ClubRedirect::where('club_id', $club->id)->orderBy('from_path')->get(['id', 'from_path', 'to_url', 'is_permanent']),

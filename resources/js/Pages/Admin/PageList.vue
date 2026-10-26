@@ -2978,6 +2978,8 @@ const confirmDeleteActivePage = () => {
                                         :status="websiteSettings.domain_status"
                                         :verified-at="websiteSettings.domain_verified_at"
                                         :instructions="websiteSettings.domain_instructions"
+                                        :provider="websiteSettings.domain_provider"
+                                        :saved-domain="websiteSettings.custom_domain"
                                         :checking="checkingDomain"
                                         @check="checkDomainNow"
                                     />
