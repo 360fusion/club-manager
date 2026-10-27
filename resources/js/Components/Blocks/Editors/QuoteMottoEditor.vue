@@ -12,11 +12,11 @@ defineProps({
     <div class="space-y-3 text-xs">
         <div>
             <label :for="`block-${index}-motto-heading`" :class="LABEL">Heading</label>
-            <input :id="`block-${index}-motto-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Fraternus Amor Maneto" :class="[INPUT, 'font-bold']" />
+            <input :id="`block-${index}-motto-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Fraternus Amor Maneto" :class="INPUT" />
         </div>
         <div>
             <label :for="`block-${index}-motto-text`" :class="LABEL">Text <span class="font-normal text-slate-400">(optional, plain text)</span></label>
-            <textarea :id="`block-${index}-motto-text`" v-model="block.text" rows="4" maxlength="1500" :class="[INPUT, 'font-medium text-xs']"></textarea>
+            <textarea :id="`block-${index}-motto-text`" v-model="block.text" rows="4" maxlength="1500" :class="INPUT"></textarea>
             <p :class="HINT">A new line starts a new paragraph.</p>
         </div>
         <div>

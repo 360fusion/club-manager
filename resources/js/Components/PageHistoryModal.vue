@@ -3,6 +3,10 @@
 // the site until the admin saves, and the version they replaced is remembered too.
 import { ref, watch } from 'vue';
 import { formatLocal } from '@/Utils/localDateTime';
+import Alert from '@/Components/Ui/Alert.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Modal from '@/Components/Ui/Modal.vue';
 
 const props = defineProps({
     show: { type: Boolean, default: false },
@@ -63,36 +67,35 @@ watch(() => props.show, (open) => { if (open) load(); });
 
 <template>
     <Teleport to="body">
-        <div v-if="show" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm" @click.self="emit('close')" @keydown.esc="emit('close')">
-            <div role="dialog" aria-modal="true" aria-labelledby="page-history-title" class="w-full max-w-xl max-h-[85vh] flex flex-col bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl">
-                <div class="flex items-start justify-between gap-4 p-6 border-b border-slate-100 dark:border-slate-800">
-                    <div>
-                        <h2 id="page-history-title" class="text-lg font-bold text-slate-900 dark:text-white">Page history</h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Restoring puts that version in the editor as unsaved changes. Nothing changes on your site until you save.</p>
-                    </div>
-                    <button type="button" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 cursor-pointer" aria-label="Close" @click="emit('close')">✕</button>
-                </div>
-
-                <div class="p-4 overflow-y-auto space-y-2">
+        <!-- Above the builder's own z-[100] overlays, as before. -->
+        <div v-if="show" class="relative z-[100]">
+            <Modal
+                :open="show"
+                title="Page history"
+                subtitle="Restoring puts that version in the editor as unsaved changes. Nothing changes on your site until you save."
+                size="lg"
+                @close="emit('close')"
+            >
+                <div class="space-y-2">
                     <p v-if="loading" class="text-xs text-slate-400 p-2">Loading…</p>
-                    <p v-else-if="error" class="text-xs font-bold text-rose-600 dark:text-rose-400 p-2">{{ error }}</p>
+                    <Alert v-else-if="error" variant="danger">{{ error }}</Alert>
                     <p v-else-if="!revisions.length" class="text-xs text-slate-400 italic p-2">No earlier versions yet. A version is kept each time you save.</p>
 
                     <div v-for="(revision, index) in revisions" :key="revision.id" class="flex items-center justify-between gap-3 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
                         <div class="min-w-0 text-xs">
-                            <p class="font-bold text-slate-900 dark:text-white truncate">
+                            <p class="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white truncate">
                                 {{ formatLocal(revision.created_at) }}
-                                <span v-if="index === 0" class="ml-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[10px] uppercase">Latest</span>
+                                <Badge v-if="index === 0" variant="info">Latest</Badge>
                             </p>
                             <p class="text-slate-500 dark:text-slate-400 truncate">{{ SOURCES[revision.source] || 'Saved' }}<template v-if="revision.user"> by {{ revision.user }}</template> · {{ revision.block_count }} element{{ revision.block_count === 1 ? '' : 's' }}</p>
                             <p class="text-slate-400 truncate">{{ revision.title }}</p>
                         </div>
-                        <button type="button" :disabled="restoringId !== null" class="shrink-0 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs disabled:opacity-50 cursor-pointer" @click="restore(revision)">
+                        <Button variant="secondary" size="sm" class="shrink-0" :disabled="restoringId !== null" :loading="restoringId === revision.id" @click="restore(revision)">
                             {{ restoringId === revision.id ? 'Loading…' : 'Restore' }}
-                        </button>
+                        </Button>
                     </div>
                 </div>
-            </div>
+            </Modal>
         </div>
     </Teleport>
 </template>

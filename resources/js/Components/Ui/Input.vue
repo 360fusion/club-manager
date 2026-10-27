@@ -15,9 +15,16 @@ const props = defineProps({
     prefix: { type: String, default: '' },
     disabled: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
+    // v-model.number: like on a native field, a value that reads as a number is sent as one, anything else as typed.
+    modelModifiers: { type: Object, default: () => ({}) },
 });
 
-defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue']);
+
+const update = (value) => {
+    const number = parseFloat(value);
+    emit('update:modelValue', props.modelModifiers.number && !Number.isNaN(number) ? number : value);
+};
 
 const attrs = useAttrs();
 const id = useId();
@@ -59,7 +66,7 @@ const fieldClasses = computed(() => [
                 :aria-invalid="error ? 'true' : undefined"
                 :aria-describedby="error ? `${id}-error` : (hint ? `${id}-hint` : undefined)"
                 :class="fieldClasses"
-                @input="$emit('update:modelValue', $event.target.value)"
+                @input="update($event.target.value)"
             />
         </div>
 

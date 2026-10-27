@@ -4,7 +4,9 @@
 // Mutates `block.section` in place (created on first change); the server tidies whatever is sent.
 import { computed } from 'vue';
 import { SECTION_DEFAULTS } from '@/Support/blockSection';
-import { LABEL, INPUT, SMALL_INPUT, SELECT, CARD, MINI_BUTTON, MINI_DANGER, HINT } from './styles';
+import { LABEL, INPUT, SMALL_INPUT, SELECT, CARD, HINT } from './styles';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     block: { type: Object, required: true },
@@ -50,9 +52,9 @@ const BG_LABELS = { none: 'No background (page colour)', tint: 'Soft tint (cream
 </script>
 
 <template>
-    <details class="group rounded-xl border border-slate-200 bg-slate-50/60 text-xs dark:border-slate-800 dark:bg-slate-900/40">
-        <summary class="flex cursor-pointer select-none items-center justify-between gap-2 px-3 py-2 font-bold text-slate-700 dark:text-slate-200">
-            <span>🎨 Section style <span class="font-normal text-slate-400">· {{ summary }}<span v-if="section.anchor"> · #{{ section.anchor }}</span></span></span>
+    <details class="group rounded-2xl border border-slate-200 bg-slate-50/60 text-xs dark:border-slate-800 dark:bg-slate-900/40">
+        <summary class="flex cursor-pointer select-none items-center justify-between gap-2 px-3 py-2 font-medium text-slate-700 dark:text-slate-200">
+            <span class="flex flex-wrap items-center gap-1.5"><UiIcon name="palette" :size="14" class="text-slate-500 dark:text-slate-400" />Section style <span class="font-normal text-slate-400">· {{ summary }}<span v-if="section.anchor"> · #{{ section.anchor }}</span></span></span>
             <span class="text-[10px] font-normal text-slate-400 group-open:hidden">Edit</span>
         </summary>
 
@@ -65,7 +67,7 @@ const BG_LABELS = { none: 'No background (page colour)', tint: 'Soft tint (cream
                         :key="preset.label"
                         type="button"
                         :aria-pressed="isPreset(preset)"
-                        :class="['rounded-lg border px-2.5 py-1 text-[11px] font-bold cursor-pointer', isPreset(preset) ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300']"
+                        :class="['rounded-xl border px-2.5 py-1 text-[11px] font-medium cursor-pointer transition-colors', isPreset(preset) ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300' : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800']"
                         @click="set(preset.patch)"
                     >{{ preset.label }}</button>
                 </div>
@@ -91,7 +93,7 @@ const BG_LABELS = { none: 'No background (page colour)', tint: 'Soft tint (cream
                 <div v-if="section.bg === 'custom'" class="sm:col-span-2">
                     <label :for="`block-${index}-section-color`" :class="LABEL">Colour</label>
                     <div class="flex items-center gap-2">
-                        <input :id="`block-${index}-section-color`" type="color" :value="section.bg_color || '#1b2a4a'" class="h-9 w-12 cursor-pointer rounded-lg border border-slate-300 bg-white p-0.5 dark:border-slate-700" aria-label="Pick a background colour" @input="set({ bg_color: $event.target.value })" />
+                        <input :id="`block-${index}-section-color`" type="color" :value="section.bg_color || '#1b2a4a'" class="h-9 w-12 cursor-pointer rounded-xl border border-slate-300 bg-white p-0.5 dark:border-slate-700" aria-label="Pick a background colour" @input="set({ bg_color: $event.target.value })" />
                         <input :value="section.bg_color" type="text" maxlength="7" placeholder="#1b2a4a" :class="[SMALL_INPUT, 'font-mono text-[11px]']" aria-label="Background colour, as #rrggbb" @input="set({ bg_color: $event.target.value })" />
                     </div>
                 </div>
@@ -100,8 +102,8 @@ const BG_LABELS = { none: 'No background (page colour)', tint: 'Soft tint (cream
                     <div class="flex items-center justify-between">
                         <label :for="`block-${index}-section-image`" :class="LABEL">Background photo</label>
                         <div class="flex items-center gap-1.5">
-                            <button v-if="section.bg_image" type="button" :class="MINI_DANGER" @click="set({ bg_image: '' })">🗑️ Clear</button>
-                            <button type="button" :class="MINI_BUTTON" @click="emit('media', 'section_image', block)">📁 Media Library</button>
+                            <Button v-if="section.bg_image" variant="ghost" size="sm" @click="set({ bg_image: '' })"><UiIcon name="trash" :size="14" />Clear</Button>
+                            <Button variant="secondary" size="sm" @click="emit('media', 'section_image', block)"><UiIcon name="folder" :size="14" />Media library</Button>
                         </div>
                     </div>
                     <input :id="`block-${index}-section-image`" :value="section.bg_image" type="text" placeholder="https://example.com/photo.jpg" :class="[SMALL_INPUT, 'font-mono text-[11px]']" @input="set({ bg_image: $event.target.value })" />
@@ -142,7 +144,7 @@ const BG_LABELS = { none: 'No background (page colour)', tint: 'Soft tint (cream
                     <input :id="`block-${index}-section-anchor`" :value="section.anchor" type="text" maxlength="60" placeholder="e.g. about" :class="INPUT" @input="set({ anchor: $event.target.value })" />
                     <p :class="HINT">Lets a button or menu link jump here with #{{ section.anchor || 'about' }}.</p>
                 </div>
-                <button v-if="canApplyToOthers && section.mode !== 'auto'" type="button" :class="[MINI_BUTTON, 'mb-5 px-3 py-1.5 text-[11px]']" @click="emit('apply-all')">Use this look on every element</button>
+                <Button v-if="canApplyToOthers && section.mode !== 'auto'" variant="secondary" size="sm" class="mb-5" @click="emit('apply-all')">Use this look on every element</Button>
             </div>
         </div>
     </details>

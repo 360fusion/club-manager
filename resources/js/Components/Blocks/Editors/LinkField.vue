@@ -1,11 +1,13 @@
 <script setup>
-// One link box for the builder: either a page on this site (picked in a "Choose Page" pop-up) or an external web
+// One link box for the builder: either a page on this site (picked in a "Choose page" pop-up) or an external web
 // address. An external link typed without https:// gets it added, so it opens the other site instead of a page here.
 // Mutates nothing itself; it emits the new address through v-model.
 import { computed, ref } from 'vue';
 import PageChooserModal from '@/Components/PageChooserModal.vue';
 import { completeWebAddress, hasUnsafeScheme, isValidExternalLink } from '@/Utils/links';
-import { SMALL_INPUT, MINI_BUTTON, MINI_DANGER, HINT } from './styles';
+import { SMALL_INPUT, MINI_DANGER, HINT } from './styles';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     modelValue: { type: String, default: '' },
@@ -51,23 +53,23 @@ const problem = computed(() => {
     return '';
 });
 
-const TAB = 'px-3 py-1 text-[11px] font-bold cursor-pointer transition-colors';
+const TAB = 'px-3 py-1.5 text-[11px] font-medium cursor-pointer transition-colors';
 </script>
 
 <template>
     <div class="space-y-2">
-        <div class="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden" role="group" :aria-label="`${label} type`">
+        <div class="inline-flex rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden" role="group" :aria-label="`${label} type`">
             <button type="button" :aria-pressed="mode === 'page'" :class="[TAB, mode === 'page' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800']" @click="mode = 'page'">Page on this site</button>
-            <button type="button" :aria-pressed="mode === 'external'" :class="[TAB, 'border-l border-slate-200 dark:border-slate-700', mode === 'external' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800']" @click="mode = 'external'">External link</button>
+            <button type="button" :aria-pressed="mode === 'external'" :class="[TAB, 'border-l border-slate-300 dark:border-slate-700', mode === 'external' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800']" @click="mode = 'external'">External link</button>
         </div>
 
         <div v-if="mode === 'page'" class="space-y-1">
             <div class="flex items-center gap-2">
-                <span :class="[SMALL_INPUT, 'flex-1 min-w-0 truncate', chosenPage ? 'font-bold' : 'text-slate-400 italic']">
+                <span :class="[SMALL_INPUT, 'flex-1 min-w-0 truncate', chosenPage ? 'font-medium' : 'text-slate-400! dark:text-slate-500! italic']">
                     {{ chosenPage ? chosenPage.title : (value ? 'Not one of your pages yet' : 'No page chosen') }}
                 </span>
-                <button type="button" :class="MINI_BUTTON" @click="chooserOpen = true">Choose Page</button>
-                <button v-if="value" type="button" :class="MINI_DANGER" :aria-label="`Clear ${label.toLowerCase()}`" @click="clear">✕</button>
+                <Button variant="secondary" size="sm" class="shrink-0" @click="chooserOpen = true">Choose page</Button>
+                <button v-if="value" type="button" :class="MINI_DANGER" :aria-label="`Clear ${label.toLowerCase()}`" @click="clear"><UiIcon name="x" :size="14" /></button>
             </div>
             <p v-if="value && !chosenPage" :class="[HINT, 'font-mono break-all']">Currently: {{ value }}</p>
         </div>
@@ -86,8 +88,8 @@ const TAB = 'px-3 py-1 text-[11px] font-bold cursor-pointer transition-colors';
                 @blur="complete"
                 @keydown.enter.prevent="complete"
             />
-            <p v-if="notice" role="status" class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{{ notice }}</p>
-            <p v-if="problem" role="alert" class="text-[10px] font-bold text-rose-600 dark:text-rose-400">{{ problem }}</p>
+            <p v-if="notice" role="status" class="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">{{ notice }}</p>
+            <p v-if="problem" role="alert" class="text-[11px] font-medium text-rose-600 dark:text-rose-400">{{ problem }}</p>
             <p v-else-if="!notice" :class="HINT">Type or paste the address. If you leave off https:// it is added for you.</p>
         </div>
 

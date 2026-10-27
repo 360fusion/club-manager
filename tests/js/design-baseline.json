@@ -1,42 +1,6 @@
 {
-  "resources/js/Components/ContentPickerModal.vue": {
-    "emoji in a button or link": 5
-  },
-  "resources/js/Components/DomainSetupGuide.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/PageChooserModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/PageHistoryModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Pages/PageEditPane.vue": {
-    "off-palette colour": 6,
-    "emoji in a button or link": 22,
-    "Title Case label": 1
-  },
-  "resources/js/Components/Pages/PageHeaderFooterPane.vue": {
-    "emoji in a button or link": 6
-  },
-  "resources/js/Components/Pages/PagePreviewPane.vue": {
-    "emoji in a button or link": 2
-  },
-  "resources/js/Components/Pages/PageSettingsPane.vue": {
-    "emoji in a button or link": 6
-  },
-  "resources/js/Components/Pages/PageTablePane.vue": {
-    "off-palette colour": 6,
-    "emoji in a button or link": 6
-  },
-  "resources/js/Components/Pages/PageThemesPane.vue": {
-    "emoji in a button or link": 6
-  },
   "resources/js/Layouts/SuperAdminLayout.vue": {
     "emoji in a button or link": 13
-  },
-  "resources/js/Pages/Admin/PageList.vue": {
-    "emoji in a button or link": 12
   },
   "resources/js/Pages/Club/Show.vue": {
     "emoji in a button or link": 13

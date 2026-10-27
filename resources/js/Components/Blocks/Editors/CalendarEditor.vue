@@ -12,7 +12,7 @@ defineProps({
     <div class="space-y-3 text-xs">
         <div>
             <label :for="`block-${index}-cal-heading`" :class="LABEL">Heading <span class="font-normal text-slate-400">(optional)</span></label>
-            <input :id="`block-${index}-cal-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. What's on" :class="[INPUT, 'font-bold']" />
+            <input :id="`block-${index}-cal-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. What's on" :class="INPUT" />
         </div>
 
         <div :class="[CARD, 'grid grid-cols-2 sm:grid-cols-4 gap-3 items-end']">

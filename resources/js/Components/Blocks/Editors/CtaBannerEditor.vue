@@ -1,7 +1,9 @@
 <script setup>
 // Edit form for the Call-to-action banner block. Mutates `block` in place, like the inline forms in PageList.vue.
 import LinkField from './LinkField.vue';
-import { LABEL, INPUT, SMALL_INPUT, SELECT, CARD, CHECK, CHECK_LABEL, MINI_BUTTON, MINI_DANGER, HINT } from './styles';
+import { LABEL, INPUT, SMALL_INPUT, SELECT, CARD, CHECK, CHECK_LABEL, HINT } from './styles';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 defineProps({
     block: { type: Object, required: true },
@@ -22,25 +24,25 @@ defineEmits(['media']);
             </div>
             <div class="sm:col-span-2">
                 <label :for="`block-${index}-cta-heading`" :class="LABEL">Heading</label>
-                <input :id="`block-${index}-cta-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Interested in becoming a member?" :class="[INPUT, 'font-bold']" />
+                <input :id="`block-${index}-cta-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Interested in becoming a member?" :class="INPUT" />
             </div>
         </div>
 
         <div>
             <label :for="`block-${index}-cta-text`" :class="LABEL">Text <span class="font-normal text-slate-400">(optional, plain text)</span></label>
-            <textarea :id="`block-${index}-cta-text`" v-model="block.text" rows="2" maxlength="500" :class="[INPUT, 'font-medium text-xs']"></textarea>
+            <textarea :id="`block-${index}-cta-text`" v-model="block.text" rows="2" maxlength="500" :class="INPUT"></textarea>
         </div>
 
         <div :class="[CARD, 'space-y-3']">
             <p :class="LABEL">Main button</p>
-            <input v-model="block.button_label" type="text" maxlength="80" placeholder="Label, e.g. Get in touch" :class="[SMALL_INPUT, 'font-bold']" aria-label="Main button label" />
+            <input v-model="block.button_label" type="text" maxlength="80" placeholder="Label, e.g. Get in touch" :class="SMALL_INPUT" aria-label="Main button label" />
             <LinkField v-model="block.button_url" :pages="pages" :club="club" label="Main button" />
             <label :class="CHECK_LABEL"><input v-model="block.button_new_tab" type="checkbox" :class="CHECK" /> Open in a new tab</label>
         </div>
 
         <div :class="[CARD, 'space-y-3']">
             <p :class="LABEL">Second button <span class="font-normal text-slate-400">(optional, outlined)</span></p>
-            <input v-model="block.button2_label" type="text" maxlength="80" placeholder="Label, e.g. Learn more" :class="[SMALL_INPUT, 'font-bold']" aria-label="Second button label" />
+            <input v-model="block.button2_label" type="text" maxlength="80" placeholder="Label, e.g. Learn more" :class="SMALL_INPUT" aria-label="Second button label" />
             <LinkField v-model="block.button2_url" :pages="pages" :club="club" label="Second button" />
             <label :class="CHECK_LABEL"><input v-model="block.button2_new_tab" type="checkbox" :class="CHECK" /> Open in a new tab</label>
         </div>
@@ -84,8 +86,8 @@ defineEmits(['media']);
             <div class="flex items-center justify-between">
                 <label :for="`block-${index}-cta-side-image`" :class="LABEL">Side photo <span class="font-normal text-slate-400">(optional)</span></label>
                 <div class="flex items-center gap-1.5">
-                    <button v-if="block.side_image_url" type="button" :class="MINI_DANGER" @click="block.side_image_url = ''">🗑️ Clear</button>
-                    <button type="button" :class="MINI_BUTTON" @click="$emit('media', 'cta_side_image')">📁 Media Library</button>
+                    <Button v-if="block.side_image_url" variant="ghost" size="sm" @click="block.side_image_url = ''"><UiIcon name="trash" :size="14" />Clear</Button>
+                    <Button variant="secondary" size="sm" @click="$emit('media', 'cta_side_image')"><UiIcon name="folder" :size="14" />Media library</Button>
                 </div>
             </div>
             <input :id="`block-${index}-cta-side-image`" v-model="block.side_image_url" type="text" placeholder="https://example.com/photo.jpg" :class="[SMALL_INPUT, 'font-mono text-[11px]']" />
@@ -119,8 +121,8 @@ defineEmits(['media']);
             <div class="flex items-center justify-between mb-1">
                 <label :for="`block-${index}-cta-image`" :class="LABEL">Background photo</label>
                 <div class="flex items-center gap-1.5">
-                    <button v-if="block.image_url" type="button" :class="MINI_DANGER" @click="block.image_url = ''">🗑️ Clear</button>
-                    <button type="button" :class="MINI_BUTTON" @click="$emit('media', 'cta_image')">📁 Media Library</button>
+                    <Button v-if="block.image_url" variant="ghost" size="sm" @click="block.image_url = ''"><UiIcon name="trash" :size="14" />Clear</Button>
+                    <Button variant="secondary" size="sm" @click="$emit('media', 'cta_image')"><UiIcon name="folder" :size="14" />Media library</Button>
                 </div>
             </div>
             <input :id="`block-${index}-cta-image`" v-model="block.image_url" type="text" placeholder="https://example.com/photo.jpg" :class="[SMALL_INPUT, 'font-mono text-[11px]']" />

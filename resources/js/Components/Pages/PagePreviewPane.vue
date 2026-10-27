@@ -2,6 +2,10 @@
 import BlockRenderer from '@/Components/Blocks/BlockRenderer.vue';
 import PublicFooter from '@/Components/Site/PublicFooter.vue';
 import PublicHeader from '@/Components/Site/PublicHeader.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 // A section of the website builder page, in its own file so the page stays readable.
 const selectedColorSchemeId = defineModel('selectedColorSchemeId', { type: [String, Number, Boolean, Array, Object], default: undefined });
@@ -26,21 +30,25 @@ defineProps({
     previewThemeClasses: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
     publishedNavPages: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
 });
+
+// The kit's field look; the layout and scheme ids keep their own :value/@change handling.
+const selectField = 'rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 cursor-pointer focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
 </script>
 
 <template>
     <div class="space-y-4">
-        <!-- Theme Preview Control Toolbar -->
-        <div class="bg-slate-900 dark:bg-slate-700 text-white p-4 sm:px-6 rounded-3xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+        <!-- Theme preview toolbar -->
+        <Card padding="sm" class="flex flex-col sm:flex-row items-center justify-between gap-3">
             <div class="flex items-center gap-3 flex-wrap">
-                <span id="theme-preview-select-label" class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                    <span>🎨 Previewing:</span>
+                <span id="theme-preview-select-label" class="text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <UiIcon name="palette" :size="14" class="text-slate-500 dark:text-slate-400" />
+                    <span>Previewing</span>
                 </span>
                 <select
                     :value="selectedLayoutId"
                     @change="e => selectedLayoutId = e.target.value"
                     aria-labelledby="theme-preview-select-label"
-                    class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    :class="selectField"
                 >
                     <option :value="legacy.id">{{ legacy.name }}</option>
                     <option v-for="l in layouts" :key="l.id" :value="l.id">{{ l.name }}</option>
@@ -50,31 +58,34 @@ defineProps({
                     :value="selectedColorSchemeId"
                     @change="e => selectedColorSchemeId = e.target.value"
                     aria-label="Colour scheme"
-                    class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    :class="selectField"
                 >
                     <option v-for="c in colorSchemes" :key="c.id" :value="c.id">{{ c.name }}</option>
                 </select>
-                <span v-if="effectivePreviewThemeKey === currentThemeKey" class="text-[10px] font-bold text-emerald-400">(Active Live)</span>
+                <Badge v-if="effectivePreviewThemeKey === currentThemeKey" variant="success">Live on the site</Badge>
             </div>
 
             <div class="flex items-center gap-2 shrink-0 flex-nowrap">
-                <button
+                <Button
                     v-if="effectivePreviewThemeKey !== currentThemeKey"
-                    type="button"
+                    size="sm"
+                    class="whitespace-nowrap shrink-0"
                     @click="applyPreviewTheme()"
-                    class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
-                    <span>✨ Apply this theme</span>
-                </button>
+                    <UiIcon name="sparkles" :size="14" />
+                    <span>Apply this theme</span>
+                </Button>
                 <a
                     :href="`/site/${club.slug}?preview_theme=${effectivePreviewThemeKey}`"
                     target="_blank"
-                    class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                    class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
                 >
-                    <span>🌐 Open full site ↗</span>
+                    <UiIcon name="globe" :size="14" />
+                    <span>Open the full site</span>
+                    <UiIcon name="external-link" :size="14" />
                 </a>
             </div>
-        </div>
+        </Card>
 
         <!-- Preview Canvas Frame -->
         <div :class="['font-sans rounded-3xl border overflow-hidden relative transition-colors duration-300', previewThemeClasses.container]" :style="previewThemeClasses.cssVars">

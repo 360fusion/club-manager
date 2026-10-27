@@ -15,7 +15,15 @@ import SectionHeadingEditor from '@/Components/Blocks/Editors/SectionHeadingEdit
 import SectionStyleEditor from '@/Components/Blocks/Editors/SectionStyleEditor.vue';
 import SlideshowEditor from '@/Components/Blocks/Editors/SlideshowEditor.vue';
 import StatsEditor from '@/Components/Blocks/Editors/StatsEditor.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
 import ToggleSwitch from '@/Components/Ui/ToggleSwitch.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { formatLocal } from '@/Utils/localDateTime';
 import { formatTimestamp, parseYouTubeUrl } from '@/Utils/youtube';
 
@@ -81,99 +89,148 @@ defineProps({
     toggleInsertMenu: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
     triggerDeleteModal: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
 });
+
+// The kit's field look, for the fields its components cannot take: number-valued selects, inputs with their own
+// handlers, and labels that share a row with buttons.
+const field = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder-slate-500';
+const fieldLabel = 'block text-xs font-medium text-slate-700 dark:text-slate-300';
+const smallSelect = 'rounded-xl border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 cursor-pointer focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200';
+const checkbox = 'h-4 w-4 rounded border-slate-300 accent-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700';
+const iconButton = 'inline-flex h-7 w-7 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-white hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white';
+const linkButton = 'inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap';
+const tooltip = 'pointer-events-none absolute top-full mt-2 z-50 w-64 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-medium leading-snug p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-opacity duration-150';
+
+// The palette in Support/pageBlockCatalog.js gives each element an emoji; the editor shows an interface icon instead.
+const BLOCK_ICONS = {
+    text: 'document', rich_text: 'document', image: 'photo', images: 'photo', notice: 'info', button: 'link', youtube: 'eye',
+    downloads: 'download', faq: 'info', map: 'globe', cta_banner: 'star', calendar: 'calendar', hero: 'sparkles',
+    news_feed: 'clipboard', news_list: 'clipboard', events_calendar: 'calendar', pricing_cards: 'cash', donation_campaign: 'heart',
+    contact_details: 'user', contact_form: 'mail', slideshow: 'photo', section_heading: 'tag', feature_cards: 'award',
+    stats: 'chart', media_text: 'photo', quote_motto: 'pencil',
+};
+
+const HEADER_STYLES = [
+    { value: 'full', label: 'Full header (menu and buttons)' },
+    { value: 'logo_only', label: 'Logo only' },
+    { value: 'hidden', label: 'No header at all' },
+];
+const TEXT_ALIGNS = [
+    { value: 'left', label: 'Left aligned' },
+    { value: 'center', label: 'Centred' },
+    { value: 'right', label: 'Right aligned' },
+];
+const IMAGE_POSITIONS = [...TEXT_ALIGNS, { value: 'full', label: 'Full-width banner' }];
+const IMAGE_SIZES = [
+    { value: 'small', label: 'Small (25% width)' },
+    { value: 'medium', label: 'Medium (50% width)' },
+    { value: 'large', label: 'Large (75% width)' },
+    { value: 'full', label: 'Full width (100%)' },
+];
+const NOTICE_STYLES = [
+    { value: 'info', label: 'Information (blue)' },
+    { value: 'warning', label: 'Warning (amber)' },
+    { value: 'important', label: 'Important (red)' },
+    { value: 'success', label: 'Success (green)' },
+];
+const VIDEO_LAYOUTS = [
+    { value: 'stacked', label: 'Video, then text' },
+    { value: 'video_only', label: 'Video only' },
+    { value: 'side_left', label: 'Video left, text right' },
+    { value: 'side_right', label: 'Text left, video right' },
+];
+const VIDEO_SHAPES = [
+    { value: '16:9', label: 'Widescreen 16:9' },
+    { value: '4:3', label: 'Classic 4:3' },
+    { value: '21:9', label: 'Cinema 21:9' },
+    { value: '1:1', label: 'Square 1:1' },
+    { value: '9:16', label: 'Portrait 9:16' },
+];
+const VIDEO_TEXT_ALIGNS = TEXT_ALIGNS.slice(0, 2);
+const NEWS_COLUMNS = [
+    { value: '1', label: '1 column (a list)' },
+    { value: '2', label: '2-column grid' },
+    { value: '3', label: '3-column grid (default)' },
+    { value: '4', label: '4-column grid' },
+    { value: 'masonry', label: 'Masonry grid' },
+];
+const NEWS_IMAGE_POSITIONS = [
+    { value: 'above', label: 'Above the text' },
+    { value: 'below', label: 'Below the text' },
+    { value: 'left', label: 'On the left' },
+    { value: 'right', label: 'On the right' },
+    { value: 'alternate', label: 'Alternating left and right' },
+];
 </script>
 
 <template>
     <div class="space-y-6">
 
         <!-- Unpublished draft -->
-        <div v-if="hasDraft" class="rounded-2xl border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/30 p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <p class="text-amber-900 dark:text-amber-200"><strong>You are editing an unpublished draft</strong> saved {{ formatLocal(activePage?.draft_saved_at) }}. Visitors still see the live page until you press Publish draft.</p>
-            <div class="flex items-center gap-2">
-                <button type="button" @click="discardDraft" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-200 font-bold cursor-pointer">Discard draft</button>
+        <Alert v-if="hasDraft" variant="warning">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <p><strong class="font-medium">You are editing an unpublished draft</strong> saved {{ formatLocal(activePage?.draft_saved_at) }}. Visitors still see the live page until you press Publish draft.</p>
+                <Button variant="secondary" size="sm" @click="discardDraft">Discard draft</Button>
             </div>
-        </div>
+        </Alert>
 
-        <div v-if="restoreNotice" role="status" class="rounded-2xl border border-blue-200 dark:border-blue-800/60 bg-blue-50 dark:bg-blue-950/30 p-3 text-xs font-bold text-blue-800 dark:text-blue-200">{{ restoreNotice }}</div>
-        <div v-if="copyNotice" role="status" :class="['rounded-2xl border p-3 text-xs font-bold', copyNoticeIsError ? 'border-rose-200 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-200' : 'border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200']">{{ copyNotice }}</div>
+        <Alert v-if="restoreNotice" variant="info">{{ restoreNotice }}</Alert>
+        <Alert v-if="copyNotice" :variant="copyNoticeIsError ? 'danger' : 'success'">{{ copyNotice }}</Alert>
 
-        <!-- Page Particulars Card -->
-        <div class="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-6">
+        <!-- Page details card -->
+        <Card padding="lg" class="space-y-6">
             <div class="border-b border-slate-100 dark:border-slate-800 pb-5 space-y-4">
                 <div>
-                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Page Particulars & Navigation Settings</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Configure page title, permalink URL slug, and navigation visibility.</p>
+                    <h3 class="text-base font-semibold text-slate-900 dark:text-white">Page details and navigation</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">The page title, and where the page appears in the site's menus.</p>
                 </div>
 
                 <div class="flex flex-wrap items-end gap-x-4 gap-y-3">
                     <!-- Saving: the first puts your edits on the live page, the second keeps them aside -->
                     <div role="group" aria-label="Save">
-                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Save</p>
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Save</p>
                         <div class="flex items-center gap-1.5">
                             <div class="relative group">
-                            <button
-                                @click="submitForm" aria-describedby="tip-save"
-                                :disabled="form.processing"
-                                :class="[
-                                    'px-2.5 py-1.5 font-bold text-[11px] rounded-xl shadow-md transition-all duration-300 flex items-center gap-1.5 cursor-pointer',
-                                    form.processing ? 'bg-blue-500 text-white cursor-wait opacity-80' :
-                                    isSavedSuccess ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 scale-105 ring-2 ring-emerald-400/50' :
-                                    'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
-                                ]"
-                            >
-                                <svg v-if="form.processing" class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <svg v-else-if="isSavedSuccess" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved!' : 'Save page') }}</span>
-                            </button>
-                                <span id="tip-save" role="tooltip" class="pointer-events-none absolute top-full mt-2 z-50 w-64 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-medium leading-snug p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-opacity duration-150 left-0">{{ hasDraft ? 'Saves the page as it looks here and makes it live straight away, replacing the draft. To publish the draft as it was saved, use Publish draft.' : 'Saves your changes and makes them live straight away.' }}</span>
+                                <Button size="sm" :loading="form.processing" aria-describedby="tip-save" @click="submitForm">
+                                    <UiIcon v-if="!form.processing" name="check" :size="14" />
+                                    <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? 'Saved' : 'Save page') }}</span>
+                                </Button>
+                                <span id="tip-save" role="tooltip" :class="[tooltip, 'left-0']">{{ hasDraft ? 'Saves the page as it looks here and makes it live straight away, replacing the draft. To publish the draft as it was saved, use Publish draft.' : 'Saves your changes and makes them live straight away.' }}</span>
                             </div>
                             <div v-if="canDraft" class="relative group">
-                                <button type="button" @click="saveDraft" :disabled="form.processing" aria-describedby="tip-draft" class="py-1.5 px-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[11px] border border-slate-300 dark:border-slate-700 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
-                                    <span>Save draft</span>
-                                </button>
-                                <span id="tip-draft" role="tooltip" class="pointer-events-none absolute top-full mt-2 z-50 w-64 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-medium leading-snug p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-opacity duration-150 left-0">Keeps your edits aside. Visitors still see the live page until you publish the draft.</span>
+                                <Button variant="secondary" size="sm" :disabled="form.processing" aria-describedby="tip-draft" class="whitespace-nowrap" @click="saveDraft">Save draft</Button>
+                                <span id="tip-draft" role="tooltip" :class="[tooltip, 'left-0']">Keeps your edits aside. Visitors still see the live page until you publish the draft.</span>
                             </div>
                             <div v-if="canDraft" class="relative group">
-                                <button type="button" @click="publishDraft" :disabled="!hasDraft || form.processing" aria-describedby="tip-publish-draft" :class="['py-1.5 px-2 rounded-xl font-bold text-[11px] border transition-colors flex items-center gap-1 whitespace-nowrap disabled:cursor-not-allowed', hasDraft ? 'bg-amber-500 hover:bg-amber-600 border-amber-500 text-white shadow-md cursor-pointer' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 opacity-60']">
-                                    <span>Publish draft</span>
-                                </button>
-                                <span id="tip-publish-draft" role="tooltip" class="pointer-events-none absolute top-full mt-2 z-50 w-64 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-medium leading-snug p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-opacity duration-150 left-0">{{ hasDraft ? 'Makes your saved draft live for visitors.' : 'There is no draft to publish. Use Save as draft first.' }}</span>
+                                <Button variant="secondary" size="sm" :disabled="!hasDraft || form.processing" aria-describedby="tip-publish-draft" class="whitespace-nowrap" @click="publishDraft">Publish draft</Button>
+                                <span id="tip-publish-draft" role="tooltip" :class="[tooltip, 'left-0']">{{ hasDraft ? 'Makes your saved draft live for visitors.' : 'There is no draft to publish. Use Save as draft first.' }}</span>
                             </div>
                             <div v-if="form.id" class="relative group">
-                                <button type="button" @click="showHistory = true" aria-describedby="tip-history" aria-label="History" class="py-1.5 px-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[11px] border border-slate-300 dark:border-slate-700 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap !px-2">
-                                    <span aria-hidden="true">🕘</span>
-                                </button>
-                                <span id="tip-history" role="tooltip" class="pointer-events-none absolute top-full mt-2 z-50 w-64 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-medium leading-snug p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-opacity duration-150 left-0">History: earlier saves of this page. Restore one into the editor, then save to keep it.</span>
+                                <Button variant="secondary" size="sm" aria-describedby="tip-history" aria-label="History" @click="showHistory = true">
+                                    <UiIcon name="clock" :size="14" />
+                                </Button>
+                                <span id="tip-history" role="tooltip" :class="[tooltip, 'left-0']">History: earlier saves of this page. Restore one into the editor, then save to keep it.</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Previewing: the first is what visitors see now, the second is a secret link that includes drafts -->
                     <div v-if="form.id" role="group" aria-label="Preview">
-                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Preview</p>
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Preview</p>
                         <div class="flex items-center gap-1.5">
                             <div class="relative group">
-                                <a v-if="form.slug && activePage?.lifecycle_status === 'live'" :href="form.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${form.slug}`" target="_blank" rel="noopener" aria-describedby="tip-live" class="py-1.5 px-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[11px] border border-slate-300 dark:border-slate-700 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
-                                    <span>View live ↗</span>
+                                <a v-if="form.slug && activePage?.lifecycle_status === 'live'" :href="form.is_homepage ? `/site/${club.slug}` : `/site/${club.slug}/${form.slug}`" target="_blank" rel="noopener" aria-describedby="tip-live" :class="linkButton">
+                                    <span>View live</span>
+                                    <UiIcon name="external-link" :size="14" />
                                 </a>
-                                <button v-else type="button" disabled aria-describedby="tip-live" class="py-1.5 px-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[11px] border border-slate-300 dark:border-slate-700 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
-                                    <span>View live ↗</span>
-                                </button>
-                                <span id="tip-live" role="tooltip" class="pointer-events-none absolute top-full mt-2 z-50 w-64 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-medium leading-snug p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-opacity duration-150 right-0">{{ activePage?.lifecycle_status === 'live' ? 'View live page: opens the page as visitors see it right now, in a new tab.' : "View live page: this page is not live yet, so visitors can't see it. Use Draft preview instead." }}</span>
+                                <Button v-else variant="secondary" size="sm" disabled aria-describedby="tip-live" class="whitespace-nowrap">
+                                    <span>View live</span>
+                                    <UiIcon name="external-link" :size="14" />
+                                </Button>
+                                <span id="tip-live" role="tooltip" :class="[tooltip, 'right-0']">{{ activePage?.lifecycle_status === 'live' ? 'View live page: opens the page as visitors see it right now, in a new tab.' : "View live page: this page is not live yet, so visitors can't see it. Use Draft preview instead." }}</span>
                             </div>
                             <div class="relative group">
-                                <button type="button" @click="openPreviewPanel" :aria-expanded="previewOpen" aria-describedby="tip-private" class="py-1.5 px-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-[11px] border border-slate-300 dark:border-slate-700 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
-                                    <span>Draft preview</span>
-                                </button>
-                                <span id="tip-private" role="tooltip" class="pointer-events-none absolute top-full mt-2 z-50 w-64 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-medium leading-snug p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-opacity duration-150 right-0">Makes a secret link that shows this page with your draft, even before it is live. Share it with someone to get their feedback.</span>
+                                <Button variant="secondary" size="sm" :aria-expanded="previewOpen" aria-describedby="tip-private" class="whitespace-nowrap" @click="openPreviewPanel">Draft preview</Button>
+                                <span id="tip-private" role="tooltip" :class="[tooltip, 'right-0']">Makes a secret link that shows this page with your draft, even before it is live. Share it with someone to get their feedback.</span>
                             </div>
                         </div>
                     </div>
@@ -181,178 +238,166 @@ defineProps({
             </div>
 
             <!-- Private preview link -->
-            <div v-if="previewOpen" class="rounded-2xl border border-violet-200 dark:border-violet-800/60 bg-violet-50/60 dark:bg-violet-950/20 p-4 space-y-2 text-xs">
-                <p class="font-bold text-violet-900 dark:text-violet-200">Draft preview link</p>
-                <p class="text-slate-600 dark:text-slate-300">Anyone with this link can see this page{{ hasDraft ? ', including its unsaved draft,' : '' }} even if it is not live yet{{ form.is_members_only ? ', and even though it is for members only' : '' }}. Only share it with people you trust.</p>
+            <div v-if="previewOpen" class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-2 text-sm">
+                <p class="font-medium text-slate-900 dark:text-white">Draft preview link</p>
+                <p class="text-xs text-slate-600 dark:text-slate-300">Anyone with this link can see this page{{ hasDraft ? ', including its unsaved draft,' : '' }} even if it is not live yet{{ form.is_members_only ? ', and even though it is for members only' : '' }}. Only share it with people you trust.</p>
                 <div class="flex flex-wrap items-center gap-2">
-                    <input :value="previewUrl" readonly aria-label="Draft preview link" @focus="$event.target.select()" class="flex-1 min-w-[220px] px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono text-[11px] text-slate-700 dark:text-slate-200" />
-                    <button type="button" :disabled="!previewUrl" @click="copyPreviewLink" class="py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-300 dark:border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50">{{ previewCopied ? '✓ Copied' : 'Copy link' }}</button>
-                    <a v-if="previewUrl" :href="previewUrl" target="_blank" rel="noopener" class="py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-300 dark:border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50">Open ↗</a>
-                    <button type="button" :disabled="!previewUrl" @click="renewPreviewLink" class="py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-300 dark:border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50">New link</button>
+                    <input :value="previewUrl" readonly aria-label="Draft preview link" @focus="$event.target.select()" :class="[field, 'flex-1 min-w-[220px] font-mono text-xs']" />
+                    <Button variant="secondary" size="sm" :disabled="!previewUrl" @click="copyPreviewLink">
+                        <UiIcon :name="previewCopied ? 'check' : 'copy'" :size="14" />
+                        <span>{{ previewCopied ? 'Copied' : 'Copy link' }}</span>
+                    </Button>
+                    <a v-if="previewUrl" :href="previewUrl" target="_blank" rel="noopener" :class="linkButton">
+                        <span>Open</span>
+                        <UiIcon name="external-link" :size="14" />
+                    </a>
+                    <Button variant="secondary" size="sm" :disabled="!previewUrl" @click="renewPreviewLink">New link</Button>
                 </div>
-                <p v-if="previewError" class="font-bold text-rose-600 dark:text-rose-400">{{ previewError }}</p>
+                <p v-if="previewError" class="text-xs font-medium text-rose-600 dark:text-rose-400">{{ previewError }}</p>
             </div>
 
-            <div class="text-xs">
-                <label for="page-title" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page Title</label>
-                <input id="page-title" v-model="form.title" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="e.g. About Our Club" />
-            </div>
+            <Input v-model="form.title" label="Page title" placeholder="For example, About our lodge" />
 
             <div class="flex flex-wrap items-center gap-6 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
-                    <input type="checkbox" v-model="form.is_published" :disabled="form.is_homepage || form.slug === 'home'" class="w-4 h-4 rounded text-emerald-600 dark:text-emerald-400 focus:ring-emerald-500 accent-emerald-600 cursor-pointer disabled:opacity-50" />
-                    <span>Published & Active</span>
+                <label class="flex items-center gap-2.5 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 select-none">
+                    <input type="checkbox" v-model="form.is_published" :disabled="form.is_homepage || form.slug === 'home'" :class="checkbox" />
+                    <span>Published</span>
                 </label>
 
-                <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
-                    <input type="checkbox" v-model="form.show_in_navigation" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 accent-blue-600 cursor-pointer" />
-                    <span>Show in Top Header Menu</span>
+                <label class="flex items-center gap-2.5 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 select-none">
+                    <input type="checkbox" v-model="form.show_in_navigation" :class="checkbox" />
+                    <span>Show in the top menu</span>
                 </label>
 
-                <label v-if="!form.is_homepage" class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
-                    <input type="checkbox" v-model="form.is_members_only" class="w-4 h-4 rounded text-amber-600 dark:text-amber-400 focus:ring-amber-500 accent-amber-600 cursor-pointer" />
-                    <span>🔒 Members Only</span>
+                <label v-if="!form.is_homepage" class="flex items-center gap-2.5 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 select-none">
+                    <input type="checkbox" v-model="form.is_members_only" :class="checkbox" />
+                    <UiIcon name="lock" :size="14" class="text-slate-500 dark:text-slate-400" />
+                    <span>Members only</span>
                 </label>
 
-                <label class="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-200 select-none" title="A separate menu of links at the bottom of every page">
-                    <input type="checkbox" v-model="form.show_in_footer" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 accent-blue-600 cursor-pointer" />
-                    <span>Show in Footer Menu</span>
+                <label class="flex items-center gap-2.5 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 select-none" title="A separate menu of links at the bottom of every page">
+                    <input type="checkbox" v-model="form.show_in_footer" :class="checkbox" />
+                    <span>Show in the footer menu</span>
                 </label>
             </div>
 
             <!-- Top menu style and schedule -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div>
-                    <label for="page-header-style" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Top menu on this page</label>
-                    <select id="page-header-style" v-model="form.header_style" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-blue-500/20 font-bold">
-                        <option value="full">Full header (menu and buttons)</option>
-                        <option value="logo_only">Logo only</option>
-                        <option value="hidden">No header at all</option>
-                    </select>
-                    <p class="text-[10px] text-slate-400 mt-1">Handy for a landing page.</p>
-                </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Select v-model="form.header_style" label="Top menu on this page" :options="HEADER_STYLES" hint="Handy for a landing page." />
+                <Input v-if="!form.is_homepage" v-model="publishAtLocal" type="datetime-local" label="Go live on (optional)" />
                 <div v-if="!form.is_homepage">
-                    <label for="page-publish-at" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Go live on <span class="font-normal normal-case text-slate-400">(optional)</span></label>
-                    <input id="page-publish-at" v-model="publishAtLocal" type="datetime-local" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-blue-500/20" />
+                    <Input v-model="unpublishAtLocal" type="datetime-local" label="Come down on (optional)" :error="form.errors.unpublish_at" />
+                    <p v-if="form.publish_at && form.unpublish_at && form.unpublish_at <= form.publish_at" class="text-xs text-rose-600 dark:text-rose-400 mt-1">This must be after the go-live time.</p>
                 </div>
-                <div v-if="!form.is_homepage">
-                    <label for="page-unpublish-at" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Come down on <span class="font-normal normal-case text-slate-400">(optional)</span></label>
-                    <input id="page-unpublish-at" v-model="unpublishAtLocal" type="datetime-local" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-blue-500/20" />
-                    <p v-if="form.publish_at && form.unpublish_at && form.unpublish_at <= form.publish_at" class="text-[10px] font-bold text-rose-600 dark:text-rose-400 mt-1">This must be after the go-live time.</p>
-                    <p v-if="form.errors.unpublish_at" class="text-[10px] font-bold text-rose-600 dark:text-rose-400 mt-1">{{ form.errors.unpublish_at }}</p>
-                </div>
-                <p v-if="!form.is_homepage" class="sm:col-span-3 text-[10px] text-slate-400 -mt-2">Times are in your own timezone. The page must also be ticked as Published for these dates to apply.<template v-if="lifecycleText(activePage)"> <strong class="text-slate-600 dark:text-slate-300">{{ lifecycleText(activePage) }}.</strong></template></p>
+                <p v-if="!form.is_homepage" class="sm:col-span-3 text-xs text-slate-500 dark:text-slate-400 -mt-2">Times are in your own timezone. The page must also be ticked as Published for these dates to apply.<template v-if="lifecycleText(activePage)"> <strong class="font-medium text-slate-700 dark:text-slate-300">{{ lifecycleText(activePage) }}.</strong></template></p>
             </div>
-        </div>
+        </Card>
 
-        <!-- SEO & URL Card (collapsible) -->
-        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+        <!-- SEO and web address (collapsible) -->
+        <Card padding="none">
             <button
                 type="button"
                 @click="seoOpen = !seoOpen"
-                class="w-full flex items-center gap-3 p-6 sm:px-7 text-left cursor-pointer"
+                class="w-full flex items-center gap-3 p-6 sm:px-8 text-left cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 :aria-expanded="seoOpen"
                 aria-controls="page-seo-panel"
             >
-                <svg class="w-4 h-4 shrink-0 text-slate-500 dark:text-slate-400 transition-transform" :class="seoOpen ? '' : '-rotate-90'" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
-                </svg>
+                <UiIcon name="chevron-down" class="text-slate-500 dark:text-slate-400 transition-transform" :class="seoOpen ? '' : '-rotate-90'" />
                 <span class="min-w-0">
-                    <span class="block text-base font-bold text-slate-900 dark:text-white">Search Engine Optimization (this page)</span>
-                    <span v-if="seoOpen" class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">The page's web address, and what search engines show for it. Overrides the site-wide SEO defaults; leave the title and description blank to use them.</span>
+                    <span class="block text-base font-semibold text-slate-900 dark:text-white">Search engine optimisation (this page)</span>
+                    <span v-if="seoOpen" class="block text-sm text-slate-500 dark:text-slate-400 mt-0.5">The page's web address, and what search engines show for it. Overrides the site-wide SEO defaults; leave the title and description blank to use them.</span>
                     <span v-else class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-mono truncate">/site/{{ club.slug }}/{{ form.is_homepage ? '' : form.slug }}</span>
                 </span>
             </button>
 
-            <div v-show="seoOpen" id="page-seo-panel" class="px-6 sm:px-7 pb-6 sm:pb-7 space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 sm:items-end gap-4 text-xs">
-                    <div>
-                        <div class="flex flex-wrap items-center gap-x-2 mb-1.5">
-                            <label for="page-slug" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px]">URL Slug (Permalink)</label>
-                            <span class="text-slate-300">|</span>
-                            <span class="text-slate-400 font-mono text-[11px]">/site/{{ club.slug }}/</span>
-                        </div>
-                        <input id="page-slug" v-model="form.slug" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-mono font-bold outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="about" />
-                    </div>
-                    <div>
-                        <label for="page-meta-title" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page SEO Title</label>
-                        <input id="page-meta-title" v-model="form.meta_title" type="text" maxlength="255" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-blue-500/20" :placeholder="form.title || 'Page title'" />
-                    </div>
+            <div v-show="seoOpen" id="page-seo-panel" class="px-6 sm:px-8 pb-6 sm:pb-8 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 sm:items-start gap-4">
+                    <Input v-model="form.slug" label="Web address (slug)" placeholder="about" :hint="`/site/${club.slug}/${form.slug || ''}`" />
+                    <Input v-model="form.meta_title" label="SEO title" maxlength="255" :placeholder="form.title || 'Page title'" />
                 </div>
-                <div class="text-xs">
-                    <label for="page-meta-description" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Page Meta Description</label>
-                    <textarea id="page-meta-description" v-model="form.meta_description" rows="3" maxlength="500" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="Site-wide default description"></textarea>
-                    <p class="text-[10px] text-slate-400 mt-1">{{ (form.meta_description || '').length }}/500. Search engines usually show around 155 characters.</p>
-                </div>
+                <Textarea
+                    v-model="form.meta_description"
+                    label="Meta description"
+                    :rows="3"
+                    maxlength="500"
+                    placeholder="Site-wide default description"
+                    :hint="`${(form.meta_description || '').length}/500. Search engines usually show around 155 characters.`"
+                />
 
                 <!-- How it may look in a search engine -->
                 <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 p-4 text-left" aria-label="Search result preview">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Search result preview</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Search result preview</p>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ searchPreview.url }}</p>
                     <p class="text-base font-semibold text-blue-700 dark:text-blue-400 truncate">{{ searchPreview.title }}</p>
                     <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">{{ searchPreview.description }}</p>
-                    <p v-if="searchPreview.title.length > 60" class="mt-2 text-[10px] font-bold text-amber-600 dark:text-amber-400">The title is {{ searchPreview.title.length }} characters; search engines usually cut it off after about 60.</p>
-                    <p v-if="(form.meta_description || '').length > 160" class="mt-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">The description is long; search engines usually cut it off after about 160 characters.</p>
+                    <p v-if="searchPreview.title.length > 60" class="mt-2 text-xs font-medium text-amber-700 dark:text-amber-400">The title is {{ searchPreview.title.length }} characters; search engines usually cut it off after about 60.</p>
+                    <p v-if="(form.meta_description || '').length > 160" class="mt-1 text-xs font-medium text-amber-700 dark:text-amber-400">The description is long; search engines usually cut it off after about 160 characters.</p>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <div class="flex items-center justify-between mb-1.5">
-                            <label for="page-share-image" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px]">Share image</label>
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                            <label for="page-share-image" :class="fieldLabel">Share image</label>
                             <div class="flex items-center gap-1.5">
-                                <button v-if="form.share_image" type="button" @click="form.share_image = ''" class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 cursor-pointer">🗑️ Clear</button>
-                                <button type="button" @click="openMediaLibrary('page_share_image', null, 'pages')" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer">📁 Media library</button>
+                                <Button v-if="form.share_image" variant="ghost" size="sm" @click="form.share_image = ''">
+                                    <UiIcon name="trash" :size="14" />
+                                    <span>Clear</span>
+                                </Button>
+                                <Button variant="secondary" size="sm" @click="openMediaLibrary('page_share_image', null, 'pages')">
+                                    <UiIcon name="folder" :size="14" />
+                                    <span>Media library</span>
+                                </Button>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
-                            <input id="page-share-image" v-model="form.share_image" type="text" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:border-blue-500 rounded-xl p-3 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-blue-500/20 font-mono text-[11px]" placeholder="Site-wide share image is used" />
+                            <input id="page-share-image" v-model="form.share_image" type="text" :class="[field, 'font-mono text-xs']" placeholder="Site-wide share image is used" />
                             <img v-if="form.share_image" :src="form.share_image" alt="" class="w-16 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
                         </div>
-                        <p class="text-[10px] text-slate-400 mt-1">The picture shown when this page is shared on Facebook, WhatsApp or Messages. About 1200 × 630 works best.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">The picture shown when this page is shared on Facebook, WhatsApp or Messages. About 1200 × 630 works best.</p>
                     </div>
                     <div>
-                        <span class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] mb-1.5">Search engines</span>
-                        <label :class="['flex items-start gap-2.5 select-none', form.is_homepage || form.slug === 'home' ? 'opacity-50' : 'cursor-pointer']">
-                            <input type="checkbox" v-model="form.noindex" :disabled="form.is_homepage || form.slug === 'home'" class="w-4 h-4 mt-0.5 rounded accent-blue-600 cursor-pointer disabled:cursor-not-allowed" />
+                        <span :class="[fieldLabel, 'mb-1.5']">Search engines</span>
+                        <label :class="['flex items-start gap-2.5 select-none text-sm', form.is_homepage || form.slug === 'home' ? 'opacity-50' : 'cursor-pointer']">
+                            <input type="checkbox" v-model="form.noindex" :disabled="form.is_homepage || form.slug === 'home'" :class="[checkbox, 'mt-0.5']" />
                             <span>
-                                <span class="font-bold text-slate-700 dark:text-slate-200">Hide this page from search engines</span>
-                                <span class="block text-[10px] text-slate-400 mt-0.5">People with the link can still open it. It is also left out of the sitemap. The home page always stays visible.</span>
+                                <span class="font-medium text-slate-700 dark:text-slate-300">Hide this page from search engines</span>
+                                <span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">People with the link can still open it. It is also left out of the sitemap. The home page always stays visible.</span>
                             </span>
                         </label>
                     </div>
                 </div>
             </div>
-        </div>
+        </Card>
 
         <!-- Compact / expand every element -->
         <div v-if="form.blocks.length" class="flex items-center justify-end gap-2 text-xs">
-            <span class="text-slate-500 dark:text-slate-400 font-semibold" aria-live="polite">{{ collapsedCount }} of {{ form.blocks.length }} compact</span>
-            <div class="inline-flex rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700" role="group" aria-label="Compact or expand all elements">
-                <button type="button" @click="collapseAll" :disabled="collapsedCount === form.blocks.length" class="px-3 py-1.5 font-bold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Compact all</button>
-                <button type="button" @click="expandAll" :disabled="collapsedCount === 0" class="px-3 py-1.5 font-bold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border-l border-slate-300 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">Expand all</button>
+            <span class="text-slate-500 dark:text-slate-400 font-medium" aria-live="polite">{{ collapsedCount }} of {{ form.blocks.length }} compact</span>
+            <div class="inline-flex items-center gap-1" role="group" aria-label="Compact or expand all elements">
+                <Button variant="secondary" size="sm" :disabled="collapsedCount === form.blocks.length" @click="collapseAll">Compact all</Button>
+                <Button variant="secondary" size="sm" :disabled="collapsedCount === 0" @click="expandAll">Expand all</Button>
             </div>
         </div>
 
-        <!-- Reorderable Block Element Stack List -->
+        <!-- Reorderable list of the page's elements -->
         <div class="space-y-3">
             <template v-for="(block, bIdx) in form.blocks" :key="block.id || bIdx">
-                
-                <!-- Insert Divider Above First Block (Index 0) -->
+
+                <!-- Insert point above the first element (index 0) -->
                 <div v-if="bIdx === 0" class="relative py-1 flex items-center justify-center insert-menu-container">
                     <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                        <div class="w-full border-t border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"></div>
+                        <div class="w-full border-t border-dashed border-slate-200 dark:border-slate-800"></div>
                     </div>
                     <div class="relative flex justify-center">
                         <button
                             type="button"
                             @click.stop="toggleInsertMenu(0, $event)"
-                            class="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
+                            class="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 rounded-full text-xs font-medium shadow-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
-                            <span class="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center text-xs font-black">+</span>
-                            <span>Insert block at top</span>
+                            <UiIcon name="plus" :size="14" class="text-blue-600 dark:text-blue-400" />
+                            <span>Insert an element at the top</span>
                         </button>
 
-                        <!-- Insert Menu Dropdown Popover -->
+                        <!-- Insert menu -->
                         <div
                             v-if="activeInsertIndex === 0"
                             :class="[
@@ -361,14 +406,14 @@ defineProps({
                             ]"
                             :style="{ translate: `calc(-50% + ${insertMenuShift}px) 0` }"
                         >
-                            <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
-                                <span>Insert Element Here</span>
-                                <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs cursor-pointer p-1">✕</button>
+                            <div class="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
+                                <span>Insert an element here</span>
+                                <button type="button" aria-label="Close" @click="activeInsertIndex = null" :class="iconButton"><UiIcon name="x" /></button>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 pt-1">
                                 <div v-for="(col, cIdx) in blockColumns" :key="cIdx" class="space-y-1.5">
-                                    <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                                    <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
                                         {{ col.title }}
                                     </div>
                                     <div class="space-y-1">
@@ -377,14 +422,14 @@ defineProps({
                                             :key="item.type"
                                             type="button"
                                             @click="addBlock(item.type, 0)"
-                                            class="w-full flex items-start gap-2.5 p-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800/60 rounded-xl transition-all cursor-pointer group"
+                                            class="w-full flex items-start gap-2.5 p-2 text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800/60 rounded-xl transition-colors cursor-pointer group"
                                         >
-                                            <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shrink-0 transition-transform group-hover:scale-110" :class="[item.bg, item.color]">
-                                                {{ item.icon }}
+                                            <span class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+                                                <UiIcon :name="BLOCK_ICONS[item.type]" />
                                             </span>
                                             <div class="min-w-0">
-                                                <span class="block font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">{{ item.label }}</span>
-                                                <span class="text-[10px] text-slate-400 font-normal leading-tight block line-clamp-2">{{ item.desc }}</span>
+                                                <span class="block font-medium text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">{{ item.label }}</span>
+                                                <span class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight block line-clamp-2">{{ item.desc }}</span>
                                             </div>
                                         </button>
                                     </div>
@@ -394,105 +439,58 @@ defineProps({
                     </div>
                 </div>
 
-                <!-- Block Item Card Container -->
-                <div :id="blockCardId(block, bIdx)" :class="['scroll-mt-24 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md shadow-slate-200/60 overflow-hidden transition-all hover:shadow-lg', newBlockId === block.id ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-transparent' : '']">
-                    
-                    <!-- Block Header & Controls -->
-                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-200/80 dark:bg-slate-700/80 border-b border-slate-300/80 dark:border-slate-700/80 text-xs font-bold text-slate-800 dark:text-slate-100">
+                <!-- Element card -->
+                <div :id="blockCardId(block, bIdx)" :class="['scroll-mt-24 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-shadow hover:shadow-md', newBlockId === block.id ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-transparent' : '']">
+
+                    <!-- Element header and controls -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-800 dark:text-slate-100">
                         <div class="flex items-center gap-2">
                             <button
                                 type="button"
                                 @click="toggleCollapsed(block)"
-                                class="w-6 h-6 rounded flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-900/60 cursor-pointer"
+                                :class="iconButton"
                                 :aria-expanded="!isCollapsed(block)"
                                 :title="isCollapsed(block) ? 'Expand to edit this element' : 'Compact this element'"
                                 :aria-label="isCollapsed(block) ? 'Expand element' : 'Compact element'"
                             >
-                                <svg class="w-3.5 h-3.5 transition-transform" :class="isCollapsed(block) ? '-rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
-                                </svg>
+                                <UiIcon name="chevron-down" :size="14" class="transition-transform" :class="isCollapsed(block) ? '-rotate-90' : ''" />
                             </button>
-                            <span class="w-5 h-5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[11px] font-black border border-slate-200 dark:border-slate-800">
+                            <span class="w-5 h-5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[11px] font-semibold border border-slate-200 dark:border-slate-700">
                                 {{ bIdx + 1 }}
                             </span>
 
-                            <!-- Type Badges -->
-                            <span v-if="block.type === 'text' || block.type === 'rich_text'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                📝 Text Block
-                            </span>
-                            <span v-else-if="block.type === 'image'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                🖼️ Single Image
-                            </span>
-                            <span v-else-if="block.type === 'images'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                🖼️ Image Gallery ({{ block.columns || 3 }} Cols)
-                            </span>
-                            <span v-else-if="block.type === 'notice'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
-                                📢 Callout Box
-                            </span>
-                            <span v-else-if="block.type === 'button'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                🔗 Button Link
-                            </span>
-                            <span v-else-if="block.type === 'youtube'" class="px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-[10px] uppercase font-bold">
-                                ▶️ YouTube Video
-                            </span>
-                            <span v-else-if="block.type === 'downloads'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                📥 Downloads
-                            </span>
-                            <span v-else-if="block.type === 'faq'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                ❓ FAQ
-                            </span>
-                            <span v-else-if="block.type === 'map'" class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[10px] uppercase font-bold">
-                                🗺️ Map
-                            </span>
-                            <span v-else-if="block.type === 'cta_banner'" class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[10px] uppercase font-bold">
-                                📣 Call-to-Action
-                            </span>
-                            <span v-else-if="block.type === 'calendar'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                🗓️ Events Calendar
-                            </span>
-                            <span v-else-if="block.type === 'hero'" class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[10px] uppercase font-bold">
-                                🚀 Hero Banner
-                            </span>
-                            <span v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                📰 News List ({{ String(block.columns) === 'masonry' ? 'Masonry' : (block.columns || 3) + ' Cols' }})
-                            </span>
-                            <span v-else-if="block.type === 'events_calendar'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                📅 Dynamic Events & Summons
-                            </span>
-                            <span v-else-if="block.type === 'pricing_cards'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                💳 Membership Dues
-                            </span>
-                            <span v-else-if="block.type === 'donation_campaign'" class="px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-[10px] uppercase font-bold">
-                                💰 Dynamic Donation
-                            </span>
-                            <span v-else-if="block.type === 'contact_details'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
-                                📇 Contact Cards
-                            </span>
-                            <span v-else-if="block.type === 'contact_form'" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 text-[10px] uppercase font-bold">
-                                📝 Contact Form
-                            </span>
-                            <span v-else-if="block.type === 'slideshow'" class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[10px] uppercase font-bold">
-                                🎞️ Slideshow ({{ (block.slides || []).filter((slide) => slide.image_url).length }} Photos)
-                            </span>
-                            <span v-else-if="block.type === 'section_heading'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
-                                🔠 Section Heading
-                            </span>
-                            <span v-else-if="block.type === 'feature_cards'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
-                                🃏 Icon Cards ({{ block.columns || 3 }} Cols)
-                            </span>
-                            <span v-else-if="block.type === 'stats'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
-                                🔢 Stats Row
-                            </span>
-                            <span v-else-if="block.type === 'media_text'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
-                                🖼️ Image &amp; Text
-                            </span>
-                            <span v-else-if="block.type === 'quote_motto'" class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase font-bold">
-                                ❝ Motto
-                            </span>
+                            <!-- Element type -->
+                            <Badge>
+                                <UiIcon :name="BLOCK_ICONS[block.type]" :size="14" />
+                                <template v-if="block.type === 'text' || block.type === 'rich_text'">Text block</template>
+                                <template v-else-if="block.type === 'image'">Single image</template>
+                                <template v-else-if="block.type === 'images'">Image gallery ({{ block.columns || 3 }} columns)</template>
+                                <template v-else-if="block.type === 'notice'">Callout box</template>
+                                <template v-else-if="block.type === 'button'">Button link</template>
+                                <template v-else-if="block.type === 'youtube'">YouTube video</template>
+                                <template v-else-if="block.type === 'downloads'">Downloads</template>
+                                <template v-else-if="block.type === 'faq'">FAQ</template>
+                                <template v-else-if="block.type === 'map'">Map</template>
+                                <template v-else-if="block.type === 'cta_banner'">Call-to-action banner</template>
+                                <template v-else-if="block.type === 'calendar'">Events calendar</template>
+                                <template v-else-if="block.type === 'hero'">Hero banner</template>
+                                <template v-else-if="block.type === 'news_feed' || block.type === 'news_list'">News list ({{ String(block.columns) === 'masonry' ? 'masonry' : (block.columns || 3) + ' columns' }})</template>
+                                <template v-else-if="block.type === 'events_calendar'">Events and summons</template>
+                                <template v-else-if="block.type === 'pricing_cards'">Membership dues</template>
+                                <template v-else-if="block.type === 'donation_campaign'">Donation campaign</template>
+                                <template v-else-if="block.type === 'contact_details'">Contact cards</template>
+                                <template v-else-if="block.type === 'contact_form'">Contact form</template>
+                                <template v-else-if="block.type === 'slideshow'">Slideshow ({{ (block.slides || []).filter((slide) => slide.image_url).length }} photos)</template>
+                                <template v-else-if="block.type === 'section_heading'">Section heading</template>
+                                <template v-else-if="block.type === 'feature_cards'">Icon cards ({{ block.columns || 3 }} columns)</template>
+                                <template v-else-if="block.type === 'stats'">Stats row</template>
+                                <template v-else-if="block.type === 'media_text'">Image and text</template>
+                                <template v-else-if="block.type === 'quote_motto'">Motto</template>
+                            </Badge>
                         </div>
 
-                        <!-- Control Buttons (Up, Down, Duplicate, Delete) -->
-                        <div class="flex items-center gap-1">
+                        <!-- Controls: show/hide, width, copy, save, move, duplicate, delete -->
+                        <div class="flex flex-wrap items-center gap-1">
                             <ToggleSwitch
                                 :model-value="!block.hidden"
                                 :label="`Show element ${bIdx + 1} on the live site`"
@@ -503,7 +501,7 @@ defineProps({
                                 <select
                                     :value="block.block_width || 'full'"
                                     @change="block.block_width = $event.target.value"
-                                    class="px-1.5 py-1 rounded-lg text-[11px] font-bold border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 cursor-pointer"
+                                    :class="smallSelect"
                                     title="How wide this element is on the page"
                                     aria-label="Element width"
                                 >
@@ -515,11 +513,11 @@ defineProps({
                                     v-if="block.block_width && block.block_width !== 'full'"
                                     :value="block.block_align || 'center'"
                                     @change="block.block_align = $event.target.value"
-                                    class="px-1.5 py-1 rounded-lg text-[11px] font-bold border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 cursor-pointer"
+                                    :class="smallSelect"
                                     title="Where a narrower element sits"
                                     aria-label="Element position"
                                 >
-                                    <option value="center">Centered</option>
+                                    <option value="center">Centred</option>
                                     <option value="left">Left</option>
                                     <option value="right">Right</option>
                                 </select>
@@ -527,68 +525,62 @@ defineProps({
                             <select
                                 v-if="copyTargets.length"
                                 @change="copyBlockTo(block, $event)"
-                                class="px-1.5 py-1 rounded-lg text-[11px] font-bold border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 cursor-pointer max-w-[7.5rem]"
+                                :class="[smallSelect, 'max-w-[7.5rem]']"
                                 title="Add a copy of this element to the end of another page"
                                 aria-label="Copy this element to another page"
                             >
                                 <option value="">Copy to…</option>
                                 <option v-for="target in copyTargets" :key="target.id" :value="target.id">{{ target.title }}</option>
                             </select>
-                            <button
-                                type="button"
-                                @click="submitForm()"
+                            <Button
+                                :variant="isDirty && !isSavedSuccess ? 'primary' : 'secondary'"
+                                size="sm"
+                                class="mr-1"
                                 :disabled="form.processing"
-                                :class="[
-                                    'mr-1 px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 cursor-pointer border transition-colors disabled:opacity-60 disabled:cursor-wait',
-                                    isSavedSuccess
-                                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
-                                        : isDirty
-                                            ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600'
-                                            : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-                                ]"
                                 title="Save this page"
                                 aria-label="Save this page"
+                                @click="submitForm()"
                             >
-                                <span aria-hidden="true">{{ isSavedSuccess ? '✓' : '💾' }}</span>
+                                <UiIcon :name="isSavedSuccess ? 'check' : 'save'" :size="14" />
                                 <span>{{ form.processing ? 'Saving…' : isSavedSuccess ? 'Saved' : 'Save' }}</span>
-                            </button>
+                            </Button>
                             <button
                                 type="button"
                                 @click="moveBlockUp(bIdx)"
                                 :disabled="bIdx === 0"
-                                class="p-1 min-w-6 min-h-6 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
-                                title="Move Up"
+                                :class="iconButton"
+                                title="Move up"
                                 aria-label="Move block up"
                             >
-                                ▲
+                                <UiIcon name="chevron-down" class="rotate-180" />
                             </button>
                             <button
                                 type="button"
                                 @click="moveBlockDown(bIdx)"
                                 :disabled="bIdx === form.blocks.length - 1"
-                                class="p-1 min-w-6 min-h-6 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer"
-                                title="Move Down"
+                                :class="iconButton"
+                                title="Move down"
                                 aria-label="Move block down"
                             >
-                                ▼
+                                <UiIcon name="chevron-down" />
                             </button>
                             <button
                                 type="button"
                                 @click="duplicateBlock(bIdx)"
-                                class="p-1 min-w-6 min-h-6 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
-                                title="Duplicate Element"
+                                :class="iconButton"
+                                title="Duplicate element"
                                 aria-label="Duplicate block"
                             >
-                                📋
+                                <UiIcon name="copy" />
                             </button>
                             <button
                                 type="button"
                                 @click="blockToDelete = bIdx"
-                                class="p-1 min-w-6 min-h-6 flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
-                                title="Delete Element"
+                                :class="[iconButton, 'hover:!text-rose-600 dark:hover:!text-rose-400']"
+                                title="Delete element"
                                 aria-label="Delete block"
                             >
-                                🗑️
+                                <UiIcon name="trash" />
                             </button>
                         </div>
                     </div>
@@ -598,298 +590,192 @@ defineProps({
                         <BlockSummary :block="block" />
                     </div>
 
-                    <!-- Block Body Editors -->
+                    <!-- Element editors -->
                     <div v-else class="p-4 space-y-3">
-                        
-                        <!-- 1. Text / Rich Text Block -->
+
+                        <!-- 1. Text / rich text -->
                         <div v-if="block.type === 'text' || block.type === 'rich_text'" class="space-y-3">
+                            <Input v-model="block.heading" label="Section heading (optional)" placeholder="For example, our history and mission" />
                             <div>
-                                <label :for="`block-${bIdx}-heading`" class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Section Heading (Optional)</label>
-                                <input :id="`block-${bIdx}-heading`" v-model="block.heading" type="text" placeholder="e.g. Our History & Mission" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold" />
-                            </div>
-                            <div>
-                                <label :id="`block-${bIdx}-content-label`" class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Body Text Content</label>
+                                <label :id="`block-${bIdx}-content-label`" :class="[fieldLabel, 'mb-1.5']">Text</label>
                                 <RichTextEditor v-model="block.content" placeholder="Write formatted text content here..." :aria-labelledby="`block-${bIdx}-content-label`" />
                             </div>
-                            <div>
-                                <label :for="`block-${bIdx}-text-align`" class="block font-bold text-slate-700 dark:text-slate-200 text-xs mb-1">Text alignment</label>
-                                <select :id="`block-${bIdx}-text-align`" v-model="block.text_align" class="w-full max-w-[12rem] p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-xs">
-                                    <option value="left">Left aligned</option>
-                                    <option value="center">Centred</option>
-                                    <option value="right">Right aligned</option>
-                                </select>
-                            </div>
+                            <Select v-model="block.text_align" label="Text alignment" :options="TEXT_ALIGNS" class="max-w-[12rem]" />
                         </div>
 
-                        <!-- 2. Single Image Block -->
-                        <div v-else-if="block.type === 'image'" class="space-y-3 text-xs">
+                        <!-- 2. Single image -->
+                        <div v-else-if="block.type === 'image'" class="space-y-3">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                    <div class="flex items-center justify-between mb-1">
-                                        <label :for="`block-${bIdx}-image-url`" class="block font-bold text-slate-700 dark:text-slate-200">Image URL</label>
+                                    <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                                        <label :for="`block-${bIdx}-image-url`" :class="fieldLabel">Image URL</label>
                                         <div class="flex items-center gap-1.5">
-                                            <button
-                                                v-if="block.url"
-                                                type="button"
-                                                @click="removeBlockImage(block)"
-                                                class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 cursor-pointer"
-                                            >
-                                                🗑️ Clear
-                                            </button>
-                                            <button
-                                                type="button"
-                                                @click="openMediaLibrary('block_image', block, 'pages')"
-                                                class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer"
-                                            >
-                                                📁 Media library
-                                            </button>
+                                            <Button v-if="block.url" variant="ghost" size="sm" @click="removeBlockImage(block)">
+                                                <UiIcon name="trash" :size="14" />
+                                                <span>Clear</span>
+                                            </Button>
+                                            <Button variant="secondary" size="sm" @click="openMediaLibrary('block_image', block, 'pages')">
+                                                <UiIcon name="folder" :size="14" />
+                                                <span>Media library</span>
+                                            </Button>
                                         </div>
                                     </div>
-                                    <input :id="`block-${bIdx}-image-url`" v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
+                                    <input :id="`block-${bIdx}-image-url`" v-model="block.url" type="text" placeholder="https://example.com/photo.jpg" :class="[field, 'font-mono text-xs']" />
                                 </div>
 
-                                <div>
-                                    <label :for="`block-${bIdx}-caption`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Caption / Alt Text</label>
-                                    <input :id="`block-${bIdx}-caption`" v-model="block.caption" type="text" placeholder="e.g. Annual Dinner at the Lodge" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl" />
-                                </div>
+                                <Input v-model="block.caption" label="Caption and alt text" placeholder="For example, the annual dinner at the lodge" />
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-                                <div>
-                                    <label :for="`block-${bIdx}-position`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Image Positioning</label>
-                                    <select :id="`block-${bIdx}-position`" v-model="block.position" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
-                                        <option value="left">Left Aligned</option>
-                                        <option value="center">Centered</option>
-                                        <option value="right">Right Aligned</option>
-                                        <option value="full">Full Width Banner</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label :for="`block-${bIdx}-size`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Image Sizing</label>
-                                    <select :id="`block-${bIdx}-size`" v-model="block.size" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
-                                        <option value="small">Small (25% Width)</option>
-                                        <option value="medium">Medium (50% Width)</option>
-                                        <option value="large">Large (75% Width)</option>
-                                        <option value="full">Full Container Width (100%)</option>
-                                    </select>
-                                </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
+                                <Select v-model="block.position" label="Image position" :options="IMAGE_POSITIONS" />
+                                <Select v-model="block.size" label="Image size" :options="IMAGE_SIZES" />
                             </div>
 
                             <div v-if="block.url" class="pt-2">
-                                <span class="text-[10px] font-bold text-slate-400 block mb-1">Preview Thumbnail:</span>
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Layout preview</span>
                                 <div :class="['flex', block.position === 'left' ? 'justify-start' : block.position === 'right' ? 'justify-end' : block.position === 'center' ? 'justify-center' : 'w-full']">
                                     <div :class="[
                                         'rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1',
                                         block.size === 'small' ? 'w-1/4' : block.size === 'medium' ? 'w-1/2' : block.size === 'large' ? 'w-3/4' : 'w-full'
                                     ]">
-                                        <img :src="block.url" class="w-full h-auto max-h-48 object-cover rounded-lg" />
+                                        <img :src="block.url" alt="" class="w-full h-auto max-h-48 object-cover rounded-lg" />
                                         <p v-if="block.caption" class="text-[11px] text-center text-slate-500 dark:text-slate-400 italic mt-1">{{ block.caption }}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 3. Image Gallery Block -->
-                        <div v-else-if="block.type === 'images'" class="space-y-3 text-xs">
-                            <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <!-- 3. Image gallery -->
+                        <div v-else-if="block.type === 'images'" class="space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
                                 <div class="flex items-center gap-2">
-                                    <label :for="`block-${bIdx}-columns`" class="font-bold text-slate-700 dark:text-slate-200">Grid Columns Layout:</label>
-                                    <select :id="`block-${bIdx}-columns`" v-model="block.columns" class="p-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-lg font-bold">
-                                        <option :value="2">2 Columns</option>
-                                        <option :value="3">3 Columns</option>
-                                        <option :value="4">4 Columns</option>
+                                    <label :for="`block-${bIdx}-columns`" :class="fieldLabel">Columns</label>
+                                    <select :id="`block-${bIdx}-columns`" v-model="block.columns" :class="[field, 'w-auto']">
+                                        <option :value="2">2 columns</option>
+                                        <option :value="3">3 columns</option>
+                                        <option :value="4">4 columns</option>
                                     </select>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    @click="addGalleryImage(block)"
-                                    class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer flex items-center gap-1"
-                                >
-                                    ➕ Add image item
-                                </button>
+                                <Button variant="secondary" size="sm" @click="addGalleryImage(block)">
+                                    <UiIcon name="plus" :size="14" />
+                                    <span>Add an image</span>
+                                </Button>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div v-for="(gItem, gIdx) in block.items" :key="gItem.id || gIdx" class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 relative">
-                                    <div class="flex items-center justify-between">
-                                        <span class="font-bold text-slate-600 dark:text-slate-300 text-[11px]">Image #{{ gIdx + 1 }}</span>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Image {{ gIdx + 1 }}</span>
                                         <div class="flex items-center gap-1">
-                                            <button
-                                                type="button"
-                                                @click="openMediaLibrary('gallery_image', gItem, 'pages')"
-                                                class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer"
-                                            >
-                                                📁 Media library
-                                            </button>
-                                            <button
-                                                type="button"
-                                                @click="removeGalleryImage(block, gIdx)"
-                                                class="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 font-bold px-1 text-xs cursor-pointer"
-                                            >
-                                                ✕
-                                            </button>
+                                            <Button variant="secondary" size="sm" @click="openMediaLibrary('gallery_image', gItem, 'pages')">
+                                                <UiIcon name="folder" :size="14" />
+                                                <span>Media library</span>
+                                            </Button>
+                                            <Button variant="ghost" size="sm" :aria-label="`Remove image ${gIdx + 1}`" @click="removeGalleryImage(block, gIdx)">
+                                                <UiIcon name="x" :size="14" />
+                                            </Button>
                                         </div>
                                     </div>
 
-                                    <input v-model="gItem.url" type="text" :aria-label="`Image ${gIdx + 1} URL`" placeholder="https://example.com/photo.jpg" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg font-mono text-[11px]" />
-                                    <input v-model="gItem.caption" type="text" :aria-label="`Image ${gIdx + 1} caption / alt text`" placeholder="Caption / Alt Text" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg text-xs" />
+                                    <Input v-model="gItem.url" :aria-label="`Image ${gIdx + 1} URL`" placeholder="https://example.com/photo.jpg" />
+                                    <Input v-model="gItem.caption" :aria-label="`Image ${gIdx + 1} caption / alt text`" placeholder="Caption and alt text" />
 
-                                    <img v-if="gItem.url" :src="gItem.url" class="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-800 mt-1" />
+                                    <img v-if="gItem.url" :src="gItem.url" alt="" class="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-800 mt-1" />
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 4. Notice / Callout Box Block -->
-                        <div v-else-if="block.type === 'notice'" class="space-y-3 text-xs">
+                        <!-- 4. Notice / callout box -->
+                        <div v-else-if="block.type === 'notice'" class="space-y-3">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label :for="`block-${bIdx}-style`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Callout Style</label>
-                                    <select :id="`block-${bIdx}-style`" v-model="block.style" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
-                                        <option value="info">💡 Info Box (Sky Blue)</option>
-                                        <option value="warning">⚠️ Warning Box (Amber Gold)</option>
-                                        <option value="important">❗ Important Notice (Rose Red)</option>
-                                        <option value="success">✅ Success Box (Emerald Green)</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label :for="`block-${bIdx}-notice-title`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Box Header Title</label>
-                                    <input :id="`block-${bIdx}-notice-title`" v-model="block.title" type="text" placeholder="e.g. Important Announcement" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
-                                </div>
+                                <Select v-model="block.style" label="Callout style" :options="NOTICE_STYLES" />
+                                <Input v-model="block.title" label="Box title" placeholder="For example, an important announcement" />
                             </div>
 
-                            <div>
-                                <label :for="`block-${bIdx}-notice-text`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Notice Body Message</label>
-                                <textarea :id="`block-${bIdx}-notice-text`" v-model="block.text" rows="3" placeholder="Write callout announcement text here..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-xs"></textarea>
-                            </div>
+                            <Textarea v-model="block.text" label="Notice text" :rows="3" placeholder="Write callout announcement text here..." />
                         </div>
 
-                        <!-- 5. Button Link Block -->
-                        <div v-else-if="block.type === 'button'" class="space-y-3 text-xs">
+                        <!-- 5. Button link -->
+                        <div v-else-if="block.type === 'button'" class="space-y-3">
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <div>
-                                    <label :for="`block-${bIdx}-button-label`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Label</label>
-                                    <input :id="`block-${bIdx}-button-label`" v-model="block.label" type="text" placeholder="e.g. Learn More →" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
-                                </div>
+                                <Input v-model="block.label" label="Button label" placeholder="For example, Learn more" />
 
                                 <div>
-                                    <span class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Link Target</span>
+                                    <span :class="[fieldLabel, 'mb-1.5']">Link target</span>
                                     <LinkField v-model="block.url" :pages="pages" :club="club" label="Button link" />
                                 </div>
 
-                                <div>
-                                    <label :for="`block-${bIdx}-button-align`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Alignment</label>
-                                    <select :id="`block-${bIdx}-button-align`" v-model="block.align" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
-                                        <option value="left">Left Aligned</option>
-                                        <option value="center">Centered</option>
-                                        <option value="right">Right Aligned</option>
-                                    </select>
-                                </div>
+                                <Select v-model="block.align" label="Button alignment" :options="TEXT_ALIGNS" />
                             </div>
                         </div>
 
-                        <!-- 6a. YouTube Video Block -->
-                        <div v-else-if="block.type === 'youtube'" class="space-y-3 text-xs">
+                        <!-- 6a. YouTube video -->
+                        <div v-else-if="block.type === 'youtube'" class="space-y-3">
                             <div>
-                                <label :for="`block-${bIdx}-yt-url`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">YouTube Link</label>
-                                <input :id="`block-${bIdx}-yt-url`" v-model="block.url" @input="onYoutubeUrlInput(block)" type="text" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
-                                <p v-if="!block.url" class="text-[10px] text-slate-400 mt-1">Paste any YouTube link: a normal video, a youtu.be short link or a Short.</p>
-                                <p v-else-if="parseYouTubeUrl(block.url)" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">✓ Video found</p>
-                                <p v-else class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1">✗ That isn't a YouTube video link, so nothing will show on the site.</p>
+                                <label :for="`block-${bIdx}-yt-url`" :class="[fieldLabel, 'mb-1.5']">YouTube link</label>
+                                <input :id="`block-${bIdx}-yt-url`" v-model="block.url" @input="onYoutubeUrlInput(block)" type="text" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." :class="[field, 'font-mono text-xs']" />
+                                <p v-if="!block.url" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Paste any YouTube link: a normal video, a youtu.be short link or a Short.</p>
+                                <p v-else-if="parseYouTubeUrl(block.url)" class="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400 font-medium mt-1"><UiIcon name="check" :size="14" />Video found</p>
+                                <p v-else class="flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400 font-medium mt-1"><UiIcon name="warning" :size="14" />That isn't a YouTube video link, so nothing will show on the site.</p>
+                            </div>
+
+                            <Input v-model="block.title" label="Name (optional)" maxlength="200" placeholder="For example, Installation ceremony 2026" />
+                            <Textarea v-model="block.description" label="Description (optional, plain text)" :rows="3" maxlength="2000" />
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
+                                <Select v-model="block.layout" label="Layout" :options="VIDEO_LAYOUTS" />
+                                <Select v-model="block.aspect" label="Shape" :options="VIDEO_SHAPES" />
+                                <Select v-model="block.text_align" label="Text and buttons" :options="VIDEO_TEXT_ALIGNS" />
                             </div>
 
                             <div>
-                                <label :for="`block-${bIdx}-yt-title`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Name <span class="font-normal text-slate-400">(optional)</span></label>
-                                <input :id="`block-${bIdx}-yt-title`" v-model="block.title" type="text" maxlength="200" placeholder="e.g. Installation Ceremony 2026" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
-                            </div>
-
-                            <div>
-                                <label :for="`block-${bIdx}-yt-description`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Description <span class="font-normal text-slate-400">(optional, plain text)</span></label>
-                                <textarea :id="`block-${bIdx}-yt-description`" v-model="block.description" rows="3" maxlength="2000" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-xs"></textarea>
-                            </div>
-
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-                                <div>
-                                    <label :for="`block-${bIdx}-yt-layout`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Layout</label>
-                                    <select :id="`block-${bIdx}-yt-layout`" v-model="block.layout" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
-                                        <option value="stacked">Video, then text</option>
-                                        <option value="video_only">Video only</option>
-                                        <option value="side_left">Video left, text right</option>
-                                        <option value="side_right">Text left, video right</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label :for="`block-${bIdx}-yt-aspect`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Shape</label>
-                                    <select :id="`block-${bIdx}-yt-aspect`" v-model="block.aspect" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
-                                        <option value="16:9">Widescreen 16:9</option>
-                                        <option value="4:3">Classic 4:3</option>
-                                        <option value="21:9">Cinema 21:9</option>
-                                        <option value="1:1">Square 1:1</option>
-                                        <option value="9:16">Portrait 9:16</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label :for="`block-${bIdx}-yt-align`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Text &amp; buttons</label>
-                                    <select :id="`block-${bIdx}-yt-align`" v-model="block.text_align" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold">
-                                        <option value="left">Left aligned</option>
-                                        <option value="center">Centered</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="flex items-center justify-between mb-1">
-                                    <label :for="`block-${bIdx}-yt-cover`" class="block font-bold text-slate-700 dark:text-slate-200">Cover Image <span class="font-normal text-slate-400">(optional)</span></label>
+                                <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                                    <label :for="`block-${bIdx}-yt-cover`" :class="fieldLabel">Cover image (optional)</label>
                                     <div class="flex items-center gap-1.5">
-                                        <button v-if="block.cover_url" type="button" @click="block.cover_url = ''" class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 cursor-pointer">
-                                            🗑️ Clear
-                                        </button>
-                                        <button type="button" @click="openMediaLibrary('video_cover', block, 'pages')" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer">
-                                            📁 Media library
-                                        </button>
+                                        <Button v-if="block.cover_url" variant="ghost" size="sm" @click="block.cover_url = ''">
+                                            <UiIcon name="trash" :size="14" />
+                                            <span>Clear</span>
+                                        </Button>
+                                        <Button variant="secondary" size="sm" @click="openMediaLibrary('video_cover', block, 'pages')">
+                                            <UiIcon name="folder" :size="14" />
+                                            <span>Media library</span>
+                                        </Button>
                                     </div>
                                 </div>
-                                <input :id="`block-${bIdx}-yt-cover`" v-model="block.cover_url" type="text" placeholder="https://example.com/cover.jpg" class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
-                                <p class="text-[10px] text-slate-400 mt-1">Without a cover, the YouTube thumbnail is used and loads from YouTube's image server when the page opens. A cover from your media library keeps visitors' details away from YouTube until they press play.</p>
+                                <input :id="`block-${bIdx}-yt-cover`" v-model="block.cover_url" type="text" placeholder="https://example.com/cover.jpg" :class="[field, 'font-mono text-xs']" />
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Without a cover, the YouTube thumbnail is used and loads from YouTube's image server when the page opens. A cover from your media library keeps visitors' details away from YouTube until they press play.</p>
                             </div>
 
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 items-end">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 items-end">
                                 <div>
-                                    <label :for="`block-${bIdx}-yt-start`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Start at</label>
-                                    <input :id="`block-${bIdx}-yt-start`" :value="formatTimestamp(block.start)" @change="setYoutubeTime(block, 'start', $event)" type="text" placeholder="e.g. 1:30" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
+                                    <label :for="`block-${bIdx}-yt-start`" :class="[fieldLabel, 'mb-1.5']">Start at</label>
+                                    <input :id="`block-${bIdx}-yt-start`" :value="formatTimestamp(block.start)" @change="setYoutubeTime(block, 'start', $event)" type="text" placeholder="e.g. 1:30" :class="[field, 'font-mono text-xs']" />
                                 </div>
                                 <div>
-                                    <label :for="`block-${bIdx}-yt-end`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Stop at</label>
-                                    <input :id="`block-${bIdx}-yt-end`" :value="formatTimestamp(block.end)" @change="setYoutubeTime(block, 'end', $event)" type="text" placeholder="e.g. 4:05" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
+                                    <label :for="`block-${bIdx}-yt-end`" :class="[fieldLabel, 'mb-1.5']">Stop at</label>
+                                    <input :id="`block-${bIdx}-yt-end`" :value="formatTimestamp(block.end)" @change="setYoutubeTime(block, 'end', $event)" type="text" placeholder="e.g. 4:05" :class="[field, 'font-mono text-xs']" />
                                 </div>
-                                <label class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 cursor-pointer pb-2">
-                                    <input type="checkbox" v-model="block.loop" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" /> Repeat (loop)
+                                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer pb-2">
+                                    <input type="checkbox" v-model="block.loop" :class="checkbox" /> Repeat (loop)
                                 </label>
-                                <label class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 cursor-pointer pb-2">
-                                    <input type="checkbox" v-model="block.captions" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" /> Show captions
+                                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer pb-2">
+                                    <input type="checkbox" v-model="block.captions" :class="checkbox" /> Show captions
                                 </label>
                             </div>
 
-                            <div class="space-y-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-                                <label class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 cursor-pointer">
-                                    <input type="checkbox" v-model="block.show_youtube_link" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" /> Show a "Watch on YouTube" link
+                            <div class="space-y-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
+                                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                    <input type="checkbox" v-model="block.show_youtube_link" :class="checkbox" /> Show a "Watch on YouTube" link
                                 </label>
-                                <label class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 cursor-pointer">
-                                    <input type="checkbox" v-model="block.button_enabled" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" /> Add a button
+                                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                    <input type="checkbox" v-model="block.button_enabled" :class="checkbox" /> Add a button
                                 </label>
                                 <div v-if="block.button_enabled" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <div>
-                                        <label :for="`block-${bIdx}-yt-button-label`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Label</label>
-                                        <input :id="`block-${bIdx}-yt-button-label`" v-model="block.button_label" type="text" maxlength="100" placeholder="e.g. Book your place" class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-bold" />
-                                    </div>
-                                    <div class="sm:col-span-2">
-                                        <label :for="`block-${bIdx}-yt-button-url`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Button Link</label>
-                                        <input :id="`block-${bIdx}-yt-button-url`" v-model="block.button_url" type="text" placeholder="https://..." class="w-full p-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]" />
-                                    </div>
-                                    <label class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 cursor-pointer sm:col-span-3">
-                                        <input type="checkbox" v-model="block.button_new_tab" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" /> Open the button link in a new tab
+                                    <Input v-model="block.button_label" label="Button label" maxlength="100" placeholder="For example, Book your place" />
+                                    <Input v-model="block.button_url" label="Button link" placeholder="https://..." class="sm:col-span-2" />
+                                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer sm:col-span-3">
+                                        <input type="checkbox" v-model="block.button_new_tab" :class="checkbox" /> Open the button link in a new tab
                                     </label>
                                 </div>
                             </div>
@@ -909,266 +795,184 @@ defineProps({
                         <SectionHeadingEditor v-else-if="block.type === 'section_heading'" :block="block" :index="bIdx" />
                         <HeroEditor v-else-if="block.type === 'hero'" :block="block" :index="bIdx" :pages="pages" :club="club" @media="(type, target) => openMediaLibrary(type, target || block, 'pages')" />
 
-                        <!-- 7. Dynamic News Feed & News List Block -->
-                        <div v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="space-y-3 text-xs">
-                            <div>
-                                <label :for="`block-${bIdx}-news-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
-                                <input :id="`block-${bIdx}-news-heading`" v-model="block.heading" placeholder="e.g. Latest Club News & Articles" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
-                            </div>
+                        <!-- 7. News feed and news list -->
+                        <div v-else-if="block.type === 'news_feed' || block.type === 'news_list'" class="space-y-3">
+                            <Input v-model="block.heading" label="Section heading" placeholder="For example, latest news" />
 
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <div>
-                                    <label :for="`block-${bIdx}-news-columns`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">News Layout & Columns</label>
-                                    <select :id="`block-${bIdx}-news-columns`" v-model="block.columns" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="1">1 Column (Vertical List)</option>
-                                        <option value="2">2 Columns Grid</option>
-                                        <option value="3">3 Columns Grid (Default)</option>
-                                        <option value="4">4 Columns Grid</option>
-                                        <option value="masonry">Masonry Grid Layout</option>
-                                    </select>
-                                </div>
+                                <Select v-model="block.columns" label="Layout and columns" :options="NEWS_COLUMNS" />
+                                <Select v-model="block.image_position" label="Featured image position" :options="NEWS_IMAGE_POSITIONS" />
 
                                 <div>
-                                    <label :for="`block-${bIdx}-news-image-position`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Featured Image Position</label>
-                                    <select :id="`block-${bIdx}-news-image-position`" v-model="block.image_position" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="above">Image Above Content (Top Banner)</option>
-                                        <option value="below">Image Below Content (Bottom Banner)</option>
-                                        <option value="left">Image on Left (Horizontal Layout)</option>
-                                        <option value="right">Image on Right (Horizontal Layout)</option>
-                                        <option value="alternate">Alternate Left & Right</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label :for="`block-${bIdx}-news-limit`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Articles Per Page (Pagination)</label>
-                                    <select :id="`block-${bIdx}-news-limit`" v-model="block.limit" class="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option :value="3">3 Articles per page</option>
-                                        <option :value="6">6 Articles per page</option>
-                                        <option :value="9">9 Articles per page</option>
-                                        <option :value="12">12 Articles per page</option>
-                                        <option :value="24">24 Articles per page</option>
-                                        <option :value="999">Show All Articles (No pagination)</option>
+                                    <label :for="`block-${bIdx}-news-limit`" :class="[fieldLabel, 'mb-1.5']">Articles per page</label>
+                                    <select :id="`block-${bIdx}-news-limit`" v-model="block.limit" :class="field">
+                                        <option :value="3">3 articles per page</option>
+                                        <option :value="6">6 articles per page</option>
+                                        <option :value="9">9 articles per page</option>
+                                        <option :value="12">12 articles per page</option>
+                                        <option :value="24">24 articles per page</option>
+                                        <option :value="999">Show all articles (no pages)</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div class="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-blue-900 dark:text-blue-200 text-xs">
-                                ⚡ <strong>Dynamic Paginated News List:</strong> Renders published news items in a <strong>{{ String(block.columns) === 'masonry' ? 'Masonry Grid' : (block.columns || 3) + ' Column' }}</strong> with automatic Previous / Next page controls when articles exceed {{ block.limit == 999 ? 'all articles' : block.limit + ' per page' }}.
-                            </div>
+                            <Alert variant="info">
+                                <strong class="font-medium">Filled in automatically:</strong> shows published news items in a <strong class="font-medium">{{ String(block.columns) === 'masonry' ? 'masonry grid' : (block.columns || 3) + '-column grid' }}</strong>, with Previous and Next page controls when there are more than {{ block.limit == 999 ? 'all articles' : block.limit + ' per page' }}.
+                            </Alert>
                         </div>
 
-                        <!-- 8. Dynamic Events Calendar Block -->
-                        <div v-else-if="block.type === 'events_calendar'" class="space-y-3 text-xs">
-                            <div>
-                                <label :for="`block-${bIdx}-events-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
-                                <input :id="`block-${bIdx}-events-heading`" v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
-                            </div>
-                            <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 rounded-xl text-emerald-900 dark:text-emerald-200 text-xs">
-                                ⚡ <strong>Dynamic Events & Summons Feed:</strong> Automatically displays upcoming club events, dinners, and meetings.
-                            </div>
+                        <!-- 8. Events and summons feed -->
+                        <div v-else-if="block.type === 'events_calendar'" class="space-y-3">
+                            <Input v-model="block.heading" label="Section heading" placeholder="Section heading" />
+                            <Alert variant="info">
+                                <strong class="font-medium">Filled in automatically:</strong> shows the club's upcoming events, dinners and meetings.
+                            </Alert>
                         </div>
 
-                        <!-- 9. Dynamic Pricing Cards Block -->
-                        <div v-else-if="block.type === 'pricing_cards'" class="space-y-3 text-xs">
-                            <div>
-                                <label :for="`block-${bIdx}-pricing-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
-                                <input :id="`block-${bIdx}-pricing-heading`" v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
-                            </div>
-                            <div class="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-blue-900 dark:text-blue-200 text-xs">
-                                ⚡ <strong>Dynamic Membership Dues:</strong> Automatically renders active membership plans and pricing packages configured in Club Settings.
-                            </div>
+                        <!-- 9. Membership dues -->
+                        <div v-else-if="block.type === 'pricing_cards'" class="space-y-3">
+                            <Input v-model="block.heading" label="Section heading" placeholder="Section heading" />
+                            <Alert variant="info">
+                                <strong class="font-medium">Filled in automatically:</strong> shows the active membership plans and prices set up in the club's settings.
+                            </Alert>
                         </div>
 
-                        <!-- 10. Dynamic Donation Campaign Block -->
-                        <div v-else-if="block.type === 'donation_campaign'" class="space-y-3 text-xs">
-                            <div>
-                                <label :for="`block-${bIdx}-donation-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
-                                <input :id="`block-${bIdx}-donation-heading`" v-model="block.heading" placeholder="Section Heading" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
-                            </div>
-                            <div class="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/80 rounded-xl text-rose-900 dark:text-rose-200 text-xs">
-                                ⚡ <strong>Dynamic Fundraising Feed:</strong> Automatically renders active fundraising campaigns and progress bars.
-                            </div>
+                        <!-- 10. Donation campaign -->
+                        <div v-else-if="block.type === 'donation_campaign'" class="space-y-3">
+                            <Input v-model="block.heading" label="Section heading" placeholder="Section heading" />
+                            <Alert variant="info">
+                                <strong class="font-medium">Filled in automatically:</strong> shows active fundraising campaigns and their progress bars.
+                            </Alert>
                         </div>
 
-                        <!-- 11. Contact Details Block -->
-                        <div v-else-if="block.type === 'contact_details'" class="space-y-4 text-xs">
+                        <!-- 11. Contact details -->
+                        <div v-else-if="block.type === 'contact_details'" class="space-y-4">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label :for="`block-${bIdx}-cd-eyebrow`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Eyebrow Subtitle</label>
-                                    <input :id="`block-${bIdx}-cd-eyebrow`" v-model="block.eyebrow" placeholder="e.g. CONTACT" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
-                                </div>
-                                <div>
-                                    <label :for="`block-${bIdx}-cd-title`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Main Section Title</label>
-                                    <input :id="`block-${bIdx}-cd-title`" v-model="block.title" placeholder="e.g. Get in Touch" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
-                                </div>
+                                <Input v-model="block.eyebrow" label="Small label above the title" placeholder="For example, CONTACT" />
+                                <Input v-model="block.title" label="Section title" placeholder="For example, Get in touch" />
                             </div>
 
-                            <div>
-                                <label :for="`block-${bIdx}-cd-description`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Introductory Description</label>
-                                <textarea :id="`block-${bIdx}-cd-description`" v-model="block.description" rows="2" placeholder="Introductory paragraph..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"></textarea>
-                            </div>
+                            <Textarea v-model="block.description" label="Introduction" :rows="2" placeholder="Introductory paragraph..." />
 
-                            <div class="p-3 bg-amber-50/70 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800/80 rounded-xl space-y-3">
-                                <div class="font-bold text-amber-900 dark:text-amber-200 text-xs flex items-center gap-1.5">
-                                    <span>📇 Contact Cards Details</span>
-                                    <span class="text-[10px] text-amber-700/70 dark:text-amber-300/70 font-normal">(Initial defaults loaded from Website Settings)</span>
+                            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
+                                <h4 class="text-sm font-semibold text-slate-900 dark:text-white">
+                                    Contact cards
+                                    <span class="text-xs text-slate-500 dark:text-slate-400 font-normal">(they start with the details from the website settings)</span>
+                                </h4>
+
+                                <!-- Email card -->
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <Input v-model="block.email_heading" label="Email heading" placeholder="Email" />
+                                    <Input
+                                        v-model="block.email"
+                                        label="Contact email"
+                                        :placeholder="'Default: ' + (settingsForm.contact_email || club.contact_email || 'Not configured')"
+                                        hint="Leave blank to use the contact email from the organisation settings."
+                                        class="sm:col-span-2"
+                                    />
                                 </div>
 
-                                <!-- Email Card -->
+                                <!-- Meeting times card -->
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    <div>
-                                        <label :for="`block-${bIdx}-cd-email-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Email Heading</label>
-                                        <input :id="`block-${bIdx}-cd-email-heading`" v-model="block.email_heading" placeholder="Email" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
-                                    </div>
-                                    <div class="sm:col-span-2">
-                                        <label :for="`block-${bIdx}-cd-email`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Contact Email</label>
-                                        <input :id="`block-${bIdx}-cd-email`" v-model="block.email" :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'Not configured')" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
-                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">Leave blank to automatically use the Contact Email from Organization Settings.</span>
-                                    </div>
+                                    <Input v-model="block.times_heading" label="Times heading" placeholder="Meeting times" />
+                                    <Textarea v-model="block.times" label="Meeting times and schedule" :rows="2" placeholder="e.g. 7:00 pm, 4th Thursday..." class="sm:col-span-2" />
                                 </div>
 
-                                <!-- Meeting Times Card -->
+                                <!-- Location card -->
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    <div>
-                                        <label :for="`block-${bIdx}-cd-times-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Times Heading</label>
-                                        <input :id="`block-${bIdx}-cd-times-heading`" v-model="block.times_heading" placeholder="Meeting Times" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
-                                    </div>
-                                    <div class="sm:col-span-2">
-                                        <label :for="`block-${bIdx}-cd-times`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Meeting Times & Schedule</label>
-                                        <textarea :id="`block-${bIdx}-cd-times`" v-model="block.times" rows="2" placeholder="e.g. 7:00 pm, 4th Thursday..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold"></textarea>
-                                    </div>
-                                </div>
-
-                                <!-- Location Card -->
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    <div>
-                                        <label :for="`block-${bIdx}-cd-location-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Location Heading</label>
-                                        <input :id="`block-${bIdx}-cd-location-heading`" v-model="block.location_heading" placeholder="Location" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold" />
-                                    </div>
-                                    <div class="sm:col-span-2">
-                                        <label :for="`block-${bIdx}-cd-location`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Full Address / Location</label>
-                                        <textarea :id="`block-${bIdx}-cd-location`" v-model="block.location" rows="3" placeholder="e.g. Masonic Hall, Street, Town..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold"></textarea>
-                                    </div>
+                                    <Input v-model="block.location_heading" label="Location heading" placeholder="Location" />
+                                    <Textarea v-model="block.location" label="Full address" :rows="3" placeholder="e.g. Masonic Hall, Street, Town..." class="sm:col-span-2" />
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 12. Contact Form Block -->
-                        <div v-else-if="block.type === 'contact_form'" class="space-y-4 text-xs">
+                        <!-- 12. Contact form -->
+                        <div v-else-if="block.type === 'contact_form'" class="space-y-4">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label :for="`block-${bIdx}-cf-heading`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Section Heading</label>
-                                    <input :id="`block-${bIdx}-cf-heading`" v-model="block.heading" placeholder="e.g. Send Us a Message" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
-                                </div>
-                                <div>
-                                    <label :for="`block-${bIdx}-cf-button-text`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Submit Button Label</label>
-                                    <input :id="`block-${bIdx}-cf-button-text`" v-model="block.button_text" placeholder="e.g. Send Message" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
-                                </div>
+                                <Input v-model="block.heading" label="Section heading" placeholder="For example, Send us a message" />
+                                <Input v-model="block.button_text" label="Send button label" placeholder="For example, Send message" />
                             </div>
 
-                            <div>
-                                <label :for="`block-${bIdx}-cf-subtitle`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Subtitle / Instructions</label>
-                                <textarea :id="`block-${bIdx}-cf-subtitle`" v-model="block.subtitle" rows="2" placeholder="Subheading or instructions..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"></textarea>
-                            </div>
+                            <Textarea v-model="block.subtitle" label="Subtitle or instructions" :rows="2" placeholder="Subheading or instructions..." />
 
-                            <div class="p-3.5 bg-blue-50/70 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/80 rounded-xl space-y-3">
-                                <div class="font-bold text-blue-900 dark:text-blue-200 text-xs flex items-center justify-between">
-                                    <span>📬 Email Routing & Notification Settings</span>
-                                </div>
+                            <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
+                                <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Where messages go</h4>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label :for="`block-${bIdx}-cf-recipient`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Secretary / Recipient Email</label>
-                                        <div class="space-y-1.5">
-                                            <input
-                                                :id="`block-${bIdx}-cf-recipient`"
-                                                v-model="block.recipient_email"
-                                                type="email"
-                                                :placeholder="'Dynamic Default: ' + (settingsForm.contact_email || club.contact_email || 'secretary@' + club.slug + '.org.uk')"
-                                                class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold text-xs"
-                                            />
-                                            <div class="flex flex-wrap items-center gap-1.5 text-[10px]">
-                                                <button 
-                                                    type="button" 
-                                                    @click="block.recipient_email = ''"
-                                                    class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800/60 transition-colors cursor-pointer"
-                                                >
-                                                    ⚡ Use organization default (dynamic)
-                                                </button>
-                                                <button 
-                                                    v-if="settingsForm.contact_email || club.contact_email"
-                                                    type="button" 
-                                                    @click="block.recipient_email = settingsForm.contact_email || club.contact_email"
-                                                    class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
-                                                >
-                                                    ✉️ Fill: {{ settingsForm.contact_email || club.contact_email }}
-                                                </button>
-                                            </div>
-                                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block leading-tight">
-                                                Form submissions route here. Leave blank to automatically use the Contact Email from Organization Settings ({{ settingsForm.contact_email || club.contact_email || 'Not configured' }}).
-                                            </span>
+                                    <div class="space-y-1.5">
+                                        <Input
+                                            v-model="block.recipient_email"
+                                            type="email"
+                                            label="Secretary or recipient email"
+                                            :placeholder="'Default: ' + (settingsForm.contact_email || club.contact_email || 'secretary@' + club.slug + '.org.uk')"
+                                        />
+                                        <div class="flex flex-wrap items-center gap-1.5">
+                                            <Button variant="ghost" size="sm" @click="block.recipient_email = ''">Use the organisation default</Button>
+                                            <Button
+                                                v-if="settingsForm.contact_email || club.contact_email"
+                                                variant="secondary"
+                                                size="sm"
+                                                @click="block.recipient_email = settingsForm.contact_email || club.contact_email"
+                                            >
+                                                <UiIcon name="mail" :size="14" />
+                                                <span>Fill in {{ settingsForm.contact_email || club.contact_email }}</span>
+                                            </Button>
                                         </div>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-tight">
+                                            Messages sent through the form go here. Leave blank to use the contact email from the organisation settings ({{ settingsForm.contact_email || club.contact_email || 'not set up' }}).
+                                        </p>
                                     </div>
 
-                                    <div>
-                                        <label :for="`block-${bIdx}-cf-cc`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">CC Email Addresses (Comma-separated)</label>
-                                        <input :id="`block-${bIdx}-cf-cc`" v-model="block.cc_emails" placeholder="e.g. treasurer@lodge.org, assistant@lodge.org" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-slate-900 dark:text-white font-semibold text-xs" />
-                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">Copies of form submissions will be sent here.</span>
-                                    </div>
+                                    <Input v-model="block.cc_emails" label="CC email addresses (comma-separated)" placeholder="e.g. treasurer@lodge.org, assistant@lodge.org" hint="Copies of each message are sent here." />
                                 </div>
                             </div>
 
                             <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
-                                <div class="font-bold text-slate-800 dark:text-slate-100 text-xs">
-                                    ⚙️ Mandatory Field Rules (Admin Configuration)
-                                </div>
+                                <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Required fields</h4>
 
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    <label class="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-xs cursor-pointer">
-                                        <input type="checkbox" v-model="block.name_required" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" />
-                                        Name Required
+                                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                        <input type="checkbox" v-model="block.name_required" :class="checkbox" />
+                                        Name required
                                     </label>
-                                    <label class="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-xs cursor-pointer">
-                                        <input type="checkbox" v-model="block.email_required" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" />
-                                        Email Required
+                                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                        <input type="checkbox" v-model="block.email_required" :class="checkbox" />
+                                        Email required
                                     </label>
-                                    <label class="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-xs cursor-pointer">
-                                        <input type="checkbox" v-model="block.phone_required" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" />
-                                        Phone Required
+                                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                        <input type="checkbox" v-model="block.phone_required" :class="checkbox" />
+                                        Phone required
                                     </label>
-                                    <label class="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-xs cursor-pointer">
-                                        <input type="checkbox" v-model="block.message_required" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 accent-blue-600" />
-                                        Message Required
+                                    <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                        <input type="checkbox" v-model="block.message_required" :class="checkbox" />
+                                        Message required
                                     </label>
                                 </div>
                             </div>
 
-                            <div>
-                                <label :for="`block-${bIdx}-cf-success-message`" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Success Message Displayed on Submission</label>
-                                <input :id="`block-${bIdx}-cf-success-message`" v-model="block.success_message" placeholder="e.g. Thank you! Your message has been sent successfully." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold" />
-                            </div>
+                            <Input v-model="block.success_message" label="Message shown after sending" placeholder="For example, Thank you, your message has been sent." />
                         </div>
 
                         <SectionStyleEditor v-if="block.type !== 'hero'" :block="block" :index="bIdx" :can-apply-to-others="form.blocks.length > 1" @media="(type, target) => openMediaLibrary(type, target || block, 'pages')" @apply-all="applySectionToAll(block)" />
                     </div>
                 </div>
 
-                <!-- Insert Divider Below Block -->
+                <!-- Insert point below the element -->
                 <div class="relative py-1 flex items-center justify-center insert-menu-container">
                     <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                        <div class="w-full border-t border-dashed border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"></div>
+                        <div class="w-full border-t border-dashed border-slate-200 dark:border-slate-800"></div>
                     </div>
                     <div class="relative flex justify-center">
                         <button
                             type="button"
                             @click.stop="toggleInsertMenu(bIdx + 1, $event)"
-                            class="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 rounded-full text-xs font-bold shadow-sm transition-all cursor-pointer hover:scale-105"
+                            class="inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 rounded-full text-xs font-medium shadow-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
-                            <span class="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center text-xs font-black">+</span>
-                            <span>Insert block here</span>
+                            <UiIcon name="plus" :size="14" class="text-blue-600 dark:text-blue-400" />
+                            <span>Insert an element here</span>
                         </button>
 
-                        <!-- Insert Menu Dropdown Popover -->
+                        <!-- Insert menu -->
                         <div
                             v-if="activeInsertIndex === bIdx + 1"
                             :class="[
@@ -1177,14 +981,14 @@ defineProps({
                             ]"
                             :style="{ translate: `calc(-50% + ${insertMenuShift}px) 0` }"
                         >
-                            <div class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
-                                <span>Insert Element Here</span>
-                                <button type="button" @click="activeInsertIndex = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs cursor-pointer p-1">✕</button>
+                            <div class="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
+                                <span>Insert an element here</span>
+                                <button type="button" aria-label="Close" @click="activeInsertIndex = null" :class="iconButton"><UiIcon name="x" /></button>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 pt-1">
                                 <div v-for="(col, cIdx) in blockColumns" :key="cIdx" class="space-y-1.5">
-                                    <div class="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                                    <div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
                                         {{ col.title }}
                                     </div>
                                     <div class="space-y-1">
@@ -1193,14 +997,14 @@ defineProps({
                                             :key="item.type"
                                             type="button"
                                             @click="addBlock(item.type, bIdx + 1)"
-                                            class="w-full flex items-start gap-2.5 p-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800/60 rounded-xl transition-all cursor-pointer group"
+                                            class="w-full flex items-start gap-2.5 p-2 text-left text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800/60 rounded-xl transition-colors cursor-pointer group"
                                         >
-                                            <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shrink-0 transition-transform group-hover:scale-110" :class="[item.bg, item.color]">
-                                                {{ item.icon }}
+                                            <span class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+                                                <UiIcon :name="BLOCK_ICONS[item.type]" />
                                             </span>
                                             <div class="min-w-0">
-                                                <span class="block font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">{{ item.label }}</span>
-                                                <span class="text-[10px] text-slate-400 font-normal leading-tight block line-clamp-2">{{ item.desc }}</span>
+                                                <span class="block font-medium text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">{{ item.label }}</span>
+                                                <span class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight block line-clamp-2">{{ item.desc }}</span>
                                             </div>
                                         </button>
                                     </div>
@@ -1213,41 +1017,37 @@ defineProps({
             <!-- Room below the last block so a newly added block can always be scrolled up to the top of the view -->
             <div v-if="form.blocks.length" class="h-[45vh]" aria-hidden="true"></div>
 
-            <div v-if="!form.blocks.length" class="text-center py-10 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-3">
-                <span class="text-3xl">🧩</span>
-                <p class="text-xs font-bold text-slate-500 dark:text-slate-400">No content elements added yet.</p>
-                <button type="button" @click="addBlock('text')" class="py-2 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md">
-                    ➕ Add first text block
-                </button>
+            <div v-if="!form.blocks.length" class="flex flex-col items-center text-center py-10 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-3">
+                <span class="w-10 h-10 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                    <UiIcon name="document" :size="20" />
+                </span>
+                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">No content elements added yet.</p>
+                <Button variant="secondary" size="sm" @click="addBlock('text')">
+                    <UiIcon name="plus" :size="14" />
+                    <span>Add a first text block</span>
+                </Button>
             </div>
         </div>
 
-        <!-- Page Action Footer -->
-        <div class="flex items-center justify-between pt-4">
-            <button
+        <!-- Page actions -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-4">
+            <Button
                 v-if="form.id && !isDefaultPage(activePage)"
+                variant="danger"
                 @click="triggerDeleteModal(activePage)"
-                type="button"
-                class="py-2.5 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800/60 transition-colors cursor-pointer"
             >
-                🗑️ Delete custom page
-            </button>
-            <span v-else class="text-xs text-slate-400 font-semibold">
-                ℹ️ Default system pages cannot be deleted (only published/unpublished).
+                <UiIcon name="trash" />
+                <span>Delete custom page</span>
+            </Button>
+            <span v-else class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                <UiIcon name="info" :size="14" />
+                Default system pages cannot be deleted (only published or unpublished).
             </span>
 
-            <button
-                @click="submitForm"
-                :disabled="form.processing"
-                :class="[
-                    'px-6 py-3 font-bold text-xs rounded-xl shadow-md transition-all duration-300 flex items-center gap-2 cursor-pointer',
-                    form.processing ? 'bg-blue-500 text-white cursor-wait opacity-80' :
-                    isSavedSuccess ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 scale-105 ring-2 ring-emerald-400/50' :
-                    'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
-                ]"
-            >
-                <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved successfully!' : '💾 Save & publish page') }}</span>
-            </button>
+            <Button size="lg" :loading="form.processing" @click="submitForm">
+                <UiIcon v-if="!form.processing" :name="isSavedSuccess ? 'check' : 'save'" />
+                <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? 'Saved' : 'Save and publish page') }}</span>
+            </Button>
         </div>
     </div>
 </template>

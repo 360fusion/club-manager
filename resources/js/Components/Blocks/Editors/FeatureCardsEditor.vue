@@ -3,6 +3,8 @@
 import LinkField from './LinkField.vue';
 import IconPicker from './IconPicker.vue';
 import { LABEL, INPUT, SMALL_INPUT, SELECT, CARD, CHECK, CHECK_LABEL, MINI_BUTTON, MINI_DANGER } from './styles';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     block: { type: Object, required: true },
@@ -40,7 +42,7 @@ const move = (i, by) => {
             </div>
             <div class="sm:col-span-2">
                 <label :for="`block-${index}-fc-heading`" :class="LABEL">Heading <span class="font-normal text-slate-400">(optional)</span></label>
-                <input :id="`block-${index}-fc-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. What our lodge offers" :class="[INPUT, 'font-bold']" />
+                <input :id="`block-${index}-fc-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. What our lodge offers" :class="INPUT" />
             </div>
         </div>
         <div>
@@ -85,25 +87,25 @@ const move = (i, by) => {
 
         <div v-for="(item, i) in block.items" :key="item.id" :class="[CARD, 'space-y-2']">
             <div class="flex items-center justify-between gap-2">
-                <span class="font-bold text-slate-500">Card {{ i + 1 }}</span>
+                <span class="font-medium text-slate-500 dark:text-slate-400">Card {{ i + 1 }}</span>
                 <div class="flex items-center gap-1.5">
-                    <button type="button" :class="MINI_BUTTON" :disabled="i === 0" aria-label="Move up" @click="move(i, -1)">▲</button>
-                    <button type="button" :class="MINI_BUTTON" :disabled="i === block.items.length - 1" aria-label="Move down" @click="move(i, 1)">▼</button>
-                    <button type="button" :class="MINI_BUTTON" aria-label="Duplicate" @click="duplicateItem(i)">📋</button>
-                    <button type="button" :class="MINI_DANGER" aria-label="Delete" @click="removeItem(i)">🗑️</button>
+                    <button type="button" :class="MINI_BUTTON" :disabled="i === 0" aria-label="Move up" @click="move(i, -1)"><UiIcon name="chevron-down" :size="14" class="rotate-180" /></button>
+                    <button type="button" :class="MINI_BUTTON" :disabled="i === block.items.length - 1" aria-label="Move down" @click="move(i, 1)"><UiIcon name="chevron-down" :size="14" /></button>
+                    <button type="button" :class="MINI_BUTTON" aria-label="Duplicate" @click="duplicateItem(i)"><UiIcon name="copy" :size="14" /></button>
+                    <button type="button" :class="MINI_DANGER" aria-label="Delete" @click="removeItem(i)"><UiIcon name="trash" :size="14" /></button>
                 </div>
             </div>
             <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <IconPicker v-model="item.icon" :label="`Card ${i + 1} icon`" />
-                <input v-model="item.title" type="text" maxlength="120" placeholder="Title" :class="[SMALL_INPUT, 'font-bold sm:col-span-2']" :aria-label="`Card ${i + 1} title`" />
+                <input v-model="item.title" type="text" maxlength="120" placeholder="Title" :class="[SMALL_INPUT, 'sm:col-span-2']" :aria-label="`Card ${i + 1} title`" />
             </div>
-            <textarea v-model="item.text" rows="2" maxlength="500" placeholder="Short text" :class="[SMALL_INPUT, 'font-medium']" :aria-label="`Card ${i + 1} text`"></textarea>
+            <textarea v-model="item.text" rows="2" maxlength="500" placeholder="Short text" :class="SMALL_INPUT" :aria-label="`Card ${i + 1} text`"></textarea>
             <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <div class="sm:col-span-2"><LinkField v-model="item.link" :pages="pages" :club="club" :label="`Card ${i + 1} link`" /></div>
                 <input v-model="item.link_label" type="text" maxlength="60" placeholder="Link text, e.g. Read more" :class="SMALL_INPUT" :aria-label="`Card ${i + 1} link text`" />
             </div>
         </div>
 
-        <button type="button" :disabled="block.items.length >= MAX_ITEMS" class="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:border-slate-300 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300" @click="addItem">➕ Add card</button>
+        <Button variant="secondary" size="sm" :disabled="block.items.length >= MAX_ITEMS" @click="addItem"><UiIcon name="plus" :size="14" />Add card</Button>
     </div>
 </template>

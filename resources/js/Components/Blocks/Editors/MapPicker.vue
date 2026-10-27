@@ -178,12 +178,12 @@ onBeforeUnmount(() => resizeObserver?.disconnect());
             </svg>
 
             <div class="absolute top-2 right-2 flex flex-col gap-1">
-                <button type="button" class="w-8 h-8 rounded-lg bg-white/95 text-slate-800 font-bold shadow cursor-pointer hover:bg-white" aria-label="Zoom in" @pointerdown.stop @click="changeZoom(1)">+</button>
-                <button type="button" class="w-8 h-8 rounded-lg bg-white/95 text-slate-800 font-bold shadow cursor-pointer hover:bg-white" aria-label="Zoom out" @pointerdown.stop @click="changeZoom(-1)">−</button>
+                <button type="button" class="w-8 h-8 rounded-xl bg-white/95 text-slate-800 font-medium shadow cursor-pointer hover:bg-white" aria-label="Zoom in" @pointerdown.stop @click="changeZoom(1)">+</button>
+                <button type="button" class="w-8 h-8 rounded-xl bg-white/95 text-slate-800 font-medium shadow cursor-pointer hover:bg-white" aria-label="Zoom out" @pointerdown.stop @click="changeZoom(-1)">−</button>
             </div>
 
             <a :href="current.creditUrl" target="_blank" rel="noopener" class="absolute bottom-0 right-0 max-w-full truncate px-1.5 py-0.5 text-[10px] bg-white/80 text-slate-700 hover:underline" @pointerdown.stop>{{ current.credit }}</a>
         </div>
-        <p class="text-[10px] text-slate-400 mt-1">Click the map to drop the pin, or drag the pin to the exact spot. Scroll or use + and − to zoom.</p>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Click the map to drop the pin, or drag the pin to the exact spot. Scroll or use + and − to zoom.</p>
     </div>
 </template>

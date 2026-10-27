@@ -5,6 +5,8 @@ import { formatBytes } from '@/Utils/fileSize';
 import { ref } from 'vue';
 import { postForm } from '@/Utils/postForm';
 import { LABEL, INPUT, SMALL_INPUT, SELECT, CARD, CHECK, CHECK_LABEL, MINI_BUTTON, MINI_DANGER, HINT } from './styles';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     block: { type: Object, required: true },
@@ -77,7 +79,7 @@ const move = (i, by) => {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
                 <label :for="`block-${index}-dl-heading`" :class="LABEL">Heading <span class="font-normal text-slate-400">(optional)</span></label>
-                <input :id="`block-${index}-dl-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Documents and forms" :class="[INPUT, 'font-bold']" />
+                <input :id="`block-${index}-dl-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Documents and forms" :class="INPUT" />
             </div>
             <div>
                 <label :for="`block-${index}-dl-intro`" :class="LABEL">Intro <span class="font-normal text-slate-400">(optional)</span></label>
@@ -119,40 +121,40 @@ const move = (i, by) => {
         </div>
 
         <div :class="[CARD, 'border-amber-300 dark:border-amber-800/60 bg-amber-50/40 dark:bg-amber-950/20 space-y-1']">
-            <label :class="CHECK_LABEL"><input v-model="block.members_only" type="checkbox" :class="CHECK" /> 🔒 Members only</label>
+            <label :class="CHECK_LABEL"><input v-model="block.members_only" type="checkbox" :class="CHECK" /> <UiIcon name="lock" :size="14" class="text-slate-500 dark:text-slate-400" />Members only</label>
             <p :class="HINT">Only signed-in active members of this club can open the <strong>uploaded</strong> files or even see this list. Visitors see a "log in" notice instead. Link items point elsewhere, so this cannot protect them.</p>
         </div>
 
         <div v-for="(item, i) in block.items" :key="item.id" :class="[CARD, 'space-y-2']">
             <div class="flex items-center justify-between gap-2">
-                <span class="font-bold text-slate-500">
-                    {{ item.source === 'upload' ? '📎 Uploaded file' : '🔗 Link' }}
+                <span class="flex flex-wrap items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
+                    <UiIcon :name="item.source === 'upload' ? 'document' : 'link'" :size="14" />{{ item.source === 'upload' ? 'Uploaded file' : 'Link' }}
                     <span v-if="item.source === 'upload'" class="font-normal">· {{ item.file_name }} <span v-if="formatBytes(item.size)">({{ formatBytes(item.size) }})</span></span>
                 </span>
                 <div class="flex items-center gap-1.5">
-                    <button type="button" :class="MINI_BUTTON" :disabled="i === 0" aria-label="Move up" @click="move(i, -1)">▲</button>
-                    <button type="button" :class="MINI_BUTTON" :disabled="i === block.items.length - 1" aria-label="Move down" @click="move(i, 1)">▼</button>
-                    <button type="button" :class="MINI_DANGER" aria-label="Remove" @click="removeItem(i)">🗑️</button>
+                    <button type="button" :class="MINI_BUTTON" :disabled="i === 0" aria-label="Move up" @click="move(i, -1)"><UiIcon name="chevron-down" :size="14" class="rotate-180" /></button>
+                    <button type="button" :class="MINI_BUTTON" :disabled="i === block.items.length - 1" aria-label="Move down" @click="move(i, 1)"><UiIcon name="chevron-down" :size="14" /></button>
+                    <button type="button" :class="MINI_DANGER" aria-label="Remove" @click="removeItem(i)"><UiIcon name="trash" :size="14" /></button>
                 </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <input v-model="item.title" type="text" maxlength="200" placeholder="Title" :class="[SMALL_INPUT, 'font-bold sm:col-span-2']" :aria-label="`Title of document ${i + 1}`" />
+                <input v-model="item.title" type="text" maxlength="200" placeholder="Title" :class="[SMALL_INPUT, 'sm:col-span-2']" :aria-label="`Title of document ${i + 1}`" />
                 <input v-model="item.group" type="text" maxlength="100" placeholder="Group, e.g. Minutes" :class="SMALL_INPUT" :aria-label="`Group of document ${i + 1}`" />
             </div>
             <input v-model="item.description" type="text" maxlength="500" placeholder="Description (optional)" :class="SMALL_INPUT" :aria-label="`Description of document ${i + 1}`" />
             <div v-if="item.source === 'link'" class="flex items-center gap-2">
                 <input v-model="item.url" type="text" placeholder="https://... link to the document" :class="[SMALL_INPUT, 'font-mono text-[11px]']" :aria-label="`Link of document ${i + 1}`" />
-                <button type="button" :class="[MINI_BUTTON, 'shrink-0']" @click="emit('media', 'download_link', item)">📁 Media Library</button>
+                <Button variant="secondary" size="sm" class="shrink-0" @click="emit('media', 'download_link', item)"><UiIcon name="folder" :size="14" />Media library</Button>
             </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
             <input ref="fileInput" type="file" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.rtf,.zip,.jpg,.jpeg,.png,.gif,.webp" @change="upload" />
-            <button type="button" :disabled="uploading || block.items.length >= MAX_ITEMS" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] cursor-pointer disabled:opacity-50" @click="fileInput.click()">⬆️ Upload files</button>
-            <button type="button" :disabled="block.items.length >= MAX_ITEMS" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-600 dark:text-slate-300 font-bold text-[11px] cursor-pointer disabled:opacity-40" @click="addLink">🔗 Add a link</button>
+            <Button variant="secondary" size="sm" :disabled="uploading || block.items.length >= MAX_ITEMS" @click="fileInput.click()"><UiIcon name="upload" :size="14" />Upload files</Button>
+            <Button variant="secondary" size="sm" :disabled="block.items.length >= MAX_ITEMS" @click="addLink"><UiIcon name="link" :size="14" />Add a link</Button>
             <span v-if="status" class="text-[11px] text-slate-500" role="status">{{ status }}</span>
         </div>
-        <p v-if="error" class="text-[11px] font-bold text-rose-600 dark:text-rose-400" role="alert">{{ error }}</p>
+        <p v-if="error" class="text-[11px] font-medium text-rose-600 dark:text-rose-400" role="alert">{{ error }}</p>
         <p :class="HINT">Uploads are stored privately (up to 10 MB each, counted in your storage). Removing an item here does not delete its file from storage.</p>
     </div>
 </template>

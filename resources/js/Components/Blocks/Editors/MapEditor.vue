@@ -6,6 +6,8 @@ import { postJson } from '@/Utils/postJson';
 import { clampZoom, hasCoordinates, mapStyle, osmLargerUrl } from '@/Utils/osmMap';
 import MapPicker from './MapPicker.vue';
 import { LABEL, INPUT, SMALL_INPUT, SELECT, CARD, CHECK, CHECK_LABEL, HINT } from './styles';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     block: { type: Object, required: true },
@@ -111,7 +113,7 @@ onBeforeUnmount(() => clearTimeout(suggestTimer));
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
                 <label :for="`block-${index}-map-heading`" :class="LABEL">Heading <span class="font-normal text-slate-400">(optional)</span></label>
-                <input :id="`block-${index}-map-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Find us" :class="[INPUT, 'font-bold']" />
+                <input :id="`block-${index}-map-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Find us" :class="INPUT" />
             </div>
             <div>
                 <label :for="`block-${index}-map-name`" :class="LABEL">Place name <span class="font-normal text-slate-400">(optional)</span></label>
@@ -122,25 +124,25 @@ onBeforeUnmount(() => clearTimeout(suggestTimer));
         <div>
             <label :for="`block-${index}-map-address`" :class="LABEL">Address</label>
             <div class="relative">
-                <textarea :id="`block-${index}-map-address`" v-model="block.address" rows="2" maxlength="500" placeholder="Start typing a hall name, town or postcode, or the full address" autocomplete="off" :class="[INPUT, 'font-medium text-xs']" @input="onAddressInput"></textarea>
+                <textarea :id="`block-${index}-map-address`" v-model="block.address" rows="2" maxlength="500" placeholder="Start typing a hall name, town or postcode, or the full address" autocomplete="off" :class="INPUT" @input="onAddressInput"></textarea>
                 <ul v-if="suggestions.length" class="absolute z-20 left-0 right-0 mt-1 max-h-60 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl" role="listbox" aria-label="Halls in the directory">
-                    <li class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Halls in the directory</li>
+                    <li class="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Halls in the directory</li>
                     <li v-for="hall in suggestions" :key="hall.id" role="option">
                         <button type="button" class="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer" @click="chooseHall(hall)">
-                            <span class="font-bold text-slate-800 dark:text-slate-100">{{ hall.name }}</span>
+                            <span class="font-medium text-slate-800 dark:text-slate-100">{{ hall.name }}</span>
                             <span class="block text-slate-500 dark:text-slate-400">{{ hall.address }}</span>
                         </button>
                     </li>
                 </ul>
             </div>
             <div class="flex flex-wrap items-center gap-2 mt-2">
-                <button type="button" :disabled="finding" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] cursor-pointer disabled:opacity-50" @click="find()">{{ finding ? 'Searching…' : '🔍 Search the map' }}</button>
-                <button v-for="option in clubAddresses" :key="option.label" type="button" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] cursor-pointer" @click="block.address = option.address; find(option.address)">Use {{ option.label }}</button>
+                <Button variant="secondary" size="sm" :disabled="finding" @click="find()"><UiIcon v-if="!finding" name="search" :size="14" />{{ finding ? 'Searching…' : 'Search the map' }}</Button>
+                <Button v-for="option in clubAddresses" :key="option.label" variant="ghost" size="sm" @click="block.address = option.address; find(option.address)">Use {{ option.label }}</Button>
             </div>
-            <p v-if="message" :class="['text-[11px] font-bold mt-1', messageIsError ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400']" role="status">{{ message }}</p>
+            <p v-if="message" :class="['text-[11px] font-medium mt-1', messageIsError ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400']" role="status">{{ message }}</p>
             <div v-if="candidates.length" class="mt-2 space-y-1">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Other matches</p>
-                <button v-for="candidate in candidates.slice(1)" :key="candidate.lat + ',' + candidate.lng" type="button" class="block w-full text-left px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer" @click="chooseCandidate(candidate)">{{ candidate.name }}</button>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Other matches</p>
+                <button v-for="candidate in candidates.slice(1)" :key="candidate.lat + ',' + candidate.lng" type="button" class="block w-full text-left px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer" @click="chooseCandidate(candidate)">{{ candidate.name }}</button>
             </div>
             <p :class="HINT">Halls come from your own directory as you type. "Search the map" asks OpenStreetMap's free Nominatim service, only when you press the button; the position is saved in the block.</p>
         </div>
@@ -178,13 +180,13 @@ onBeforeUnmount(() => clearTimeout(suggestTimer));
                 <div class="flex justify-between text-[10px] text-slate-400"><span>Wide (country)</span><span>Town</span><span>Close (street)</span></div>
             </div>
             <label :class="[CHECK_LABEL, 'col-span-2 sm:col-span-4']"><input v-model="block.allow_style_switch" type="checkbox" :class="CHECK" /> Let visitors switch between the street map and satellite</label>
-            <p v-if="hasCoordinates(block)" class="col-span-2 sm:col-span-4 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">✓ Location set. <a :href="osmLargerUrl(block)" target="_blank" rel="noopener" class="underline">Check it on OpenStreetMap</a></p>
+            <p v-if="hasCoordinates(block)" class="col-span-2 sm:col-span-4 flex flex-wrap items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400"><UiIcon name="check" :size="14" />Location set. <a :href="osmLargerUrl(block)" target="_blank" rel="noopener" class="underline">Check it on OpenStreetMap</a></p>
             <p v-else class="col-span-2 sm:col-span-4 text-[11px] text-slate-400">No location yet, so nothing will show on the live site.</p>
         </div>
 
         <div>
             <label :for="`block-${index}-map-notes`" :class="LABEL">Notes <span class="font-normal text-slate-400">(optional: parking, access, plain text)</span></label>
-            <textarea :id="`block-${index}-map-notes`" v-model="block.notes" rows="2" maxlength="1000" :class="[INPUT, 'font-medium text-xs']"></textarea>
+            <textarea :id="`block-${index}-map-notes`" v-model="block.notes" rows="2" maxlength="1000" :class="INPUT"></textarea>
         </div>
 
         <div :class="[CARD, 'grid grid-cols-1 sm:grid-cols-3 gap-3 items-end']">

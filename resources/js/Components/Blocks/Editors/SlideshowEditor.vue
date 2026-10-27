@@ -2,6 +2,8 @@
 // Edit form for the Slideshow block. Mutates `block` in place.
 import LinkField from './LinkField.vue';
 import { LABEL, SMALL_INPUT, SELECT, CARD, CHECK, CHECK_LABEL, MINI_BUTTON, MINI_DANGER, HINT } from './styles';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     block: { type: Object, required: true },
@@ -33,29 +35,29 @@ const move = (i, by) => {
     <div class="space-y-3 text-xs">
         <div v-for="(slide, i) in block.slides" :key="slide.id" :class="[CARD, 'space-y-2']">
             <div class="flex items-center justify-between gap-2">
-                <span class="font-bold text-slate-500">Photo {{ i + 1 }}</span>
+                <span class="font-medium text-slate-500 dark:text-slate-400">Photo {{ i + 1 }}</span>
                 <div class="flex items-center gap-1.5">
-                    <button type="button" :class="MINI_BUTTON" :disabled="i === 0" aria-label="Move up" @click="move(i, -1)">▲</button>
-                    <button type="button" :class="MINI_BUTTON" :disabled="i === block.slides.length - 1" aria-label="Move down" @click="move(i, 1)">▼</button>
-                    <button type="button" :class="MINI_DANGER" aria-label="Delete photo" @click="removeSlide(i)">🗑️</button>
+                    <button type="button" :class="MINI_BUTTON" :disabled="i === 0" aria-label="Move up" @click="move(i, -1)"><UiIcon name="chevron-down" :size="14" class="rotate-180" /></button>
+                    <button type="button" :class="MINI_BUTTON" :disabled="i === block.slides.length - 1" aria-label="Move down" @click="move(i, 1)"><UiIcon name="chevron-down" :size="14" /></button>
+                    <button type="button" :class="MINI_DANGER" aria-label="Delete photo" @click="removeSlide(i)"><UiIcon name="trash" :size="14" /></button>
                 </div>
             </div>
             <div class="flex gap-3">
-                <div class="flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-100 text-[10px] text-slate-400 dark:border-slate-700 dark:bg-slate-800">
+                <div class="flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100 text-[10px] text-slate-400 dark:border-slate-700 dark:bg-slate-800">
                     <img v-if="slide.image_url" :src="slide.image_url" alt="" class="h-full w-full object-cover" />
                     <span v-else>No photo</span>
                 </div>
                 <div class="min-w-0 flex-1 space-y-2">
                     <div class="flex items-center gap-1.5">
                         <input v-model="slide.image_url" type="text" placeholder="https://example.com/photo.jpg" :class="[SMALL_INPUT, 'font-mono text-[11px]']" :aria-label="`Photo ${i + 1} address`" />
-                        <button type="button" :class="[MINI_BUTTON, 'shrink-0']" @click="$emit('media', 'slideshow_image', slide)">📁 Library</button>
+                        <Button variant="secondary" size="sm" class="shrink-0" @click="$emit('media', 'slideshow_image', slide)"><UiIcon name="folder" :size="14" />Media library</Button>
                     </div>
                     <input v-model="slide.alt" type="text" maxlength="200" placeholder="Describe the photo (for screen readers)" :class="SMALL_INPUT" :aria-label="`Photo ${i + 1} description`" />
                     <input v-model="slide.caption" type="text" maxlength="200" placeholder="Caption shown on the photo (optional)" :class="SMALL_INPUT" :aria-label="`Photo ${i + 1} caption`" />
                 </div>
             </div>
         </div>
-        <button type="button" :disabled="block.slides.length >= MAX_SLIDES" class="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:border-slate-300 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300" @click="addSlide">➕ Add photo</button>
+        <Button variant="secondary" size="sm" :disabled="block.slides.length >= MAX_SLIDES" @click="addSlide"><UiIcon name="plus" :size="14" />Add photo</Button>
         <p :class="HINT">Up to {{ MAX_SLIDES }} photos. Photos without an address are dropped when you save.</p>
 
         <div :class="[CARD, 'grid grid-cols-2 gap-3 sm:grid-cols-4']">
@@ -100,16 +102,16 @@ const move = (i, by) => {
             <p :class="LABEL">Text over the photos <span class="font-normal text-slate-400">(optional, makes it a hero)</span></p>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <input v-model="block.eyebrow" type="text" maxlength="80" placeholder="Small label" :class="SMALL_INPUT" aria-label="Small label" />
-                <textarea v-model="block.heading" rows="2" maxlength="200" placeholder="Heading (press Enter for a second line)" :class="[SMALL_INPUT, 'font-bold sm:col-span-2']" aria-label="Heading"></textarea>
+                <textarea v-model="block.heading" rows="2" maxlength="200" placeholder="Heading (press Enter for a second line)" :class="[SMALL_INPUT, 'sm:col-span-2']" aria-label="Heading"></textarea>
             </div>
             <textarea v-model="block.text" rows="2" maxlength="500" placeholder="Text" :class="SMALL_INPUT" aria-label="Text over the photos"></textarea>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div class="space-y-2">
-                    <input v-model="block.button_label" type="text" maxlength="80" placeholder="Main button label" :class="[SMALL_INPUT, 'font-bold']" aria-label="Main button label" />
+                    <input v-model="block.button_label" type="text" maxlength="80" placeholder="Main button label" :class="SMALL_INPUT" aria-label="Main button label" />
                     <LinkField v-model="block.button_url" :pages="pages" :club="club" label="Main button" />
                 </div>
                 <div class="space-y-2">
-                    <input v-model="block.button2_label" type="text" maxlength="80" placeholder="Second button label (outlined)" :class="[SMALL_INPUT, 'font-bold']" aria-label="Second button label" />
+                    <input v-model="block.button2_label" type="text" maxlength="80" placeholder="Second button label (outlined)" :class="SMALL_INPUT" aria-label="Second button label" />
                     <LinkField v-model="block.button2_url" :pages="pages" :club="club" label="Second button" />
                 </div>
             </div>

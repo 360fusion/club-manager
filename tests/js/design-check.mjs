@@ -6,7 +6,8 @@
 import { globSync, readFileSync, writeFileSync } from 'node:fs';
 
 const BASELINE = 'tests/js/design-baseline.json';
-const SKIP = /Pages\/Public\/|Components\/(Site|Blocks)\/|views\/(emails|pdf|summons|events|club-accounting)\//;
+// The block editors (Components/Blocks/Editors) are the builder's own forms, so they are checked; the blocks beside them render the club's site.
+const SKIP = /Pages\/Public\/|Components\/Site\/|Components\/Blocks\/(?!Editors\/)|views\/(emails|pdf|summons|events|club-accounting)\//;
 
 // Tailwind colour families that are not in the palette (slate, blue, gold and the amber/emerald/rose status colours are).
 const OFF_PALETTE = /(?<![\w-])(?:[a-z-]+:)*(?:bg|text|border|ring|from|to|via|divide|outline|decoration|fill|stroke|placeholder|accent|caret|shadow)-(?:red|green|yellow|orange|indigo|purple|violet|gray|zinc|neutral|stone|sky|cyan|teal|lime|pink|fuchsia)-\d{2,3}\b/g;

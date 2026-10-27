@@ -25,6 +25,22 @@ import { toLocalInput, fromLocalInput } from '@/Utils/localDateTime';
 import { parseYouTubeUrl, parseTimestamp, formatTimestamp } from '@/Utils/youtube';
 import { readCollapsed, writeCollapsed } from '@/Utils/collapsedBlocks';
 import { SITE_LAYOUTS, SITE_COLOR_SCHEMES, LEGACY_THEME, DEFAULT_THEME_KEY, themeClasses, withSiteStyle, asColourScheme } from '@/Support/siteThemes';
+import Alert from '@/Components/Ui/Alert.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
+
+// getPageIcon (Utils/pageBuilderUrl) answers with an emoji; the builder's own lists draw the matching interface icon.
+const PAGE_ICON_NAMES = { '🏠': 'home', 'ℹ️': 'info', '🤝': 'users', '📰': 'document', '✉️': 'mail' };
+const pageIconName = (page) => PAGE_ICON_NAMES[getPageIcon(page)] || 'document';
+
+// A link in the side navigation, highlighted while its screen is showing.
+const navLinkClass = (isActive) => [
+    'w-full px-3 py-2 rounded-xl transition-colors flex items-center gap-2.5 cursor-pointer text-left',
+    isActive ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
+];
 
 const props = defineProps({
     club: {
@@ -924,29 +940,29 @@ const confirmDeleteActivePage = () => {
 </script>
 
 <template>
-    <AdminLayout title="Website Builder" :club="club" active-tab="pages">
-        <Head :title="`Website Builder - ${club.name}`" />
+    <AdminLayout title="Website builder" :club="club" active-tab="pages">
+        <Head :title="`Website builder - ${club.name}`" />
 
         <div class="space-y-6 max-w-7xl mx-auto">
-            
+
             <!-- Top Action Bar & Header Card -->
-            <div class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <Card class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-3">
-                        <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Website Builder & Navigation</h2>
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                            {{ club.slug }}
-                        </span>
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-white">Website builder and navigation</h2>
+                        <Badge variant="info">{{ club.slug }}</Badge>
                     </div>
-                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Manage public site pages, customize layout blocks, preview rendered pages, and arrange navigation links.</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage public site pages, customize layout blocks, preview rendered pages, and arrange navigation links.</p>
                 </div>
 
-                <div class="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
-                    <a :href="`/site/${club.slug}`" target="_blank" class="py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-2">
-                        <span>🌐 View live site</span>
+                <div class="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+                    <!-- A plain link, since the public site opens in a new tab outside the admin. -->
+                    <a :href="`/site/${club.slug}`" target="_blank" class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+                        <UiIcon name="globe" />
+                        View live site
                     </a>
                 </div>
-            </div>
+            </Card>
 
             <!-- 2-Column Responsive Layout -->
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
@@ -955,49 +971,47 @@ const confirmDeleteActivePage = () => {
                 <div class="lg:col-span-1 space-y-4">
                     
                     <!-- Mobile Page Selector Dropdown -->
-                    <div class="lg:hidden bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-2">
-                        <label for="mobile-page-selector" class="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Website Navigation Page</label>
-                        <select id="mobile-page-selector" :value="activeNavSelection" @change="e => requestNavigation(e.target.value)" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                            <optgroup label="Public Website Pages">
+                    <Card padding="sm" class="lg:hidden space-y-1.5">
+                        <label for="mobile-page-selector" class="block text-xs font-medium text-slate-700 dark:text-slate-300">Website page</label>
+                        <!-- A raw select: the kit's Select has no option groups. -->
+                        <select id="mobile-page-selector" :value="activeNavSelection" @change="e => requestNavigation(e.target.value)" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white cursor-pointer">
+                            <optgroup label="Public website pages">
                                 <option v-for="p in pages" :key="p.id" :value="String(p.id)">
-                                    {{ getPageIcon(p) }} {{ p.title }} {{ p.is_homepage ? '(Homepage)' : '' }}
+                                    {{ p.title }} {{ p.is_homepage ? '(homepage)' : '' }}
                                 </option>
                             </optgroup>
                             <optgroup label="Management">
-                                <option value="settings">⚙️ Website & SEO Settings</option>
-                                <option value="header_footer">🧭 Header & Footer</option>
-                                <option value="themes">🎨 Website Themes</option>
-                                <option value="redirects">↪️ Redirects</option>
-                                <option value="new">➕ Add Custom New Page</option>
-                                <option value="overview">📋 Manage Pages</option>
+                                <option value="settings">Website & SEO settings</option>
+                                <option value="header_footer">Header & footer</option>
+                                <option value="themes">Website themes</option>
+                                <option value="redirects">Redirects</option>
+                                <option value="new">Add a new custom page</option>
+                                <option value="overview">Manage pages</option>
                             </optgroup>
                         </select>
-                    </div>
+                    </Card>
 
                     <!-- Desktop Vertical Sidebar Navigation Card -->
-                    <div class="hidden lg:block bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-5 sticky top-6">
-                        
+                    <Card padding="none" class="hidden lg:block p-3 space-y-5 sticky top-6">
+
                         <!-- Navigation Pages Group -->
                         <div>
-                            <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
-                                <span>Navigation Pages</span>
-                                <span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded text-[9px] font-bold">{{ pages.length }} Pages</span>
+                            <div class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                                <span>Navigation pages</span>
+                                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium normal-case tracking-normal text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ pages.length }} pages</span>
                             </div>
 
-                            <div class="space-y-1 text-xs font-bold">
+                            <div class="space-y-1 text-sm font-medium">
                                 <a
                                     v-for="p in pages"
                                     :key="p.id"
                                     :href="selectionUrl(p.id, pageViewMode)"
                                     :aria-current="activeNavSelection === String(p.id) ? 'page' : undefined"
                                     @click="navClick($event, p.id, pageViewMode || 'edit')"
-                                    :class="[
-                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left group font-bold',
-                                        activeNavSelection === String(p.id) ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                                    ]"
+                                    :class="navLinkClass(activeNavSelection === String(p.id))"
                                 >
-                                    <span class="text-base leading-none">{{ getPageIcon(p) }}</span>
-                                    <span class="truncate font-bold">{{ p.title }}</span>
+                                    <UiIcon :name="pageIconName(p)" />
+                                    <span class="truncate">{{ p.title }}</span>
                                 </a>
                             </div>
 
@@ -1006,84 +1020,69 @@ const confirmDeleteActivePage = () => {
                                 :href="selectionUrl('new', 'edit')"
                                 @click="navClick($event, 'new', 'edit')"
                                 :class="[
-                                    'w-full mt-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-sm',
+                                    'w-full mt-3 px-3 py-2 rounded-xl border transition-colors text-sm font-medium flex items-center justify-center gap-2 cursor-pointer',
                                     activeNavSelection === 'new'
-                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-2 ring-blue-400/50'
-                                        : 'bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white hover:shadow-md hover:scale-[1.01]'
+                                        ? 'bg-blue-600 border-transparent text-white'
+                                        : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
                                 ]"
                             >
-                                <span class="text-sm leading-none">➕</span>
+                                <UiIcon name="plus" />
                                 <span>Add new custom page</span>
                             </a>
                         </div>
 
                         <!-- Management & Tools Group -->
-                        <div class="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-1">
-                            <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Management</div>
-                            <div class="space-y-1 text-xs font-bold">
+                        <div class="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-1">
+                            <div class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Management</div>
+                            <div class="space-y-1 text-sm font-medium">
                                 <a
                                     :href="selectionUrl('settings')"
                                     :aria-current="activeNavSelection === 'settings' ? 'page' : undefined"
                                     @click="navClick($event, 'settings')"
-                                    :class="[
-                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
-                                        activeNavSelection === 'settings' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                                    ]"
+                                    :class="navLinkClass(activeNavSelection === 'settings')"
                                 >
-                                    <span>⚙️</span> Website & SEO settings
+                                    <UiIcon name="settings" /> Website & SEO settings
                                 </a>
 
                                 <a
                                     :href="selectionUrl('header_footer')"
                                     :aria-current="activeNavSelection === 'header_footer' ? 'page' : undefined"
                                     @click="navClick($event, 'header_footer')"
-                                    :class="[
-                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
-                                        activeNavSelection === 'header_footer' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                                    ]"
+                                    :class="navLinkClass(activeNavSelection === 'header_footer')"
                                 >
-                                    <span>🧭</span> Header & footer
+                                    <UiIcon name="resize" /> Header & footer
                                 </a>
 
                                 <a
                                     :href="selectionUrl('themes')"
                                     :aria-current="activeNavSelection === 'themes' ? 'page' : undefined"
                                     @click="navClick($event, 'themes')"
-                                    :class="[
-                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
-                                        activeNavSelection === 'themes' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                                    ]"
+                                    :class="navLinkClass(activeNavSelection === 'themes')"
                                 >
-                                    <span>🎨</span> Website themes
+                                    <UiIcon name="palette" /> Website themes
                                 </a>
 
                                 <a
                                     :href="selectionUrl('redirects')"
                                     :aria-current="activeNavSelection === 'redirects' ? 'page' : undefined"
                                     @click="navClick($event, 'redirects')"
-                                    :class="[
-                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
-                                        activeNavSelection === 'redirects' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                                    ]"
+                                    :class="navLinkClass(activeNavSelection === 'redirects')"
                                 >
-                                    <span>↪️</span> Redirects
+                                    <UiIcon name="link" /> Redirects
                                 </a>
 
                                 <a
                                     :href="selectionUrl('overview')"
                                     :aria-current="activeNavSelection === 'overview' ? 'page' : undefined"
                                     @click="navClick($event, 'overview')"
-                                    :class="[
-                                        'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-2.5 cursor-pointer text-left',
-                                        activeNavSelection === 'overview' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                                    ]"
+                                    :class="navLinkClass(activeNavSelection === 'overview')"
                                 >
-                                    <span>📋</span> Manage pages
+                                    <UiIcon name="clipboard" /> Manage pages
                                 </a>
                             </div>
                         </div>
 
-                    </div>
+                    </Card>
                 </div>
 
                 <!-- Right Main Content Panel -->
@@ -1093,26 +1092,27 @@ const confirmDeleteActivePage = () => {
                     <div v-if="!MANAGEMENT_SELECTIONS.includes(activeNavSelection)" class="space-y-6">
 
                         <!-- View Mode Selector Header Card -->
-                        <div class="bg-white dark:bg-slate-900 px-6 py-4 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center justify-between gap-4 flex-wrap">
+                        <Card padding="none" class="px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
                             <div>
-                                <h2 class="text-base font-bold text-slate-900 dark:text-white">
-                                    {{ form.id ? form.title : 'New Page' }}
+                                <h2 class="text-base font-semibold text-slate-900 dark:text-white">
+                                    {{ form.id ? form.title : 'New page' }}
                                 </h2>
-                                <span class="text-xs text-slate-400 font-mono">/site/{{ club.slug }}/{{ form.slug }}</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">/site/{{ club.slug }}/{{ form.slug }}</span>
                             </div>
 
                             <!-- Segmented Pill Control: Edit vs Live Preview -->
-                            <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
+                            <div class="inline-flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
                                 <a
                                     :href="selectionUrl(activeNavSelection, 'edit')"
                                     :aria-current="pageViewMode === 'edit' ? 'true' : undefined"
                                     @click="navClick($event, activeNavSelection, 'edit')"
                                     :class="[
-                                        'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
-                                        pageViewMode === 'edit' ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-md shadow-slate-200' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                                        'px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-2 cursor-pointer',
+                                        pageViewMode === 'edit' ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
-                                    <span>✏️ Edit builder</span>
+                                    <UiIcon name="pencil" />
+                                    <span>Edit builder</span>
                                 </a>
 
                                 <a
@@ -1120,14 +1120,15 @@ const confirmDeleteActivePage = () => {
                                     :aria-current="pageViewMode === 'preview' ? 'true' : undefined"
                                     @click="navClick($event, activeNavSelection, 'preview')"
                                     :class="[
-                                        'px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer',
-                                        pageViewMode === 'preview' ? 'bg-amber-400 text-amber-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                                        'px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-2 cursor-pointer',
+                                        pageViewMode === 'preview' ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
-                                    <span>👁️ Live preview</span>
+                                    <UiIcon name="eye" />
+                                    <span>Live preview</span>
                                 </a>
                             </div>
-                        </div>
+                        </Card>
 
                         <!-- SUB-VIEW 1: EDIT BUILDER VIEW -->
                         <PageEditPane :club="club" :pages="pages" :club-addresses="clubAddresses" v-if="pageViewMode === 'edit'" v-model:active-insert-index="activeInsertIndex" :active-page="activePage" :add-block="addBlock" :add-gallery-image="addGalleryImage" :apply-section-to-all="applySectionToAll" :block-card-id="blockCardId" :block-columns="blockColumns" v-model:block-to-delete="blockToDelete" :can-draft="canDraft" :collapse-all="collapseAll" :collapsed-count="collapsedCount" :copy-block-to="copyBlockTo" :copy-notice="copyNotice" :copy-notice-is-error="copyNoticeIsError" :copy-preview-link="copyPreviewLink" :copy-targets="copyTargets" :discard-draft="discardDraft" :duplicate-block="duplicateBlock" :expand-all="expandAll" :form="form" :has-draft="hasDraft" :insert-menu-placement="insertMenuPlacement" :insert-menu-shift="insertMenuShift" :is-collapsed="isCollapsed" :is-default-page="isDefaultPage" :is-dirty="isDirty" :is-saved-success="isSavedSuccess" :lifecycle-text="lifecycleText" :move-block-down="moveBlockDown" :move-block-up="moveBlockUp" :new-block-id="newBlockId" :on-youtube-url-input="onYoutubeUrlInput" :open-media-library="openMediaLibrary" :open-preview-panel="openPreviewPanel" :preview-copied="previewCopied" :preview-error="previewError" :preview-open="previewOpen" :preview-url="previewUrl" v-model:publish-at-local="publishAtLocal" :publish-draft="publishDraft" :remove-block-image="removeBlockImage" :remove-gallery-image="removeGalleryImage" :renew-preview-link="renewPreviewLink" :restore-notice="restoreNotice" :save-draft="saveDraft" :search-preview="searchPreview" v-model:seo-open="seoOpen" :set-youtube-time="setYoutubeTime" :settings-form="settingsForm" v-model:show-history="showHistory" :submit-form="submitForm" :toggle-collapsed="toggleCollapsed" :toggle-insert-menu="toggleInsertMenu" :trigger-delete-modal="triggerDeleteModal" v-model:unpublish-at-local="unpublishAtLocal" />
@@ -1161,40 +1162,26 @@ const confirmDeleteActivePage = () => {
         </div>
 
         <!-- Delete Confirmation Modal -->
-        <div v-if="showDeleteConfirmModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="delete-page-modal-title"
-                v-focus-trap="() => { showDeleteConfirmModal = false; pageToDelete = null; }"
-                class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200 dark:border-slate-800"
-            >
-                <h3 id="delete-page-modal-title" class="text-lg font-bold text-slate-900 dark:text-white">Delete Page?</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300">Are you sure you want to delete <strong>{{ pageToDelete ? pageToDelete.title : form.title }}</strong>? This action cannot be undone.</p>
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <button @click="showDeleteConfirmModal = false; pageToDelete = null;" class="py-2 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer">Cancel</button>
-                    <button @click="confirmDeleteActivePage" class="py-2 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md cursor-pointer">Confirm delete</button>
-                </div>
-            </div>
-        </div>
+        <ConfirmDialog
+            :open="showDeleteConfirmModal"
+            title="Delete this page?"
+            confirm-label="Delete page"
+            @close="showDeleteConfirmModal = false; pageToDelete = null;"
+            @confirm="confirmDeleteActivePage"
+        >
+            Are you sure you want to delete <strong>{{ pageToDelete ? pageToDelete.title : form.title }}</strong>? This action cannot be undone.
+        </ConfirmDialog>
 
         <!-- Confirm deleting a page element -->
-        <div v-if="blockToDelete !== null" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="delete-block-modal-title"
-                v-focus-trap="() => { blockToDelete = null; }"
-                class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200 dark:border-slate-800"
-            >
-                <h3 id="delete-block-modal-title" class="text-lg font-bold text-slate-900 dark:text-white">Delete this element?</h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300">Are you sure you want to delete <strong>{{ blockToDeleteName }}</strong>? Its content will be lost once you save the page.</p>
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <button type="button" @click="blockToDelete = null" class="py-2 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer">Cancel</button>
-                    <button type="button" @click="confirmRemoveBlock" class="py-2 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md cursor-pointer">Delete element</button>
-                </div>
-            </div>
-        </div>
+        <ConfirmDialog
+            :open="blockToDelete !== null"
+            title="Delete this element?"
+            confirm-label="Delete element"
+            @close="blockToDelete = null"
+            @confirm="confirmRemoveBlock"
+        >
+            Are you sure you want to delete <strong>{{ blockToDeleteName }}</strong>? Its content will be lost once you save the page.
+        </ConfirmDialog>
 
         <PageChooserModal
             :show="showNavChooser"
@@ -1228,51 +1215,37 @@ const confirmDeleteActivePage = () => {
                     aria-modal="true"
                     aria-labelledby="unsaved-changes-modal-title"
                     v-focus-trap="handleStayAndEdit"
-                    class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden"
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 space-y-5 relative overflow-hidden"
                 >
                     <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0 shadow-inner">
-                            ⚠️
+                        <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                            <UiIcon name="warning" :size="20" />
                         </div>
                         <div class="space-y-1 pt-0.5">
-                            <h3 id="unsaved-changes-modal-title" class="text-lg font-black text-slate-900 dark:text-white leading-tight">Unsaved Changes</h3>
-                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                You have modified <strong class="text-slate-900 dark:text-white font-bold">"{{ form.title || 'this page' }}"</strong>. 
+                            <h3 id="unsaved-changes-modal-title" class="text-base font-semibold text-slate-900 dark:text-white leading-tight">Unsaved changes</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">
+                                You have modified <strong class="text-slate-900 dark:text-white font-semibold">"{{ form.title || 'this page' }}"</strong>.
                                 What would you like to do with your changes before leaving?
                             </p>
                         </div>
                     </div>
 
                     <div class="space-y-2 pt-2">
-                        <button
-                            @click="handleSaveAndProceed"
-                            :disabled="form.processing"
-                            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 flex items-center justify-between transition-all cursor-pointer disabled:opacity-50"
-                        >
-                            <span class="flex items-center gap-2">
-                                <span>💾</span>
-                                <span>{{ form.processing ? 'Saving changes...' : 'Save changes & proceed' }}</span>
-                            </span>
-                            <span class="text-[10px] bg-white/20 dark:bg-slate-900/20 px-2 py-0.5 rounded font-black">Recommended</span>
-                        </button>
+                        <Button block :disabled="form.processing" @click="handleSaveAndProceed">
+                            <template #icon><UiIcon name="save" /></template>
+                            <span>{{ form.processing ? 'Saving changes...' : 'Save changes & proceed' }}</span>
+                            <span class="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-medium">Recommended</span>
+                        </Button>
 
-                        <button
-                            @click="handleDiscardAndProceed"
-                            :disabled="form.processing"
-                            class="w-full py-3 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                        >
-                            <span>🗑️</span>
-                            <span>Discard changes & switch page</span>
-                        </button>
+                        <Button block variant="danger" :disabled="form.processing" @click="handleDiscardAndProceed">
+                            <template #icon><UiIcon name="trash" /></template>
+                            Discard changes & switch page
+                        </Button>
 
-                        <button
-                            @click="handleStayAndEdit"
-                            :disabled="form.processing"
-                            class="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                        >
-                            <span>✏️</span>
-                            <span>Stay & continue editing</span>
-                        </button>
+                        <Button block variant="ghost" :disabled="form.processing" @click="handleStayAndEdit">
+                            <template #icon><UiIcon name="pencil" /></template>
+                            Stay & continue editing
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -1289,45 +1262,33 @@ const confirmDeleteActivePage = () => {
                     aria-modal="true"
                     aria-labelledby="theme-confirm-modal-title"
                     v-focus-trap="() => { showThemeConfirmModal = false; selectedThemeForModal = null; }"
-                    class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden"
+                    class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 space-y-5 relative overflow-hidden"
                 >
                     <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl shrink-0 shadow-inner">
-                            🎨
+                        <div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                            <UiIcon name="palette" :size="20" />
                         </div>
                         <div class="space-y-1 pt-0.5">
-                            <h3 id="theme-confirm-modal-title" class="text-lg font-black text-slate-900 dark:text-white leading-tight">Apply New Website Theme?</h3>
-                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                You are about to switch your active design to <strong class="text-blue-600 dark:text-blue-400 font-bold">"{{ selectedThemeForModal.label }}"</strong>.
+                            <h3 id="theme-confirm-modal-title" class="text-base font-semibold text-slate-900 dark:text-white leading-tight">Apply a new website theme?</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">
+                                You are about to switch your active design to <strong class="text-slate-900 dark:text-white font-semibold">"{{ selectedThemeForModal.label }}"</strong>.
                             </p>
                         </div>
                     </div>
 
-                    <div class="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 rounded-2xl text-xs space-y-1.5">
-                        <div class="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
-                            <span>⚠️ Notice</span>
-                        </div>
-                        <p class="text-amber-800 dark:text-amber-200 text-[11px] leading-relaxed">
-                            This will immediately change the visual appearance, color scheme, and layout of your live public site. 
-                            <strong>All your existing pages, news, events, and forms will stay intact.</strong>
-                        </p>
-                    </div>
+                    <Alert variant="warning" title="Notice">
+                        This will immediately change the visual appearance, color scheme, and layout of your live public site.
+                        <strong>All your existing pages, news, events, and forms will stay intact.</strong>
+                    </Alert>
 
-                    <div class="flex items-center justify-end gap-3 pt-2">
-                        <button
-                            @click="showThemeConfirmModal = false; selectedThemeForModal = null;"
-                            :disabled="themeForm.processing"
-                            class="py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-all cursor-pointer"
-                        >
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <Button variant="secondary" :disabled="themeForm.processing" @click="showThemeConfirmModal = false; selectedThemeForModal = null;">
                             Cancel
-                        </button>
-                        <button
-                            @click="confirmApplyTheme"
-                            :disabled="themeForm.processing"
-                            class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-2"
-                        >
-                            <span>{{ themeForm.processing ? 'Applying theme...' : '✨ Apply theme to live site' }}</span>
-                        </button>
+                        </Button>
+                        <Button :disabled="themeForm.processing" @click="confirmApplyTheme">
+                            <template #icon><UiIcon v-if="!themeForm.processing" name="sparkles" /></template>
+                            {{ themeForm.processing ? 'Applying theme...' : 'Apply theme to live site' }}
+                        </Button>
                     </div>
                 </div>
             </div>

@@ -17,12 +17,12 @@ defineProps({
             </div>
             <div class="sm:col-span-2">
                 <label :for="`block-${index}-sh-title`" :class="LABEL">Title</label>
-                <input :id="`block-${index}-sh-title`" v-model="block.title" type="text" maxlength="200" placeholder="e.g. A tradition of fellowship" :class="[INPUT, 'font-bold']" />
+                <input :id="`block-${index}-sh-title`" v-model="block.title" type="text" maxlength="200" placeholder="e.g. A tradition of fellowship" :class="INPUT" />
             </div>
         </div>
         <div>
             <label :for="`block-${index}-sh-intro`" :class="LABEL">Introduction <span class="font-normal text-slate-400">(optional)</span></label>
-            <textarea :id="`block-${index}-sh-intro`" v-model="block.intro" rows="2" maxlength="500" :class="[INPUT, 'font-medium text-xs']"></textarea>
+            <textarea :id="`block-${index}-sh-intro`" v-model="block.intro" rows="2" maxlength="500" :class="INPUT"></textarea>
         </div>
         <div :class="[CARD, 'grid grid-cols-1 items-end gap-3 sm:grid-cols-2']">
             <div>

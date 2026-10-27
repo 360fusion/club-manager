@@ -9,7 +9,7 @@ import path from 'node:path';
 // section used to get from the page and now is not given.
 // Usage: npm run check:components -- [file.vue ...]   (no arguments: the components split out of the big pages)
 import { globSync } from 'node:fs';
-const files = process.argv.slice(2).length ? process.argv.slice(2) : ['resources/js/Components/Settings/*.vue', 'resources/js/Components/Accounting/Reports/*.vue', 'resources/js/Components/Accounting/Sections/*.vue', 'resources/js/Components/Accounting/Modals/*.vue', 'resources/js/Components/Accounting/Tabs/*.vue', 'resources/js/Components/Accounting/Reconciliation/*.vue', 'resources/js/Components/Pages/*.vue', 'resources/js/Components/Officers/*.vue', 'resources/js/Components/Media/*.vue', 'resources/js/Components/Blocks/BlockRenderer.vue'].flatMap((g) => globSync(g));
+const files = process.argv.slice(2).length ? process.argv.slice(2) : ['resources/js/Components/Settings/*.vue', 'resources/js/Components/Accounting/Reports/*.vue', 'resources/js/Components/Accounting/Sections/*.vue', 'resources/js/Components/Accounting/Modals/*.vue', 'resources/js/Components/Accounting/Tabs/*.vue', 'resources/js/Components/Accounting/Reconciliation/*.vue', 'resources/js/Components/Pages/*.vue', 'resources/js/Components/Officers/*.vue', 'resources/js/Components/Media/*.vue', 'resources/js/Components/Blocks/BlockRenderer.vue', 'resources/js/Components/Blocks/Editors/*.vue'].flatMap((g) => globSync(g));
 const server = await createServer({
   root: process.cwd(),
   configFile: false,

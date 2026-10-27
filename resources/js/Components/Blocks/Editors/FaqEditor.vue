@@ -2,6 +2,8 @@
 // Edit form for the FAQ block: questions with rich-text answers. Mutates `block` in place.
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 import { LABEL, INPUT, SELECT, CARD, CHECK, CHECK_LABEL, MINI_BUTTON, MINI_DANGER } from './styles';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     block: { type: Object, required: true },
@@ -33,7 +35,7 @@ const move = (i, by) => {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
                 <label :for="`block-${index}-faq-heading`" :class="LABEL">Heading <span class="font-normal text-slate-400">(optional)</span></label>
-                <input :id="`block-${index}-faq-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Frequently asked questions" :class="[INPUT, 'font-bold']" />
+                <input :id="`block-${index}-faq-heading`" v-model="block.heading" type="text" maxlength="200" placeholder="e.g. Frequently asked questions" :class="INPUT" />
             </div>
             <div>
                 <label :for="`block-${index}-faq-intro`" :class="LABEL">Intro <span class="font-normal text-slate-400">(optional)</span></label>
@@ -64,18 +66,18 @@ const move = (i, by) => {
 
         <div v-for="(item, i) in block.items" :key="item.id" :class="[CARD, 'space-y-2']">
             <div class="flex items-center justify-between gap-2">
-                <span class="font-bold text-slate-500">Question {{ i + 1 }}</span>
+                <span class="font-medium text-slate-500 dark:text-slate-400">Question {{ i + 1 }}</span>
                 <div class="flex items-center gap-1.5">
-                    <button type="button" :class="MINI_BUTTON" :disabled="i === 0" aria-label="Move up" @click="move(i, -1)">▲</button>
-                    <button type="button" :class="MINI_BUTTON" :disabled="i === block.items.length - 1" aria-label="Move down" @click="move(i, 1)">▼</button>
-                    <button type="button" :class="MINI_BUTTON" aria-label="Duplicate" @click="duplicateItem(i)">📋</button>
-                    <button type="button" :class="MINI_DANGER" aria-label="Delete" @click="removeItem(i)">🗑️</button>
+                    <button type="button" :class="MINI_BUTTON" :disabled="i === 0" aria-label="Move up" @click="move(i, -1)"><UiIcon name="chevron-down" :size="14" class="rotate-180" /></button>
+                    <button type="button" :class="MINI_BUTTON" :disabled="i === block.items.length - 1" aria-label="Move down" @click="move(i, 1)"><UiIcon name="chevron-down" :size="14" /></button>
+                    <button type="button" :class="MINI_BUTTON" aria-label="Duplicate" @click="duplicateItem(i)"><UiIcon name="copy" :size="14" /></button>
+                    <button type="button" :class="MINI_DANGER" aria-label="Delete" @click="removeItem(i)"><UiIcon name="trash" :size="14" /></button>
                 </div>
             </div>
-            <input v-model="item.question" type="text" maxlength="300" placeholder="The question" :class="[INPUT, 'font-bold']" :aria-label="`Question ${i + 1}`" />
+            <input v-model="item.question" type="text" maxlength="300" placeholder="The question" :class="INPUT" :aria-label="`Question ${i + 1}`" />
             <RichTextEditor v-model="item.answer" placeholder="The answer (you can add links and lists)…" />
         </div>
 
-        <button type="button" :disabled="block.items.length >= MAX_ITEMS" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-600 dark:text-slate-300 font-bold text-[11px] cursor-pointer disabled:opacity-40" @click="addItem">➕ Add question</button>
+        <Button variant="secondary" size="sm" :disabled="block.items.length >= MAX_ITEMS" @click="addItem"><UiIcon name="plus" :size="14" />Add question</Button>
     </div>
 </template>
