@@ -31,7 +31,7 @@ defineProps({
     getRowState: { type: Function, default: undefined },
     invoices: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
     navigateTo: { type: Function, default: undefined },
-    number_format: { type: Function, default: undefined },
+    numberFormat: { type: Function, default: undefined },
     openManualMatchModalForTx: { type: Function, default: undefined },
     reconciliation: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
     resetGiftAidFilters: { type: Function, default: undefined },
@@ -281,10 +281,10 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
     </div>
 
     <!-- SUB-TAB 1: RECONCILE WORKSPACE -->
-    <ReconcilePanel v-if="reconSubTab === 'reconcile'" :accounts="accounts" :active-details-tx-id="activeDetailsTxId" :active-options-tx-id="activeOptionsTxId" :close-who-dropdown-soon="closeWhoDropdownSoon" :compact-view="compactView" :delete-single-statement-line="deleteSingleStatementLine" :filtered-unmatched-tx="filteredUnmatchedTx" :get-contact-suggestions="getContactSuggestions" :get-row-state="getRowState" :number-format="number_format" :open-manual-match-modal-for-tx="openManualMatchModalForTx" :set-row-tab="setRowTab" :submit-reconcile="submitReconcile" :submit-row-reconcile="submitRowReconcile" :toggle-details-popover="toggleDetailsPopover" :toggle-options-dropdown="toggleOptionsDropdown" @close-details="activeDetailsTxId = null" />
+    <ReconcilePanel v-if="reconSubTab === 'reconcile'" :accounts="accounts" :active-details-tx-id="activeDetailsTxId" :active-options-tx-id="activeOptionsTxId" :close-who-dropdown-soon="closeWhoDropdownSoon" :compact-view="compactView" :delete-single-statement-line="deleteSingleStatementLine" :filtered-unmatched-tx="filteredUnmatchedTx" :get-contact-suggestions="getContactSuggestions" :get-row-state="getRowState" :number-format="numberFormat" :open-manual-match-modal-for-tx="openManualMatchModalForTx" :set-row-tab="setRowTab" :submit-reconcile="submitReconcile" :submit-row-reconcile="submitRowReconcile" :toggle-details-popover="toggleDetailsPopover" :toggle-options-dropdown="toggleOptionsDropdown" @close-details="activeDetailsTxId = null" />
 
     <!-- SUB-TAB 2: CASH CODING -->
-    <CashCodingPanel v-else-if="reconSubTab === 'cash_coding'" :accounts="accounts" :close-who-dropdown-soon="closeWhoDropdownSoon" :contacts="contacts" :filtered-unmatched-tx="filteredUnmatchedTx" :get-contact-suggestions="getContactSuggestions" :get-row-state="getRowState" :number-format="number_format" v-model:selected-cash-coding-tx="selectedCashCodingTx" :submit-bulk-cash-coding="submitBulkCashCoding" :toggle-cash-coding-select-all="toggleCashCodingSelectAll" />
+    <CashCodingPanel v-else-if="reconSubTab === 'cash_coding'" :accounts="accounts" :close-who-dropdown-soon="closeWhoDropdownSoon" :contacts="contacts" :filtered-unmatched-tx="filteredUnmatchedTx" :get-contact-suggestions="getContactSuggestions" :get-row-state="getRowState" :number-format="numberFormat" v-model:selected-cash-coding-tx="selectedCashCodingTx" :submit-bulk-cash-coding="submitBulkCashCoding" :toggle-cash-coding-select-all="toggleCashCodingSelectAll" />
 
     <!-- SUB-TAB 3: BANK STATEMENTS (Full imported statement lines log) -->
     <BankStatementsPanel v-else-if="reconSubTab === 'bank_statements'" :deletable-statement-lines="deletableStatementLines" :delete-selected-statement-lines="deleteSelectedStatementLines" :filtered-statement-lines="filteredStatementLines" :restorable-statement-lines="restorableStatementLines" :restore-selected-statement-lines="restoreSelectedStatementLines" v-model:selected-statement-line-ids="selectedStatementLineIds" :show-import-modal="showImportModal" v-model:statement-lines-filter="statementLinesFilter" :toggle-statement-lines-select-all="toggleStatementLinesSelectAll" @open-import="showImportModal = true" />
