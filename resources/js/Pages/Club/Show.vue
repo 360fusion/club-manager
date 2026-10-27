@@ -124,7 +124,7 @@ const primaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl 
                                 {{ club.name }}
                             </h1>
                             <span class="text-xs text-slate-500 dark:text-slate-400">
-                                {{ club.type_name }} · PostgreSQL tenant #{{ club.id }}
+                                {{ club.type_name }}
                             </span>
                         </div>
                     </div>
