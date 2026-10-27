@@ -62,9 +62,9 @@ class SiteSeo
      */
     public static function pageUrl(Club $club, Page $page): string
     {
-        return $page->is_homepage
+        return ClubDomain::publicUrl($club, $page->is_homepage
             ? route('public.site', ['clubSlug' => $club->slug])
-            : route('public.site', ['clubSlug' => $club->slug, 'pageSlug' => $page->slug]);
+            : route('public.site', ['clubSlug' => $club->slug, 'pageSlug' => $page->slug]));
     }
 
     /**
@@ -114,7 +114,7 @@ class SiteSeo
     private static function structuredData(Club $club, Page $page, Collection $events): string
     {
         $settings = $club->settings ?? [];
-        $home = route('public.site', ['clubSlug' => $club->slug]);
+        $home = ClubDomain::publicUrl($club, route('public.site', ['clubSlug' => $club->slug]));
 
         $sameAs = collect(['social_facebook', 'social_instagram', 'social_twitter', 'social_youtube', 'social_linkedin', 'social_tiktok'])
             ->map(fn (string $key) => self::absoluteUrl($settings[$key] ?? null))
@@ -146,7 +146,7 @@ class SiteSeo
                     'eventStatus' => 'https://schema.org/EventScheduled',
                     'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
                     'location' => $event->formatted_location ? ['@type' => 'Place', 'name' => $event->formatted_location] : null,
-                    'url' => route('public.event', ['clubSlug' => $club->slug, 'eventSlug' => $event->slug]),
+                    'url' => ClubDomain::publicUrl($club, route('public.event', ['clubSlug' => $club->slug, 'eventSlug' => $event->slug])),
                     'organizer' => ['@id' => $home.'#organization'],
                 ]);
             }

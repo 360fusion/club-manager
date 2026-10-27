@@ -111,7 +111,7 @@ const CELL = 'px-3 py-2 font-mono text-[11px] font-bold text-slate-900 dark:text
             <button type="button" :disabled="checking" class="cursor-pointer rounded-xl bg-amber-600 px-3.5 py-1.5 text-[11px] font-bold text-white shadow-sm transition-colors hover:bg-amber-700 disabled:cursor-wait disabled:opacity-60" @click="$emit('check')">
                 {{ checking ? 'Checking…' : '🔄 Check Now' }}
             </button>
-            <span class="text-[11px] text-amber-800/90 dark:text-amber-200/80">“Active” means we can see your DNS record. Leave the record in place afterwards.</span>
+            <span class="text-[11px] text-amber-800/90 dark:text-amber-200/80">Once it says “Active” your site opens on this domain (the secure certificate is set up on the first visit). Leave the record in place afterwards.</span>
         </div>
     </div>
 </template>

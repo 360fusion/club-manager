@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import BlockRenderer from '@/Components/Blocks/BlockRenderer.vue';
 import PublicHeader from '@/Components/Site/PublicHeader.vue';
@@ -38,8 +38,13 @@ const columnTheme = computed(() => ({ ...theme.value, layout: 'boxed' }));
 
 const pageTitle = computed(() => `${props.page.meta_title || props.page.title} ${props.site.title_suffix || '- ' + props.club.name}`);
 
+const inertiaPage = usePage();
+
 const getSiteUrl = (urlPath) => {
     if (!urlPath) return '';
+    // On the lodge's own domain its pages live at the root, not under /site/{club}.
+    const prefix = `/site/${props.club.slug}`;
+    if (inertiaPage.props.onClubDomain && (urlPath === prefix || urlPath.startsWith(`${prefix}/`))) return urlPath.slice(prefix.length) || '/';
     if (!props.previewTheme) return urlPath;
     if (urlPath.startsWith('/site/') || urlPath.includes('/site/')) {
         const separator = urlPath.includes('?') ? '&' : '?';

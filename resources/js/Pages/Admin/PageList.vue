@@ -88,6 +88,7 @@ const settingsForm = useForm({
     seo_title_suffix: props.websiteSettings?.seo_title_suffix || '',
     seo_meta_description: props.websiteSettings?.seo_meta_description || '',
     custom_domain: props.websiteSettings?.custom_domain || '',
+    site_redirect_to_domain: props.websiteSettings?.site_redirect_to_domain ?? false,
     primary_color: props.websiteSettings?.primary_color || '#0369a1',
     contact_email: props.websiteSettings?.contact_email || '',
     phone: props.websiteSettings?.phone || '',

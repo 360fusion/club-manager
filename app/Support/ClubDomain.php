@@ -143,6 +143,29 @@ class ClubDomain
     }
 
     /**
+     * Whether the lodge's site is served on its own domain: only once the DNS check has passed.
+     */
+    public static function isLive(Club $club): bool
+    {
+        return (bool) $club->custom_domain && $club->domain_status === 'active';
+    }
+
+    /**
+     * A /site/{club} address moved onto the lodge's own domain once that is live, so search engines see one address
+     * for each page. Any other address is returned unchanged.
+     */
+    public static function publicUrl(Club $club, string $url): string
+    {
+        $prefix = url('/site/'.$club->slug);
+
+        if (! self::isLive($club) || ($url !== $prefix && ! str_starts_with($url, $prefix.'/'))) {
+            return $url;
+        }
+
+        return 'https://'.$club->custom_domain.(substr($url, strlen($prefix)) ?: '/');
+    }
+
+    /**
      * Look up whether the domain's DNS now points here, and record the result. Returns whether it is verified.
      */
     public static function verify(Club $club): bool

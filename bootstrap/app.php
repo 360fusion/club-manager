@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserCanAdministerClub;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\IdentifyTenantByDomain;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,6 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
         if ($proxies = env('TRUSTED_PROXIES')) {
             $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
         }
+
+        // A lodge's own domain is mapped onto its /site/{club} routes before routing.
+        $middleware->prepend(IdentifyTenantByDomain::class);
 
         $middleware->web(append: [
             SecurityHeaders::class,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\Page;
+use App\Support\ClubDomain;
 use App\Support\SiteSeo;
 use Illuminate\Http\Response;
 
@@ -57,7 +58,7 @@ class SearchIndexController extends Controller
         $club->events()->published()->where('status', '!=', 'cancelled')->visibleTo(null)
             ->where('starts_at', '>=', now()->subDays(30))->orderBy('starts_at')->limit(self::MAX_URLS - count($urls))->get()
             ->each(function ($event) use ($club, &$urls) {
-                $urls[] = ['loc' => route('public.event', ['clubSlug' => $club->slug, 'eventSlug' => $event->slug]), 'lastmod' => $event->updated_at, 'priority' => '0.5'];
+                $urls[] = ['loc' => ClubDomain::publicUrl($club, route('public.event', ['clubSlug' => $club->slug, 'eventSlug' => $event->slug])), 'lastmod' => $event->updated_at, 'priority' => '0.5'];
             });
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n".'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";

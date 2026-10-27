@@ -26,6 +26,7 @@ class UpdateSiteSettingsRequest extends ClubRequest
             'seo_title_suffix' => 'nullable|string|max:255',
             'seo_meta_description' => 'nullable|string|max:1000',
             'custom_domain' => ClubDomain::rule($club),
+            'site_redirect_to_domain' => 'boolean',
             'primary_color' => 'nullable|string|max:50',
             'contact_email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:100',

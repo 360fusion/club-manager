@@ -63,6 +63,14 @@ defineProps({
                         :checking="checkingDomain"
                         @check="checkDomainNow"
                     />
+
+                    <label v-if="websiteSettings.custom_domain" class="flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" v-model="settingsForm.site_redirect_to_domain" class="w-4 h-4 mt-0.5 rounded accent-blue-600 cursor-pointer" />
+                        <span>
+                            <span class="block font-bold text-slate-700 dark:text-slate-200">Send visitors to {{ websiteSettings.custom_domain }}</span>
+                            <span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Your pages are on your domain once it is Active. Tick this to forward the address <code class="font-mono">/site/{{ club.slug }}</code> there too; leave it unticked to keep the pages at both addresses.</span>
+                        </span>
+                    </label>
                 </div>
             </div>
 

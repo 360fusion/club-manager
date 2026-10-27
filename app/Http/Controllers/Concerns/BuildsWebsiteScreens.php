@@ -101,6 +101,7 @@ trait BuildsWebsiteScreens
             'seo_title_suffix' => '| '.$club->name,
             'seo_meta_description' => 'Official website and member portal for '.$club->name,
             'custom_domain' => $club->custom_domain ?? '',
+            'site_redirect_to_domain' => false,
             'primary_color' => '#0369a1',
             'contact_email' => 'admin@'.$club->slug.'.org',
             'phone' => '',

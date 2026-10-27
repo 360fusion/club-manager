@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\TwoFactorAuthController;
 use App\Http\Controllers\ClubController;
+use App\Http\Controllers\ClubDomainAllowedController;
 use App\Http\Controllers\EventOnlinePaymentController;
 use App\Http\Controllers\EventQuoteController;
 use App\Http\Controllers\GoCardlessWebhookController;
@@ -73,6 +74,9 @@ Route::get('/', [ClubController::class, 'index'])->name('home');
 Route::any('/clubs/{legacySlug}/{path?}', LegacyClubUrlController::class)
     ->where('legacySlug', '[A-Za-z0-9_-]+')
     ->where('path', '.*');
+
+// Caddy asks this before issuing a certificate for a lodge's own domain (answers the server itself only).
+Route::get('/internal/domain-allowed', ClubDomainAllowedController::class)->name('internal.domain_allowed');
 
 // What search engines read (robots.txt is a file in public/): before /{slug} and the /site/{club} routes.
 Route::get('/sitemap.xml', [SearchIndexController::class, 'index'])->name('sitemap.index');

@@ -14,7 +14,7 @@ class ReservedClubSlugs
     public const WORDS = [
         'about', 'account', 'admin', 'api', 'assets', 'auth', 'blog', 'build', 'calendar', 'clubs',
         'committee', 'contact', 'css', 'dashboard', 'directory', 'docs', 'documents', 'dues', 'events',
-        'favicon', 'fonts', 'forgot-password', 'halls', 'help', 'home', 'images', 'index', 'js', 'livewire',
+        'favicon', 'fonts', 'forgot-password', 'halls', 'help', 'home', 'images', 'index', 'internal', 'js', 'livewire',
         'lodges', 'login', 'logout', 'meetings', 'members', 'new', 'news', 'notifications', 'portal', 'pricing',
         'privacy', 'profile', 'register', 'reset-password', 'robots', 'sanctum', 'search', 'security',
         'settings', 'sign', 'site', 'storage', 'subscriptions', 'summons', 'superadmin', 'support', 'terms',

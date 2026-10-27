@@ -8,6 +8,7 @@ use App\Models\LodgeCorrection;
 use App\Support\Currencies;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -45,6 +46,15 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
+     * On a lodge's own domain the page is answered by its /site/{club} route; the browser keeps the address it asked for.
+     */
+    public function urlResolver()
+    {
+        return fn (Request $request) => $request->attributes->get('club_domain_uri')
+            ?? Str::start(Str::after($request->fullUrl(), $request->getSchemeAndHttpHost()), '/');
+    }
+
+    /**
      * Define the props that are shared by default.
      *
      * @see https://inertiajs.com/shared-data
@@ -58,6 +68,8 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'currency' => fn () => $this->currencyFor($request),
+            // The lodge site's links drop their /site/{club} prefix when it is served on the lodge's own domain.
+            'onClubDomain' => $request->attributes->has('club_domain_uri'),
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
