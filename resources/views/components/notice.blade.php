@@ -1,4 +1,4 @@
-{{-- The Blade twin of Components/Ui/Alert.vue. `dismiss` names a Livewire method that clears the notice; leave it out
+{{-- The Blade twin of Components/Ui/Alert.vue. Pass role="alert" for an error that must be read out at once. `dismiss` names a Livewire method that clears the notice; leave it out
      for a notice that stays. --}}
 @props(['variant' => 'info', 'title' => null, 'dismiss' => null])
 
@@ -11,7 +11,7 @@
     ];
 @endphp
 
-<div role="status" {{ $attributes->class(['flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm', $variants[$variant] ?? $variants['info']]) }}>
+<div role="{{ $attributes->get('role', 'status') }}" {{ $attributes->except('role')->class(['flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm', $variants[$variant] ?? $variants['info']]) }}>
     <div class="min-w-0">
         @if ($title)
             <p class="font-medium mb-0.5">{{ $title }}</p>

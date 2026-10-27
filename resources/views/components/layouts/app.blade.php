@@ -14,7 +14,8 @@
             } catch (e) {}
         })();
     </script>
-    @vite(['resources/js/app.js'])
+    {{-- CSS only: app.js starts the Inertia app, which a Livewire page has no root for. --}}
+    @vite(['resources/css/app.css'])
     @livewireStyles
     <style>[x-cloak] { display: none !important; }</style>
 </head>

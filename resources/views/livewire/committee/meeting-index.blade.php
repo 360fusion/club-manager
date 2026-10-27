@@ -7,44 +7,31 @@
         ['key' => 'officers', 'label' => 'Annual officers roster & board', 'href' => route('admin.officers.index', ['clubSlug' => $clubSlug])],
     ]" />
 
-    <!-- Top Header & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
+    <x-card class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Committee & Board Meetings</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage executive meetings, pre-meeting briefing packs, and live minutes under UGLE governance rules.</p>
+            <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Committee and board meetings</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage executive meetings, pre-meeting briefing packs and live minutes under UGLE governance rules.</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-            <button
-                type="button"
-                wire:click="openCreateModal"
-                class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all cursor-pointer inline-flex items-center gap-2 self-start sm:self-auto"
-            >
-                <span>➕</span>
-                <span>Schedule Committee Meeting</span>
-            </button>
-        </div>
-    </div>
+        <x-button wire:click="openCreateModal" class="self-start sm:self-auto">Schedule committee meeting</x-button>
+    </x-card>
 
-    <!-- Rule Advisory Banner -->
-    <div class="p-4 bg-amber-50/80 dark:bg-amber-950/80 border border-amber-200/80 dark:border-amber-800/80 rounded-2xl flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
-        <span class="text-xl shrink-0">⚖️</span>
-        <div>
-            <span class="font-extrabold block">Constitutional Advisory (UGLE Rule 153 & 158)</span>
-            <span class="text-amber-800/90 dark:text-amber-200/90 leading-relaxed block mt-0.5">
-                The Lodge Committee is an advisory, investigating, and auditing body. Committee actions are recommendations requiring open lodge confirmation. All candidate vetting must be signed off here before appearance on the Summons (Rule 159).
-            </span>
-        </div>
-    </div>
+    <x-notice variant="warning" title="Constitutional advisory (UGLE Rules 153 and 158)">
+        The Lodge Committee is an advisory, investigating and auditing body. Committee actions are recommendations that need confirming in open lodge. All candidate vetting must be signed off here before the candidate appears on the summons (Rule 159).
+    </x-notice>
 
-    <!-- Filter & Search Toolbar -->
-    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-1 overflow-x-auto w-full sm:w-auto">
-            @foreach(['all' => 'All Meetings', 'scheduled' => 'Scheduled', 'draft' => 'Draft', 'past' => 'Past'] as $val => $label)
+    <x-card padding="sm" class="flex flex-col items-center justify-between gap-4 sm:flex-row">
+        <div role="group" aria-label="Filter meetings" class="flex w-full items-center gap-1 overflow-x-auto sm:w-auto">
+            @foreach(['all' => 'All meetings', 'scheduled' => 'Scheduled', 'draft' => 'Draft', 'past' => 'Past'] as $val => $label)
                 <button
                     type="button"
                     wire:click="$set('statusFilter', '{{ $val }}')"
-                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap {{ $statusFilter === $val ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700' }}"
+                    aria-pressed="{{ $statusFilter === $val ? 'true' : 'false' }}"
+                    @class([
+                        'cursor-pointer whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors',
+                        'bg-slate-900 text-white shadow-sm dark:bg-slate-700' => $statusFilter === $val,
+                        'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700' => $statusFilter !== $val,
+                    ])
                 >
                     {{ $label }}
                 </button>
@@ -52,280 +39,174 @@
         </div>
 
         <div class="w-full sm:w-64">
-            <input
-                type="text"
+            <x-input
+                type="search"
                 wire:model.live.debounce.300ms="search"
                 placeholder="Search meetings by title..."
-                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all font-medium"
+                aria-label="Search meetings by title"
             />
         </div>
-    </div>
+    </x-card>
 
-    <!-- Meetings Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         @forelse($meetings as $m)
-            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-5 group">
+            @php
+                $statusLabel = $m->displayStatusLabel();
+                $statusVariant = $m->isPast() ? 'neutral' : match ($m->status) {
+                    \App\Domains\ClubAccounting\Enums\CommitteeMeetingStatus::Scheduled => 'info',
+                    \App\Domains\ClubAccounting\Enums\CommitteeMeetingStatus::Finalized => 'success',
+                    default => 'warning',
+                };
+            @endphp
+            <x-card class="group flex flex-col justify-between space-y-5 transition-shadow hover:shadow-md">
                 <div class="space-y-3">
                     <div class="flex items-center justify-between gap-2">
-                        <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border {{ $m->displayBadgeClass() }}">
-                            {{ $m->displayStatusLabel() }}
-                        </span>
-                        <span class="text-xs font-bold text-slate-400 font-mono">
+                        <x-badge :variant="$statusVariant">{{ $statusLabel }}</x-badge>
+                        <span class="font-mono text-xs font-medium text-slate-500 dark:text-slate-400">
                             {{ $m->meeting_date->format('d M Y, H:i') }}
                         </span>
                     </div>
 
                     <div>
-                        <h3 class="font-black text-slate-900 dark:text-white text-base group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        <h3 class="text-base font-semibold text-slate-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
                             {{ $m->title }}
                         </h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
-                            <span>📍</span>
-                            <span>{{ $m->location ?: 'Lodge Committee Room' }}</span>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            {{ $m->location ?: 'Lodge committee room' }}
                         </p>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-center text-xs">
-                        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                            <span class="text-slate-400 block text-[10px] font-bold">Attendees</span>
-                            <span class="font-black text-slate-800 dark:text-slate-100 text-sm">{{ $m->attendees->count() }}</span>
+                    <dl class="grid grid-cols-3 gap-2 border-t border-slate-200 pt-2 text-center text-xs dark:border-slate-800">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800/50">
+                            <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Attendees</dt>
+                            <dd class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $m->attendees->count() }}</dd>
                         </div>
-                        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                            <span class="text-slate-400 block text-[10px] font-bold">Agenda</span>
-                            <span class="font-black text-slate-800 dark:text-slate-100 text-sm">{{ $m->agendaItems->count() }}</span>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800/50">
+                            <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Agenda</dt>
+                            <dd class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $m->agendaItems->count() }}</dd>
                         </div>
-                        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                            <span class="text-slate-400 block text-[10px] font-bold">Tasks</span>
-                            <span class="font-black text-slate-800 dark:text-slate-100 text-sm">{{ $m->tasks->count() }}</span>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800/50">
+                            <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Tasks</dt>
+                            <dd class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $m->tasks->count() }}</dd>
                         </div>
-                    </div>
+                    </dl>
                 </div>
 
-                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                    <button
-                        type="button"
+                <div class="flex items-center gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+                    <x-button
+                        variant="secondary"
+                        size="sm"
                         wire:click="openEditModal({{ $m->id }})"
-                        class="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200/80 dark:border-slate-800/80 rounded-xl transition-all"
-                        title="Edit Meeting Title, Date & Location"
+                        title="Edit meeting title, date and location"
+                        aria-label="Edit {{ $m->title }}"
                     >
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                    </button>
-                    <a
-                        href="{{ route('admin.committee.workspace', ['clubSlug' => $club->slug, 'meetingId' => $m->id]) }}"
-                        class="flex-1 py-2 text-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-all"
-                    >
-                        📁 Agenda Pack
-                    </a>
-                    <a
-                        href="{{ route('admin.committee.minutes', ['clubSlug' => $club->slug, 'meetingId' => $m->id]) }}"
-                        class="flex-1 py-2 text-center bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
-                    >
-                        ✍️ Live Minutes
-                    </a>
+                    </x-button>
+                    <x-button variant="secondary" size="sm" class="flex-1" href="{{ route('admin.committee.workspace', ['clubSlug' => $club->slug, 'meetingId' => $m->id]) }}">
+                        Agenda pack
+                    </x-button>
+                    <x-button size="sm" class="flex-1" href="{{ route('admin.committee.minutes', ['clubSlug' => $club->slug, 'meetingId' => $m->id]) }}">
+                        Live minutes
+                    </x-button>
                 </div>
-            </div>
+            </x-card>
         @empty
-            <div class="col-span-full py-16 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-center space-y-3">
-                <span class="text-4xl block">🏛️</span>
-                <span class="text-sm font-bold text-slate-800 dark:text-slate-100 block">No committee meetings found</span>
-                <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Schedule a meeting to start organizing agenda items, vetting candidates, auditing accounts, and taking live minutes.</p>
-                <button
-                    type="button"
-                    wire:click="openCreateModal"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
-                >
-                    ➕ Schedule First Committee Meeting
-                </button>
+            <div class="col-span-full space-y-3 rounded-2xl border-2 border-dashed border-slate-200 bg-white py-16 text-center dark:border-slate-800 dark:bg-slate-900">
+                <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">No committee meetings found</p>
+                <p class="mx-auto max-w-sm text-xs text-slate-500 dark:text-slate-400">Schedule a meeting to start organising agenda items, vetting candidates, auditing accounts and taking live minutes.</p>
+                <x-button wire:click="openCreateModal">Schedule the first committee meeting</x-button>
             </div>
         @endforelse
     </div>
 
-    <!-- Schedule Meeting Modal -->
-    @if($showCreateModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
-            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <h3 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>🏛️</span>
-                        <span>Schedule Committee Meeting</span>
-                    </h3>
-                    <button type="button" wire:click="closeCreateModal" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold text-sm">✕</button>
-                </div>
+    @if ($showCreateModal)
+    <x-modal :show="$showCreateModal" title="Schedule committee meeting" close="closeCreateModal">
+        <form wire:submit="createMeeting" id="meeting-index-create-form" class="space-y-4">
+            @if(isset($upcomingRegularMeetings) && $upcomingRegularMeetings->isNotEmpty())
+                <x-select
+                    label="Link to a regular lodge meeting (optional)"
+                    hint="Picking a regular lodge meeting moves the committee date to 9 days before it."
+                    wire:model.live="linked_regular_meeting_id"
+                >
+                    <option value="">Standalone committee meeting</option>
+                    @foreach($upcomingRegularMeetings as $regMeeting)
+                        <option value="{{ $regMeeting->id }}">
+                            {{ $regMeeting->title ?: 'Regular lodge meeting' }} ({{ $regMeeting->meeting_date?->format('d M Y') }})
+                        </option>
+                    @endforeach
+                </x-select>
+            @endif
 
-                <form wire:submit="createMeeting" class="space-y-4 text-xs">
-                    <!-- Helper: Link to Regular Lodge Meeting (Optional) -->
-                    @if(isset($upcomingRegularMeetings) && $upcomingRegularMeetings->isNotEmpty())
-                        <div class="p-3 bg-blue-50/50 dark:bg-blue-950/50 border border-blue-200/70 dark:border-blue-800/70 rounded-2xl space-y-1">
-                            <label class="block font-bold text-blue-950 dark:text-blue-100 flex items-center justify-between">
-                                <span class="flex items-center gap-1.5">
-                                    <span>🔗</span>
-                                    <span>Link to Regular Lodge Meeting (Optional)</span>
-                                </span>
-                                <span class="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-100/70 dark:bg-blue-900/70 px-2 py-0.5 rounded-full">Auto-Suggests -9 Days</span>
-                            </label>
-                            <select
-                                wire:model.live="linked_regular_meeting_id"
-                                class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            >
-                                <option value="">-- Standalone Committee Meeting --</option>
-                                @foreach($upcomingRegularMeetings as $regMeeting)
-                                    <option value="{{ $regMeeting->id }}">
-                                        {{ $regMeeting->title ?: 'Regular Lodge Meeting' }} ({{ $regMeeting->meeting_date?->format('d M Y') }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
+            <x-input
+                type="datetime-local"
+                label="Date and time"
+                hint="Sets the standard title."
+                wire:model.live="newDate"
+                required
+            />
 
-                    <div class="space-y-1">
-                        <div class="flex items-center justify-between">
-                            <label class="block font-bold text-slate-700 dark:text-slate-200">Date &amp; Time</label>
-                            <span class="text-[10px] text-slate-400">Triggers standardized title</span>
-                        </div>
-                        <input
-                            type="datetime-local"
-                            wire:model.live="newDate"
-                            class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 dark:bg-slate-800/50 focus:bg-white dark:focus:bg-slate-900 transition-all font-semibold"
-                            required
-                        />
-                        @error('newDate') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                    </div>
+            <x-input
+                label="Meeting title"
+                hint="Filled in from the meeting date. You can change it if you like."
+                wire:model.live="newTitle"
+                placeholder="e.g. Committee Meeting – 15th September 2026"
+                required
+            />
 
-                    <div class="space-y-1">
-                        <div class="flex items-center justify-between">
-                            <label class="block font-bold text-slate-700 dark:text-slate-200">Meeting Title</label>
-                            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">✓ Auto-Generated from Date</span>
-                        </div>
-                        <input
-                            type="text"
-                            wire:model.live="newTitle"
-                            placeholder="e.g. Committee Meeting – 15th September 2026"
-                            class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-900 transition-all"
-                            required
-                        />
-                        <p class="text-[10px] text-slate-400">Standardized title generated from meeting date. Can be customized if desired.</p>
-                        @error('newTitle') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                    </div>
+            <x-input
+                label="Location or venue"
+                hint="Defaults to the lodge's usual venue."
+                wire:model="newLocation"
+                placeholder="e.g. Masonic Hall, Wellington Street..."
+            />
+        </form>
 
-                    <div class="space-y-1">
-                        <div class="flex items-center justify-between">
-                            <label class="block font-bold text-slate-700 dark:text-slate-200">Location / Venue</label>
-                            <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">Defaulted</span>
-                        </div>
-                        <input
-                            type="text"
-                            wire:model="newLocation"
-                            placeholder="e.g. Masonic Hall, Wellington Street..."
-                            class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        />
-                        @error('newLocation') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
-                        <button
-                            type="button"
-                            wire:click="closeCreateModal"
-                            class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition-all cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
-                        >
-                            <span>📅</span>
-                            <span>Schedule Meeting</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <x-slot:footer>
+            <x-button variant="secondary" wire:click="closeCreateModal">Cancel</x-button>
+            <x-button type="submit" form="meeting-index-create-form">Schedule meeting</x-button>
+        </x-slot:footer>
+    </x-modal>
     @endif
 
-    <!-- Edit Committee Meeting Modal -->
-    @if($showEditModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
-            <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 text-xs">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div>
-                        <h3 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                            <span>✏️</span>
-                            <span>Edit Committee Meeting</span>
-                        </h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Update the meeting title, date &amp; time, and location.</p>
-                    </div>
-                    <button type="button" wire:click="closeEditModal" class="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold transition-all">✕</button>
-                </div>
+    @if ($showEditModal)
+    <x-modal :show="$showEditModal" title="Edit committee meeting" subtitle="Update the meeting title, date and time, and location." close="closeEditModal">
+        <form wire:submit="updateMeeting" id="meeting-index-edit-form" class="space-y-4">
+            <x-input
+                label="Meeting title or name"
+                wire:model="editTitle"
+                placeholder="e.g. Regular Committee Meeting"
+                required
+            />
 
-                <form wire:submit="updateMeeting" class="space-y-4">
-                    <div class="space-y-1">
-                        <label class="block font-bold text-slate-700 dark:text-slate-200">Meeting Title / Name <span class="text-rose-500">*</span></label>
-                        <input
-                            type="text"
-                            wire:model="editTitle"
-                            placeholder="e.g. Regular Committee Meeting"
-                            class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            required
-                        />
-                        @error('editTitle') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                    </div>
+            <x-input
+                type="datetime-local"
+                label="Date and time"
+                wire:model="editDate"
+                required
+            />
 
-                    <div class="space-y-1">
-                        <label class="block font-bold text-slate-700 dark:text-slate-200">Date &amp; Time <span class="text-rose-500">*</span></label>
-                        <input
-                            type="datetime-local"
-                            wire:model="editDate"
-                            class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            required
-                        />
-                        @error('editDate') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                    </div>
+            <x-input
+                label="Meeting location"
+                wire:model="editLocation"
+                placeholder="e.g. Masonic Hall, Wellington Street..."
+            />
 
-                    <div class="space-y-1">
-                        <label class="block font-bold text-slate-700 dark:text-slate-200">Meeting Location</label>
-                        <input
-                            type="text"
-                            wire:model="editLocation"
-                            placeholder="e.g. Masonic Hall, Wellington Street..."
-                            class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        />
-                        @error('editLocation') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                    </div>
+            <x-select label="Meeting status" wire:model="editStatus">
+                <option value="draft" @selected($editStatus === 'draft')>Draft (invites not yet sent)</option>
+                <option value="scheduled" @selected($editStatus === 'scheduled')>Scheduled (invites sent)</option>
+            </x-select>
+        </form>
 
-                    <div class="space-y-1">
-                        <label class="block font-bold text-slate-700 dark:text-slate-200">Meeting Status</label>
-                        <select
-                            wire:model="editStatus"
-                            class="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        >
-                            <option value="draft">Draft (invites not yet dispatched)</option>
-                            <option value="scheduled">Scheduled (invites dispatched)</option>
-                        </select>
-                        @error('editStatus') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
-                        <button
-                            type="button"
-                            wire:click="closeEditModal"
-                            class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition-all cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            wire:loading.attr="disabled"
-                            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
-                        >
-                            <span wire:loading.remove wire:target="updateMeeting">Save Changes</span>
-                            <span wire:loading wire:target="updateMeeting">Saving...</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <x-slot:footer>
+            <x-button variant="secondary" wire:click="closeEditModal">Cancel</x-button>
+            <x-button type="submit" form="meeting-index-edit-form" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="updateMeeting">Save changes</span>
+                <span wire:loading wire:target="updateMeeting">Saving...</span>
+            </x-button>
+        </x-slot:footer>
+    </x-modal>
     @endif
 
     @livewire(\App\Domains\ClubAccounting\Livewire\Committee\CreateCommitteeMeetingModal::class, ['clubSlug' => $club->slug], key('create-comm-modal-' . $club->slug))

@@ -1,195 +1,201 @@
 @php
-    $field = 'w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none text-xs';
-    $lbl = 'font-bold text-slate-700 dark:text-slate-200 block mb-1 text-xs';
-    $tabButton = 'px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer';
+    // The stage enum's own colours include sky and violet, which the design system does not use.
+    $stageBadge = ['enquiry' => 'neutral', 'first_interview' => 'info', 'interview_pending' => 'info', 'lodge_committee' => 'warning', 'proposed' => 'info', 'accepted' => 'success', 'initiated' => 'info', 'rejected' => 'danger', 'withdrawn' => 'neutral'];
 @endphp
 
 <div class="space-y-6" x-data="{ tab: 'details' }">
-    <a href="{{ route('admin.club_acc.candidates.index', ['clubSlug' => $club->slug]) }}" class="inline-flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400">&larr; Back to the pipeline</a>
+    <a href="{{ route('admin.club_acc.candidates.index', ['clubSlug' => $club->slug]) }}" class="inline-flex items-center gap-1 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400">&larr; Back to the pipeline</a>
 
     @if (session()->has('success'))
-        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 text-xs font-semibold rounded-2xl flex items-center gap-2"><span>✅</span><span>{{ session('success') }}</span></div>
+        <x-notice variant="success">{{ session('success') }}</x-notice>
     @endif
     @if (session()->has('error'))
-        <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 text-xs font-semibold rounded-2xl flex items-center gap-2"><span>⚠️</span><span>{{ session('error') }}</span></div>
+        <x-notice variant="danger">{{ session('error') }}</x-notice>
     @endif
 
     <!-- Header: who, where they are, and the actions -->
-    <div class="p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm space-y-4">
+    <x-card class="space-y-4">
         <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div>
                 <div class="flex items-center gap-2 flex-wrap">
-                    <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $candidate->full_name }}</h1>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $candidate->stage->badgeClasses() }}">{{ $candidate->stage->label() }}</span>
-                    @if($candidate->isOnHold())<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300">On hold</span>@endif
+                    <h1 class="text-xl font-bold text-slate-900 dark:text-white">{{ $candidate->full_name }}</h1>
+                    <x-badge :variant="$stageBadge[$candidate->stage->value] ?? 'neutral'">{{ $candidate->stage->label() }}</x-badge>
+                    @if($candidate->isOnHold())<x-badge variant="warning">On hold</x-badge>@endif
                 </div>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ $candidate->stage->hint() }}</p>
-                @if($candidate->owner)<p class="text-[11px] text-slate-400 mt-0.5">Owner: {{ $candidate->owner->name }}</p>@endif
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ $candidate->stage->hint() }}</p>
+                @if($candidate->owner)<p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Owner: {{ $candidate->owner->name }}</p>@endif
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
                 @if($candidate->isActive())
                     @php $next = $candidate->stage->next(); @endphp
                     @if($next && $next->value === 'accepted')
-                        <button type="button" wire:click="openBallot({{ $candidate->id }})" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl shadow-sm cursor-pointer">🗳️ Record ballot</button>
+                        <x-button size="sm" wire:click="openBallot({{ $candidate->id }})">Record ballot</x-button>
                     @elseif($next && $next->value === 'initiated')
-                        <button type="button" wire:click="openInitiationModal({{ $candidate->id }})" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-black rounded-xl shadow-sm cursor-pointer">🏛️ Record initiation</button>
+                        <x-button size="sm" wire:click="openInitiationModal({{ $candidate->id }})">Record initiation</x-button>
                     @elseif($next)
-                        <button type="button" wire:click="advance({{ $candidate->id }})" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl shadow-sm cursor-pointer">Move on to {{ $next->shortLabel() }} &rarr;</button>
+                        <x-button size="sm" wire:click="advance({{ $candidate->id }})">Move on to {{ $next->shortLabel() }} &rarr;</x-button>
                     @endif
                     @if($candidate->isOnHold())
-                        <button type="button" wire:click="resume({{ $candidate->id }})" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer">Take off hold</button>
+                        <x-button variant="secondary" size="sm" wire:click="resume({{ $candidate->id }})">Take off hold</x-button>
                     @else
-                        <button type="button" wire:click="openOutcome({{ $candidate->id }}, 'hold')" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer">Hold</button>
+                        <x-button variant="secondary" size="sm" wire:click="openOutcome({{ $candidate->id }}, 'hold')">Hold</x-button>
                     @endif
-                    <button type="button" wire:click="openOutcome({{ $candidate->id }}, 'close')" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer">Close</button>
-                    <button type="button" wire:click="openOutcome({{ $candidate->id }}, 'reject')" class="px-3.5 py-2 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-xs font-bold rounded-xl cursor-pointer">Reject</button>
+                    <x-button variant="secondary" size="sm" wire:click="openOutcome({{ $candidate->id }}, 'close')">Close</x-button>
+                    <x-button variant="danger" size="sm" wire:click="openOutcome({{ $candidate->id }}, 'reject')">Reject</x-button>
                 @elseif($canReopen && $candidate->stage->isClosed())
-                    <button type="button" wire:click="openOutcome({{ $candidate->id }}, 'reopen')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-sm cursor-pointer">Reopen</button>
+                    <x-button size="sm" wire:click="openOutcome({{ $candidate->id }}, 'reopen')">Reopen</x-button>
                 @endif
             </div>
         </div>
 
         @if($candidate->isActive() && count($checks))
-            <div class="flex flex-wrap gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <ul class="flex flex-wrap gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
                 @foreach($checks as $label => $done)
-                    <span class="px-2.5 py-1 rounded-lg text-[11px] font-semibold {{ $done ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400' }}">{{ $done ? '✓' : '○' }} {{ $label }}</span>
+                    <li>
+                        <x-badge :variant="$done ? 'success' : 'neutral'">
+                            @if($done)<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>@endif
+                            {{ $label }}<span class="sr-only">{{ $done ? ': done' : ': to do' }}</span>
+                        </x-badge>
+                    </li>
                 @endforeach
-            </div>
+            </ul>
         @endif
 
         @if(! $candidate->isActive() && $candidate->outcome_note)
-            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-                <span class="font-bold text-slate-700 dark:text-slate-200">{{ $candidate->stage === \App\Domains\ClubAccounting\Enums\CandidateStage::Rejected ? 'Rejected' : 'Closed' }}:</span>
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 text-sm">
+                <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $candidate->stage === \App\Domains\ClubAccounting\Enums\CandidateStage::Rejected ? 'Rejected' : 'Closed' }}:</span>
                 <span class="text-slate-500 dark:text-slate-400">{{ \App\Domains\ClubAccounting\Services\CandidateTransitionService::REJECT_REASONS[$candidate->outcome_reason] ?? \App\Domains\ClubAccounting\Services\CandidateTransitionService::CLOSE_REASONS[$candidate->outcome_reason] ?? $candidate->outcome_reason }} — {{ $candidate->outcome_note }}</span>
             </div>
         @endif
-    </div>
+    </x-card>
 
     <!-- Tabs -->
-    <div class="flex flex-wrap gap-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-1.5">
+    <div class="flex flex-wrap items-center gap-1" role="group" aria-label="Sections">
         @foreach(['details' => 'Details', 'timeline' => 'Timeline & notes', 'formp' => 'Form P & ballot'] as $key => $label)
-            <button type="button" @click="tab = '{{ $key }}'" :class="tab === '{{ $key }}' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'" class="{{ $tabButton }}">{{ $label }}</button>
+            <button type="button" @click="tab = '{{ $key }}'" :aria-pressed="tab === '{{ $key }}'" :class="tab === '{{ $key }}' ? 'bg-slate-900 text-white dark:bg-slate-700' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'" class="rounded-full px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer">{{ $label }}</button>
         @endforeach
     </div>
 
     <!-- Details -->
-    <div x-show="tab === 'details'" x-cloak class="p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm">
-        <form wire:submit.prevent="saveDetails" class="space-y-4 text-xs">
+    <x-card x-show="tab === 'details'" x-cloak>
+        <form wire:submit.prevent="saveDetails" class="space-y-4">
             <div class="grid grid-cols-2 gap-3">
-                <div><label class="{{ $lbl }}">First name *</label><input type="text" wire:model="first_name" class="{{ $field }}" required />@error('first_name') <span class="text-rose-600 text-[10px]">{{ $message }}</span> @enderror</div>
-                <div><label class="{{ $lbl }}">Last name *</label><input type="text" wire:model="last_name" class="{{ $field }}" required />@error('last_name') <span class="text-rose-600 text-[10px]">{{ $message }}</span> @enderror</div>
+                <x-input label="First name" required wire:model="first_name" />
+                <x-input label="Last name" required wire:model="last_name" />
             </div>
             <div class="grid grid-cols-2 gap-3">
-                <div><label class="{{ $lbl }}">Email</label><input type="email" wire:model="email" class="{{ $field }}" />@error('email') <span class="text-rose-600 text-[10px]">{{ $message }}</span> @enderror</div>
-                <div><label class="{{ $lbl }}">Phone</label><input type="text" wire:model="phone" class="{{ $field }}" /></div>
+                <x-input type="email" label="Email" wire:model="email" />
+                <x-input label="Phone" wire:model="phone" />
             </div>
             <div class="grid grid-cols-2 gap-3">
-                <div><label class="{{ $lbl }}">Date of birth</label><input type="date" wire:model="date_of_birth" class="{{ $field }}" />@error('date_of_birth') <span class="text-rose-600 text-[10px]">{{ $message }}</span> @enderror</div>
-                <div><label class="{{ $lbl }}">Occupation</label><input type="text" wire:model="occupation" class="{{ $field }}" /></div>
+                <x-input type="date" label="Date of birth" wire:model="date_of_birth" />
+                <x-input label="Occupation" wire:model="occupation" />
             </div>
             <div class="grid grid-cols-3 gap-3">
-                <div class="col-span-2"><label class="{{ $lbl }}">Address</label><input type="text" wire:model="address" class="{{ $field }}" /></div>
-                <div><label class="{{ $lbl }}">Postcode</label><input type="text" wire:model="postcode" class="{{ $field }}" /></div>
+                <div class="col-span-2"><x-input label="Address" wire:model="address" /></div>
+                <x-input label="Postcode" wire:model="postcode" />
             </div>
 
             <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div>
-                    <label class="{{ $lbl }}">Candidate type</label>
-                    <select wire:model="candidate_type" class="{{ $field }}"><option value="new_candidate">New candidate (initiation)</option><option value="joining_member">Joining member</option></select>
-                </div>
-                <div><label class="{{ $lbl }}">Owner</label>
-                    <select wire:model="owner_user_id" class="{{ $field }}">
-                        <option value="">Not assigned</option>
-                        @foreach($owners as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach
-                    </select>
-                </div>
+                <x-select label="Candidate type" wire:model="candidate_type">
+                    <option value="new_candidate" @selected($candidate_type === 'new_candidate')>New candidate (initiation)</option>
+                    <option value="joining_member" @selected($candidate_type === 'joining_member')>Joining member</option>
+                </x-select>
+                <x-select label="Owner" wire:model="owner_user_id">
+                    <option value="">Not assigned</option>
+                    @foreach($owners as $person)<option value="{{ $person->id }}" @selected($owner_user_id === $person->id)>{{ $person->name }}</option>@endforeach
+                </x-select>
                 @if($candidate_type === 'joining_member')
-                    <div><label class="{{ $lbl }}">Grand Lodge number</label><input type="text" wire:model="grand_lodge_number" class="{{ $field }}" /></div>
-                    <div><label class="{{ $lbl }}">Mother lodge</label><input type="text" wire:model="mother_lodge_info" class="{{ $field }}" placeholder="Name and number" /></div>
+                    <x-input label="Grand Lodge number" wire:model="grand_lodge_number" />
+                    <x-input label="Mother lodge" wire:model="mother_lodge_info" placeholder="Name and number" />
                 @endif
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="{{ $lbl }}">How did they hear of us?</label>
-                    <select wire:model="source" class="{{ $field }}">
-                        <option value="">Not recorded</option>
-                        <option value="website">Website</option><option value="member">A member</option><option value="event">An event</option><option value="social">Social media</option><option value="other">Other</option>
-                    </select>
-                </div>
-                <div><label class="{{ $lbl }}">Who or which?</label><input type="text" wire:model="source_note" class="{{ $field }}" /></div>
+                <x-select label="How did they hear of us?" wire:model="source">
+                    <option value="">Not recorded</option>
+                    @foreach(['website' => 'Website', 'member' => 'A member', 'event' => 'An event', 'social' => 'Social media', 'other' => 'Other'] as $sourceValue => $sourceLabel)
+                        <option value="{{ $sourceValue }}" @selected($source === $sourceValue)>{{ $sourceLabel }}</option>
+                    @endforeach
+                </x-select>
+                <x-input label="Who or which?" wire:model="source_note" />
             </div>
 
-            <div><label class="{{ $lbl }}">General notes</label><textarea wire:model="notes" rows="3" class="{{ $field }}"></textarea></div>
+            <x-textarea label="General notes" rows="3" wire:model="notes" />
 
-            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md">Save details</button>
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <x-button type="submit">Save details</x-button>
                 @if($candidate->stage->value !== 'initiated')
-                    <button type="button" wire:click="deleteCandidate" wire:confirm="Delete {{ $candidate->full_name }} from the pipeline? This cannot be undone." class="text-rose-600 dark:text-rose-400 font-bold hover:underline">Delete candidate</button>
+                    <x-button variant="danger" size="sm" wire:click="deleteCandidate" wire:confirm="Delete {{ $candidate->full_name }} from the pipeline? This cannot be undone.">Delete candidate</x-button>
                 @endif
             </div>
         </form>
-    </div>
+    </x-card>
 
     <!-- Timeline & notes -->
     <div x-show="tab === 'timeline'" x-cloak class="grid md:grid-cols-3 gap-6">
-        <div class="md:col-span-1 p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm h-fit space-y-3">
-            <h3 class="font-black text-slate-900 dark:text-white text-sm">Add to the record</h3>
-            <form wire:submit.prevent="addNote" class="space-y-3 text-xs">
-                <div class="flex gap-2">
-                    @foreach(['note' => 'Note', 'call' => 'Call', 'meeting' => 'Meeting'] as $val => $noteLabel)
-                        <label class="flex-1 text-center px-2 py-1.5 rounded-lg border cursor-pointer {{ $note_type === $val ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/40' : 'border-slate-200 dark:border-slate-800' }}">
-                            <input type="radio" wire:model.live="note_type" value="{{ $val }}" class="sr-only" />{{ $noteLabel }}
-                        </label>
-                    @endforeach
-                </div>
-                <div><label class="{{ $lbl }}">Date</label><input type="date" wire:model="note_date" class="{{ $field }}" /></div>
-                <div><label class="{{ $lbl }}">Summary *</label><input type="text" wire:model="note_summary" class="{{ $field }}" placeholder="e.g. Phoned, keen to proceed" />@error('note_summary') <span class="text-rose-600 text-[10px]">{{ $message }}</span> @enderror</div>
-                <div><label class="{{ $lbl }}">Details</label><textarea wire:model="note_body" rows="3" class="{{ $field }}"></textarea></div>
-                <button type="submit" class="w-full px-4 py-2 bg-slate-900 dark:bg-slate-700 text-white font-bold rounded-xl">Add</button>
+        <x-card padding="sm" class="md:col-span-1 h-fit space-y-3">
+            <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Add to the record</h2>
+            <form wire:submit.prevent="addNote" class="space-y-3">
+                <fieldset>
+                    <legend class="sr-only">Type of entry</legend>
+                    <div class="flex gap-2">
+                        @foreach(['note' => 'Note', 'call' => 'Call', 'meeting' => 'Meeting'] as $val => $noteLabel)
+                            <label class="flex-1 text-center px-2 py-1.5 rounded-lg border text-xs font-medium cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-500 {{ $note_type === $val ? 'border-blue-400 bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200' : 'border-slate-200 text-slate-700 dark:border-slate-800 dark:text-slate-200' }}">
+                                <input type="radio" wire:model.live="note_type" value="{{ $val }}" class="sr-only" />{{ $noteLabel }}
+                            </label>
+                        @endforeach
+                    </div>
+                </fieldset>
+                <x-input type="date" label="Date" wire:model="note_date" />
+                <x-input label="Summary" required wire:model="note_summary" placeholder="e.g. Phoned, keen to proceed" />
+                <x-textarea label="Details" rows="3" wire:model="note_body" />
+                <x-button type="submit" block>Add</x-button>
             </form>
-        </div>
+        </x-card>
 
-        <div class="md:col-span-2 p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm">
-            <h3 class="font-black text-slate-900 dark:text-white text-sm mb-3">History</h3>
+        <x-card padding="sm" class="md:col-span-2">
+            <h2 class="text-sm font-semibold text-slate-900 dark:text-white mb-3">History</h2>
             <ol class="space-y-3">
                 @forelse($candidate->events as $event)
                     <li class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
                         <div class="flex items-center justify-between gap-2">
-                            <span class="font-bold text-slate-900 dark:text-white">{{ $event->summary }}</span>
+                            <span class="font-semibold text-slate-900 dark:text-white">{{ $event->summary }}</span>
                             @if(in_array($event->type, \App\Domains\ClubAccounting\Models\CandidateEvent::NOTE_TYPES, true))
-                                <button type="button" wire:click="deleteNote({{ $event->id }})" wire:confirm="Remove this note?" class="text-slate-400 hover:text-rose-600 cursor-pointer" aria-label="Remove note">✕</button>
+                                <button type="button" wire:click="deleteNote({{ $event->id }})" wire:confirm="Remove this note?" class="rounded p-0.5 text-slate-400 hover:text-rose-600 cursor-pointer" aria-label="Remove note">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>
+                                </button>
                             @endif
                         </div>
                         @if($event->body)<p class="mt-1 text-slate-600 dark:text-slate-300 whitespace-pre-line">{{ $event->body }}</p>@endif
-                        <p class="mt-1 text-[10px] text-slate-400">{{ $event->occurred_at->format('j M Y, H:i') }} @if($event->author) · {{ $event->author->name }} @endif</p>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $event->occurred_at->format('j M Y, H:i') }} @if($event->author) · {{ $event->author->name }} @endif</p>
                     </li>
                 @empty
-                    <li class="text-slate-400 italic text-xs">Nothing recorded yet.</li>
+                    <li class="text-slate-500 dark:text-slate-400 text-xs">Nothing recorded yet.</li>
                 @endforelse
             </ol>
-        </div>
+        </x-card>
     </div>
 
     <!-- Form P & ballot -->
-    <div x-show="tab === 'formp'" x-cloak class="p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm space-y-4 text-xs">
-        <div class="flex items-center justify-between">
-            <h3 class="font-black text-slate-900 dark:text-white text-sm">Proposer, seconder, Form P and the ballot</h3>
-            <button type="button" wire:click="openFormPModal({{ $candidate->id }})" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl cursor-pointer">Edit</button>
+    <x-card x-show="tab === 'formp'" x-cloak class="space-y-4 text-xs">
+        <div class="flex items-center justify-between gap-2">
+            <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Proposer, seconder, Form P and the ballot</h2>
+            <x-button variant="secondary" size="sm" wire:click="openFormPModal({{ $candidate->id }})">Edit</x-button>
         </div>
         <div class="grid sm:grid-cols-2 gap-3">
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-400">Proposer</span><div class="font-bold text-slate-900 dark:text-white">{{ $candidate->proposer?->formatted_rank_name ?: 'Not chosen' }}</div></div>
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-400">Seconder</span><div class="font-bold text-slate-900 dark:text-white">{{ $candidate->seconder?->formatted_rank_name ?: 'Not chosen' }}</div></div>
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-400">Form P signed</span><div class="font-bold text-slate-900 dark:text-white">{{ $candidate->form_p_signed_at?->format('j M Y') ?: '—' }}</div></div>
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-400">Proposed in open lodge</span><div class="font-bold text-slate-900 dark:text-white">{{ $candidate->proposed_at?->format('j M Y') ?: '—' }}</div></div>
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-400">Committee recommendation</span><div class="font-bold text-slate-900 dark:text-white">{{ $candidate->committee_recommended_at ? 'Recommended '.$candidate->committee_recommended_at->format('j M Y') : 'Not yet' }}</div></div>
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-400">Ballot</span><div class="font-bold text-slate-900 dark:text-white">{{ $candidate->ballot_at ? $candidate->ballot_at->format('j M Y').' — '.($candidate->ballot_result === 'elected' ? 'Elected' : 'Not elected') : 'Not held' }}</div></div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-500 dark:text-slate-400">Proposer</span><div class="font-semibold text-slate-900 dark:text-white">{{ $candidate->proposer?->formatted_rank_name ?: 'Not chosen' }}</div></div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-500 dark:text-slate-400">Seconder</span><div class="font-semibold text-slate-900 dark:text-white">{{ $candidate->seconder?->formatted_rank_name ?: 'Not chosen' }}</div></div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-500 dark:text-slate-400">Form P signed</span><div class="font-semibold text-slate-900 dark:text-white">{{ $candidate->form_p_signed_at?->format('j M Y') ?: '—' }}</div></div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-500 dark:text-slate-400">Proposed in open lodge</span><div class="font-semibold text-slate-900 dark:text-white">{{ $candidate->proposed_at?->format('j M Y') ?: '—' }}</div></div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-500 dark:text-slate-400">Committee recommendation</span><div class="font-semibold text-slate-900 dark:text-white">{{ $candidate->committee_recommended_at ? 'Recommended '.$candidate->committee_recommended_at->format('j M Y') : 'Not yet' }}</div></div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40"><span class="text-slate-500 dark:text-slate-400">Ballot</span><div class="font-semibold text-slate-900 dark:text-white">{{ $candidate->ballot_at ? $candidate->ballot_at->format('j M Y').' — '.($candidate->ballot_result === 'elected' ? 'Elected' : 'Not elected') : 'Not held' }}</div></div>
             @if($candidate->initiate_by)
-                <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 sm:col-span-2"><span class="text-emerald-700 dark:text-emerald-300">Must be initiated by</span><div class="font-bold text-emerald-900 dark:text-emerald-200">{{ $candidate->initiate_by->format('j M Y') }}</div></div>
+                <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 sm:col-span-2"><span class="text-emerald-700 dark:text-emerald-300">Must be initiated by</span><div class="font-semibold text-emerald-900 dark:text-emerald-200">{{ $candidate->initiate_by->format('j M Y') }}</div></div>
             @endif
         </div>
-    </div>
+    </x-card>
 
     @include('livewire.candidates.partials.dialogs')
 </div>

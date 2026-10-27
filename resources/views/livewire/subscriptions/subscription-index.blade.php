@@ -1,199 +1,139 @@
+@php
+    // The status enum's own classes include an animated pulse; the kit's badge keeps them in line with the rest of the app.
+    $statusBadge = ['unpaid' => 'warning', 'partially_paid' => 'info', 'paid' => 'success', 'waived' => 'neutral', 'arrears_warning' => 'danger'];
+    $billingYears = [2024, 2025, 2026, 2027];
+@endphp
+
 <div class="space-y-6">
     @include('livewire.members._tabs', ['active' => 'subscriptions'])
 
-    <!-- Header Banner -->
-    <div class="p-6 bg-slate-900 dark:bg-slate-700 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-3">
-                <span class="p-2.5 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/30">💳</span>
-                <div>
-                    <h1 class="text-2xl font-black tracking-tight">Subscriptions</h1>
-                    <p class="text-xs text-slate-400 mt-1 font-medium">UGLE Rule 181 Arrears Audit &amp; Accounts Receivable Ledger Integration</p>
-                </div>
+    <!-- Header -->
+    <x-card>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white">Subscriptions</h1>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">UGLE Rule 181 arrears audit and accounts receivable ledger integration</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <x-button wire:click="openBillingModal">Run annual billing</x-button>
+                <x-button variant="secondary" wire:click="runRule181ArrearsAudit">Rule 181 arrears audit</x-button>
+                <x-button variant="secondary" wire:click="openTierModal()">Manage fee tiers</x-button>
             </div>
         </div>
+    </x-card>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <button
-                type="button"
-                wire:click="openBillingModal"
-                class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
-            >
-                <span>⚡</span>
-                <span>Run Annual Billing</span>
-            </button>
-
-            <button
-                type="button"
-                wire:click="runRule181ArrearsAudit"
-                class="px-3.5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
-            >
-                <span>⚠️</span>
-                <span>Rule 181 Arrears Audit</span>
-            </button>
-
-            <button
-                type="button"
-                wire:click="openTierModal()"
-                class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 transition-all flex items-center gap-2 cursor-pointer"
-            >
-                <span>⚙️</span>
-                <span>Manage Fee Tiers</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Flash Notifications -->
     @if (session()->has('success'))
-        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 text-xs font-semibold rounded-2xl shadow-sm flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span>✅</span>
-                <span>{{ session('success') }}</span>
-            </div>
-        </div>
+        <x-notice variant="success">{{ session('success') }}</x-notice>
     @endif
     @if (session()->has('error'))
-        <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 text-xs font-semibold rounded-2xl shadow-sm flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span>⚠️</span>
-                <span>{{ session('error') }}</span>
-            </div>
-        </div>
+        <x-notice variant="danger">{{ session('error') }}</x-notice>
     @endif
 
-    <!-- Metrics Cards -->
+    <!-- Metrics -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Dues Billed ({{ $selectedYear }})</span>
-            <div class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ $cs }}{{ number_format($totalBilled, 2) }}</div>
-            <span class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">Total annual subscription invoicing</span>
-        </div>
-        <div class="p-5 bg-emerald-50/60 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 rounded-2xl shadow-sm">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-200">Dues Collected</span>
-            <div class="text-2xl font-black text-emerald-950 dark:text-emerald-100 mt-1">{{ $cs }}{{ number_format($totalCollected, 2) }}</div>
-            <span class="text-[10px] text-emerald-700 dark:text-emerald-300 mt-1 block">Payments received &amp; reconciled</span>
-        </div>
-        <div class="p-5 bg-amber-50/60 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/80 rounded-2xl shadow-sm">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-200">Outstanding Balance</span>
-            <div class="text-2xl font-black text-amber-950 dark:text-amber-100 mt-1">{{ $cs }}{{ number_format($totalOutstanding, 2) }}</div>
-            <span class="text-[10px] text-amber-700 dark:text-amber-300 mt-1 block">Pending member payments</span>
-        </div>
-        <div class="p-5 bg-rose-50/60 dark:bg-rose-950/60 border border-rose-200/80 dark:border-rose-800/80 rounded-2xl shadow-sm">
-            <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-rose-800 dark:text-rose-200">Rule 181 Arrears</span>
-                <button type="button" wire:click="$set('showArrearsModal', true)" class="text-[10px] text-rose-700 dark:text-rose-300 underline font-bold">Review</button>
+        <x-card padding="sm">
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Total dues billed ({{ $selectedYear }})</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-white">{{ $cs }}{{ number_format($totalBilled, 2) }}</p>
+            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Total annual subscription invoicing</p>
+        </x-card>
+        <x-card padding="sm">
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Dues collected</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-white">{{ $cs }}{{ number_format($totalCollected, 2) }}</p>
+            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Payments received and reconciled</p>
+        </x-card>
+        <x-card padding="sm">
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Outstanding balance</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-amber-700 dark:text-amber-300">{{ $cs }}{{ number_format($totalOutstanding, 2) }}</p>
+            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Pending member payments</p>
+        </x-card>
+        <x-card padding="sm">
+            <div class="flex items-center justify-between gap-2">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Rule 181 arrears</p>
+                <x-button variant="ghost" size="sm" wire:click="$set('showArrearsModal', true)">Review</x-button>
             </div>
-            <div class="text-2xl font-black text-rose-950 dark:text-rose-100 mt-1">{{ $arrearsCount }}</div>
-            <span class="text-[10px] text-rose-700 dark:text-rose-300 mt-1 block">Members past statutory grace period</span>
-        </div>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-rose-700 dark:text-rose-300">{{ $arrearsCount }}</p>
+            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Members past statutory grace period</p>
+        </x-card>
     </div>
 
-    <!-- Membership Fee Tiers & Pricing Grid -->
-    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 p-6 shadow-sm space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <div>
-                <h3 class="font-black text-slate-900 dark:text-white text-sm flex items-center gap-2">
-                    <span>💳</span>
-                    <span>Membership Fee Tiers &amp; Pricing</span>
-                </h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Active fee structures for annual subscription billing and member dues tiers.</p>
+    <!-- Membership fee tiers -->
+    <x-card>
+        <x-slot:header>
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Membership fee tiers and pricing</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Active fee structures for annual subscription billing and member dues tiers.</p>
+                </div>
+                <x-button size="sm" wire:click="openTierModal()">Add fee tier</x-button>
             </div>
-            <button
-                type="button"
-                wire:click="openTierModal()"
-                class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer"
-            >
-                <span>+</span>
-                <span>Add Fee Tier</span>
-            </button>
-        </div>
+        </x-slot:header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             @forelse($tiers as $t)
-                <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl flex flex-col justify-between space-y-3">
+                <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col justify-between space-y-3">
                     <div class="space-y-1">
-                        <div class="flex items-center justify-between">
-                            <span class="font-extrabold text-slate-900 dark:text-white text-sm">{{ $t->name }}</span>
-                            <span class="font-black text-amber-950 dark:text-amber-100 text-base">{{ $cs }}{{ number_format($t->annual_amount, 2) }}</span>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-semibold text-slate-900 dark:text-white text-sm">{{ $t->name }}</span>
+                            <span class="font-semibold text-slate-900 dark:text-white text-base">{{ $cs }}{{ number_format($t->annual_amount, 2) }}</span>
                         </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t->description ?: 'Standard annual membership subscription rate.' }}</p>
                     </div>
 
-                    <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-800/60 text-xs">
-                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full {{ $t->is_active ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300' }}">
-                            {{ $t->is_active ? 'Active Tier' : 'Inactive' }}
-                        </span>
-                        <button type="button" wire:click="openTierModal({{ $t->id }})" class="text-xs text-amber-700 dark:text-amber-300 hover:underline font-bold">
-                            Edit Tier ✏️
-                        </button>
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                        <x-badge :variant="$t->is_active ? 'success' : 'neutral'">{{ $t->is_active ? 'Active tier' : 'Inactive' }}</x-badge>
+                        <x-button variant="ghost" size="sm" wire:click="openTierModal({{ $t->id }})">Edit tier</x-button>
                     </div>
                 </div>
             @empty
-                <div class="md:col-span-3 p-6 text-center text-slate-400 text-xs italic bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+                <div class="md:col-span-3 p-6 text-center text-slate-500 dark:text-slate-400 text-xs bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
                     No custom fee tiers configured. Default {{ $cs }}160.00 rate will apply to annual billing runs.
                 </div>
             @endforelse
         </div>
-    </div>
+    </x-card>
 
-    <!-- Search & Filter Controls -->
-    <div class="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        <div class="relative w-full md:w-80">
-            <input
+    <!-- Search and filters -->
+    <x-card padding="sm">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end">
+            <x-input
                 type="search"
+                label="Search"
                 name="sub_search_query"
                 autocomplete="off"
                 autocorrect="off"
                 autocapitalize="off"
                 spellcheck="false"
                 wire:model.live.debounce.300ms="search"
-                placeholder="Search member name, email..."
-                class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                placeholder="Member name, email..."
             />
-            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <x-select label="Billing year" wire:model.live="selectedYear">
+                @foreach($billingYears as $yr)
+                    <option value="{{ $yr }}" @selected($selectedYear === $yr)>{{ $yr }} / {{ $yr + 1 }}</option>
+                @endforeach
+            </x-select>
+            <x-select label="Status" wire:model.live="statusFilter">
+                <option value="">All statuses</option>
+                @foreach($statuses as $st)
+                    <option value="{{ $st->value }}" @selected($statusFilter === $st->value)>{{ $st->label() }}</option>
+                @endforeach
+            </x-select>
         </div>
+    </x-card>
 
-        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <div class="flex items-center gap-1 text-xs">
-                <span class="font-bold text-slate-500 dark:text-slate-400">Billing Year:</span>
-                <select
-                    wire:model.live="selectedYear"
-                    class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                >
-                    @foreach([2024, 2025, 2026, 2027] as $yr)
-                        <option value="{{ $yr }}">{{ $yr }} / {{ $yr + 1 }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="flex items-center gap-1 text-xs">
-                <span class="font-bold text-slate-500 dark:text-slate-400">Status:</span>
-                <select
-                    wire:model.live="statusFilter"
-                    class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                >
-                    <option value="">All Statuses</option>
-                    @foreach($statuses as $st)
-                        <option value="{{ $st->value }}">{{ $st->label() }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <!-- Subscriptions Roster Table -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden">
+    <!-- Subscriptions table -->
+    <x-card padding="none" class="overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        <th class="py-3.5 px-4">Member &amp; Rank</th>
-                        <th class="py-3.5 px-4">Subscription Tier</th>
-                        <th class="py-3.5 px-4">Invoice Ref</th>
-                        <th class="py-3.5 px-4 text-right">Amount Due</th>
-                        <th class="py-3.5 px-4 text-right">Amount Paid</th>
+                    <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400">
+                        <th class="py-3.5 px-4">Member and rank</th>
+                        <th class="py-3.5 px-4">Subscription tier</th>
+                        <th class="py-3.5 px-4">Invoice ref</th>
+                        <th class="py-3.5 px-4 text-right">Amount due</th>
+                        <th class="py-3.5 px-4 text-right">Amount paid</th>
                         <th class="py-3.5 px-4 text-right">Balance</th>
-                        <th class="py-3.5 px-4">Due Date</th>
+                        <th class="py-3.5 px-4">Due date</th>
                         <th class="py-3.5 px-4">Status</th>
                         <th class="py-3.5 px-4 text-right">Actions</th>
                     </tr>
@@ -201,27 +141,23 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
                     @forelse ($subscriptions as $sub)
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
-                            <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">
-                                <a href="{{ route('admin.club_acc.members.show', ['clubSlug' => $club->slug, 'memberId' => $sub->member->id]) }}" class="hover:underline hover:text-amber-600 dark:hover:text-amber-400">
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">
+                                <a href="{{ route('admin.club_acc.members.show', ['clubSlug' => $club->slug, 'memberId' => $sub->member->id]) }}" class="hover:underline hover:text-blue-600 dark:hover:text-blue-400">
                                     {{ $sub->member->formatted_rank_name }}
                                 </a>
                                 @if($sub->member->current_office && $sub->member->current_office->value !== 'member')
-                                    <span class="block text-[10px] text-amber-700 dark:text-amber-300 font-semibold">{{ $sub->member->current_office->label() }}</span>
+                                    <span class="block text-xs font-medium text-slate-500 dark:text-slate-400">{{ $sub->member->current_office->label() }}</span>
                                 @endif
                             </td>
 
-                            <td class="py-3 px-4">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="font-bold text-slate-800 dark:text-slate-100">
-                                        {{ $sub->tier ? $sub->tier->name : ($sub->member->annual_dues_override ? 'Custom Dues' : 'Standard Dues') }}
-                                    </span>
-                                </div>
+                            <td class="py-3 px-4 font-medium text-slate-800 dark:text-slate-100">
+                                {{ $sub->tier ? $sub->tier->name : ($sub->member->annual_dues_override ? 'Custom dues' : 'Standard dues') }}
                             </td>
 
-                            <td class="py-3 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-300">
+                            <td class="py-3 px-4 font-mono text-xs text-slate-600 dark:text-slate-300">
                                 {{ $sub->invoice_reference ?: '—' }}
                                 @if($sub->member->customerAccount)
-                                    <span class="inline-block px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded text-[9px] font-bold" title="Linked to Accounting Contact">Linked ✓</span>
+                                    <x-badge variant="success" class="font-sans" title="Linked to accounting contact">Linked</x-badge>
                                 @endif
                             </td>
 
@@ -229,52 +165,41 @@
                                 {{ $cs }}{{ number_format($sub->amount_due, 2) }}
                             </td>
 
-                            <td class="py-3 px-4 text-right font-bold text-emerald-700 dark:text-emerald-300">
+                            <td class="py-3 px-4 text-right font-semibold text-emerald-700 dark:text-emerald-300">
                                 {{ $cs }}{{ number_format($sub->amount_paid, 2) }}
                             </td>
 
-                            <td class="py-3 px-4 text-right font-black {{ $sub->balance_due > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-slate-400' }}">
+                            <td class="py-3 px-4 text-right font-semibold {{ $sub->balance_due > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500 dark:text-slate-400' }}">
                                 {{ $cs }}{{ number_format($sub->balance_due, 2) }}
                             </td>
 
-                            <td class="py-3 px-4 text-slate-600 dark:text-slate-300 font-medium">
+                            <td class="py-3 px-4 text-slate-600 dark:text-slate-300">
                                 {{ $sub->due_date ? $sub->due_date->format('d M Y') : '—' }}
                             </td>
 
                             <td class="py-3 px-4">
-                                <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full border {{ $sub->status->badgeClasses() }}">
-                                    {{ $sub->status->label() }}
-                                </span>
+                                <x-badge :variant="$statusBadge[$sub->status->value] ?? 'neutral'">{{ $sub->status->label() }}</x-badge>
                             </td>
 
-                            <td class="py-3 px-4 text-right space-x-1">
+                            <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
                                 @if($sub->status->isOutstanding())
-                                    <button
-                                        type="button"
-                                        wire:click="openPaymentModal({{ $sub->id }})"
-                                        class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition-all"
-                                    >
-                                        Record Payment
-                                    </button>
-
-                                    <button
-                                        type="button"
+                                    <x-button size="sm" wire:click="openPaymentModal({{ $sub->id }})">Record payment</x-button>
+                                    <x-button
+                                        variant="secondary"
+                                        size="sm"
                                         wire:click="waiveDues({{ $sub->id }})"
                                         wire:confirm="Waive subscription dues for {{ $sub->member->full_name }}?"
-                                        class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold text-[10px] rounded-lg transition"
-                                        title="Waive Dues"
-                                    >
-                                        Waive
-                                    </button>
+                                        title="Waive dues"
+                                    >Waive</x-button>
                                 @else
-                                    <span class="text-[10px] text-slate-400 italic">Settled</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">Settled</span>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="py-8 text-center text-slate-400 text-xs">
-                                No subscription records found for {{ $selectedYear }}. Click <strong class="text-slate-700 dark:text-slate-200">"Run Annual Billing"</strong> to generate annual invoices.
+                            <td colspan="9" class="py-8 text-center text-slate-500 dark:text-slate-400 text-xs">
+                                No subscription records found for {{ $selectedYear }}. Choose <strong class="font-semibold text-slate-700 dark:text-slate-200">Run annual billing</strong> to generate annual invoices.
                             </td>
                         </tr>
                     @endforelse
@@ -283,202 +208,123 @@
         </div>
 
         @if($subscriptions->hasPages())
-            <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
                 {{ $subscriptions->links() }}
             </div>
         @endif
-    </div>
+    </x-card>
 
-    <!-- Annual Billing Run Modal -->
-    @if($showBillingModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-            <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5 border border-slate-100 dark:border-slate-800">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl">⚡</span>
-                        <h3 class="font-black text-slate-900 dark:text-white text-base">Run Annual Subscription Billing</h3>
-                    </div>
-                    <button type="button" wire:click="$set('showBillingModal', false)" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg">✕</button>
-                </div>
+    <!-- Annual billing run -->
+    @if ($showBillingModal)
+    <x-modal :show="$showBillingModal" title="Run annual subscription billing" close="$set('showBillingModal', false)">
+        <div class="space-y-4">
+            <x-notice variant="warning">This batch action will generate annual dues invoices for all active lodge members who do not yet have an invoice for the selected billing year.</x-notice>
 
-                <div class="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl text-xs text-amber-900 dark:text-amber-200 space-y-1">
-                    <p class="font-bold">This batch action will generate annual dues invoices for all active lodge members who do not yet have an invoice for the selected billing year.</p>
-                </div>
+            <form id="billing-run-form" wire:submit.prevent="runAnnualBilling" class="space-y-4">
+                <x-select label="Billing year" required wire:model="billing_year">
+                    @foreach($billingYears as $yr)
+                        <option value="{{ $yr }}" @selected($billing_year === $yr)>{{ $yr }} / {{ $yr + 1 }}</option>
+                    @endforeach
+                </x-select>
 
-                <form wire:submit.prevent="runAnnualBilling" class="space-y-4 text-xs">
-                    <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Billing Year *</label>
-                        <select wire:model="billing_year" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                            @foreach([2024, 2025, 2026, 2027] as $yr)
-                                <option value="{{ $yr }}">{{ $yr }} / {{ $yr + 1 }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Due Date *</label>
-                        <input type="date" wire:model="billing_due_date" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" required />
-                    </div>
-
-                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
-                        <button type="button" wire:click="$set('showBillingModal', false)" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
-                        <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md transition">Generate Annual Invoices</button>
-                    </div>
-                </form>
-            </div>
+                <x-input type="date" label="Due date" required wire:model="billing_due_date" />
+            </form>
         </div>
+
+        <x-slot:footer>
+            <x-button variant="secondary" wire:click="$set('showBillingModal', false)">Cancel</x-button>
+            <x-button type="submit" form="billing-run-form">Generate annual invoices</x-button>
+        </x-slot:footer>
+    </x-modal>
     @endif
 
-    <!-- Fee Tier Manager Modal -->
-    @if($showTierModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-            <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-5 border border-slate-100 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl">⚙️</span>
-                        <h3 class="font-black text-slate-900 dark:text-white text-base">Subscription Fee Tiers</h3>
+    <!-- Fee tier manager -->
+    @if ($showTierModal)
+    <x-modal :show="$showTierModal" title="Subscription fee tiers" size="lg" close="$set('showTierModal', false)">
+        <div class="space-y-2">
+            <h3 class="text-xs font-semibold text-slate-800 dark:text-slate-100">Active lodge fee structures</h3>
+            @forelse($tiers as $t)
+                <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-3 text-xs">
+                    <div>
+                        <span class="font-semibold text-slate-900 dark:text-white block">{{ $t->name }}</span>
+                        <span class="text-slate-500 dark:text-slate-400 text-xs">{{ $t->description ?: 'Standard fee structure' }}</span>
                     </div>
-                    <button type="button" wire:click="$set('showTierModal', false)" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg">✕</button>
+                    <div class="flex items-center gap-3">
+                        <span class="font-semibold text-slate-900 dark:text-white text-sm">{{ $cs }}{{ number_format($t->annual_amount, 2) }}</span>
+                        <x-button variant="ghost" size="sm" wire:click="openTierModal({{ $t->id }})">Edit</x-button>
+                    </div>
                 </div>
-
-                <!-- Existing Tiers List -->
-                <div class="space-y-2">
-                    <span class="font-bold text-slate-800 dark:text-slate-100 text-xs block">Active Lodge Fee Structures:</span>
-                    @forelse($tiers as $t)
-                        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between text-xs">
-                            <div>
-                                <span class="font-black text-slate-900 dark:text-white block">{{ $t->name }}</span>
-                                <span class="text-slate-500 dark:text-slate-400 font-medium text-[11px]">{{ $t->description ?: 'Standard fee structure' }}</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="font-black text-amber-900 dark:text-amber-200 text-sm">{{ $cs }}{{ number_format($t->annual_amount, 2) }}</span>
-                                <button type="button" wire:click="openTierModal({{ $t->id }})" class="text-blue-600 dark:text-blue-400 hover:underline font-bold text-[11px]">Edit</button>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 text-slate-400 text-center text-xs rounded-xl">No custom tiers configured. Default {{ $cs }}160.00 will apply.</div>
-                    @endforelse
-                </div>
-
-                <form wire:submit.prevent="saveTier" class="space-y-4 text-xs pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <span class="font-black text-slate-900 dark:text-white block text-sm">{{ $tierId ? 'Edit Fee Tier' : 'Add New Fee Tier' }}</span>
-
-                    <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Tier Name *</label>
-                        <input type="text" wire:model="tier_name" placeholder="e.g. Full Member, Country Member" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" required />
-                    </div>
-
-                    <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Annual Amount ({{ $cs }}) *</label>
-                        <input type="number" step="0.01" wire:model="tier_amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" required />
-                    </div>
-
-                    <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Description</label>
-                        <input type="text" wire:model="tier_description" placeholder="Optional details..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none" />
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" wire:model="tier_active" id="tier_active_cb" class="rounded text-amber-600 dark:text-amber-400 focus:ring-amber-500" />
-                        <label for="tier_active_cb" class="font-bold text-slate-700 dark:text-slate-200 cursor-pointer">Active Tier</label>
-                    </div>
-
-                    <div class="pt-3 flex items-center justify-end gap-3">
-                        <button type="button" wire:click="$set('showTierModal', false)" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Close</button>
-                        <button type="submit" class="px-5 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-black rounded-xl shadow-md transition">Save Tier</button>
-                    </div>
-                </form>
-            </div>
+            @empty
+                <div class="p-3 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-center text-xs rounded-xl">No custom tiers configured. Default {{ $cs }}160.00 will apply.</div>
+            @endforelse
         </div>
+
+        <form id="fee-tier-form" wire:submit.prevent="saveTier" class="space-y-4 mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-white">{{ $tierId ? 'Edit fee tier' : 'Add a new fee tier' }}</h3>
+
+            <x-input label="Tier name" required wire:model="tier_name" placeholder="e.g. Full member, country member" />
+            <x-input type="number" step="0.01" label="Annual amount ({{ $cs }})" required wire:model="tier_amount" />
+            <x-input label="Description" wire:model="tier_description" placeholder="Optional details..." />
+
+            <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer">
+                <input type="checkbox" wire:model="tier_active" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950" />
+                Active tier
+            </label>
+        </form>
+
+        <x-slot:footer>
+            <x-button variant="secondary" wire:click="$set('showTierModal', false)">Close</x-button>
+            <x-button type="submit" form="fee-tier-form">Save tier</x-button>
+        </x-slot:footer>
+    </x-modal>
     @endif
 
-    <!-- Payment Recording Modal -->
-    @if($showPaymentModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-            <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5 border border-slate-100 dark:border-slate-800">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl">💳</span>
-                        <h3 class="font-black text-slate-900 dark:text-white text-base">Record Dues Payment</h3>
-                    </div>
-                    <button type="button" wire:click="$set('showPaymentModal', false)" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg">✕</button>
-                </div>
+    <!-- Payment recording -->
+    @if ($showPaymentModal)
+    <x-modal :show="$showPaymentModal" title="Record dues payment" close="$set('showPaymentModal', false)">
+        <form id="dues-payment-form" wire:submit.prevent="recordPayment" class="space-y-4">
+            <x-input type="number" step="0.01" label="Payment amount ({{ $cs }})" required wire:model="payment_amount" />
+            <x-input label="Payment reference (BACS, cheque or cash)" wire:model="payment_reference" placeholder="e.g. BACS-20260916" />
+            <x-textarea label="Notes" rows="2" wire:model="payment_notes" placeholder="Optional notes..." />
+        </form>
 
-                <form wire:submit.prevent="recordPayment" class="space-y-4 text-xs">
-                    <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Payment Amount ({{ $cs }}) *</label>
-                        <input type="number" step="0.01" wire:model="payment_amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" required />
-                    </div>
-
-                    <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Payment Reference (BACS / Cheque / Cash)</label>
-                        <input type="text" wire:model="payment_reference" placeholder="e.g. BACS-20260916" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                    </div>
-
-                    <div>
-                        <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Notes</label>
-                        <textarea wire:model="payment_notes" rows="2" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Optional notes..."></textarea>
-                    </div>
-
-                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
-                        <button type="button" wire:click="$set('showPaymentModal', false)" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
-                        <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md transition">Record Payment</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <x-slot:footer>
+            <x-button variant="secondary" wire:click="$set('showPaymentModal', false)">Cancel</x-button>
+            <x-button type="submit" form="dues-payment-form">Record payment</x-button>
+        </x-slot:footer>
+    </x-modal>
     @endif
 
-    <!-- Confidential Rule 181 Arrears Review Drawer Modal -->
-    @if($showArrearsModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-            <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-2xl w-full p-6 space-y-5 border border-slate-100 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl">⚠️</span>
+    <!-- Confidential Rule 181 arrears review -->
+    @if ($showArrearsModal)
+    <x-modal :show="$showArrearsModal" title="UGLE Rule 181 confidential arrears review" subtitle="Confidential list for the Almoner and Secretary before statutory exclusion proceedings." size="lg" close="$set('showArrearsModal', false)">
+        <div class="space-y-4">
+            <x-notice variant="danger" title="UGLE Rule 181 procedure">
+                Members overdue past the 90-day grace period must be reviewed by the Almoner to confirm if brotherly relief or hardship support is required before formal exclusion warnings are dispatched.
+            </x-notice>
+
+            <div class="space-y-3 text-xs">
+                @forelse($arrearsSubscriptions as $arrSub)
+                    <div class="p-4 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-3">
                         <div>
-                            <h3 class="font-black text-slate-900 dark:text-white text-base">UGLE Rule 181 Confidential Arrears Review</h3>
-                            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Confidential list for Almoner &amp; Secretary before statutory exclusion proceedings.</p>
+                            <span class="font-semibold text-slate-900 dark:text-white text-sm block">{{ $arrSub->member->formatted_rank_name }}</span>
+                            <span class="text-slate-500 dark:text-slate-400 text-xs block">Due: {{ $arrSub->due_date ? $arrSub->due_date->format('d M Y') : '—' }} (overdue past 90 days)</span>
+                            <span class="text-slate-600 dark:text-slate-300 font-medium text-xs">Invoice ref: {{ $arrSub->invoice_reference }}</span>
+                        </div>
+                        <div class="text-right space-y-1">
+                            <span class="text-base font-semibold text-rose-700 dark:text-rose-300 block">{{ $cs }}{{ number_format($arrSub->balance_due, 2) }}</span>
+                            <x-button size="sm" wire:click="openPaymentModal({{ $arrSub->id }})">Settle dues</x-button>
                         </div>
                     </div>
-                    <button type="button" wire:click="$set('showArrearsModal', false)" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg">✕</button>
-                </div>
-
-                <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-2xl text-xs text-rose-900 dark:text-rose-200 space-y-1">
-                    <p class="font-bold">UGLE Rule 181 Procedure:</p>
-                    <p>Members overdue past the 90-day grace period must be reviewed by the Almoner to confirm if brotherly relief or hardship support is required before formal exclusion warnings are dispatched.</p>
-                </div>
-
-                <div class="space-y-3 text-xs">
-                    @forelse($arrearsSubscriptions as $arrSub)
-                        <div class="p-4 bg-rose-50/50 dark:bg-rose-950/50 border border-rose-200/80 dark:border-rose-800/80 rounded-2xl flex items-center justify-between">
-                            <div>
-                                <span class="font-extrabold text-slate-900 dark:text-white text-sm block">{{ $arrSub->member->formatted_rank_name }}</span>
-                                <span class="text-slate-500 dark:text-slate-400 text-[11px] block">Due: {{ $arrSub->due_date ? $arrSub->due_date->format('d M Y') : '—' }} (Overdue past 90 days)</span>
-                                <span class="text-rose-800 dark:text-rose-200 font-semibold text-[10px]">Invoice Ref: {{ $arrSub->invoice_reference }}</span>
-                            </div>
-                            <div class="text-right space-y-1">
-                                <span class="text-base font-black text-rose-950 dark:text-rose-100 block">{{ $cs }}{{ number_format($arrSub->balance_due, 2) }}</span>
-                                <button
-                                    type="button"
-                                    wire:click="openPaymentModal({{ $arrSub->id }})"
-                                    class="px-2.5 py-1 bg-rose-700 hover:bg-rose-800 text-white font-bold text-[10px] rounded-lg shadow-sm"
-                                >
-                                    Settle Dues
-                                </button>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="p-6 text-center text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl font-bold">
-                            No members currently in Rule 181 statutory arrears!
-                        </div>
-                    @endforelse
-                </div>
-
-                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
-                    <button type="button" wire:click="$set('showArrearsModal', false)" class="px-5 py-2 bg-slate-900 dark:bg-slate-700 text-white font-black rounded-xl hover:bg-slate-800 dark:hover:bg-slate-600 transition">Close Review</button>
-                </div>
+                @empty
+                    <x-notice variant="success">No members are currently in Rule 181 statutory arrears.</x-notice>
+                @endforelse
             </div>
         </div>
+
+        <x-slot:footer>
+            <x-button variant="secondary" wire:click="$set('showArrearsModal', false)">Close review</x-button>
+        </x-slot:footer>
+    </x-modal>
     @endif
 </div>

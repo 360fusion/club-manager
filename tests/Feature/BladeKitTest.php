@@ -44,7 +44,7 @@ class BladeKitTest extends TestCase
         $this->assertStringContainsString('role="dialog"', $html);
         $this->assertStringContainsString('aria-labelledby="modal-add-a-visitor"', $html);
         $this->assertStringContainsString('x-trap.noscroll="true"', $html);
-        $this->assertStringContainsString('$wire.closeVisitor()', $html);
+        $this->assertStringContainsString('wire:keydown.escape.window="closeVisitor"', $html);
         $this->assertStringContainsString('wire:click="closeVisitor"', $html);
     }
 

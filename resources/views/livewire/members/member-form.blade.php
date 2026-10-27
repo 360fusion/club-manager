@@ -1,201 +1,126 @@
-<div class="space-y-6 max-w-5xl">
+<div class="max-w-5xl space-y-6">
     <div class="space-y-1">
-        <a href="{{ $editing ? route('admin.club_acc.members.show', ['clubSlug' => $club->slug, 'memberId' => $memberId]) : route('admin.club_acc.members.index', ['clubSlug' => $club->slug]) }}" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">&larr; {{ $editing ? 'Back to the member' : 'Back to the member directory' }}</a>
-        <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{{ $editing ? 'Edit Member Record' : 'Add New Lodge Member' }}</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $editing ? 'Update masonic ranks, office assignments, and contact details.' : 'Register a new brother onto the Lodge Rule 153 roster.' }}</p>
+        <a href="{{ $editing ? route('admin.club_acc.members.show', ['clubSlug' => $club->slug, 'memberId' => $memberId]) : route('admin.club_acc.members.index', ['clubSlug' => $club->slug]) }}" class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">&larr; {{ $editing ? 'Back to the member' : 'Back to the member directory' }}</a>
+        <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ $editing ? 'Edit Member Record' : 'Add New Lodge Member' }}</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">{{ $editing ? 'Update masonic ranks, office assignments and contact details.' : 'Register a new brother onto the Lodge Rule 153 roster.' }}</p>
     </div>
 
-    <form wire:submit="save" class="space-y-6 text-xs">
-        <section class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 space-y-4" aria-labelledby="sec-name">
-            <h2 id="sec-name" class="text-sm font-black text-slate-900 dark:text-white">Name</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-                <label for="f-first_name" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">First Name *</label>
-                <input id="f-first_name" type="text" wire:model="first_name" placeholder="" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " required />
-                @error('first_name') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
+    <form wire:submit="save" class="space-y-6">
+        <x-card>
+            <h3 id="sec-name" class="mb-4 text-base font-semibold text-slate-900 dark:text-white">Name</h3>
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <x-input label="First name" required wire:model="first_name" />
+                    <x-input label="Middle names" wire:model="middle_names" placeholder="David Arthur" />
+                    <x-input label="Surname" required wire:model="last_name" />
+                </div>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <x-input label="Preferred name" wire:model="preferred_name" placeholder="Dave" />
+                </div>
             </div>
-            <div>
-                <label for="f-middle_names" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Middle Names</label>
-                <input id="f-middle_names" type="text" wire:model="middle_names" placeholder="David Arthur" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-                @error('middle_names') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-            </div>
-            <div>
-                <label for="f-last_name" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Surname / Last Name *</label>
-                <input id="f-last_name" type="text" wire:model="last_name" placeholder="" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " required />
-                @error('last_name') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-            </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-                <label for="f-preferred_name" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Preferred Name</label>
-                <input id="f-preferred_name" type="text" wire:model="preferred_name" placeholder="Dave" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-                @error('preferred_name') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-            </div>
-            </div>
-        </section>
+        </x-card>
 
-        <section class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 space-y-4" aria-labelledby="sec-contact">
-            <h2 id="sec-contact" class="text-sm font-black text-slate-900 dark:text-white">Contact &amp; Residential Address</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-                <label for="f-email" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Email Address</label>
-                <input id="f-email" type="email" wire:model="email" placeholder="brother@example.org" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-                @error('email') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
+        <x-card>
+            <h3 id="sec-contact" class="mb-4 text-base font-semibold text-slate-900 dark:text-white">Contact and home address</h3>
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <x-input label="Email address" type="email" wire:model="email" placeholder="brother@example.org" />
+                    <x-input label="Phone number" wire:model="phone" placeholder="07123 456789" />
+                    <x-input label="Address line 1" wire:model="address_line_1" placeholder="Building name, house number and street" />
+                    <x-input label="Address line 2" wire:model="address_line_2" placeholder="Flat, suite, unit, etc." />
+                </div>
+                <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <x-input label="Town or city" wire:model="city" placeholder="Oxford" />
+                    <x-input label="County or region" wire:model="county" placeholder="Oxfordshire" />
+                    <x-input label="Postcode" wire:model="postcode" placeholder="OX1 2JD" class="uppercase" />
+                    <x-input label="Country" wire:model="country" placeholder="United Kingdom" />
+                </div>
             </div>
-            <div>
-                <label for="f-phone" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Phone Number</label>
-                <input id="f-phone" type="text" wire:model="phone" placeholder="07123 456789" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-                @error('phone') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-            </div>
-            <div>
-                <label for="f-address_line_1" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Address Line 1</label>
-                <input id="f-address_line_1" type="text" wire:model="address_line_1" placeholder="Building name, house number &amp; street" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-            </div>
-            <div>
-                <label for="f-address_line_2" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Address Line 2</label>
-                <input id="f-address_line_2" type="text" wire:model="address_line_2" placeholder="Apartment, suite, unit, etc." class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-            </div>
-            </div>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-                <label for="f-city" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Town / City</label>
-                <input id="f-city" type="text" wire:model="city" placeholder="Oxford" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-            </div>
-            <div>
-                <label for="f-county" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">County / Region</label>
-                <input id="f-county" type="text" wire:model="county" placeholder="Oxfordshire" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-            </div>
-            <div>
-                <label for="f-postcode" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Postcode / ZIP</label>
-                <input id="f-postcode" type="text" wire:model="postcode" placeholder="OX1 2JD" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none uppercase" />
-            </div>
-            <div>
-                <label for="f-country" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Country</label>
-                <input id="f-country" type="text" wire:model="country" placeholder="United Kingdom" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-            </div>
-            </div>
-        </section>
+        </x-card>
 
-        <section class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 space-y-4" aria-labelledby="sec-masonic">
-            <h2 id="sec-masonic" class="text-sm font-black text-slate-900 dark:text-white">Masonic Governance &amp; Ranks</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label for="f-masonic_rank" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Masonic Rank *</label>
-                    <select id="f-masonic_rank" wire:model="masonic_rank" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <x-card>
+            <h3 id="sec-masonic" class="mb-4 text-base font-semibold text-slate-900 dark:text-white">Masonic ranks and office</h3>
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <x-select label="Masonic rank" required wire:model="masonic_rank">
                         @foreach($ranks as $rankValue => $rankLabel)
-                            <option value="{{ $rankValue }}">{{ $rankLabel }}</option>
+                            <option value="{{ $rankValue }}" @selected($masonic_rank === $rankValue)>{{ $rankLabel }}</option>
                         @endforeach
-                    </select>
+                    </x-select>
+                    <x-select label="Grand rank" wire:model="grand_rank">
+                        <option value="">None</option>
+                        @foreach($grandRanks as $rank)
+                            <option value="{{ $rank['value'] }}" @selected($grand_rank === $rank['value'])>{{ $rank['label'] }}</option>
+                        @endforeach
+                    </x-select>
+                    <x-select label="Provincial rank" wire:model="provincial_rank">
+                        <option value="">None</option>
+                        @foreach($provincialRanks as $rank)
+                            <option value="{{ $rank['value'] }}" @selected($provincial_rank === $rank['value'])>{{ $rank['label'] }}</option>
+                        @endforeach
+                    </x-select>
                 </div>
-            <div>
-                <label for="f-grand_rank" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Grand Rank</label>
-                <select id="f-grand_rank" wire:model="grand_rank" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <option value="">None</option>
-                    @foreach($grandRanks as $rank)
-                        <option value="{{ $rank['value'] }}">{{ $rank['label'] }}</option>
-                    @endforeach
-                </select>
-                @error('grand_rank') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-            </div>
-            <div>
-                <label for="f-provincial_rank" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Provincial Rank</label>
-                <select id="f-provincial_rank" wire:model="provincial_rank" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <option value="">None</option>
-                    @foreach($provincialRanks as $rank)
-                        <option value="{{ $rank['value'] }}">{{ $rank['label'] }}</option>
-                    @endforeach
-                </select>
-                @error('provincial_rank') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-            </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-                <label for="f-grand_lodge_number" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Hermes / GL Member ID</label>
-                <input id="f-grand_lodge_number" type="text" wire:model="grand_lodge_number" placeholder="1482092" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono" />
-            </div>
-                <div>
-                    <label for="f-current_office" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Current Office *</label>
-                    <select id="f-current_office" wire:model="current_office" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <x-input label="Hermes / GL member ID" wire:model="grand_lodge_number" placeholder="1482092" class="font-mono" />
+                    <x-select label="Current office" required wire:model="current_office">
                         @foreach($offices as $of)
-                            <option value="{{ $of->value }}">{{ $of->label() }}</option>
+                            <option value="{{ $of->value }}" @selected($current_office === $of->value)>{{ $of->label() }}</option>
                         @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label for="f-membership_status" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Membership Status *</label>
-                    <select id="f-membership_status" wire:model="membership_status" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </x-select>
+                    <x-select label="Membership status" required wire:model="membership_status">
                         @foreach($statuses as $st)
-                            <option value="{{ $st->value }}">{{ $st->label() }}</option>
+                            <option value="{{ $st->value }}" @selected($membership_status === $st->value)>{{ $st->label() }}</option>
                         @endforeach
-                    </select>
+                    </x-select>
                 </div>
             </div>
-        </section>
+        </x-card>
 
-        <section class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 space-y-4" aria-labelledby="sec-dates">
-            <h2 id="sec-dates" class="text-sm font-black text-slate-900 dark:text-white">Key Dates</h2>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-                <label for="f-date_of_initiation" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Date of Initiation</label>
-                <input id="f-date_of_initiation" type="date" wire:model="date_of_initiation" placeholder="" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-                @error('date_of_initiation') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
+        <x-card>
+            <h3 id="sec-dates" class="mb-4 text-base font-semibold text-slate-900 dark:text-white">Key dates</h3>
+            <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <x-input label="Date of initiation" type="date" wire:model="date_of_initiation" />
+                <x-input label="Date of passing" type="date" wire:model="date_of_passing" />
+                <x-input label="Date of raising" type="date" wire:model="date_of_raising" />
+                <x-input label="Date joined the lodge" type="date" wire:model="date_of_joining" />
             </div>
-            <div>
-                <label for="f-date_of_passing" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Date of Passing</label>
-                <input id="f-date_of_passing" type="date" wire:model="date_of_passing" placeholder="" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-                @error('date_of_passing') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-            </div>
-            <div>
-                <label for="f-date_of_raising" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Date of Raising</label>
-                <input id="f-date_of_raising" type="date" wire:model="date_of_raising" placeholder="" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-                @error('date_of_raising') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-            </div>
-            <div>
-                <label for="f-date_of_joining" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Date Joined Lodge</label>
-                <input id="f-date_of_joining" type="date" wire:model="date_of_joining" placeholder="" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none " />
-                @error('date_of_joining') <span class="text-rose-500 text-[11px] font-bold">{{ $message }}</span> @enderror
-            </div>
-            </div>
-        </section>
+        </x-card>
 
-        <section class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 space-y-4" aria-labelledby="sec-more">
-            <h2 id="sec-more" class="text-sm font-black text-slate-900 dark:text-white">Notes &amp; Accounting</h2>
-            <div>
-                <label for="f-notes" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Notes</label>
-                <textarea id="f-notes" wire:model="notes" rows="3" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-            </div>
-            @if($accountingContacts->isNotEmpty())
-                <div>
-                    <label for="f-customer_account_id" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Accounting Ledger Contact Link</label>
-                    <select id="f-customer_account_id" wire:model="customer_account_id" class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        <option value="">-- No Ledger Account Linked --</option>
+        <x-card>
+            <h3 id="sec-more" class="mb-4 text-base font-semibold text-slate-900 dark:text-white">Notes and accounting</h3>
+            <div class="space-y-4">
+                <x-textarea label="Notes" rows="3" wire:model="notes" />
+
+                @if($accountingContacts->isNotEmpty())
+                    <x-select label="Accounting ledger contact" wire:model="customer_account_id">
+                        <option value="">No ledger account linked</option>
                         @foreach($accountingContacts as $ac)
-                            <option value="{{ $ac->id }}">{{ $ac->full_name }} ({{ $ac->email ?: 'No email' }})</option>
+                            <option value="{{ $ac->id }}" @selected($customer_account_id === $ac->id)>{{ $ac->full_name }} ({{ $ac->email ?: 'No email' }})</option>
                         @endforeach
-                    </select>
-                </div>
-            @endif
+                    </x-select>
+                @endif
 
-            @if(! $editing && $canInvite)
-                <label
-                    x-data
-                    :class="($wire.email ?? '').trim() === '' ? 'opacity-60' : ''"
-                    class="flex items-start gap-2.5 p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50"
-                >
-                    <input type="checkbox" wire:model="sendInvitation" :disabled="($wire.email ?? '').trim() === ''" class="mt-0.5 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500" />
-                    <span>
-                        <span class="block font-bold text-slate-800 dark:text-slate-100">Send an invitation to set up an online account</span>
-                        <span class="block text-slate-500 dark:text-slate-400">Emails a private link so they can create their own login. Type an email address above to turn this on.</span>
-                    </span>
-                </label>
-            @endif
-        </section>
+                @if(! $editing && $canInvite)
+                    <label
+                        x-data
+                        :class="($wire.email ?? '').trim() === '' ? 'opacity-60' : ''"
+                        class="flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm dark:border-blue-800/60 dark:bg-blue-950/40"
+                    >
+                        <input type="checkbox" wire:model="sendInvitation" :disabled="($wire.email ?? '').trim() === ''" class="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600" />
+                        <span>
+                            <span class="block font-medium text-slate-900 dark:text-white">Send an invitation to set up an online account</span>
+                            <span class="block text-xs text-slate-500 dark:text-slate-400">Emails a private link so they can create their own login. Type an email address above to turn this on.</span>
+                        </span>
+                    </label>
+                @endif
+            </div>
+        </x-card>
 
-        <div class="sticky bottom-0 -mx-1 px-1 py-4 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
-            <a href="{{ $editing ? route('admin.club_acc.members.show', ['clubSlug' => $club->slug, 'memberId' => $memberId]) : route('admin.club_acc.members.index', ['clubSlug' => $club->slug]) }}" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition">Cancel</a>
-            <button type="submit" wire:loading.attr="disabled" wire:target="save" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl text-xs shadow-md transition cursor-pointer">
-                {{ $editing ? 'Save Changes' : 'Create Member Record' }}
-            </button>
+        <div class="sticky bottom-0 -mx-1 flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/90 px-1 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+            <x-button variant="secondary" href="{{ $editing ? route('admin.club_acc.members.show', ['clubSlug' => $club->slug, 'memberId' => $memberId]) : route('admin.club_acc.members.index', ['clubSlug' => $club->slug]) }}">Cancel</x-button>
+            <x-button type="submit" wire:loading.attr="disabled" wire:target="save">
+                {{ $editing ? 'Save changes' : 'Create member record' }}
+            </x-button>
         </div>
     </form>
 </div>

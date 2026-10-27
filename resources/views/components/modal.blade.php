@@ -1,6 +1,6 @@
-{{-- The Blade twin of Components/Ui/Modal.vue for Livewire views: shown while :show is true; `close` names the
-     component method that closes it (run by the close button, Escape and a click on the backdrop). Keyboard focus stays
-     inside it while open (Alpine's x-trap, bundled with Livewire). --}}
+{{-- The Blade twin of Components/Ui/Modal.vue for Livewire views: shown while :show is true. `close` is the Livewire action
+     that closes it, a method name or $set('showX', false); the close button, Escape and a click on the backdrop run it.
+     Keyboard focus stays inside while it is open (Alpine's x-trap, bundled with Livewire). --}}
 @props(['show' => false, 'title', 'subtitle' => null, 'size' => 'md', 'close'])
 
 @php
@@ -12,8 +12,8 @@
     <div
         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
         wire:mousedown.self="{{ $close }}"
+        wire:keydown.escape.window="{{ $close }}"
         x-data
-        x-on:keydown.escape.window="$wire.{{ $close }}()"
     >
         <div
             role="dialog"
