@@ -25,9 +25,10 @@ class Geocoder
     private ?float $lastRequestAt = null;
 
     /**
+     * @param  string|null  $countries  Nominatim country codes (comma separated) to keep the search to
      * @return array{results: list<array{lat: float, lng: float, name: string}>, approximate: bool, matched: string|null}|null null when the service could not be reached and nothing was found
      */
-    public function search(string $query, int $limit = 5): ?array
+    public function search(string $query, int $limit = 5, ?string $countries = null): ?array
     {
         $query = $this->normalise($query);
 
@@ -38,7 +39,7 @@ class Geocoder
         $failed = false;
 
         foreach ($this->variants($query) as $variant) {
-            $results = $this->fetch($variant, $limit);
+            $results = $this->fetch($variant, $limit, $countries);
 
             if ($results === null) {
                 $failed = true;
@@ -87,9 +88,9 @@ class Geocoder
     /**
      * @return list<array{lat: float, lng: float, name: string}>|null null when the request failed
      */
-    private function fetch(string $query, int $limit): ?array
+    private function fetch(string $query, int $limit, ?string $countries = null): ?array
     {
-        $key = 'geocode:v2:'.$limit.':'.md5(mb_strtolower($query));
+        $key = 'geocode:v2:'.$limit.':'.($countries ? $countries.':' : '').md5(mb_strtolower($query));
 
         if (($cached = Cache::get($key)) !== null) {
             return $cached;
@@ -101,7 +102,7 @@ class Geocoder
             $response = Http::withUserAgent((string) config('services.nominatim.user_agent'))
                 ->timeout(10)
                 ->acceptJson()
-                ->get(self::ENDPOINT, ['q' => $query, 'format' => 'jsonv2', 'limit' => $limit]);
+                ->get(self::ENDPOINT, array_filter(['q' => $query, 'format' => 'jsonv2', 'limit' => $limit, 'countrycodes' => $countries]));
         } catch (ConnectionException) {
             return null;
         }

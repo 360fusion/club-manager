@@ -12,11 +12,13 @@ use App\Models\MasonicHall;
 use App\Models\Post;
 use App\Models\Province;
 use App\Models\User;
+use App\Services\Geocoder;
 use App\Support\ClubAccess;
 use App\Support\LodgeReferenceLinks;
 use App\Support\VisitorSummons;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,11 +28,34 @@ use Inertia\Response;
  */
 class LodgeDirectoryController extends Controller
 {
-    public function index(IndexLodgeDirectoryRequest $request): Response
+    public function index(IndexLodgeDirectoryRequest $request, Geocoder $geocoder): Response
     {
         $filters = $request->validated();
 
         $query = Lodge::query()->listed()->with(self::relations());
+        $near = ['place' => null, 'error' => null];
+        $distances = [];
+
+        if (($place = trim((string) ($filters['near'] ?? ''))) !== '') {
+            // Looked up only when the search is sent (never while typing), and at most 20 times a minute per visitor,
+            // as OpenStreetMap's usage policy asks.
+            $result = RateLimiter::attempt('lodge-near:'.$request->ip(), 20, fn () => $geocoder->search($place, 1, MasonicHall::SEARCH_COUNTRIES));
+            $spot = is_array($result) ? ($result['results'][0] ?? null) : null;
+
+            if ($spot === null) {
+                $near['error'] = $result === false ? 'Too many place searches. Try again in a minute.' : "We couldn't find that place. Try a postcode or a town.";
+            } else {
+                $near['place'] = $spot['name'];
+                $distances = MasonicHall::withinMiles($spot['lat'], $spot['lng'], (int) ($filters['within'] ?? 10));
+                $query->whereIn('masonic_hall_id', array_keys($distances));
+
+                if ($distances !== []) {
+                    // Hall ids and ranks are integers from our own query, written inline so PostgreSQL compares numbers.
+                    $order = collect(array_keys($distances))->map(fn (int $id, int $rank) => 'when '.(int) $id.' then '.$rank)->implode(' ');
+                    $query->orderByRaw('case masonic_hall_id '.$order.' end');
+                }
+            }
+        }
 
         if ($q = trim((string) ($filters['q'] ?? ''))) {
             $like = '%'.$q.'%';
@@ -62,7 +87,11 @@ class LodgeDirectoryController extends Controller
         $following = $this->followedIds($request);
 
         $lodges = $query->orderBy('name')->paginate(24)->withQueryString()
-            ->through(fn (Lodge $lodge) => [...$this->card($lodge), 'following' => in_array($lodge->id, $following, true)]);
+            ->through(fn (Lodge $lodge) => [
+                ...$this->card($lodge),
+                'following' => in_array($lodge->id, $following, true),
+                'miles' => isset($distances[$lodge->masonic_hall_id]) ? round($distances[$lodge->masonic_hall_id], 1) : null,
+            ]);
 
         return Inertia::render('Lodges/Index', [
             'lodges' => $lodges,
@@ -72,7 +101,10 @@ class LodgeDirectoryController extends Controller
                 'order' => $filters['order'] ?? '',
                 'day' => $filters['day'] ?? '',
                 'when' => $filters['when'] ?? '',
+                'near' => $filters['near'] ?? '',
+                'within' => $filters['within'] ?? '10',
             ],
+            'near' => $near,
             'provinces' => Province::whereHas('lodges', fn ($lodge) => $lodge->listed())
                 ->withCount(['lodges' => fn ($lodge) => $lodge->listed()])
                 ->orderBy('name')->get(['id', 'code', 'name'])

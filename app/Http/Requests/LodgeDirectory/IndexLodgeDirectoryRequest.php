@@ -21,6 +21,8 @@ class IndexLodgeDirectoryRequest extends AppRequest
             'order' => 'nullable|string|max:60',
             'day' => 'nullable|in:'.implode(',', LodgeSchedule::DAYS),
             'when' => 'nullable|in:week,month',
+            'near' => 'nullable|string|max:100',
+            'within' => 'nullable|in:5,10,25,50',
         ];
     }
 }

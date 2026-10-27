@@ -13,9 +13,17 @@ const props = defineProps({
     orders: { type: Array, default: () => [] },
     days: { type: Array, default: () => [] },
     total: { type: Number, default: 0 },
+    // The distance search: the place that was found, or why not.
+    near: { type: Object, default: () => ({ place: null, error: null }) },
 });
 
 const form = reactive({ ...props.filters });
+
+// The place is only looked up when this is sent, never while typing (OpenStreetMap's usage policy).
+function clearNear() {
+    form.near = '';
+    search();
+}
 
 function search() {
     const query = Object.fromEntries(Object.entries(form).filter(([, value]) => value));
@@ -56,6 +64,16 @@ const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2
                     <option value="week">Meeting in the next 7 days</option>
                     <option value="month">Meeting in the next month</option>
                 </select>
+                <form class="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-5" @submit.prevent="search">
+                    <input v-model="form.near" type="search" placeholder="Near a postcode or town" :class="[inputClass, 'min-w-48 flex-1']" aria-label="Near a postcode or town" />
+                    <select v-model="form.within" :class="[inputClass, 'w-auto']" aria-label="Distance">
+                        <option v-for="miles in ['5', '10', '25', '50']" :key="miles" :value="miles">Within {{ miles }} miles</option>
+                    </select>
+                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Search nearby</button>
+                    <button v-if="filters.near" type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" @click="clearNear">Clear</button>
+                </form>
+                <p v-if="near.error" class="text-sm text-rose-600 sm:col-span-2 lg:col-span-5 dark:text-rose-400">{{ near.error }}</p>
+                <p v-else-if="near.place" class="text-sm text-slate-500 sm:col-span-2 lg:col-span-5 dark:text-slate-400">Nearest first, from {{ near.place }}.</p>
             </div>
 
             <div v-if="lodges.data.length === 0" class="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
@@ -80,6 +98,7 @@ const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2
                     <p v-if="lodge.hall" class="mt-3 text-sm">
                         <Link :href="route('lodges.hall', lodge.hall.slug)" class="font-medium hover:underline">{{ lodge.hall.name }}</Link>
                         <span class="text-slate-500 dark:text-slate-400"> · {{ lodge.hall.town }} {{ lodge.hall.postcode }}</span>
+                        <span v-if="lodge.miles !== null && lodge.miles !== undefined" class="text-slate-500 dark:text-slate-400"> · {{ lodge.miles }} miles</span>
                     </p>
 
                     <p v-if="lodge.next.length" class="mt-2 text-sm">
