@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import FlashMessages from '@/Components/Ui/FlashMessages.vue';
 import Button from '@/Components/Ui/Button.vue';
@@ -200,12 +200,10 @@ const user = page.props.auth?.user;
             <template #icon><UiIcon name="arrow-left" :size="14" /></template>
             Return to app
           </Button>
-          <form method="POST" action="/logout" class="block">
-            <Button type="submit" variant="ghost" size="sm" block>
-              <template #icon><UiIcon name="logout" :size="14" /></template>
-              Log out
-            </Button>
-          </form>
+          <Button variant="ghost" size="sm" block @click="router.post('/logout')">
+            <template #icon><UiIcon name="logout" :size="14" /></template>
+            Log out
+          </Button>
         </div>
       </div>
     </aside>
