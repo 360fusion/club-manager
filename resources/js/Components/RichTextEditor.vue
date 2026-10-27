@@ -238,8 +238,9 @@ const removeLink = () => {
         :disabled="!editor.can().undo()"
         class="px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 transition-all cursor-pointer"
         title="Undo"
+        aria-label="Undo"
       >
-        ↩
+        <UiIcon name="restore" />
       </button>
 
       <!-- Redo -->
@@ -249,8 +250,9 @@ const removeLink = () => {
         :disabled="!editor.can().redo()"
         class="px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 transition-all cursor-pointer"
         title="Redo"
+        aria-label="Redo"
       >
-        ↪
+        <UiIcon name="restore" class="-scale-x-100" />
       </button>
     </div>
 
