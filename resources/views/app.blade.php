@@ -54,7 +54,7 @@
                 } catch (e) {}
             })();
         </script>
-        @routes
+        @routes(\App\Http\Middleware\HandleInertiaRequests::routeGroup(auth()->user()))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
     </head>

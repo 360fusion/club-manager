@@ -175,7 +175,7 @@
 
                     <div class="space-y-2">
                         @forelse($candidates as $cand)
-                            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl flex items-center justify-between gap-2 text-xs">
+                            <div wire:key="cand-{{ $cand->id }}" class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl flex items-center justify-between gap-2 text-xs">
                                 <div class="min-w-0">
                                     <span class="font-semibold text-slate-900 dark:text-white block">{{ $cand->name }}</span>
                                     <span class="text-xs text-slate-500 dark:text-slate-400">{{ $cand->email }}</span>
@@ -219,7 +219,7 @@
 
                     <div class="space-y-2">
                         @forelse($unpaid_bills as $bill)
-                            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl flex items-center justify-between gap-2 text-xs">
+                            <div wire:key="bill-{{ $bill->id }}" class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl flex items-center justify-between gap-2 text-xs">
                                 <div class="min-w-0">
                                     <span class="font-semibold text-slate-900 dark:text-white block">{{ $bill->vendor_name }}</span>
                                     <span class="text-xs font-medium text-slate-500 dark:text-slate-400 font-mono">{{ $cs }}{{ number_format($bill->amount, 2) }} • {{ $bill->bill_number }}</span>

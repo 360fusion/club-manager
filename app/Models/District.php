@@ -34,6 +34,8 @@ class District extends Model
 
     /**
      * Get the governing Grand Lodge.
+     *
+     * @return BelongsTo<GrandLodge, $this>
      */
     public function grandLodge(): BelongsTo
     {

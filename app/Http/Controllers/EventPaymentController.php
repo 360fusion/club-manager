@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EventPayment\BulkPaidRequest;
+use App\Http\Requests\EventPayment\MarkPaidRequest;
+use App\Http\Requests\EventPayment\MarkUnpaidRequest;
+use App\Http\Requests\EventPayment\RefundRequest;
+use App\Http\Requests\EventPayment\WaiveRequest;
 use App\Models\Club;
 use App\Models\Event;
 use App\Models\EventRegistration;
@@ -30,33 +35,23 @@ class EventPaymentController extends Controller
         ]);
     }
 
-    public function markPaid(Request $request, string $clubSlug, int $id, int $registrationId, EventPaymentService $payments): RedirectResponse
+    public function markPaid(MarkPaidRequest $request, string $clubSlug, int $id, int $registrationId, EventPaymentService $payments): RedirectResponse
     {
         [, $registration] = $this->find($clubSlug, $id, $registrationId);
 
-        $validated = $request->validate([
-            'amount' => 'nullable|numeric|min:0.01|max:99999999.99',
-            'method' => 'nullable|string|max:100',
-            'received_on' => 'nullable|date',
-            'comment' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $payments->markPaid($registration, $request->user(), isset($validated['amount']) ? (float) $validated['amount'] : null, $validated['method'] ?? null, isset($validated['received_on']) ? Carbon::parse($validated['received_on']) : null, $validated['comment'] ?? null);
 
         return redirect()->back()->with('success', $registration->contact_name.' marked as paid.');
     }
 
-    public function bulkPaid(Request $request, string $clubSlug, int $id, EventPaymentService $payments): RedirectResponse
+    public function bulkPaid(BulkPaidRequest $request, string $clubSlug, int $id, EventPaymentService $payments): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = Event::where('club_id', $club->id)->findOrFail($id);
 
-        $validated = $request->validate([
-            'registration_ids' => 'required|array|min:1|max:200',
-            'registration_ids.*' => 'integer|max:4294967295',
-            'method' => 'nullable|string|max:100',
-            'comment' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $count = 0;
 
@@ -70,34 +65,31 @@ class EventPaymentController extends Controller
         return redirect()->back()->with('success', $count.' '.($count === 1 ? 'booking' : 'bookings').' marked as paid.');
     }
 
-    public function markUnpaid(Request $request, string $clubSlug, int $id, int $registrationId, EventPaymentService $payments): RedirectResponse
+    public function markUnpaid(MarkUnpaidRequest $request, string $clubSlug, int $id, int $registrationId, EventPaymentService $payments): RedirectResponse
     {
         [, $registration] = $this->find($clubSlug, $id, $registrationId);
-        $validated = $request->validate(['comment' => 'required|string|min:3|max:1000']);
+        $validated = $request->validated();
 
         $payments->markUnpaid($registration, $request->user(), $validated['comment']);
 
         return redirect()->back()->with('success', 'Payment taken back.');
     }
 
-    public function waive(Request $request, string $clubSlug, int $id, int $registrationId, EventPaymentService $payments): RedirectResponse
+    public function waive(WaiveRequest $request, string $clubSlug, int $id, int $registrationId, EventPaymentService $payments): RedirectResponse
     {
         [, $registration] = $this->find($clubSlug, $id, $registrationId);
-        $validated = $request->validate(['comment' => 'required|string|min:3|max:1000']);
+        $validated = $request->validated();
 
         $payments->waive($registration, $request->user(), $validated['comment']);
 
         return redirect()->back()->with('success', 'Charge waived.');
     }
 
-    public function refund(Request $request, string $clubSlug, int $id, int $registrationId, EventPaymentService $payments): RedirectResponse
+    public function refund(RefundRequest $request, string $clubSlug, int $id, int $registrationId, EventPaymentService $payments): RedirectResponse
     {
         [, $registration] = $this->find($clubSlug, $id, $registrationId);
 
-        $validated = $request->validate([
-            'comment' => 'required|string|min:3|max:1000',
-            'amount' => 'nullable|numeric|min:0.01|max:99999999.99',
-        ]);
+        $validated = $request->validated();
 
         $payments->refund($registration, $request->user(), $validated['comment'], isset($validated['amount']) ? (float) $validated['amount'] : null);
 
@@ -109,7 +101,7 @@ class EventPaymentController extends Controller
      */
     private function find(string $clubSlug, int $id, int $registrationId): array
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = Event::where('club_id', $club->id)->findOrFail($id);
 
         return [$club, EventRegistration::where('event_id', $event->id)->findOrFail($registrationId)];

@@ -36,6 +36,24 @@ jobs:
           npm ci --ignore-scripts
           npm run build
 
+      - name: Frontend lint
+        run: npm run lint
+
+      - name: Template names resolve
+        run: npm run check:templates
+
+      - name: Render the components split out of the big pages
+        run: npm run check:components
+
+      - name: Check the page editor's element palette
+        run: npm run check:blocks
+
+      - name: Check the report date ranges
+        run: npm run check:ranges
+
+      - name: Check the accounting screen's addresses
+        run: npm run check:urls
+
       - name: Prepare environment
         run: |
           cp .env.example .env
@@ -53,4 +71,4 @@ jobs:
       - name: Dependency advisories
         run: |
           composer audit --no-interaction
-          npm audit --omit=dev
+          npm audit

@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Club;
-use App\Models\ClubType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -29,9 +28,8 @@ class CrossClubMemberAccessTest extends TestCase
     {
         parent::setUp();
 
-        $type = ClubType::create(['name' => 'Masonic Lodge', 'code' => 'masonic', 'available_modules' => [], 'default_settings' => []]);
-        $this->a = Club::create(['club_type_id' => $type->id, 'name' => 'Club A', 'slug' => 'club-a', 'status' => 'active']);
-        $this->b = Club::create(['club_type_id' => $type->id, 'name' => 'Club B', 'slug' => 'club-b', 'status' => 'active']);
+        $this->a = Club::factory()->create(['slug' => 'club-a']);
+        $this->b = Club::factory()->create(['slug' => 'club-b']);
 
         $this->adminA = User::factory()->create();
         $this->a->users()->attach($this->adminA->id, ['role' => 'admin', 'status' => 'active']);

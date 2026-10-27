@@ -15,11 +15,17 @@ class MediaFolder extends Model
         'created_by',
     ];
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

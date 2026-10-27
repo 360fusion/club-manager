@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Register\StoreRegisterRequest;
 use App\Models\Club;
 use App\Models\User;
 use App\Support\EmailVerification;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,13 +19,8 @@ class RegisterController extends Controller
         return Inertia::render('Auth/Register');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreRegisterRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'password' => ['required', 'string', Password::defaults(), 'confirmed'],
-        ]);
 
         $email = strtolower($request->email);
 

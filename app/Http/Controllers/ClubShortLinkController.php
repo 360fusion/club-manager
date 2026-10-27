@@ -14,7 +14,7 @@ class ClubShortLinkController extends Controller
 {
     public function __invoke(Request $request, string $slug): RedirectResponse
     {
-        $club = Club::where('slug', $slug)->firstOrFail();
+        $club = $this->findClub($slug);
         $user = $request->user();
 
         $isMember = $user && ($user->is_super_admin || $user->clubs()->where('clubs.id', $club->id)->exists());

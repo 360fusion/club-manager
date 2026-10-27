@@ -79,15 +79,6 @@ function submitCreate() {
     });
 }
 
-function startEdit(prov) {
-    editingProvince.value = prov;
-    editForm.name = prov.name;
-    editForm.grand_lodge_id = prov.grand_lodge_id || null;
-    editForm.country = prov.country || 'England';
-    editForm.region = prov.region || '';
-    editForm.website_url = prov.website_url || '';
-}
-
 function submitUpdate() {
     if (!editingProvince.value) return;
     editForm.put(route('superadmin.provinces.update', editingProvince.value.id), {

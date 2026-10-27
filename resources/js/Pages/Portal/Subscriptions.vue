@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 
-const props = defineProps({
+defineProps({
   clubMatrix: Array,
   broadcastFeed: Array,
   user: Object,

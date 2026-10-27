@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ClubMemberStatus;
 use App\Models\Club;
 use App\Models\Event;
 use App\Models\EventRegistration;
@@ -27,7 +28,7 @@ class EventOrganiserBookingController extends Controller
      */
     public function memberSearch(Request $request, string $clubSlug, int $id): JsonResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = Event::where('club_id', $club->id)->findOrFail($id);
 
         $term = trim((string) $request->query('q', ''));
@@ -41,7 +42,7 @@ class EventOrganiserBookingController extends Controller
 
         $members = $club->users()
             ->withPivot('home_club_name')
-            ->wherePivot('status', 'active')
+            ->wherePivot('status', ClubMemberStatus::Active->value)
             ->where(fn ($q) => $q->whereRaw("users.name LIKE ? ESCAPE '!'", [$like])
                 ->orWhereRaw("users.email LIKE ? ESCAPE '!'", [$like])
                 ->orWhereRaw("club_user.member_number LIKE ? ESCAPE '!'", [$like]))
@@ -102,14 +103,14 @@ class EventOrganiserBookingController extends Controller
 
     public function store(Request $request, string $clubSlug, int $id, EventRegistrationService $registrations, EventPaymentService $payments): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = Event::where('club_id', $club->id)->findOrFail($id);
         $validated = $request->validate($this->rules());
 
         $member = null;
 
         if (! empty($validated['member_id'])) {
-            $member = $club->users()->wherePivot('status', 'active')->where('users.id', $validated['member_id'])->first();
+            $member = $club->users()->wherePivot('status', ClubMemberStatus::Active->value)->where('users.id', $validated['member_id'])->first();
 
             if (! $member) {
                 throw ValidationException::withMessages(['member_id' => 'That person is not an active member of this club.']);
@@ -228,7 +229,7 @@ class EventOrganiserBookingController extends Controller
      */
     private function find(string $clubSlug, int $id, int $registrationId): array
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = Event::where('club_id', $club->id)->findOrFail($id);
         $registration = EventRegistration::where('event_id', $event->id)->findOrFail($registrationId);
 

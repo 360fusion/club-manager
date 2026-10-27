@@ -76,7 +76,7 @@ class MemberInvitationTest extends TestCase
 
         $this->club->users()->attach($user->id, [
             'role' => 'member',
-            'invitation_token' => $token,
+            'invitation_token' => hash('sha256', $token),
             'invited_at' => now(),
         ]);
 
@@ -97,7 +97,7 @@ class MemberInvitationTest extends TestCase
 
         $this->club->users()->attach($user->id, [
             'role' => 'member',
-            'invitation_token' => $token,
+            'invitation_token' => hash('sha256', $token),
             'invited_at' => now(),
             'status' => 'active',
         ]);
@@ -127,7 +127,7 @@ class MemberInvitationTest extends TestCase
         $token = 'revoke-token-123';
         $this->club->users()->attach($member->id, [
             'role' => 'member',
-            'invitation_token' => $token,
+            'invitation_token' => hash('sha256', $token),
             'invited_at' => now(),
         ]);
 
@@ -150,7 +150,7 @@ class MemberInvitationTest extends TestCase
         // Set invited_at to 15 days ago (default limit is 14 days)
         $this->club->users()->attach($user->id, [
             'role' => 'member',
-            'invitation_token' => $token,
+            'invitation_token' => hash('sha256', $token),
             'invited_at' => now()->subDays(15),
         ]);
 
@@ -204,8 +204,9 @@ class MemberInvitationTest extends TestCase
         $this->assertCount(2, $user->fresh()->clubs);
 
         // 6. Test logging in via invitation for Club B with existing password
-        $pivotB = $user->clubs()->where('clubs.id', $clubB->id)->first()->pivot;
-        $token = $pivotB->invitation_token;
+        // Only a hash is stored, so give the invitation a link we know.
+        $token = 'known-token-for-club-b';
+        $clubB->users()->updateExistingPivot($user->id, ['invitation_token' => hash('sha256', $token)]);
 
         $acceptResponse = $this->post(route('invitation.submit', ['slug' => $clubB->slug, 'token' => $token]), [
             'password' => 'original-secret-123',

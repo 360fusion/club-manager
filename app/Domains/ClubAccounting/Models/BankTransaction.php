@@ -40,14 +40,14 @@ class BankTransaction extends Model
         ];
     }
 
-    public function isIncome(): Attribute
+    protected function isIncome(): Attribute
     {
         return Attribute::make(
             get: fn () => (float) $this->amount > 0
         );
     }
 
-    public function isExpense(): Attribute
+    protected function isExpense(): Attribute
     {
         return Attribute::make(
             get: fn () => (float) $this->amount < 0

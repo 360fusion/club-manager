@@ -24,11 +24,11 @@ function apply(dark) {
 }
 
 onMounted(() => {
-    let stored = null;
+    let stored;
 
     try {
         stored = localStorage.getItem(STORAGE_KEY);
-    } catch (e) {
+    } catch {
         stored = null;
     }
 
@@ -40,7 +40,7 @@ function toggle() {
 
     try {
         localStorage.setItem(STORAGE_KEY, isDark.value ? 'dark' : 'light');
-    } catch (e) {
+    } catch {
         // Storage unavailable (private browsing); the theme still applies for this page.
     }
 }

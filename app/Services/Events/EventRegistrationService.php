@@ -2,6 +2,7 @@
 
 namespace App\Services\Events;
 
+use App\Enums\EventStatus;
 use App\Mail\EventGuestBookingMail;
 use App\Models\ClubPaymentMethod;
 use App\Models\Event;
@@ -280,7 +281,7 @@ class EventRegistrationService
             return null;
         }
 
-        return $basis === 'after_booking' ? now()->addDays($days) : $event->starts_at?->copy()->subDays($days);
+        return $basis === 'after_booking' ? now()->addDays($days) : $event->starts_at->copy()->subDays($days);
     }
 
     /**
@@ -409,7 +410,7 @@ class EventRegistrationService
      */
     public function assertOpen(Event $event, ?User $user): void
     {
-        if (in_array($event->status, ['draft', 'cancelled', 'completed'], true)) {
+        if (in_array($event->status, [EventStatus::Draft->value, EventStatus::Cancelled->value, EventStatus::Completed->value], true)) {
             throw ValidationException::withMessages(['registration' => 'This event is not open for booking.']);
         }
 

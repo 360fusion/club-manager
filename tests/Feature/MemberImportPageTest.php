@@ -14,7 +14,6 @@ use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\User;
 use App\Support\Csv;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
@@ -218,8 +217,7 @@ class MemberImportPageTest extends TestCase
         $other = Club::create(['name' => 'Other', 'slug' => 'other', 'club_type_id' => $this->club->club_type_id, 'is_active' => true]);
         $foreign = MemberImportMapping::create(['club_id' => $other->id, 'name' => 'Theirs', 'header_signature' => 'x', 'mapping' => ['person' => 'full_name']]);
 
-        $this->expectException(ModelNotFoundException::class);
-        $this->page()->set('file', $this->csv("Person\nAnn\n"))->call('loadSavedMapping', $foreign->id);
+        $this->page()->set('file', $this->csv("Person\nAnn\n"))->call('loadSavedMapping', $foreign->id)->assertNotFound();
     }
 
     public function test_another_clubs_import_cannot_be_undone(): void
@@ -227,8 +225,8 @@ class MemberImportPageTest extends TestCase
         $other = Club::create(['name' => 'Other', 'slug' => 'other', 'club_type_id' => $this->club->club_type_id, 'is_active' => true]);
         $theirs = MemberImport::create(['club_id' => $other->id, 'filename' => 'x.csv', 'file_hash' => 'h', 'status' => MemberImport::IMPORTED]);
 
-        $this->expectException(ModelNotFoundException::class);
-        $this->page()->call('undoImport', $theirs->id);
+        $this->page()->call('undoImport', $theirs->id)->assertNotFound();
+        $this->assertSame(MemberImport::IMPORTED, $theirs->fresh()->status);
     }
 
     public function test_the_error_rows_download_has_the_original_cells_and_the_problem(): void

@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 
-const props = defineProps({
+defineProps({
     grandLodges: {
         type: Array,
         required: true,

@@ -10,7 +10,7 @@ import ClubChips from '@/Components/ClubChips.vue';
 import DateTile from '@/Components/Ui/DateTile.vue';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 
-const props = defineProps({
+defineProps({
     meetings: { type: Array, default: () => [] },
     recent: { type: Array, default: () => [] },
     scopeClub: { type: Object, default: null },

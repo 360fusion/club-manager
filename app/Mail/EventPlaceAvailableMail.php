@@ -37,7 +37,7 @@ class EventPlaceAvailableMail extends EventTemplatedMail
                 'club_name' => $event->club->name,
                 'contact_name' => $this->registration->contact_name,
                 'event_title' => $event->title,
-                'event_date' => $event->starts_at?->format('l j F Y, H:i'),
+                'event_date' => $event->starts_at->format('l j F Y, H:i'),
                 'event_location' => $event->formatted_location,
                 'people' => (string) $this->registration->attendees->count(),
             ],

@@ -159,7 +159,7 @@
             <h2 class="text-sm font-semibold text-slate-900 dark:text-white mb-3">History</h2>
             <ol class="space-y-3">
                 @forelse($candidate->events as $event)
-                    <li class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                    <li wire:key="event-{{ $event->id }}" class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
                         <div class="flex items-center justify-between gap-2">
                             <span class="font-semibold text-slate-900 dark:text-white">{{ $event->summary }}</span>
                             @if(in_array($event->type, \App\Domains\ClubAccounting\Models\CandidateEvent::NOTE_TYPES, true))

@@ -7,12 +7,13 @@ use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Models\AnnualOfficerRoster;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\AnnualOfficerRosterService;
-use App\Models\Club;
+use App\Http\Requests\OfficerRosterAdmin\StoreOfficerRosterRequest;
+use App\Http\Requests\OfficerRosterAdmin\StoreQuickMemberRequest;
+use App\Http\Requests\OfficerRosterAdmin\UpdateStatusRequest;
 use App\Support\MasonicRanks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,7 +24,7 @@ class OfficerRosterAdminController extends Controller
      */
     public function index(Request $request, string $clubSlug, AnnualOfficerRosterService $rosterService): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         // Automatically trigger installation rollover if the installation meeting has passed
         $rosterService->checkAndAutoInstallPassedInstallationMeetings($club);
@@ -75,18 +76,11 @@ class OfficerRosterAdminController extends Controller
     /**
      * Save or update roster for a specific Masonic Year.
      */
-    public function store(Request $request, string $clubSlug, AnnualOfficerRosterService $rosterService): RedirectResponse|JsonResponse
+    public function store(StoreOfficerRosterRequest $request, string $clubSlug, AnnualOfficerRosterService $rosterService): RedirectResponse|JsonResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'masonic_year' => 'required|string|max:20',
-            'assignments' => 'present|array|max:100',
-            'assignments.*.member_id' => 'required|integer',
-            'assignments.*.office' => 'required|string|max:50',
-            'notes' => 'nullable|string|max:10000',
-            'status' => 'nullable|string|in:draft,proposed,confirmed,installed',
-        ]);
+        $validated = $request->validated();
 
         try {
             $roster = $rosterService->saveRoster(
@@ -119,14 +113,12 @@ class OfficerRosterAdminController extends Controller
     /**
      * Update status (e.g., mark as Proposed or Approved in Committee).
      */
-    public function updateStatus(Request $request, string $clubSlug, int $id): RedirectResponse
+    public function updateStatus(UpdateStatusRequest $request, string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $roster = AnnualOfficerRoster::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
-        $validated = $request->validate([
-            'status' => 'required|string|in:draft,proposed,confirmed,installed',
-        ]);
+        $validated = $request->validated();
 
         $roster->update([
             'status' => $validated['status'],
@@ -140,7 +132,7 @@ class OfficerRosterAdminController extends Controller
      */
     public function install(Request $request, string $clubSlug, int $id, AnnualOfficerRosterService $rosterService): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $roster = AnnualOfficerRoster::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
         // Mark previously installed roster as archived/past
@@ -157,18 +149,11 @@ class OfficerRosterAdminController extends Controller
     /**
      * Quickly create a historic/new member for roster assignment.
      */
-    public function storeQuickMember(Request $request, string $clubSlug): JsonResponse|RedirectResponse
+    public function storeQuickMember(StoreQuickMemberRequest $request, string $clubSlug): JsonResponse|RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'membership_status' => 'nullable|string|max:50',
-            'masonic_rank' => ['nullable', Rule::in(array_keys(Member::MASONIC_RANKS))],
-            'grand_rank' => ['nullable', 'string', 'max:100', Rule::in(MasonicRanks::allowedValues($club, MasonicRanks::GRAND))],
-            'provincial_rank' => ['nullable', 'string', 'max:100', Rule::in(MasonicRanks::allowedValues($club, MasonicRanks::PROVINCIAL))],
-        ]);
+        $validated = $request->validated();
 
         $masonicRank = $validated['masonic_rank'] ?: 'Bro';
 

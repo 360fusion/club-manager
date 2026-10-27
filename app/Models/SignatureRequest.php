@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Contracts\Signable;
 use App\Enums\SignatureRequestStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +18,10 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class SignatureRequest extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory;
+
+    /** @use InteractsWithMedia<Media> */
+    use InteractsWithMedia;
 
     protected $fillable = [
         'club_id',
@@ -66,7 +70,9 @@ class SignatureRequest extends Model implements HasMedia
     }
 
     /**
-     * @return MorphTo<Model, $this>
+     * What is being signed: any model that implements Signable.
+     *
+     * @return MorphTo<Model&Signable, $this>
      */
     public function signable(): MorphTo
     {

@@ -53,6 +53,23 @@ class EventAdminFormTest extends TestCase
         ];
     }
 
+    public function test_the_events_index_is_paged_newest_first(): void
+    {
+        foreach (range(1, 25) as $i) {
+            Event::create(['club_id' => $this->club->id, 'title' => "Event {$i}", 'slug' => "event-{$i}", 'starts_at' => now()->addDays($i), 'status' => 'upcoming']);
+        }
+
+        $this->actingAs($this->admin)->get(route('admin.events.index', ['clubSlug' => 'club-a']))
+            ->assertInertia(fn ($page) => $page
+                ->component('Admin/Events/Index')
+                ->has('events.data', 20)
+                ->where('events.total', 25)
+                ->where('events.data.0.title', 'Event 25'));
+
+        $this->actingAs($this->admin)->get(route('admin.events.index', ['clubSlug' => 'club-a', 'page' => 2]))
+            ->assertInertia(fn ($page) => $page->has('events.data', 5));
+    }
+
     private function store(array $extra = [])
     {
         return $this->actingAs($this->admin)->post(route('admin.events.store', ['clubSlug' => 'club-a']), $this->payload($extra));

@@ -269,9 +269,9 @@ const submitContactForm = (block) => {
             <!-- 4. Image gallery -->
             <section v-else-if="block.type === 'images' && block.items?.length" class="max-w-6xl mx-auto space-y-4">
                 <div :class="['grid gap-4', block.columns === 2 ? 'grid-cols-1 sm:grid-cols-2' : block.columns === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3']">
-                    <div v-for="(item, iIdx) in block.items" :key="item.id || iIdx" class="space-y-2">
-                        <img v-if="item.url" :src="item.url" :alt="item.caption || 'Gallery image'" :class="['w-full h-48 sm:h-56 object-cover border border-neutral-800 shadow-md', radiusMd]" />
-                        <p v-if="item.caption" class="text-xs text-center text-neutral-400 italic">{{ item.caption }}</p>
+                    <div v-for="(image, iIdx) in block.items" :key="image.id || iIdx" class="space-y-2">
+                        <img v-if="image.url" :src="image.url" :alt="image.caption || 'Gallery image'" :class="['w-full h-48 sm:h-56 object-cover border border-neutral-800 shadow-md', radiusMd]" />
+                        <p v-if="image.caption" class="text-xs text-center text-neutral-400 italic">{{ image.caption }}</p>
                     </div>
                 </div>
             </section>

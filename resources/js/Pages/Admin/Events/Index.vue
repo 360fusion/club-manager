@@ -6,11 +6,13 @@ import Card from '@/Components/Ui/Card.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
 import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
+import Pagination from '@/Components/Ui/Pagination.vue';
 import { formatEventTime } from '@/Utils/localDateTime';
 
 const props = defineProps({
   club: Object,
-  events: Array,
+  // One page of the club's events (a Laravel paginator), newest first.
+  events: Object,
 });
 
 const eventToDelete = ref(null);
@@ -44,8 +46,8 @@ const deleteEvent = () => {
         </div>
       </Card>
 
-      <div v-if="events.length" class="space-y-4">
-        <Card v-for="event in events" :key="event.id">
+      <div v-if="events.data.length" class="space-y-4">
+        <Card v-for="event in events.data" :key="event.id">
           <div class="flex flex-col justify-between gap-6 md:flex-row md:items-center">
             <div class="min-w-0 space-y-2">
               <div class="flex flex-wrap items-center gap-2">
@@ -66,6 +68,7 @@ const deleteEvent = () => {
             </div>
           </div>
         </Card>
+        <Pagination :links="events.links" />
       </div>
 
       <Card v-else class="text-center">

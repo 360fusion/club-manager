@@ -16,7 +16,10 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Post extends Model implements HasMedia
 {
-    use HasFactory, HasVisibility, InteractsWithMedia;
+    use HasFactory, HasVisibility;
+
+    /** @use InteractsWithMedia<Media> */
+    use InteractsWithMedia;
 
     protected $fillable = [
         'club_id',

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SuperAdminLodge\IndexSuperAdminLodgeRequest;
+use App\Http\Requests\SuperAdminLodge\LinkClubRequest;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Lodge;
@@ -22,15 +24,9 @@ use Inertia\Response;
  */
 class SuperAdminLodgeController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(IndexSuperAdminLodgeRequest $request): Response
     {
-        $filters = $request->validate([
-            'q' => 'nullable|string|max:100',
-            'province' => 'nullable|string|max:60',
-            'order' => 'nullable|string|max:60',
-            'status' => ['nullable', Rule::in([...Lodge::STATUSES, 'managed'])],
-            'gaps' => 'nullable|in:no_hall,no_schedule,no_province',
-        ]);
+        $filters = $request->validated();
 
         $query = Lodge::query()->with(['clubType:id,code,name', 'province:id,name', 'masonicHall:id,name,town', 'schedules', 'sources', 'club:id,name,slug']);
 
@@ -145,9 +141,9 @@ class SuperAdminLodgeController extends Controller
         return redirect()->route('superadmin.lodges.index')->with('success', "'{$lodge->displayName()}' updated.");
     }
 
-    public function linkClub(Request $request, int $id, LodgeClaimService $claims): RedirectResponse
+    public function linkClub(LinkClubRequest $request, int $id, LodgeClaimService $claims): RedirectResponse
     {
-        $validated = $request->validate(['club_id' => 'required|exists:clubs,id']);
+        $validated = $request->validated();
         $lodge = Lodge::findOrFail($id);
 
         $claims->link($lodge, Club::findOrFail($validated['club_id']));

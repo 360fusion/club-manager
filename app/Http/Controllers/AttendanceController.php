@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Club;
+use App\Http\Requests\Attendance\CheckInRequest;
+use App\Http\Requests\Attendance\WalkInRequest;
 use App\Models\Event;
 use App\Models\EventAttendee;
 use App\Models\EventRegistration;
 use App\Services\Events\EventRegistrationService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,7 +19,7 @@ class AttendanceController extends Controller
      */
     public function show(string $clubSlug, int $eventId): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = Event::where('club_id', $club->id)->findOrFail($eventId);
 
         $attendees = EventRegistration::with(['attendees.starter', 'attendees.main', 'attendees.dessert', 'user'])
@@ -52,15 +52,12 @@ class AttendanceController extends Controller
     /**
      * Mark one person as checked in or undo it.
      */
-    public function checkIn(Request $request, string $clubSlug, int $eventId): RedirectResponse
+    public function checkIn(CheckInRequest $request, string $clubSlug, int $eventId): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = Event::where('club_id', $club->id)->findOrFail($eventId);
 
-        $validated = $request->validate([
-            'attendee_id' => 'required|integer',
-            'action' => 'required|in:checkin,undo',
-        ]);
+        $validated = $request->validated();
 
         $attendee = EventAttendee::whereHas('registration', fn ($q) => $q->where('event_id', $event->id))->findOrFail($validated['attendee_id']);
 
@@ -72,15 +69,12 @@ class AttendanceController extends Controller
     /**
      * Someone who turned up without a booking.
      */
-    public function walkIn(Request $request, string $clubSlug, int $eventId, EventRegistrationService $registrations): RedirectResponse
+    public function walkIn(WalkInRequest $request, string $clubSlug, int $eventId, EventRegistrationService $registrations): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = Event::where('club_id', $club->id)->findOrFail($eventId);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:150',
-            'dietary_requirements' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $attendee = $registrations->walkIn($event, $validated['name'], $validated['dietary_requirements'] ?? null);
 

@@ -60,7 +60,7 @@ class AgendaPackPreviewModal extends Component
         $meeting = $this->getMeeting();
         $club = $meeting->club;
 
-        $dateFormatted = $meeting->meeting_date ? $meeting->meeting_date->format('d M Y') : Carbon::now()->format('d M Y');
+        $dateFormatted = $meeting->meeting_date->format('d M Y');
         $this->emailSubject = "{$club->name} - Committee Meeting Agenda Pack - {$dateFormatted}";
 
         $compiler = app(CommitteePackCompilerService::class);

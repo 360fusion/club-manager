@@ -1,12 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
-import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import FlashMessages from '@/Components/Ui/FlashMessages.vue';
-
-const showNavMediaModal = ref(false);
 
 const props = defineProps({
   title: {
@@ -25,15 +22,13 @@ const props = defineProps({
 
 const page = usePage();
 const clubSlug = props.club?.slug || page.props.club?.slug || 'lodge-of-fraternity';
-const clubName = props.club?.name || page.props.club?.name || 'The Lodge of Fraternity';
+const clubName = props.club?.name || page.props.club?.name || '';
 
 const sidebarOpen = ref(false);
 const switcherOpen = ref(false);
 const userMenuOpen = ref(false);
 
 const userClubs = computed(() => page.props.auth?.clubs || []);
-const adminClubs = computed(() => userClubs.value.filter(c => ['admin', 'owner'].includes(c.role)));
-const memberClubs = computed(() => userClubs.value.filter(c => !['admin', 'owner'].includes(c.role)));
 
 const currentClubRole = computed(() => {
   const c = userClubs.value.find(item => item.slug === clubSlug);

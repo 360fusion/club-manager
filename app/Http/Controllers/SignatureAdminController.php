@@ -16,7 +16,7 @@ class SignatureAdminController extends Controller
 {
     public function downloadPdf(string $clubSlug, int $id, SignatureCertificatePdf $pdf)
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $request = SignatureRequest::where('club_id', $club->id)->findOrFail($id);
 
         abort_unless($request->status === SignatureRequestStatus::Signed, 404);

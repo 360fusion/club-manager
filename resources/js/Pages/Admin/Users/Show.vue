@@ -1,6 +1,5 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -37,8 +36,6 @@ const props = defineProps({
     default: () => ['Novice', 'Intermediate', 'Senior', 'Captain', 'Coxswain', 'Veteran'],
   },
 });
-
-const activeTab = ref('overview');
 
 const updateRole = (newRole) => {
   router.post(

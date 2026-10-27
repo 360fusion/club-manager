@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('category')->default('General Expense');
             $table->decimal('amount', 12, 2);
             $table->date('due_date');
-            $table->enum('status', ['unpaid', 'paid', 'cancelled'])->default('unpaid');
+            $table->string('status')->default('unpaid'); // unpaid, paid, cancelled, draft, pending_approval, void
             $table->timestamp('paid_at')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();

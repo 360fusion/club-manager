@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LodgeVisitor\StoreLodgeVisitorRequest;
 use App\Models\ClubVisitorAccess;
 use App\Models\Lodge;
 use App\Services\Lodges\VisitorAccessService;
@@ -15,17 +16,12 @@ class LodgeVisitorController extends Controller
 {
     public function __construct(private readonly VisitorAccessService $access) {}
 
-    public function store(Request $request, string $slug): RedirectResponse
+    public function store(StoreLodgeVisitorRequest $request, string $slug): RedirectResponse
     {
         $lodge = Lodge::listed()->with('club')->where('slug', $slug)->firstOrFail();
         abort_if($lodge->club === null, 404);
 
-        $validated = $request->validate([
-            'home_lodge_name' => 'required|string|max:255',
-            'home_lodge_number' => 'nullable|string|max:20',
-            'rank' => 'nullable|string|max:100',
-            'message' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $this->access->request($lodge->club, $request->user(), $validated);
 

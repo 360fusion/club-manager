@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PaymentOptions\Reorder2Request;
+use App\Http\Requests\PaymentOptions\ToggleRequest;
 use App\Models\Club;
 use App\Models\ClubPaymentMethod;
 use App\Services\Events\EventPricing;
@@ -22,7 +24,7 @@ class PaymentOptionsController extends Controller
 {
     public function index(Request $request, string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         return Inertia::render('Admin/PaymentOptions/Index', [
             'club' => ['name' => $club->name, 'slug' => $club->slug],
@@ -44,7 +46,7 @@ class PaymentOptionsController extends Controller
 
     public function store(Request $request, string $clubSlug, EventPricing $pricing): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $method = new ClubPaymentMethod(['club_id' => $club->id, 'sort_order' => ClubPaymentMethod::where('club_id', $club->id)->count()]);
 
         $note = $this->save($request, $method, $pricing);
@@ -54,7 +56,7 @@ class PaymentOptionsController extends Controller
 
     public function update(Request $request, string $clubSlug, int $id, EventPricing $pricing): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $method = ClubPaymentMethod::where('club_id', $club->id)->findOrFail($id);
 
         $note = $this->save($request, $method, $pricing);
@@ -65,11 +67,11 @@ class PaymentOptionsController extends Controller
     /**
      * Switch an option on or off for the whole lodge. Switching on adds it to every upcoming event that does not have it yet.
      */
-    public function toggle(Request $request, string $clubSlug, int $id): RedirectResponse
+    public function toggle(ToggleRequest $request, string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $method = ClubPaymentMethod::where('club_id', $club->id)->findOrFail($id);
-        $on = (bool) $request->validate(['is_active' => 'required|boolean'])['is_active'];
+        $on = (bool) $request->validated('is_active');
 
         if ($on && ! $method->hasCompleteDetails()) {
             throw ValidationException::withMessages(['option_'.$method->id => $method->missingDetailsMessage()]);
@@ -86,10 +88,10 @@ class PaymentOptionsController extends Controller
     /**
      * The order options are shown to people booking.
      */
-    public function reorder(Request $request, string $clubSlug): RedirectResponse
+    public function reorder(Reorder2Request $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $validated = $request->validate(['ids' => 'required|array|min:1|max:50', 'ids.*' => 'integer|min:1|max:4294967295']);
+        $club = $this->findClub($clubSlug);
+        $validated = $request->validated();
 
         $owned = ClubPaymentMethod::where('club_id', $club->id)->whereIn('id', $validated['ids'])->pluck('id')->all();
 
@@ -104,7 +106,7 @@ class PaymentOptionsController extends Controller
 
     public function destroy(string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $method = ClubPaymentMethod::where('club_id', $club->id)->findOrFail($id);
 
         // Bookings that used it keep their history; the method itself is only switched off if it was used.

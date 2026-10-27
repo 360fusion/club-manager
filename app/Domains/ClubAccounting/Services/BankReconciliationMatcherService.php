@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Models\BankMatchRule;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
+use App\Enums\DocumentStatus;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
@@ -198,7 +199,7 @@ class BankReconciliationMatcherService
             // Unpaid member invoices (the Inertia accounting layer's Invoice model — distinct
             // from MemberSubscription above, e.g. one-off charges like locker rental).
             $unpaidInvoices = Invoice::where('club_id', $clubId)
-                ->where('status', 'unpaid')
+                ->where('status', DocumentStatus::Unpaid->value)
                 ->with('user')
                 ->get();
 
@@ -286,7 +287,7 @@ class BankReconciliationMatcherService
         if ($amount < 0) {
             $absAmount = abs($amount);
             $unpaidBills = Bill::where('club_id', $clubId)
-                ->where('status', 'unpaid')
+                ->where('status', DocumentStatus::Unpaid->value)
                 ->get();
 
             foreach ($unpaidBills as $bill) {
@@ -385,7 +386,7 @@ class BankReconciliationMatcherService
                     auth()->user(),
                     min(abs($amount), $registration->balanceDue()),
                     'Bank transfer',
-                    $transaction->transaction_date ? Carbon::parse($transaction->transaction_date) : null,
+                    Carbon::parse($transaction->transaction_date),
                     'Matched to bank line: '.($transaction->raw_description ?: 'bank statement'),
                     'bank_reconciliation',
                 );
@@ -394,7 +395,7 @@ class BankReconciliationMatcherService
             } elseif ($matchType === 'supplier_bill') {
                 $bill = Bill::where('club_id', $transaction->club_id)->find((int) $targetId);
                 if ($bill) {
-                    if ($bill->status !== 'paid') {
+                    if ($bill->status !== DocumentStatus::Paid->value) {
                         $accountingService->markBillAsPaid($bill, auth()->user());
                     }
                     $accountingService->markBillReconciled($bill, $transaction);
@@ -405,7 +406,7 @@ class BankReconciliationMatcherService
             } elseif ($matchType === 'invoice') {
                 $invoice = Invoice::where('club_id', $transaction->club_id)->find((int) $targetId);
                 if ($invoice) {
-                    if ($invoice->status !== 'paid') {
+                    if ($invoice->status !== DocumentStatus::Paid->value) {
                         $accountingService->markInvoiceAsPaid($invoice, auth()->user());
                     }
                     $accountingService->markInvoiceReconciled($invoice, $transaction);
@@ -444,7 +445,7 @@ class BankReconciliationMatcherService
 
             if ($bankAcc && $offsetAcc && ! $alreadyPosted && ! $ledgerAlreadyPosted) {
                 $absAmount = abs($amount);
-                $txDate = $transaction->transaction_date ? Carbon::parse($transaction->transaction_date)->format('Y-m-d') : date('Y-m-d');
+                $txDate = Carbon::parse($transaction->transaction_date)->format('Y-m-d');
                 if ($amount > 0) {
                     // Money Received: Debit Bank (1000), Credit Revenue/Offset
                     $accountingService->postJournalEntry($club, [

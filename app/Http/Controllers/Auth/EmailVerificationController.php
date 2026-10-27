@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Domains\ClubAccounting\Services\MemberInvitationService;
+use App\Enums\ClubMemberStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +28,7 @@ class EmailVerificationController extends Controller
 
         // Now the address is proven, tie the person to the roster record it matches at any club that has approved them.
         $invitations = app(MemberInvitationService::class);
-        $user->clubs()->wherePivot('status', 'active')->get()->each(fn ($club) => $invitations->linkMatchingMember($club, $user));
+        $user->clubs()->wherePivot('status', ClubMemberStatus::Active->value)->get()->each(fn ($club) => $invitations->linkMatchingMember($club, $user));
 
         return redirect()->route('login')->with('success', 'Email confirmed. You can now sign in.');
     }

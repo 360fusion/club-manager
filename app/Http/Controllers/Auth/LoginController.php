@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Login\StoreLoginRequest;
 use App\Models\User;
 use App\Support\EmailVerification;
 use Illuminate\Http\Request;
@@ -27,12 +28,9 @@ class LoginController extends Controller
     /**
      * Handle an authentication request.
      */
-    public function store(Request $request)
+    public function store(StoreLoginRequest $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email', 'max:255'],
-            'password' => ['required', 'string', 'max:255'],
-        ]);
+        $credentials = $request->validated();
 
         if (Auth::validate($credentials)) {
             $user = User::where('email', $request->email)->first();
@@ -49,7 +47,7 @@ class LoginController extends Controller
                 $request->session()->put('login.id', $user->id);
                 $request->session()->put('login.remember', $request->boolean('remember'));
 
-                return redirect()->route('two-factor.challenge');
+                return redirect()->route('two-factor.login');
             }
 
             Auth::login($user, $request->boolean('remember'));

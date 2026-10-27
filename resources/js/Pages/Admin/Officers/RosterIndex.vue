@@ -1,6 +1,8 @@
 <script setup>
+import RosterQuickMemberModal from '@/Components/Officers/RosterQuickMemberModal.vue';
+import RosterNewYearModal from '@/Components/Officers/RosterNewYearModal.vue';
 import { ref, computed } from 'vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Tabs from '@/Components/Ui/Tabs.vue';
 
@@ -189,9 +191,6 @@ const openNewYearModal = () => {
   selectedStartYear.value = getNextSequentialStartYear();
   showNewYearModal.value = true;
 };
-
-// Filter toggle for stewards list: active by default
-const onlyNonOfficersFilter = ref(true);
 
 // Filter toggle for administrative offices: active by default
 const onlyNonOfficersAdminFilter = ref(true);
@@ -917,182 +916,10 @@ const installCurrentRoster = () => {
       </div>
 
       <!-- Add New Masonic Year Modal (Strict Start Year Dropdown) -->
-      <div v-if="showNewYearModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <h3 class="text-base font-bold text-slate-900 dark:text-white">Add New Masonic Year Roster</h3>
-            <button @click="showNewYearModal = false" class="text-slate-400 text-lg font-bold">✕</button>
-          </div>
-
-          <div class="space-y-4">
-            <div class="space-y-2">
-              <div class="flex items-center justify-between">
-                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">Installation Start Year</label>
-                <span class="text-[10px] text-slate-400 font-semibold">1717 to {{ currentYearNum + 3 }}</span>
-              </div>
-
-              <!-- Direct Number Input + Filter Input Row -->
-              <div class="flex items-center gap-2">
-                <input
-                  type="number"
-                  v-model.number="selectedStartYear"
-                  :min="1717"
-                  :max="currentYearNum + 3"
-                  placeholder="e.g. 1849"
-                  class="w-32 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  v-model="yearSearchInput"
-                  placeholder="Search year (e.g. 1850)..."
-                  class="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <!-- Compact Scrollable List (Fixed Max Height 160px) -->
-              <div class="max-h-40 overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-xl p-1 bg-slate-50 dark:bg-slate-800/50 space-y-0.5">
-                <button
-                  v-for="y in filteredStartYearOptions"
-                  :key="y"
-                  type="button"
-                  @click="selectedStartYear = y"
-                  :class="[
-                    'w-full text-left px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-between cursor-pointer',
-                    selectedStartYear === y ? 'bg-blue-600 text-white shadow-xs' : 'hover:bg-slate-200/80 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200'
-                  ]"
-                >
-                  <span>{{ y }} (Installation Start)</span>
-                  <span v-if="selectedStartYear === y" class="text-[10px] uppercase font-black bg-white/20 dark:bg-slate-900/20 px-1.5 py-0.5 rounded">Selected</span>
-                </button>
-                <div v-if="!filteredStartYearOptions.length" class="p-3 text-center text-xs text-slate-400">
-                  No available start year matching "{{ yearSearchInput }}"
-                </div>
-              </div>
-            </div>
-
-            <!-- Dynamic Preview Box -->
-            <div class="p-3.5 bg-blue-50/70 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/80 rounded-2xl space-y-1">
-              <div class="flex items-center justify-between text-xs font-black text-blue-950 dark:text-blue-100">
-                <span>Calculated Masonic Year:</span>
-                <span class="text-sm font-black text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-900 px-2.5 py-0.5 rounded-lg border border-blue-200/60 dark:border-blue-800/60">
-                  {{ calculatedMasonicYear }}
-                </span>
-              </div>
-              <p class="text-[11px] text-blue-800 dark:text-blue-200 font-medium">
-                Period: 1st {{ installationMonth }} {{ selectedStartYear }} – 30th {{ installationMonth }} {{ calculatedEndYear }}
-              </p>
-            </div>
-          </div>
-
-          <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <button type="button" @click="showNewYearModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl">Cancel</button>
-            <button type="button" @click="createNewMasonicYear" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer">
-              Start Roster Draft
-            </button>
-          </div>
-        </div>
-      </div>
+      <RosterNewYearModal v-if="showNewYearModal" :calculated-end-year="calculatedEndYear" :calculated-masonic-year="calculatedMasonicYear" :create-new-masonic-year="createNewMasonicYear" :current-year-num="currentYearNum" :filtered-start-year-options="filteredStartYearOptions" :installation-month="installationMonth" v-model:selected-start-year="selectedStartYear" v-model:year-search-input="yearSearchInput" @close="showNewYearModal = false" />
 
       <!-- Add Quick Historic Member Modal -->
-      <div v-if="showQuickMemberModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <div>
-              <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <span>👤</span>
-                <span>Add Historic Member</span>
-              </h3>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400">Quickly add a member to assign to roster entries.</p>
-            </div>
-            <button @click="showQuickMemberModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold cursor-pointer">✕</button>
-          </div>
-
-          <div v-if="quickMemberError" class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 p-3 rounded-xl text-xs font-bold">
-            {{ quickMemberError }}
-          </div>
-
-          <form @submit.prevent="submitQuickMember" class="space-y-3">
-            <div class="grid grid-cols-2 gap-3">
-              <div class="space-y-1">
-                <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">First Name <span class="text-rose-500">*</span></label>
-                <input
-                  type="text"
-                  v-model="quickMemberForm.first_name"
-                  placeholder="e.g. Thomas"
-                  required
-                  class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div class="space-y-1">
-                <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Surname <span class="text-rose-500">*</span></label>
-                <input
-                  type="text"
-                  v-model="quickMemberForm.last_name"
-                  placeholder="e.g. Dunckerley"
-                  required
-                  class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div class="space-y-1">
-                <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Member Status</label>
-                <select
-                  v-model="quickMemberForm.membership_status"
-                  class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                >
-                  <option value="historical">Historical Member (Default)</option>
-                  <option value="active">Active Member</option>
-                  <option value="honorary">Honorary Member</option>
-                  <option value="resigned">Resigned</option>
-                  <option value="excluded_rule_181">Excluded (Rule 181)</option>
-                  <option value="deceased">Deceased</option>
-                </select>
-              </div>
-
-              <div class="space-y-1">
-                <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Title / Rank <span class="text-slate-400 font-normal">(Optional)</span></label>
-                <select
-                  v-model="quickMemberForm.masonic_rank"
-                  class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                >
-                  <option value="Bro">Bro (Brother)</option>
-                  <option value="WBro">WBro (Worshipful Brother)</option>
-                  <option value="VWBro">VWBro (Very Worshipful Brother)</option>
-                  <option value="RWBro">RWBro (Right Worshipful Brother)</option>
-                  <option value="MWBro">MWBro (Most Worshipful Brother)</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div class="space-y-1">
-                <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Grand Rank <span class="text-slate-400 font-normal">(Optional)</span></label>
-                <select v-model="quickMemberForm.grand_rank" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">None</option>
-                  <option v-for="rank in grandRanks" :key="rank.value" :value="rank.value">{{ rank.label }}</option>
-                </select>
-              </div>
-              <div class="space-y-1">
-                <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Provincial Rank <span class="text-slate-400 font-normal">(Optional)</span></label>
-                <select v-model="quickMemberForm.provincial_rank" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">None</option>
-                  <option v-for="rank in provincialRanks" :key="rank.value" :value="rank.value">{{ rank.label }}</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button type="button" @click="showQuickMemberModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer">Cancel</button>
-              <button type="submit" :disabled="isCreatingMember" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer flex items-center gap-1.5">
-                <span v-if="isCreatingMember">Saving...</span>
-                <span v-else>Save &amp; Select Member</span>
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+      <RosterQuickMemberModal v-if="showQuickMemberModal" :grand-ranks="grandRanks" :is-creating-member="isCreatingMember" :provincial-ranks="provincialRanks" :quick-member-error="quickMemberError" :quick-member-form="quickMemberForm" :submit-quick-member="submitQuickMember" @close="showQuickMemberModal = false" />
 
     </div>
   </AdminLayout>

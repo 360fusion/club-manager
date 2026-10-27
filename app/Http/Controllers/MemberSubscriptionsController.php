@@ -114,7 +114,7 @@ class MemberSubscriptionsController extends Controller
     public function toggle(Request $request, string $clubSlug, int $typeId): RedirectResponse
     {
         $user = Auth::user();
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $type = NewsletterType::where('club_id', $club->id)->findOrFail($typeId);
         $isMember = $user->clubs()->where('clubs.id', $club->id)->exists();
 

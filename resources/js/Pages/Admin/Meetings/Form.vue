@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-import { useForm, Head, Link, router } from '@inertiajs/vue3';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Card from '@/Components/Ui/Card.vue';
 import Badge from '@/Components/Ui/Badge.vue';
@@ -36,7 +36,6 @@ const sectionHashMap = {
   'officers': 'officers-for-year',
   'officers-for-year': 'officers-for-year',
   'officers_for_year': 'officers-for-year',
-  'officers': 'officers-for-year',
   'roster': 'officers-for-year',
 
   'festive': 'festive-board',
@@ -145,7 +144,7 @@ const form = useForm({
   meeting_date: props.meeting.meeting_date ? String(props.meeting.meeting_date).split('T')[0] : '',
   starts_at: props.meeting.starts_at || '19:00',
   rehearsal_starts_at: props.meeting.rehearsal_starts_at || '18:00',
-  venue: props.meeting.venue || 'Masonic Hall, Wellington Street, Stockton-on-Tees',
+  venue: props.meeting.venue || '',
   dress_code: props.meeting.dress_code || 'Dinner Jacket, White Gloves',
   salutation: props.meeting.salutation || 'Dear Sir and Brother,',
   intro_text: props.meeting.intro_text || 'You are respectfully requested to attend the Regular Meeting of this Lodge of Free and Accepted Masons.',
@@ -160,22 +159,22 @@ const form = useForm({
   payment_link: props.meeting.payment_link || '',
   almoner_notice: props.meeting.almoner_notice || '',
   sick_distressed_notes: props.meeting.sick_distressed_notes || 'Should you be aware of any illness or unusual circumstances, please contact the Almoner.',
-  honorary_members_text: props.meeting.honorary_members_text || 'RW Bro Sir David Hugh Wootton Past Deputy Grand Master',
-  provincial_header_text: props.meeting.provincial_header_text || 'PROVINCIAL GRAND LODGE\nProvincial Grand Master\nR WBro John David Watts',
-  fraternal_visits_text: props.meeting.fraternal_visits_text || 'The Worshipful Master and Brethren of Haven of Rest Lodge No 4350 will be making their fraternal visit.',
-  officers_year_label: props.meeting.officers_year_label || props.club.settings?.officers_year_label || 'OFFICERS FOR 2025-2026',
+  honorary_members_text: props.meeting.honorary_members_text || '',
+  provincial_header_text: props.meeting.provincial_header_text || props.club.settings?.provincial_name || '',
+  fraternal_visits_text: props.meeting.fraternal_visits_text || '',
+  officers_year_label: props.meeting.officers_year_label || props.club.settings?.officers_year_label || '',
   officers_roster: getInitialRoster(),
 
   // Front Page Cover Fields
   front_page_logo: props.meeting.front_page_logo || '',
   front_page_logo_file: null,
   front_page_title: props.meeting.front_page_title || props.club.settings?.provincial_name?.toUpperCase() || 'PROVINCIAL GRAND LODGE',
-  provincial_grand_master: props.meeting.provincial_grand_master || props.club.settings?.provincial_grand_master || 'R WBro John David Watts',
-  deputy_provincial_grand_master: props.meeting.deputy_provincial_grand_master || props.club.settings?.deputy_provincial_grand_master || 'WBro Andrew Peter Faul Foster PSGD',
-  assistant_provincial_grand_masters: props.meeting.assistant_provincial_grand_masters || props.club.settings?.assistant_provincial_grand_masters || "WBro Dr. Rakesh Bhalla PSGD\nWBro Thomas Fred Gittins PSGD\nWBro Martin Rankin PJGD\nWBro Michael Stuart Shaw PJGD\nWBro Lt Col John William Henry",
+  provincial_grand_master: props.meeting.provincial_grand_master || props.club.settings?.provincial_grand_master || '',
+  deputy_provincial_grand_master: props.meeting.deputy_provincial_grand_master || props.club.settings?.deputy_provincial_grand_master || '',
+  assistant_provincial_grand_masters: props.meeting.assistant_provincial_grand_masters || props.club.settings?.assistant_provincial_grand_masters || '',
   cover_club_name: props.meeting.cover_club_name || props.club.name,
-  cover_club_number: props.meeting.cover_club_number || (props.club.lodge_number || '1418'),
-  cover_motto: props.meeting.cover_motto || (props.club.motto || 'Fraternus Amor Maneto'),
+  cover_club_number: props.meeting.cover_club_number || (props.club.lodge_number || ''),
+  cover_motto: props.meeting.cover_motto || (props.club.motto || ''),
   cover_worshipful_master: props.meeting.cover_worshipful_master || '',
 
   status: props.meeting.status || 'draft',
@@ -210,60 +209,7 @@ const importProvincialRulersFromSettings = () => {
   if (s.assistant_provincial_grand_masters) form.assistant_provincial_grand_masters = s.assistant_provincial_grand_masters;
 };
 
-const reloadingRoster = ref(false);
 const isEditingRoster = ref(false);
-
-// Snapshot the initial roster for dirty-checking
-const originalRosterSnapshot = ref(JSON.stringify(form.officers_roster));
-
-const rosterHasChanges = computed(() => {
-  return JSON.stringify(form.officers_roster) !== originalRosterSnapshot.value;
-});
-
-const importOfficersFromSettings = () => {
-  reloadOfficersFromSettings();
-};
-
-const applyRosterFromSettings = (settingsObj) => {
-  const s = settingsObj || props.club?.settings || {};
-  if (s.officers_year_label) {
-    form.officers_year_label = s.officers_year_label;
-  }
-  if (Array.isArray(s.officers_roster) && s.officers_roster.length > 0) {
-    form.officers_roster = s.officers_roster.map(o => ({ role: o.role || '', name: o.name || '' }));
-    const master = s.officers_roster.find(o => o.role && o.role.toLowerCase().includes('master'));
-    if (master && master.name) {
-      form.cover_worshipful_master = master.name;
-    }
-  }
-  // Update the snapshot after reload so dirty-check resets
-  originalRosterSnapshot.value = JSON.stringify(form.officers_roster);
-  isEditingRoster.value = false;
-};
-
-const reloadOfficersFromSettings = async () => {
-  reloadingRoster.value = true;
-  try {
-    const url = route('admin.meetings.settings_json', { clubSlug: props.club.slug });
-    const response = await fetch(url, {
-      headers: { 'Accept': 'application/json' },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      applyRosterFromSettings(data);
-    } else {
-      applyRosterFromSettings(props.club?.settings);
-    }
-  } catch {
-    applyRosterFromSettings(props.club?.settings);
-  } finally {
-    reloadingRoster.value = false;
-  }
-};
-
-const addOfficerRow = () => {
-  form.officers_roster.push({ role: '', name: '' });
-};
 
 const removeOfficerRow = (idx) => {
   form.officers_roster.splice(idx, 1);

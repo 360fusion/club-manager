@@ -2,10 +2,10 @@
 import EventBookingModal from '@/Components/Events/EventBookingModal.vue';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 import { ref } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 
-const props = defineProps({
+defineProps({
   club: { type: Object, required: true },
   isPending: { type: Boolean, default: false },
   memberRole: { type: String, default: 'member' },

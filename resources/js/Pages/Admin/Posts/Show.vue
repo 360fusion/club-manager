@@ -6,7 +6,7 @@ import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
 import Alert from '@/Components/Ui/Alert.vue';
 
-const props = defineProps({
+defineProps({
   club: Object,
   post: Object,
 });

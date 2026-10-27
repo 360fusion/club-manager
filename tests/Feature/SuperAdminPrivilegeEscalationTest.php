@@ -14,7 +14,7 @@ class SuperAdminPrivilegeEscalationTest extends TestCase
     {
         $user = User::factory()->create(['is_super_admin' => false]);
 
-        $response = $this->actingAs($user)->get('/auth/make-me-superadmin');
+        $response = $this->actingAs($user)->post('/auth/make-me-superadmin');
 
         $response->assertNotFound();
         $this->assertFalse($user->fresh()->is_super_admin);

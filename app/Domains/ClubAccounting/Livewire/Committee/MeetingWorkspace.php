@@ -102,7 +102,7 @@ class MeetingWorkspace extends Component
             'grantSeconderId.different' => 'The Seconder must be a different Brother than the Proposer.',
         ]);
 
-        CharityGrant::create([
+        $grant = CharityGrant::create([
             'club_id' => $meeting->club_id,
             'committee_meeting_id' => $meeting->id,
             'recipient_name' => trim($this->grantRecipient),
@@ -111,8 +111,10 @@ class MeetingWorkspace extends Component
             'proposer_member_id' => $this->grantProposerId ?: null,
             'seconder_member_id' => $this->grantSeconderId ?: null,
             'approval_status' => GrantApprovalStatus::Proposed,
-            'bacs_reference' => 'BACS-G'.sprintf('%04d', rand(1, 9999)),
         ]);
+
+        // Built from the id so no two grants can share a reference.
+        $grant->update(['bacs_reference' => 'BACS-G'.sprintf('%04d', $grant->id)]);
 
         $this->showCharityModal = false;
         $this->reset(['grantRecipient', 'grantPurpose', 'grantAmount', 'grantProposerId', 'grantSeconderId']);
@@ -162,7 +164,7 @@ class MeetingWorkspace extends Component
     {
         $meeting = $this->getMeeting();
         $this->editTitle = $meeting->title;
-        $this->editDate = $meeting->meeting_date ? $meeting->meeting_date->format('Y-m-d\TH:i') : '';
+        $this->editDate = $meeting->meeting_date->format('Y-m-d\TH:i');
         $this->editLocation = $meeting->location ?? '';
         $this->editStatus = $meeting->status === CommitteeMeetingStatus::Scheduled ? 'scheduled' : 'draft';
         $this->showEditModal = true;
@@ -266,7 +268,7 @@ class MeetingWorkspace extends Component
         $club = $meeting->club;
 
         // 1. Resolve Roster assignments for this meeting
-        $meetingDate = $meeting->meeting_date ? Carbon::parse($meeting->meeting_date) : Carbon::now();
+        $meetingDate = Carbon::parse($meeting->meeting_date);
         $year = $meetingDate->format('Y');
         $masonicYear = "{$year}-".($meetingDate->year + 1);
 

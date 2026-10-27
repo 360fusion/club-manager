@@ -32,7 +32,7 @@ class ClubDirectoryController extends Controller
      */
     public function subscribe(Request $request, string $clubSlug, int $typeId): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $type = NewsletterType::where('club_id', $club->id)
             ->where('is_external_subscribable', true)
             ->findOrFail($typeId);

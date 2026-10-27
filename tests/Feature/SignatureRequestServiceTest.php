@@ -12,7 +12,7 @@ use App\Models\ClubType;
 use App\Models\SignatureRequest;
 use App\Models\User;
 use App\Notifications\ClubNotification;
-use App\Services\AccountingService;
+use App\Services\FinancialYearService;
 use App\Services\Signatures\SignatureRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -176,7 +176,7 @@ class SignatureRequestServiceTest extends TestCase
         $auditorOne->clubs()->attach($this->club->id, ['role' => 'member', 'status' => 'active']);
         $auditorTwo->clubs()->attach($this->club->id, ['role' => 'member', 'status' => 'active']);
 
-        $audit = app(AccountingService::class)->requestYearAudit($this->club, 2025, $auditorOne, $auditorTwo, 'Reviewed');
+        $audit = app(FinancialYearService::class)->requestYearAudit($this->club, 2025, $auditorOne, $auditorTwo, 'Reviewed');
         $this->assertNull($audit->signed_off_at);
 
         $r1 = $this->service()->request($audit, 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $this->admin);

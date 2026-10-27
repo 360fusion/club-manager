@@ -2,7 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 
-const props = defineProps({
+defineProps({
   province: {
     type: Object,
     required: true,

@@ -68,6 +68,13 @@ return [
     'timezone' => 'UTC',
 
     /*
+    | Whether the content security policy is enforced. It is enforced in production and only reported (browsers log
+    | violations to the console, nothing is blocked) everywhere else, so a staging site shows what would break first.
+    | Set CSP_ENFORCE=true or false to override either way.
+    */
+    'csp_enforce' => (bool) env('CSP_ENFORCE', env('APP_ENV') === 'production'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------

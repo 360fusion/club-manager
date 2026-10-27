@@ -1,0 +1,11 @@
+import { h, reactive } from 'vue';
+const page = reactive({ props: { currency: { code: 'GBP', symbol: '£', name: 'Pound sterling' }, auth: { user: { id: 1, name: 'A', is_super_admin: false }, clubs: [] }, flash: {}, errors: {} }, url: '/', component: 'X', version: '1' });
+export const usePage = () => page;
+export const Link = { props: ['href'], setup: (p, { slots }) => () => h('a', { href: p.href }, slots.default?.()) };
+export const Head = { setup: () => () => null };
+export const router = { visit() {}, get() {}, post() {}, put() {}, delete() {}, reload() {}, on() { return () => {}; }, cancelAll() {} };
+export const useForm = (data = {}) => reactive({ ...data, errors: {}, processing: false, post() {}, put() {}, patch() {}, delete() {}, reset() {}, clearErrors() {}, transform() { return this; }, setError() {}, isDirty: false });
+export const createInertiaApp = () => {};
+export const useRemember = (v) => v;
+export const usePoll = () => {};
+export default {};

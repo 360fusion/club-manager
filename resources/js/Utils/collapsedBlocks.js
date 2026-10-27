@@ -8,7 +8,7 @@ const readAll = (clubSlug) => {
         const stored = JSON.parse(localStorage.getItem(key(clubSlug)) || '{}');
 
         return stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
-    } catch (e) {
+    } catch {
         return {};
     }
 };
@@ -32,7 +32,7 @@ export function writeCollapsed(clubSlug, pageId, ids) {
 
     try {
         localStorage.setItem(key(clubSlug), JSON.stringify(all));
-    } catch (e) {
+    } catch {
         // Storage is unavailable (private browsing); folding still works for this visit.
     }
 }

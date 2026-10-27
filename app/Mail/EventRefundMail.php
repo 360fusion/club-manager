@@ -35,7 +35,7 @@ class EventRefundMail extends EventTemplatedMail
                 'club_name' => $event->club->name,
                 'contact_name' => $this->registration->contact_name,
                 'event_title' => $event->title,
-                'event_date' => $event->starts_at?->format('l j F Y, H:i'),
+                'event_date' => $event->starts_at->format('l j F Y, H:i'),
                 'amount_refunded' => Currencies::symbolFor($event->club).number_format($this->amount, 2),
                 'reference' => $this->registration->payment_reference,
             ],

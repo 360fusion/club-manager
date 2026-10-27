@@ -92,7 +92,10 @@ class Candidate extends Model implements Signable
      * ACCESSORS & MUTATORS
      * ========================================================================= */
 
-    public function fullName(): Attribute
+    /**
+     * @return Attribute<string, never>
+     */
+    protected function fullName(): Attribute
     {
         return Attribute::make(
             get: fn () => trim("{$this->first_name} {$this->last_name}")
@@ -144,6 +147,9 @@ class Candidate extends Model implements Signable
      * RELATIONSHIPS
      * ========================================================================= */
 
+    /**
+     * @return BelongsTo<Club, $this>
+     */
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
@@ -184,6 +190,9 @@ class Candidate extends Model implements Signable
         return $this->belongsTo(User::class, 'owner_user_id');
     }
 
+    /**
+     * @return BelongsTo<Member, $this>
+     */
     public function convertedMember(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'converted_member_id');

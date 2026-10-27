@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StripeConnect\AcceptTermsRequest;
 use App\Models\Club;
 use App\Models\ClubPlatformAccount;
 use App\Services\Payment\StripeConnectGateway;
@@ -26,7 +27,7 @@ class StripeConnectController extends Controller
      */
     public function connect(Request $request, string $clubSlug): Response
     {
-        $club = $this->club($clubSlug);
+        $club = $this->findClub($clubSlug);
         $this->assertAvailable();
 
         $state = Str::random(40);
@@ -67,7 +68,7 @@ class StripeConnectController extends Controller
      */
     public function express(Request $request, string $clubSlug): Response
     {
-        $club = $this->club($clubSlug);
+        $club = $this->findClub($clubSlug);
         $this->assertAvailable();
 
         $existing = $club->platformAccount;
@@ -94,7 +95,7 @@ class StripeConnectController extends Controller
      */
     public function refresh(string $clubSlug): Response
     {
-        $club = $this->club($clubSlug);
+        $club = $this->findClub($clubSlug);
         $account = $this->activeAccount($club);
 
         return Inertia::location($this->stripe->onboardingUrl(
@@ -109,7 +110,7 @@ class StripeConnectController extends Controller
      */
     public function done(string $clubSlug): RedirectResponse
     {
-        $club = $this->club($clubSlug);
+        $club = $this->findClub($clubSlug);
         $account = $this->activeAccount($club);
         $account->update($this->stripe->status($account->stripe_account_id));
 
@@ -119,12 +120,11 @@ class StripeConnectController extends Controller
     /**
      * Agree to the platform's payment terms and fee, which is required before card payments are taken through the account.
      */
-    public function acceptTerms(Request $request, string $clubSlug): RedirectResponse
+    public function acceptTerms(AcceptTermsRequest $request, string $clubSlug): RedirectResponse
     {
-        $club = $this->club($clubSlug);
+        $club = $this->findClub($clubSlug);
         $account = $this->activeAccount($club);
 
-        $request->validate(['agree' => 'accepted']);
         $account->update(['terms_accepted_at' => now(), 'terms_accepted_by' => $request->user()->id]);
 
         return redirect()->back()->with('success', 'Thank you. Terms accepted.');
@@ -132,7 +132,7 @@ class StripeConnectController extends Controller
 
     public function disconnect(string $clubSlug): RedirectResponse
     {
-        $club = $this->club($clubSlug);
+        $club = $this->findClub($clubSlug);
         $account = $this->activeAccount($club);
 
         if ($account->type === ClubPlatformAccount::STANDARD) {
@@ -142,11 +142,6 @@ class StripeConnectController extends Controller
         $account->update(['disconnected_at' => now(), 'charges_enabled' => false, 'payouts_enabled' => false, 'terms_accepted_at' => null]);
 
         return redirect()->back()->with('success', 'Stripe disconnected. Card payments through the platform are switched off.');
-    }
-
-    private function club(string $clubSlug): Club
-    {
-        return Club::where('slug', $clubSlug)->with('platformAccount')->firstOrFail();
     }
 
     private function activeAccount(Club $club): ClubPlatformAccount

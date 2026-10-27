@@ -15,6 +15,11 @@ const emit = defineEmits(['close', 'select']);
 const activeFolder = ref(props.defaultFolder || 'all');
 const searchQuery = ref('');
 const mediaItems = ref([]);
+// The server sends the files a page at a time; `totalFiles` counts every file the filters match.
+const currentPage = ref(1);
+const hasMore = ref(false);
+const totalFiles = ref(0);
+const isLoadingMore = ref(false);
 const isLoading = ref(false);
 const isUploading = ref(false);
 const uploadFileInput = ref(null);
@@ -54,9 +59,9 @@ const subfoldersOf = (fixedId) => customFolders.value.filter(f => f.parent_slug 
 const activeCustomFolder = computed(() => customFolders.value.find(f => f.slug === activeFolder.value) || null);
 const fixedFolderById = (id) => fixedFolders.find(f => f.id === id);
 
-const fetchMedia = async () => {
+const fetchMedia = async (append = false) => {
   if (!props.clubSlug) return;
-  isLoading.value = true;
+  if (append) isLoadingMore.value = true; else isLoading.value = true;
   try {
     const params = new URLSearchParams();
     if (activeFolder.value !== 'all') params.append('folder', activeFolder.value);
@@ -65,11 +70,16 @@ const fetchMedia = async () => {
     if (filterExtension.value !== 'all') params.append('extension', filterExtension.value);
     if (filterDate.value !== 'all') params.append('date', filterDate.value);
     if (sortBy.value !== 'newest') params.append('sort', sortBy.value);
+    const page = append ? currentPage.value + 1 : 1;
+    params.append('page', page);
 
     const res = await fetch(`/${props.clubSlug}/admin/media?${params.toString()}`);
     if (res.ok) {
       const data = await res.json();
-      mediaItems.value = data.media || [];
+      mediaItems.value = append ? [...mediaItems.value, ...(data.media || [])] : (data.media || []);
+      currentPage.value = page;
+      hasMore.value = !!data.has_more;
+      totalFiles.value = data.total ?? mediaItems.value.length;
       trashCount.value = data.trash_count || 0;
       availableExtensions.value = data.available_extensions || [];
       availableMonths.value = data.available_months || [];
@@ -79,6 +89,7 @@ const fetchMedia = async () => {
     console.error('Failed to load media library items:', err);
   } finally {
     isLoading.value = false;
+    isLoadingMore.value = false;
   }
 };
 
@@ -105,19 +116,8 @@ watch([activeFolder, searchQuery, filterType, filterExtension, filterDate, sortB
 });
 
 const uploadFolder = ref('images');
-const isDragging = ref(false);
 const uploadStatus = ref('');
 const uploadError = ref('');
-
-const selectableFolders = computed(() => [
-  { id: 'summons', label: 'Summonses' },
-  { id: 'logos', label: 'Logos' },
-  { id: 'news', label: 'News Items' },
-  { id: 'newsletters', label: 'Newsletters' },
-  { id: 'images', label: 'Single Images' },
-  { id: 'galleries', label: 'Galleries' },
-  { id: 'documents', label: 'Documents' },
-].flatMap(f => [f, ...subfoldersOf(f.id).map(c => ({ id: c.slug, label: `— ${c.name}` }))]));
 
 const getCsrfToken = () => {
   const meta = document.querySelector('meta[name="csrf-token"]');
@@ -152,8 +152,6 @@ const uploadFiles = async (filesList) => {
     : ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'ppt', 'pptx', 'txt', 'rtf', 'zip'];
 
   const maxSizeBytes = 10 * 1024 * 1024; // 10MB
-
-  let successCount = 0;
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
@@ -196,7 +194,6 @@ const uploadFiles = async (filesList) => {
 
       if (res.ok && data.success && data.media) {
         mediaItems.value.unshift(data.media);
-        successCount++;
       } else {
         const msg = data.message || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Upload failed');
         uploadError.value = `Error uploading "${file.name}": ${msg}`;
@@ -216,13 +213,6 @@ const uploadFiles = async (filesList) => {
 const handleFileUpload = (e) => {
   uploadFiles(e.target.files);
   if (e.target) e.target.value = '';
-};
-
-const handleDrop = (e) => {
-  isDragging.value = false;
-  if (e.dataTransfer && e.dataTransfer.files) {
-    uploadFiles(e.dataTransfer.files);
-  }
 };
 
 const selectItem = (item) => {
@@ -464,7 +454,7 @@ const isImage = (mimeOrUrl) => {
 
               <!-- Counter -->
               <div class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
-                Showing {{ mediaItems.length }} {{ mediaItems.length === 1 ? 'file' : 'files' }}
+                Showing {{ mediaItems.length }}<template v-if="hasMore"> of {{ totalFiles }}</template> {{ totalFiles === 1 ? 'file' : 'files' }}
               </div>
             </div>
 
@@ -628,6 +618,12 @@ const isImage = (mimeOrUrl) => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div v-if="hasMore && !isLoading" class="flex justify-center pt-3">
+              <button type="button" :disabled="isLoadingMore" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50" @click="fetchMedia(true)">
+                {{ isLoadingMore ? 'Loading…' : `Load more files (${mediaItems.length} of ${totalFiles})` }}
+              </button>
             </div>
 
           </div>

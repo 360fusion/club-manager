@@ -20,12 +20,13 @@ class VisitorAccessAdminController extends Controller
 
     public function index(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         $requests = ClubVisitorAccess::where('club_id', $club->id)->with(['user:id,name,email', 'decidedBy:id,name'])
             ->orderByRaw("case status when 'pending' then 0 when 'approved' then 1 else 2 end")
-            ->latest('updated_at')->get()
-            ->map(fn (ClubVisitorAccess $access) => [
+            ->latest('updated_at')->orderByDesc('id')
+            ->paginate(20)->withQueryString()
+            ->through(fn (ClubVisitorAccess $access) => [
                 'id' => $access->id,
                 'status' => $access->status,
                 'name' => $access->user->name,
@@ -73,7 +74,7 @@ class VisitorAccessAdminController extends Controller
      */
     private function find(string $clubSlug, int $id): ClubVisitorAccess
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         return ClubVisitorAccess::where('club_id', $club->id)->with('user')->findOrFail($id);
     }

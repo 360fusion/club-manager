@@ -1,4 +1,15 @@
 <script setup>
+import OfficersSettingsTab from '@/Components/Settings/OfficersSettingsTab.vue';
+import BookingsSettingsTab from '@/Components/Settings/BookingsSettingsTab.vue';
+import CommunicationsSettingsTab from '@/Components/Settings/CommunicationsSettingsTab.vue';
+import DiningSettingsTab from '@/Components/Settings/DiningSettingsTab.vue';
+import EventsSettingsTab from '@/Components/Settings/EventsSettingsTab.vue';
+import SubscriptionsSettingsTab from '@/Components/Settings/SubscriptionsSettingsTab.vue';
+import BrandingSettingsTab from '@/Components/Settings/BrandingSettingsTab.vue';
+import GeneralSettingsTab from '@/Components/Settings/GeneralSettingsTab.vue';
+import RolesSettingsTab from '@/Components/Settings/RolesSettingsTab.vue';
+import ModulesSettingsTab from '@/Components/Settings/ModulesSettingsTab.vue';
+import AccountingSettingsTab from '@/Components/Settings/AccountingSettingsTab.vue';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -176,16 +187,16 @@ const form = useForm({
   name: props.club.name || '',
   province_id: props.club.province_id || '',
   masonic_hall_id: props.club.masonic_hall_id || '',
-  lodge_number: props.club.lodge_number || props.settings.lodge_number || '1418',
+  lodge_number: props.club.lodge_number || props.settings.lodge_number || '',
   lodge_status: props.settings.lodge_status || 'Normal',
   installed_masters: props.settings.installed_masters || 'No',
   ritual: props.settings.ritual || '-',
-  consecration_date: props.settings.consecration_date || '3rd April 1873',
-  constitution_date: props.settings.constitution_date || '21st October 1872',
+  consecration_date: props.settings.consecration_date || '',
+  constitution_date: props.settings.constitution_date || '',
   subscription_month: props.settings.subscription_month || 'April',
   installation_month: props.settings.installation_month || 'April',
   provincial_ar_month: props.settings.provincial_ar_month || 'March',
-  meeting_formula: props.settings.meeting_formula || '4th Thu. 1 To 11 Ex. 6, 7, 8',
+  meeting_formula: props.settings.meeting_formula || '',
   tagline: props.settings.tagline || '',
   logo_url: props.club.logo_url || '',
   primary_color: props.settings.primary_color || '#0369a1',
@@ -213,7 +224,7 @@ const form = useForm({
   invite_reminder_days: props.settings.invite_reminder_days ?? 7,
   grand_ranks: (props.settings.grand_ranks || []).map((r) => ({ ...r })),
   provincial_ranks: (props.settings.provincial_ranks || []).map((r) => ({ ...r })),
-  membership_year_start: props.settings.membership_year_start || '2026-10-01',
+  membership_year_start: props.settings.membership_year_start || '',
   enable_member_ranks: props.settings.enable_member_ranks ?? true,
   member_ranks: props.settings.member_ranks || [
     'Worshipful Master (WM)',
@@ -237,33 +248,14 @@ const form = useForm({
     'Tyler (Tyler)',
     'Immediate Past Master (IPM)',
     'Royal Arch Representative (Royal Arch Rep)',
-    'Durham FC Representative (Durham FC Rep)',
     'Mentoring & Members Co-ordinator (MenCo-ord)',
   ],
-  provincial_name: props.settings.provincial_name || 'Provincial Grand Lodge of Durham',
-  provincial_grand_master: props.settings.provincial_grand_master || 'R WBro John David Watts',
-  deputy_provincial_grand_master: props.settings.deputy_provincial_grand_master || 'WBro Andrew Peter Faul Foster PSGD',
-  assistant_provincial_grand_masters: props.settings.assistant_provincial_grand_masters || "WBro Dr. Rakesh Bhalla PSGD\nWBro Thomas Fred Gittins PSGD\nWBro Martin Rankin PJGD\nWBro Michael Stuart Shaw PJGD\nWBro Lt Col John William Henry",
-  officers_year_label: props.settings.officers_year_label || 'OFFICERS FOR 2025-2026',
-  officers_roster: props.settings.officers_roster || [
-    { role: 'Worshipful Master', name: 'W. Bro. K. D. Lord' },
-    { role: 'Senior Warden', name: 'Bro. A. Smith' },
-    { role: 'Junior Warden', name: 'Bro. M. Johnson' },
-    { role: 'Chaplain', name: 'W. Bro. P. Davies' },
-    { role: 'Treasurer', name: 'W. Bro. M. Brown' },
-    { role: 'Secretary', name: 'W. Bro. R. Wilson' },
-    { role: 'Director of Ceremonies', name: 'W. Bro. T. Anderson' },
-    { role: 'Almoner', name: 'W. Bro. G. Martin' },
-    { role: 'Charity Steward', name: 'W. Bro. E. Clark' },
-    { role: 'Senior Deacon', name: 'Bro. C. White' },
-    { role: 'Junior Deacon', name: 'Bro. D. Harris' },
-    { role: 'Assistant Director of Ceremonies', name: 'W. Bro. P. Lewis' },
-    { role: 'Organist', name: 'Bro. S. Walker' },
-    { role: 'Assistant Secretary', name: 'Bro. A. Hall' },
-    { role: 'Inner Guard', name: 'Bro. M. Allen' },
-    { role: 'Steward', name: 'Bro. J. Young' },
-    { role: 'Tyler', name: 'Bro. D. King' },
-  ],
+  provincial_name: props.settings.provincial_name || '',
+  provincial_grand_master: props.settings.provincial_grand_master || '',
+  deputy_provincial_grand_master: props.settings.deputy_provincial_grand_master || '',
+  assistant_provincial_grand_masters: props.settings.assistant_provincial_grand_masters || '',
+  officers_year_label: props.settings.officers_year_label || '',
+  officers_roster: props.settings.officers_roster || [],
   custom_domain: props.club.custom_domain || '',
   enabled_modules: props.settings.enabled_modules || [],
   permission_matrix: props.settings.permission_matrix || {},
@@ -288,8 +280,8 @@ const form = useForm({
   default_expense_account_code: props.settings.default_expense_account_code || '5000',
   require_bill_approval: props.settings.require_bill_approval ?? false,
   default_bank_account_code: props.settings.default_bank_account_code || '1000',
-  bank_sort_code: props.settings.bank_sort_code || '20-65-18',
-  bank_account_number: props.settings.bank_account_number || '83920145',
+  bank_sort_code: props.settings.bank_sort_code || '',
+  bank_account_number: props.settings.bank_account_number || '',
   enforce_balanced_journals: props.settings.enforce_balanced_journals ?? true,
 
   // Events & Check-Ins
@@ -453,10 +445,6 @@ const addRank = () => {
   }
 };
 
-const removeRank = (index) => {
-  form.member_ranks.splice(index, 1);
-};
-
 const moveRankUp = (index) => {
   if (index <= 0) return;
   const item = form.member_ranks.splice(index, 1)[0];
@@ -592,26 +580,6 @@ const updateMemberRank = (userId, newRank) => {
   );
 };
 
-// Officer Roster Helper Functions
-const addOfficerRow = () => {
-  form.officers_roster.push({ role: '', name: '' });
-};
-
-const removeOfficerRow = (index) => {
-  form.officers_roster.splice(index, 1);
-};
-
-const moveOfficerUp = (index) => {
-  if (index <= 0) return;
-  const item = form.officers_roster.splice(index, 1)[0];
-  form.officers_roster.splice(index - 1, 0, item);
-};
-
-const moveOfficerDown = (index) => {
-  if (index >= form.officers_roster.length - 1) return;
-  const item = form.officers_roster.splice(index, 1)[0];
-  form.officers_roster.splice(index + 1, 0, item);
-};
 </script>
 
 <template>
@@ -867,290 +835,7 @@ const moveOfficerDown = (index) => {
         <div class="lg:col-span-3 space-y-6">
 
       <!-- TAB 1: GENERAL SETTINGS -->
-      <div v-if="activeTab === 'general'" class="space-y-6">
-
-        <!-- Lodge Details Card (Matches Lodge Particulars Specs) -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
-            <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white">Details</h2>
-          </div>
-
-          <!-- 2-Column Responsive Layout -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1 text-sm font-semibold text-slate-800 dark:text-slate-100">
-            <!-- Left Column -->
-            <div>
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 py-3.5">
-                <span class="font-black text-slate-900 dark:text-white">Status</span>
-                <span class="px-3 py-0.5 rounded border border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-white dark:bg-slate-900 text-xs font-medium">
-                  {{ form.lodge_status || 'Normal' }}
-                </span>
-              </div>
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 py-3.5">
-                <span class="font-black text-slate-900 dark:text-white">Installed Masters</span>
-                <span class="text-slate-800 dark:text-slate-100 font-normal">{{ form.installed_masters || 'No' }}</span>
-              </div>
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 py-3.5">
-                <span class="font-black text-slate-900 dark:text-white">Ritual</span>
-                <span class="text-slate-800 dark:text-slate-100 font-normal">{{ form.ritual || '-' }}</span>
-              </div>
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 py-3.5">
-                <span class="font-black text-slate-900 dark:text-white">Consecration Date</span>
-                <span class="text-slate-800 dark:text-slate-100 font-normal">{{ form.consecration_date || '3rd April 1873' }}</span>
-              </div>
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 py-3.5">
-                <span class="font-black text-slate-900 dark:text-white">Constitution Date</span>
-                <span class="text-slate-800 dark:text-slate-100 font-normal">{{ form.constitution_date || '21st October 1872' }}</span>
-              </div>
-            </div>
-
-            <!-- Right Column -->
-            <div>
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 py-3.5">
-                <span class="font-black text-slate-900 dark:text-white">Subscription Month</span>
-                <span class="text-slate-800 dark:text-slate-100 font-normal">{{ form.subscription_month || 'April' }}</span>
-              </div>
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 py-3.5">
-                <span class="font-black text-slate-900 dark:text-white">Installation Month</span>
-                <span class="text-slate-800 dark:text-slate-100 font-normal">{{ form.installation_month || 'April' }}</span>
-              </div>
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 py-3.5">
-                <span class="font-black text-slate-900 dark:text-white">Provincial AR Month</span>
-                <span class="text-slate-800 dark:text-slate-100 font-normal">{{ form.provincial_ar_month || 'March' }}</span>
-              </div>
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 py-3.5">
-                <span class="font-black text-slate-900 dark:text-white">Meeting Formula</span>
-                <span class="text-slate-800 dark:text-slate-100 font-normal">{{ form.meeting_formula || '4th Thu. 1 To 11 Ex. 6, 7, 8' }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Edit Particulars Inputs Grid -->
-          <div class="border-t border-slate-100 dark:border-slate-800 pt-5 space-y-4">
-            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Edit Lodge Particulars & Dates</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Status</label>
-                <select v-model="form.lodge_status" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="Normal">Normal</option>
-                  <option value="Active">Active</option>
-                  <option value="Suspended">Suspended</option>
-                  <option value="Erased">Erased</option>
-                  <option value="Amalgamated">Amalgamated</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Installed Masters</label>
-                <select v-model="form.installed_masters" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="No">No</option>
-                  <option value="Yes">Yes</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Ritual</label>
-                <input v-model="form.ritual" type="text" placeholder="e.g. Emulation / Stability" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-              </div>
-
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Consecration Date</label>
-                <input v-model="form.consecration_date" type="text" placeholder="e.g. 3rd April 1873" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-              </div>
-
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Constitution Date</label>
-                <input v-model="form.constitution_date" type="text" placeholder="e.g. 21st October 1872" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-              </div>
-
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Subscription Month</label>
-                <select v-model="form.subscription_month" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-blue-500">
-                  <option v-for="m in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']" :key="m" :value="m">{{ m }}</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Installation Month</label>
-                <select v-model="form.installation_month" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-blue-500">
-                  <option v-for="m in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']" :key="m" :value="m">{{ m }}</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Provincial AR Month</label>
-                <select v-model="form.provincial_ar_month" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-blue-500">
-                  <option v-for="m in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']" :key="m" :value="m">{{ m }}</option>
-                </select>
-              </div>
-
-              <div>
-                <label for="meeting-formula" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Meeting Formula Rule</label>
-                <div class="flex items-center gap-2">
-                  <input id="meeting-formula" v-model="form.meeting_formula" type="text" placeholder="e.g. 4th Thu. 1 To 11 Ex. 6, 7, 8" class="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-                  <button
-                    type="button"
-                    @click="openFormulaBuilder"
-                    class="px-3.5 py-2.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer"
-                  >
-                    ⚡ Build rule
-                  </button>
-                </div>
-                <p class="text-[11px] text-slate-400 mt-1">Type it directly, or build it from the same occurrence / weekday / months picker the meetings page uses.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <h2 class="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">🏢 Organization Profile</h2>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Club / Organization Name</label>
-              <input v-model="form.name" type="text" required class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Lodge / Club Number</label>
-              <input v-model="form.lodge_number" type="text" placeholder="e.g. 1418" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Assigned Masonic Province</label>
-              <select v-model="form.province_id" @change="onProvinceChange" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">No Province Selected</option>
-                <option v-for="p in provinces" :key="p.id" :value="p.id">
-                  🏛️ {{ p.name }}
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Masonic Hall / Meeting Place</label>
-              <select v-model="form.masonic_hall_id" @change="onHallChange" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">No Masonic Hall Selected</option>
-                <optgroup label="Masonic halls">
-                  <option v-for="h in hallsOnly" :key="h.id" :value="h.id">{{ hallLabel(h) }}</option>
-                </optgroup>
-                <optgroup v-if="otherVenues.length" label="Hotels, clubs and other venues">
-                  <option v-for="h in otherVenues" :key="h.id" :value="h.id">{{ hallLabel(h) }}</option>
-                </optgroup>
-              </select>
-              <p v-if="selectedHallAddress" class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">📍 {{ selectedHallAddress }}</p>
-              <p v-else class="text-[11px] text-slate-400 mt-1">Where your lodge or chapter meets, including hotels and clubs. Choose a province first to narrow the list.</p>
-              <p v-if="form.errors.masonic_hall_id" class="text-[11px] text-rose-600 mt-1">{{ form.errors.masonic_hall_id }}</p>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Tagline or Motto</label>
-              <input v-model="form.tagline" type="text" placeholder="e.g. Excellence on the Isis & Thames" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Contact Email</label>
-              <input v-model="form.contact_email" type="email" placeholder="admin@club.org" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Support Phone Number</label>
-              <input v-model="form.phone" type="text" placeholder="+44 20 7946 0912" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            <div class="sm:col-span-2 border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
-              <label class="block font-bold text-slate-900 dark:text-white mb-3 text-xs flex items-center gap-1.5">
-                <span>📍</span> Club Headquarters & Physical Address
-              </label>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="sm:col-span-2">
-                  <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Address Line 1</label>
-                  <input v-model="form.address_line_1" type="text" placeholder="Building name, street number & name" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-
-                <div class="sm:col-span-2">
-                  <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Address Line 2 (Optional)</label>
-                  <input v-model="form.address_line_2" type="text" placeholder="Suite, unit, floor, or department" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-
-                <div>
-                  <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Town / City</label>
-                  <input v-model="form.city" type="text" placeholder="e.g. Oxford" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-
-                <div>
-                  <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">County / State / Region</label>
-                  <input v-model="form.county" type="text" placeholder="e.g. Oxfordshire" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-
-                <div>
-                  <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Postcode / ZIP Code</label>
-                  <input v-model="form.postcode" type="text" placeholder="e.g. OX1 1AA" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 uppercase font-mono" />
-                </div>
-
-                <div>
-                  <label class="block font-semibold text-slate-600 dark:text-slate-300 mb-1">Country</label>
-                  <input v-model="form.country" type="text" placeholder="e.g. United Kingdom" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <h2 class="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">⚙️ Onboarding & Access Control</h2>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Registration Mode</label>
-              <select v-model="form.registration_mode" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                <option value="open">🔓 Public Open Join</option>
-                <option value="invite_only">🔒 Invite-Only / Admin Approval</option>
-              </select>
-            </div>
-
-            <div class="sm:col-span-2">
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Who outside the lodge can see your meetings</label>
-              <select v-model="form.summons_visibility" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                <option value="members">Members only (nothing is shared)</option>
-                <option value="approved_visitors">Visiting brethren I approve</option>
-                <option value="public_safe">Anyone: date, time, venue, dress and dining only</option>
-              </select>
-              <p class="text-[11px] text-slate-400 mt-1">Shown on your lodge's directory page. Outsiders never see the sick list, candidates, dues, bank details or the rest of a summons.</p>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Member Number Prefix</label>
-              <input v-model="form.member_prefix" type="text" placeholder="OUBC-" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default New Member Role</label>
-              <select v-model="form.default_role" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                <option value="member">Member</option>
-                <option value="coach">Coach</option>
-                <option value="treasurer">Treasurer</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Invite Expiry (Days)</label>
-              <input v-model="form.invite_expiration_days" type="number" min="1" max="365" placeholder="14" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Invite Reminder (Days)</label>
-              <input v-model="form.invite_reminder_days" type="number" min="0" max="365" placeholder="7" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-              <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">One reminder is emailed to anyone who has not accepted after this many days. Use 0 to switch reminders off.</p>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Membership Year Start Date</label>
-              <input v-model="form.membership_year_start" type="date" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-            </div>
-          </div>
-        </div>
-      </div>
+      <GeneralSettingsTab v-if="activeTab === 'general'" :form="form" :hall-label="hallLabel" :halls-only="hallsOnly" :on-hall-change="onHallChange" :on-province-change="onProvinceChange" :open-formula-builder="openFormulaBuilder" :other-venues="otherVenues" :selected-hall-address="selectedHallAddress" :provinces="provinces" />
 
       <!-- TAB: CLUB POSITIONS & RANKS -->
       <div v-if="activeTab === 'positions'" class="space-y-6">
@@ -1340,492 +1025,19 @@ const moveOfficerDown = (index) => {
       </div>
 
       <!-- TAB 2: BRANDING & THEME -->
-      <div v-if="activeTab === 'branding'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <h2 class="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">🎨 Logo & Visual Assets</h2>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="block font-bold text-slate-700 dark:text-slate-200">Logo Image URL</label>
-                <button
-                  type="button"
-                  @click="showMediaModal = true"
-                  class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all flex items-center gap-1 cursor-pointer"
-                >
-                  📁 Choose from Media Library
-                </button>
-              </div>
-              <input v-model="form.logo_url" type="url" placeholder="https://example.com/logo.png" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            <div class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
-              <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-600 to-blue-700 text-white font-black flex items-center justify-center text-sm uppercase shadow-md flex-shrink-0">
-                {{ club.name.substring(0, 2) }}
-              </div>
-              <div>
-                <div class="font-bold text-slate-900 dark:text-white">{{ club.name }}</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">Live Header Preview Badge</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <h2 class="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">🌈 Primary Color Tokens</h2>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-2">Primary Accent Color</label>
-              <div class="flex items-center gap-3">
-                <input v-model="form.primary_color" type="color" class="w-12 h-10 rounded-xl cursor-pointer border border-slate-200 dark:border-slate-800 p-1 bg-white dark:bg-slate-900" />
-                <input v-model="form.primary_color" type="text" class="w-32 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl font-mono uppercase font-bold text-xs" />
-              </div>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-2">Admin Navigation Sidebar Theme</label>
-              <select v-model="form.sidebar_theme" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                <option value="dark_slate">🌑 Dark Slate (#1e293b)</option>
-                <option value="deep_navy">🌌 Deep Navy (#0f172a)</option>
-                <option value="emerald_forest">🌲 Emerald Forest (#064e3b)</option>
-                <option value="royal_indigo">👑 Royal Indigo (#312e81)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <h2 class="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">💾 Storage</h2>
-
-          <div v-if="storage.quota_bytes !== null" class="space-y-1.5 text-xs">
-            <div class="flex items-center justify-between font-bold text-slate-600 dark:text-slate-300">
-              <span>{{ storage.used_human }} of {{ storage.quota_human }} used</span>
-              <span>{{ storage.percent }}%</span>
-            </div>
-            <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div
-                class="h-full rounded-full transition-all"
-                :class="storage.percent >= 90 ? 'bg-rose-500' : storage.percent >= 70 ? 'bg-amber-500' : 'bg-blue-500'"
-                :style="{ width: Math.min(100, storage.percent || 0) + '%' }"
-              ></div>
-            </div>
-          </div>
-          <p v-else class="text-xs font-bold text-slate-600 dark:text-slate-300">{{ storage.used_human }} used · unlimited quota</p>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-2">Storage Quota (MB)</label>
-              <input
-                v-model.number="form.storage_quota_mb"
-                type="number"
-                min="0"
-                :disabled="!isSuperAdmin"
-                :placeholder="`Platform default (${platformDefaultStorageQuotaMb ?? 'unlimited'} MB)`"
-                class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold disabled:opacity-60"
-              />
-              <p v-if="!isSuperAdmin" class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Only platform admins can change a club's storage quota. Leave a support request if this club needs more room.</p>
-              <p v-else class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Leave blank to use the platform default ({{ platformDefaultStorageQuotaMb ?? 'unlimited' }} MB).</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
+      <BrandingSettingsTab v-if="activeTab === 'branding'" :form="form" :is-super-admin="isSuperAdmin" @open-media="showMediaModal = true" :club="club" :platform-default-storage-quota-mb="platformDefaultStorageQuotaMb" :storage="storage" />
 
       <!-- TAB: PROVINCIAL & OFFICERS ROSTER -->
-      <div v-if="activeTab === 'officers'" class="space-y-6">
-        
-        <!-- Provincial Executive Card -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">🏛️ Provincial Executive & Rulers</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Configure annual Provincial Grand Lodge rulers and executive officers. These settings automatically populate new meeting summonses.</p>
-          </div>
-
-          <div class="space-y-4 text-xs">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Provincial Title / Name</label>
-                <input v-model="form.provincial_name" type="text" placeholder="Provincial Grand Lodge of Durham" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-              </div>
-
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Provincial Grand Master</label>
-                <input v-model="form.provincial_grand_master" type="text" placeholder="R WBro John David Watts" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Deputy Provincial Grand Master</label>
-                <input v-model="form.deputy_provincial_grand_master" type="text" placeholder="WBro Andrew Peter Faul Foster PSGD" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-              </div>
-
-              <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Assistant Provincial Grand Masters (One per line)</label>
-                <textarea v-model="form.assistant_provincial_grand_masters" rows="4" placeholder="WBro Dr. Rakesh Bhalla PSGD..." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs"></textarea>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Annual Officers Roster Managed Card -->
-        <div class="bg-blue-50/60 dark:bg-blue-950/60 rounded-2xl p-6 border border-blue-200/80 dark:border-blue-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-blue-600 dark:text-blue-400">👔 Lodge Governance</span>
-              <span class="text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 font-extrabold text-[10px]">Active Domain</span>
-            </div>
-            <h3 class="text-base font-black text-slate-900 dark:text-white">Annual Officer Rosters &amp; History</h3>
-            <p class="text-xs text-slate-600 dark:text-slate-300">
-              Lodge Officer rosters, multi-year installation dates, progressive ladder seats, and committee approvals are now managed centrally in the Member Directory.
-            </p>
-          </div>
-          <a
-            :href="route('admin.officers.index', { clubSlug: club.slug })"
-            class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex-shrink-0 flex items-center gap-1.5"
-          >
-            <span>Manage Officers Roster</span>
-            <span>→</span>
-          </a>
-        </div>
-
-      </div>
+      <OfficersSettingsTab v-if="activeTab === 'officers'" :form="form" :club="club" />
 
       <!-- TAB 3: ROLES & PERMISSIONS -->
-      <div v-if="activeTab === 'roles'" class="space-y-6">
-        
-        <!-- Role Permission Matrix Grid -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">🛡️ Granular Admin Permission Matrix</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Define which administrative actions each club role is allowed to perform.</p>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                  <th class="py-3 px-4">Administrative Action</th>
-                  <th v-for="r in visibleRoles" :key="r.code" class="py-3 px-3 text-center">
-                    <span :class="['px-2 py-0.5 rounded text-[10px] font-extrabold border', r.badge]">
-                      {{ r.name }}
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-                <tr v-for="(perm, permKey) in form.permission_matrix" :key="permKey" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                  <td class="py-3.5 px-4">
-                    <div class="font-bold text-slate-900 dark:text-white">{{ perm.label }}</div>
-                    <div class="text-[11px] text-slate-400">{{ perm.description }}</div>
-                  </td>
-
-                  <td v-for="r in visibleRoles" :key="r.code" class="py-3.5 px-3 text-center">
-                    <input
-                      type="checkbox"
-                      :checked="perm.roles && perm.roles.includes(r.code)"
-                      @change="togglePermissionRole(permKey, r.code)"
-                      :disabled="r.code === 'owner'"
-                      class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
-                    />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Role Directory & Quick Assignment -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div class="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h2 class="text-lg font-bold text-slate-900 dark:text-white">👥 Member Administrative Role Directory</h2>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Assign or change each member's admin permission level (e.g. who can edit the website or manage billing).</p>
-            </div>
-            <a
-              :href="route('admin.officers.index', { clubSlug: club.slug })"
-              class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
-            >
-              Manage lodge offices →
-            </a>
-          </div>
-
-          <div class="divide-y divide-slate-100 dark:divide-slate-800">
-            <div v-for="m in members" :key="m.id" class="py-3 flex items-center justify-between gap-4 text-xs">
-              <div class="overflow-hidden">
-                <div class="font-bold text-slate-900 dark:text-white truncate">{{ m.name }}</div>
-                <div class="text-[11px] text-slate-400 truncate">{{ m.email }} • <span class="font-mono">{{ m.member_number }}</span></div>
-              </div>
-
-              <div class="flex items-center gap-2">
-                <!-- Office is read-only here: it's owned by the annual officer roster, not this page. -->
-                <span
-                  v-if="m.current_office_label"
-                  :class="['px-2.5 py-1 rounded-xl border text-[11px]', m.current_office_badge_class]"
-                  :title="`${m.current_office_label} — set from the officer roster, not editable here`"
-                >
-                  {{ m.current_office_label }}
-                </span>
-
-                <select
-                  :value="m.role"
-                  @change="updateMemberRole(m.id, $event.target.value)"
-                  class="px-3 py-1.5 font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-xs cursor-pointer outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="member">Media Manager</option>
-                  <option value="coach">Secretary</option>
-                  <option value="treasurer">Treasurer</option>
-                  <option value="examiner">Examiner / Auditor</option>
-                  <option value="admin">Admin</option>
-                  <option v-if="isSuperAdmin || m.role === 'owner'" value="owner">Owner</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
+      <RolesSettingsTab v-if="activeTab === 'roles'" :form="form" :is-super-admin="isSuperAdmin" :toggle-permission-role="togglePermissionRole" :update-member-role="updateMemberRole" :visible-roles="visibleRoles" :club="club" :members="members" />
 
       <!-- TAB: ACCOUNTING SETTINGS -->
-      <div v-if="activeTab === 'accounting'" class="space-y-6">
-        <!-- 1. Fiscal Year & Accounting Controls -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">📊 Financial Year & Tax Controls</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Configure fiscal year boundaries, accounting basis, lock dates, and tax rules.</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Fiscal Year Start Month</label>
-              <select v-model="form.fiscal_year_start_month" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                <option value="January">January</option>
-                <option value="February">February</option>
-                <option value="March">March</option>
-                <option value="April">April (UK Tax Year)</option>
-                <option value="May">May</option>
-                <option value="June">June</option>
-                <option value="July">July</option>
-                <option value="August">August</option>
-                <option value="September">September</option>
-                <option value="October">October (Club Dues Cycle)</option>
-                <option value="November">November</option>
-                <option value="December">December</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Accounting Basis / Method</label>
-              <select v-model="form.accounting_method" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                <option value="accrual">Accrual Basis (Recognize when billed)</option>
-                <option value="cash">Cash Basis (Recognize when paid)</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Standard VAT Rate (%)</label>
-              <input v-model.number="form.standard_vat_rate" type="number" step="0.1" min="0" max="100" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Closed Period Lock Date</label>
-              <input v-model="form.lock_accounting_date" type="date" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-              <p class="text-[11px] text-slate-400 mt-1">Prevents posting journals before this date.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. Sales Invoicing & Member Receivables -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">🧾 Sales Invoicing & Receivables Rules</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Set invoice number prefixes, default revenue accounts, payment terms, and lead times.</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Invoice Number Prefix</label>
-              <input v-model="form.invoice_prefix" type="text" placeholder="INV-2026-" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default Payment Due Terms</label>
-              <select v-model="form.invoice_due_terms" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                <option value="Due on Receipt">Due on Receipt</option>
-                <option value="Net 7">Net 7 Days</option>
-                <option value="Net 14">Net 14 Days</option>
-                <option value="Net 30">Net 30 Days</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default A/R Account Code</label>
-              <input v-model="form.default_ar_account_code" type="text" placeholder="1200" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default Revenue Account Code</label>
-              <input v-model="form.default_revenue_account_code" type="text" placeholder="4000" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Auto-Invoice Lead Time (Days)</label>
-              <input v-model.number="form.auto_invoice_days_before" type="number" min="0" max="90" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Overdue Grace Period (Days)</label>
-              <input v-model.number="form.dues_grace_period_days" type="number" min="0" max="180" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. Purchases & Vendor Bills Payables -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">📄 Purchases & Vendor Payables Rules</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Set bill prefixes, default expense accounts, and vendor approval workflows.</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Bill Number Prefix</label>
-              <input v-model="form.bill_prefix" type="text" placeholder="BILL-2026-" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default A/P Account Code</label>
-              <input v-model="form.default_ap_account_code" type="text" placeholder="2000" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default Expense Account Code</label>
-              <input v-model="form.default_expense_account_code" type="text" placeholder="5000" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-          </div>
-
-          <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <label class="flex items-center gap-3 cursor-pointer text-xs">
-              <input type="checkbox" v-model="form.require_bill_approval" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-              <div>
-                <div class="font-bold text-slate-900 dark:text-white">Vendor Bill Approval Workflow</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">Require explicit Administrator approval before a vendor bill can be marked as paid.</div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- 4. General Ledger, Currency & Company Address Profile -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">🏢 Organization Address & General Ledger Controls</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Base accounting currency, double-entry validation, and company registration address.</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Base Accounting Currency</label>
-              <select v-model="form.currency" :disabled="currencyLocked" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold disabled:opacity-60">
-                <option v-for="c in currencies" :key="c.code" :value="c.code">{{ c.code }} ({{ c.symbol.trim() }}) - {{ c.name }}</option>
-              </select>
-              <p v-if="currencyLocked" class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Locked: this club already has financial records, and amounts are not converted between currencies.</p>
-              <p v-else class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Every amount in this club's accounts uses this currency. It is locked once you record any money.</p>
-              <p v-if="form.errors?.currency" class="mt-1 text-[11px] font-semibold text-rose-600">{{ form.errors.currency }}</p>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Operating Bank Account Code</label>
-              <input v-model="form.default_bank_account_code" type="text" placeholder="1000" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Bank Sort Code (Summons Dues/Dining)</label>
-              <input v-model="form.bank_sort_code" type="text" placeholder="20-65-18" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Bank Account Number (Summons Dues/Dining)</label>
-              <input v-model="form.bank_account_number" type="text" placeholder="83920145" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">VAT / Tax Registration Number</label>
-              <input v-model="form.tax_registration_number" type="text" placeholder="GB 987 6543 21" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold" />
-            </div>
-
-            <div class="sm:col-span-2">
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Company Registered Billing Address (Line 1)</label>
-              <input v-model="form.address_line_1" type="text" placeholder="100 Boathouse Way" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">City / Town</label>
-              <input v-model="form.city" type="text" placeholder="Oxford" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Postcode / ZIP</label>
-              <input v-model="form.postcode" type="text" placeholder="OX1 1AA" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono font-semibold" />
-            </div>
-
-            <div class="sm:col-span-2">
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Receipt & Invoice Footer Terms</label>
-              <textarea v-model="form.receipt_footer_notes" rows="3" placeholder="Thank you for supporting our club. Fees support equipment & clubhouse operations." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-            </div>
-          </div>
-
-          <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <label class="flex items-center gap-3 cursor-pointer text-xs">
-              <input type="checkbox" v-model="form.enforce_balanced_journals" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-              <div>
-                <div class="font-bold text-slate-900 dark:text-white">Enforce Double-Entry Balance Validation</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">Require total debits to exactly equal total credits before manual journal entries can be posted.</div>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
+      <AccountingSettingsTab v-if="activeTab === 'accounting'" :form="form" :currencies="currencies" :currency-locked="currencyLocked" />
 
       <!-- TAB 4: SUBSCRIPTIONS & DUES -->
-      <div v-if="activeTab === 'subscriptions'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">💳 Subscriptions & Billing Settings</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Configure grace periods, automated dues invoicing, and payment receipt footers.</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Overdue Grace Period (Days)</label>
-              <input v-model.number="form.dues_grace_period_days" type="number" min="0" max="180" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-              <p class="text-[11px] text-slate-400 mt-1">Days after due date before member status defaults to overdue.</p>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Auto-Invoice Lead Time (Days Before Cycle)</label>
-              <input v-model.number="form.auto_invoice_days_before" type="number" min="0" max="90" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-              <p class="text-[11px] text-slate-400 mt-1">Days prior to membership renewal to dispatch automated invoices.</p>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Membership Year Start Date</label>
-              <input v-model="form.membership_year_start" type="date" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-              <p class="text-[11px] text-slate-400 mt-1">Official annual start date for club membership dues and subscription billing.</p>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">VAT / Tax Registration Number</label>
-              <input v-model="form.tax_registration_number" type="text" placeholder="GB 987 6543 21" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono" />
-            </div>
-
-            <div class="sm:col-span-2">
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Receipt & Invoice Footer Notes</label>
-              <textarea v-model="form.receipt_footer_notes" rows="3" placeholder="Thank you for supporting our club." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-            </div>
-          </div>
-        </div>
-      </div>
+      <SubscriptionsSettingsTab v-if="activeTab === 'subscriptions'" :form="form" />
 
       <!-- TAB: PAYMENT GATEWAYS & PROVIDERS -->
       <div v-if="activeTab === 'payments'" class="space-y-6">
@@ -1917,122 +1129,13 @@ const moveOfficerDown = (index) => {
       </div>
 
       <!-- TAB 5: EVENTS & CHECK-INS -->
-      <div v-if="activeTab === 'events'" class="space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-800/60 dark:bg-blue-950/30">
-          <div>
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white">💳 Payment options for events and bookings</h3>
-            <p class="mt-1 text-xs text-slate-600 dark:text-slate-300">Bank transfer, card, PayPal, pay later and pay on the night. Set them up and switch them on once here, and every event offers them.</p>
-          </div>
-          <a :href="paymentOptionsUrl('events')" class="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700">Manage payment options</a>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">📅 Events & Attendance Policy</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Set RSVP deadlines, guest policies, and attendance QR code expiration limits.</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Default RSVP Cutoff (Hours Before Event)</label>
-              <input v-model.number="form.event_rsvp_cutoff_hours" type="number" min="0" max="168" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Max Guests Per Member</label>
-              <input v-model.number="form.max_guests_per_member" type="number" min="0" max="20" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Attendance QR Code Expiry (Minutes)</label>
-              <input v-model.number="form.qr_code_expiry_minutes" type="number" min="5" max="1440" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-            </div>
-          </div>
-
-          <div class="pt-2">
-            <label class="flex items-center gap-3 cursor-pointer text-xs">
-              <input type="checkbox" v-model="form.notify_event_reminders" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-              <div>
-                <div class="font-bold text-slate-900 dark:text-white">Automated Event Reminders</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">Send automated email reminders to confirmed attendees 48 hours before events.</div>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
+      <EventsSettingsTab v-if="activeTab === 'events'" :form="form" :payment-options-url="paymentOptionsUrl" />
 
       <!-- TAB 6: DINING & RSVPs -->
-      <div v-if="activeTab === 'dining'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">🍽️ Dining & Menu RSVP Policy</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Configure catering deadlines, dietary restriction prompts, and guest meals.</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Catering RSVP Cutoff (Hours Prior)</label>
-              <input v-model.number="form.dining_rsvp_cutoff_hours" type="number" min="0" max="168" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-              <p class="text-[11px] text-slate-400 mt-1">Locks meal selections for kitchen headcount preparation.</p>
-            </div>
-          </div>
-
-          <div class="space-y-3 pt-2 text-xs">
-            <label class="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" v-model="form.require_dietary_allergens" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-              <div>
-                <div class="font-bold text-slate-900 dark:text-white">Prompt for Dietary Requirements</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">Require members to specify vegetarian/vegan/allergen preferences during dining checkout.</div>
-              </div>
-            </label>
-
-            <label class="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" v-model="form.allow_guest_meals" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-              <div>
-                <div class="font-bold text-slate-900 dark:text-white">Allow Guest Meal RSVPs</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">Permit members to purchase additional guest dining tickets.</div>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
+      <DiningSettingsTab v-if="activeTab === 'dining'" :form="form" />
 
       <!-- TAB 7: COMMUNICATIONS -->
-      <div v-if="activeTab === 'communications'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">✉️ Email Broadcasts & Sender Settings</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Set default email signatures, reply-to addresses, and notification dispatch rules.</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Email Sender From Name</label>
-              <input v-model="form.email_from_name" type="text" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Reply-To Email Address</label>
-              <input v-model="form.email_reply_to" type="email" placeholder="admin@club.org" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
-            </div>
-
-            <div class="sm:col-span-2">
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Email Footer Physical Address / Compliance Text</label>
-              <input v-model="form.email_footer_address" type="text" placeholder="100 Boathouse Way, Oxford, UK" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-          </div>
-
-          <div class="pt-2 text-xs">
-            <label class="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" v-model="form.notify_dues_overdue" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-              <div>
-                <div class="font-bold text-slate-900 dark:text-white">Automated Overdue Dues Notices</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">Send reminder emails when membership dues invoices pass their grace period.</div>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
+      <CommunicationsSettingsTab v-if="activeTab === 'communications'" :form="form" />
 
 
 
@@ -2048,72 +1151,10 @@ const moveOfficerDown = (index) => {
       </div>
 
       <!-- TAB 9: BOOKINGS -->
-      <div v-if="activeTab === 'bookings'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">🚣 Equipment & Facility Bookings</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Rules for boat bay, pitch, or clubhouse facility reservations.</p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Advance Booking Window (Days)</label>
-              <input v-model.number="form.booking_window_days" type="number" min="1" max="365" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Max Duration Per Reservation (Hours)</label>
-              <input v-model.number="form.max_booking_hours" type="number" min="1" max="24" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold" />
-            </div>
-          </div>
-
-          <div class="pt-2 text-xs">
-            <label class="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" v-model="form.require_coach_approval_equipment" class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-              <div>
-                <div class="font-bold text-slate-900 dark:text-white">Require Coach Approval</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">Require coach sign-off before high-performance racing shells or specialized gear bookings are confirmed.</div>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
+      <BookingsSettingsTab v-if="activeTab === 'bookings'" :form="form" />
 
       <!-- TAB 11: FEATURE MODULES -->
-      <div v-if="activeTab === 'modules'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">⚡ Active Club Feature Modules</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Toggle interactive tools enabled for administrators and members in this club workspace.</p>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              v-for="mod in allModules"
-              :key="mod.code"
-              @click="toggleModule(mod.code)"
-              :class="[
-                'p-4 rounded-2xl border transition-all cursor-pointer flex items-start justify-between gap-4',
-                form.enabled_modules.includes(mod.code)
-                  ? 'bg-blue-50/50 dark:bg-blue-950/50 border-blue-300 dark:border-blue-700/60 ring-2 ring-blue-500/20'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 opacity-60'
-              ]"
-            >
-              <div class="flex items-start gap-3">
-                <span class="text-2xl">{{ mod.icon }}</span>
-                <div>
-                  <div class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">{{ mod.name }}</div>
-                  <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ mod.description }}</div>
-                </div>
-              </div>
-
-              <div :class="['w-10 h-6 rounded-full transition-colors flex items-center p-1', form.enabled_modules.includes(mod.code) ? 'bg-blue-600' : 'bg-slate-300']">
-                <div :class="['w-4 h-4 rounded-full bg-white shadow-md transform transition-transform', form.enabled_modules.includes(mod.code) ? 'translate-x-4' : 'translate-x-0']"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ModulesSettingsTab v-if="activeTab === 'modules'" :form="form" :toggle-module="toggleModule" :all-modules="allModules" />
 
       <!-- Bottom Save Action Bar -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">

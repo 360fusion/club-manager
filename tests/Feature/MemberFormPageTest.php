@@ -11,7 +11,6 @@ use App\Models\Accounting\AccountingContact;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -142,8 +141,7 @@ class MemberFormPageTest extends TestCase
         $other = Club::create(['name' => 'Other', 'slug' => 'other', 'club_type_id' => $this->club->club_type_id, 'is_active' => true]);
         $foreign = $this->member([], $other);
 
-        $this->expectException(ModelNotFoundException::class);
-        $this->page($foreign->id);
+        $this->page($foreign->id)->assertNotFound();
     }
 
     public function test_only_this_clubs_ledger_contacts_can_be_linked(): void

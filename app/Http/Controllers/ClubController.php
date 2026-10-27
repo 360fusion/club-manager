@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Services\MemberInvitationService;
+use App\Enums\ClubMemberStatus;
+use App\Http\Requests\Club\UpdateDomainRequest;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\User;
@@ -70,28 +72,6 @@ class ClubController extends Controller
     {
         $user = $request->user();
 
-        if (! $user) {
-            $clubs = Club::with('clubType')->withCount(['users', 'events'])->get()->map(function ($c) {
-                return [
-                    'id' => $c->id,
-                    'name' => $c->name,
-                    'slug' => $c->slug,
-                    'custom_domain' => $c->custom_domain,
-                    'type_name' => $c->clubType?->name ?? 'General',
-                    'role' => 'admin',
-                    'member_number' => 'OUBC-001',
-                    'status' => 'active',
-                    'joined_at' => 'Recent',
-                    'members_count' => $c->users_count,
-                    'events_count' => $c->events_count,
-                ];
-            });
-
-            return Inertia::render('Admin/Clubs/Index', [
-                'clubs' => $clubs,
-            ]);
-        }
-
         $clubs = $user->clubs()->with('clubType')->withCount(['users', 'events'])->get()->map(function ($c) {
             return [
                 'id' => $c->id,
@@ -154,7 +134,7 @@ class ClubController extends Controller
                     'id' => $p->id,
                     'name' => $p->name,
                     'description' => $p->description,
-                    'price' => number_format($p->price, 2),
+                    'price' => number_format((float) $p->price, 2),
                     'billing_period' => $p->billing_period,
                 ]),
                 'posts' => $club->posts()->with('author')->published()->visibleTo($viewer)->get()->map(fn ($post) => [
@@ -179,19 +159,19 @@ class ClubController extends Controller
                     'slug' => $event->slug,
                     'description' => $event->description,
                     'location' => $event->location,
-                    'starts_at' => $event->starts_at?->format('j M Y, H:i'),
+                    'starts_at' => $event->starts_at->format('j M Y, H:i'),
                     'is_recurring' => $event->is_recurring,
                     'recurrence_rule' => $event->recurrence_rule,
                     'requires_payment' => $event->requires_payment,
-                    'price' => number_format($event->price, 2),
+                    'price' => number_format((float) $event->price, 2),
                     'has_dining' => $event->has_dining,
-                    'dining_price' => number_format($event->dining_price, 2),
+                    'dining_price' => number_format((float) $event->dining_price, 2),
                     'rsvp_deadline' => $event->rsvp_deadline?->format('j M Y'),
                     'status' => $event->status,
                     'ticket_tiers' => $event->ticketTiers->map(fn ($t) => [
                         'id' => $t->id,
                         'name' => $t->name,
-                        'price' => number_format($t->price, 2),
+                        'price' => number_format((float) $t->price, 2),
                         'max_quantity' => $t->max_quantity,
                         'sold_quantity' => $t->sold_quantity,
                         'available' => $t->max_quantity > 0 ? max(0, $t->max_quantity - $t->sold_quantity) : 'Unlimited',
@@ -231,11 +211,11 @@ class ClubController extends Controller
     /**
      * Update custom domain configuration for a club.
      */
-    public function updateDomain(Request $request, string $slug)
+    public function updateDomain(UpdateDomainRequest $request, string $slug)
     {
-        $club = Club::where('slug', $slug)->firstOrFail();
+        $club = $this->findClub($slug);
 
-        $validated = $request->validate(['custom_domain' => ClubDomain::rule($club)]);
+        $validated = $request->validated();
 
         ClubDomain::apply($club, $validated['custom_domain'] ?? null);
         $club->save();
@@ -248,8 +228,8 @@ class ClubController extends Controller
      */
     public function approveMember(string $slug, int $userId)
     {
-        $club = Club::where('slug', $slug)->firstOrFail();
-        $approved = $club->users()->updateExistingPivot($userId, ['status' => 'active']);
+        $club = $this->findClub($slug);
+        $approved = $club->users()->updateExistingPivot($userId, ['status' => ClubMemberStatus::Active->value]);
 
         if ($approved && $member = User::find($userId)) {
             app(ClubNotifier::class)->toUser($member, ClubNotification::membershipApproved($club));
@@ -268,7 +248,7 @@ class ClubController extends Controller
      */
     public function rejectMember(string $slug, int $userId)
     {
-        $club = Club::where('slug', $slug)->firstOrFail();
+        $club = $this->findClub($slug);
         $club->users()->detach($userId);
 
         return redirect()->back()->with('success', 'Member request removed.');

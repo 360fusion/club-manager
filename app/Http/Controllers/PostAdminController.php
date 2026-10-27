@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Visibility;
+use App\Http\Requests\StorePostRequest;
 use App\Models\Club;
 use App\Models\Post;
 use App\Notifications\ClubNotification;
@@ -11,8 +12,6 @@ use App\Support\ImageDownscaler;
 use App\Support\UploadRules;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,11 +22,13 @@ class PostAdminController extends Controller
      */
     public function index(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $posts = Post::where('club_id', $club->id)
             ->with(['author', 'tags:id,name,slug,color'])
             ->orderByDesc('created_at')
-            ->get();
+            ->orderByDesc('id')
+            ->paginate(20)
+            ->withQueryString();
 
         return Inertia::render('Admin/Posts/Index', [
             'club' => $club,
@@ -40,7 +41,7 @@ class PostAdminController extends Controller
      */
     public function show(string $clubSlug, int $id): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $post = Post::where('club_id', $club->id)
             ->with('author')
             ->findOrFail($id);
@@ -68,7 +69,7 @@ class PostAdminController extends Controller
      */
     public function edit(string $clubSlug, ?int $id = null): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         $post = $id
             ? Post::where('club_id', $club->id)->findOrFail($id)
@@ -97,30 +98,12 @@ class PostAdminController extends Controller
     /**
      * Store or update a blog post.
      */
-    public function store(Request $request, string $clubSlug): RedirectResponse
+    public function store(StorePostRequest $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $user = $request->user();
 
-        $validated = $request->validate([
-            'id' => 'nullable|integer',
-            'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255',
-            'excerpt' => 'nullable|string|max:500',
-            'content' => 'nullable|string|max:200000',
-            'status' => 'required|in:draft,published',
-            'visibility' => ['nullable', Rule::enum(Visibility::class)],
-            'published_at' => 'nullable|date',
-            'expires_at' => 'nullable|date',
-            'cover_image_url' => 'nullable|string|max:1000',
-            'cover_image' => UploadRules::image(4096),
-            'blocks' => 'nullable|array|max:200',
-            'existing_attachments' => 'nullable|array|max:50',
-            'new_attachments.*' => UploadRules::attachment(10240),
-            'action_type' => 'nullable|string|max:50',
-            'tag_ids' => 'nullable|array|max:20',
-            'tag_ids.*' => ['integer', Rule::exists('news_tags', 'id')->where('club_id', $club->id)],
-        ]);
+        $validated = $request->validated();
 
         // Checked separately: rules on nested block keys would make validated() drop the rest of each block.
         $request->validate([
@@ -303,7 +286,7 @@ class PostAdminController extends Controller
      */
     public function destroy(string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $post = Post::where('club_id', $club->id)->findOrFail($id);
         $post->delete();
 

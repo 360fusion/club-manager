@@ -46,9 +46,11 @@ class BudgetService
         $totalBudgeted = 0.0;
         $totalActual = 0.0;
 
+        $actuals = Account::actualsForYear($accounts, $year);
+
         foreach ($accounts as $account) {
             $budgeted = (float) ($budgets[$account->id]->budgeted_amount ?? 0);
-            $actual = $this->actualForAccountAndYear($account, $year);
+            $actual = $actuals[$account->id] ?? 0.0;
 
             if ($budgeted == 0.0 && $actual == 0.0) {
                 continue;
@@ -78,26 +80,5 @@ class BudgetService
             'total_budgeted' => round($totalBudgeted, 2),
             'total_actual' => round($totalActual, 2),
         ];
-    }
-
-    private function actualForAccountAndYear(Account $account, int $year): float
-    {
-        $debits = (float) DB::table('accounting_journal_items')
-            ->join('accounting_journal_entries', 'accounting_journal_entries.id', '=', 'accounting_journal_items.journal_entry_id')
-            ->where('accounting_journal_entries.club_id', $account->club_id)
-            ->where('accounting_journal_items.account_id', $account->id)
-            ->whereYear('accounting_journal_entries.entry_date', $year)
-            ->where('accounting_journal_entries.status', '!=', 'void')
-            ->sum('accounting_journal_items.debit');
-
-        $credits = (float) DB::table('accounting_journal_items')
-            ->join('accounting_journal_entries', 'accounting_journal_entries.id', '=', 'accounting_journal_items.journal_entry_id')
-            ->where('accounting_journal_entries.club_id', $account->club_id)
-            ->where('accounting_journal_items.account_id', $account->id)
-            ->whereYear('accounting_journal_entries.entry_date', $year)
-            ->where('accounting_journal_entries.status', '!=', 'void')
-            ->sum('accounting_journal_items.credit');
-
-        return $account->type === 'expense' ? $debits - $credits : $credits - $debits;
     }
 }

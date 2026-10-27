@@ -2,6 +2,7 @@
 
 namespace App\Services\Payment;
 
+use App\Models\Club;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Cashier\Cashier;
 
@@ -12,6 +13,9 @@ class StripePaymentGateway implements PaymentGatewayInterface
         return 'stripe';
     }
 
+    /**
+     * @param  Club  $customer  The billable model is always a club.
+     */
     public function createCheckoutSession(Model $customer, string $priceId, array $options = []): string
     {
         // Stripe Cashier checkout session creation
@@ -23,11 +27,17 @@ class StripePaymentGateway implements PaymentGatewayInterface
         return $checkout->url;
     }
 
+    /**
+     * @param  Club  $customer  The billable model is always a club.
+     */
     public function createCustomerPortalSession(Model $customer, string $returnUrl): string
     {
         return $customer->billingPortalUrl($returnUrl);
     }
 
+    /**
+     * @param  Club  $customer  The billable model is always a club.
+     */
     public function getSubscriptionStatus(Model $customer, string $name = 'default'): ?string
     {
         $subscription = $customer->subscription($name);
@@ -51,6 +61,9 @@ class StripePaymentGateway implements PaymentGatewayInterface
         return 'inactive';
     }
 
+    /**
+     * @param  Club  $customer  The billable model is always a club.
+     */
     public function cancelSubscription(Model $customer, string $name = 'default'): bool
     {
         $subscription = $customer->subscription($name);

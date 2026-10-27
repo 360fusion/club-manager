@@ -44,6 +44,8 @@ class Province extends Model
 
     /**
      * Get the governing Grand Lodge.
+     *
+     * @return BelongsTo<GrandLodge, $this>
      */
     public function grandLodge(): BelongsTo
     {
@@ -52,6 +54,8 @@ class Province extends Model
 
     /**
      * Get the clubs/lodges associated with this Masonic province.
+     *
+     * @return HasMany<Club, $this>
      */
     public function clubs(): HasMany
     {

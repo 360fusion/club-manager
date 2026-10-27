@@ -28,7 +28,7 @@ return new class extends Migration
                 $table->text('fraternal_visits_text')->nullable();
             }
             if (! Schema::hasColumn('meetings', 'officers_year_label')) {
-                $table->string('officers_year_label')->nullable()->default('OFFICERS FOR 2025-2026');
+                $table->string('officers_year_label')->nullable();
             }
         });
 
@@ -40,10 +40,10 @@ return new class extends Migration
                 $table->text('default_honorary_members_text')->nullable();
             }
             if (! Schema::hasColumn('clubs', 'lodge_number')) {
-                $table->string('lodge_number')->nullable()->default('1418');
+                $table->string('lodge_number')->nullable();
             }
             if (! Schema::hasColumn('clubs', 'motto')) {
-                $table->string('motto')->nullable()->default('Fraternus Amor Maneto');
+                $table->string('motto')->nullable();
             }
         });
     }

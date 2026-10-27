@@ -1,8 +1,7 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 
-const props = defineProps({
+defineProps({
   club: { type: Object, required: true },
   memberRole: { type: String, default: 'member' },
   memberNumber: { type: String, default: 'MEM-1001' },

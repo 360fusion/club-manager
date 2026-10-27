@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ResetPassword\StoreResetPasswordRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,13 +22,8 @@ class ResetPasswordController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreResetPasswordRequest $request): RedirectResponse
     {
-        $request->validate([
-            'token' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'password' => ['required', PasswordRule::defaults(), 'confirmed'],
-        ]);
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),

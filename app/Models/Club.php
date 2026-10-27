@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Services\DefaultSitePages;
 use App\Support\Currencies;
 use App\Support\MasonicRanks;
 use App\Support\Months;
 use App\Support\OrderColours;
 use App\Support\ReservedClubSlugs;
-use App\Support\SiteThemes;
+use Database\Factories\ClubFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,12 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Club extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    /** @use HasFactory<ClubFactory> */
+    use HasFactory;
+
+    /** @use InteractsWithMedia<Media> */
+    use InteractsWithMedia;
+
     use PaddleBillable, StripeBillable {
         StripeBillable::subscription insteadof PaddleBillable;
         StripeBillable::subscriptions insteadof PaddleBillable;
@@ -129,186 +135,7 @@ class Club extends Model implements HasMedia
      */
     public function ensureDefaultPages(): void
     {
-        $settings = $this->settings ?? [];
-        $settingsUpdated = false;
-
-        if (empty($settings['website_theme'])) {
-            $settings['website_theme'] = SiteThemes::DEFAULT;
-            $settingsUpdated = true;
-        }
-
-        if (empty($settings['contact_email'])) {
-            $settings['contact_email'] = $this->email;
-            $settingsUpdated = true;
-        }
-
-        if (empty($settings['seo_title_suffix'])) {
-            $settings['seo_title_suffix'] = ' - '.$this->name;
-            $settingsUpdated = true;
-        }
-
-        if (! array_key_exists('header_layout', $settings)) {
-            $settings['header_layout'] = 'logo_left';
-            $settings['header_show_logo'] = true;
-            $settings['header_show_tagline'] = true;
-            $settings['header_cta_enabled'] = false;
-            $settings['header_show_account_links'] = true;
-            $settings['footer_layout'] = 'simple';
-            $settings['footer_show_social'] = true;
-            $settings['footer_show_nav'] = false;
-            $settingsUpdated = true;
-        }
-
-        if ($settingsUpdated) {
-            $this->settings = $settings;
-            $this->save();
-        }
-
-        $defaultPages = [
-            [
-                'title' => 'Home',
-                'slug' => 'home',
-                'is_homepage' => true,
-                'is_published' => true,
-                'show_in_navigation' => true,
-                'sort_order' => 1,
-                'blocks' => [
-                    [
-                        'type' => 'hero',
-                        'title' => 'Welcome to '.$this->name,
-                        'subtitle' => 'Official Website & Portal',
-                        'cta_text' => 'Join Us',
-                        'cta_link' => '/site/'.$this->slug.'/join-us',
-                    ],
-                    [
-                        'type' => 'news_feed',
-                        'heading' => 'Latest News & Updates',
-                    ],
-                    [
-                        'type' => 'events_calendar',
-                        'heading' => 'Upcoming Events & Meetings',
-                    ],
-                ],
-            ],
-            [
-                'title' => 'About',
-                'slug' => 'about',
-                'is_homepage' => false,
-                'is_published' => true,
-                'show_in_navigation' => true,
-                'sort_order' => 2,
-                'blocks' => [
-                    [
-                        'type' => 'hero',
-                        'title' => 'About '.$this->name,
-                        'subtitle' => 'History, Values & Community',
-                    ],
-                    [
-                        'type' => 'rich_text',
-                        'heading' => 'Our History & Mission',
-                        'content' => '<p>Welcome to '.e($this->name).'. Our organization is dedicated to fostering community, excellence, and fellowship.</p>',
-                    ],
-                ],
-            ],
-            [
-                'title' => 'Join Us',
-                'slug' => 'join-us',
-                'is_homepage' => false,
-                'is_published' => true,
-                'show_in_navigation' => true,
-                'sort_order' => 3,
-                'blocks' => [
-                    [
-                        'type' => 'hero',
-                        'title' => 'Join '.$this->name,
-                        'subtitle' => 'Become a Member Today',
-                    ],
-                    [
-                        'type' => 'pricing_cards',
-                        'heading' => 'Membership Options & Dues',
-                    ],
-                    [
-                        'type' => 'rich_text',
-                        'heading' => 'Application Process',
-                        'content' => '<p>To enquire about membership, please reach out to our secretary or complete our visitor registration form.</p>',
-                    ],
-                ],
-            ],
-            [
-                'title' => 'News',
-                'slug' => 'news',
-                'is_homepage' => false,
-                'is_published' => true,
-                'show_in_navigation' => true,
-                'sort_order' => 4,
-                'blocks' => [
-                    [
-                        'type' => 'hero',
-                        'title' => 'Club News & Updates',
-                        'subtitle' => 'Latest Articles & Announcements',
-                    ],
-                    [
-                        'type' => 'news_feed',
-                        'heading' => 'Recent Articles',
-                    ],
-                ],
-            ],
-            [
-                'title' => 'Contact',
-                'slug' => 'contact',
-                'is_homepage' => false,
-                'is_published' => true,
-                'show_in_navigation' => true,
-                'sort_order' => 5,
-                'blocks' => [
-                    [
-                        'type' => 'hero',
-                        'title' => 'Contact Us',
-                        'subtitle' => 'Get in touch with our team',
-                    ],
-                    [
-                        'type' => 'contact_details',
-                        'eyebrow' => 'CONTACT',
-                        'title' => 'Get in Touch',
-                        'description' => 'Whether you\'re interested in joining '.$this->name.', a visiting member, or simply want to learn more, we\'d be delighted to hear from you.',
-                    ],
-                    [
-                        'type' => 'contact_form',
-                        'heading' => 'Send Us a Message',
-                        'subtitle' => 'Have questions or need assistance? Fill out the form below.',
-                        'recipient_email' => $this->settings['contact_email'] ?? $this->email,
-                        'cc_emails' => '',
-                        'name_required' => true,
-                        'email_required' => true,
-                        'phone_required' => false,
-                        'message_required' => true,
-                        'button_text' => 'Send Message',
-                        'success_message' => 'Thank you! Your message has been sent successfully.',
-                    ],
-                ],
-            ],
-        ];
-
-        // Only ever seeded once: after that, a missing slug means an admin renamed or removed that page on
-        // purpose, not that it needs putting back. Without this flag, renaming "About" away would leave a
-        // fresh blank "About" reappearing every time the site is visited.
-        if (! empty($settings['default_pages_seeded'])) {
-            $home = $this->pages()->where('slug', 'home')->first();
-
-            if ($home && $home->title !== 'Home') {
-                $home->update(['title' => 'Home']);
-            }
-
-            return;
-        }
-
-        foreach ($defaultPages as $def) {
-            if (! $this->pages()->where('slug', $def['slug'])->exists()) {
-                $this->pages()->create($def);
-            }
-        }
-
-        $this->update(['settings' => array_merge($this->settings ?? [], ['default_pages_seeded' => true])]);
+        app(DefaultSitePages::class)->ensure($this);
     }
 
     /**
@@ -349,7 +176,7 @@ class Club extends Model implements HasMedia
 
         $month = Months::number($this->settings['installation_month'] ?? null);
 
-        return $month !== null && $meeting->meeting_date !== null && (int) $meeting->meeting_date->format('n') === $month;
+        return $month !== null && (int) $meeting->meeting_date->format('n') === $month;
     }
 
     /**
@@ -360,6 +187,17 @@ class Club extends Model implements HasMedia
     public function masonicHall(): BelongsTo
     {
         return $this->belongsTo(MasonicHall::class);
+    }
+
+    /**
+     * Where a new meeting is held unless the secretary says otherwise: the lodge's own hall ("Masonic Hall, High Street,
+     * Stockton-on-Tees"), or nothing when the lodge has not said which hall it meets in.
+     */
+    public function defaultMeetingVenue(): string
+    {
+        $hall = $this->masonicHall;
+
+        return $hall ? collect([$hall->name, $hall->address_line_1, $hall->town])->filter()->implode(', ') : '';
     }
 
     /**
@@ -439,6 +277,9 @@ class Club extends Model implements HasMedia
         return $this->hasOne(ClubPlatformAccount::class);
     }
 
+    /**
+     * @return HasMany<Event, $this>
+     */
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);

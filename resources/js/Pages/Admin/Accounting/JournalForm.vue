@@ -30,9 +30,11 @@ const form = useForm({
     : [blankLine(props.accounts[0]), blankLine(props.accounts[1])],
 });
 
-const totalDebit = computed(() => form.items.reduce((sum, item) => sum + (Number(item.debit) || 0), 0));
-const totalCredit = computed(() => form.items.reduce((sum, item) => sum + (Number(item.credit) || 0), 0));
-const isBalanced = computed(() => totalDebit.value > 0 && Math.abs(totalDebit.value - totalCredit.value) < 0.001);
+// Each line is rounded to the penny first, as the ledger stores it, so this agrees with the server's check.
+const pence = (value) => Math.round((Number(value) || 0) * 100);
+const totalDebit = computed(() => form.items.reduce((sum, item) => sum + pence(item.debit), 0) / 100);
+const totalCredit = computed(() => form.items.reduce((sum, item) => sum + pence(item.credit), 0) / 100);
+const isBalanced = computed(() => totalDebit.value > 0 && Math.round(totalDebit.value * 100) === Math.round(totalCredit.value * 100));
 
 const addLine = () => form.items.push(blankLine());
 const removeLine = (index) => {

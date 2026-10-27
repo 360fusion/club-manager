@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -11,7 +11,6 @@ const props = defineProps({
 });
 
 const searchQuery = ref('');
-const roleFilter = ref('');
 
 const adminClubs = computed(() => {
   return props.clubs.filter(c => ['admin', 'owner'].includes(c.role));

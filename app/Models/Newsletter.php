@@ -12,7 +12,10 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Newsletter extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory;
+
+    /** @use InteractsWithMedia<Media> */
+    use InteractsWithMedia;
 
     protected $fillable = [
         'club_id',

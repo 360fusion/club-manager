@@ -46,14 +46,14 @@ class CharityCollection extends Model
         ];
     }
 
-    public function totalAmount(): Attribute
+    protected function totalAmount(): Attribute
     {
         return Attribute::make(
             get: fn () => (float) $this->cash_amount + (float) $this->cheque_amount
         );
     }
 
-    public function calculatedGiftAid(): Attribute
+    protected function calculatedGiftAid(): Attribute
     {
         return Attribute::make(
             get: function () {
@@ -67,7 +67,7 @@ class CharityCollection extends Model
         );
     }
 
-    public function donorDisplayName(): Attribute
+    protected function donorDisplayName(): Attribute
     {
         return Attribute::make(
             get: function () {

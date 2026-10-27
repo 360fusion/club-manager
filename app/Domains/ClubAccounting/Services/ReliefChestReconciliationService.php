@@ -54,7 +54,7 @@ class ReliefChestReconciliationService
         $netChestBalance = ($totalEligibleDonations + $totalGiftAidReclaimed) - (float) $grantsTotal;
 
         return [
-            'relief_chest_ref' => $festivalTarget?->relief_chest_ref ?: 'E1418',
+            'relief_chest_ref' => $festivalTarget?->relief_chest_ref ?: '',
             'festival_name' => $festivalTarget?->festival_name ?: 'Provincial Charity Festival',
             'total_eligible_donations' => $totalEligibleDonations,
             'formatted_total_eligible' => Currencies::format($totalEligibleDonations, $clubObj),
@@ -110,7 +110,7 @@ class ReliefChestReconciliationService
 
             if ($isGiftAid || $isReliefChest) {
                 $targetAcc = $isGiftAid ? $giftAidAcc : $charityAcc;
-                $txDate = $tx->transaction_date ? Carbon::parse($tx->transaction_date)->format('Y-m-d') : date('Y-m-d');
+                $txDate = Carbon::parse($tx->transaction_date)->format('Y-m-d');
                 $memo = $tx->raw_description ?: ($isGiftAid ? 'HMRC Gift Aid Recovery' : 'MCF Relief Chest Payout');
 
                 // Check double-entry journal entry duplication guard
@@ -175,7 +175,7 @@ class ReliefChestReconciliationService
             ->get();
 
         $festivalTarget = FestivalTarget::where('club_id', $clubObj->id)->first();
-        $chestRef = $festivalTarget?->relief_chest_ref ?: 'E1418';
+        $chestRef = $festivalTarget?->relief_chest_ref ?: '';
 
         $sym = trim(Currencies::symbolFor($clubObj));
         $csv = "Relief Chest Ref,Collection Date,Collection Type,Donation Amount ({$sym}),Gift Aid Reclaim (25%) ({$sym}),Status,Counter,Witness\n";
@@ -285,7 +285,7 @@ class ReliefChestReconciliationService
                 'gift_aid_reconciled_at' => $col->gift_aid_reconciled_at ? $col->gift_aid_reconciled_at->format('d M Y H:i') : null,
                 'bank_transaction' => $col->bankTransaction ? [
                     'id' => $col->bankTransaction->id,
-                    'transaction_date' => $col->bankTransaction->transaction_date ? $col->bankTransaction->transaction_date->format('d M Y') : null,
+                    'transaction_date' => $col->bankTransaction->transaction_date->format('d M Y'),
                     'raw_description' => $col->bankTransaction->raw_description,
                     'reference' => $col->bankTransaction->reference,
                     'amount' => (float) $col->bankTransaction->amount,

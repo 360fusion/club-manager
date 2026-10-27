@@ -229,6 +229,21 @@ class LodgeVisitorTest extends TestCase
         $this->assertSame(0, ClubVisitorAccess::count());
     }
 
+    public function test_the_visitors_list_is_paged_with_pending_requests_first(): void
+    {
+        foreach (range(1, 22) as $i) {
+            ClubVisitorAccess::create(['club_id' => $this->club->id, 'user_id' => User::factory()->create(['name' => "Visitor {$i}"])->id, 'home_lodge_name' => 'Lodge of Fellowship']);
+        }
+        ClubVisitorAccess::query()->where('club_id', $this->club->id)->limit(2)->update(['status' => 'declined']);
+
+        $url = route('admin.visitors.index', ['clubSlug' => 'lodge-of-industry']);
+
+        $this->actingAs($this->secretary)->get($url)
+            ->assertInertia(fn ($page) => $page->has('requests.data', 20)->where('requests.total', 22)->where('requests.data.0.status', 'pending'));
+        $this->actingAs($this->secretary)->get($url.'?page=2')
+            ->assertInertia(fn ($page) => $page->has('requests.data', 2)->where('requests.data.1.status', 'declined'));
+    }
+
     public function test_only_the_lodges_secretary_can_answer_and_only_for_their_own_lodge(): void
     {
         $this->setVisibility('approved_visitors');
@@ -236,7 +251,7 @@ class LodgeVisitorTest extends TestCase
         $access = ClubVisitorAccess::firstOrFail();
 
         $this->actingAs($this->secretary)->get(route('admin.visitors.index', ['clubSlug' => 'lodge-of-industry']))
-            ->assertOk()->assertInertia(fn ($page) => $page->component('Admin/Visitors/Index')->has('requests', 1)->where('requests.0.name', 'Vic Visitor'));
+            ->assertOk()->assertInertia(fn ($page) => $page->component('Admin/Visitors/Index')->has('requests.data', 1)->where('requests.data.0.name', 'Vic Visitor'));
 
         $this->actingAs($this->member)->get(route('admin.visitors.index', ['clubSlug' => 'lodge-of-industry']))->assertForbidden();
         $this->actingAs($this->member)->post(route('admin.visitors.approve', ['clubSlug' => 'lodge-of-industry', 'id' => $access->id]))->assertForbidden();

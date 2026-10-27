@@ -5,7 +5,7 @@ const STORAGE_KEY = 'members-nav';
 const read = () => {
     try {
         return localStorage.getItem(STORAGE_KEY) === 'side' ? 'side' : 'top';
-    } catch (e) {
+    } catch {
         return 'top';
     }
 };
@@ -21,7 +21,7 @@ export function setNavMode(mode) {
 
     try {
         localStorage.setItem(STORAGE_KEY, navMode.value);
-    } catch (e) {
+    } catch {
         // Storage is unavailable (private browsing); the choice still applies for this page.
     }
 }

@@ -27,6 +27,9 @@ class Media extends BaseMedia
         static::forceDeleting(fn (Media $media) => $media->deleteVersionFiles());
     }
 
+    /**
+     * @return HasMany<MediaVersion, $this>
+     */
     public function versions(): HasMany
     {
         return $this->hasMany(MediaVersion::class)->latest();

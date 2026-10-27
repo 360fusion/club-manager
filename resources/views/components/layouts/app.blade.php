@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#f1f5f9] dark:bg-slate-950">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-slate-100 dark:bg-slate-950">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,12 +19,12 @@
     @livewireStyles
     <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body class="min-h-screen bg-[#f1f5f9] dark:bg-slate-950 text-slate-800 font-sans antialiased">
+<body class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 font-sans antialiased">
     @php
         $user = auth()->user();
         $clubSlug = request()->route('clubSlug') ?? request()->route('slug') ?? (isset($club) && is_object($club) ? $club->slug : null);
         $currentClub = isset($club) && is_object($club) ? $club : ($clubSlug ? \App\Models\Club::where('slug', $clubSlug)->first() : null);
-        $clubName = $currentClub?->name ?? 'The Lodge of Fraternity';
+        $clubName = $currentClub?->name ?? config('app.name');
         $clubSlug = $currentClub?->slug ?? $clubSlug ?? 'lodge-of-fraternity';
         $userClubs = $user ? $user->clubs : collect();
         $currentClubRole = $user && $currentClub ? ($user->clubs->firstWhere('id', $currentClub->id)?->pivot?->role ?? 'admin') : 'admin';
@@ -33,7 +33,7 @@
 
     <div
         x-data="{ sidebarOpen: false, switcherOpen: false, userMenuOpen: false }"
-        class="min-h-screen bg-[#f1f5f9] dark:bg-slate-950 text-slate-800 font-sans flex flex-col md:flex-row"
+        class="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-800 font-sans flex flex-col md:flex-row"
     >
         <!-- Mobile Sidebar Toggle Header -->
         <div class="cm-nav md:hidden bg-slate-800 text-white p-4 flex items-center justify-between border-b border-slate-700 sticky top-0 z-40">

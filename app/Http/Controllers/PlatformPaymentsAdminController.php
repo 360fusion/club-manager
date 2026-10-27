@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PlatformPaymentsAdmin\UpdatePlatformPaymentsRequest;
 use App\Models\ClubPlatformAccount;
 use App\Models\PlatformPayment;
 use App\Support\Csv;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -71,14 +71,11 @@ class PlatformPaymentsAdminController extends Controller
     /**
      * Give one lodge its own commission rate, or clear it to use the platform default.
      */
-    public function update(Request $request, int $id): RedirectResponse
+    public function update(UpdatePlatformPaymentsRequest $request, int $id): RedirectResponse
     {
         $account = ClubPlatformAccount::findOrFail($id);
 
-        $validated = $request->validate([
-            'commission_percent' => 'nullable|numeric|min:0|max:100',
-            'commission_fixed' => 'nullable|numeric|min:0|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $account->update(['commission_percent' => $validated['commission_percent'] ?? null, 'commission_fixed' => $validated['commission_fixed'] ?? null]);
 

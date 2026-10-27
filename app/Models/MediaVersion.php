@@ -26,11 +26,17 @@ class MediaVersion extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Media, $this>
+     */
     public function media(): BelongsTo
     {
         return $this->belongsTo(Media::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

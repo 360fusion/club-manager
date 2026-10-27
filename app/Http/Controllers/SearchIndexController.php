@@ -42,7 +42,7 @@ class SearchIndexController extends Controller
      */
     public function club(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         abort_if(SiteSeo::siteHidden($club), 404);
 

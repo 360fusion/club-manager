@@ -48,6 +48,7 @@
                     @endphp
                     <button
                         type="button"
+                        wire:key="tx-{{ $tx->id }}"
                         wire:click="selectTransaction({{ $tx->id }})"
                         aria-pressed="{{ $isSelected ? 'true' : 'false' }}"
                         class="block w-full text-left p-4 rounded-xl border transition-colors cursor-pointer text-xs space-y-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 {{ $isSelected ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-400 dark:border-blue-700 ring-2 ring-blue-400/30' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700' }}"

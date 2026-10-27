@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SuperAdminLodgeCorrection\ApplyRequest;
+use App\Http\Requests\SuperAdminLodgeCorrection\Reject2Request;
 use App\Models\Lodge;
 use App\Models\LodgeCorrection;
 use App\Models\MasonicHall;
@@ -10,7 +12,6 @@ use App\Support\MeetingScheduleParser;
 use App\Support\Months;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,20 +51,9 @@ class SuperAdminLodgeCorrectionController extends Controller
         ]);
     }
 
-    public function apply(Request $request, int $id): RedirectResponse
+    public function apply(ApplyRequest $request, int $id): RedirectResponse
     {
-        $validated = $request->validate([
-            'fields' => 'required|array|max:7',
-            'fields.*' => Rule::in(array_keys(LodgeCorrection::FIELDS)),
-            'values' => 'nullable|array|max:7',
-            'values.meets_text' => 'nullable|string|max:500',
-            'values.masonic_hall_id' => 'nullable|exists:masonic_halls,id',
-            'values.status' => ['nullable', Rule::in(Lodge::STATUSES)],
-            'values.name' => 'nullable|string|max:255',
-            'values.number' => 'nullable|string|max:20',
-            'values.website_url' => ['nullable', 'url', 'max:255', 'regex:#^https?://#i'],
-            'note' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         // A ticked field the form sent no value for is being emptied.
         $values = collect($validated['fields'])->mapWithKeys(fn (string $field) => [$field => $validated['values'][$field] ?? null])->all();
@@ -73,9 +63,9 @@ class SuperAdminLodgeCorrectionController extends Controller
         return back()->with('success', 'Applied. The listing is updated and the person has been thanked.');
     }
 
-    public function reject(Request $request, int $id): RedirectResponse
+    public function reject(Reject2Request $request, int $id): RedirectResponse
     {
-        $validated = $request->validate(['reason' => 'required|string|min:3|max:1000']);
+        $validated = $request->validated();
 
         $this->corrections->reject(LodgeCorrection::findOrFail($id), $request->user(), $validated['reason']);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LodgeFollow\UpdateLodgeFollowRequest;
 use App\Models\Lodge;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,9 +46,9 @@ class LodgeFollowController extends Controller
     /**
      * Change a follow: put the lodge's expected meetings in, or take them out of, the calendar, or choose to hear about its summonses.
      */
-    public function update(Request $request, string $slug): RedirectResponse
+    public function update(UpdateLodgeFollowRequest $request, string $slug): RedirectResponse
     {
-        $validated = $request->validate(['in_calendar' => 'sometimes|required|boolean', 'notify_summons' => 'sometimes|required|boolean']);
+        $validated = $request->validated();
         $lodge = Lodge::where('slug', $slug)->firstOrFail();
 
         abort_unless($request->user()->followedLodges()->whereKey($lodge->id)->exists(), 404);

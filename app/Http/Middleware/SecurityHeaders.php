@@ -26,10 +26,12 @@ class SecurityHeaders
             $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
         }
 
-        // Report-only: browsers log violations to the console without blocking anything,
-        // so the policy can be tightened before it is enforced.
-        if (! app()->environment('local') && ! $response->headers->has('Content-Security-Policy-Report-Only')) {
-            $response->headers->set('Content-Security-Policy-Report-Only', implode('; ', [
+        // Report-only unless CSP_ENFORCE is on: browsers then log violations to the console without blocking anything.
+        // shortcut: 'unsafe-inline' and 'unsafe-eval' stay because Alpine/Livewire's standard build needs them; move to nonces and the CSP build to drop them.
+        $header = config('app.csp_enforce') ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only';
+
+        if (! app()->environment('local') && ! $response->headers->has($header)) {
+            $response->headers->set($header, implode('; ', [
                 "default-src 'self'",
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://plausible.io",
                 "style-src 'self' 'unsafe-inline' https:",
@@ -39,7 +41,7 @@ class SecurityHeaders
                 "frame-src 'self' https://www.youtube-nocookie.com https://www.openstreetmap.org",
                 "object-src 'none'",
                 "base-uri 'self'",
-                "form-action 'self'",
+                "form-action 'self' https://checkout.stripe.com https://www.paypal.com https://www.sandbox.paypal.com",
                 "frame-ancestors 'self'",
             ]));
         }

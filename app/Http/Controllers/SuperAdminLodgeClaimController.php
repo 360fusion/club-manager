@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SuperAdminLodgeClaim\ApproveRequest;
+use App\Http\Requests\SuperAdminLodgeClaim\RejectRequest;
+use App\Http\Requests\SuperAdminLodgeClaim\RequestInfoRequest;
 use App\Models\Club;
 use App\Models\Lodge;
 use App\Models\LodgeClaim;
 use App\Services\Lodges\LodgeClaimService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,16 +46,11 @@ class SuperAdminLodgeClaimController extends Controller
         ]);
     }
 
-    public function approve(Request $request, int $id): RedirectResponse
+    public function approve(ApproveRequest $request, int $id): RedirectResponse
     {
         $claim = LodgeClaim::findOrFail($id);
 
-        $validated = $request->validate([
-            'mode' => ['required', Rule::in(['new', 'link'])],
-            'club_id' => ['required_if:mode,link', 'nullable', 'exists:clubs,id'],
-            'make_claimant_admin' => 'nullable|boolean',
-            'note' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         if ($validated['mode'] === 'link') {
             $this->claims->approveByLinking($claim, $request->user(), Club::findOrFail($validated['club_id']), (bool) ($validated['make_claimant_admin'] ?? false), $validated['note'] ?? null);
@@ -66,18 +63,18 @@ class SuperAdminLodgeClaimController extends Controller
         return back()->with('success', "Approved. {$club->name} has been created and {$claim->user->name} is its owner.");
     }
 
-    public function reject(Request $request, int $id): RedirectResponse
+    public function reject(RejectRequest $request, int $id): RedirectResponse
     {
-        $validated = $request->validate(['reason' => 'required|string|min:3|max:1000']);
+        $validated = $request->validated();
 
         $this->claims->reject(LodgeClaim::findOrFail($id), $request->user(), $validated['reason']);
 
         return back()->with('success', 'The claim was refused and the person has been told why.');
     }
 
-    public function requestInfo(Request $request, int $id): RedirectResponse
+    public function requestInfo(RequestInfoRequest $request, int $id): RedirectResponse
     {
-        $validated = $request->validate(['question' => 'required|string|min:3|max:1000']);
+        $validated = $request->validated();
 
         $this->claims->requestInfo(LodgeClaim::findOrFail($id), $request->user(), $validated['question']);
 

@@ -23,7 +23,7 @@ const b64Email = computed(() => {
     if (!props.email) return '';
     try {
         return btoa(props.email);
-    } catch (e) {
+    } catch {
         return props.email;
     }
 });

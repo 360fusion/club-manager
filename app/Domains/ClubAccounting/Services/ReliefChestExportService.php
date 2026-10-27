@@ -20,7 +20,7 @@ class ReliefChestExportService
     {
         $clubObj = $club instanceof Club ? $club : Club::findOrFail($club);
         $target = FestivalTarget::where('club_id', $clubObj->id)->first();
-        $chestRef = $target?->relief_chest_ref ?: 'E1418';
+        $chestRef = $target?->relief_chest_ref ?: '';
         $provincialRef = 'L'.($clubObj->id ?: '1418').'BEN'.Carbon::now()->format('Y');
 
         if (! $collections) {

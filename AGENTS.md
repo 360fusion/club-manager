@@ -49,6 +49,6 @@ Boost replaces these bootstrap instructions with guidelines tailored to the appl
 # Project Rules & Customizations
 
 ## Accounting ERP Component Isolation Guidelines
-- All accounting models, services, controllers, migrations, and Vue 3 frontend components MUST remain strictly isolated in dedicated namespaces (`App\Models\Accounting\*`, `App\Services\AccountingService`, `App\Http\Controllers\AccountingAdminController`, `resources/js/Pages/Admin/Accounting/*`, `accounting_*` database tables).
+- All accounting models, services, controllers, migrations, and Vue 3 frontend components MUST remain strictly isolated in dedicated namespaces (`App\Models\Accounting\*`, `App\Services\AccountingService`, `App\Http\Controllers\AccountingAdminController`, `resources/js/Pages/Admin/Accounting/*`, `accounting_*` database tables). The Livewire layer for banking, members, subscriptions, charity, candidates and committee governance is a separate domain in `app/Domains/ClubAccounting` and deliberately uses `club_acc_*` tables; the rule above covers the ledger module (`App\Models\Accounting`, `AccountingService`). The one ledger table without the prefix is `meeting_financial_returns`; renaming it is optional tidying.
 - Do NOT mutate third-party vendor code directly; all custom logic must be encapsulated in standalone services so that upstream Git / Composer updates can be pulled cleanly without merge conflicts or breaking changes.
 

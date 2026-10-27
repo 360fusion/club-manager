@@ -6,6 +6,7 @@ use App\Models\Club;
 use App\Models\LodgeClaim;
 use App\Models\LodgeCorrection;
 use App\Support\Currencies;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -27,7 +28,20 @@ class HandleInertiaRequests extends Middleware
      */
     public function version(Request $request): ?string
     {
-        return parent::version($request);
+        // The route table in the page depends on who is looking, so signing in or out forces a full page load.
+        return parent::version($request).'|'.(self::routeGroup($request->user()) ?? 'all');
+    }
+
+    /**
+     * Which of the Ziggy route groups in config/ziggy.php this person's pages carry; null means every route.
+     */
+    public static function routeGroup(?Authenticatable $user): ?string
+    {
+        return match (true) {
+            $user === null => 'guest',
+            (bool) ($user->is_super_admin ?? false) => null,
+            default => 'member',
+        };
     }
 
     /**

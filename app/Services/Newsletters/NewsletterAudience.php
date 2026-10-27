@@ -2,6 +2,7 @@
 
 namespace App\Services\Newsletters;
 
+use App\Enums\ClubMemberStatus;
 use App\Models\Newsletter;
 use App\Models\NewsletterSubscription;
 use Illuminate\Support\Collection;
@@ -33,13 +34,13 @@ class NewsletterAudience
         $optedOut = $rows->where('status', 'unsubscribed')->whereNotNull('user_id')->pluck('user_id')->all();
 
         $members = $club->users()
-            ->wherePivot('status', 'active')
+            ->wherePivot('status', ClubMemberStatus::Active->value)
             ->wherePivotIn('role', $roles)
             ->get()
             ->reject(fn ($user) => ! $mandatory && in_array($user->id, $optedOut, true))
             ->map(fn ($user) => ['email' => $user->email, 'name' => $user->name, 'user_id' => $user->id, 'subscription_id' => $rows->firstWhere('user_id', $user->id)?->id, 'visitor' => false]);
 
-        $memberIds = $club->users()->wherePivot('status', 'active')->pluck('users.id')->all();
+        $memberIds = $club->users()->wherePivot('status', ClubMemberStatus::Active->value)->pluck('users.id')->all();
 
         $visitors = $rows->where('status', 'active')
             ->reject(fn (NewsletterSubscription $row) => $row->user_id !== null && in_array($row->user_id, $memberIds, true))

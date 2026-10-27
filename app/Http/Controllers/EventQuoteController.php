@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Club;
 use App\Models\Event;
 use App\Services\Events\EventPricing;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +17,7 @@ class EventQuoteController extends Controller
 {
     public function member(Request $request, string $slug, int $id, EventPricing $pricing): JsonResponse
     {
-        $club = Club::where('slug', $slug)->firstOrFail();
+        $club = $this->findClub($slug);
         $user = Auth::user();
         $event = Event::where('club_id', $club->id)->published()->visibleTo($user)->findOrFail($id);
 
@@ -32,7 +31,7 @@ class EventQuoteController extends Controller
      */
     public function organiser(Request $request, string $clubSlug, int $id, EventPricing $pricing): JsonResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = Event::where('club_id', $club->id)->findOrFail($id);
 
         return $this->respond($request, $event, $pricing);
@@ -40,7 +39,7 @@ class EventQuoteController extends Controller
 
     public function guest(Request $request, string $clubSlug, string $eventSlug, EventPricing $pricing): JsonResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = Event::where('club_id', $club->id)->published()->visibleTo(Auth::user())->where('slug', $eventSlug)->firstOrFail();
 
         abort_unless($event->allow_public_registration && $event->visibility->value === 'public', 403);

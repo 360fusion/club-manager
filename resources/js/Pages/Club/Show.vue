@@ -60,7 +60,7 @@ const applyPromo = () => {
 };
 
 const calculateTotal = (event) => {
-    let base = 0;
+    let base;
     if (event.ticket_tiers && event.ticket_tiers.length > 0 && rsvpForm.value.selected_tier_id) {
         const tier = event.ticket_tiers.find(t => t.id === rsvpForm.value.selected_tier_id);
         base = tier ? parseFloat(tier.price) : 0;

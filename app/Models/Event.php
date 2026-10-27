@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EventStatus;
 use App\Enums\Visibility;
 use App\Models\Concerns\HasVisibility;
 use Illuminate\Database\Eloquent\Builder;
@@ -208,7 +209,7 @@ class Event extends Model
      */
     public function scopePublished($query)
     {
-        return $query->where('status', '!=', 'draft');
+        return $query->where('status', '!=', EventStatus::Draft->value);
     }
 
     /**

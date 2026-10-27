@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Billing\CheckoutRequest;
+use App\Http\Requests\Billing\UpdateBusinessAccountRequest;
+use App\Http\Requests\Billing\UpdateProviderRequest;
 use App\Models\Club;
 use App\Services\Payment\PaymentManager;
 use Illuminate\Http\RedirectResponse;
@@ -20,18 +23,18 @@ class BillingController extends Controller
 
     public function index(Request $request, string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $settings = $club->settings ?? [];
 
         $currentProvider = $settings['payment_provider'] ?? 'stripe';
 
         $businessDetails = [
             'business_name' => $settings['business_name'] ?? $club->name,
-            'company_number' => $settings['company_number'] ?? '12948573',
-            'tax_id' => $settings['tax_id'] ?? 'GB 987 6543 21',
+            'company_number' => $settings['company_number'] ?? '',
+            'tax_id' => $settings['tax_id'] ?? '',
             'billing_contact_email' => $settings['billing_contact_email'] ?? ($settings['contact_email'] ?? 'treasurer@'.$club->slug.'.org'),
-            'billing_phone' => $settings['billing_phone'] ?? ($settings['phone'] ?? '+44 20 7946 0912'),
-            'address' => $settings['address'] ?? '100 Boathouse Way, Oxford, OX1 1AA, UK',
+            'billing_phone' => $settings['billing_phone'] ?? ($settings['phone'] ?? ''),
+            'address' => $settings['address'] ?? '',
             'stripe_publishable_key' => $settings['stripe_publishable_key'] ?? '',
             'stripe_secret_key' => '',
             'stripe_webhook_secret' => '',
@@ -82,21 +85,11 @@ class BillingController extends Controller
         ]);
     }
 
-    public function updateBusinessAccount(Request $request, string $clubSlug): RedirectResponse
+    public function updateBusinessAccount(UpdateBusinessAccountRequest $request, string $clubSlug): RedirectResponse
     {
-        $validated = $request->validate([
-            'business_name' => 'required|string|max:255',
-            'company_number' => 'nullable|string|max:100',
-            'tax_id' => 'nullable|string|max:100',
-            'billing_contact_email' => 'required|email|max:255',
-            'billing_phone' => 'nullable|string|max:100',
-            'address' => 'nullable|string|max:500',
-            'stripe_publishable_key' => 'nullable|string|max:255',
-            'stripe_secret_key' => 'nullable|string|max:255',
-            'stripe_webhook_secret' => 'nullable|string|max:255',
-        ]);
+        $validated = $request->validated();
 
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         foreach (self::SECRET_KEYS as $key) {
             if (empty($validated[$key])) {
                 unset($validated[$key]);
@@ -112,13 +105,10 @@ class BillingController extends Controller
         return redirect()->back()->with('success', 'Main Business Account details and Merchant Gateway credentials updated successfully.');
     }
 
-    public function updateProvider(Request $request, string $clubSlug): RedirectResponse
+    public function updateProvider(UpdateProviderRequest $request, string $clubSlug): RedirectResponse
     {
-        $request->validate([
-            'provider' => 'required|in:stripe,paddle',
-        ]);
 
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $settings = $club->settings ?? [];
         $settings['payment_provider'] = $request->provider;
         $club->settings = $settings;
@@ -127,13 +117,10 @@ class BillingController extends Controller
         return redirect()->back()->with('success', 'Active payment provider updated to '.strtoupper($request->provider));
     }
 
-    public function checkout(Request $request, string $clubSlug, PaymentManager $paymentManager): RedirectResponse
+    public function checkout(CheckoutRequest $request, string $clubSlug, PaymentManager $paymentManager): RedirectResponse
     {
-        $request->validate([
-            'price_id' => 'required|string',
-        ]);
 
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $gateway = $paymentManager->forClub($club);
 
         try {
@@ -147,7 +134,7 @@ class BillingController extends Controller
 
     public function portal(Request $request, string $clubSlug, PaymentManager $paymentManager): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $gateway = $paymentManager->forClub($club);
 
         try {

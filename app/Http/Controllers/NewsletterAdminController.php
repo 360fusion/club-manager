@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
+use App\Http\Requests\NewsletterAdmin\StoreNewsletterRequest;
 use App\Mail\NewsletterMail;
 use App\Models\Club;
 use App\Models\ClubUpdate;
@@ -14,14 +15,12 @@ use App\Services\Newsletters\NewsletterAudience;
 use App\Services\Newsletters\NewsletterSender;
 use App\Support\Currencies;
 use App\Support\RichTextSanitizer;
-use App\Support\UploadRules;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,16 +30,37 @@ class NewsletterAdminController extends Controller
     /**
      * Display listing of newsletters for a club.
      */
-    public function index(string $clubSlug, NewsletterSender $sender, NewsletterAudience $audience): Response
+    public function index(Request $request, string $clubSlug, NewsletterSender $sender, NewsletterAudience $audience): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         NewsletterTypeAdminController::ensureDefaultTypes($club);
 
-        $newsletters = Newsletter::where('club_id', $club->id)
+        $filters = [
+            'q' => trim((string) $request->query('q', '')),
+            'type' => (string) $request->query('type', 'all'),
+            'status' => (string) $request->query('status', 'all'),
+            'role' => (string) $request->query('role', 'all'),
+            'sent' => (string) $request->query('sent', 'all'),
+        ];
+
+        $query = Newsletter::where('club_id', $club->id)
+            ->when($filters['q'] !== '', fn ($q) => $q->where(fn ($w) => $w->where('subject', 'like', '%'.$filters['q'].'%')->orWhere('content', 'like', '%'.$filters['q'].'%')))
+            ->when($filters['type'] !== 'all', fn ($q) => $q->where('newsletter_type_id', (int) $filters['type']))
+            ->when(in_array($filters['status'], ['sent', 'draft'], true), fn ($q) => $q->where('status', $filters['status']))
+            ->when($filters['role'] !== 'all', fn ($q) => $q->whereJsonContains('target_roles', $filters['role']))
+            ->when($filters['sent'] === '30_days', fn ($q) => $q->where('sent_at', '>=', now()->subDays(30)))
+            ->when($filters['sent'] === 'this_year', fn ($q) => $q->where('sent_at', '>=', now()->startOfYear()));
+
+        $statusCounts = Newsletter::where('club_id', $club->id)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+        $counts = ['all' => (int) $statusCounts->sum(), 'sent' => (int) ($statusCounts['sent'] ?? 0), 'draft' => (int) ($statusCounts['draft'] ?? 0)];
+
+        $newsletters = $query
             ->with(['newsletterType', 'club'])
             ->orderByDesc('created_at')
-            ->get()
-            ->map(function ($newsletter) use ($sender, $audience) {
+            ->orderByDesc('id')
+            ->paginate(15)
+            ->withQueryString()
+            ->through(function ($newsletter) use ($sender, $audience) {
                 $stats = $sender->stats($newsletter);
                 $counts = $newsletter->status === 'sent' ? null : $audience->counts($newsletter);
                 $total = $counts['total'] ?? ($stats['queued'] + $stats['sent'] + $stats['failed']);
@@ -70,6 +90,8 @@ class NewsletterAdminController extends Controller
         return Inertia::render('Admin/Newsletters/Index', [
             'club' => $club,
             'newsletters' => $newsletters,
+            'counts' => $counts,
+            'filters' => $filters,
             'types' => $types,
         ]);
     }
@@ -79,7 +101,7 @@ class NewsletterAdminController extends Controller
      */
     public function edit(string $clubSlug, ?int $id = null): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         NewsletterTypeAdminController::ensureDefaultTypes($club);
 
         $types = NewsletterType::where('club_id', $club->id)->get();
@@ -141,20 +163,11 @@ class NewsletterAdminController extends Controller
     /**
      * Store or update a newsletter draft.
      */
-    public function store(Request $request, string $clubSlug, NewsletterSender $sender): RedirectResponse
+    public function store(StoreNewsletterRequest $request, string $clubSlug, NewsletterSender $sender): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'id' => 'nullable|integer',
-            'newsletter_type_id' => ['nullable', Rule::exists('newsletter_types', 'id')->where('club_id', $club->id)],
-            'subject' => 'required|string|max:255',
-            'content' => 'required|string|max:200000',
-            'target_roles' => 'required|array|max:10',
-            'status' => 'required|in:draft,sent',
-            'existing_attachments' => 'nullable|array|max:50',
-            'new_attachments.*' => UploadRules::attachment(10240),
-        ]);
+        $validated = $request->validated();
 
         $rawAttachments = $validated['existing_attachments'] ?? [];
         $attachments = array_values(array_filter($rawAttachments, function ($att) {
@@ -227,7 +240,7 @@ class NewsletterAdminController extends Controller
      */
     public function send(string $clubSlug, int $id, NewsletterSender $sender): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $newsletter = Newsletter::where('club_id', $club->id)->findOrFail($id);
 
         $sender->send($newsletter);
@@ -240,7 +253,7 @@ class NewsletterAdminController extends Controller
      */
     public function retry(string $clubSlug, int $id, NewsletterSender $sender): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $newsletter = Newsletter::where('club_id', $club->id)->where('status', 'sent')->findOrFail($id);
 
         $count = $sender->retryFailed($newsletter);
@@ -253,7 +266,7 @@ class NewsletterAdminController extends Controller
      */
     public function duplicate(string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $newsletter = Newsletter::where('club_id', $club->id)->findOrFail($id);
 
         $copy = Newsletter::create([
@@ -274,7 +287,7 @@ class NewsletterAdminController extends Controller
      */
     public function test(Request $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $mail = $this->draftMail($request, $club, $request->user()->name, isTest: true);
 
         Mail::to($request->user()->email)->send($mail);
@@ -287,7 +300,7 @@ class NewsletterAdminController extends Controller
      */
     public function preview(Request $request, string $clubSlug): JsonResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $mail = $this->draftMail($request, $club, 'Alex Sample', unsubscribeUrl: '#');
 
         return response()->json(['html' => view('emails.newsletter', $mail->viewData())->render()]);
@@ -315,7 +328,7 @@ class NewsletterAdminController extends Controller
      */
     public function destroy(string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $newsletter = Newsletter::where('club_id', $club->id)->findOrFail($id);
         $newsletter->delete();
 

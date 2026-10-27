@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ClubMemberStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
@@ -17,6 +19,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Paddle\Billable as PaddleBillable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * @property Pivot $pivot The club_user row, present on users loaded through a club's users() relation.
+ */
 // 'is_super_admin' is deliberately NOT fillable: it must never be settable from
 // request input. Grant it explicitly via forceFill or the superadmin:grant command.
 #[Fillable(['name', 'email', 'avatar_url', 'password'])]
@@ -101,7 +106,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function activeClubIds(): Collection
     {
-        return $this->clubs()->wherePivot('status', 'active')->pluck('clubs.id');
+        return $this->clubs()->wherePivot('status', ClubMemberStatus::Active->value)->pluck('clubs.id');
     }
 
     /**

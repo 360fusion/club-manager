@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\ClubMemberStatus;
 use App\Models\Club;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ final class MemberScope
      */
     public static function for(User $user, ?string $slug = null): self
     {
-        $memberClubs = $user->clubs()->with('clubType')->wherePivot('status', 'active')->get();
+        $memberClubs = $user->clubs()->with('clubType')->wherePivot('status', ClubMemberStatus::Active->value)->get();
 
         if ($slug === null) {
             return new self($user, $memberClubs, null);

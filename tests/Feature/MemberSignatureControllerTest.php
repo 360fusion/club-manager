@@ -6,7 +6,7 @@ use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\SignatureRequest;
 use App\Models\User;
-use App\Services\AccountingService;
+use App\Services\FinancialYearService;
 use App\Services\Signatures\SignatureRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -40,7 +40,7 @@ class MemberSignatureControllerTest extends TestCase
     private function pendingRequest(): SignatureRequest
     {
         Mail::fake();
-        $audit = app(AccountingService::class)->requestYearAudit($this->club, 2025, $this->auditorOne, $this->auditorTwo, null);
+        $audit = app(FinancialYearService::class)->requestYearAudit($this->club, 2025, $this->auditorOne, $this->auditorTwo, null);
 
         return app(SignatureRequestService::class)->request($audit, 'year_audit_auditor_one', $this->auditorOne, $this->auditorOne->name, $this->auditorOne->email, $this->auditorOne);
     }

@@ -177,7 +177,7 @@
                 <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                     <span class="font-medium">Saved:</span>
                     @foreach($savedMappings as $saved)
-                        <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2 py-1 dark:bg-slate-800">
+                        <span wire:key="saved-{{ $saved->id }}" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2 py-1 dark:bg-slate-800">
                             {{ $saved->name }}
                             <button type="button" wire:click="deleteSavedMapping({{ $saved->id }})" wire:confirm="Remove the saved matching '{{ $saved->name }}'?" aria-label="Remove {{ $saved->name }}" class="cursor-pointer text-slate-400 hover:text-rose-600">
                                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>

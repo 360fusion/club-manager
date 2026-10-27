@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ClubMemberStatus;
+use App\Enums\EventStatus;
 use App\Models\Club;
 use App\Models\ClubUpdate;
 use App\Models\Event;
@@ -38,7 +40,7 @@ class MemberHomeController extends Controller
 
         $scope = MemberScope::for($user);
         $clubs = $scope->memberClubs;
-        $pending = $user->clubs()->with('clubType')->wherePivot('status', 'pending')->get();
+        $pending = $user->clubs()->with('clubType')->wherePivot('status', ClubMemberStatus::Pending->value)->get();
 
         return Inertia::render('Members/Dashboard', [
             'clubs' => $clubs->map(fn (Club $club) => $this->clubSummary($club))->all(),
@@ -95,7 +97,7 @@ class MemberHomeController extends Controller
 
         $events = Event::whereIn('club_id', $clubIds)
             ->visibleTo($user)
-            ->where('status', 'upcoming')
+            ->where('status', EventStatus::Upcoming->value)
             ->where('starts_at', '>=', now())
             ->orderBy('starts_at')
             ->limit(self::UP_NEXT_LIMIT)
@@ -111,7 +113,7 @@ class MemberHomeController extends Controller
             'club_name' => $clubs->firstWhere('id', $meeting->club_id)->name,
             'club_colour' => $clubs->firstWhere('id', $meeting->club_id)->colourKey(),
             'title' => $meeting->title,
-            'at' => ($meeting->starts_at ? $meeting->meeting_date?->copy()->setTimeFromTimeString((string) $meeting->starts_at) : $meeting->meeting_date)?->toIso8601String(),
+            'at' => ($meeting->starts_at ? $meeting->meeting_date->copy()->setTimeFromTimeString((string) $meeting->starts_at) : $meeting->meeting_date)?->toIso8601String(),
             'where' => $meeting->venue,
             'reply' => $meetingReplies[$meeting->id] ?? null,
         ])->concat($events->map(fn (Event $event) => [
@@ -120,7 +122,7 @@ class MemberHomeController extends Controller
             'club_name' => $clubs->firstWhere('id', $event->club_id)->name,
             'club_colour' => $clubs->firstWhere('id', $event->club_id)->colourKey(),
             'title' => $event->title,
-            'at' => $event->starts_at?->toIso8601String(),
+            'at' => $event->starts_at->toIso8601String(),
             'where' => $event->location,
             'reply' => $eventReplies[$event->id] ?? null,
         ]))
@@ -161,7 +163,7 @@ class MemberHomeController extends Controller
             ]);
 
         $events = Event::whereIn('club_id', $clubIds)->visibleTo($user)
-            ->where('status', 'upcoming')
+            ->where('status', EventStatus::Upcoming->value)
             ->where('starts_at', '>=', now())
             ->latest()->limit(self::FEED_LIMIT)->get()
             ->map(fn (Event $event) => [
@@ -169,7 +171,7 @@ class MemberHomeController extends Controller
                 'type' => 'event',
                 'club' => $club($event->club_id),
                 'title' => $event->title,
-                'excerpt' => trim($event->starts_at?->format('j M Y, H:i').' · '.$event->location, ' ·'),
+                'excerpt' => trim($event->starts_at->format('j M Y, H:i').' · '.$event->location, ' ·'),
                 'at' => $event->created_at->toIso8601String(),
                 'important' => false,
                 'link' => ['name' => 'member.events', 'params' => ['slug' => $club($event->club_id)['slug']]],

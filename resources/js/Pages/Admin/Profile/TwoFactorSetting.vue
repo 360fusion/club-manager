@@ -1,9 +1,8 @@
 <script setup>
-import { ref } from 'vue';
 import { useForm, router, Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 
-const props = defineProps({
+defineProps({
   user: Object,
   twoFactorEnabled: Boolean,
   twoFactorPending: Boolean,

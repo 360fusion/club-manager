@@ -2,6 +2,7 @@
 
 namespace App\Services\Newsletters;
 
+use App\Enums\ClubMemberStatus;
 use App\Models\NewsletterDelivery;
 use App\Models\NewsletterSubscription;
 
@@ -20,7 +21,7 @@ class NewsletterOptOut
             return false;
         }
 
-        $isMember = $delivery->user_id !== null && $delivery->newsletter->club->users()->wherePivot('status', 'active')->where('users.id', $delivery->user_id)->exists();
+        $isMember = $delivery->user_id !== null && $delivery->newsletter->club->users()->wherePivot('status', ClubMemberStatus::Active->value)->where('users.id', $delivery->user_id)->exists();
 
         return ! ($isMember && $type->is_mandatory);
     }

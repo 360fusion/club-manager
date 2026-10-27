@@ -226,6 +226,7 @@
                             </div>
                             @foreach($mentionSuggestions as $sugg)
                                 <button
+                                    wire:key="mention-{{ $loop->index }}"
                                     type="button"
                                     wire:click="insertMention('{{ $sugg['mention_tag'] }}')"
                                     class="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-left transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/40"
@@ -367,7 +368,7 @@
                         <div class="max-h-[520px] space-y-2 overflow-y-auto pr-1">
                             @forelse($tasks as $task)
                                 @php $isDone = $task->status->value === 'completed'; @endphp
-                                <div class="flex items-start justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-800 dark:bg-slate-800/50">
+                                <div wire:key="task-{{ $task->id }}" class="flex items-start justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-800 dark:bg-slate-800/50">
                                     <div class="min-w-0 flex-1 space-y-1">
                                         <div class="flex items-start gap-2">
                                             <button

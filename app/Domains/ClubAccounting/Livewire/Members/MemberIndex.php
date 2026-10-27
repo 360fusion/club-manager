@@ -240,6 +240,7 @@ class MemberIndex extends Component
         }
 
         $members = $query->paginate(15);
+        Member::loadActiveOffices($members->items());
 
         $canInvite = ClubAccess::can(auth()->user(), $club, 'manage_members');
         $invitableIds = $canInvite

@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, useForm, router, Link } from '@inertiajs/vue3';
+import { useForm, router, Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 const props = defineProps({

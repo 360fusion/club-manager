@@ -1,17 +1,31 @@
 <script setup>
 import { useClipboard } from '@/Composables/useClipboard';
-import { ref, computed } from 'vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
+import { Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Pagination from '@/Components/Ui/Pagination.vue';
 
 const props = defineProps({
   club: {
     type: Object,
     required: true,
   },
+  // One page of the roster (a Laravel paginator): the server applies the search, tab and filters.
   members: {
+    type: Object,
+    required: true,
+  },
+  pendingMembers: {
     type: Array,
     default: () => [],
+  },
+  counts: {
+    type: Object,
+    required: true,
+  },
+  filters: {
+    type: Object,
+    default: () => ({}),
   },
   enableMemberRanks: {
     type: Boolean,
@@ -24,12 +38,12 @@ const props = defineProps({
 });
 
 // Search and filtering state
-const searchQuery = ref('');
-const roleFilter = ref('');
-const rankFilter = ref('');
-const statusFilter = ref('');
-const committeeRoleFilter = ref('');
-const activeRosterTab = ref('all'); // 'all', 'active', 'invited_pending', 'deactivated', 'past'
+const searchQuery = ref(props.filters.q ?? '');
+const roleFilter = ref(props.filters.role ?? '');
+const rankFilter = ref(props.filters.rank ?? '');
+const statusFilter = ref(props.filters.status ?? '');
+const committeeRoleFilter = ref(props.filters.committee ?? '');
+const activeRosterTab = ref(props.filters.tab || 'all'); // 'all', 'active', 'invited_pending', 'deactivated', 'past'
 const { copied: inviteCopied, copy } = useClipboard({ resetAfter: 2500 });
 
 const registrationUrl = computed(() => {
@@ -76,56 +90,22 @@ const roleBadgeClass = (role) => {
   }
 };
 
-// Computed counts for tabs
-// Join requests only: people who were invited by email are pending too, but they approve themselves by accepting.
-const pendingMembers = computed(() => {
-  return props.members.filter((m) => m.status === 'pending' && !m.invitation_token);
-});
-
-const counts = computed(() => {
-  return {
-    all: props.members.length,
-    active: props.members.filter((m) => m.status === 'active').length,
-    invited_pending: props.members.filter((m) => m.status === 'pending').length,
-    deactivated: props.members.filter((m) => m.status === 'inactive').length,
-    past: props.members.filter((m) => m.status === 'past').length,
-  };
-});
-
-const filteredMembers = computed(() => {
-  return props.members.filter((m) => {
-    // 1. Tab Filter
-    let matchesTab = true;
-    if (activeRosterTab.value === 'active') {
-      matchesTab = m.status === 'active';
-    } else if (activeRosterTab.value === 'invited_pending') {
-      matchesTab = m.status === 'pending';
-    } else if (activeRosterTab.value === 'deactivated') {
-      matchesTab = m.status === 'inactive';
-    } else if (activeRosterTab.value === 'past') {
-      matchesTab = m.status === 'past';
-    }
-
-    // 2. Search & Dropdown Filters
-    const matchesSearch =
-      m.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      (m.member_number && m.member_number.toLowerCase().includes(searchQuery.value.toLowerCase()));
-
-    const matchesRole = roleFilter.value ? m.role === roleFilter.value : true;
-    const matchesRank = rankFilter.value ? m.rank === rankFilter.value : true;
-    const matchesStatus = statusFilter.value ? m.status === statusFilter.value : true;
-    const matchesCommittee = committeeRoleFilter.value
-      ? (committeeRoleFilter.value === 'any'
-          ? !!m.committee_role
-          : (committeeRoleFilter.value === 'none'
-              ? !m.committee_role
-              : m.committee_role === committeeRoleFilter.value))
-      : true;
-
-    return matchesTab && matchesSearch && matchesRole && matchesRank && matchesStatus && matchesCommittee;
-  });
-});
+// Any change to the search or filters reloads the first page from the server.
+let reloadTimer = null;
+const reloadRoster = () => {
+  clearTimeout(reloadTimer);
+  reloadTimer = setTimeout(() => {
+    router.get(route('admin.users.index', { clubSlug: props.club.slug }), {
+      q: searchQuery.value || undefined,
+      tab: activeRosterTab.value === 'all' ? undefined : activeRosterTab.value,
+      role: roleFilter.value || undefined,
+      rank: rankFilter.value || undefined,
+      status: statusFilter.value || undefined,
+      committee: committeeRoleFilter.value || undefined,
+    }, { preserveState: true, preserveScroll: true, replace: true, only: ['members', 'filters'] });
+  }, 300);
+};
+watch([searchQuery, roleFilter, rankFilter, statusFilter, committeeRoleFilter, activeRosterTab], reloadRoster);
 
 // Actions
 const updateRole = (userId, newRole) => {
@@ -192,14 +172,6 @@ const revokeInviteEmail = (userId, name) => {
   }
 };
 
-const removeMember = (userId, name) => {
-  if (confirm(`Are you sure you want to remove ${name} from the club roster?`)) {
-    router.delete(route('admin.users.destroy', { clubSlug: props.club.slug, userId }), {
-      preserveScroll: true,
-    });
-  }
-};
-
 const approveMember = (userId) => {
   router.post(
     route('clubs.members.approve', { slug: props.club.slug, userId }),
@@ -240,7 +212,7 @@ const submitAddMember = () => {
           <div class="flex items-center gap-3">
             <h2 class="text-xl font-bold text-slate-900 dark:text-white">Club Member Roster</h2>
             <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-              {{ members.length }} Total Members
+              {{ counts.all }} Total Members
             </span>
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage club member directory, member IDs, administrative roles, pending approvals, and roster exports.</p>
@@ -475,7 +447,7 @@ const submitAddMember = () => {
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200">
               <tr
-                v-for="m in filteredMembers"
+                v-for="m in members.data"
                 :key="m.id"
                 class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
               >
@@ -633,7 +605,7 @@ const submitAddMember = () => {
                 </td>
               </tr>
 
-              <tr v-if="filteredMembers.length === 0">
+              <tr v-if="members.data.length === 0">
                 <td :colspan="enableMemberRanks ? 7 : 6" class="py-12 text-center text-slate-400">
                   <p class="text-sm font-medium">No members found matching your search or filters.</p>
                 </td>
@@ -641,6 +613,7 @@ const submitAddMember = () => {
             </tbody>
           </table>
         </div>
+        <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800"><Pagination :links="members.links" /></div>
       </div>
 
       <!-- Public Registration Link Widget Card (At Bottom) -->

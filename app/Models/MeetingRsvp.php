@@ -64,6 +64,9 @@ class MeetingRsvp extends Model
         return $this->belongsTo(User::class, 'paid_recorded_by');
     }
 
+    /**
+     * @return HasMany<MeetingRsvpGuest, $this>
+     */
     public function guests(): HasMany
     {
         return $this->hasMany(MeetingRsvpGuest::class, 'meeting_rsvp_id');

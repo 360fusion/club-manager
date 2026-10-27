@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Summons — {{ $club->name }} No. {{ $club->lodge_number ?? '1418' }}</title>
+<title>Summons — {{ $club->name }}{{ filled($club->lodge_number) ? ' No. '.$club->lodge_number : '' }}</title>
 <style>
 <style>
   @page {
@@ -299,7 +299,7 @@
     <!-- Page 1 Left: Full Membership Roll -->
     <div class="column column-left">
       <div class="member-roll-header">
-        {{ $club->name }} No {{ $club->lodge_number ?? '1418' }} Members
+        {{ $club->name }}{{ filled($club->lodge_number) ? ' No '.$club->lodge_number : '' }} Members
       </div>
 
       <table class="member-table">
@@ -335,34 +335,40 @@
 
           <div class="prov-title">{{ $meeting->front_page_title ?? 'PROVINCIAL GRAND LODGE' }}</div>
           
+          @if(filled($meeting->provincial_grand_master))
           <div class="prov-officer">
             Provincial Grand Master
-            <strong>{{ $meeting->provincial_grand_master ?? 'R WBro John David Watts' }}</strong>
+            <strong>{{ $meeting->provincial_grand_master }}</strong>
           </div>
+          @endif
 
+          @if(filled($meeting->deputy_provincial_grand_master))
           <div class="prov-officer" style="margin-top: 6px;">
             Deputy Provincial Grand Master
-            <strong>{{ $meeting->deputy_provincial_grand_master ?? 'WBro Andrew Peter Faul Foster PSGD' }}</strong>
+            <strong>{{ $meeting->deputy_provincial_grand_master }}</strong>
           </div>
+          @endif
 
+          @if(filled($meeting->assistant_provincial_grand_masters))
           <div class="prov-officer" style="margin-top: 6px;">
             Assistant Provincial Grand Masters
             <div style="font-size: 8.5pt; margin-top: 2px;">
-              {!! nl2br(e($meeting->assistant_provincial_grand_masters ?? "WBro Dr. Rakesh Bhalla PSGD\nWBro Thomas Fred Gittins PSGD\nWBro Martin Rankin PJGD\nWBro Michael Stuart Shaw PJGD\nWBro Lt Col John William Henry")) !!}
+              {!! nl2br(e($meeting->assistant_provincial_grand_masters)) !!}
             </div>
           </div>
+          @endif
         </div>
 
         <!-- Lodge Main Name & Motto -->
         <div class="lodge-title-block">
           <div class="lodge-main-name">{{ strtoupper($meeting->cover_club_name ?? $club->name) }}</div>
-          <div class="lodge-number">No {{ $meeting->cover_club_number ?? ($club->lodge_number ?? '1418') }}</div>
-          <div class="motto">{{ $meeting->cover_motto ?? ($club->motto ?? 'Fraternus Amor Maneto') }}</div>
+          @if(filled($meeting->cover_club_number ?? $club->lodge_number))<div class="lodge-number">No {{ $meeting->cover_club_number ?? $club->lodge_number }}</div>@endif
+          @if(filled($meeting->cover_motto ?? $club->motto))<div class="motto">{{ $meeting->cover_motto ?? $club->motto }}</div>@endif
         </div>
 
         <!-- Master Name -->
         <div style="font-size: 11pt; font-weight: bold;">
-          {{ $meeting->cover_worshipful_master ?? ('WBro ' . ($worshipfulMaster->name ?? 'KD Lord')) }}<br>
+          {{ $meeting->cover_worshipful_master ?? ($worshipfulMaster?->name ? 'WBro '.$worshipfulMaster->name : '') }}<br>
           <span style="font-size: 10pt; font-weight: normal; letter-spacing: 1px;">MASTER</span>
         </div>
 
@@ -384,7 +390,7 @@
     <!-- Page 2 Left: Officers Roster, Honorary Members, & Secretary Contacts -->
     <div class="column column-left">
       
-      <h2>{{ $meeting->officers_year_label ?? 'OFFICERS FOR 2025-2026' }}</h2>
+      <h2>{{ $meeting->officers_year_label ?: \App\Support\OfficersYear::label($meeting->meeting_date, $club->settings['installation_month'] ?? null) }}</h2>
       
       <table class="officer-table">
         @if(!empty($meeting->officers_roster) && is_array($meeting->officers_roster) && count($meeting->officers_roster) > 0)
@@ -413,20 +419,6 @@
               <td class="holder-name">{{ $officer['name'] ?? '' }}</td>
             </tr>
           @endforeach
-        @else
-          <tr><td>Worshipful Master:</td><td>WBro Kristopher D Lord.</td></tr>
-          <tr><td>Senior Warden:</td><td>Bro Corey N Irons.</td></tr>
-          <tr><td>Junior Warden:</td><td>Bro David A Chapman.</td></tr>
-          <tr><td>Chaplain:</td><td>WBro Kenneth Hardy PM PPJGD.</td></tr>
-          <tr><td>Treasurer:</td><td>WBro George F Bird PM PAGDC PPJGW.</td></tr>
-          <tr><td>Secretary:</td><td>WBro Ian McCabe PM.</td></tr>
-          <tr><td>Director of Ceremonies:</td><td>WBro Richard I Barlow PM PPGSwd.</td></tr>
-          <tr><td>Almoner:</td><td>WBro Stephen Bakewell PM PPGReg.</td></tr>
-          <tr><td>Charity Steward:</td><td>WBro Kristopher D Lord.</td></tr>
-          <tr><td>Senior Deacon:</td><td>Bro Ethan E Chapman.</td></tr>
-          <tr><td>Junior Deacon:</td><td>Bro Alfie TS Mensah.</td></tr>
-          <tr><td>Inner Guard:</td><td>Bro Jonathon A Corney.</td></tr>
-          <tr><td>Tyler:</td><td>WBro Donald Marshall PM PPJGW.</td></tr>
         @endif
       </table>
 
@@ -444,7 +436,7 @@
       </div>
 
       <div style="margin-top: 10px; font-size: 8pt; font-style: italic; color: #333; border-top: 1px solid #ddd; pt: 4px;">
-        {{ $meeting->sick_distressed_notes ?? 'Should you be aware of any illness or any other unusual circumstances involving any member, please communicate same to W Bro S Bakewell, Tel: 01642 888383.' }}
+        {{ $meeting->sick_distressed_notes ?? 'Should you be aware of any illness or any other unusual circumstances involving any member, please communicate same to the Almoner.' }}
       </div>
 
     </div>
@@ -461,7 +453,7 @@
         {{ $meeting->intro_text ?? ('You are respectfully requested to attend the Regular Meeting of this Lodge of Free and Accepted Masons, to be held in the ' . $meeting->venue . ', on ' . \Carbon\Carbon::parse($meeting->meeting_date)->format('l jS F Y') . ' at ' . $meeting->starts_at . '.') }}
         <br><br>
         By order of the Worshipful Master.<br>
-        <em>Yours fraternally — WBro {{ $secretaryUser->name ?? 'I McCabe' }}, Secretary</em>
+        <em>Yours fraternally{{ $secretaryUser?->name ? ' — WBro '.$secretaryUser->name.', Secretary' : '' }}</em>
       </div>
 
       <h2>BUSINESS</h2>
@@ -507,9 +499,15 @@
 
       <div class="section-title">FESTIVE BOARD</div>
       <div class="notice-box" style="background: #fdfdfd; border: 1px solid #ccc; padding: 6px 8px; font-size: 8.5pt;">
-        {{ $meeting->festive_board_theme ?? 'The Lodge of Fraternity will be holding their Festive Board.' }} Please confirm your attendance to {{ $secretaryUser->name ?? 'Secretary' }} by emailing {{ $secretaryUser->email ?? 'secretary@lodge.org' }}.<br>
+        {{ $meeting->festive_board_theme ?? ($club->name.' will be holding their Festive Board.') }} Please confirm your attendance to {{ $secretaryUser->name ?? 'Secretary' }} by emailing {{ $secretaryUser->email ?? 'secretary@lodge.org' }}.<br>
         Price: <strong>{{ \App\Support\Currencies::symbolFor($club) }}{{ number_format($meeting->dining_cost_member, 2) }}</strong><br>
-        Sort Code: <strong>{{ $meeting->bank_sort_code ?: ($club->settings['bank_sort_code'] ?? '20-65-18') }}</strong> | Acc No: <strong>{{ $meeting->bank_account_number ?: ($club->settings['bank_account_number'] ?? '83920145') }}</strong><br>
+        @php
+          $payeeSortCode = $meeting->bank_sort_code ?: ($club->settings['bank_sort_code'] ?? '');
+          $payeeAccountNumber = $meeting->bank_account_number ?: ($club->settings['bank_account_number'] ?? '');
+        @endphp
+        @if($payeeSortCode && $payeeAccountNumber)
+        Sort Code: <strong>{{ $payeeSortCode }}</strong> | Acc No: <strong>{{ $payeeAccountNumber }}</strong><br>
+        @endif
         Reference: <strong>your name or names</strong>.<br>
         @if($meeting->payment_link)
           Pay Online: <strong><a href="{{ $meeting->payment_link }}" style="color: #000; text-decoration: underline;">{{ $meeting->payment_link }}</a></strong><br>

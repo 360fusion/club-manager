@@ -19,13 +19,13 @@ const showGivingModal = ref(false);
 const selectedMemberId = ref(null);
 
 const targetForm = useForm({
-  festival_name: props.target?.festival_name || 'Durham 2029 Festival',
-  relief_chest_ref: props.target?.relief_chest_ref || 'E1418',
-  target_amount: props.target?.target_amount || '25000.00',
-  bronze_tier: props.target?.bronze_tier || '5000.00',
-  silver_tier: props.target?.silver_tier || '10000.00',
-  gold_tier: props.target?.gold_tier || '18000.00',
-  platinum_tier: props.target?.platinum_tier || '25000.00',
+  festival_name: props.target?.festival_name || '',
+  relief_chest_ref: props.target?.relief_chest_ref || '',
+  target_amount: props.target?.target_amount || '0.00',
+  bronze_tier: props.target?.bronze_tier || '0.00',
+  silver_tier: props.target?.silver_tier || '0.00',
+  gold_tier: props.target?.gold_tier || '0.00',
+  platinum_tier: props.target?.platinum_tier || '0.00',
 });
 
 const givingForm = useForm({

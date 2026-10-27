@@ -172,9 +172,11 @@ return [
             'confirmPassword' => false,
             // 'window' => 0,
         ]),
-        Features::passkeys([
-            'confirmPassword' => true,
-        ]),
+        // Switched off: nothing in the app offers passkeys, `User` does not implement Fortify's PasskeyUser contract and
+        // there is no password.confirm route, so every passkey endpoint failed with a 500. To add them, do those three things first.
+        // Features::passkeys([
+        //     'confirmPassword' => true,
+        // ]),
     ],
 
 ];

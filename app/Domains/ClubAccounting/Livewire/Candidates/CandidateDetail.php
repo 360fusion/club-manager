@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Models\Candidate;
 use App\Domains\ClubAccounting\Models\CandidateEvent;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\CandidateTransitionService;
+use App\Enums\ClubMemberStatus;
 use App\Models\Club;
 use App\Support\ClubAccess;
 use Carbon\Carbon;
@@ -223,7 +224,7 @@ class CandidateDetail extends Component
             'next' => $next,
             'checks' => $checks,
             'activeMembers' => Member::where('club_id', $club->id)->active()->orderBy('last_name')->get(),
-            'owners' => $club->users()->wherePivot('status', 'active')->orderBy('users.name')->get(['users.id', 'users.name']),
+            'owners' => $club->users()->wherePivot('status', ClubMemberStatus::Active->value)->orderBy('users.name')->get(['users.id', 'users.name']),
             'reasons' => $this->outcomeReasons(),
             'canReopen' => auth()->user()->is_super_admin || in_array(ClubAccess::role(auth()->user(), $club), ['owner', 'admin'], true),
         ])->layout('components.layouts.app', [

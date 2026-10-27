@@ -112,13 +112,6 @@ const move = (card, offset) => {
 
 const backLabel = computed(() => (props.returnTo?.includes('/admin/events') ? 'Back to event' : props.returnTo?.includes('/admin/settings') ? 'Back to settings' : 'Back'));
 
-const chooseType = (value) => {
-  form.type = value;
-  form.label = typeInfo(value).label;
-  form.config = configFor(value);
-  if (!typeInfo(value).fee && form.default_adjustment_kind === 'fee') form.default_adjustment_kind = 'none';
-};
-
 const stripeError = computed(() => page.props.errors?.stripe);
 const agreeTerms = ref(false);
 const stripeAction = (name, data = {}) => {

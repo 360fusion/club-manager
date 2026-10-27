@@ -50,8 +50,28 @@ class UserAdminTest extends TestCase
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
             ->component('Admin/Users/Index')
-            ->has('members', 1)
+            ->has('members.data', 1)
         );
+    }
+
+    public function test_the_roster_is_paged_and_filtered_on_the_server(): void
+    {
+        foreach (range(1, 30) as $i) {
+            $user = User::factory()->create(['name' => sprintf('Roster Person %02d', $i), 'email' => "roster{$i}@example.com"]);
+            $this->club->users()->attach($user->id, ['role' => 'member', 'status' => $i <= 5 ? 'past' : 'active']);
+        }
+        $url = route('admin.users.index', ['clubSlug' => $this->club->slug]);
+
+        $this->actingAs($this->adminUser)->get($url)->assertInertia(fn ($page) => $page
+            ->has('members.data', 25)
+            ->where('members.total', 31)
+            ->where('counts.all', 31)
+            ->where('counts.past', 5));
+
+        $this->actingAs($this->adminUser)->get($url.'?tab=past')->assertInertia(fn ($page) => $page->has('members.data', 5));
+        $this->actingAs($this->adminUser)->get($url.'?q=roster17@')->assertInertia(fn ($page) => $page
+            ->has('members.data', 1)
+            ->where('members.data.0.email', 'roster17@example.com'));
     }
 
     public function test_can_add_new_member_to_roster(): void
@@ -180,7 +200,7 @@ class UserAdminTest extends TestCase
 
         $rosterResponse->assertInertia(fn ($page) => $page
             ->component('Admin/Users/Index')
-            ->has('members', 1)
+            ->has('members.data', 1)
         );
     }
 

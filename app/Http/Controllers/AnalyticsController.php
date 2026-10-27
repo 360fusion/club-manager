@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Models\SubscriptionTier;
+use App\Enums\DocumentStatus;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
 use App\Models\EventRegistration;
@@ -38,8 +39,8 @@ class AnalyticsController extends Controller
             ->count();
 
         // 3. Open Unpaid Invoices & Vendor Bills Count
-        $openInvoicesCount = Invoice::where('club_id', $club->id)->where('status', 'unpaid')->count();
-        $openBillsCount = Bill::where('club_id', $club->id)->where('status', 'unpaid')->count();
+        $openInvoicesCount = Invoice::where('club_id', $club->id)->where('status', DocumentStatus::Unpaid->value)->count();
+        $openBillsCount = Bill::where('club_id', $club->id)->where('status', DocumentStatus::Unpaid->value)->count();
         $totalOpenInvoices = $openInvoicesCount + $openBillsCount;
 
         // 4. Event & RSVP Revenue
@@ -48,7 +49,7 @@ class AnalyticsController extends Controller
             ->sum(DB::raw('amount_paid - amount_refunded'));
 
         // 5. Total Sales / Revenue Projection
-        $paidInvoicesSum = (float) Invoice::where('club_id', $club->id)->where('status', 'paid')->sum('amount');
+        $paidInvoicesSum = (float) Invoice::where('club_id', $club->id)->where('status', DocumentStatus::Paid->value)->sum('amount');
         $paidSubscriptionsSum = (float) MemberSubscription::where('club_id', $club->id)->sum('amount_paid');
         $revenueTotal = $paidInvoicesSum + $paidSubscriptionsSum + (float) $totalEventRevenue;
 

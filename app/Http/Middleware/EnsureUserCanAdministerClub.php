@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ClubMemberStatus;
+use App\Enums\ClubRole;
 use App\Models\Club;
 use App\Support\ClubPermissions;
 use Closure;
@@ -21,7 +23,7 @@ class EnsureUserCanAdministerClub
      * Pivot roles that may reach a club's admin area. Every role except the
      * plain 'member' is considered staff.
      */
-    private const MEMBER_ONLY_ROLE = 'member';
+    private const MEMBER_ONLY_ROLE = ClubRole::Member->value;
 
     /**
      * @param  string|null  $capability  when given (`club.admin:manage_members`) the check is applied
@@ -61,11 +63,14 @@ class EnsureUserCanAdministerClub
             abort(404);
         }
 
+        // Controllers read it from here (Controller::club()) instead of querying for it a second time.
+        $request->attributes->set("club:{$clubSlug}", $club);
+
         $membership = $user->clubs()->where('clubs.id', $club->id)->first();
 
         abort_if($membership === null, 403, 'You are not a member of this club.');
 
-        abort_if($membership->pivot->status !== 'active', 403, 'Your membership of this club is not active.');
+        abort_if($membership->pivot->status !== ClubMemberStatus::Active->value, 403, 'Your membership of this club is not active.');
 
         $role = $membership->pivot->role;
 

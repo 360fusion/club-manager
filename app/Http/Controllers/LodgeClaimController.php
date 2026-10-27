@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LodgeClaim\RespondRequest;
+use App\Http\Requests\LodgeClaim\StoreLodgeClaimRequest;
 use App\Models\Lodge;
 use App\Models\LodgeClaim;
 use App\Services\Lodges\LodgeClaimService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,27 +45,21 @@ class LodgeClaimController extends Controller
         ]);
     }
 
-    public function store(Request $request, string $slug): RedirectResponse
+    public function store(StoreLodgeClaimRequest $request, string $slug): RedirectResponse
     {
         $lodge = Lodge::listed()->where('slug', $slug)->firstOrFail();
 
-        $validated = $request->validate([
-            'claimant_role' => ['required', Rule::in(array_keys(LodgeClaim::ROLES))],
-            'message' => 'required|string|min:10|max:2000',
-            'phone' => 'nullable|string|max:50',
-            'evidence' => 'nullable|string|max:2000',
-            'confirm' => 'accepted',
-        ]);
+        $validated = $request->validated();
 
         $this->claims->submit($lodge, $request->user(), collect($validated)->only(['claimant_role', 'message', 'phone', 'evidence'])->all());
 
         return redirect()->route('members.lodges')->with('success', 'Your claim has been sent. A member of our team will check it and be in touch.');
     }
 
-    public function respond(Request $request, int $id): RedirectResponse
+    public function respond(RespondRequest $request, int $id): RedirectResponse
     {
         $claim = LodgeClaim::findOrFail($id);
-        $validated = $request->validate(['reply' => 'required|string|min:2|max:2000']);
+        $validated = $request->validated();
 
         $this->claims->respond($claim, $request->user(), $validated['reply']);
 

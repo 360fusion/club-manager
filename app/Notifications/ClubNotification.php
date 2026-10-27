@@ -52,7 +52,7 @@ class ClubNotification extends Notification
         return new self(
             self::SUMMONS,
             'New summons: '.$meeting->title,
-            trim(($meeting->meeting_date?->format('j M Y') ?? '').' · '.($meeting->venue ?? ''), ' ·'),
+            trim(($meeting->meeting_date->format('j M Y') ?? '').' · '.($meeting->venue ?? ''), ' ·'),
             $club,
             'member.meetings.summons',
             ['slug' => $club->slug, 'id' => $meeting->id],
@@ -96,7 +96,7 @@ class ClubNotification extends Notification
         return new self(
             self::SUMMONS,
             'New summons: '.$meeting->title,
-            trim(($meeting->meeting_date?->format('j M Y') ?? '').' · '.($meeting->venue ?? ''), ' ·'),
+            trim(($meeting->meeting_date->format('j M Y') ?? '').' · '.($meeting->venue ?? ''), ' ·'),
             $club,
             'lodges.show',
             ['slug' => $lodgeSlug],
@@ -113,7 +113,7 @@ class ClubNotification extends Notification
         return new self(
             self::EVENT,
             'New event: '.$event->title,
-            trim(($event->starts_at?->format('j M Y, H:i') ?? '').' · '.($event->location ?? ''), ' ·'),
+            trim(($event->starts_at->format('j M Y, H:i') ?? '').' · '.($event->location ?? ''), ' ·'),
             $club,
             'member.events',
             ['slug' => $club->slug],

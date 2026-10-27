@@ -9,6 +9,7 @@ use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\User;
 use App\Services\AccountingService;
+use App\Services\FinancialYearService;
 use App\Services\Signatures\SignatureRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -51,7 +52,7 @@ class PeriodLockingTest extends TestCase
 
     public function test_posting_into_a_closed_year_is_blocked_for_a_normal_admin(): void
     {
-        $this->accountingService->closeFinancialYear($this->club, 2025, $this->adminUser);
+        app(FinancialYearService::class)->closeFinancialYear($this->club, 2025, $this->adminUser);
         $this->assertTrue($this->club->financialYearIsClosed(2025));
 
         $bankAcc = Account::where('club_id', $this->club->id)->where('code', '1000')->firstOrFail();
@@ -71,7 +72,7 @@ class PeriodLockingTest extends TestCase
 
     public function test_posting_into_an_open_year_still_works_after_a_different_year_is_closed(): void
     {
-        $this->accountingService->closeFinancialYear($this->club, 2025, $this->adminUser);
+        app(FinancialYearService::class)->closeFinancialYear($this->club, 2025, $this->adminUser);
 
         $bankAcc = Account::where('club_id', $this->club->id)->where('code', '1000')->firstOrFail();
         $duesAcc = Account::where('club_id', $this->club->id)->where('code', '4000')->firstOrFail();
@@ -90,7 +91,7 @@ class PeriodLockingTest extends TestCase
 
     public function test_reopening_a_year_allows_posting_again_and_is_super_admin_only(): void
     {
-        $this->accountingService->closeFinancialYear($this->club, 2025, $this->adminUser);
+        app(FinancialYearService::class)->closeFinancialYear($this->club, 2025, $this->adminUser);
 
         $this->actingAs($this->adminUser)
             ->post(route('admin.accounting.financial_year.reopen', $this->club->slug), ['financial_year' => 2025])
@@ -229,7 +230,7 @@ class PeriodLockingTest extends TestCase
         $auditorOne->clubs()->attach($this->club->id, ['role' => 'member']);
         $auditorTwo->clubs()->attach($this->club->id, ['role' => 'member']);
 
-        $audit = $this->accountingService->requestYearAudit($this->club, 2025, $auditorOne, $auditorTwo, null);
+        $audit = app(FinancialYearService::class)->requestYearAudit($this->club, 2025, $auditorOne, $auditorTwo, null);
         $signatures = app(SignatureRequestService::class);
         $request = $signatures->request($audit, 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $this->adminUser);
         $signatures->sign($request, 'typed', ['typed_name' => $auditorOne->name], '1.1.1.1', 'Agent');
@@ -250,7 +251,7 @@ class PeriodLockingTest extends TestCase
         $plainMember = User::factory()->create();
         $plainMember->clubs()->attach($this->club->id, ['role' => 'member', 'status' => 'active']);
 
-        $audit = $this->accountingService->requestYearAudit($this->club, 2025, $auditorOne, $auditorTwo, null);
+        $audit = app(FinancialYearService::class)->requestYearAudit($this->club, 2025, $auditorOne, $auditorTwo, null);
         $signatures = app(SignatureRequestService::class);
         $request = $signatures->request($audit, 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $this->adminUser);
         $signatures->sign($request, 'typed', ['typed_name' => $auditorOne->name], '1.1.1.1', 'Agent');

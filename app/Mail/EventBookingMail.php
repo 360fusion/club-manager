@@ -49,7 +49,7 @@ class EventBookingMail extends Mailable implements ShouldQueue
             'club_name' => $club->name,
             'contact_name' => $registration->contact_name,
             'event_title' => $event->title,
-            'event_date' => $event->starts_at?->format('l j F Y, H:i'),
+            'event_date' => $event->starts_at->format('l j F Y, H:i'),
             'event_location' => $event->formatted_location,
             'manage_url' => $this->manageUrl,
         ], [

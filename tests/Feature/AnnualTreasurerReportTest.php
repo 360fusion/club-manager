@@ -15,6 +15,7 @@ use App\Models\ClubType;
 use App\Models\User;
 use App\Services\AccountingService;
 use App\Services\AnnualTreasurerReportService;
+use App\Services\FinancialYearService;
 use App\Services\Signatures\SignatureRequestService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -132,8 +133,8 @@ class AnnualTreasurerReportTest extends TestCase
         $auditorOne->clubs()->attach($this->club->id, ['role' => 'member']);
         $auditorTwo->clubs()->attach($this->club->id, ['role' => 'member']);
 
-        $this->accountingService->closeFinancialYear($this->club, 2026, $this->adminUser);
-        $this->accountingService->signOffYearAudit($this->club, 2026, $auditorOne, $auditorTwo, 'All correct.');
+        app(FinancialYearService::class)->closeFinancialYear($this->club, 2026, $this->adminUser);
+        app(FinancialYearService::class)->signOffYearAudit($this->club, 2026, $auditorOne, $auditorTwo, 'All correct.');
 
         $report = $this->reportService->build($this->club, 2026);
 
@@ -153,7 +154,7 @@ class AnnualTreasurerReportTest extends TestCase
         $auditorOne->clubs()->attach($this->club->id, ['role' => 'member']);
         $auditorTwo->clubs()->attach($this->club->id, ['role' => 'member']);
 
-        $audit = $this->accountingService->requestYearAudit($this->club, 2026, $auditorOne, $auditorTwo, null);
+        $audit = app(FinancialYearService::class)->requestYearAudit($this->club, 2026, $auditorOne, $auditorTwo, null);
         $signatures = app(SignatureRequestService::class);
         $r1 = $signatures->request($audit, 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $this->adminUser);
         $r2 = $signatures->request($audit, 'year_audit_auditor_two', $auditorTwo, $auditorTwo->name, $auditorTwo->email, $this->adminUser);
@@ -182,7 +183,7 @@ class AnnualTreasurerReportTest extends TestCase
         $auditorOne->clubs()->attach($this->club->id, ['role' => 'member']);
         $auditorTwo->clubs()->attach($this->club->id, ['role' => 'member']);
 
-        $audit = $this->accountingService->requestYearAudit($this->club, 2026, $auditorOne, $auditorTwo, null);
+        $audit = app(FinancialYearService::class)->requestYearAudit($this->club, 2026, $auditorOne, $auditorTwo, null);
         $signatures = app(SignatureRequestService::class);
         $r1 = $signatures->request($audit, 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $this->adminUser);
         $r2 = $signatures->request($audit, 'year_audit_auditor_two', $auditorTwo, $auditorTwo->name, $auditorTwo->email, $this->adminUser);

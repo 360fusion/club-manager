@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Enums\MemberAccountStatus;
 use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Observers\MemberObserver;
+use App\Enums\ClubMemberStatus;
 use App\Models\Accounting\AccountingContact;
 use App\Models\Club;
 use App\Models\User;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 #[ObservedBy(MemberObserver::class)]
@@ -207,7 +209,7 @@ class Member extends Model
         $hasAccount = fn ($q) => $q->whereExists(fn ($sub) => $sub->from('club_user')
             ->whereColumn('club_user.user_id', 'club_acc_members.user_id')
             ->where('club_user.club_id', $clubId)
-            ->where('club_user.status', 'active')
+            ->where('club_user.status', ClubMemberStatus::Active->value)
             ->where(fn ($w) => $w->whereNotNull('club_user.invitation_accepted_at')
                 ->orWhereExists(fn ($u) => $u->from('users')
                     ->whereColumn('users.id', 'club_acc_members.user_id')
@@ -216,8 +218,8 @@ class Member extends Model
         $pending = fn ($q) => $q->whereExists(fn ($sub) => $sub->from('club_user')
             ->whereColumn('club_user.user_id', 'club_acc_members.user_id')
             ->where('club_user.club_id', $clubId)
-            ->where(fn ($w) => $w->where('club_user.status', 'pending')
-                ->orWhere(fn ($t) => $t->where('club_user.status', 'active')->whereNotNull('club_user.invitation_token'))));
+            ->where(fn ($w) => $w->where('club_user.status', ClubMemberStatus::Pending->value)
+                ->orWhere(fn ($t) => $t->where('club_user.status', ClubMemberStatus::Active->value)->whereNotNull('club_user.invitation_token'))));
 
         return match ($state) {
             'has_account' => $query->where($hasAccount),
@@ -308,22 +310,73 @@ class Member extends Model
         return $this->hasMany(AnnualOfficerAssignment::class, 'member_id');
     }
 
+    /**
+     * Set by loadActiveOffices() for a whole list of members; looked up for this one member otherwise.
+     *
+     * @var list<string>|null
+     */
+    private ?array $loadedOffices = null;
+
+    /**
+     * Work out the offices of every member in a list with two queries, instead of two per member.
+     *
+     * @param  iterable<Member>  $members
+     */
+    public static function loadActiveOffices(iterable $members): void
+    {
+        $members = collect($members);
+
+        if ($members->isEmpty()) {
+            return;
+        }
+
+        $latestRosterByClub = AnnualOfficerRoster::whereIn('club_id', $members->pluck('club_id')->unique())
+            ->where('status', 'confirmed')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('club_id')
+            ->map(fn ($rosters) => $rosters->last()->id);
+
+        $assignments = AnnualOfficerAssignment::whereIn('roster_id', $latestRosterByClub->values())
+            ->whereIn('member_id', $members->pluck('id'))
+            ->get()
+            ->groupBy(fn ($assignment) => $assignment->roster_id.':'.$assignment->member_id);
+
+        foreach ($members as $member) {
+            $rosterId = $latestRosterByClub->get($member->club_id);
+            $member->loadedOffices = $member->officesFrom($rosterId ? $assignments->get($rosterId.':'.$member->id, collect()) : null);
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
     public function getActiveOfficesAttribute(): array
     {
+        if ($this->loadedOffices !== null) {
+            return $this->loadedOffices;
+        }
+
         $latestRoster = AnnualOfficerRoster::where('club_id', $this->club_id)
             ->where('status', 'confirmed')
             ->orderBy('id', 'desc')
             ->first();
 
-        if (! $latestRoster) {
-            return $this->current_office ? [$this->current_office] : [];
-        }
+        return $this->officesFrom($latestRoster
+            ? AnnualOfficerAssignment::where('roster_id', $latestRoster->id)->where('member_id', $this->id)->get()
+            : null);
+    }
 
-        $assignments = AnnualOfficerAssignment::where('roster_id', $latestRoster->id)
-            ->where('member_id', $this->id)
-            ->get();
-
-        if ($assignments->isEmpty()) {
+    /**
+     * The offices on the latest confirmed roster, or the office on the member's own record when there is no roster
+     * or they are not on it.
+     *
+     * @param  Collection<int, AnnualOfficerAssignment>|null  $assignments  null when the club has no confirmed roster
+     * @return list<string>
+     */
+    private function officesFrom(?Collection $assignments): array
+    {
+        if ($assignments === null || $assignments->isEmpty()) {
             return $this->current_office ? [$this->current_office] : [];
         }
 

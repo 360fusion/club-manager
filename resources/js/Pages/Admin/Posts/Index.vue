@@ -7,11 +7,12 @@ import Card from '@/Components/Ui/Card.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
 import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
+import Pagination from '@/Components/Ui/Pagination.vue';
 import { orderColour } from '@/Utils/orderColour';
 
 const props = defineProps({
   club: Object,
-  posts: Array,
+  posts: Object, // a Laravel paginator: `data` is this page, `links` are the page links
 });
 
 const postToDelete = ref(null);
@@ -45,8 +46,8 @@ const deletePost = () => {
         </div>
       </Card>
 
-      <div v-if="posts.length" class="space-y-4">
-        <Card v-for="post in posts" :key="post.id">
+      <div v-if="posts.data.length" class="space-y-4">
+        <Card v-for="post in posts.data" :key="post.id">
           <div class="flex flex-col justify-between gap-6 md:flex-row md:items-center">
             <div class="min-w-0 space-y-2">
               <div class="flex flex-wrap items-center gap-2">
@@ -68,6 +69,8 @@ const deletePost = () => {
             </div>
           </div>
         </Card>
+
+        <Pagination :links="posts.links" />
       </div>
 
       <Card v-else class="text-center">

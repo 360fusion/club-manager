@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\IssueTokenRequest;
 use App\Models\Club;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Pennant\Feature;
 
@@ -15,18 +15,18 @@ class ApiController extends Controller
     /**
      * Issue Sanctum API token for user authentication.
      */
-    public function issueToken(Request $request): JsonResponse
+    public function issueToken(IssueTokenRequest $request): JsonResponse
     {
-        $request->validate([
-            'email' => 'required|email|max:255',
-            'password' => 'required|string|max:255',
-            'device_name' => 'required|string|max:100',
-        ]);
 
         $user = User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials provided.'], 401);
+        }
+
+        // A token would skip the second step, so people who use two-factor sign in on the website instead.
+        if ($user->two_factor_confirmed_at) {
+            return response()->json(['message' => 'Tokens cannot be issued for accounts with two-factor authentication.'], 403);
         }
 
         $token = $user->createToken($request->device_name, ['profile:read'])->plainTextToken;

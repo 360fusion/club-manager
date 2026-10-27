@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { orderColour } from '@/Utils/orderColour';
 
-const props = defineProps({
+defineProps({
     // [{ name, slug }]
     options: { type: Array, default: () => [] },
     current: { type: String, default: null },

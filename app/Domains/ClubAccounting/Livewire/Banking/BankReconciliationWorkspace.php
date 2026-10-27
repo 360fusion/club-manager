@@ -5,6 +5,7 @@ namespace App\Domains\ClubAccounting\Livewire\Banking;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
+use App\Enums\DocumentStatus;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
 use App\Models\Invoice;
@@ -141,14 +142,14 @@ class BankReconciliationWorkspace extends Component
                 }
                 $manualCandidates = $subQuery->take(15)->get();
             } elseif ($this->manualAllocationType === 'supplier_bill') {
-                $billQuery = Bill::where('club_id', $club->id)->where('status', 'unpaid');
+                $billQuery = Bill::where('club_id', $club->id)->where('status', DocumentStatus::Unpaid->value);
                 if (! empty($this->manualSearch)) {
                     $term = '%'.trim($this->manualSearch).'%';
                     $billQuery->where(fn ($q) => $q->where('vendor_name', 'like', $term)->orWhere('bill_number', 'like', $term));
                 }
                 $manualCandidates = $billQuery->take(15)->get();
             } elseif ($this->manualAllocationType === 'invoice') {
-                $invoiceQuery = Invoice::where('club_id', $club->id)->where('status', 'unpaid')->with('user');
+                $invoiceQuery = Invoice::where('club_id', $club->id)->where('status', DocumentStatus::Unpaid->value)->with('user');
                 if (! empty($this->manualSearch)) {
                     $term = '%'.trim($this->manualSearch).'%';
                     $invoiceQuery->where(fn ($q) => $q->where('title', 'like', $term)->orWhere('invoice_number', 'like', $term)

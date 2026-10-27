@@ -3,7 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import { orderColour } from '@/Utils/orderColour';
 
-const props = defineProps({
+defineProps({
   clubType: {
     type: Object,
     required: true,

@@ -60,7 +60,7 @@ class CreateCommitteeMeetingModal extends Component
             ?? $club->settings['meeting_venue']
             ?? $club->settings['meeting_location']
             ?? Meeting::where('club_id', $club->id)->whereNotNull('venue')->where('venue', '!=', '')->latest('meeting_date')->value('venue')
-            ?? 'Masonic Hall, Wellington Street, Stockton-on-Tees';
+            ?? $club->defaultMeetingVenue();
 
         if (empty(trim($this->location))) {
             $this->location = 'Masonic Hall';
@@ -106,7 +106,7 @@ class CreateCommitteeMeetingModal extends Component
             $club = $this->getClub();
             $regularMeeting = Meeting::where('club_id', $club->id)->find($this->linked_regular_meeting_id);
 
-            if ($regularMeeting && $regularMeeting->meeting_date) {
+            if ($regularMeeting) {
                 $offsetDays = (int) ($club->settings['committee_meeting_offset_days'] ?? 9);
                 $suggestedDate = Carbon::parse($regularMeeting->meeting_date)->subDays($offsetDays);
                 $this->meeting_date = $suggestedDate->toDateString();

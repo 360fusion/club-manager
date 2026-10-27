@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-const props = defineProps({
+defineProps({
   show: Boolean,
   updates: { type: Array, default: () => [] },
   meetings: { type: Array, default: () => [] },

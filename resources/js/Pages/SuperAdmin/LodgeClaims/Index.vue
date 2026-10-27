@@ -3,7 +3,7 @@ import { ref, reactive } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 
-const props = defineProps({
+defineProps({
     claims: { type: Object, required: true },
     status: { type: String, default: 'open' },
     counts: { type: Object, required: true },
@@ -163,7 +163,7 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
 
             <nav v-if="claims.links.length > 3" class="flex flex-wrap gap-1.5" aria-label="Pages">
                 <template v-for="link in claims.links" :key="link.label">
-                    <Link v-if="link.url" :href="link.url" preserve-scroll :class="['rounded-md border px-2.5 py-1 text-xs', link.active ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800']" v-html="link.label" />
+                    <Link v-if="link.url" :href="link.url" preserve-scroll :class="['rounded-md border px-2.5 py-1 text-xs', link.active ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800']"><span v-html="link.label" /></Link>
                     <span v-else class="rounded-md border border-slate-200 px-2.5 py-1 text-xs text-slate-400 dark:border-slate-800" v-html="link.label" />
                 </template>
             </nav>

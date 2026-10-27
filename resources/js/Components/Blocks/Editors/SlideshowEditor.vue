@@ -1,7 +1,7 @@
 <script setup>
 // Edit form for the Slideshow block. Mutates `block` in place.
 import LinkField from './LinkField.vue';
-import { LABEL, INPUT, SMALL_INPUT, SELECT, CARD, CHECK, CHECK_LABEL, MINI_BUTTON, MINI_DANGER, HINT } from './styles';
+import { LABEL, SMALL_INPUT, SELECT, CARD, CHECK, CHECK_LABEL, MINI_BUTTON, MINI_DANGER, HINT } from './styles';
 
 const props = defineProps({
     block: { type: Object, required: true },

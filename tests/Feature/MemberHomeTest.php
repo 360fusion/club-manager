@@ -10,7 +10,7 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Post;
 use App\Models\User;
-use App\Services\AccountingService;
+use App\Services\FinancialYearService;
 use App\Services\Signatures\SignatureRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -137,7 +137,7 @@ class MemberHomeTest extends TestCase
         $auditorTwo = User::factory()->create();
         $auditorTwo->clubs()->attach($this->club->id, ['role' => 'member', 'status' => 'active']);
 
-        $audit = app(AccountingService::class)->requestYearAudit($this->club, 2025, $this->member, $auditorTwo, null);
+        $audit = app(FinancialYearService::class)->requestYearAudit($this->club, 2025, $this->member, $auditorTwo, null);
         app(SignatureRequestService::class)->request($audit, 'year_audit_auditor_one', $this->member, $this->member->name, $this->member->email, $this->member);
 
         $this->actingAs($this->member)->get(route('members.dashboard'))

@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Enums\ClubMemberStatus;
+use App\Enums\ClubRole;
 use App\Models\Club;
 use App\Models\User;
 
@@ -22,7 +24,7 @@ final class ClubAccess
 
         $membership = $user->clubs()->where('clubs.id', $club->id)->first();
 
-        return $membership && $membership->pivot->status === 'active' ? $membership->pivot->role : null;
+        return $membership && $membership->pivot->status === ClubMemberStatus::Active->value ? $membership->pivot->role : null;
     }
 
     public static function isActiveMember(?User $user, Club $club): bool
@@ -61,16 +63,24 @@ final class ClubAccess
 
         $actorRole = self::role($actor, $club);
 
-        if ($actorRole === 'owner') {
-            $owners = $club->users()->wherePivot('status', 'active')->wherePivot('role', 'owner')->count();
+        if ($actorRole === ClubRole::Owner->value) {
+            $owners = $club->users()->wherePivot('status', ClubMemberStatus::Active->value)->wherePivot('role', ClubRole::Owner->value)->count();
 
-            return ! ($targetCurrentRole === 'owner' && $newRole !== 'owner' && $owners <= 1);
+            return ! ($targetCurrentRole === ClubRole::Owner->value && $newRole !== ClubRole::Owner->value && $owners <= 1);
         }
 
-        if (($newRole === 'examiner' || $targetCurrentRole === 'examiner') && ! in_array($actorRole, ['admin', 'treasurer'], true)) {
+        if (($newRole === ClubRole::Examiner->value || $targetCurrentRole === ClubRole::Examiner->value) && ! in_array($actorRole, [ClubRole::Admin->value, ClubRole::Treasurer->value], true)) {
             return false;
         }
 
-        return $actorRole !== null && $newRole !== 'owner' && $targetCurrentRole !== 'owner';
+        return $actorRole !== null && $newRole !== ClubRole::Owner->value && $targetCurrentRole !== ClubRole::Owner->value;
+    }
+
+    /**
+     * Whether this person may download a club's whole set of accounting records: the lodge owner, or a platform super admin.
+     */
+    public static function canExportAllData(?User $user, Club $club): bool
+    {
+        return $user !== null && ($user->is_super_admin || self::role($user, $club) === ClubRole::Owner->value);
     }
 }

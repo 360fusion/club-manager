@@ -1,0 +1,1159 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Instanceof between App\\Models\\User and Illuminate\\Contracts\\Auth\\MustVerifyEmail will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Actions/Fortify/UpdateUserProfileInformation.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<int\|string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Casts/SanitizedHtmlBlocks.php
+
+		-
+			message: '#^Call to function is_string\(\) with array\<int\|string, mixed\> will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Casts/SanitizedHtmlBlocks.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Domains/ClubAccounting/Livewire/Candidates/CandidateDetail.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Domains/ClubAccounting/Livewire/Candidates/CandidatePipeline.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>full_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/ClubAccounting/Livewire/Candidates/Concerns/HandlesCandidateActions.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Domains/ClubAccounting/Livewire/Committee/LiveMinuteTaker.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\CommitteeItemType\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/ClubAccounting/Livewire/Committee/LiveMinuteTaker.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberImportRow\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/ClubAccounting/Livewire/Members/MemberImportPage.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberSubscription\:\:\$balance_due\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/ClubAccounting/Livewire/Subscriptions/SubscriptionIndex.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: app/Domains/ClubAccounting/Models/ClubCommitteeMeeting.php
+
+		-
+			message: '#^Method App\\Domains\\ClubAccounting\\Models\\Member\:\:officesFrom\(\) should return list\<string\> but returns array\<int, App\\Domains\\ClubAccounting\\Enums\\LodgeOffice\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/ClubAccounting/Models/Member.php
+
+		-
+			message: '#^Method App\\Domains\\ClubAccounting\\Models\\Member\:\:officesFrom\(\) should return list\<string\> but returns array\{App\\Domains\\ClubAccounting\\Enums\\LodgeOffice\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domains/ClubAccounting/Models/Member.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Domains/ClubAccounting/Models/Member.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>invitation_token" in empty\(\) is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/ClubAccounting/Models/Member.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Domains/ClubAccounting/Services/AnnualOfficerRosterService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>office" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/ClubAccounting/Services/AnnualOfficerRosterService.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberSubscription\:\:\$balance_due\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/ClubAccounting/Services/BankReconciliationMatcherService.php
+
+		-
+			message: '#^Comparison operation "\>\=" between 60\|75 and 60 is always true\.$#'
+			identifier: greaterOrEqual.alwaysTrue
+			count: 2
+			path: app/Domains/ClubAccounting/Services/BankReconciliationMatcherService.php
+
+		-
+			message: '#^Comparison operation "\>\=" between 60\|75\|85 and 60 is always true\.$#'
+			identifier: greaterOrEqual.alwaysTrue
+			count: 1
+			path: app/Domains/ClubAccounting/Services/BankReconciliationMatcherService.php
+
+		-
+			message: '#^Parameter \#5 \$receivedAt of method App\\Services\\Events\\EventPaymentService\:\:markPaid\(\) expects Illuminate\\Support\\Carbon\|null, Carbon\\Carbon given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/ClubAccounting/Services/BankReconciliationMatcherService.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Domains/ClubAccounting/Services/BankReconciliationMatcherService.php
+
+		-
+			message: '#^Offset 1 on array\{list\<string\>, list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domains/ClubAccounting/Services/BankStatementParserService.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<non\-empty\-list\<string\|null\>\>\) to function array_filter does not contain falsy values, the array will always stay the same\.$#'
+			identifier: arrayFilter.same
+			count: 1
+			path: app/Domains/ClubAccounting/Services/BankStatementParserService.php
+
+		-
+			message: '#^Method App\\Domains\\ClubAccounting\\Services\\Governance\\CommitteeNotesParserService\:\:findMemberByName\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Domains/ClubAccounting/Services/Governance/CommitteeNotesParserService.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Domains/ClubAccounting/Services/Governance/CommitteeNotesParserService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>chair" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/ClubAccounting/Services/Governance/CommitteeNotesParserService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/ClubAccounting/Services/Governance/CommitteeNotesParserService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>secretary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/ClubAccounting/Services/Governance/CommitteeNotesParserService.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Domains/ClubAccounting/Services/Governance/CommitteePackCompilerService.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\CommitteeItemType\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/ClubAccounting/Services/Governance/CommitteePackCompilerService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Domains/ClubAccounting/Services/Governance/CommitteePackCompilerService.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\LodgeOffice\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/ClubAccounting/Services/MemberImport/MemberImportFields.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\MembershipStatus\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/ClubAccounting/Services/MemberImport/MemberImportFields.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domains/ClubAccounting/Services/MemberInvitationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>full_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/ClubAccounting/Services/ReliefChestExportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\CharityCollection\:\:\$calculated_gift_aid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\CharityCollection\:\:\$donor_display_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\CharityCollection\:\:\$total_amount\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domains\\ClubAccounting\\Models\\CharityCollection\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\CollectionType\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>full_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Domains/ClubAccounting/Services/ReliefChestReconciliationService.php
+
+		-
+			message: '#^Match arm comparison between \$this\(App\\Enums\\Visibility\)&App\\Enums\\Visibility\:\:Club and App\\Enums\\Visibility\:\:Club is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 1
+			path: app/Enums/Visibility.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AccountingAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AccountingAdminController.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: app/Http/Controllers/AccountingContactController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Meeting\:\:\$apologies_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AnalyticsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Meeting\:\:\$dining_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AnalyticsController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Meeting\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/AnalyticsController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>email" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AttendanceController.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\CharityCollection\:\:\$donor_display_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CharityAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\CharityCollection\:\:\$total_amount\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/CharityAdminController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Http/Controllers/CharityAdminController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domains\\ClubAccounting\\Models\\CharityCollection\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/CharityAdminController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/CharityAdminController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\CollectionType\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/CharityAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>full_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/CharityAdminController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Event\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/ClubController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,App\\Models\\EventRegistration\>\:\:flatMap\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/ClubController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/ClubController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/ClubSettingsController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Concerns/BuildsWebsiteScreens.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>member_number" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/EventRegistrationAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>rank" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/EventRegistrationAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>role" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/EventRegistrationAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/LegacyClubUrlController.php
+
+		-
+			message: '#^Variable \$schedule in PHPDoc tag @var does not match any variable in the foreach loop\: \$date$#'
+			identifier: varTag.differentVariable
+			count: 1
+			path: app/Http/Controllers/LodgeCalendarController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Post\:\:\$cover_image\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaBulkController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Club\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MeetingAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Meeting\:\:\$visitors_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MeetingAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\MeetingRsvp\:\:\$is_visitor\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MeetingAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\MeetingRsvp\:\:\$visitor_home_club\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MeetingAdminController.php
+
+		-
+			message: '#^Property App\\Models\\Meeting\:\:\$meeting_date \(Carbon\\Carbon\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Http/Controllers/MeetingAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>dietary_requirements" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MeetingAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>payment_status" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MeetingAdminController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\LodgeOffice\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MeetingBusinessController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\LodgeOffice\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MeetingBusinessController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/MeetingDiningController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/MeetingDiningController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MemberHomeController.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberSubscription\:\:\$balance_due\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MemberListController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Lodge\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/MemberLodgesController.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Http/Controllers/MemberLodgesController.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Controllers\\MeetingAdminController\:\:pdf\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/MemberMeetingController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Http/Controllers/MemberPortalController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 2
+			path: app/Http/Controllers/MemberPortalController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MemberPortalController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 2
+			path: app/Http/Controllers/MemberProfileController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>grand_lodge_number" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MemberProfileController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>grand_rank" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MemberProfileController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>masonic_rank" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MemberProfileController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>provincial_rank" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MemberProfileController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Club\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/MemberSubscriptionsController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>color" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MemberSubscriptionsController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>icon" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MemberSubscriptionsController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MemberSubscriptionsController.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: app/Http/Controllers/NewsletterAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>color" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/NewsletterAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>icon" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/NewsletterAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/NewsletterAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$home_club_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/NewsletterTypeAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$rank\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/NewsletterTypeAdminController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\NewsletterSubscription\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/NewsletterTypeAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>color" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/NewsletterTypeAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>home_club_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/NewsletterTypeAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>icon" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/NewsletterTypeAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/NewsletterTypeAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>rank" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/NewsletterTypeAdminController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\LodgeOffice\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/OfficerRosterAdminController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\LodgeOffice\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/OfficerRosterAdminController.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/PageAdminController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\PageAdminController\:\:trashedPages\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, array\{id\: int, title\: string, deleted_at\: non\-falsy\-string\|null\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/PageAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/PageAdminController.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/PageSiteSettingsController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\PageSiteSettingsController\:\:trashedPages\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, array\{id\: int, title\: string, deleted_at\: non\-falsy\-string\|null\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/PageSiteSettingsController.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<array\{id\: mixed, name\: string, primary\: string, accent\: string\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Http/Controllers/PageThemeController.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 2
+			path: app/Http/Controllers/PostAdminController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/PostAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/PostAdminController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_if expects bool, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/PublicSiteController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, App\\Models\\Page\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Page\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/PublicSiteController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, App\\Models\\Post\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/PublicSiteController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/PublicSiteController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, App\\Models\\Media\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/PublicSiteExtrasController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, array\<string, bool\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/PublicSiteExtrasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Club\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/QuickRsvpController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/SuperAdminClubTypeController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/SuperAdminController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\Lodge\>\:\:through\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/SuperAdminLodgeController.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: app/Http/Controllers/UpdateAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Club\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/UserAdminController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Mail/MemberInvitationMail.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),array\<string, mixed\>\>\:\:filter\(\) expects \(callable\(array\{name\: mixed, url\: string\|null\}, int\|string\)\: bool\)\|null, Closure\(mixed\)\: \(string\|null\) given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Mail/NewsletterMail.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>colour" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/Club.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Models/Event.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Models/EventAttendee.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>due_basis" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/EventPaymentMethod.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\NewsTag\:\:\$visible_posts_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/NewsTag.php
+
+		-
+			message: '#^Method App\\Models\\NewsTag\:\:browsableFor\(\) should return Illuminate\\Support\\Collection\<int, array\{name\: string, slug\: string, color\: string\|null, count\: int\}\> but returns Illuminate\\Support\\Collection\<int, array\{name\: mixed, slug\: mixed, color\: mixed, count\: int\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/NewsTag.php
+
+		-
+			message: '#^Method App\\Models\\SignatureRequest\:\:signable\(\) should return Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<App\\Contracts\\Signable&Illuminate\\Database\\Eloquent\\Model, \$this\(App\\Models\\SignatureRequest\)\> but returns Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, \$this\(App\\Models\\SignatureRequest\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/SignatureRequest.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 3
+			path: app/Notifications/ClubNotification.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Notifications/ClubNotification.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>body_html" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Providers/AppServiceProvider.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>subject" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Providers/AppServiceProvider.php
+
+		-
+			message: '#^Method App\\Services\\AccountingReports\:\:getVatReturnData\(\) should return array\{enabled\: bool, quarter_label\: string, quarter_start\: string, quarter_end\: string, output_vat\: float, input_vat\: float, net_vat_due\: float, net_sales\: float, \.\.\.\} but returns array\{enabled\: true, quarter_label\: non\-falsy\-string, quarter_start\: non\-falsy\-string, quarter_end\: non\-falsy\-string, output_vat\: float, input_vat\: float, net_vat_due\: float, net_sales\: float, \.\.\.\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/AccountingReports.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/AnnualTreasurerReportService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Club\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/ClubDirectoryService.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Services/ClubSettingsScreenData.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 1
+			path: app/Services/ClubSettingsScreenData.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domains\\ClubAccounting\\Enums\\LodgeOffice\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ClubSettingsScreenData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>email" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ClubSettingsScreenData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ClubSettingsScreenData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ClubSettingsScreenData.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\<string, mixed\>\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Services/Events/EventDetailsSync.php
+
+		-
+			message: '#^Access to protected property Illuminate\\Support\\HigherOrderCollectionProxy\<string, App\\Models\\EventPaymentMethod, Illuminate\\Support\\Collection\<int, App\\Models\\EventPaymentMethod\>\>\:\:\$method\.$#'
+			identifier: property.protected
+			count: 2
+			path: app/Services/Events/EventOnlinePayment.php
+
+		-
+			message: '#^Cannot call method first\(\) on TMethod of string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Services/Events/EventOnlinePayment.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Events/EventPaymentService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Events/EventPaymentService.php
+
+		-
+			message: '#^Method App\\Services\\Events\\EventRegistrationService\:\:dueAt\(\) should return Illuminate\\Support\\Carbon\|null but returns Carbon\\Carbon\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Events/EventRegistrationService.php
+
+		-
+			message: '#^Offset ''email'' on array\{name\?\: string, is_guest\?\: bool, ticket_tier_id\?\: int\|null, attending_dining\?\: bool, starter_item_id\?\: int\|null, main_item_id\?\: int\|null, dessert_item_id\?\: int\|null, dietary_requirements\?\: string\|null\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Events/EventRegistrationService.php
+
+		-
+			message: '#^Offset ''organisation'' on array\{name\?\: string, is_guest\?\: bool, ticket_tier_id\?\: int\|null, attending_dining\?\: bool, starter_item_id\?\: int\|null, main_item_id\?\: int\|null, dessert_item_id\?\: int\|null, dietary_requirements\?\: string\|null\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Events/EventRegistrationService.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<array\{name\?\: string, is_guest\?\: bool, ticket_tier_id\?\: int\|null, attending_dining\?\: bool, starter_item_id\?\: int\|null, main_item_id\?\: int\|null, dessert_item_id\?\: int\|null, dietary_requirements\?\: string\|null\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Services/Events/EventRegistrationService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between int and '''' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Services/Events/EventRegistrationService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/Events/EventRegistrationService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Accounting\\JournalEntry\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/LedgerScreenData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Lodges/LodgeClaimService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Lodge\:\:\$hall_text\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Lodges/LodgeCorrectionService.php
+
+		-
+			message: '#^Method App\\Services\\MemberCalendar\:\:flagClashes\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, non\-empty\-array\<string, mixed\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/MemberCalendar.php
+
+		-
+			message: '#^Method App\\Services\\MemberCalendar\:\:followedLodgeItems\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Database\\Eloquent\\Collection\<int, array\{key\: string, type\: string, id\: int, club\: array\{id\: null, name\: string, slug\: string, colour\: string\}, title\: string, installation\: bool, start\: Carbon\\CarbonImmutable, end\: Carbon\\CarbonImmutable, \.\.\.\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/MemberCalendar.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberSubscription\:\:\$balance_due\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/MemberInbox.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Services/MemberInbox.php
+
+		-
+			message: '#^Method App\\Services\\MemberInbox\:\:pendingApprovals\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, non\-empty\-array\<string, mixed\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/MemberInbox.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Services/MemberInbox.php
+
+		-
+			message: '#^Method App\\Services\\Newsletters\\NewsletterAudience\:\:recipients\(\) should return Illuminate\\Support\\Collection\<int, array\{email\: string, name\: string\|null, user_id\: int\|null, subscription_id\: int\|null, visitor\: bool\}\> but returns Illuminate\\Support\\Collection\<int, array\{email\: mixed, name\: mixed, user_id\: mixed, subscription_id\: int\|null, visitor\: bool\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Newsletters/NewsletterAudience.php
+
+		-
+			message: '#^Call to an undefined method Laravel\\Cashier\\Subscription\:\:paymentMethodUpdateUrl\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Payment/PaddlePaymentGateway.php
+
+		-
+			message: '#^Call to an undefined method Laravel\\Paddle\\Checkout\:\:url\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Payment/PaddlePaymentGateway.php
+
+		-
+			message: '#^Access to an undefined property Stripe\\StripeObject\:\:\$stripe_user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Payment/StripeConnectGateway.php
+
+		-
+			message: '#^Access to an undefined property Laravel\\Cashier\\Checkout\:\:\$url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Payment/StripePaymentGateway.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\ClubAccounting\\Models\\MemberSubscription\:\:\$balance_due\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/ReconciliationScreenData.php
+
+		-
+			message: '#^Cannot cast App\\Domains\\ClubAccounting\\Enums\\BankTransactionStatus to string\.$#'
+			identifier: cast.string
+			count: 3
+			path: app/Services/ReconciliationScreenData.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domains\\ClubAccounting\\Models\\BankTransaction\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: app/Services/ReconciliationScreenData.php
+
+		-
+			message: '#^Access to an undefined property App\\Contracts\\Signable&Illuminate\\Database\\Eloquent\\Model\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Signatures/SignatureRequestService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$club\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Signatures/SignatureRequestService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Signatures/SignatureRequestService.php
+
+		-
+			message: '#^Method App\\Services\\Signatures\\SignatureRequestService\:\:signerUser\(\) should return App\\Models\\User\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Signatures/SignatureRequestService.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Services/WeeklyUpdateDigestService.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<non\-empty\-string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Support/CsvReader.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Club\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Support/MemberScope.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>role" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Support/MemberScope.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Support/PageBlocks.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between numeric\-string and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Support/VisitorSummons.php

@@ -358,4 +358,29 @@ class MemberAccountInvitationTest extends TestCase
             'updated_at' => now(),
         ]);
     }
+
+    public function test_only_a_hash_of_the_link_is_kept_and_a_reminder_sends_a_working_new_link(): void
+    {
+        Mail::fake();
+        $member = $this->member();
+        $this->service->invite($member, $this->club, $this->admin);
+
+        $sentToken = null;
+        Mail::assertQueued(MemberInvitationMail::class, function (MemberInvitationMail $mail) use (&$sentToken) {
+            $sentToken = $mail->invitationToken;
+
+            return true;
+        });
+
+        $stored = $this->pivot($member)->invitation_token;
+        $this->assertNotSame($sentToken, $stored);
+        $this->assertSame(hash('sha256', $sentToken), $stored);
+        $this->assertNotNull($this->service->userForToken($this->club, $sentToken));
+
+        $invitedAt = $this->pivot($member)->invited_at;
+        $this->assertTrue($this->service->remind($this->club, User::findOrFail($member->fresh()->user_id)));
+
+        $this->assertSame($invitedAt, $this->pivot($member)->invited_at, 'A reminder must not restart the expiry clock.');
+        $this->assertNull($this->service->userForToken($this->club, $sentToken), 'The earlier link is replaced by the reminder.');
+    }
 }

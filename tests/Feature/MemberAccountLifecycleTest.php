@@ -162,7 +162,7 @@ class MemberAccountLifecycleTest extends TestCase
         Mail::assertNothingQueued();
     }
 
-    public function test_a_reminder_reuses_the_original_link(): void
+    public function test_a_reminder_sends_a_fresh_link_and_keeps_the_expiry_clock(): void
     {
         Mail::fake();
         $member = $this->member();
@@ -173,7 +173,8 @@ class MemberAccountLifecycleTest extends TestCase
 
         $service->remind($this->club, $member->fresh()->user);
 
-        Mail::assertQueued(MemberInvitationMail::class, fn ($mail) => $mail->acceptUrl === $sent['url'] && $mail->reminder);
+        Mail::assertQueued(MemberInvitationMail::class, fn ($mail) => $mail->acceptUrl !== $sent['url'] && $mail->reminder);
+        $this->assertTrue(now()->subDays(8)->diffInSeconds($this->club->users()->where('users.id', $member->fresh()->user_id)->first()->pivot->invited_at, true) < 5, 'A reminder must not restart the expiry clock.');
     }
 
     public function test_registration_is_linked_to_a_matching_record_only_when_an_admin_approves_a_verified_user(): void
@@ -303,6 +304,6 @@ class MemberAccountLifecycleTest extends TestCase
         $this->club->users()->attach($joiner, ['role' => 'member', 'status' => 'pending']);
 
         $this->actingAs($this->admin)->get(route('admin.users.index', ['clubSlug' => $this->club->slug]))
-            ->assertInertia(fn ($page) => $page->where('members', fn ($members) => collect($members)->contains(fn ($m) => $m['email'] === 'ivy@example.com' && $m['matching_member'] === 'Ivy Match')));
+            ->assertInertia(fn ($page) => $page->where('pendingMembers', fn ($members) => collect($members)->contains(fn ($m) => $m['email'] === 'ivy@example.com' && $m['matching_member'] === 'Ivy Match')));
     }
 }

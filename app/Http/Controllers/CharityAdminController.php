@@ -9,13 +9,16 @@ use App\Domains\ClubAccounting\Models\FestivalTarget;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberFestivalGiving;
 use App\Domains\ClubAccounting\Services\ReliefChestReconciliationService;
+use App\Http\Requests\CharityAdmin\StoreCollectionRequest;
+use App\Http\Requests\CharityAdmin\StoreGrantRequest;
+use App\Http\Requests\CharityAdmin\UpdateFestivalTargetRequest;
+use App\Http\Requests\CharityAdmin\UpdateGrantStatusRequest;
+use App\Http\Requests\CharityAdmin\UpdateMemberGivingRequest;
 use App\Models\AgendaItem;
-use App\Models\Club;
 use App\Models\Meeting;
 use App\Support\Currencies;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,19 +26,19 @@ class CharityAdminController extends Controller
 {
     public function index(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         $target = FestivalTarget::where('club_id', $club->id)->first();
         if (! $target) {
             $target = FestivalTarget::create([
                 'club_id' => $club->id,
-                'festival_name' => 'Durham 2029 Festival',
-                'relief_chest_ref' => 'E1418',
-                'target_amount' => 25000.00,
-                'bronze_tier' => 5000.00,
-                'silver_tier' => 10000.00,
-                'gold_tier' => 18000.00,
-                'platinum_tier' => 25000.00,
+                'festival_name' => '',
+                'relief_chest_ref' => '',
+                'target_amount' => 0,
+                'bronze_tier' => 0,
+                'silver_tier' => 0,
+                'gold_tier' => 0,
+                'platinum_tier' => 0,
             ]);
         }
 
@@ -139,7 +142,7 @@ class CharityAdminController extends Controller
 
     public function giftAidTransactionsPage(Request $request, string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $service = app(ReliefChestReconciliationService::class);
 
         $giftAidSummary = $service->getGiftAidSummary($club);
@@ -155,19 +158,19 @@ class CharityAdminController extends Controller
 
     public function festivalPage(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         $target = FestivalTarget::where('club_id', $club->id)->first();
         if (! $target) {
             $target = FestivalTarget::create([
                 'club_id' => $club->id,
-                'festival_name' => 'Durham 2029 Festival',
-                'relief_chest_ref' => 'E1418',
-                'target_amount' => 25000.00,
-                'bronze_tier' => 5000.00,
-                'silver_tier' => 10000.00,
-                'gold_tier' => 18000.00,
-                'platinum_tier' => 25000.00,
+                'festival_name' => '',
+                'relief_chest_ref' => '',
+                'target_amount' => 0,
+                'bronze_tier' => 0,
+                'silver_tier' => 0,
+                'gold_tier' => 0,
+                'platinum_tier' => 0,
             ]);
         }
 
@@ -215,20 +218,11 @@ class CharityAdminController extends Controller
         ]);
     }
 
-    public function storeCollection(Request $request, string $clubSlug): RedirectResponse
+    public function storeCollection(StoreCollectionRequest $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'collection_type' => 'required|string|max:50',
-            'cash_amount' => 'required|numeric|min:0|max:99999999.99',
-            'cheque_amount' => 'required|numeric|min:0|max:99999999.99',
-            'counted_by_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
-            'witnessed_by_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
-            'donor_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
-            'donor_name' => 'nullable|string|max:150',
-            'notes' => 'nullable|string|max:10000',
-        ]);
+        $validated = $request->validated();
 
         $collection = CharityCollection::create([
             'club_id' => $club->id,
@@ -248,19 +242,11 @@ class CharityAdminController extends Controller
         return redirect()->back()->with('success', 'Dual-custody meeting collection of '.Currencies::format($collection->total_amount, $club).' recorded.');
     }
 
-    public function storeGrant(Request $request, string $clubSlug): RedirectResponse
+    public function storeGrant(StoreGrantRequest $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'recipient_name' => 'required|string|max:150',
-            'purpose' => 'required|string|max:10000',
-            'amount' => 'required|numeric|min:0.01|max:99999999.99',
-            'relief_chest_number' => 'nullable|string|max:50',
-            'proposer_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
-            'seconder_member_id' => ['nullable', Rule::exists('club_acc_members', 'id')->where('club_id', $club->id)],
-            'meeting_id' => ['nullable', Rule::exists('meetings', 'id')->where('club_id', $club->id)],
-        ]);
+        $validated = $request->validated();
 
         $grant = CharityGrant::create([
             'club_id' => $club->id,
@@ -302,14 +288,12 @@ class CharityAdminController extends Controller
         return redirect()->back()->with('success', "Charity grant proposal for {$validated['recipient_name']} recorded".(! empty($validated['meeting_id']) ? ' and added to Meeting agenda.' : '.'));
     }
 
-    public function updateGrantStatus(Request $request, string $clubSlug, int $grantId): RedirectResponse
+    public function updateGrantStatus(UpdateGrantStatusRequest $request, string $clubSlug, int $grantId): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $grant = CharityGrant::where('club_id', $club->id)->findOrFail($grantId);
 
-        $validated = $request->validate([
-            'approval_status' => 'required|string|max:50',
-        ]);
+        $validated = $request->validated();
 
         $grant->update([
             'approval_status' => $validated['approval_status'],
@@ -318,19 +302,11 @@ class CharityAdminController extends Controller
         return redirect()->back()->with('success', "Grant status updated to {$grant->approval_status->label()}.");
     }
 
-    public function updateFestivalTarget(Request $request, string $clubSlug): RedirectResponse
+    public function updateFestivalTarget(UpdateFestivalTargetRequest $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'festival_name' => 'required|string|max:150',
-            'relief_chest_ref' => 'required|string|max:50',
-            'target_amount' => 'required|numeric|min:0|max:99999999.99',
-            'bronze_tier' => 'required|numeric|min:0|max:99999999.99',
-            'silver_tier' => 'required|numeric|min:0|max:99999999.99',
-            'gold_tier' => 'required|numeric|min:0|max:99999999.99',
-            'platinum_tier' => 'required|numeric|min:0|max:99999999.99',
-        ]);
+        $validated = $request->validated();
 
         FestivalTarget::updateOrCreate(
             ['club_id' => $club->id],
@@ -340,17 +316,12 @@ class CharityAdminController extends Controller
         return redirect()->back()->with('success', 'Provincial Festival Target milestones saved.');
     }
 
-    public function updateMemberGiving(Request $request, string $clubSlug, int $memberId): RedirectResponse
+    public function updateMemberGiving(UpdateMemberGivingRequest $request, string $clubSlug, int $memberId): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $member = Member::where('club_id', $club->id)->findOrFail($memberId);
 
-        $validated = $request->validate([
-            'regular_giving_amount' => 'required|numeric|min:0|max:99999999.99',
-            'total_donated_to_date' => 'required|numeric|min:0|max:99999999.99',
-            'qualifies_for_jewel' => 'boolean',
-            'qualifies_for_bar' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $donated = (float) $validated['total_donated_to_date'];
         $autoJewel = ($validated['qualifies_for_jewel'] ?? false) || $donated >= 250.00;

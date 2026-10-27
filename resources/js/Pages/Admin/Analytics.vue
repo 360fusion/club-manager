@@ -1,8 +1,8 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
-const props = defineProps({
+defineProps({
   club: Object,
   metrics: Object,
   upcomingMeetings: Array,

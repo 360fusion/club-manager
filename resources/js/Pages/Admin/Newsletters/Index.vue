@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import CommunicationsTabs from '@/Components/CommunicationsTabs.vue';
@@ -10,19 +10,23 @@ import Button from '@/Components/Ui/Button.vue';
 import Input from '@/Components/Ui/Input.vue';
 import Select from '@/Components/Ui/Select.vue';
 import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
+import Pagination from '@/Components/Ui/Pagination.vue';
 import { formatLocal } from '@/Utils/localDateTime';
 
 const props = defineProps({
   club: Object,
-  newsletters: Array,
+  // One page of newsletters (a Laravel paginator): the server applies the search and filters.
+  newsletters: Object,
+  counts: Object,
+  filters: { type: Object, default: () => ({}) },
   types: Array,
 });
 
-const searchQuery = ref('');
-const selectedTypeId = ref('all');
-const selectedStatus = ref('all');
-const selectedRole = ref('all');
-const selectedDateRange = ref('all');
+const searchQuery = ref(props.filters.q ?? '');
+const selectedTypeId = ref(props.filters.type ?? 'all');
+const selectedStatus = ref(props.filters.status ?? 'all');
+const selectedRole = ref(props.filters.role ?? 'all');
+const selectedDateRange = ref(props.filters.sent ?? 'all');
 
 const availableRoles = [
   { id: 'member', label: 'Members and brethren' },
@@ -31,47 +35,19 @@ const availableRoles = [
   { id: 'treasurer', label: 'Treasurers' },
 ];
 
-const filteredNewsletters = computed(() => {
-  return (props.newsletters || []).filter(item => {
-    // 1. Search Query Filter
-    const query = searchQuery.value.toLowerCase().trim();
-    if (query) {
-      const matchesSubject = item.subject && item.subject.toLowerCase().includes(query);
-      const matchesContent = item.content && item.content.toLowerCase().includes(query);
-      if (!matchesSubject && !matchesContent) return false;
-    }
-
-    // 2. Channel Type Filter
-    if (selectedTypeId.value !== 'all' && Number(item.newsletter_type_id) !== Number(selectedTypeId.value)) {
-      return false;
-    }
-
-    // 3. Status Filter (sent / draft)
-    if (selectedStatus.value !== 'all' && item.status !== selectedStatus.value) {
-      return false;
-    }
-
-    // 4. Target Role Filter
-    if (selectedRole.value !== 'all') {
-      const roles = item.target_roles || [];
-      if (!roles.includes(selectedRole.value)) return false;
-    }
-
-    // 5. Date Range Filter
-    if (selectedDateRange.value !== 'all' && item.sent_at_iso) {
-      const sentDate = new Date(item.sent_at_iso);
-      const now = new Date();
-      if (selectedDateRange.value === '30_days') {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(now.getDate() - 30);
-        if (sentDate < thirtyDaysAgo) return false;
-      } else if (selectedDateRange.value === 'this_year') {
-        if (sentDate.getFullYear() !== now.getFullYear()) return false;
-      }
-    }
-
-    return true;
-  });
+// Any change to the search or filters reloads the first page from the server.
+let reloadTimer = null;
+watch([searchQuery, selectedTypeId, selectedStatus, selectedRole, selectedDateRange], () => {
+  clearTimeout(reloadTimer);
+  reloadTimer = setTimeout(() => {
+    router.get(route('admin.newsletters.index', { clubSlug: props.club.slug }), {
+      q: searchQuery.value || undefined,
+      type: selectedTypeId.value === 'all' ? undefined : selectedTypeId.value,
+      status: selectedStatus.value === 'all' ? undefined : selectedStatus.value,
+      role: selectedRole.value === 'all' ? undefined : selectedRole.value,
+      sent: selectedDateRange.value === 'all' ? undefined : selectedDateRange.value,
+    }, { preserveState: true, preserveScroll: true, replace: true, only: ['newsletters', 'filters'] });
+  }, 300);
 });
 
 // Sending emails everyone once and cannot be undone, so it waits for the confirm dialog.
@@ -95,11 +71,11 @@ const deleteNewsletter = () => {
 };
 
 const people = (count) => `${count} ${count === 1 ? 'person' : 'people'}`;
-const sentCount = computed(() => (props.newsletters || []).filter(n => n.status === 'sent').length);
-const draftCount = computed(() => (props.newsletters || []).filter(n => n.status === 'draft').length);
+const sentCount = computed(() => props.counts.sent);
+const draftCount = computed(() => props.counts.draft);
 
 const statusOptions = computed(() => [
-  { value: 'all', label: `All statuses (${props.newsletters.length})` },
+  { value: 'all', label: `All statuses (${props.counts.all})` },
   { value: 'sent', label: `Sent (${sentCount.value})` },
   { value: 'draft', label: `Drafts (${draftCount.value})` },
 ]);
@@ -150,8 +126,8 @@ const roleLabel = (role) => availableRoles.find((r) => r.id === role)?.label ?? 
             <Select v-model="selectedDateRange" label="Sent" :options="DATE_OPTIONS" />
           </div>
 
-          <div v-if="filteredNewsletters.length" class="space-y-4">
-            <div v-for="item in filteredNewsletters" :key="item.id" class="flex flex-col justify-between gap-6 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/50 md:flex-row md:items-center">
+          <div v-if="newsletters.data.length" class="space-y-4">
+            <div v-for="item in newsletters.data" :key="item.id" class="flex flex-col justify-between gap-6 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/50 md:flex-row md:items-center">
               <div class="min-w-0 space-y-3">
                 <div class="flex flex-wrap items-center gap-2">
                   <Badge v-if="item.status === 'sent'" variant="success">Sent {{ item.sent_at_iso ? formatLocal(item.sent_at_iso) : item.sent_at }}</Badge>
@@ -204,6 +180,7 @@ const roleLabel = (role) => availableRoles.find((r) => r.id === role)?.label ?? 
                 <Button variant="ghost" size="sm" @click="newsletterToDelete = item">Delete</Button>
               </div>
             </div>
+            <Pagination :links="newsletters.links" />
           </div>
 
           <p v-else class="p-12 text-center text-sm text-slate-500 dark:text-slate-400">No newsletters match these filters.</p>

@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { useForm, Head, Link } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -20,11 +20,11 @@ const providerForm = useForm({
 
 const businessForm = useForm({
   business_name: props.businessDetails?.business_name || props.club.name || '',
-  company_number: props.businessDetails?.company_number || '12948573',
-  tax_id: props.businessDetails?.tax_id || 'GB 987 6543 21',
+  company_number: props.businessDetails?.company_number || '',
+  tax_id: props.businessDetails?.tax_id || '',
   billing_contact_email: props.businessDetails?.billing_contact_email || props.club.email || '',
-  billing_phone: props.businessDetails?.billing_phone || '+44 20 7946 0912',
-  address: props.businessDetails?.address || '100 Boathouse Way, Oxford, OX1 1AA, UK',
+  billing_phone: props.businessDetails?.billing_phone || '',
+  address: props.businessDetails?.address || '',
   stripe_publishable_key: props.businessDetails?.stripe_publishable_key || '',
   stripe_secret_key: props.businessDetails?.stripe_secret_key || '',
   stripe_webhook_secret: props.businessDetails?.stripe_webhook_secret || '',

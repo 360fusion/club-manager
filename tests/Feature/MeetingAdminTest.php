@@ -193,6 +193,31 @@ class MeetingAdminTest extends TestCase
         $downloadResponse->assertOk();
     }
 
+    public function test_the_summons_names_the_lodge_and_only_prints_bank_details_the_lodge_has_entered()
+    {
+        $clubType = ClubType::create(['name' => 'Masonic Lodge', 'code' => 'masonic', 'available_modules' => ['meetings'], 'default_settings' => []]);
+        $club = Club::create(['club_type_id' => $clubType->id, 'name' => 'Apollo Lodge No. 357', 'slug' => 'apollo-bank', 'status' => 'active']);
+        $this->actingAs($this->makeClubAdmin(User::factory()->create(), $club));
+
+        $meeting = Meeting::create([
+            'club_id' => $club->id, 'title' => 'Meeting - 20th October 2026', 'meeting_date' => '2026-10-20', 'starts_at' => '18:30',
+            'venue' => 'Masonic Hall', 'dress_code' => 'Dark Suit', 'dining_cost_member' => 30, 'rsvp_cutoff_at' => Carbon::now()->addDays(10),
+        ]);
+        $url = route('admin.meetings.pdf', ['clubSlug' => $club->slug, 'id' => $meeting->id]);
+
+        // No bank details anywhere: no payee line, and never another lodge's name or a stand-in account.
+        $this->get($url)->assertOk()
+            ->assertDontSee('Sort Code')
+            ->assertDontSee('20-65-18')
+            ->assertDontSee('83920145')
+            ->assertDontSee('Lodge of Fraternity')
+            ->assertSee('Apollo Lodge No. 357 will be holding their Festive Board.');
+
+        // Details saved in the lodge's settings are printed.
+        $club->update(['settings' => ['bank_sort_code' => '11-22-33', 'bank_account_number' => '12345678']]);
+        $this->get($url)->assertOk()->assertSee('Sort Code')->assertSee('11-22-33')->assertSee('12345678');
+    }
+
     public function test_admin_can_duplicate_meeting_summons_without_rsvp_stats()
     {
         $clubType = ClubType::create([

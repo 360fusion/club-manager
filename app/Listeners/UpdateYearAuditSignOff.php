@@ -5,18 +5,18 @@ namespace App\Listeners;
 use App\Enums\SignatureRequestStatus;
 use App\Events\SignatureCompleted;
 use App\Models\Accounting\AccountingYearAudit;
-use App\Services\AccountingService;
+use App\Services\FinancialYearService;
 use App\Services\Signatures\SignatureRequestService;
 
 /**
  * Once both named auditors have signed, stamp the financial year's audit as signed off — the same
- * AccountingService::signOffYearAudit() the admin form used to call directly.
+ * FinancialYearService::signOffYearAudit() the admin form used to call directly.
  */
 class UpdateYearAuditSignOff
 {
     public function __construct(
         private readonly SignatureRequestService $signatures,
-        private readonly AccountingService $accounting,
+        private readonly FinancialYearService $years,
     ) {}
 
     public function handle(SignatureCompleted $event): void
@@ -44,6 +44,6 @@ class UpdateYearAuditSignOff
 
         $audit->loadMissing(['club', 'auditorOne', 'auditorTwo']);
 
-        $this->accounting->signOffYearAudit($audit->club, $audit->financial_year, $audit->auditorOne, $audit->auditorTwo, $audit->notes);
+        $this->years->signOffYearAudit($audit->club, $audit->financial_year, $audit->auditorOne, $audit->auditorTwo, $audit->notes);
     }
 }

@@ -244,7 +244,7 @@
         <div class="space-y-2">
             <h3 class="text-xs font-semibold text-slate-800 dark:text-slate-100">Active lodge fee structures</h3>
             @forelse($tiers as $t)
-                <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-3 text-xs">
+                <div wire:key="tier-{{ $t->id }}" class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-3 text-xs">
                     <div>
                         <span class="font-semibold text-slate-900 dark:text-white block">{{ $t->name }}</span>
                         <span class="text-slate-500 dark:text-slate-400 text-xs">{{ $t->description ?: 'Standard fee structure' }}</span>

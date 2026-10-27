@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\VisitorRegistration\StoreVisitorRegistrationRequest;
 use App\Models\Club;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -18,7 +18,7 @@ class VisitorRegistrationController extends Controller
      */
     public function create(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         return Inertia::render('Public/VisitorRegister', [
             'club' => $club,
@@ -28,19 +28,11 @@ class VisitorRegistrationController extends Controller
     /**
      * Process visitor sign-up for a club.
      */
-    public function store(Request $request, string $clubSlug): RedirectResponse
+    public function store(StoreVisitorRegistrationRequest $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'rank' => 'nullable|string|max:100',
-            'home_club_name' => 'required|string|max:255',
-            'home_club_number' => 'nullable|string|max:100',
-            'phone' => 'nullable|string|max:50',
-            'dietary_notes' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         // Find or create user account
         $user = User::where('email', strtolower($validated['email']))->first();

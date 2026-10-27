@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\NewsletterTypeAdmin\StoreNewsletterTypeRequest;
+use App\Http\Requests\NewsletterTypeAdmin\UpdateSubscriberStatusRequest;
 use App\Models\Club;
 use App\Models\NewsletterSubscription;
 use App\Models\NewsletterType;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -70,7 +71,7 @@ class NewsletterTypeAdminController extends Controller
      */
     public function index(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         self::ensureDefaultTypes($club);
 
         $types = NewsletterType::where('club_id', $club->id)
@@ -96,7 +97,7 @@ class NewsletterTypeAdminController extends Controller
      */
     public function edit(string $clubSlug, ?int $id = null): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         $type = $id
             ? NewsletterType::where('club_id', $club->id)->findOrFail($id)
@@ -122,24 +123,11 @@ class NewsletterTypeAdminController extends Controller
     /**
      * Store or update a newsletter type.
      */
-    public function store(Request $request, string $clubSlug): RedirectResponse
+    public function store(StoreNewsletterTypeRequest $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'id' => 'nullable|integer',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:10000',
-            'color' => 'required|string|max:20',
-            'icon' => 'required|string|max:10',
-            'is_external_subscribable' => 'required|boolean',
-            'require_approval' => 'required|boolean',
-            'is_mandatory' => 'required|boolean',
-            'require_home_club_info' => 'required|boolean',
-            'default_roles' => 'nullable|array|max:10',
-            'sender_name' => 'nullable|string|max:255',
-            'sender_email' => 'nullable|email|max:255',
-        ]);
+        $validated = $request->validated();
 
         $slug = Str::slug($validated['name']);
 
@@ -170,7 +158,7 @@ class NewsletterTypeAdminController extends Controller
      */
     public function destroy(string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $type = NewsletterType::where('club_id', $club->id)->findOrFail($id);
         $type->delete();
 
@@ -182,7 +170,7 @@ class NewsletterTypeAdminController extends Controller
      */
     public function subscribers(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         self::ensureDefaultTypes($club);
 
         $types = NewsletterType::where('club_id', $club->id)->get();
@@ -219,14 +207,12 @@ class NewsletterTypeAdminController extends Controller
     /**
      * Update subscription status (approve, reject, unsubscribe).
      */
-    public function updateSubscriberStatus(Request $request, string $clubSlug, int $id): RedirectResponse
+    public function updateSubscriberStatus(UpdateSubscriberStatusRequest $request, string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $subscription = NewsletterSubscription::where('club_id', $club->id)->findOrFail($id);
 
-        $validated = $request->validate([
-            'status' => 'required|in:active,pending_approval,unsubscribed,rejected',
-        ]);
+        $validated = $request->validated();
 
         $subscription->update([
             'status' => $validated['status'],

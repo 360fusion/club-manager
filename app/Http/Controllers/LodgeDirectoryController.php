@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LodgeDirectory\IndexLodgeDirectoryRequest;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\ClubVisitorAccess;
@@ -25,15 +26,9 @@ use Inertia\Response;
  */
 class LodgeDirectoryController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(IndexLodgeDirectoryRequest $request): Response
     {
-        $filters = $request->validate([
-            'q' => 'nullable|string|max:100',
-            'province' => 'nullable|string|max:60',
-            'order' => 'nullable|string|max:60',
-            'day' => 'nullable|in:'.implode(',', LodgeSchedule::DAYS),
-            'when' => 'nullable|in:week,month',
-        ]);
+        $filters = $request->validated();
 
         $query = Lodge::query()->listed()->with(self::relations());
 

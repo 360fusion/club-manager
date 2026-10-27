@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\QuickRsvp\EventRequest;
+use App\Http\Requests\QuickRsvp\MeetingRequest;
 use App\Models\Event;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Services\Events\EventRegistrationService;
 use App\Support\MemberScope;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 /**
@@ -18,9 +19,9 @@ use Illuminate\Support\Str;
  */
 class QuickRsvpController extends Controller
 {
-    public function meeting(Request $request, string $slug, int $id): RedirectResponse
+    public function meeting(MeetingRequest $request, string $slug, int $id): RedirectResponse
     {
-        $validated = $request->validate(['attendance_status' => 'required|in:attending_dining,attending_meeting_only,apologies']);
+        $validated = $request->validated();
 
         $scope = MemberScope::for($request->user(), $slug);
         $meeting = Meeting::where('club_id', $scope->club->id)->where('status', 'published')->findOrFail($id);
@@ -49,9 +50,9 @@ class QuickRsvpController extends Controller
         return back()->with('success', 'Your reply to '.$meeting->title.' has been saved.');
     }
 
-    public function event(Request $request, string $slug, int $id, EventRegistrationService $registrations): RedirectResponse
+    public function event(EventRequest $request, string $slug, int $id, EventRegistrationService $registrations): RedirectResponse
     {
-        $validated = $request->validate(['attendance_status' => 'required|in:attending,declined,tentative']);
+        $validated = $request->validated();
 
         $scope = MemberScope::for($request->user(), $slug);
         $event = Event::where('club_id', $scope->club->id)->published()->visibleTo($request->user())->findOrFail($id);

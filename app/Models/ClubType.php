@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\ClubTypeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClubType extends Model
 {
+    /** @use HasFactory<ClubTypeFactory> */
     use HasFactory;
 
     protected $fillable = [

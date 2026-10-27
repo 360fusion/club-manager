@@ -16,10 +16,12 @@ use App\Models\Invoice;
 use App\Models\Province;
 use App\Models\User;
 use App\Services\AccountingDataExportService;
+use App\Services\AccountingReports;
 use App\Services\AccountingService;
 use App\Services\AnnualTreasurerReportService;
 use App\Services\Signatures\SignatureRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
@@ -119,6 +121,55 @@ class AccountingErpTest extends TestCase
         ]);
     }
 
+    public function test_sub_penny_lines_cannot_slip_an_unbalanced_entry_past_the_check(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $bank = Account::where('club_id', $this->club->id)->where('code', '1000')->firstOrFail();
+        $dues = Account::where('club_id', $this->club->id)->where('code', '4000')->firstOrFail();
+
+        // Three debits of 0.004 look equal to one credit of 0.012, but the ledger stores 0.00 + 0.00 + 0.00 against 0.01.
+        try {
+            $this->accountingService->postJournalEntry($this->club, ['description' => 'Sub-penny', 'items' => [
+                ['account_id' => $bank->id, 'debit' => 0.004, 'credit' => 0],
+                ['account_id' => $bank->id, 'debit' => 0.004, 'credit' => 0],
+                ['account_id' => $bank->id, 'debit' => 0.004, 'credit' => 0],
+                ['account_id' => $dues->id, 'debit' => 0, 'credit' => 0.012],
+            ]]);
+            $this->fail('An entry that does not balance in whole pennies was posted.');
+        } catch (InvalidArgumentException) {
+            $this->assertSame(0, JournalEntry::where('club_id', $this->club->id)->count());
+        }
+
+        $entry = $this->accountingService->postJournalEntry($this->club, ['description' => 'Fine', 'items' => [
+            ['account_id' => $bank->id, 'debit' => 10.10, 'credit' => 0],
+            ['account_id' => $dues->id, 'debit' => 0, 'credit' => 10.1],
+        ]]);
+
+        $this->assertEquals(10.10, $entry->items()->sum('debit'));
+    }
+
+    public function test_reports_run_the_same_number_of_queries_however_many_accounts_there_are(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+
+        $count = function (): int {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            app(AccountingReports::class)->getFinancialSummary($this->club);
+            app(AccountingReports::class)->getReportsData($this->club);
+
+            return count(DB::getQueryLog());
+        };
+
+        $before = $count();
+
+        foreach (range(1, 30) as $n) {
+            Account::create(['club_id' => $this->club->id, 'code' => (string) (9000 + $n), 'name' => "Extra {$n}", 'type' => 'expense', 'currency' => 'GBP', 'is_active' => true]);
+        }
+
+        $this->assertSame($before, $count(), 'Adding accounts made the reports run more queries: something is querying per account.');
+    }
+
     public function test_records_member_dues_and_event_ticket_sales_automatically(): void
     {
         $duesEntry = $this->accountingService->recordMemberDuesPayment(
@@ -135,7 +186,7 @@ class AccountingErpTest extends TestCase
         );
         $this->assertTrue($ticketEntry->isBalanced());
 
-        $summary = $this->accountingService->getFinancialSummary($this->club);
+        $summary = app(AccountingReports::class)->getFinancialSummary($this->club);
         $this->assertEquals(325.00, $summary['total_assets']);
         $this->assertEquals(325.00, $summary['total_revenue']);
         $this->assertEquals(325.00, $summary['net_income']);
@@ -409,7 +460,7 @@ class AccountingErpTest extends TestCase
 
     public function test_comparative_income_expenditure_reports_zero_not_fabricated_figures(): void
     {
-        $data = $this->accountingService->getComparativeIncomeExpenditureData($this->club);
+        $data = app(AccountingReports::class)->getComparativeIncomeExpenditureData($this->club);
 
         $this->assertEquals(0.0, $data['current_totals']['income']);
         $this->assertEquals(0.0, $data['current_totals']['expenditure']);
@@ -969,7 +1020,7 @@ class AccountingErpTest extends TestCase
             'due_date' => now()->addDays(10)->format('Y-m-d'),
         ]);
 
-        $reports = $this->accountingService->getReportsData($this->club);
+        $reports = app(AccountingReports::class)->getReportsData($this->club);
 
         $this->assertCount(1, $reports['aged_payables']['items']);
         $this->assertEquals('pending_approval', $reports['aged_payables']['items'][0]['status']);
@@ -997,7 +1048,7 @@ class AccountingErpTest extends TestCase
         $this->addLodgeMember('b@example.com');
         $this->addLodgeMember('gone@example.com', MembershipStatus::Resigned);
 
-        $worksheet = $this->accountingService->getProvincialDueWorksheet($this->club->fresh());
+        $worksheet = app(AccountingReports::class)->getProvincialDueWorksheet($this->club->fresh());
 
         $this->assertSame(2, $worksheet['member_count']);
         $this->assertSame(25.0, $worksheet['per_capita_amount']);
@@ -1019,7 +1070,7 @@ class AccountingErpTest extends TestCase
         $this->club->update(['province_id' => $province->id]);
         $this->addLodgeMember('a@example.com');
 
-        $worksheet = $this->accountingService->getProvincialDueWorksheet($this->club->fresh());
+        $worksheet = app(AccountingReports::class)->getProvincialDueWorksheet($this->club->fresh());
 
         $this->assertNull($worksheet['per_capita_rate']);
         $this->assertNull($worksheet['per_capita_amount']);
@@ -1029,7 +1080,7 @@ class AccountingErpTest extends TestCase
 
     public function test_provincial_due_worksheet_handles_a_lodge_with_no_province(): void
     {
-        $worksheet = $this->accountingService->getProvincialDueWorksheet($this->club);
+        $worksheet = app(AccountingReports::class)->getProvincialDueWorksheet($this->club);
 
         $this->assertFalse($worksheet['has_province']);
         $this->assertNull($worksheet['total_due']);

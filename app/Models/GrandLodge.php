@@ -32,6 +32,8 @@ class GrandLodge extends Model
 
     /**
      * Get the provinces under this Grand Lodge.
+     *
+     * @return HasMany<Province, $this>
      */
     public function provinces(): HasMany
     {

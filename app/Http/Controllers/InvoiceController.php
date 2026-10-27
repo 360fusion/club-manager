@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Club;
 use App\Models\Invoice;
 use App\Support\ClubAccess;
 use Illuminate\Http\Request;
@@ -15,7 +14,7 @@ class InvoiceController extends Controller
      */
     public function download(Request $request, string $slug, int $id)
     {
-        $club = Club::where('slug', $slug)->firstOrFail();
+        $club = $this->findClub($slug);
         $invoice = Invoice::where('club_id', $club->id)->with('user')->findOrFail($id);
 
         abort_unless(

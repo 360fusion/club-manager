@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PublicEvent\RegisterRequest;
 use App\Mail\EventBookingMail;
 use App\Models\Club;
 use App\Models\Event;
@@ -11,7 +12,6 @@ use App\Services\Events\EventPayload;
 use App\Services\Events\EventRegistrationService;
 use App\Support\SiteChrome;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -26,7 +26,7 @@ class PublicEventController extends Controller
 {
     public function show(string $clubSlug, string $eventSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = $this->findEvent($club, $eventSlug);
 
         return Inertia::render('Public/Event', [
@@ -37,31 +37,12 @@ class PublicEventController extends Controller
         ]);
     }
 
-    public function register(Request $request, string $clubSlug, string $eventSlug, EventRegistrationService $registrations, EventOnlinePayment $online): RedirectResponse|SymfonyResponse
+    public function register(RegisterRequest $request, string $clubSlug, string $eventSlug, EventRegistrationService $registrations, EventOnlinePayment $online): RedirectResponse|SymfonyResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $event = $this->findEvent($club, $eventSlug);
 
-        $validated = $request->validate([
-            // A hidden field real people leave empty; bots fill it in.
-            'website' => 'nullable|string|max:0',
-            'contact_name' => 'required|string|max:150',
-            'contact_email' => 'required|email|max:255',
-            'contact_phone' => 'nullable|string|max:50',
-            'attendance_status' => 'nullable|in:attending,tentative',
-            'payment_method' => 'nullable|integer|max:4294967295',
-            'promo_code' => 'nullable|string|max:40',
-            'attendees' => 'required|array|min:1|max:50',
-            'attendees.*.name' => 'nullable|string|max:150',
-            'attendees.*.email' => 'nullable|string|max:255',
-            'attendees.*.is_guest' => 'nullable|boolean',
-            'attendees.*.ticket_tier_id' => 'nullable|integer',
-            'attendees.*.attending_dining' => 'nullable|boolean',
-            'attendees.*.starter_item_id' => 'nullable|integer',
-            'attendees.*.main_item_id' => 'nullable|integer',
-            'attendees.*.dessert_item_id' => 'nullable|integer',
-            'attendees.*.dietary_requirements' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $email = Str::lower($validated['contact_email']);
 
@@ -102,7 +83,7 @@ class PublicEventController extends Controller
 
     public function booking(string $clubSlug, string $token): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $registration = $this->findRegistration($club, $token);
 
         if (! $registration) {
@@ -122,7 +103,7 @@ class PublicEventController extends Controller
 
     public function cancel(string $clubSlug, string $token, EventRegistrationService $registrations): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $registration = $this->findRegistration($club, $token);
 
         abort_if($registration === null, 404);

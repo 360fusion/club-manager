@@ -47,7 +47,7 @@ class EventGuestBookingMail extends Mailable implements ShouldQueue
             'booking_verb' => $waiting ? 'asked for' : 'booked',
             'club_name' => $event->club->name,
             'event_title' => $event->title,
-            'event_date' => $event->starts_at?->format('l j F Y, H:i'),
+            'event_date' => $event->starts_at->format('l j F Y, H:i'),
             'event_location' => $event->formatted_location,
         ], [
             'waiting_note' => $waiting ? '<p>The event is currently full, so you are on the waiting list. We will email '.e($bookedBy).' if a place becomes available.</p>' : '',

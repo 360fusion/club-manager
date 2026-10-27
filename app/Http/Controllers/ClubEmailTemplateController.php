@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Club;
+use App\Http\Requests\ClubEmailTemplate\TestRequest;
+use App\Http\Requests\ClubEmailTemplate\UpdateClubEmailTemplateRequest;
 use App\Models\ClubEmailTemplate;
 use App\Models\DefaultEmailTemplate;
 use App\Support\EmailTemplate;
 use App\Support\EmailTemplateSanitizer;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -21,7 +21,7 @@ class ClubEmailTemplateController extends Controller
 {
     public function index(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $overrides = ClubEmailTemplate::where('club_id', $club->id)->get()->keyBy('template_key');
 
         $templates = DefaultEmailTemplate::whereIn('template_key', array_keys(EmailTemplate::LODGE_EDITABLE))->orderBy('id')->get()->map(function (DefaultEmailTemplate $default) use ($overrides) {
@@ -41,15 +41,12 @@ class ClubEmailTemplateController extends Controller
         return Inertia::render('Admin/EmailTemplates/Index', ['club' => $club, 'templates' => $templates]);
     }
 
-    public function update(Request $request, string $clubSlug, string $key): RedirectResponse
+    public function update(UpdateClubEmailTemplateRequest $request, string $clubSlug, string $key): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $default = $this->editable($key);
 
-        $validated = $request->validate([
-            'subject' => 'required|string|max:255',
-            'body_html' => 'required|string|max:50000',
-        ]);
+        $validated = $request->validated();
 
         $body = EmailTemplateSanitizer::sanitize($validated['body_html']);
 
@@ -69,7 +66,7 @@ class ClubEmailTemplateController extends Controller
 
     public function destroy(string $clubSlug, string $key): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $default = $this->editable($key);
 
         ClubEmailTemplate::where('club_id', $club->id)->where('template_key', $key)->delete();
@@ -80,15 +77,12 @@ class ClubEmailTemplateController extends Controller
     /**
      * Email the wording, with each placeholder shown as its own name, to the person testing it.
      */
-    public function test(Request $request, string $clubSlug, string $key): RedirectResponse
+    public function test(TestRequest $request, string $clubSlug, string $key): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $default = $this->editable($key);
 
-        $validated = $request->validate([
-            'subject' => 'required|string|max:255',
-            'body_html' => 'required|string|max:50000',
-        ]);
+        $validated = $request->validated();
 
         $body = EmailTemplateSanitizer::sanitize($validated['body_html']);
         $this->assertPlaceholders($default, $validated['subject'], $body);

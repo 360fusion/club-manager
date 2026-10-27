@@ -91,7 +91,7 @@ class MemberListController extends Controller
                 'id' => $meeting->id,
                 'club' => $this->clubPayload($scope->clubFor($meeting->club_id)),
                 'title' => $meeting->title,
-                'date' => $meeting->meeting_date?->toDateString(),
+                'date' => $meeting->meeting_date->toDateString(),
                 'reply' => MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $scope->user->id)->value('attendance_status'),
             ]);
 
@@ -201,7 +201,7 @@ class MemberListController extends Controller
                 'id' => $subscription->id,
                 'club' => $this->clubPayload($scope->clubFor($subscription->club_id)),
                 'year' => $subscription->billing_year,
-                'due_date' => $subscription->due_date?->toDateString(),
+                'due_date' => $subscription->due_date->toDateString(),
                 'amount_due' => number_format((float) $subscription->amount_due, 2),
                 'amount_paid' => number_format((float) $subscription->amount_paid, 2),
                 'balance' => number_format($subscription->balance_due, 2),

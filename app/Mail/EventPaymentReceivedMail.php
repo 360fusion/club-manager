@@ -36,7 +36,7 @@ class EventPaymentReceivedMail extends EventTemplatedMail
                 'club_name' => $event->club->name,
                 'contact_name' => $this->registration->contact_name,
                 'event_title' => $event->title,
-                'event_date' => $event->starts_at?->format('l j F Y, H:i'),
+                'event_date' => $event->starts_at->format('l j F Y, H:i'),
                 'amount_received' => $this->money($this->amount),
                 'total' => $this->money((float) $this->registration->total),
                 'payment_status' => $balance > 0 ? 'Part paid' : 'Paid in full',

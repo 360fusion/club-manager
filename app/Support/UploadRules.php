@@ -12,6 +12,9 @@ use Illuminate\Http\UploadedFile;
  */
 class UploadRules
 {
+    /** An image given by address rather than uploaded: http(s) or a site-relative path. */
+    public const IMAGE_URL = 'regex:#^(https?://|/[^/])#i';
+
     public const IMAGE_TYPES = 'jpg,jpeg,png,gif,webp';
 
     public const DOCUMENT_TYPES = 'pdf,doc,docx,xls,xlsx,ppt,pptx,csv,txt,rtf,zip';

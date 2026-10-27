@@ -7,7 +7,9 @@ use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
+use App\Services\AccountingReports;
 use App\Services\AccountingService;
+use App\Services\MeetingFinancialReturns;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -80,7 +82,7 @@ class MeetingFinancialReturnTest extends TestCase
             'notes' => 'Great meeting and fundraising',
         ];
 
-        $return = $service->postMeetingFinancialReturn($this->club, $this->meeting, $returnData);
+        $return = app(MeetingFinancialReturns::class)->postMeetingFinancialReturn($this->club, $this->meeting, $returnData);
 
         $this->assertDatabaseHas('meeting_financial_returns', [
             'club_id' => $this->club->id,
@@ -149,7 +151,7 @@ class MeetingFinancialReturnTest extends TestCase
     {
         $service = app(AccountingService::class);
 
-        $service->postMeetingFinancialReturn($this->club, $this->meeting, [
+        app(MeetingFinancialReturns::class)->postMeetingFinancialReturn($this->club, $this->meeting, [
             'return_date' => '2026-09-15',
             'dining_fee_per_head' => 35.00,
             'paid_diners_count' => 30,
@@ -162,7 +164,7 @@ class MeetingFinancialReturnTest extends TestCase
             'bequest_amount' => 3750.00,
         ]);
 
-        $report = $service->getComparativeIncomeExpenditureData($this->club);
+        $report = app(AccountingReports::class)->getComparativeIncomeExpenditureData($this->club);
 
         $this->assertEquals((string) (now()->year - 1), $report['prior_year_label']);
         $this->assertEquals((string) now()->year, $report['current_year_label']);

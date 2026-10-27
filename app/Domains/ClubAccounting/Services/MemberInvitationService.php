@@ -6,6 +6,8 @@ use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Enums\MemberAccountStatus;
 use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Models\Member;
+use App\Enums\ClubMemberStatus;
+use App\Enums\ClubRole;
 use App\Mail\MemberInvitationMail;
 use App\Models\Club;
 use App\Models\User;
@@ -54,7 +56,7 @@ class MemberInvitationService
             }
 
             $fields = [
-                'invitation_token' => $token,
+                'invitation_token' => self::hash($token),
                 'invited_at' => now(),
                 'invited_by' => $actor?->id,
                 'invitation_reminded_at' => null,
@@ -71,7 +73,7 @@ class MemberInvitationService
                 ]);
             } else {
                 // Someone already active at the club keeps their access and role; anyone else waits as pending.
-                $club->users()->updateExistingPivot($user->id, $fields + ($pivot->status === 'active' ? [] : ['status' => 'pending']));
+                $club->users()->updateExistingPivot($user->id, $fields + ($pivot->status === ClubMemberStatus::Active->value ? [] : ['status' => ClubMemberStatus::Pending->value]));
             }
 
             $member->forceFill(['user_id' => $user->id])->save();
@@ -106,7 +108,7 @@ class MemberInvitationService
         $token = Str::random(40);
 
         $club->users()->updateExistingPivot($member->user_id, [
-            'invitation_token' => $token,
+            'invitation_token' => self::hash($token),
             'invited_at' => now(),
             'invited_by' => $actor?->id ?? $pivot->invited_by,
             'invitation_reminded_at' => null,
@@ -116,21 +118,24 @@ class MemberInvitationService
     }
 
     /**
-     * Nudge someone whose invitation has not been answered. Reuses the same link, so the earlier email still works.
+     * Nudge someone whose invitation has not been answered. Sends a fresh link.
      */
     public function remind(Club $club, User $user): bool
     {
         $pivot = $club->users()->where('users.id', $user->id)->first()?->pivot;
 
-        if (! $pivot || ! in_array($pivot->status, ['pending', 'active'], true) || empty($pivot->invitation_token) || $pivot->invitation_accepted_at || ($pivot->status === 'active' && $user->hasVerifiedEmail())) {
+        if (! $pivot || ! in_array($pivot->status, ['pending', 'active'], true) || empty($pivot->invitation_token) || $pivot->invitation_accepted_at || ($pivot->status === ClubMemberStatus::Active->value && $user->hasVerifiedEmail())) {
             return false;
         }
 
-        $club->users()->updateExistingPivot($user->id, ['invitation_reminded_at' => now()]);
+        // Only a hash is kept, so a reminder carries a fresh link; the invited date (and so the expiry) stays as it was.
+        $token = Str::random(40);
+
+        $club->users()->updateExistingPivot($user->id, ['invitation_token' => self::hash($token), 'invitation_reminded_at' => now()]);
 
         $inviter = $pivot->invited_by ? User::find($pivot->invited_by) : null;
 
-        return $this->send($club, $user, $pivot->invitation_token, $inviter, reminder: true)['emailed'];
+        return $this->send($club, $user, $token, $inviter, reminder: true)['emailed'];
     }
 
     /**
@@ -144,7 +149,7 @@ class MemberInvitationService
             return;
         }
 
-        $neverHadAccount = $pivot->status === 'pending'
+        $neverHadAccount = $pivot->status === ClubMemberStatus::Pending->value
             && $user->email_verified_at === null
             && $user->clubs()->where('clubs.id', '!=', $club->id)->doesntExist();
 
@@ -197,10 +202,10 @@ class MemberInvitationService
             return;
         }
 
-        if ($pivot->status === 'pending') {
+        if ($pivot->status === ClubMemberStatus::Pending->value) {
             $this->revoke($club, $user);
-        } elseif ($endAccess && $pivot->status === 'active' && $pivot->role === 'member') {
-            $club->users()->updateExistingPivot($user->id, ['status' => 'past', 'invitation_token' => null]);
+        } elseif ($endAccess && $pivot->status === ClubMemberStatus::Active->value && $pivot->role === ClubRole::Member->value) {
+            $club->users()->updateExistingPivot($user->id, ['status' => ClubMemberStatus::Past->value, 'invitation_token' => null]);
         }
     }
 
@@ -299,7 +304,15 @@ class MemberInvitationService
      */
     public function userForToken(Club $club, string $token): ?User
     {
-        return $club->users()->where('club_user.invitation_token', $token)->first();
+        return $club->users()->where('club_user.invitation_token', self::hash($token))->first();
+    }
+
+    /**
+     * Only this hash is stored, so a copy of the table cannot be used to accept anyone's invitation.
+     */
+    public static function hash(string $token): string
+    {
+        return hash('sha256', $token);
     }
 
     public function isExpired(Club $club, ?object $pivot): bool

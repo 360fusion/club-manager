@@ -40,7 +40,7 @@ export function parseYouTubeUrl(input) {
     if (!['http:', 'https:'].includes(url.protocol) || !HOSTS.includes(url.hostname.toLowerCase())) return null;
 
     const segments = url.pathname.split('/').filter(Boolean);
-    let id = '';
+    let id;
 
     if (url.hostname.toLowerCase().endsWith('youtu.be')) {
         id = segments[0] || '';

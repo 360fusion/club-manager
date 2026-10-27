@@ -8,6 +8,7 @@ use App\Domains\ClubAccounting\Mail\CommitteeAgendaPackMailable;
 use App\Domains\ClubAccounting\Models\Candidate;
 use App\Domains\ClubAccounting\Models\ClubCommitteeAttendee;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
+use App\Enums\DocumentStatus;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\User;
@@ -58,7 +59,7 @@ class CommitteePackCompilerService
 
         // 3. Unpaid Vendor Bills for Audit
         $unpaidBills = Bill::where('club_id', $club->id)
-            ->where('status', 'unpaid')
+            ->where('status', DocumentStatus::Unpaid->value)
             ->orderBy('due_date')
             ->get();
 
@@ -116,7 +117,7 @@ class CommitteePackCompilerService
     public function compileEmailBody(ClubCommitteeMeeting $meeting): string
     {
         $club = $meeting->club;
-        $dateStr = $meeting->meeting_date ? $meeting->meeting_date->format('l, jS F Y \a\t H:i') : 'Date to be confirmed';
+        $dateStr = $meeting->meeting_date->format('l, jS F Y \a\t H:i');
         $chairName = $meeting->chair?->name ?? 'Worshipful Master / Chairman';
         $secretaryName = $meeting->secretary?->name ?? 'Lodge Secretary';
 
@@ -181,7 +182,7 @@ class CommitteePackCompilerService
         $pdfFilename = null;
         if ($attachPdf) {
             $pdfBinary = $this->compilePdf($meeting);
-            $pdfFilename = 'Agenda-Pack-'.Str::slug($meeting->title).'-'.($meeting->meeting_date ? $meeting->meeting_date->format('Y-m-d') : 'meeting').'.pdf';
+            $pdfFilename = 'Agenda-Pack-'.Str::slug($meeting->title).'-'.($meeting->meeting_date->format('Y-m-d')).'.pdf';
         }
 
         // Only people who belong to this meeting's club may receive the pack.

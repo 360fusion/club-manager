@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Club;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Services\Events\EventOnlinePayment;
@@ -75,7 +74,7 @@ class EventOnlinePaymentController extends Controller
 
     private function memberRegistration(string $slug, int $id): EventRegistration
     {
-        $club = Club::where('slug', $slug)->firstOrFail();
+        $club = $this->findClub($slug);
         $event = Event::where('club_id', $club->id)->published()->findOrFail($id);
 
         return EventRegistration::where('event_id', $event->id)->where('user_id', Auth::id())->firstOrFail();
@@ -83,7 +82,7 @@ class EventOnlinePaymentController extends Controller
 
     private function guestRegistration(string $clubSlug, string $token): EventRegistration
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         abort_if(strlen($token) < 20, 404);
 
         return EventRegistration::where('token_hash', hash('sha256', $token))

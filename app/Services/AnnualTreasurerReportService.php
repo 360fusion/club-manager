@@ -17,7 +17,6 @@ use App\Services\Signatures\SignatureCertificatePdf;
 use App\Services\Signatures\SignatureRequestService;
 use App\Support\Csv;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Assembles the annual Treasurer's Report a Lodge Secretary would otherwise build by
@@ -85,9 +84,9 @@ class AnnualTreasurerReportService
                     'invoice_reference' => $sub->invoice_reference,
                     'balance_due' => (float) $sub->balance_due,
                 ])->values()->all(),
-                'provincial_due' => $this->accountingService->getProvincialDueWorksheet($club),
+                'provincial_due' => app(AccountingReports::class)->getProvincialDueWorksheet($club),
             ],
-            'vat' => $club->vatIsEnabled() ? $this->accountingService->getVatReturnData($club, "{$year}-01-01") : null,
+            'vat' => $club->vatIsEnabled() ? app(AccountingReports::class)->getVatReturnData($club, "{$year}-01-01") : null,
             'audit_sign_off' => $auditSignOff?->signed_off_at ? [
                 'auditor_one' => $auditSignOff->auditorOne?->name,
                 'auditor_two' => $auditSignOff->auditorTwo?->name,
@@ -195,8 +194,10 @@ class AnnualTreasurerReportService
      */
     private function fundReceiptsAndPayments(Club $club, int $year, $accounts): array
     {
-        $rows = $accounts->map(function (Account $account) use ($year) {
-            $actual = $this->actualForAccountAndYear($account, $year);
+        $actuals = Account::actualsForYear($accounts, $year);
+
+        $rows = $accounts->map(function (Account $account) use ($actuals) {
+            $actual = $actuals[$account->id] ?? 0.0;
 
             return [
                 'code' => $account->code,
@@ -215,27 +216,6 @@ class AnnualTreasurerReportService
             'total_expenditure' => round($expenditure, 2),
             'net_surplus' => round($income - $expenditure, 2),
         ];
-    }
-
-    private function actualForAccountAndYear(Account $account, int $year): float
-    {
-        $debits = (float) DB::table('accounting_journal_items')
-            ->join('accounting_journal_entries', 'accounting_journal_entries.id', '=', 'accounting_journal_items.journal_entry_id')
-            ->where('accounting_journal_entries.club_id', $account->club_id)
-            ->where('accounting_journal_items.account_id', $account->id)
-            ->whereYear('accounting_journal_entries.entry_date', $year)
-            ->where('accounting_journal_entries.status', '!=', 'void')
-            ->sum('accounting_journal_items.debit');
-
-        $credits = (float) DB::table('accounting_journal_items')
-            ->join('accounting_journal_entries', 'accounting_journal_entries.id', '=', 'accounting_journal_items.journal_entry_id')
-            ->where('accounting_journal_entries.club_id', $account->club_id)
-            ->where('accounting_journal_items.account_id', $account->id)
-            ->whereYear('accounting_journal_entries.entry_date', $year)
-            ->where('accounting_journal_entries.status', '!=', 'void')
-            ->sum('accounting_journal_items.credit');
-
-        return $account->type === 'expense' ? $debits - $credits : $credits - $debits;
     }
 
     public function toCsv(array $report): string

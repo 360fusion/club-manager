@@ -11,7 +11,6 @@ use App\Mail\MemberInvitationMail;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -123,8 +122,10 @@ class MemberDirectoryInvitationTest extends TestCase
         $otherClub = Club::create(['name' => 'Other', 'slug' => 'other', 'club_type_id' => $this->club->club_type_id, 'is_active' => true]);
         $foreign = $this->member([], $otherClub);
 
-        $this->expectException(ModelNotFoundException::class);
-        $this->index()->call('inviteMember', $foreign->id);
+        $this->index()->call('inviteMember', $foreign->id)->assertNotFound();
+
+        Mail::assertNothingQueued();
+        $this->assertNull($foreign->fresh()->user_id);
     }
 
     public function test_bulk_invite_selected_reports_what_happened(): void

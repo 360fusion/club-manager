@@ -4,7 +4,7 @@ import EventBookingModal from '@/Components/Events/EventBookingModal.vue';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 import { formatMoney } from '@/Utils/currency';
 import { ref, computed } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 
 const props = defineProps({

@@ -7,6 +7,9 @@ use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\MemberInvitationException;
 use App\Domains\ClubAccounting\Services\MemberInvitationService;
+use App\Enums\ClubMemberStatus;
+use App\Enums\DocumentStatus;
+use App\Http\Requests\UserAdmin\StoreMemberRequest;
 use App\Models\Club;
 use App\Models\EventRegistration;
 use App\Models\Invoice;
@@ -27,32 +30,85 @@ class UserAdminController extends Controller
     /**
      * Display member roster for a club in the admin portal.
      */
-    public function index(string $clubSlug, MemberInvitationService $invitations): Response
+    public function index(Request $request, string $clubSlug, MemberInvitationService $invitations): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $members = $club->users()
-            ->wherePivot('status', '!=', 'deleted')
-            ->get()
-            ->map(function ($u) use ($club, $invitations) {
-                $isJoinRequest = $u->pivot->status === 'pending' && empty($u->pivot->invitation_token);
+        $filters = [
+            'q' => trim((string) $request->query('q', '')),
+            'tab' => (string) $request->query('tab', 'all'),
+            'role' => (string) $request->query('role', ''),
+            'rank' => (string) $request->query('rank', ''),
+            'status' => (string) $request->query('status', ''),
+            'committee' => (string) $request->query('committee', ''),
+        ];
 
-                return [
-                    'matching_member' => $isJoinRequest ? $invitations->matchForUser($club, $u)?->full_name : null,
-                    'id' => $u->id,
-                    'name' => $u->name,
-                    'email' => $u->email,
-                    'role' => $u->pivot->role ?? 'member',
-                    'rank' => $u->pivot->rank ?? '',
-                    'committee_role' => $u->pivot->committee_role ?? null,
-                    'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
-                    'status' => $u->pivot->status ?? 'active',
-                    'invitation_token' => ! empty($u->pivot->invitation_token),
-                    'invited_at' => $u->pivot->invited_at ? Carbon::parse($u->pivot->invited_at)->format('j M Y') : null,
-                    'invitation_accepted_at' => $u->pivot->invitation_accepted_at ? Carbon::parse($u->pivot->invitation_accepted_at)->format('j M Y') : null,
-                    'joined_at' => $u->pivot->created_at ? Carbon::parse($u->pivot->created_at)->format('j M Y') : 'Recent',
-                ];
-            });
+        $tabStatus = ['active' => 'active', 'invited_pending' => 'pending', 'deactivated' => 'inactive', 'past' => 'past'][$filters['tab']] ?? null;
+
+        $query = $club->users()->wherePivot('status', '!=', 'deleted');
+        if ($tabStatus) {
+            $query->wherePivot('status', $tabStatus);
+        }
+        if ($filters['status'] !== '') {
+            $query->wherePivot('status', $filters['status']);
+        }
+        if ($filters['role'] !== '') {
+            $query->wherePivot('role', $filters['role']);
+        }
+        if ($filters['rank'] !== '') {
+            $query->wherePivot('rank', $filters['rank']);
+        }
+        if ($filters['committee'] === 'any') {
+            $query->wherePivotNotNull('committee_role');
+        } elseif ($filters['committee'] === 'none') {
+            $query->wherePivotNull('committee_role');
+        } elseif ($filters['committee'] !== '') {
+            $query->wherePivot('committee_role', $filters['committee']);
+        }
+        if ($filters['q'] !== '') {
+            $like = '%'.$filters['q'].'%';
+            $query->where(fn ($q) => $q->where('users.name', 'like', $like)
+                ->orWhere('users.email', 'like', $like)
+                ->orWhere('club_user.member_number', 'like', $like)
+                ->orWhereRaw("'MEM-' || users.id like ?", [$like]));
+        }
+
+        $toRow = function ($u) use ($club, $invitations) {
+            $isJoinRequest = $u->pivot->status === ClubMemberStatus::Pending->value && empty($u->pivot->invitation_token);
+
+            return [
+                'matching_member' => $isJoinRequest ? $invitations->matchForUser($club, $u)?->full_name : null,
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'role' => $u->pivot->role ?? 'member',
+                'rank' => $u->pivot->rank ?? '',
+                'committee_role' => $u->pivot->committee_role ?? null,
+                'member_number' => $u->pivot->member_number ?? ('MEM-'.$u->id),
+                'status' => $u->pivot->status ?? 'active',
+                'invitation_token' => ! empty($u->pivot->invitation_token),
+                'invited_at' => $u->pivot->invited_at ? Carbon::parse($u->pivot->invited_at)->format('j M Y') : null,
+                'invitation_accepted_at' => $u->pivot->invitation_accepted_at ? Carbon::parse($u->pivot->invitation_accepted_at)->format('j M Y') : null,
+                'joined_at' => $u->pivot->created_at ? Carbon::parse($u->pivot->created_at)->format('j M Y') : 'Recent',
+            ];
+        };
+
+        $members = $query->orderBy('users.name')->orderBy('users.id')->paginate(25)->withQueryString()
+            ->through($toRow);
+
+        $statusCounts = DB::table('club_user')->where('club_id', $club->id)->where('status', '!=', 'deleted')
+            ->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+        $counts = [
+            'all' => (int) $statusCounts->sum(),
+            'active' => (int) ($statusCounts['active'] ?? 0),
+            'invited_pending' => (int) ($statusCounts['pending'] ?? 0),
+            'deactivated' => (int) ($statusCounts['inactive'] ?? 0),
+            'past' => (int) ($statusCounts['past'] ?? 0),
+        ];
+
+        // Join requests (not email invitations) are always shown above the table, whatever the filters say.
+        $pendingMembers = $club->users()->wherePivot('status', ClubMemberStatus::Pending->value)->wherePivotNull('invitation_token')
+            ->orderBy('club_user.created_at')->get()->map($toRow)->values();
 
         $enableMemberRanks = $club->settings['enable_member_ranks'] ?? true;
         $defaultRanks = [
@@ -82,6 +138,9 @@ class UserAdminController extends Controller
         return Inertia::render('Admin/Users/Index', [
             'club' => $club,
             'members' => $members,
+            'pendingMembers' => $pendingMembers,
+            'counts' => $counts,
+            'filters' => $filters,
             'enableMemberRanks' => $enableMemberRanks,
             'memberRanks' => $memberRanks,
         ]);
@@ -92,7 +151,7 @@ class UserAdminController extends Controller
      */
     public function show(string $clubSlug, int $userId): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $user = $club->users()->where('users.id', $userId)->firstOrFail();
 
         $memberPivot = $user->pivot;
@@ -117,7 +176,7 @@ class UserAdminController extends Controller
             ->values()
             ->map(fn (EventRegistration $r) => [
                 'event_title' => $r->event->title,
-                'event_date' => $r->event->starts_at ? $r->event->starts_at->format('j M Y, H:i') : 'TBD',
+                'event_date' => $r->event->starts_at->format('j M Y, H:i'),
                 'location' => $r->event->location,
                 'rsvp_status' => $r->status ?? 'attending',
                 'attended' => $r->booker()?->checked_in_at !== null,
@@ -166,7 +225,7 @@ class UserAdminController extends Controller
                 'total_rsvps' => $totalRsvps,
                 'attended_count' => $attendedCount,
                 'attendance_rate' => $attendanceRate,
-                'total_invoices_paid' => $invoices->where('status', 'paid')->count(),
+                'total_invoices_paid' => $invoices->where('status', DocumentStatus::Paid->value)->count(),
             ],
         ]);
     }
@@ -174,19 +233,11 @@ class UserAdminController extends Controller
     /**
      * Store a newly created member in the club roster.
      */
-    public function storeMember(Request $request, string $clubSlug, MemberInvitationService $invitations): RedirectResponse
+    public function storeMember(StoreMemberRequest $request, string $clubSlug, MemberInvitationService $invitations): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'role' => 'required|in:owner,admin,coach,member,treasurer,examiner',
-            'rank' => 'nullable|string|max:100',
-            'committee_role' => 'nullable|in:chair,secretary,member',
-            'member_number' => 'nullable|string|max:100',
-            'send_invite' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         abort_unless(ClubAccess::canAssignRole($request->user(), $club, $validated['role'], null), 403, 'Only a club owner can grant the owner role.');
 
@@ -250,7 +301,7 @@ class UserAdminController extends Controller
      */
     public function sendInvite(Request $request, string $clubSlug, int $userId, MemberInvitationService $invitations): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $user = $club->users()->where('users.id', $userId)->firstOrFail();
 
         try {
@@ -268,150 +319,15 @@ class UserAdminController extends Controller
     }
 
     /**
-     * Update a member's role in the club.
-     */
-    public function updateRole(Request $request, string $clubSlug, int $userId): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-
-        $validated = $request->validate([
-            'role' => 'required|in:owner,admin,coach,member,treasurer,examiner',
-        ]);
-
-        $targetRole = $club->users()->where('users.id', $userId)->firstOrFail()->pivot->role;
-        abort_unless(ClubAccess::canAssignRole($request->user(), $club, $validated['role'], $targetRole), 403, 'Only a club owner can grant or change the owner role.');
-
-        $club->users()->updateExistingPivot($userId, ['role' => $validated['role']]);
-
-        return redirect()->back()->with('success', 'Member role updated to '.strtoupper($validated['role']));
-    }
-
-    /**
-     * Update a member's rank in the club.
-     */
-    public function updateRank(Request $request, string $clubSlug, int $userId): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-
-        $club->users()->where('users.id', $userId)->firstOrFail();
-
-        $validated = $request->validate([
-            'rank' => 'nullable|string|max:100',
-        ]);
-
-        $club->users()->updateExistingPivot($userId, ['rank' => $validated['rank']]);
-
-        return redirect()->back()->with('success', 'Member rank updated.');
-    }
-
-    /**
-     * Update a member's committee role in the club.
-     */
-    public function updateCommitteeRole(Request $request, string $clubSlug, int $userId): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-
-        $club->users()->where('users.id', $userId)->firstOrFail();
-
-        $validated = $request->validate([
-            'committee_role' => 'nullable|in:chair,secretary,member',
-        ]);
-
-        $roleValue = ! empty($validated['committee_role']) ? $validated['committee_role'] : null;
-
-        $club->users()->updateExistingPivot($userId, ['committee_role' => $roleValue]);
-
-        $roleLabel = match ($roleValue) {
-            'chair' => 'Committee Chair',
-            'secretary' => 'Committee Secretary',
-            'member' => 'Committee Member',
-            default => 'None',
-        };
-
-        return redirect()->back()->with('success', "Committee role updated to {$roleLabel}.");
-    }
-
-    /**
      * Revoke an active invitation for a member.
      */
     public function revokeInvite(string $clubSlug, int $userId, MemberInvitationService $invitations): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $user = $club->users()->where('users.id', $userId)->firstOrFail();
 
         $invitations->revoke($club, $user);
 
         return redirect()->back()->with('success', "Invitation revoked for {$user->name}.");
-    }
-
-    /**
-     * Update member status (active, inactive, past, pending, deleted).
-     */
-    public function updateStatus(Request $request, string $clubSlug, int $userId): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $this->guardOwner($club, $userId);
-        $user = $club->users()->where('users.id', $userId)->firstOrFail();
-
-        $validated = $request->validate([
-            'status' => 'required|in:active,inactive,past,pending,deleted',
-        ]);
-
-        $club->users()->updateExistingPivot($userId, ['status' => $validated['status']]);
-
-        $messages = [
-            'active' => "{$user->name} has been restored and reactivated on the active roster.",
-            'inactive' => "{$user->name} status set to Deactivated (access paused).",
-            'past' => "{$user->name} moved to Past Members list.",
-            'pending' => "{$user->name} status set to pending.",
-            'deleted' => "{$user->name} has been deleted from the member directory.",
-        ];
-
-        return redirect()->back()->with('success', $messages[$validated['status']] ?? 'Member status updated.');
-    }
-
-    /**
-     * Remove a member from active roster to Past Members.
-     */
-    public function removeMember(string $clubSlug, int $userId): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $this->guardOwner($club, $userId);
-        $user = $club->users()->where('users.id', $userId)->firstOrFail();
-
-        $club->users()->updateExistingPivot($userId, ['status' => 'past']);
-
-        return redirect()->back()->with('success', "{$user->name} moved to Past Members list.");
-    }
-
-    /**
-     * Delete a member from the admin directory (preserves historical database records).
-     */
-    public function forceDeleteMember(string $clubSlug, int $userId): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $this->guardOwner($club, $userId);
-        $user = $club->users()->where('users.id', $userId)->firstOrFail();
-
-        // Soft hide member by setting pivot status to 'deleted'
-        $club->users()->updateExistingPivot($userId, ['status' => 'deleted']);
-
-        return redirect()->route('admin.users.index', ['clubSlug' => $clubSlug])
-            ->with('success', "{$user->name} has been deleted from the member directory. Historical records remain preserved.");
-    }
-
-    /**
-     * Only an owner (or a platform super admin) may suspend or remove a club owner.
-     */
-    private function guardOwner(Club $club, int $userId): void
-    {
-        $actor = request()->user();
-        $targetRole = $club->users()->where('users.id', $userId)->first()?->pivot->role;
-
-        abort_if(
-            $targetRole === 'owner' && ! $actor->is_super_admin && ClubAccess::role($actor, $club) !== 'owner',
-            403,
-            'Only a club owner can change or remove another owner.',
-        );
     }
 }

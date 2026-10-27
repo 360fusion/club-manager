@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ClubMemberStatus;
 use App\Models\Club;
 use App\Models\Meeting;
 use App\Models\User;
@@ -21,7 +22,7 @@ class ClubNotifier
     public function toMembers(Club $club, ClubNotification $notification, ?User $except = null): void
     {
         $members = $club->users()
-            ->wherePivot('status', 'active')
+            ->wherePivot('status', ClubMemberStatus::Active->value)
             ->when($except, fn ($query) => $query->where('users.id', '!=', $except->id))
             ->get();
 
@@ -38,7 +39,7 @@ class ClubNotifier
      */
     public function toStaff(Club $club, ClubNotification $notification, string $capability): void
     {
-        $staff = $club->users()->wherePivot('status', 'active')->get()
+        $staff = $club->users()->wherePivot('status', ClubMemberStatus::Active->value)->get()
             ->filter(fn (User $user) => ClubAccess::can($user, $club, $capability));
 
         Notification::sendNow($staff, $notification);

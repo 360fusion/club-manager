@@ -40,7 +40,7 @@ class EventPaymentReminderMail extends Mailable implements ShouldQueue
             'club_name' => $event->club->name,
             'contact_name' => $this->registration->contact_name,
             'event_title' => $event->title,
-            'event_day' => $event->starts_at?->format('l j F Y'),
+            'event_day' => $event->starts_at->format('l j F Y'),
             'amount_due' => Currencies::symbolFor($event->club).number_format((float) $payment['balance'], 2),
             'due_text' => $payment['due_at'] ? ', due by '.$payment['due_at'] : '',
         ], [

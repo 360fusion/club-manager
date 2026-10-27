@@ -6,7 +6,7 @@ import Icon from '@/Components/Ui/Icon.vue';
 import { BLOCK_ICONS } from '@/Support/icons';
 import { SMALL_INPUT } from './styles';
 
-const props = defineProps({
+defineProps({
     modelValue: { type: String, default: '' },
     label: { type: String, default: 'Icon' },
 });

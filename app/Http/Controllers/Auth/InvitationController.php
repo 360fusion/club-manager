@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Domains\ClubAccounting\Services\MemberInvitationService;
 use App\Http\Controllers\Controller;
-use App\Models\Club;
+use App\Http\Requests\Invitation\AcceptRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -23,7 +22,7 @@ class InvitationController extends Controller
      */
     public function showForm(string $clubSlug, string $token): Response|RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         $user = $this->invitations->userForToken($club, $token);
 
@@ -72,9 +71,9 @@ class InvitationController extends Controller
     /**
      * Accept invitation, set password, and log in user.
      */
-    public function accept(Request $request, string $clubSlug, string $token): RedirectResponse
+    public function accept(AcceptRequest $request, string $clubSlug, string $token): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         $user = $this->invitations->userForToken($club, $token);
 
@@ -91,9 +90,6 @@ class InvitationController extends Controller
         $isExistingUser = $this->isExistingAccount($user);
 
         if ($isExistingUser) {
-            $request->validate([
-                'password' => 'required|string|max:255',
-            ]);
 
             if (! Hash::check($request->password, $user->password)) {
                 return back()->withErrors(['password' => 'Incorrect password for your existing account.']);

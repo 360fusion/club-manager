@@ -204,7 +204,7 @@ const filterClass = 'bg-slate-100 border border-slate-300 text-slate-900 text-xs
                 </div>
                 <nav v-if="lodges.links.length > 3" class="flex flex-wrap gap-1.5 border-t border-slate-200 p-3 dark:border-slate-800" aria-label="Pages">
                     <template v-for="link in lodges.links" :key="link.label">
-                        <Link v-if="link.url" :href="link.url" preserve-scroll :class="['rounded-md border px-2.5 py-1 text-xs', link.active ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800']" v-html="link.label" />
+                        <Link v-if="link.url" :href="link.url" preserve-scroll :class="['rounded-md border px-2.5 py-1 text-xs', link.active ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800']"><span v-html="link.label" /></Link>
                         <span v-else class="rounded-md border border-slate-200 px-2.5 py-1 text-xs text-slate-400 dark:border-slate-800" v-html="link.label" />
                     </template>
                 </nav>

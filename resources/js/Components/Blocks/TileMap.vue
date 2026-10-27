@@ -2,7 +2,7 @@
 // The public map: tiles for the chosen style with a pin at the block's location, zoom buttons and (optionally) a
 // switch between street and satellite. It is view-only (no dragging), so it never fights the page for a swipe.
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { MAP_STYLES, clampZoom, mapStyle, tilesFor } from '@/Utils/osmMap';
+import { clampZoom, mapStyle, tilesFor } from '@/Utils/osmMap';
 
 const props = defineProps({
     lat: { type: Number, required: true },

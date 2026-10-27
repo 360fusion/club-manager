@@ -2,10 +2,12 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import MeetingsTabs from '@/Components/MeetingsTabs.vue';
+import Pagination from '@/Components/Ui/Pagination.vue';
 
 const props = defineProps({
     club: { type: Object, required: true },
-    requests: { type: Array, default: () => [] },
+    // One page of visiting brethren's requests (a Laravel paginator): pending first, then approved, then the rest.
+    requests: { type: Object, required: true },
     visibility: { type: String, required: true },
     visibilityOptions: { type: Object, required: true },
 });
@@ -46,10 +48,10 @@ function act(request, action) {
                 Visitors can only ask to receive your summonses when your lodge shares with <em>{{ visibilityOptions.approved_visitors }}</em>.
             </p>
 
-            <p v-if="!requests.length" class="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No requests yet.</p>
+            <p v-if="!requests.data.length" class="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No requests yet.</p>
 
             <ul v-else class="space-y-3">
-                <li v-for="request in requests" :key="request.id" class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <li v-for="request in requests.data" :key="request.id" class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <p class="font-bold text-slate-900 dark:text-white">{{ request.name }}</p>
@@ -74,6 +76,7 @@ function act(request, action) {
                     </div>
                 </li>
             </ul>
+            <Pagination :links="requests.links" />
         </div>
     </AdminLayout>
 </template>

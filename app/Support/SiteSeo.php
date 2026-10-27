@@ -141,7 +141,7 @@ class SiteSeo
                 $graph[] = array_filter([
                     '@type' => 'Event',
                     'name' => $event->title,
-                    'startDate' => $event->starts_at?->toIso8601String(),
+                    'startDate' => $event->starts_at->toIso8601String(),
                     'endDate' => $event->ends_at?->toIso8601String(),
                     'eventStatus' => 'https://schema.org/EventScheduled',
                     'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',

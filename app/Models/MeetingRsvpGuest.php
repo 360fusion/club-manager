@@ -43,6 +43,9 @@ class MeetingRsvpGuest extends Model
         return $this->belongsTo(User::class, 'paid_recorded_by');
     }
 
+    /**
+     * @return BelongsTo<MeetingRsvp, $this>
+     */
     public function rsvp(): BelongsTo
     {
         return $this->belongsTo(MeetingRsvp::class, 'meeting_rsvp_id');

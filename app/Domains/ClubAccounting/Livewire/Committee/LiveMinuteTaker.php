@@ -295,7 +295,7 @@ class LiveMinuteTaker extends Component
         $items = $meeting->agendaItems;
 
         $outline = "# Meeting Minutes: {$meeting->title}\n";
-        $outline .= '**Date:** '.($meeting->meeting_date ? $meeting->meeting_date->format('jS F Y, H:i') : 'TBD')."\n\n";
+        $outline .= '**Date:** '.($meeting->meeting_date->format('jS F Y, H:i'))."\n\n";
 
         // Attendees Roll Call summary
         $attendees = $meeting->attendees;

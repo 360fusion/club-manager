@@ -167,4 +167,23 @@ class PostPublishSettingsTest extends TestCase
         $publishedPosts = Post::where('club_id', $this->club->id)->published()->get();
         $this->assertTrue($publishedPosts->contains('id', $post->id));
     }
+
+    public function test_the_admin_posts_list_is_paginated(): void
+    {
+        $club = Club::factory()->create();
+        $admin = User::factory()->create();
+        $club->users()->attach($admin->id, ['role' => 'admin', 'status' => 'active']);
+
+        foreach (range(1, 23) as $n) {
+            Post::create(['club_id' => $club->id, 'title' => "Post {$n}", 'slug' => "post-{$n}", 'status' => 'draft', 'author_id' => $admin->id, 'content' => '<p>Text</p>']);
+        }
+
+        $page = $this->actingAs($admin)->get(route('admin.posts.index', ['clubSlug' => $club->slug]))->assertOk();
+        preg_match('#<script data-page="app" type="application/json">(.*?)</script>#s', $page->getContent(), $found);
+        $posts = json_decode($found[1], true)['props']['posts'];
+
+        $this->assertCount(20, $posts['data']);
+        $this->assertSame(23, $posts['total']);
+        $this->assertNotEmpty($posts['links']);
+    }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
+use App\Http\Requests\UpdateAdmin\StoreUpdateRequest;
+use App\Http\Requests\UpdateAdmin\UpdateStatus2Request;
 use App\Models\Club;
 use App\Models\ClubUpdate;
 use App\Models\Event;
@@ -12,7 +14,6 @@ use App\Services\ClubNotifier;
 use App\Services\WeeklyUpdateDigestService;
 use App\Support\Currencies;
 use App\Support\ImageDownscaler;
-use App\Support\UploadRules;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class UpdateAdminController extends Controller
      */
     public function index(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         $updates = ClubUpdate::where('club_id', $club->id)
             ->with(['author', 'newsletter'])
@@ -91,23 +92,11 @@ class UpdateAdminController extends Controller
     /**
      * Store or update a ClubUpdate item.
      */
-    public function store(Request $request, string $clubSlug): RedirectResponse
+    public function store(StoreUpdateRequest $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'id' => 'nullable|integer',
-            'title' => 'required|string|max:255',
-            'category' => 'required|string|in:summons,provincial,event_notice,general,charity',
-            'summary' => 'nullable|string|max:10000',
-            'cover_image_url' => 'nullable|string|max:1000',
-            'cover_image_file' => UploadRules::image(8192),
-            'attachments' => 'nullable|array|max:50',
-            'attachment_files.*' => UploadRules::attachment(20480),
-            'status' => 'required|string|in:draft,approved,sent,archived',
-            'is_important' => 'nullable|boolean',
-            'clean_text' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         $coverImageUrl = $validated['cover_image_url'] ?? null;
         if ($request->hasFile('cover_image_file') && $request->file('cover_image_file')->isValid()) {
@@ -199,14 +188,12 @@ class UpdateAdminController extends Controller
     /**
      * Update status (e.g. approve, unapprove, archive).
      */
-    public function updateStatus(Request $request, string $clubSlug, int $id): RedirectResponse
+    public function updateStatus(UpdateStatus2Request $request, string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $update = ClubUpdate::where('club_id', $club->id)->findOrFail($id);
 
-        $validated = $request->validate([
-            'status' => 'required|in:draft,approved,sent,archived',
-        ]);
+        $validated = $request->validated();
 
         $updateData = ['status' => $validated['status']];
         if ($validated['status'] === 'approved') {
@@ -226,7 +213,7 @@ class UpdateAdminController extends Controller
      */
     public function destroy(string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $update = ClubUpdate::where('club_id', $club->id)->findOrFail($id);
         $update->delete();
 
@@ -238,7 +225,7 @@ class UpdateAdminController extends Controller
      */
     public function triggerDigest(Request $request, string $clubSlug, WeeklyUpdateDigestService $digestService): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $selectedIds = $request->input('selected_ids');
 
         $approvedCount = ClubUpdate::where('club_id', $club->id)

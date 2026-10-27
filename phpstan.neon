@@ -1,13 +1,21 @@
 includes:
     - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
 
 parameters:
+    # Models declare casts() as a method; Larastan only reads those casts when it may parse the method body.
+    parseModelCastsMethod: true
+
+    # A pivot row carries whichever columns the relation's withPivot() asked for, so any property on it is fine.
+    universalObjectCratesClasses:
+        - Illuminate\Database\Eloquent\Relations\Pivot
 
     paths:
         - app/
 
-    # Level 1 static analysis for standard Laravel dynamic Eloquent models & relations
-    level: 1
+    # Level 5, with the problems that already existed recorded in phpstan-baseline.neon so only new code is held to it.
+    # Pay the baseline down by fixing an entry and regenerating: vendor/bin/phpstan analyse --generate-baseline=phpstan-baseline.neon
+    level: 5
 
     excludePaths:
         - storage/

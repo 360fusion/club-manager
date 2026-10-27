@@ -2,34 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Domains\ClubAccounting\Enums\LodgeOffice;
-use App\Domains\ClubAccounting\Models\AnnualOfficerRoster;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\Member;
-use App\Domains\ClubAccounting\Services\AnnualOfficerRosterService;
+use App\Enums\ClubRole;
+use App\Http\Requests\MeetingAdmin\StoreMeetingRequest;
 use App\Models\Club;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
-use App\Models\MeetingRsvpGuest;
 use App\Models\RecurringRule;
-use App\Models\User;
-use App\Notifications\ClubNotification;
-use App\Services\AccountingService;
-use App\Services\ClubNotifier;
-use App\Services\MeetingScheduleService;
-use App\Services\RsvpTokenService;
 use App\Support\ImageDownscaler;
-use App\Support\UploadRules;
+use App\Support\OfficersYear;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\LaravelPdf\Facades\Pdf;
 
 class MeetingAdminController extends Controller
 {
@@ -38,9 +27,9 @@ class MeetingAdminController extends Controller
      */
     public function index(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $visitorUserIds = $club->users()->wherePivot('role', 'visitor')->pluck('users.id');
+        $visitorUserIds = $club->users()->wherePivot('role', ClubRole::Visitor->value)->pluck('users.id');
 
         $meetings = Meeting::where('club_id', $club->id)
             ->withCount([
@@ -93,7 +82,7 @@ class MeetingAdminController extends Controller
      */
     public function create(string $clubSlug): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         return Inertia::render('Admin/Meetings/Form', [
             'club' => $club,
@@ -101,14 +90,14 @@ class MeetingAdminController extends Controller
                 'salutation' => 'Dear Sir and Brother,',
                 'starts_at' => '18:30',
                 'rehearsal_starts_at' => '17:30',
-                'venue' => 'Masonic Hall, Wellington Street, Stockton-on-Tees',
+                'venue' => $club->defaultMeetingVenue(),
                 'dress_code' => 'Dinner Jacket, White Gloves',
                 'dining_cost_member' => 20.00,
                 'dining_cost_guest' => 20.00,
-                'bank_sort_code' => $club->settings['bank_sort_code'] ?? '20-65-18',
-                'bank_account_number' => $club->settings['bank_account_number'] ?? '83920145',
+                'bank_sort_code' => $club->settings['bank_sort_code'] ?? null,
+                'bank_account_number' => $club->settings['bank_account_number'] ?? null,
                 'status' => 'draft',
-                'officers_year_label' => 'OFFICERS FOR 2025-2026',
+                'officers_year_label' => OfficersYear::label(now(), $club->settings['installation_month'] ?? null),
             ]),
             'members' => $club->users,
         ]);
@@ -119,7 +108,7 @@ class MeetingAdminController extends Controller
      */
     public function edit(string $clubSlug, int $id): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $meeting = Meeting::where('club_id', $club->id)
             ->where('id', $id)
             ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user'])
@@ -150,7 +139,7 @@ class MeetingAdminController extends Controller
      */
     public function settingsJson(string $clubSlug): JsonResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         return response()->json([
             'officers_roster' => $club->settings['officers_roster'] ?? [],
@@ -161,50 +150,11 @@ class MeetingAdminController extends Controller
     /**
      * Store new or updated meeting.
      */
-    public function store(Request $request, string $clubSlug): RedirectResponse
+    public function store(StoreMeetingRequest $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
-        $validated = $request->validate([
-            'id' => ['nullable', Rule::exists('meetings', 'id')->where('club_id', $club->id)],
-            'title' => 'required|string|max:255',
-            'meeting_number' => 'nullable|integer|max:1000000',
-            'meeting_date' => 'required|date',
-            'starts_at' => 'required|string|max:20',
-            'rehearsal_starts_at' => 'nullable|string|max:20',
-            'venue' => 'required|string|max:255',
-            'dress_code' => 'required|string|max:255',
-            'salutation' => 'nullable|string|max:255',
-            'intro_text' => 'nullable|string|max:10000',
-            'rehearsal_text' => 'nullable|string|max:10000',
-            'festive_board_theme' => 'nullable|string|max:255',
-            'festive_board_menu' => 'nullable|string|max:10000',
-            'dining_cost_member' => 'required|numeric|min:0|max:99999999.99',
-            'dining_cost_guest' => 'required|numeric|min:0|max:99999999.99',
-            'bank_sort_code' => 'nullable|string|max:20',
-            'bank_account_number' => 'nullable|string|max:30',
-            'payment_reference_prefix' => 'nullable|string|max:50',
-            'payment_link' => 'nullable|string|max:500',
-            'almoner_notice' => 'nullable|string|max:10000',
-            'sick_distressed_notes' => 'nullable|string|max:10000',
-            'honorary_members_text' => 'nullable|string|max:10000',
-            'provincial_header_text' => 'nullable|string|max:10000',
-            'fraternal_visits_text' => 'nullable|string|max:10000',
-            'officers_year_label' => 'nullable|string|max:255',
-            'officers_roster' => 'nullable|array|max:100',
-            'front_page_logo' => 'nullable|string|max:1000',
-            'front_page_logo_file' => UploadRules::image(5120),
-            'front_page_title' => 'nullable|string|max:255',
-            'provincial_grand_master' => 'nullable|string|max:255',
-            'deputy_provincial_grand_master' => 'nullable|string|max:255',
-            'assistant_provincial_grand_masters' => 'nullable|string|max:10000',
-            'cover_club_name' => 'nullable|string|max:255',
-            'cover_club_number' => 'nullable|string|max:100',
-            'cover_motto' => 'nullable|string|max:255',
-            'cover_worshipful_master' => 'nullable|string|max:255',
-            'status' => 'required|in:draft,published,completed,cancelled',
-            'agenda_items' => 'nullable|array|max:100',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('front_page_logo_file')) {
             ImageDownscaler::apply($request->file('front_page_logo_file'));
@@ -238,214 +188,9 @@ class MeetingAdminController extends Controller
             ->with('success', 'Meeting summons saved successfully.');
     }
 
-    /**
-     * Render 2-page printable HTML/PDF summons view.
-     */
-    public function pdf(string $clubSlug, int $id)
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)
-            ->with(['agendaItems', 'officerAssignments.officerRole', 'officerAssignments.user'])
-            ->firstOrFail();
-
-        $members = $club->users()->wherePivot('role', '!=', 'visitor')->get();
-        $secretaryUser = $club->users()->wherePivot('role', 'secretary')->first() ?: $club->users->first();
-        $worshipfulMaster = $club->users()->wherePivot('role', 'master')->first() ?: $club->users->first();
-
-        $charityGrants = CharityGrant::where('club_id', $club->id)
-            ->with(['proposer', 'seconder'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $viewData = [
-            'club' => $club,
-            'meeting' => $meeting,
-            'members' => $members,
-            'officerAssignments' => $meeting->officerAssignments,
-            'secretaryUser' => $secretaryUser,
-            'worshipfulMaster' => $worshipfulMaster,
-            'charityGrants' => $charityGrants,
-        ];
-
-        if (request()->has('download')) {
-            $filename = 'Summons-'.Str::slug($club->name).'-'.$meeting->meeting_date->format('Y-m-d').'.pdf';
-
-            // Detect Node & Npm paths for Laravel Herd / macOS / Linux environments
-            $nodeBinary = trim((string) shell_exec('which node 2>/dev/null'));
-            $npmBinary = trim((string) shell_exec('which npm 2>/dev/null'));
-
-            if (! $nodeBinary || ! file_exists($nodeBinary)) {
-                $nodeCandidates = glob('/Users/*/Library/Application Support/Herd/config/nvm/versions/node/*/bin/node') ?: [];
-                $nodeCandidates = array_merge($nodeCandidates, ['/opt/homebrew/bin/node', '/usr/local/bin/node', '/usr/bin/node']);
-                foreach ($nodeCandidates as $candidate) {
-                    if (file_exists($candidate)) {
-                        $nodeBinary = $candidate;
-                        break;
-                    }
-                }
-            }
-
-            if (! $npmBinary || ! file_exists($npmBinary)) {
-                $npmCandidates = glob('/Users/*/Library/Application Support/Herd/config/nvm/versions/node/*/bin/npm') ?: [];
-                $npmCandidates = array_merge($npmCandidates, ['/opt/homebrew/bin/npm', '/usr/local/bin/npm', '/usr/bin/npm']);
-                foreach ($npmCandidates as $candidate) {
-                    if (file_exists($candidate)) {
-                        $npmBinary = $candidate;
-                        break;
-                    }
-                }
-            }
-
-            try {
-                return Pdf::view('summons.pdf', $viewData)
-                    ->landscape()
-                    ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
-                        if ($nodeBinary && file_exists($nodeBinary)) {
-                            $browsershot->setNodeBinary($nodeBinary);
-                            $binDir = str_replace(' ', '\ ', dirname($nodeBinary));
-                            $browsershot->setIncludePath($binDir.':/opt/homebrew/bin:/usr/local/bin:/usr/bin');
-                        }
-                        if ($npmBinary && file_exists($npmBinary)) {
-                            $browsershot->setNpmBinary($npmBinary);
-                        }
-                    })
-                    ->name($filename)
-                    ->toResponse(request());
-            } catch (\Throwable $e) {
-                // The PDF is only rendered by toResponse(), so it must run inside this try for the fallback to work.
-                return \Barryvdh\DomPDF\Facade\Pdf::loadView('summons.pdf', $viewData)
-                    ->setPaper('a4', 'landscape')
-                    ->download($filename);
-            }
-        }
-
-        return view('summons.pdf', $viewData);
-    }
-
-    /**
-     * Display administrative attendance dashboard & caterer breakdown.
-     */
-    /** How a dining head can be settled. Kept here so the page and the validator can't drift. */
-    public const DINING_PAYMENT_METHODS = ['bank', 'online', 'cash'];
-
-    /**
-     * The dining list for one meeting: every head the caterer is cooking for, what they owe and
-     * whether it has been settled.
-     */
-    public function dining(string $clubSlug, int $id): Response
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
-
-        $rsvps = MeetingRsvp::where('meeting_id', $meeting->id)
-            ->where('attendance_status', 'attending_dining')
-            ->with(['user', 'guests' => fn ($q) => $q->where('attending_dining', true), 'paidRecorder:id,name'])
-            ->get();
-
-        $diners = collect();
-
-        foreach ($rsvps as $rsvp) {
-            $diners->push([
-                'kind' => 'member',
-                'id' => $rsvp->id,
-                'name' => $rsvp->user?->name ?? 'Unknown member',
-                'host' => null,
-                'fee' => (float) $meeting->dining_cost_member,
-                'dietary' => $rsvp->dietary_requirements,
-                'payment_status' => $rsvp->payment_status,
-                'payment_method' => $rsvp->payment_method,
-                'payment_reference' => $rsvp->payment_reference,
-                'paid_at' => $rsvp->paid_at?->format('j M Y, H:i'),
-                'paid_by' => $rsvp->paidRecorder?->name,
-            ]);
-
-            foreach ($rsvp->guests as $guest) {
-                $diners->push([
-                    'kind' => 'guest',
-                    'id' => $guest->id,
-                    'name' => trim(($guest->guest_title_rank ? $guest->guest_title_rank.' ' : '').$guest->guest_name),
-                    'host' => $rsvp->user?->name,
-                    'fee' => (float) ($guest->dining_fee ?: $meeting->dining_cost_guest),
-                    'dietary' => $guest->dietary_requirements,
-                    'payment_status' => $guest->payment_status,
-                    'payment_method' => $guest->payment_method,
-                    'payment_reference' => null,
-                    'paid_at' => $guest->paid_at?->format('j M Y, H:i'),
-                    'paid_by' => $guest->paidRecorder?->name,
-                ]);
-            }
-        }
-
-        $diners = $diners->sortBy(fn ($d) => [$d['host'] ?? $d['name'], $d['kind'] === 'guest' ? 1 : 0])->values();
-        $settled = $diners->whereIn('payment_status', ['paid', 'waived']);
-
-        return Inertia::render('Admin/Meetings/Dining', [
-            'club' => $club,
-            'meeting' => [
-                'id' => $meeting->id,
-                'title' => $meeting->title,
-                'meeting_date' => $meeting->meeting_date?->format('l, j F Y'),
-                'dining_cost_member' => (float) $meeting->dining_cost_member,
-                'dining_cost_guest' => (float) $meeting->dining_cost_guest,
-            ],
-            'diners' => $diners,
-            'paymentMethods' => self::DINING_PAYMENT_METHODS,
-            'totals' => [
-                'heads' => $diners->count(),
-                'expected' => round((float) $diners->sum('fee'), 2),
-                'collected' => round((float) $settled->sum('fee'), 2),
-                'outstanding' => round((float) $diners->sum('fee') - (float) $settled->sum('fee'), 2),
-            ],
-        ]);
-    }
-
-    /**
-     * Record how one dining head was settled. Members and guests pay separately, so the row is
-     * addressed by kind plus its own id rather than by user.
-     */
-    public function recordDiningPayment(Request $request, string $clubSlug, int $id): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
-
-        $validated = $request->validate([
-            'kind' => 'required|in:member,guest',
-            'diner_id' => 'required|integer',
-            'payment_status' => 'required|in:unpaid,paid,waived,refunded',
-            'payment_method' => 'nullable|in:'.implode(',', self::DINING_PAYMENT_METHODS),
-            'payment_reference' => 'nullable|string|max:255',
-        ]);
-
-        $isSettled = $validated['payment_status'] === 'paid';
-
-        $changes = [
-            'payment_status' => $validated['payment_status'],
-            'payment_method' => $isSettled ? $validated['payment_method'] : null,
-            'paid_at' => $isSettled ? now() : null,
-            'paid_recorded_by' => $isSettled ? $request->user()->id : null,
-        ];
-
-        if ($validated['kind'] === 'member') {
-            $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('id', $validated['diner_id'])->firstOrFail();
-            $changes['payment_reference'] = $validated['payment_reference'] ?? $rsvp->payment_reference;
-            $rsvp->update($changes);
-            $who = $rsvp->user?->name ?? 'member';
-        } else {
-            $guest = MeetingRsvpGuest::where('id', $validated['diner_id'])
-                ->whereHas('rsvp', fn ($q) => $q->where('meeting_id', $meeting->id))
-                ->firstOrFail();
-            $guest->update($changes);
-            $who = $guest->guest_name;
-        }
-
-        return redirect()->back()->with('success', $isSettled
-            ? "Dining payment recorded for {$who}."
-            : "Dining payment status updated for {$who}.");
-    }
-
     public function show(string $clubSlug, int $id): Response
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $meeting = Meeting::where('club_id', $club->id)
             ->where('id', $id)
             ->with(['agendaItems', 'officerAssignments.user', 'officerAssignments.officerRole', 'fraternalVisits', 'rsvps.user', 'rsvps.guests', 'financialReturn'])
@@ -507,7 +252,7 @@ class MeetingAdminController extends Controller
             }
         }
 
-        $visitorUsers = $club->users()->wherePivot('role', 'visitor')->get()->unique('id');
+        $visitorUsers = $club->users()->wherePivot('role', ClubRole::Visitor->value)->get()->unique('id');
         $visitorsList = $visitorUsers->map(function ($visitor) use ($meeting) {
             $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $visitor->id)->first();
             $pivot = $visitor->pivot;
@@ -570,108 +315,11 @@ class MeetingAdminController extends Controller
     }
 
     /**
-     * Batch generate season meetings using recurring rule engine.
-     */
-    public function generateSeason(Request $request, string $clubSlug, MeetingScheduleService $scheduleService): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-
-        $request->validate([
-            'year' => 'required|integer|min:2025|max:2035',
-            'occurrence' => 'required|in:1st,2nd,3rd,4th,last',
-            'day_of_week' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            'starts_at' => 'nullable|string|max:20',
-            'rehearsal_starts_at' => 'nullable|string|max:20',
-            'active_months' => 'required|array|min:1|max:100',
-        ]);
-
-        $startTime = $request->starts_at ?: '18:30';
-        $rehearsalTime = $request->rehearsal_starts_at ?: '17:30';
-
-        $rule = RecurringRule::create([
-            'club_id' => $club->id,
-            'name' => "Regular Meetings ({$request->year})",
-            'occurrence' => $request->occurrence,
-            'day_of_week' => $request->day_of_week,
-            'active_months' => $request->active_months,
-            'default_start_time' => $startTime,
-            'default_rehearsal_time' => $rehearsalTime,
-            'default_venue' => 'Masonic Hall, Oxford',
-            'default_dress_code' => 'Dark Suit, Craft Regalia',
-        ]);
-
-        $dates = $scheduleService->generateSeasonDates(
-            (int) $request->year,
-            $request->active_months,
-            $request->occurrence,
-            $request->day_of_week
-        );
-
-        $count = 0;
-        foreach ($dates as $index => $date) {
-            Meeting::firstOrCreate(
-                [
-                    'club_id' => $club->id,
-                    'meeting_date' => $date->format('Y-m-d'),
-                ],
-                [
-                    'recurring_rule_id' => $rule->id,
-                    'meeting_number' => null,
-                    'title' => 'Meeting - '.$date->format('jS F Y'),
-                    'starts_at' => $startTime,
-                    'rehearsal_starts_at' => $rehearsalTime,
-                    'venue' => 'Masonic Hall, Oxford',
-                    'dress_code' => 'Dark Suit, Craft Regalia',
-                    'dining_cost_member' => 35.00,
-                    'dining_cost_guest' => 35.00,
-                    'bank_sort_code' => $club->settings['bank_sort_code'] ?? '20-65-18',
-                    'bank_account_number' => $club->settings['bank_account_number'] ?? '83920145',
-                    'payment_reference_prefix' => 'SUMMONS',
-                    'rsvp_cutoff_at' => $date->copy()->subDays(5)->endOfDay(),
-                    'status' => 'draft',
-                ]
-            );
-            $count++;
-        }
-
-        return redirect()->back()->with('success', "Batch generated {$count} season meetings for {$request->year}.");
-    }
-
-    /**
-     * Publish summons & issue passwordless tokens to members.
-     */
-    public function publishSummons(string $clubSlug, int $id, RsvpTokenService $tokenService): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
-        $alreadyPublished = $meeting->status === 'published';
-
-        $meeting->update([
-            'status' => 'published',
-            'summons_published_at' => Carbon::now(),
-        ]);
-
-        $expiresAt = Carbon::parse($meeting->meeting_date)->endOfDay();
-        $members = $club->users;
-
-        foreach ($members as $member) {
-            $tokenService->createTokenForUser($meeting, $member, $expiresAt);
-        }
-
-        if (! $alreadyPublished) {
-            app(ClubNotifier::class)->toMembers($club, ClubNotification::summons($meeting, $club), auth()->user());
-            app(ClubNotifier::class)->toFollowers($club, $meeting);
-        }
-
-        return redirect()->back()->with('success', "Summons published! Passwordless RSVP tokens issued to {$members->count()} members.");
-    }
-
-    /**
      * Duplicate an existing meeting summons with its details, agenda items, and officer roles.
      */
     public function duplicate(string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $original = Meeting::where('club_id', $club->id)
             ->where('id', $id)
             ->with(['agendaItems', 'officerAssignments'])
@@ -718,326 +366,11 @@ class MeetingAdminController extends Controller
      */
     public function destroy(string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
         $meeting->delete();
 
         return redirect()->route('admin.meetings.index', ['clubSlug' => $club->slug])
             ->with('success', 'Meeting removed successfully.');
-    }
-
-    /**
-     * Manually record or update an RSVP on behalf of a member/visitor.
-     */
-    public function updateRsvp(Request $request, string $clubSlug, int $id): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
-
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'attendance_status' => 'required|in:attending_dining,attending_meeting_only,apologies',
-            'apology_reason' => 'nullable|string|max:1000',
-            'dietary_requirements' => 'nullable|string|max:1000',
-            'payment_status' => 'nullable|in:unpaid,paid,waived,refunded',
-            'payment_reference' => 'nullable|string|max:100',
-            'guests' => 'nullable|array|max:50',
-            'guests.*.guest_name' => 'nullable|string|max:150',
-            'guests.*.dietary_requirements' => 'nullable|string|max:1000',
-            'guests.*.attending_dining' => 'nullable|boolean',
-        ]);
-
-        $user = $this->rsvpUser($club, $meeting, (int) $validated['user_id']);
-        abort_if($user === null, 404);
-        $surname = $user ? strtoupper(last(explode(' ', $user->name))) : 'MEMBER';
-        $defaultRef = ($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname;
-
-        $updateData = [
-            'token_hash' => Str::random(40),
-            'token_expires_at' => now()->addDays(30),
-            'attendance_status' => $validated['attendance_status'],
-            'apology_reason' => $validated['apology_reason'] ?? null,
-            'dietary_requirements' => $validated['dietary_requirements'] ?? null,
-            'responded_at' => now(),
-        ];
-
-        if (isset($validated['payment_status'])) {
-            $updateData['payment_status'] = $validated['payment_status'];
-        }
-        if (isset($validated['payment_reference'])) {
-            $updateData['payment_reference'] = $validated['payment_reference'];
-        } else {
-            $updateData['payment_reference'] = $defaultRef;
-        }
-
-        $rsvp = MeetingRsvp::updateOrCreate(
-            ['meeting_id' => $meeting->id, 'user_id' => $validated['user_id']],
-            $updateData
-        );
-
-        if (array_key_exists('guests', $validated)) {
-            $rsvp->guests()->delete();
-            if (is_array($validated['guests'])) {
-                foreach ($validated['guests'] as $g) {
-                    if (! empty($g['guest_name'])) {
-                        $rsvp->guests()->create([
-                            'guest_name' => $g['guest_name'],
-                            'dietary_requirements' => $g['dietary_requirements'] ?? null,
-                            'attending_dining' => $g['attending_dining'] ?? true,
-                            'dining_fee' => $meeting->dining_cost_guest,
-                        ]);
-                    }
-                }
-            }
-        }
-
-        return redirect()->back()->with('success', 'RSVP record updated successfully.');
-    }
-
-    /**
-     * Quickly toggle or set RSVP payment status for a member/visitor.
-     */
-    public function updatePaymentStatus(Request $request, string $clubSlug, int $id): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
-
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'payment_status' => 'required|in:unpaid,paid,waived,refunded',
-            'payment_reference' => 'nullable|string|max:255',
-        ]);
-
-        $user = $this->rsvpUser($club, $meeting, (int) $validated['user_id']);
-        abort_if($user === null, 404);
-        $surname = strtoupper(last(explode(' ', $user->name)));
-        $paymentRef = $validated['payment_reference'] ?? (($meeting->payment_reference_prefix ?: 'SUMMONS').'-'.$meeting->id.'-'.$surname);
-
-        $rsvp = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $user->id)->first();
-        if ($rsvp) {
-            $rsvp->update([
-                'payment_status' => $validated['payment_status'],
-                'payment_reference' => $paymentRef,
-            ]);
-        } else {
-            MeetingRsvp::create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $user->id,
-                'token_hash' => Str::random(40),
-                'token_expires_at' => now()->addDays(30),
-                'attendance_status' => 'attending_dining',
-                'payment_status' => $validated['payment_status'],
-                'payment_reference' => $paymentRef,
-                'responded_at' => now(),
-            ]);
-        }
-
-        $statusLabel = ucfirst($validated['payment_status']);
-
-        return redirect()->back()->with('success', "Payment status marked as {$statusLabel} for {$user->name}.");
-    }
-
-    /**
-     * Display dedicated full page for Meeting Financial Return & Dining Calculator.
-     */
-    public function financialReturn(string $clubSlug, int $id): Response
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)
-            ->where('id', $id)
-            ->with(['rsvps.guests', 'financialReturn'])
-            ->firstOrFail();
-
-        // Calculate confirmed dining count from RSVPs
-        $confirmedDiningCount = $meeting->rsvps
-            ->where('attendance_status', 'attending_dining')
-            ->count();
-
-        $guestDiningCount = 0;
-        foreach ($meeting->rsvps as $r) {
-            if ($r->attendance_status === 'attending_dining') {
-                $guestDiningCount += $r->guests->where('attending_dining', true)->count();
-            }
-        }
-
-        $totalConfirmedDiners = $confirmedDiningCount + $guestDiningCount;
-
-        return Inertia::render('Admin/Meetings/FinancialReturn', [
-            'club' => $club,
-            'meeting' => $meeting,
-            'confirmedDiningCount' => $totalConfirmedDiners,
-            'financialReturn' => $meeting->financialReturn,
-        ]);
-    }
-
-    /**
-     * Store financial return for a meeting and post to accounting ledger.
-     */
-    public function storeFinancialReturn(Request $request, string $clubSlug, int $id, AccountingService $accountingService): RedirectResponse
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
-
-        $isDraft = (bool) $request->boolean('is_draft');
-
-        if ($isDraft) {
-            $validated = $request->validate([
-                'return_date' => 'nullable|date',
-                'dining_fee_per_head' => 'nullable|numeric|min:0|max:99999999.99',
-                'paid_diners_count' => 'nullable|integer|min:0|max:1000000',
-                'waived_diners_count' => 'nullable|integer|min:0|max:1000000',
-                'waived_reason' => 'nullable|string|max:10000',
-                'kitchen_cost_per_head' => 'nullable|numeric|min:0|max:99999999.99',
-                'kitchen_vendor_name' => 'nullable|string|max:255',
-                'raffle_amount' => 'nullable|numeric|min:0|max:99999999.99',
-                'alms_amount' => 'nullable|numeric|min:0|max:99999999.99',
-                'donations_amount' => 'nullable|numeric|min:0|max:99999999.99',
-                'bequest_amount' => 'nullable|numeric|min:0|max:99999999.99',
-                'notes' => 'nullable|string|max:10000',
-            ]);
-
-            $accountingService->saveMeetingFinancialReturnDraft($club, $meeting, $validated);
-
-            return redirect()->route('admin.meetings.financial_return.show', ['clubSlug' => $club->slug, 'id' => $meeting->id])
-                ->with('success', 'Meeting financial return draft saved successfully.');
-        }
-
-        $validated = $request->validate([
-            'return_date' => 'required|date',
-            'dining_fee_per_head' => 'required|numeric|min:0|max:99999999.99',
-            'paid_diners_count' => 'required|integer|min:0|max:1000000',
-            'waived_diners_count' => 'nullable|integer|min:0|max:1000000',
-            'waived_reason' => 'nullable|string|max:10000',
-            'kitchen_cost_per_head' => 'required|numeric|min:0|max:99999999.99',
-            'kitchen_vendor_name' => 'nullable|string|max:255',
-            'raffle_amount' => 'nullable|numeric|min:0|max:99999999.99',
-            'alms_amount' => 'nullable|numeric|min:0|max:99999999.99',
-            'donations_amount' => 'nullable|numeric|min:0|max:99999999.99',
-            'bequest_amount' => 'nullable|numeric|min:0|max:99999999.99',
-            'notes' => 'nullable|string|max:10000',
-        ]);
-
-        $accountingService->postMeetingFinancialReturn($club, $meeting, $validated);
-
-        return redirect()->route('admin.meetings.show', ['clubSlug' => $club->slug, 'id' => $meeting->id])
-            ->with('success', 'Meeting financial return posted successfully to Accounts Payable and General Ledger!');
-    }
-
-    /**
-     * Get or create Annual Officer Roster for a meeting agenda.
-     */
-    public function officerElectionData(string $clubSlug, int $id)
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
-
-        $masonicYear = Carbon::parse($meeting->meeting_date)->format('Y').'-'.(Carbon::parse($meeting->meeting_date)->year + 1);
-
-        $roster = AnnualOfficerRoster::where('club_id', $club->id)
-            ->where('masonic_year', $masonicYear)
-            ->with('assignments.member')
-            ->first();
-
-        $members = Member::where('club_id', $club->id)->active()->get()->map(function ($m) {
-            return [
-                'id' => $m->id,
-                'name' => $m->formatted_rank_name,
-                'current_office' => $m->current_office?->value,
-                'current_office_label' => $m->current_office?->label(),
-            ];
-        });
-
-        $offices = collect(LodgeOffice::cases())
-            ->filter(fn ($o) => $o !== LodgeOffice::Member && $o !== LodgeOffice::IPM)
-            ->map(fn ($o) => [
-                'value' => $o->value,
-                'label' => $o->label(),
-                'category' => $o->category(),
-                'is_progressive' => $o->isProgressive(),
-                'is_administrative' => $o->isAdministrative(),
-            ])
-            ->values();
-
-        return response()->json([
-            'masonic_year' => $masonicYear,
-            'roster' => $roster,
-            'members' => $members,
-            'offices' => $offices,
-        ]);
-    }
-
-    /**
-     * Save annual officer election draft from meeting agenda discussion.
-     */
-    public function storeOfficerElection(Request $request, string $clubSlug, int $id, AnnualOfficerRosterService $rosterService)
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
-
-        $validated = $request->validate([
-            'masonic_year' => 'required|string|max:20',
-            'assignments' => 'present|array|max:100',
-            'assignments.*.member_id' => 'required|integer',
-            'assignments.*.office' => 'required|string|max:50',
-            'notes' => 'nullable|string|max:10000',
-            'status' => 'nullable|string|max:50',
-        ]);
-
-        try {
-            $roster = $rosterService->saveRoster(
-                $club,
-                $validated['masonic_year'],
-                $validated['assignments'],
-                $meeting->id,
-                $validated['status'] ?? 'proposed',
-                $validated['notes'] ?? null
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Annual officer roster draft saved successfully.',
-                'roster' => $roster,
-            ]);
-        } catch (\InvalidArgumentException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
-        }
-    }
-
-    /**
-     * Confirm annual officer election and apply to active member profiles.
-     */
-    public function confirmOfficerElection(Request $request, string $clubSlug, int $id, AnnualOfficerRosterService $rosterService)
-    {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
-        $meeting = Meeting::where('club_id', $club->id)->where('id', $id)->firstOrFail();
-
-        $masonicYear = $request->input('masonic_year') ?: (Carbon::parse($meeting->meeting_date)->format('Y').'-'.(Carbon::parse($meeting->meeting_date)->year + 1));
-
-        $roster = AnnualOfficerRoster::where('club_id', $club->id)
-            ->where('masonic_year', $masonicYear)
-            ->firstOrFail();
-
-        $confirmedRoster = $rosterService->confirmRoster($roster);
-
-        return response()->json([
-            'success' => true,
-            'message' => "Annual officer roster for {$masonicYear} confirmed and applied to active members!",
-            'roster' => $confirmedRoster,
-        ]);
-    }
-
-    /**
-     * A user an admin may record an RSVP for: a member of the club, or someone
-     * who already has an RSVP on this meeting (a visitor).
-     */
-    private function rsvpUser(Club $club, Meeting $meeting, int $userId): ?User
-    {
-        $isMember = $club->users()->where('users.id', $userId)->exists();
-        $isVisitor = MeetingRsvp::where('meeting_id', $meeting->id)->where('user_id', $userId)->exists();
-
-        return $isMember || $isVisitor ? User::find($userId) : null;
     }
 }

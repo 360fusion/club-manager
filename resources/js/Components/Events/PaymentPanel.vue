@@ -23,9 +23,14 @@ const busy = ref(false);
 const params = { clubSlug: props.clubSlug, id: props.eventId, registrationId: props.registrationId };
 
 const load = async () => {
-    const response = await fetch(route('admin.events.payment.history', params), { credentials: 'same-origin', headers: { Accept: 'application/json' } });
-    data.value = response.ok ? await response.json() : null;
-    loading.value = false;
+    try {
+        const response = await fetch(route('admin.events.payment.history', params), { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+        data.value = response.ok ? await response.json() : null;
+    } catch {
+        data.value = null; // offline or the server is down: show the same "could not load" state as a failed request
+    } finally {
+        loading.value = false;
+    }
 };
 
 onMounted(load);

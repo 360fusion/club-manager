@@ -78,7 +78,7 @@ class EventGuestListController extends Controller
      */
     private function find(string $clubSlug, int $id): array
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
 
         return [$club, Event::where('club_id', $club->id)->findOrFail($id)];
     }

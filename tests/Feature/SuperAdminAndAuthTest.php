@@ -7,6 +7,7 @@ use App\Models\DefaultEmailTemplate;
 use App\Models\User;
 use Database\Seeders\ClubTypeSeeder;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -98,10 +99,12 @@ class SuperAdminAndAuthTest extends TestCase
     public function test_make_me_superadmin_promotes_user_in_local_development(): void
     {
         $this->app['env'] = 'local';
+        // Switching to 'local' also switches the test-time CSRF skip off.
+        $this->withoutMiddleware(PreventRequestForgery::class);
 
         $user = User::factory()->create(['is_super_admin' => false]);
 
-        $response = $this->actingAs($user)->get('/auth/make-me-superadmin');
+        $response = $this->actingAs($user)->post('/auth/make-me-superadmin');
         $response->assertRedirect('/superadmin');
 
         $this->assertTrue($user->fresh()->is_super_admin);

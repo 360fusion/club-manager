@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import FlashMessages from '@/Components/Ui/FlashMessages.vue';

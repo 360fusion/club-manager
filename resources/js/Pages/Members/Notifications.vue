@@ -5,7 +5,7 @@ import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
 
-const props = defineProps({
+defineProps({
     notifications: { type: Object, required: true },
     unreadCount: { type: Number, default: 0 },
     filters: { type: Object, default: () => ({ category: '', unread: false }) },

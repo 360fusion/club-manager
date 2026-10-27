@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\Member;
 use App\Enums\SignatureRequestStatus;
+use App\Http\Requests\Signature\DeclineRequest;
+use App\Http\Requests\Signature\SignRequest;
 use App\Models\SignatureRequest;
 use App\Models\User;
 use App\Services\Signatures\SignatureCertificatePdf;
@@ -76,16 +78,8 @@ class MemberSignatureController extends Controller
     {
         $request = $this->authorized($httpRequest, $slug, $id, $signatures);
 
-        $validated = $httpRequest->validate([
-            'method' => 'required|in:typed,drawn',
-            'typed_name' => 'required_if:method,typed|nullable|string|max:150',
-            'image' => [
-                'required_if:method,drawn', 'nullable', 'file',
-                'mimes:'.UploadRules::IMAGE_TYPES, 'max:512',
-                'dimensions:max_width='.UploadRules::MAX_IMAGE_SIDE.',max_height='.UploadRules::MAX_IMAGE_SIDE,
-            ],
-            'consent' => 'accepted',
-        ]);
+        // Validated after authorized(): a non-member must be refused before they are told anything about the form.
+        $validated = $httpRequest->validate((new SignRequest)->rules());
 
         if ($validated['method'] === 'drawn' && $httpRequest->hasFile('image')) {
             if ($error = UploadRules::assertSafeUpload($httpRequest->file('image'))) {
@@ -111,7 +105,7 @@ class MemberSignatureController extends Controller
     {
         $request = $this->authorized($httpRequest, $slug, $id, $signatures);
 
-        $validated = $httpRequest->validate(['reason' => 'nullable|string|max:500']);
+        $validated = $httpRequest->validate((new DeclineRequest)->rules());
 
         try {
             $signatures->decline($request, $validated['reason'] ?? null, (string) $httpRequest->ip(), (string) $httpRequest->userAgent());

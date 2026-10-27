@@ -68,7 +68,7 @@ class MeetingIndex extends Component
                 ?? $club->settings['meeting_venue']
                 ?? $club->settings['meeting_location']
                 ?? Meeting::where('club_id', $club->id)->whereNotNull('venue')->where('venue', '!=', '')->latest('meeting_date')->value('venue')
-                ?? 'Masonic Hall, Wellington Street, Stockton-on-Tees';
+                ?? $club->defaultMeetingVenue();
         }
 
         if (empty(trim($this->newLocation))) {
@@ -104,7 +104,7 @@ class MeetingIndex extends Component
             $club = Club::where('slug', $this->clubSlug)->firstOrFail();
             $regularMeeting = Meeting::where('club_id', $club->id)->find($this->linked_regular_meeting_id);
 
-            if ($regularMeeting && $regularMeeting->meeting_date) {
+            if ($regularMeeting) {
                 $offsetDays = (int) ($club->settings['committee_meeting_offset_days'] ?? 9);
                 $suggestedDate = Carbon::parse($regularMeeting->meeting_date)->subDays($offsetDays);
                 $this->newDate = $suggestedDate->format('Y-m-d\T19:00');
@@ -174,7 +174,7 @@ class MeetingIndex extends Component
 
         $this->editingMeetingId = $meeting->id;
         $this->editTitle = $meeting->title;
-        $this->editDate = $meeting->meeting_date ? $meeting->meeting_date->format('Y-m-d\TH:i') : '';
+        $this->editDate = $meeting->meeting_date->format('Y-m-d\TH:i');
         $this->editLocation = $meeting->location ?? '';
         $this->editStatus = $meeting->status === CommitteeMeetingStatus::Scheduled ? 'scheduled' : 'draft';
         $this->showEditModal = true;

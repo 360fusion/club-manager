@@ -109,11 +109,8 @@ class PublicCalendar
             return $thisMonth;
         }
 
+        // The format was checked above, and Carbon throws on a date it cannot read rather than returning false.
         $requested = CarbonImmutable::createFromFormat('!Y-m', $month);
-
-        if ($requested === false) {
-            return $thisMonth;
-        }
 
         $earliest = $thisMonth->subMonths(self::MONTHS_BACK);
         $latest = $thisMonth->addMonths(self::MONTHS_FORWARD);

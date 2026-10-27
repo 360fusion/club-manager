@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Profile\UpdatePasswordRequest;
 use App\Support\EmailVerification;
 use App\Support\ImageDownscaler;
 use App\Support\UploadRules;
@@ -10,7 +11,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -68,12 +68,8 @@ class ProfileController extends Controller
         return redirect()->back()->with('success', 'Profile information updated successfully.');
     }
 
-    public function updatePassword(Request $request): RedirectResponse
+    public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
     {
-        $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'string', Password::defaults(), 'confirmed'],
-        ]);
 
         $request->user()->update([
             'password' => Hash::make($request->password),

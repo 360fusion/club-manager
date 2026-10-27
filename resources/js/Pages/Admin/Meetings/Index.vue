@@ -2,7 +2,7 @@
 import { localDate } from '@/Utils/localDateTime';
 import { formatDate } from '@/Utils/lodgeDates';
 import { ref, computed } from 'vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import MeetingsTabs from '@/Components/MeetingsTabs.vue';
 import Card from '@/Components/Ui/Card.vue';
@@ -54,7 +54,7 @@ const availableYears = computed(() => {
 });
 
 const filteredMeetings = computed(() => {
-  let list = [];
+  let list;
   if (activeTab.value === 'upcoming') {
     list = [...upcomingMeetings.value];
   } else if (activeTab.value === 'past') {

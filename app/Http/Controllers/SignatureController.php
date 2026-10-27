@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Signature\DeclineRequest;
+use App\Http\Requests\Signature\SignRequest;
 use App\Services\Signatures\SignatureRequestService;
 use App\Support\ImageDownscaler;
 use App\Support\UploadRules;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use InvalidArgumentException;
@@ -40,21 +41,12 @@ class SignatureController extends Controller
         ]);
     }
 
-    public function store(Request $httpRequest, string $token, SignatureRequestService $signatures): RedirectResponse
+    public function store(SignRequest $httpRequest, string $token, SignatureRequestService $signatures): RedirectResponse
     {
         $signatureRequest = $signatures->findByToken($token);
         abort_if(! $signatureRequest, 404);
 
-        $validated = $httpRequest->validate([
-            'method' => 'required|in:typed,drawn',
-            'typed_name' => 'required_if:method,typed|nullable|string|max:150',
-            'image' => [
-                'required_if:method,drawn', 'nullable', 'file',
-                'mimes:'.UploadRules::IMAGE_TYPES, 'max:512',
-                'dimensions:max_width='.UploadRules::MAX_IMAGE_SIDE.',max_height='.UploadRules::MAX_IMAGE_SIDE,
-            ],
-            'consent' => 'accepted',
-        ]);
+        $validated = $httpRequest->validated();
 
         if ($validated['method'] === 'drawn' && $httpRequest->hasFile('image')) {
             if ($error = UploadRules::assertSafeUpload($httpRequest->file('image'))) {
@@ -76,12 +68,12 @@ class SignatureController extends Controller
         return redirect()->route('sign.show', ['token' => $token])->with('success', 'Thank you, your signature has been recorded.');
     }
 
-    public function decline(Request $httpRequest, string $token, SignatureRequestService $signatures): RedirectResponse
+    public function decline(DeclineRequest $httpRequest, string $token, SignatureRequestService $signatures): RedirectResponse
     {
         $signatureRequest = $signatures->findByToken($token);
         abort_if(! $signatureRequest, 404);
 
-        $validated = $httpRequest->validate(['reason' => 'nullable|string|max:500']);
+        $validated = $httpRequest->validated();
 
         try {
             $signatures->decline($signatureRequest, $validated['reason'] ?? null, (string) $httpRequest->ip(), (string) $httpRequest->userAgent());

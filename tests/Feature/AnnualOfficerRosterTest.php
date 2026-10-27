@@ -10,6 +10,7 @@ use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -130,6 +131,25 @@ class AnnualOfficerRosterTest extends TestCase
         $this->assertCount(2, $activeOffices);
         $this->assertContains(LodgeOffice::DirectorOfCeremonies, $activeOffices);
         $this->assertContains(LodgeOffice::CharitySteward, $activeOffices);
+    }
+
+    public function test_offices_loaded_for_a_list_match_the_single_lookup_in_a_fixed_number_of_queries(): void
+    {
+        $service = new AnnualOfficerRosterService;
+        $service->confirmRoster($service->saveRoster($this->club, '2026-2027', [
+            ['member_id' => $this->member1->id, 'office' => 'dc'],
+            ['member_id' => $this->member1->id, 'office' => 'charity_steward'],
+        ], $this->meeting->id));
+
+        $members = Member::where('club_id', $this->club->id)->get();
+        $single = $members->mapWithKeys(fn (Member $m) => [$m->id => $m->active_offices])->all();
+
+        DB::enableQueryLog();
+        Member::loadActiveOffices($members);
+        $loaded = $members->mapWithKeys(fn (Member $m) => [$m->id => $m->active_offices])->all();
+
+        $this->assertEquals($single, $loaded);
+        $this->assertLessThanOrEqual(2, count(DB::getQueryLog()));
     }
 
     public function test_meeting_officer_election_endpoints(): void

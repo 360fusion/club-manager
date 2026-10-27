@@ -18,7 +18,7 @@ class NewsTagAdminController extends Controller
 {
     public function store(Request $request, string $clubSlug): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $validated = $this->validated($request, $club);
 
         NewsTag::create([
@@ -33,7 +33,7 @@ class NewsTagAdminController extends Controller
 
     public function update(Request $request, string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $tag = NewsTag::where('club_id', $club->id)->findOrFail($id);
         $validated = $this->validated($request, $club, $tag);
 
@@ -49,7 +49,7 @@ class NewsTagAdminController extends Controller
 
     public function destroy(string $clubSlug, int $id): RedirectResponse
     {
-        $club = Club::where('slug', $clubSlug)->firstOrFail();
+        $club = $this->findClub($clubSlug);
         $tag = NewsTag::where('club_id', $club->id)->findOrFail($id);
 
         $tag->posts()->detach();

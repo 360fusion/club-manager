@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\ClubAccounting\Livewire\Committee\MeetingWorkspace;
 use App\Domains\ClubAccounting\Livewire\Members\MemberImportPage;
+use App\Domains\ClubAccounting\Models\ClubCommitteeAttendee;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
@@ -372,13 +373,18 @@ class SecurityAuditTest extends TestCase
     {
         $meeting = ClubCommitteeMeeting::create(['club_id' => $this->a->id, 'title' => 'Committee', 'meeting_date' => now()->addWeek()]);
 
-        $this->expectException(ModelNotFoundException::class);
+        // Newer Livewire answers a missing record with a 404 effect instead of throwing, so check the outcome, not the exception.
+        try {
+            Livewire::actingAs($this->admin)
+                ->test(MeetingWorkspace::class, ['clubSlug' => 'club-a', 'meetingId' => $meeting->id])
+                ->set('selectedUserId', $this->outsider->id)
+                ->set('attendeeRole', 'Guest')
+                ->call('addAttendee');
+        } catch (ModelNotFoundException) {
+            // refused by throwing, which is also fine
+        }
 
-        Livewire::actingAs($this->admin)
-            ->test(MeetingWorkspace::class, ['clubSlug' => 'club-a', 'meetingId' => $meeting->id])
-            ->set('selectedUserId', $this->outsider->id)
-            ->set('attendeeRole', 'Guest')
-            ->call('addAttendee');
+        $this->assertSame(0, ClubCommitteeAttendee::where('committee_meeting_id', $meeting->id)->count(), "Someone outside the club was added to the meeting's roll call.");
     }
 
     public function test_admins_cannot_read_or_touch_users_outside_their_club(): void

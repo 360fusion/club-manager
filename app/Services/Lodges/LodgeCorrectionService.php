@@ -2,6 +2,7 @@
 
 namespace App\Services\Lodges;
 
+use App\Enums\ClubMemberStatus;
 use App\Models\Lodge;
 use App\Models\LodgeCorrection;
 use App\Models\User;
@@ -196,7 +197,7 @@ class LodgeCorrectionService
             return;
         }
 
-        $admins = $lodge->club->users()->wherePivotIn('role', ['owner', 'admin'])->wherePivot('status', 'active')->get();
+        $admins = $lodge->club->users()->wherePivotIn('role', ['owner', 'admin'])->wherePivot('status', ClubMemberStatus::Active->value)->get();
 
         Notification::send($admins, new LodgeClaimNotification(
             ClubNotification::NOTICE,

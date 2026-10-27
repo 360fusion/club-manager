@@ -56,7 +56,7 @@ class EventPayload
             'city' => $event->city,
             'county' => $event->county,
             'postcode' => $event->postcode,
-            'starts_at' => $event->starts_at?->format('j M Y, H:i'),
+            'starts_at' => $event->starts_at->format('j M Y, H:i'),
             'ends_at' => $event->ends_at?->format('j M Y, H:i'),
             'booking_cutoff_days' => $event->booking_cutoff_days,
             'booking_cutoff_at' => $cutoff?->format('j M Y, H:i'),
