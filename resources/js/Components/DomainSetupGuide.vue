@@ -10,6 +10,8 @@ const props = defineProps({
     status: { type: String, default: null },
     verifiedAt: { type: String, default: null },
     instructions: { type: Object, default: () => ({}) },
+    // The TXT record that proves the lodge owns the domain ({ host, value }); only sent once the domain is saved.
+    ownership: { type: Object, default: null },
     checking: { type: Boolean, default: false },
     // The company that runs the saved domain's DNS ({ name, url, help, steps }), when the server recognised it.
     provider: { type: Object, default: null },
@@ -36,6 +38,10 @@ const active = computed(() => props.status === 'active');
 // The provider was looked up for the saved domain, so it only applies while the box still holds that domain.
 const knownProvider = computed(() => props.provider && props.domain.trim().toLowerCase() === props.savedDomain ? props.provider : null);
 const unsaved = computed(() => props.domain.trim().toLowerCase() !== props.savedDomain);
+// Shown until the domain is Active, and only for the saved domain (the value belongs to it).
+const showOwnership = computed(() => !!props.ownership && !active.value && !unsaved.value);
+// Providers differ on whether the Name box takes the whole address or only the part before the domain.
+const ownershipName = computed(() => (parts.value.sub ? `_clubmanager-verify.${parts.value.sub}` : '_clubmanager-verify'));
 
 // Where the browser refuses, the value is still on screen to select.
 const { copied, copy } = useClipboard({ resetAfter: 1500 });
@@ -104,7 +110,24 @@ const CELL = 'px-3 py-2 font-mono text-[11px] font-bold text-slate-900 dark:text
                 </div>
             </li>
 
-            <li><strong>Save the record, wait, then press Check Now.</strong> A new record usually shows up within minutes but can take up to 48 hours. Until then this page says “Waiting for the DNS record”, which is normal; nothing is wrong.</li>
+            <li v-if="showOwnership" class="space-y-2">
+                <div><strong>Add a second record to prove the domain is yours.</strong> This stops anyone else claiming an address that already points here:</div>
+                <div class="overflow-x-auto rounded-xl border border-amber-200 bg-white dark:border-amber-800/60 dark:bg-slate-900">
+                    <table class="w-full min-w-[26rem] text-left">
+                        <thead class="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400"><tr><th class="px-3 py-1.5">Type</th><th class="px-3 py-1.5">Name (or Host)</th><th class="px-3 py-1.5">Value</th></tr></thead>
+                        <tbody>
+                            <tr class="border-t border-amber-100 dark:border-amber-900/50">
+                                <td :class="CELL">TXT</td>
+                                <td :class="CELL">{{ ownershipName }} <button type="button" class="ml-1 cursor-pointer rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 hover:bg-amber-200 dark:bg-amber-900/60 dark:text-amber-200" @click="copy(ownershipName)">{{ copied === ownershipName ? 'Copied' : 'Copy' }}</button></td>
+                                <td :class="CELL">{{ ownership.value }} <button type="button" class="ml-1 cursor-pointer rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 hover:bg-amber-200 dark:bg-amber-900/60 dark:text-amber-200" @click="copy(ownership.value)">{{ copied === ownership.value ? 'Copied' : 'Copy' }}</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-amber-800/90 dark:text-amber-200/80">Some providers want only the first part (<span class="font-mono font-bold">{{ ownershipName }}</span>) in the Name box and others want the whole address (<span class="font-mono font-bold">{{ ownership.host }}</span>). Paste the value exactly, without quotation marks unless your provider adds them itself.</p>
+            </li>
+
+            <li><strong>Save {{ showOwnership ? 'the records' : 'the record' }}, wait, then press Check Now.</strong> A new record usually shows up within minutes but can take up to 48 hours. Until then this page says “Waiting for the DNS record”, which is normal; nothing is wrong.</li>
         </ol>
 
         <div class="flex flex-wrap items-center gap-3">

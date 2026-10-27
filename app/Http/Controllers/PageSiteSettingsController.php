@@ -218,6 +218,6 @@ class PageSiteSettingsController extends Controller
 
         return redirect()->back()->with($verified ? 'success' : 'error', $verified
             ? 'The domain is verified and live.'
-            : "The DNS record wasn't found yet. It can take a while to update \u{2014} try again shortly.");
+            : "The DNS records weren't all found yet. Check the address record and the ownership (TXT) record are both saved; they can take a while to update \u{2014} try again shortly.");
     }
 }

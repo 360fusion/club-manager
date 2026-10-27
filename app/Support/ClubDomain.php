@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Club;
+use Closure;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
@@ -166,7 +167,64 @@ class ClubDomain
     }
 
     /**
-     * Look up whether the domain's DNS now points here, and record the result. Returns whether it is verified.
+     * The DNS lookup used by the checks below. The test suite swaps it for canned records; a real lookup is a network call.
+     *
+     * @var (Closure(string, int): list<array<string, mixed>>)|null
+     */
+    private static ?Closure $dnsLookup = null;
+
+    /**
+     * @param  (Closure(string, int): list<array<string, mixed>>)|null  $lookup
+     */
+    public static function useDnsLookup(?Closure $lookup): void
+    {
+        self::$dnsLookup = $lookup;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private static function dns(string $host, int $type): array
+    {
+        if (self::$dnsLookup) {
+            return (self::$dnsLookup)($host, $type);
+        }
+
+        if (app()->runningUnitTests()) {
+            return [];
+        }
+
+        $records = @dns_get_record($host, $type);
+
+        return is_array($records) ? $records : [];
+    }
+
+    /**
+     * The TXT record that proves the lodge controls the domain's DNS, so one club cannot claim a hostname that already
+     * points at us but belongs to someone else. The value comes from the club, the domain and the app key, so nobody
+     * can work out another club's value.
+     *
+     * @return array{host: string, value: string}
+     */
+    public static function ownershipRecord(Club $club): array
+    {
+        $domain = (string) $club->custom_domain;
+
+        return [
+            'host' => '_clubmanager-verify.'.$domain,
+            'value' => 'clubmanager-verify='.substr(hash_hmac('sha256', $club->id.'|'.$domain, (string) config('app.key')), 0, 32),
+        ];
+    }
+
+    private static function holdsOwnershipRecord(Club $club): bool
+    {
+        $record = self::ownershipRecord($club);
+
+        return collect(self::dns($record['host'], DNS_TXT))->contains(fn ($found) => trim((string) ($found['txt'] ?? '')) === $record['value']);
+    }
+
+    /**
+     * Look up whether the domain's DNS now points here and carries the ownership record, and record the result. Returns whether it is verified.
      */
     public static function verify(Club $club): bool
     {
@@ -175,7 +233,11 @@ class ClubDomain
         }
 
         $target = self::instructions()['target'];
-        $verified = self::resolves($club->custom_domain, $target);
+
+        // A domain that is already live keeps the old rule (DNS points here), so re-checking never takes a working site down;
+        // a new one must also carry the ownership record.
+        $verified = self::resolves($club->custom_domain, $target)
+            && ($club->domain_status === 'active' || self::holdsOwnershipRecord($club));
 
         $club->update([
             'domain_status' => $verified ? 'active' : 'pending',
@@ -190,21 +252,16 @@ class ClubDomain
      */
     private static function resolves(string $domain, string $target): bool
     {
-        if (app()->runningUnitTests()) {
-            // A real DNS lookup is a network call the test suite should never make.
-            return false;
-        }
+        $cname = self::dns($domain, DNS_CNAME);
 
-        $cname = @dns_get_record($domain, DNS_CNAME);
-
-        if (is_array($cname) && collect($cname)->contains(fn ($record) => rtrim((string) ($record['target'] ?? ''), '.') === rtrim($target, '.'))) {
+        if (collect($cname)->contains(fn ($record) => rtrim((string) ($record['target'] ?? ''), '.') === rtrim($target, '.'))) {
             return true;
         }
 
-        $ours = @dns_get_record($target, DNS_A + DNS_AAAA);
-        $theirs = @dns_get_record($domain, DNS_A + DNS_AAAA);
+        $ours = self::dns($target, DNS_A + DNS_AAAA);
+        $theirs = self::dns($domain, DNS_A + DNS_AAAA);
 
-        if (! is_array($ours) || ! is_array($theirs) || $ours === [] || $theirs === []) {
+        if ($ours === [] || $theirs === []) {
             return false;
         }
 
