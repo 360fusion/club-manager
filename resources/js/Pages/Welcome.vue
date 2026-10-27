@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     clubs: Array,
@@ -71,16 +72,16 @@ const getIcon = (typeCode) => {
 
                 <div class="flex items-center gap-4 text-sm font-medium">
                     <Link :href="`/${defaultClubSlug}/admin/pages`" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
-                        🎨 CMS pages
+                        <UiIcon name="palette" class="inline-block align-text-bottom" /> CMS pages
                     </Link>
                     <a :href="`/site/${defaultClubSlug}`" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
-                        🌐 Live site
+                        <UiIcon name="globe" class="inline-block align-text-bottom" /> Live site
                     </a>
                     <Link :href="`/${defaultClubSlug}/admin/subscriptions`" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
-                        💳 Subscriptions
+                        <UiIcon name="cash" class="inline-block align-text-bottom" /> Subscriptions
                     </Link>
                     <Link href="/admin/profile" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
-                        ⚙️ Profile & 2FA
+                        <UiIcon name="settings" class="inline-block align-text-bottom" /> Profile & 2FA
                     </Link>
                     <template v-if="currentUser">
                         <span class="text-xs font-bold text-slate-300 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">

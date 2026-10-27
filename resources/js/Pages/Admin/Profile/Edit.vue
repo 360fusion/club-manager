@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useForm, router, Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   user: Object,
@@ -77,7 +78,7 @@ const updatePassword = () => {
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage your account details, upload your profile photo, password, and two-factor authentication.</p>
         </div>
         <Link :href="route('admin.profile.two-factor')" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all text-center flex items-center gap-1.5 justify-center">
-          <span>🔐 2FA settings</span>
+          <span><UiIcon name="shield" class="inline-block align-text-bottom" /> 2FA settings</span>
         </Link>
       </div>
 

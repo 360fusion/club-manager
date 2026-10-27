@@ -73,7 +73,9 @@ function countFile(file) {
   };
   for (const [, , inner] of source.matchAll(LABELLED)) {
     if (/<(button|Button|a|Link|x-button|div|table|ul|section|p)\b/.test(inner) || inner.includes('Aa Bb')) continue;
-    if (EMOJI.test(inner.replace(/\{\{[\s\S]*?\}\}/g, ''))) counts['emoji in a button or link']++;
+    // Quoted labels inside {{ }} count too ('✓ Subscribed'); the rest of an expression does not.
+    const shown = inner.replace(/\{\{[\s\S]*?\}\}/g, (expression) => (expression.match(/'[^']*'/g) || []).join(' '));
+    if (EMOJI.test(shown)) counts['emoji in a button or link']++;
     counts['Title Case label'] += labelsOf(inner).filter(isTitleCase).length;
   }
   return Object.fromEntries(Object.entries(counts).filter(([, n]) => n > 0));

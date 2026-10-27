@@ -1,5 +1,6 @@
 <script setup>
 import MembersLayout from '@/Layouts/MembersLayout.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 defineProps({
   club: { type: Object, required: true },
@@ -102,7 +103,7 @@ defineProps({
                       target="_blank"
                       class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1"
                     >
-                      📄 PDF receipt
+                      <UiIcon name="document" class="inline-block align-text-bottom" /> PDF receipt
                     </a>
                   </td>
                 </tr>

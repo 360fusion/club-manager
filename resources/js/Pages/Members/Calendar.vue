@@ -10,6 +10,7 @@ import Card from '@/Components/Ui/Card.vue';
 import ClubChips from '@/Components/ClubChips.vue';
 import QuickReply from '@/Components/QuickReply.vue';
 import { orderColour } from '@/Utils/orderColour';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     month: String,
@@ -106,7 +107,7 @@ const webcal = computed(() => props.feedUrl.replace(/^https?:/, 'webcal:'));
                         @click="selected = selected === day.key ? null : day.key"
                     >
                         <span :class="['inline-flex h-6 w-6 items-center justify-center rounded-full text-xs', day.key === today ? 'bg-blue-600 font-bold text-white' : '']">{{ day.day }}</span>
-                        <span v-for="item in (byDay[day.key] ?? []).slice(0, 3)" :key="item.key" :class="['block truncate rounded px-1 py-0.5 text-[10px] font-medium leading-tight sm:text-[11px]', colourFor(item.club.colour), item.clash ? 'ring-1 ring-amber-500' : '']"><span v-if="item.installation" aria-label="Installation meeting">★ </span>{{ item.title }}</span>
+                        <span v-for="item in (byDay[day.key] ?? []).slice(0, 3)" :key="item.key" :class="['block truncate rounded px-1 py-0.5 text-[10px] font-medium leading-tight sm:text-[11px]', colourFor(item.club.colour), item.clash ? 'ring-1 ring-amber-500' : '']"><span v-if="item.installation" aria-label="Installation meeting"><UiIcon name="star" :size="10" class="inline-block align-text-bottom" /> </span>{{ item.title }}</span>
                         <span v-if="(byDay[day.key] ?? []).length > 3" class="block text-[10px] text-slate-500">+{{ byDay[day.key].length - 3 }} more</span>
                     </button>
                 </div>

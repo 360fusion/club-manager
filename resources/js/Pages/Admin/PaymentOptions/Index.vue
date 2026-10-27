@@ -248,7 +248,7 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
           <template v-if="!platform.account">
             <p class="text-slate-600 dark:text-slate-300">Payments go straight to your own Stripe account and Stripe pays you out. The platform takes <span class="font-semibold">{{ platform.fee }}</span>.</p>
             <div class="flex flex-wrap gap-2">
-              <button v-if="platform.can_connect_existing" type="button" class="rounded-xl bg-indigo-600 px-3 py-2 font-bold text-white hover:bg-indigo-500" @click="stripeAction('connect')">Connect my Stripe account</button>
+              <button v-if="platform.can_connect_existing" type="button" class="rounded-xl bg-blue-600 px-3 py-2 font-medium text-white hover:bg-blue-500" @click="stripeAction('connect')">Connect my Stripe account</button>
               <button type="button" class="rounded-xl border border-slate-300 px-3 py-2 font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200" @click="stripeAction('express')">I don't have one, create one for me</button>
             </div>
           </template>
@@ -260,7 +260,7 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
             </div>
             <div v-if="!platform.account.charges_enabled && platform.account.type === 'express'">
               <p class="mb-2 text-slate-600 dark:text-slate-300">Stripe needs a few more details (identity and bank account) before it can take payments.</p>
-              <button type="button" class="rounded-xl bg-indigo-600 px-3 py-2 font-bold text-white hover:bg-indigo-500" @click="stripeAction('express')">Continue setup on Stripe</button>
+              <button type="button" class="rounded-xl bg-blue-600 px-3 py-2 font-medium text-white hover:bg-blue-500" @click="stripeAction('express')">Continue setup on Stripe</button>
             </div>
             <p v-else-if="!platform.account.charges_enabled" class="text-slate-600 dark:text-slate-300">Stripe hasn't enabled payments on this account yet. Finish any steps in your Stripe dashboard.</p>
             <div v-if="!platform.account.terms_accepted" class="space-y-2 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">

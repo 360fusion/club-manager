@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   club: Object,
@@ -62,7 +63,7 @@ const saveBusinessAccount = () => {
           <span>✅</span>
           <span>{{ successToast }}</span>
         </div>
-        <button type="button" @click="successToast = ''" class="text-white hover:opacity-80">✕</button>
+        <button type="button" @click="successToast = ''" class="text-white hover:opacity-80" aria-label="Dismiss"><UiIcon name="x" class="inline-block align-text-bottom" /></button>
       </div>
 
       <!-- Main Header Banner -->
@@ -81,7 +82,7 @@ const saveBusinessAccount = () => {
             :href="route('billing.portal', { clubSlug: club.slug })"
             class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-2 cursor-pointer"
           >
-            <span>🚀</span>
+            <UiIcon name="external-link" class="inline-block align-text-bottom" />
             <span>External Stripe portal</span>
           </a>
         </div>
@@ -186,7 +187,7 @@ const saveBusinessAccount = () => {
                 @click="showSecretKeys = !showSecretKeys"
                 class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl transition-all"
               >
-                {{ showSecretKeys ? '🙈 Hide API keys' : '👁️ Show API keys' }}
+                <UiIcon :name="showSecretKeys ? 'eye-off' : 'eye'" class="inline-block align-text-bottom" /> {{ showSecretKeys ? 'Hide API keys' : 'Show API keys' }}
               </button>
             </div>
 
@@ -230,7 +231,7 @@ const saveBusinessAccount = () => {
               class="px-5 py-2.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
             >
               <span v-if="businessForm.processing">Saving...</span>
-              <span v-else>💾 Save main business account details</span>
+              <span v-else><UiIcon name="save" class="inline-block align-text-bottom" /> Save main business account details</span>
             </button>
           </div>
         </form>
@@ -295,13 +296,13 @@ const saveBusinessAccount = () => {
                 ]"
               >
                 <div class="flex items-center gap-2.5">
-                  <span class="text-base">💳</span>
+                  <UiIcon name="cash" :size="18" class="inline-block align-text-bottom" />
                   <div>
                     <span class="block">Stripe Gateway</span>
                     <span class="text-[10px] font-semibold text-slate-400">Cards, Apple Pay, Google Pay</span>
                   </div>
                 </div>
-                <span v-if="providerForm.provider === 'stripe'" class="text-blue-600 dark:text-blue-400 font-black">✓ Active</span>
+                <span v-if="providerForm.provider === 'stripe'" class="inline-flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400"><UiIcon name="check" :size="14" /> Active</span>
               </button>
 
               <!-- Paddle Option -->
@@ -316,13 +317,13 @@ const saveBusinessAccount = () => {
                 ]"
               >
                 <div class="flex items-center gap-2.5">
-                  <span class="text-base">🌐</span>
+                  <UiIcon name="globe" :size="18" class="inline-block align-text-bottom" />
                   <div>
                     <span class="block">Paddle Billing</span>
                     <span class="text-[10px] font-semibold text-slate-400">Merchant of Record & International Tax</span>
                   </div>
                 </div>
-                <span v-if="providerForm.provider === 'paddle'" class="text-blue-600 dark:text-blue-400 font-black">✓ Active</span>
+                <span v-if="providerForm.provider === 'paddle'" class="inline-flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400"><UiIcon name="check" :size="14" /> Active</span>
               </button>
             </div>
           </div>

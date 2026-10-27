@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -80,7 +81,7 @@ const errorFor = (index, field) => props.errors[`${props.idPrefix}.${index}.${fi
         <div class="flex items-center gap-1 self-center">
           <button type="button" @click="move(index, -1)" :disabled="index === 0" aria-label="Move up" class="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer">↑</button>
           <button type="button" @click="move(index, 1)" :disabled="index === rows.length - 1" aria-label="Move down" class="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer">↓</button>
-          <button type="button" @click="remove(index)" aria-label="Remove" class="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer">✕</button>
+          <button type="button" @click="remove(index)" aria-label="Remove" class="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"><UiIcon name="x" class="inline-block align-text-bottom" /></button>
         </div>
       </li>
     </ul>

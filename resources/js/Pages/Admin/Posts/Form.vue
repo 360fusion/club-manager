@@ -15,6 +15,7 @@ import Badge from '@/Components/Ui/Badge.vue';
 import Alert from '@/Components/Ui/Alert.vue';
 import Modal from '@/Components/Ui/Modal.vue';
 import { orderColour } from '@/Utils/orderColour';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   club: Object,
@@ -470,7 +471,7 @@ const submitWithAction = (actionType) => {
                   ]"
                   @click="toggleTag(tag.id)"
                 >
-                  <span v-if="form.tag_ids.includes(tag.id)" aria-hidden="true">✓ </span>{{ tag.name }}
+                  <UiIcon v-if="form.tag_ids.includes(tag.id)" name="check" :size="12" class="inline-block align-text-bottom" /> {{ tag.name }}
                 </button>
               </div>
               <p v-else class="text-sm text-slate-500 dark:text-slate-400">

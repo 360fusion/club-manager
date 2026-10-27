@@ -15,6 +15,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichTextEditor from '@/Components/RichTextEditor.vue';
 import ContentPickerModal from '@/Components/ContentPickerModal.vue';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   club: Object,
@@ -85,7 +86,7 @@ const handleContentSelectedFromPicker = ({ updateIds, meetingIds, eventIds, news
           if (uniqueAttachments.length) {
             html += `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #cbd5e1;">`;
             uniqueAttachments.forEach(att => {
-              html += `<a href="${att.url}" target="_blank" style="display: inline-block; font-size: 12px; font-weight: 700; color: #ffffff; background-color: #4f46e5; padding: 6px 14px; border-radius: 8px; text-decoration: none; margin-right: 8px; margin-bottom: 6px;">📥 Download ${att.name}</a>`;
+              html += `<a href="${att.url}" target="_blank" style="display: inline-block; font-size: 12px; font-weight: 700; color: #ffffff; background-color: #4f46e5; padding: 6px 14px; border-radius: 8px; text-decoration: none; margin-right: 8px; margin-bottom: 6px;"><UiIcon name="download" class="inline-block align-text-bottom" /> Download ${att.name}</a>`;
 
               if (attachFiles) {
                 const alreadyAttached = existingAttachments.value.some(existing => existing.url === att.url || existing.name === att.name);

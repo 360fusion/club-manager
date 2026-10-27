@@ -1,6 +1,7 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 defineProps({
   club: Object,
@@ -142,7 +143,7 @@ defineProps({
             <div class="flex items-center justify-between gap-2">
               <Link :href="route('admin.meetings.show', { clubSlug: club.slug, id: m.id })" title="Open Secretary Dashboard" aria-label="Open Secretary Dashboard" class="font-bold text-slate-900 dark:text-white text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-2 group">
                 <span class="w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center text-xs border border-blue-200/60 dark:border-blue-800/60 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                  📜
+                  <UiIcon name="document" class="inline-block align-text-bottom" />
                 </span>
                 <span class="hover:underline">{{ m.title }}</span>
               </Link>
@@ -169,7 +170,7 @@ defineProps({
           <div class="font-bold text-slate-700 dark:text-slate-200 text-sm">No Upcoming Meetings Scheduled</div>
           <p class="text-slate-400 max-w-xs mx-auto">Generate season schedules or create individual summonses for your club.</p>
           <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition-all">
-            📜 + Add meeting
+            <UiIcon name="plus" class="inline-block align-text-bottom" /> Add meeting
           </Link>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import { FontSize, FONT_SIZES } from '@/Utils/tiptapFontSize';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   modelValue: {
@@ -149,7 +150,7 @@ const removeLink = () => {
         :class="['px-2.5 py-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-1 font-bold cursor-pointer', editor.isActive('link') ? 'bg-blue-200 dark:bg-blue-900/60 text-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-700/60' : '']"
         title="Insert or Edit Hyperlink"
       >
-        🔗 Link
+        <UiIcon name="link" class="inline-block align-text-bottom" /> Link
       </button>
 
       <div class="h-4 w-px bg-slate-300 mx-1"></div>
@@ -255,7 +256,7 @@ const removeLink = () => {
 
     <!-- Inline Link Dialog Popup -->
     <div v-if="showLinkModal" class="p-3 bg-blue-50/90 dark:bg-blue-950/90 border-b border-blue-200 dark:border-blue-800/60 flex flex-wrap items-center gap-2 text-xs">
-      <span class="font-bold text-blue-950 dark:text-blue-100">🔗 Enter URL:</span>
+      <span class="font-bold text-blue-950 dark:text-blue-100">Enter URL:</span>
       <input 
         v-model="linkUrl" 
         type="text" 
@@ -282,8 +283,9 @@ const removeLink = () => {
         type="button" 
         @click="showLinkModal = false" 
         class="px-2.5 py-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold cursor-pointer"
+        aria-label="Close"
       >
-        ✕
+        <UiIcon name="x" class="inline-block align-text-bottom" />
       </button>
     </div>
 

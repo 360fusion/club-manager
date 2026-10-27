@@ -69,8 +69,8 @@ const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2
                     <select v-model="form.within" :class="[inputClass, 'w-auto']" aria-label="Distance">
                         <option v-for="miles in ['5', '10', '25', '50']" :key="miles" :value="miles">Within {{ miles }} miles</option>
                     </select>
-                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Search nearby</button>
-                    <button v-if="filters.near" type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" @click="clearNear">Clear</button>
+                    <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Search nearby</button>
+                    <button v-if="filters.near" type="button" class="rounded-xl border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" @click="clearNear">Clear</button>
                 </form>
                 <p v-if="near.error" class="text-sm text-rose-600 sm:col-span-2 lg:col-span-5 dark:text-rose-400">{{ near.error }}</p>
                 <p v-else-if="near.place" class="text-sm text-slate-500 sm:col-span-2 lg:col-span-5 dark:text-slate-400">Nearest first, from {{ near.place }}.</p>
