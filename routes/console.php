@@ -22,3 +22,6 @@ Schedule::command('app:send-invitation-reminders')->dailyAt('10:00')->withoutOve
 Schedule::command('app:send-weekly-digest --scheduled')->hourly()->withoutOverlapping();
 // Turns due recurring bill templates (insurance, hall hire, etc.) into real vendor bills.
 Schedule::command('app:generate-recurring-bills')->dailyAt('06:00')->withoutOverlapping();
+// Re-fetches the ~3,900 pages lodge directory details came from (one a second, about an hour) and flags changed ones;
+// it never edits a lodge. A shared province list flags every lodge on it when any part of the page changes.
+Schedule::command('lodges:check-sources')->weeklyOn(0, '02:00')->withoutOverlapping()->runInBackground();
