@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import OrderColourPicker from '@/Components/OrderColourPicker.vue';
 import { orderColour, ORDER_COLOURS } from '@/Utils/orderColour';
