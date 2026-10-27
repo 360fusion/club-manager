@@ -53,7 +53,8 @@ class LodgeDistanceSearchTest extends TestCase
                 ->where('lodges.data.0.miles', 0.5)
                 ->where('lodges.data.1.name', 'Sunderland Lodge'));
 
-        Http::assertSent(fn (Request $request) => $request['countrycodes'] === MasonicHall::SEARCH_COUNTRIES);
+        // Other requests (Inertia's server-side render when a Vite dev server is running) are not the place search.
+        Http::assertSent(fn (Request $request) => str_contains($request->url(), 'nominatim.openstreetmap.org') && $request['countrycodes'] === MasonicHall::SEARCH_COUNTRIES);
     }
 
     public function test_a_smaller_distance_leaves_out_lodges_further_away(): void
