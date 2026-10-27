@@ -166,7 +166,7 @@ defineProps({
                     <a
                       :href="version.download_url"
                       target="_blank"
-                      class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold border border-slate-200 dark:border-slate-800"
+                      class="px-2 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold border border-slate-200 dark:border-slate-800"
                     >
                       ⬇️
                     </a>
@@ -174,7 +174,7 @@ defineProps({
                       type="button"
                       @click="restoreMediaVersion(version)"
                       :disabled="restoringVersionId === version.id"
-                      class="px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-[10px] font-bold border border-amber-300 dark:border-amber-700/60 disabled:opacity-50 cursor-pointer"
+                      class="px-2 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-[10px] font-bold border border-amber-300 dark:border-amber-700/60 disabled:opacity-50 cursor-pointer"
                     >
                       {{ restoringVersionId === version.id ? '...' : '↺ Restore' }}
                     </button>
@@ -266,7 +266,7 @@ defineProps({
               @click="openCropper"
               class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer"
             >
-              <span>✂️ Visual Crop & Resize</span>
+              <span>✂️ Visual crop & resize</span>
             </button>
 
             <a
@@ -274,14 +274,14 @@ defineProps({
               download
               class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all inline-flex items-center gap-1.5"
             >
-              <span>⬇️ Download File</span>
+              <span>⬇️ Download file</span>
             </a>
             <a
               :href="previewItem.original_url"
               target="_blank"
               class="px-3.5 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl border border-slate-200 dark:border-slate-800 transition-all inline-flex items-center gap-1.5"
             >
-              <span>↗️ Open in New Tab</span>
+              <span>↗️ Open in new tab</span>
             </a>
           </div>
 
@@ -292,14 +292,14 @@ defineProps({
                 @click="restoreItem(previewItem)"
                 class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5"
               >
-                ↻ Restore File
+                ↻ Restore file
               </button>
               <button
                 type="button"
                 @click="forceDeleteItem(previewItem)"
                 class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5"
               >
-                🔥 Delete Permanently
+                🔥 Delete permanently
               </button>
             </template>
             <template v-else>
@@ -313,7 +313,7 @@ defineProps({
               >
                 <span v-if="isUploadingVersion" class="animate-spin">🔄</span>
                 <span v-else>⤴️</span>
-                <span>{{ isUploadingVersion ? 'Uploading...' : 'Upload New Version' }}</span>
+                <span>{{ isUploadingVersion ? 'Uploading...' : 'Upload new version' }}</span>
               </button>
               <input
                 ref="fileInput"
@@ -330,7 +330,7 @@ defineProps({
               >
                 <span v-if="isSavingDetails" class="animate-spin">🔄</span>
                 <span v-else>💾</span>
-                <span>{{ isSavingDetails ? 'Saving...' : 'Save Asset Details' }}</span>
+                <span>{{ isSavingDetails ? 'Saving...' : 'Save asset details' }}</span>
               </button>
 
               <button
@@ -338,7 +338,7 @@ defineProps({
                 @click="deleteItem(previewItem)"
                 class="px-3.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer inline-flex items-center gap-1.5"
               >
-                <span>🗑️ Move to Trash</span>
+                <span>🗑️ Move to trash</span>
               </button>
             </template>
           </div>

@@ -75,7 +75,7 @@ const submit = () => {
           :disabled="form.processing"
           class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50"
         >
-          {{ form.processing ? 'Verifying...' : 'Verify Code & Sign In' }}
+          {{ form.processing ? 'Verifying...' : 'Verify code & sign in' }}
         </button>
 
         <div class="text-center pt-2">

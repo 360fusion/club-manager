@@ -47,10 +47,10 @@ const insertPlaceholder = (name) => { body.value += ` {{${name}}}`; };
                 <span class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ template.key }}</span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200" @click="showPreview = !showPreview">{{ showPreview ? 'Hide preview' : 'Preview' }}</button>
-                <button type="button" :disabled="processing" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200" @click="emit('test', payload())">Send test to me</button>
-                <button v-if="canReset" type="button" :disabled="processing" class="rounded-lg border border-rose-300 px-3 py-2 text-xs font-medium text-rose-700 dark:border-rose-800 dark:text-rose-300" @click="emit('reset')">Reset to default</button>
-                <button type="button" :disabled="processing" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-blue-500" @click="emit('save', payload())">
+                <button type="button" class="rounded-xl border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200" @click="showPreview = !showPreview">{{ showPreview ? 'Hide preview' : 'Preview' }}</button>
+                <button type="button" :disabled="processing" class="rounded-xl border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200" @click="emit('test', payload())">Send test to me</button>
+                <button v-if="canReset" type="button" :disabled="processing" class="rounded-xl border border-rose-300 px-3 py-2 text-xs font-medium text-rose-700 dark:border-rose-800 dark:text-rose-300" @click="emit('reset')">Reset to default</button>
+                <button type="button" :disabled="processing" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-blue-500" @click="emit('save', payload())">
                     {{ processing ? 'Saving...' : 'Save' }}
                 </button>
             </div>

@@ -60,7 +60,7 @@ function unfollow(lodge) {
                     <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">My lodges</h1>
                     <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Lodges you follow. Only you can see this list, and the lodges are not told.</p>
                 </div>
-                <Link :href="route('lodges.index')" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Find more lodges</Link>
+                <Link :href="route('lodges.index')" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Find more lodges</Link>
             </div>
 
             <Card v-if="!lodges.length">
@@ -113,7 +113,7 @@ function unfollow(lodge) {
                         <div v-if="claim.status === 'more_info'" class="mt-3 space-y-2">
                             <p class="rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">{{ claim.question }}</p>
                             <textarea v-model="replies[claim.id]" rows="3" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" aria-label="Your reply" />
-                            <button type="button" class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500" @click="reply(claim)">Send reply</button>
+                            <button type="button" class="rounded-xl bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500" @click="reply(claim)">Send reply</button>
                         </div>
 
                         <button v-if="claim.open" type="button" class="mt-3 text-sm text-slate-500 hover:text-rose-600 dark:text-slate-400" @click="withdraw(claim)">Withdraw this claim</button>

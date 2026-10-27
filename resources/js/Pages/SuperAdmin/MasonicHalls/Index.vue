@@ -114,8 +114,8 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
                     <h1 class="text-2xl font-bold text-slate-900 tracking-tight dark:text-white">Masonic Halls</h1>
                     <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">The buildings lodges, chapters and other bodies meet in. Lodges pick their hall on their settings page, filtered by province.</p>
                 </div>
-                <button @click="openCreate" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-sm shadow-sm transition">
-                    + Add Masonic Hall
+                <button @click="openCreate" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-sm shadow-sm transition">
+                    + Add Masonic hall
                 </button>
             </div>
 
@@ -244,7 +244,7 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
                     </div>
                     <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
                         <button type="button" @click="showModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">Cancel</button>
-                        <button type="submit" :disabled="form.processing" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-500">{{ editingId ? 'Save' : 'Add Hall' }}</button>
+                        <button type="submit" :disabled="form.processing" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-500">{{ editingId ? 'Save' : 'Add hall' }}</button>
                     </div>
                 </form>
             </div>

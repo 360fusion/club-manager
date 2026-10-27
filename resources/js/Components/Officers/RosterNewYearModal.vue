@@ -57,11 +57,11 @@ defineProps({
                 type="button"
                 @click="selectedStartYear = y"
                 :class="[
-                  'w-full text-left px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-between cursor-pointer',
+                  'w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer',
                   selectedStartYear === y ? 'bg-blue-600 text-white shadow-xs' : 'hover:bg-slate-200/80 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200'
                 ]"
               >
-                <span>{{ y }} (Installation Start)</span>
+                <span>{{ y }} (installation start)</span>
                 <span v-if="selectedStartYear === y" class="text-[10px] uppercase font-black bg-white/20 dark:bg-slate-900/20 px-1.5 py-0.5 rounded">Selected</span>
               </button>
               <div v-if="!filteredStartYearOptions.length" class="p-3 text-center text-xs text-slate-400">
@@ -87,7 +87,7 @@ defineProps({
         <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button type="button" @click="$emit('close')" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl">Cancel</button>
           <button type="button" @click="createNewMasonicYear" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer">
-            Start Roster Draft
+            Start roster draft
           </button>
         </div>
       </div>

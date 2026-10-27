@@ -29,7 +29,7 @@ defineProps({
             class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center gap-2"
           >
             <span>⚙️</span>
-            <span>Manage Club Types &amp; Presets</span>
+            <span>Manage club types &amp; presets</span>
           </Link>
         </div>
       </div>
@@ -137,9 +137,9 @@ defineProps({
                 <td class="py-3.5 px-4 text-right">
                   <Link
                     :href="route('admin.club_acc.charity.index', c.slug)"
-                    class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg transition"
+                    class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-xl transition"
                   >
-                    View Workspace →
+                    View workspace →
                   </Link>
                 </td>
               </tr>

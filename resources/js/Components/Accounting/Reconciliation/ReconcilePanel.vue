@@ -178,7 +178,7 @@ defineProps({
               <button
                 type="button"
                 @click="submitRowReconcile(tx)"
-                class="w-14 h-10 bg-[#008ba8] hover:bg-[#00768f] text-white font-black text-xs rounded uppercase shadow-sm transition-all cursor-pointer flex items-center justify-center tracking-wide"
+                class="w-14 h-10 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded uppercase shadow-sm transition-all cursor-pointer flex items-center justify-center tracking-wide"
               >
                 OK
               </button>
@@ -200,7 +200,7 @@ defineProps({
                       @click="setRowTab(tx.id, 'Match')"
                       :class="[
                         'pb-1 cursor-pointer transition-all',
-                        getRowState(tx.id, tx).tab === 'Match' ? 'text-slate-900 dark:text-white border-b-2 border-[#008ba8]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                        getRowState(tx.id, tx).tab === 'Match' ? 'text-slate-900 dark:text-white border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                       ]"
                     >
                       Match
@@ -211,7 +211,7 @@ defineProps({
                       @click="setRowTab(tx.id, 'Create')"
                       :class="[
                         'pb-1 cursor-pointer transition-all',
-                        getRowState(tx.id, tx).tab === 'Create' ? 'text-slate-900 dark:text-white border-b-2 border-[#008ba8]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                        getRowState(tx.id, tx).tab === 'Create' ? 'text-slate-900 dark:text-white border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                       ]"
                     >
                       Create
@@ -222,7 +222,7 @@ defineProps({
                       @click="setRowTab(tx.id, 'Transfer')"
                       :class="[
                         'pb-1 cursor-pointer transition-all',
-                        getRowState(tx.id, tx).tab === 'Transfer' ? 'text-slate-900 dark:text-white border-b-2 border-[#008ba8]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                        getRowState(tx.id, tx).tab === 'Transfer' ? 'text-slate-900 dark:text-white border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                       ]"
                     >
                       Transfer
@@ -233,14 +233,14 @@ defineProps({
                       @click="setRowTab(tx.id, 'Discuss')"
                       :class="[
                         'pb-1 cursor-pointer transition-all',
-                        getRowState(tx.id, tx).tab === 'Discuss' ? 'text-slate-900 dark:text-white border-b-2 border-[#008ba8]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                        getRowState(tx.id, tx).tab === 'Discuss' ? 'text-slate-900 dark:text-white border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                       ]"
                     >
                       Discuss
                     </button>
                   </div>
 
-                  <a href="#" @click.prevent="openManualMatchModalForTx(tx)" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">Find &amp; Match</a>
+                  <a href="#" @click.prevent="openManualMatchModalForTx(tx)" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">Find &amp; match</a>
                 </div>
 
                 <!-- Tab Body: CREATE -->
@@ -292,7 +292,7 @@ defineProps({
                         @change="getRowState(tx.id, tx).showWhatError = false"
                         :class="[
                           'w-full px-2.5 py-1 bg-white dark:bg-slate-900 border rounded text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500',
-                          getRowState(tx.id, tx).showWhatError ? 'border-red-500 bg-red-50/50 dark:bg-red-950/50' : 'border-slate-300 dark:border-slate-700'
+                          getRowState(tx.id, tx).showWhatError ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-950/50' : 'border-slate-300 dark:border-slate-700'
                         ]"
                       >
                         <option value="">Choose the account...</option>
@@ -300,7 +300,7 @@ defineProps({
                           {{ acc.code }} - {{ acc.name }}
                         </option>
                       </select>
-                      <p v-if="getRowState(tx.id, tx).showWhatError" class="text-[10px] text-red-600 dark:text-red-400 font-bold mt-0.5">Please select an account code (What) before reconciling.</p>
+                      <p v-if="getRowState(tx.id, tx).showWhatError" class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-0.5">Please select an account code (What) before reconciling.</p>
                     </div>
                   </div>
 

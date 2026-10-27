@@ -58,10 +58,10 @@ const disposeAsset = (assetId) => {
         <div v-if="canManageBilling" class="flex items-center gap-2">
           <input v-model="depreciationForm.period" placeholder="Period e.g. 2026" class="w-28 px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl" />
           <button type="button" @click="runDepreciation" class="px-3 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer">
-            📉 Run Depreciation
+            📉 Run depreciation
           </button>
           <button type="button" @click="showAddAssetForm = !showAddAssetForm" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer">
-            ➕ Add Asset
+            ➕ Add asset
           </button>
         </div>
       </div>
@@ -79,7 +79,7 @@ const disposeAsset = (assetId) => {
         <input v-model="fixedAssetForm.useful_life_years" type="number" min="1" placeholder="Useful life (years)" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
         <input v-model="fixedAssetForm.salvage_value" type="number" step="0.01" min="0" placeholder="Salvage value" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
         <button type="submit" :disabled="fixedAssetForm.processing" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50 sm:col-span-3">
-          Register Asset
+          Register asset
         </button>
       </form>
 
@@ -119,7 +119,7 @@ const disposeAsset = (assetId) => {
                       type="button"
                       @click="openActivityLog('fixed_asset', asset.id, `Asset: ${asset.name}`)"
                       title="View Activity Log"
-                      class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                      class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer"
                     >
                       🕘
                     </button>
@@ -137,7 +137,7 @@ const disposeAsset = (assetId) => {
                       <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-300">Proceeds</label>
                       <input v-model="disposalForm.disposal_proceeds" type="number" step="0.01" min="0" class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg" />
                     </div>
-                    <button type="submit" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-lg cursor-pointer">Confirm Disposal</button>
+                    <button type="submit" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl cursor-pointer">Confirm disposal</button>
                   </form>
                 </td>
               </tr>

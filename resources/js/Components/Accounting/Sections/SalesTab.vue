@@ -58,7 +58,7 @@ const filteredInvoices = computed(() => {
           :href="route('admin.accounting.invoices.create', club.slug)"
           class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer flex items-center gap-1.5"
         >
-          <span>🧾 Create Invoice</span>
+          <span>🧾 Create invoice</span>
         </Link>
       </div>
 
@@ -90,14 +90,14 @@ const filteredInvoices = computed(() => {
           <button
             type="button"
             @click="salesFyFilter = 'all'; salesYearFilter = 'all'"
-            :class="['px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer', salesFyFilter === 'all' && salesYearFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
+            :class="['px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold transition-all cursor-pointer', salesFyFilter === 'all' && salesYearFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
           >All</button>
           <button
             v-for="fy in salesFyYears"
             :key="fy"
             type="button"
             @click="salesFyFilter = fy; salesYearFilter = 'all'"
-            :class="['px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer', salesFyFilter === fy ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
+            :class="['px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold transition-all cursor-pointer', salesFyFilter === fy ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
           >FY {{ fy }}</button>
         </div>
 
@@ -156,16 +156,16 @@ const filteredInvoices = computed(() => {
                     title="View & Zoom Attachment"
                     class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold rounded-md border border-blue-200 dark:border-blue-800/60 transition-colors cursor-pointer"
                   >
-                    📎 View Document
+                    📎 View document
                   </button>
                 </div>
               </td>
               <td class="py-3 px-4 text-slate-500 dark:text-slate-400">{{ inv.created_at }}</td>
               <td class="py-3 px-4">
-                <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', inv.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : inv.status === 'draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700' : inv.status === 'pending_approval' ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']">
+                <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', inv.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : inv.status === 'draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700' : inv.status === 'pending_approval' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60']">
                   {{ inv.status === 'pending_approval' ? 'pending approval' : inv.status }}
                 </span>
-                <span v-if="inv.reconciled_at" title="Confirmed against a bank statement line" class="ml-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/60">
+                <span v-if="inv.reconciled_at" title="Confirmed against a bank statement line" class="ml-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60">
                   🔗 Reconciled
                 </span>
               </td>
@@ -177,7 +177,7 @@ const filteredInvoices = computed(() => {
                     type="button"
                     @click="publishInvoice(inv.id)"
                     title="Issue/Publish Invoice & Post to Ledger"
-                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-sm"
                   >
                     🚀 Issue
                   </button>
@@ -187,7 +187,7 @@ const filteredInvoices = computed(() => {
                     :disabled="inv.can_approve === false"
                     :title="inv.can_approve === false ? 'You raised this invoice, so you cannot also approve it — ask another admin or treasurer.' : 'Approve & Post Invoice to Accounts Receivable'"
                     @click="approveInvoice(inv.id)"
-                    class="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white border border-purple-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     ✅ Approve
                   </button>
@@ -195,9 +195,9 @@ const filteredInvoices = computed(() => {
                     v-else-if="canManageBilling && inv.status === 'unpaid'"
                     type="button"
                     @click="markInvoicePaid(inv.id)"
-                    class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer"
                   >
-                    ✓ Mark Paid
+                    ✓ Mark paid
                   </button>
                   <span v-else-if="inv.status === 'paid'" class="text-[10px] font-bold text-slate-400">
                     Paid {{ inv.paid_at }}
@@ -208,7 +208,7 @@ const filteredInvoices = computed(() => {
                     type="button"
                     @click="openActivityLog('invoice', inv.id, `Invoice ${inv.invoice_number}`)"
                     title="View Activity Log"
-                    class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer"
                   >
                     🕘
                   </button>

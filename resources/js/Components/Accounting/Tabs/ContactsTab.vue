@@ -23,9 +23,9 @@ defineProps({
         <Link
           v-if="canManageBilling"
           :href="route('admin.accounting.contacts.create', club.slug)"
-          class="px-4 py-2 bg-[#007bce] hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 shrink-0"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2 shrink-0"
         >
-          <span>+ Add Contact</span>
+          <span>+ Add contact</span>
         </Link>
       </div>
 
@@ -36,21 +36,21 @@ defineProps({
           @click="contactFilter = 'all'"
           :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer', contactFilter === 'all' ? 'bg-slate-900 dark:bg-slate-700 text-white font-black' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
         >
-          All Contacts ({{ filteredContacts.length }})
+          All contacts ({{ filteredContacts.length }})
         </button>
         <button
           type="button"
           @click="contactFilter = 'person'"
           :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5', contactFilter === 'person' ? 'bg-blue-700 text-white font-black' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
         >
-          <span>👤 Persons & Contractors</span>
+          <span>👤 Persons & contractors</span>
         </button>
         <button
           type="button"
           @click="contactFilter = 'member'"
           :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5', contactFilter === 'member' ? 'bg-emerald-700 text-white font-black' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
         >
-          <span>💳 Club Members</span>
+          <span>💳 Club members</span>
         </button>
       </div>
 
@@ -120,23 +120,23 @@ defineProps({
                 <Link
                   v-if="c.kind === 'member'"
                   :href="route('admin.accounting.invoices.create', { clubSlug: club.slug, user: c.user_id })"
-                  class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-extrabold rounded-lg transition-all"
+                  class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-extrabold rounded-xl transition-all"
                 >
-                  + Issue Invoice
+                  + Issue invoice
                 </Link>
                 <div v-else class="flex items-center justify-center gap-1.5">
                   <Link
                     :href="route('admin.accounting.contacts.edit', [club.slug, c.contact_db_id])"
-                    class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800/60 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800/60 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer"
                     title="Edit Contact"
                   >
                     Edit
                   </Link>
                   <Link
                     :href="route('admin.accounting.bills.create', { clubSlug: club.slug, vendor: c.name })"
-                    class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 text-[10px] font-extrabold rounded-lg transition-all"
+                    class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 text-[10px] font-extrabold rounded-xl transition-all"
                   >
-                    + Record Bill
+                    + Record bill
                   </Link>
                 </div>
               </td>

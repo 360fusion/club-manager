@@ -69,7 +69,7 @@ function submitUpdate() {
           :href="route('superadmin.provinces.show', province.id)"
           class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl border border-slate-300 transition dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
         >
-          ← Cancel &amp; Back to Province
+          ← Cancel &amp; back to province
         </Link>
       </div>
 
@@ -330,7 +330,7 @@ function submitUpdate() {
             :disabled="form.processing"
             class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-2"
           >
-            <span>{{ form.processing ? 'Saving...' : 'Save Province Changes' }}</span>
+            <span>{{ form.processing ? 'Saving...' : 'Save province changes' }}</span>
           </button>
         </div>
 

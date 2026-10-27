@@ -145,7 +145,7 @@ const statusBadgeClass = (status) => {
           :href="route('admin.users.index', { clubSlug: club.slug })" 
           class="inline-flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
         >
-          &larr; Back to Member Roster
+          &larr; Back to member roster
         </Link>
         <span class="text-xs text-slate-400 font-mono">Member ID: {{ member.member_number }}</span>
       </div>
@@ -220,7 +220,7 @@ const statusBadgeClass = (status) => {
                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Account Active</span>
+                <span>Account active</span>
               </button>
               <template v-else>
                 <button
@@ -230,7 +230,7 @@ const statusBadgeClass = (status) => {
                   <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <span>{{ member.invited_at ? 'Resend Invite' : 'Send Email Invite' }}</span>
+                  <span>{{ member.invited_at ? 'Resend invite' : 'Send email invite' }}</span>
                 </button>
                 <button
                   v-if="member.invited_at || member.invitation_token"
@@ -451,7 +451,7 @@ const statusBadgeClass = (status) => {
                   <a 
                     :href="route('invoices.download', { slug: club.slug, id: inv.id })" 
                     target="_blank"
-                    class="px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 text-xs font-bold rounded-lg transition-all shadow-sm flex items-center gap-1"
+                    class="px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1"
                   >
                     <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -489,7 +489,7 @@ const statusBadgeClass = (status) => {
             @click="approveMember"
             class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-2"
           >
-            ✓ Approve Member Registration
+            ✓ Approve member registration
           </button>
 
           <button
@@ -497,7 +497,7 @@ const statusBadgeClass = (status) => {
             @click="updateStatus('active')"
             class="px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2"
           >
-            ✓ Reactivate Member Access
+            ✓ Reactivate member access
           </button>
 
           <button
@@ -505,7 +505,7 @@ const statusBadgeClass = (status) => {
             @click="updateStatus('inactive')"
             class="px-4 py-2.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2"
           >
-            ⏸ Deactivate Member Access
+            ⏸ Deactivate member access
           </button>
 
           <button
@@ -513,7 +513,7 @@ const statusBadgeClass = (status) => {
             @click="updateStatus('active')"
             class="px-4 py-2.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2"
           >
-            ↺ Restore Member to Active Roster
+            ↺ Restore member to active roster
           </button>
 
           <button
@@ -522,7 +522,7 @@ const statusBadgeClass = (status) => {
             class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2"
             title="Move member to Past Members list"
           >
-            📜 Move to Past Members
+            📜 Move to past members
           </button>
 
           <button
@@ -530,7 +530,7 @@ const statusBadgeClass = (status) => {
             class="px-4 py-2.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2"
             title="Delete member from directory (preserves historical database records)"
           >
-            🗑️ Delete Member
+            🗑️ Delete member
           </button>
         </div>
       </div>

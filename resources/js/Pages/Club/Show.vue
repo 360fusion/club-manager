@@ -104,7 +104,7 @@ const getIcon = (typeCode) => {
             <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <Link href="/" class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors">
-                        ← Back to Hub
+                        ← Back to hub
                     </Link>
                     <div class="h-6 w-px bg-slate-800"></div>
                     <div class="flex items-center gap-3">
@@ -127,19 +127,19 @@ const getIcon = (typeCode) => {
                         🎫 Events
                     </Link>
                     <Link :href="`/${club.slug}/admin/posts`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20">
-                        📰 Blog & News
+                        📰 Blog & news
                     </Link>
                     <Link :href="`/${club.slug}/admin/memberships`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20">
                         💳 Memberships
                     </Link>
                     <Link :href="`/${club.slug}/admin/pages`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20">
-                        🎨 CMS Builder
+                        🎨 CMS builder
                     </Link>
                     <Link :href="`/${club.slug}/admin/analytics`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                         📊 Analytics
                     </Link>
                     <a :href="`/site/${club.slug}`" target="_blank" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:text-white">
-                        🌐 Live Site
+                        🌐 Live site
                     </a>
                 </div>
             </div>
@@ -154,21 +154,21 @@ const getIcon = (typeCode) => {
                     :class="activeTab === 'events' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
                     class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
                 >
-                    <span>🎫</span> Events & Eventbrite Ticketing ({{ club.events.length }})
+                    <span>🎫</span> Events & Eventbrite ticketing ({{ club.events.length }})
                 </button>
                 <button 
                     @click="activeTab = 'domain'"
                     :class="activeTab === 'domain' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
                     class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
                 >
-                    <span>🌐</span> Custom Domain Setup
+                    <span>🌐</span> Custom domain setup
                 </button>
                 <button 
                     @click="activeTab = 'members'"
                     :class="activeTab === 'members' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
                     class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
                 >
-                    <span>👥</span> Member Roster ({{ club.members.length }})
+                    <span>👥</span> Member roster ({{ club.members.length }})
                 </button>
             </div>
 
@@ -234,7 +234,7 @@ const getIcon = (typeCode) => {
                         </div>
 
                         <button @click="openRsvp(event)" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-600/20">
-                            🎟️ Select Ticket Tier & Generate QR Pass
+                            🎟️ Select ticket tier & generate QR pass
                         </button>
                     </div>
                 </div>
@@ -252,7 +252,7 @@ const getIcon = (typeCode) => {
 
                     <form @submit.prevent="saveDomain" class="space-y-4">
                         <input v-model="domainForm.custom_domain" type="text" :placeholder="domainExample" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-mono text-sm" />
-                        <button type="submit" class="py-3 px-6 rounded-xl bg-emerald-600 text-white font-bold text-sm">Connect Domain</button>
+                        <button type="submit" class="py-3 px-6 rounded-xl bg-emerald-600 text-white font-bold text-sm">Connect domain</button>
                     </form>
                 </div>
             </div>
@@ -264,7 +264,7 @@ const getIcon = (typeCode) => {
                         <h3 class="font-bold text-white text-lg">Member Roster & Invite Approvals</h3>
                         <p class="text-xs text-slate-400 mt-0.5">Manage active club members and approve invite-only registration requests.</p>
                     </div>
-                    <a :href="`/${club.slug}/members/export`" class="py-2.5 px-4 rounded-xl bg-slate-800 text-white text-xs font-bold">Export Roster CSV</a>
+                    <a :href="`/${club.slug}/members/export`" class="py-2.5 px-4 rounded-xl bg-slate-800 text-white text-xs font-bold">Export roster CSV</a>
                 </div>
 
                 <!-- Pending Member Invites Banner -->
@@ -281,7 +281,7 @@ const getIcon = (typeCode) => {
                             </div>
                             <div class="flex items-center gap-2">
                                 <Link :href="route('clubs.members.approve', { slug: club.slug, userId: m.id })" method="post" as="button" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md">
-                                    ✓ Approve Member
+                                    ✓ Approve member
                                 </Link>
                                 <Link :href="route('clubs.members.reject', { slug: club.slug, userId: m.id })" method="post" as="button" class="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-xs rounded-xl border border-rose-500/20">
                                     ✕ Reject
@@ -386,7 +386,7 @@ const getIcon = (typeCode) => {
 
                 <div class="flex gap-3 pt-2">
                     <button @click="showRsvpModal = false" class="w-full py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm">Cancel</button>
-                    <button @click="showRsvpModal = false" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold text-sm">Checkout & Issue QR Pass</button>
+                    <button @click="showRsvpModal = false" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold text-sm">Checkout & issue QR pass</button>
                 </div>
             </div>
         </div>

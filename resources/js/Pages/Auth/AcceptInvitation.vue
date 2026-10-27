@@ -111,7 +111,7 @@ const submit = () => {
           :disabled="form.processing"
           class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 mt-2 cursor-pointer flex items-center justify-center gap-2"
         >
-          <span>{{ isExistingUser ? `Log In & Access ${club.name}` : 'Activate Account & Enter Member Portal' }}</span>
+          <span>{{ isExistingUser ? `Log in & access ${club.name}` : 'Activate account & enter member portal' }}</span>
           <span>&rarr;</span>
         </button>
       </form>

@@ -92,12 +92,12 @@ function typeBadge(type) {
                 </div>
                 <button
                     @click="openCreateModal"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-sm shadow-sm transition inline-flex items-center gap-2"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-sm shadow-sm transition inline-flex items-center gap-2"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
-                    Add District / Group
+                    Add district / group
                 </button>
             </div>
 
@@ -159,25 +159,25 @@ function typeBadge(type) {
                     <span class="text-xs font-semibold text-slate-500 uppercase mr-2 dark:text-slate-400">Filter Type:</span>
                     <button
                         @click="selectedTypeFilter = 'all'"
-                        :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition', selectedTypeFilter === 'all' ? 'bg-blue-600 text-white shadow' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:text-white dark:bg-slate-800 dark:border-slate-800 dark:text-slate-400']"
+                        :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition', selectedTypeFilter === 'all' ? 'bg-blue-600 text-white shadow' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:text-white dark:bg-slate-800 dark:border-slate-800 dark:text-slate-400']"
                     >
                         All ({{ districts.length }})
                     </button>
                     <button
                         @click="selectedTypeFilter = 'district'"
-                        :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition', selectedTypeFilter === 'district' ? 'bg-blue-600 text-white shadow' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:text-white dark:bg-slate-800 dark:border-slate-800 dark:text-slate-400']"
+                        :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition', selectedTypeFilter === 'district' ? 'bg-blue-600 text-white shadow' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:text-white dark:bg-slate-800 dark:border-slate-800 dark:text-slate-400']"
                     >
                         🌐 Districts ({{ activeDistricts.length }})
                     </button>
                     <button
                         @click="selectedTypeFilter = 'group'"
-                        :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition', selectedTypeFilter === 'group' ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:text-white dark:bg-slate-800 dark:border-slate-800 dark:text-slate-400']"
+                        :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition', selectedTypeFilter === 'group' ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:text-white dark:bg-slate-800 dark:border-slate-800 dark:text-slate-400']"
                     >
                         🏛️ Groups ({{ groups.length }})
                     </button>
                     <button
                         @click="selectedTypeFilter = 'dormant'"
-                        :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition', selectedTypeFilter === 'dormant' ? 'bg-rose-600 text-white shadow' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:text-white dark:bg-slate-800 dark:border-slate-800 dark:text-slate-400']"
+                        :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition', selectedTypeFilter === 'dormant' ? 'bg-rose-600 text-white shadow' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:text-white dark:bg-slate-800 dark:border-slate-800 dark:text-slate-400']"
                     >
                         ⏸️ Dormant ({{ dormant.length }})
                     </button>
@@ -321,7 +321,7 @@ function typeBadge(type) {
                     </div>
                     <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
                         <button type="button" @click="showCreateModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">Cancel</button>
-                        <button type="submit" :disabled="createForm.processing" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-500">Add Entry</button>
+                        <button type="submit" :disabled="createForm.processing" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-500">Add entry</button>
                     </div>
                 </form>
             </div>

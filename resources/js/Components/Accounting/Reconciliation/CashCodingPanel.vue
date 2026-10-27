@@ -30,7 +30,7 @@ defineProps({
           :disabled="selectedCashCodingTx.length === 0"
           class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow transition cursor-pointer"
         >
-          Save &amp; Reconcile Selected ({{ selectedCashCodingTx.length }})
+          Save &amp; reconcile selected ({{ selectedCashCodingTx.length }})
         </button>
       </div>
 
@@ -99,7 +99,7 @@ defineProps({
                   @change="getRowState(tx.id, tx).showWhatError = false"
                   :class="[
                     'w-full px-2 py-1 border rounded text-xs',
-                    getRowState(tx.id, tx).showWhatError ? 'border-red-500 bg-red-50/50 dark:bg-red-950/50' : 'border-slate-300 dark:border-slate-700'
+                    getRowState(tx.id, tx).showWhatError ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-950/50' : 'border-slate-300 dark:border-slate-700'
                   ]"
                 >
                   <option value="">Select Account...</option>

@@ -39,7 +39,7 @@ const badge = typeBadge(props.district.type);
                     <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">
                         <Link :href="route('superadmin.dashboard')" class="hover:text-slate-900 transition dark:hover:text-white">Dashboard</Link>
                         <span>/</span>
-                        <Link :href="route('superadmin.districts.index')" class="hover:text-slate-900 transition dark:hover:text-white">Districts &amp; Groups</Link>
+                        <Link :href="route('superadmin.districts.index')" class="hover:text-slate-900 transition dark:hover:text-white">Districts &amp; groups</Link>
                         <span>/</span>
                         <span class="text-blue-600 font-bold dark:text-blue-400">{{ district.name }}</span>
                     </div>
@@ -58,7 +58,7 @@ const badge = typeBadge(props.district.type);
                         :href="route('superadmin.districts.edit', district.id)"
                         class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl border border-blue-500 transition"
                     >
-                        ✏️ Edit District
+                        ✏️ Edit district
                     </Link>
                     <button
                         @click="confirmDelete"
@@ -178,11 +178,11 @@ const badge = typeBadge(props.district.type);
                     <dl class="space-y-3 text-xs">
                         <div v-if="district.twitter_url" class="flex justify-between">
                             <dt class="text-slate-500 font-medium dark:text-slate-400">Twitter / X</dt>
-                            <dd><a :href="district.twitter_url" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">View Profile ↗</a></dd>
+                            <dd><a :href="district.twitter_url" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">View profile ↗</a></dd>
                         </div>
                         <div v-if="district.facebook_url" class="flex justify-between">
                             <dt class="text-slate-500 font-medium dark:text-slate-400">Facebook</dt>
-                            <dd><a :href="district.facebook_url" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">View Page ↗</a></dd>
+                            <dd><a :href="district.facebook_url" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">View page ↗</a></dd>
                         </div>
                         <p v-if="!district.twitter_url && !district.facebook_url" class="text-xs text-slate-500 italic dark:text-slate-400">
                             No social media profiles recorded. <Link :href="route('superadmin.districts.edit', district.id)" class="text-blue-600 hover:underline dark:text-blue-400">Add them →</Link>
@@ -205,13 +205,13 @@ const badge = typeBadge(props.district.type);
                     :href="route('superadmin.districts.index')"
                     class="text-xs text-slate-500 hover:text-slate-900 transition flex items-center gap-1 dark:text-slate-400 dark:hover:text-white"
                 >
-                    ← Back to Districts &amp; Groups
+                    ← Back to districts &amp; groups
                 </Link>
                 <Link
                     :href="route('superadmin.districts.edit', district.id)"
                     class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition"
                 >
-                    ✏️ Edit This Entry
+                    ✏️ Edit this entry
                 </Link>
             </div>
         </div>

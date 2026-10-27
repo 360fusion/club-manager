@@ -82,7 +82,7 @@ const saveBusinessAccount = () => {
             class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-2 cursor-pointer"
           >
             <span>🚀</span>
-            <span>External Stripe Portal</span>
+            <span>External Stripe portal</span>
           </a>
         </div>
       </div>
@@ -184,9 +184,9 @@ const saveBusinessAccount = () => {
               <button
                 type="button"
                 @click="showSecretKeys = !showSecretKeys"
-                class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-lg transition-all"
+                class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl transition-all"
               >
-                {{ showSecretKeys ? '🙈 Hide API Keys' : '👁️ Show API Keys' }}
+                {{ showSecretKeys ? '🙈 Hide API keys' : '👁️ Show API keys' }}
               </button>
             </div>
 
@@ -230,7 +230,7 @@ const saveBusinessAccount = () => {
               class="px-5 py-2.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
             >
               <span v-if="businessForm.processing">Saving...</span>
-              <span v-else>💾 Save Main Business Account Details</span>
+              <span v-else>💾 Save main business account details</span>
             </button>
           </div>
         </form>
@@ -342,7 +342,7 @@ const saveBusinessAccount = () => {
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">View recent platform subscription payments and download tax receipts.</p>
           </div>
           <button type="button" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
-            Download All Receipts (PDF)
+            Download all receipts (PDF)
           </button>
         </div>
 

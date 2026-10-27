@@ -43,7 +43,7 @@ defineProps({
               @click.stop="showConnectBankDropdown = !showConnectBankDropdown"
               class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition-all cursor-pointer font-extrabold text-xs flex items-center gap-2"
             >
-              <span>💳 Connect Bank / API</span>
+              <span>💳 Connect bank / API</span>
               <span class="text-[10px]">▾</span>
             </button>
 
@@ -175,9 +175,9 @@ defineProps({
                 <button
                   type="button"
                   @click="syncGoCardlessNow(acc.id)"
-                  class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer"
+                  class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] rounded-xl shadow-sm transition-all cursor-pointer"
                 >
-                  Sync API Now
+                  Sync API now
                 </button>
               </div>
 
@@ -190,9 +190,9 @@ defineProps({
                 <button
                   type="button"
                   @click="syncStripeNow(acc.id)"
-                  class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer"
+                  class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-xl shadow-sm transition-all cursor-pointer"
                 >
-                  Sync API Now
+                  Sync API now
                 </button>
               </div>
 
@@ -205,9 +205,9 @@ defineProps({
                 <button
                   type="button"
                   @click="syncSumUpNow(acc.id)"
-                  class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer"
+                  class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-xl shadow-sm transition-all cursor-pointer"
                 >
-                  Sync API Now
+                  Sync API now
                 </button>
               </div>
 
@@ -220,9 +220,9 @@ defineProps({
                 <button
                   type="button"
                   @click="syncPayPalNow(acc.id)"
-                  class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-lg shadow-sm transition-all cursor-pointer"
+                  class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-xl shadow-sm transition-all cursor-pointer"
                 >
-                  Sync API Now
+                  Sync API now
                 </button>
               </div>
 
@@ -271,7 +271,7 @@ defineProps({
             :href="route('admin.accounting.journal.create', club.slug)"
             class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all"
           >
-            + Add Journal Entry
+            + Add journal entry
           </Link>
         </div>
 
@@ -302,7 +302,7 @@ defineProps({
                   </span>
                   <Link
                     :href="route('admin.accounting.journal.edit', { clubSlug: club.slug, id: entry.id })"
-                    class="px-2 py-0.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 font-bold text-[10px] rounded-lg transition-colors"
+                    class="px-2 py-0.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 font-bold text-[10px] rounded-xl transition-colors"
                   >
                     Edit
                   </Link>

@@ -59,7 +59,7 @@ const filteredBills = computed(() => {
           :href="route('admin.accounting.bills.create', club.slug)"
           class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm flex items-center gap-1.5 transition-colors"
         >
-          <span>📄 Record Vendor Bill</span>
+          <span>📄 Record vendor bill</span>
         </Link>
       </div>
 
@@ -91,14 +91,14 @@ const filteredBills = computed(() => {
           <button
             type="button"
             @click="billsFyFilter = 'all'; billsYearFilter = 'all'"
-            :class="['px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer', billsFyFilter === 'all' && billsYearFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
+            :class="['px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold transition-all cursor-pointer', billsFyFilter === 'all' && billsYearFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
           >All</button>
           <button
             v-for="fy in billsFyYears"
             :key="fy"
             type="button"
             @click="billsFyFilter = fy; billsYearFilter = 'all'"
-            :class="['px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer', billsFyFilter === fy ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
+            :class="['px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold transition-all cursor-pointer', billsFyFilter === fy ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700']"
           >FY {{ fy }}</button>
         </div>
 
@@ -159,16 +159,16 @@ const filteredBills = computed(() => {
                     title="View & Zoom Receipt Attachment"
                     class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-[10px] font-extrabold rounded-md border border-amber-200 dark:border-amber-800/60 transition-colors cursor-pointer"
                   >
-                    📎 View Receipt
+                    📎 View receipt
                   </button>
                 </div>
               </td>
               <td class="py-3 px-4 text-slate-500 dark:text-slate-400">{{ b.due_date }}</td>
               <td class="py-3 px-4">
-                <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', b.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : b.status === 'draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700' : b.status === 'pending_approval' ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/60' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60']">
+                <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', b.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : b.status === 'draft' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700' : b.status === 'pending_approval' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60']">
                   {{ b.status === 'pending_approval' ? 'pending approval' : b.status }}
                 </span>
-                <span v-if="b.reconciled_at" title="Confirmed against a bank statement line" class="ml-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/60">
+                <span v-if="b.reconciled_at" title="Confirmed against a bank statement line" class="ml-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60">
                   🔗 Reconciled
                 </span>
               </td>
@@ -180,7 +180,7 @@ const filteredBills = computed(() => {
                     type="button"
                     @click="publishBill(b.id)"
                     title="Approve & Post Bill to Accounts Payable"
-                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white border border-amber-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white border border-amber-700 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-sm"
                   >
                     🚀 Approve
                   </button>
@@ -190,17 +190,17 @@ const filteredBills = computed(() => {
                     :disabled="b.can_approve === false"
                     :title="b.can_approve === false ? 'You raised this bill, so you cannot also approve it — ask another admin or treasurer.' : 'Sign Off & Post Bill to Accounts Payable'"
                     @click="approveBill(b.id)"
-                    class="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white border border-purple-700 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer flex items-center gap-1 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    ✅ Sign Off
+                    ✅ Sign off
                   </button>
                   <button
                     v-else-if="canManageBilling && b.status === 'unpaid'"
                     type="button"
                     @click="markBillPaid(b.id)"
-                    class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer"
                   >
-                    ✓ Pay Bill
+                    ✓ Pay bill
                   </button>
                   <span v-else-if="b.status === 'paid'" class="text-[10px] font-bold text-slate-400">
                     Paid {{ b.paid_at }}
@@ -211,7 +211,7 @@ const filteredBills = computed(() => {
                     type="button"
                     @click="openActivityLog('bill', b.id, `Bill ${b.bill_number}`)"
                     title="View Activity Log"
-                    class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold rounded-lg transition-all cursor-pointer"
+                    class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer"
                   >
                     🕘
                   </button>

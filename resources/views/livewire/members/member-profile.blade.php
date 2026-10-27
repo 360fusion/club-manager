@@ -295,7 +295,7 @@
                                     <x-button variant="secondary" size="sm" wire:click="revokePortalInvite" wire:confirm="Withdraw this invitation? The link in their email will stop working.">Revoke</x-button>
                                 @endif
                                 @if($member->user_id)
-                                    <a href="{{ route('admin.users.show', ['clubSlug' => $club->slug, 'userId' => $member->user_id]) }}" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Manage on Users page</a>
+                                    <a href="{{ route('admin.users.show', ['clubSlug' => $club->slug, 'userId' => $member->user_id]) }}" class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Manage on users page</a>
                                 @endif
                             </div>
                         @endif

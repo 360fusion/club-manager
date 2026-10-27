@@ -177,7 +177,7 @@ defineProps({
             @click="navigateTo('reconciliation')"
             class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl border border-blue-200/60 dark:border-blue-800/60 transition shadow-xs self-start sm:self-auto cursor-pointer"
           >
-            <span>Manage Claims & Reconciliation</span>
+            <span>Manage claims & reconciliation</span>
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>

@@ -56,7 +56,7 @@ const REPLIES = { attending_dining: 'Going, dining', attending_meeting_only: 'Go
                                 <Badge v-if="meeting.rsvp" :variant="STATUS[meeting.rsvp.attendance_status]?.variant ?? 'neutral'">{{ STATUS[meeting.rsvp.attendance_status]?.label ?? meeting.rsvp.attendance_status }}</Badge>
                                 <Badge v-if="meeting.rsvp?.attendance_status === 'attending_dining' && meeting.rsvp.payment_status === 'paid'" variant="success">Paid</Badge>
                                 <Button size="sm" :variant="meeting.rsvp ? 'secondary' : 'primary'" :disabled="meeting.closed" @click="selectedMeeting = meeting">
-                                    {{ meeting.rsvp ? 'Edit Response' : 'Respond' }}
+                                    {{ meeting.rsvp ? 'Edit response' : 'Respond' }}
                                 </Button>
                                 <span v-if="meeting.closed" class="text-xs text-slate-500 dark:text-slate-400">Replies closed</span>
                             </div>

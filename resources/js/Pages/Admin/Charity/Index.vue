@@ -102,7 +102,7 @@ const updateGrantStatus = (grantId, status) => {
             class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
           >
             <span>📥</span>
-            <span>Record Collection</span>
+            <span>Record collection</span>
           </button>
 
           <button
@@ -111,7 +111,7 @@ const updateGrantStatus = (grantId, status) => {
             class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
           >
             <span>🎁</span>
-            <span>Propose Grant</span>
+            <span>Propose grant</span>
           </button>
 
           <a
@@ -171,13 +171,13 @@ const updateGrantStatus = (grantId, status) => {
             :href="route('admin.charity.giftaid.transactions_page', club.slug)"
             class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
           >
-            <span>📜 View Gift Aid Transactions Ledger</span>
+            <span>📜 View Gift Aid transactions ledger</span>
           </Link>
           <Link
             :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'reconciliation' })"
             class="px-4 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
           >
-            <span>⚡ Open Reconciliation Workspace</span>
+            <span>⚡ Open reconciliation workspace</span>
           </Link>
         </div>
       </div>
@@ -193,7 +193,7 @@ const updateGrantStatus = (grantId, status) => {
               <h3 class="font-black text-slate-900 dark:text-white text-sm">Recent Dual-Custody Meeting Collections</h3>
             </div>
             <button type="button" @click="showCollectionModal = true" class="text-xs text-blue-700 dark:text-blue-300 font-bold hover:underline">
-              + New Collection
+              + New collection
             </button>
           </div>
 
@@ -228,7 +228,7 @@ const updateGrantStatus = (grantId, status) => {
               <h3 class="font-black text-slate-900 dark:text-white text-sm">Charity Grants &amp; Relief Voting</h3>
             </div>
             <button type="button" @click="showGrantModal = true" class="text-xs text-blue-700 dark:text-blue-300 font-bold hover:underline">
-              + Propose Grant
+              + Propose grant
             </button>
           </div>
 
@@ -258,7 +258,7 @@ const updateGrantStatus = (grantId, status) => {
                   @click="updateGrantStatus(grant.id, 'committee_approved')"
                   class="px-2 py-0.5 bg-blue-600 text-white font-bold text-[10px] rounded cursor-pointer"
                 >
-                  Approve Committee
+                  Approve committee
                 </button>
                 <button
                   v-else-if="grant.approval_status === 'committee_approved'"
@@ -266,7 +266,7 @@ const updateGrantStatus = (grantId, status) => {
                   @click="updateGrantStatus(grant.id, 'lodge_voted')"
                   class="px-2 py-0.5 bg-amber-600 text-white font-bold text-[10px] rounded cursor-pointer"
                 >
-                  Lodge Voted
+                  Lodge voted
                 </button>
                 <button
                   v-else-if="grant.approval_status === 'lodge_voted'"
@@ -274,7 +274,7 @@ const updateGrantStatus = (grantId, status) => {
                   @click="updateGrantStatus(grant.id, 'disbursed')"
                   class="px-2 py-0.5 bg-emerald-600 text-white font-bold text-[10px] rounded cursor-pointer"
                 >
-                  Disburse Payment
+                  Disburse payment
                 </button>
                 <span v-else class="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold block">Disbursed ✓</span>
               </div>
@@ -341,7 +341,7 @@ const updateGrantStatus = (grantId, status) => {
 
             <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
               <button type="button" @click="showCollectionModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
-              <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md transition">Record Collection</button>
+              <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md transition">Record collection</button>
             </div>
           </form>
         </div>
@@ -402,7 +402,7 @@ const updateGrantStatus = (grantId, status) => {
 
             <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
               <button type="button" @click="showGrantModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
-              <button type="submit" class="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-black rounded-xl shadow-md transition">Save Grant Proposal</button>
+              <button type="submit" class="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-black rounded-xl shadow-md transition">Save grant proposal</button>
             </div>
           </form>
         </div>

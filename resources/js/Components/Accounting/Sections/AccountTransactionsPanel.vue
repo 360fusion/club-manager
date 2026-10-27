@@ -51,9 +51,9 @@ const removeAndRedoSelectedAccountTransactions = () => {
             v-if="selectedAccountTxIds.length > 0"
             type="button"
             @click="removeAndRedoSelectedAccountTransactions"
-            class="px-3.5 py-1.5 bg-[#008ba8] hover:bg-[#00768f] text-white font-extrabold text-xs rounded-lg shadow transition-all cursor-pointer flex items-center gap-1.5"
+            class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer flex items-center gap-1.5"
           >
-            Remove &amp; Redo ({{ selectedAccountTxIds.length }})
+            Remove &amp; redo ({{ selectedAccountTxIds.length }})
           </button>
         </div>
       </div>

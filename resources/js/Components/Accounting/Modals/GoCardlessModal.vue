@@ -40,14 +40,14 @@ defineProps({
                 @click="goCardlessForm.gocardless_environment = 'sandbox'"
                 :class="['p-2.5 rounded-xl border text-center font-bold text-xs cursor-pointer transition-all', goCardlessForm.gocardless_environment === 'sandbox' ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 text-amber-900 dark:text-amber-200 shadow-sm' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']"
               >
-                🧪 Sandbox (Testing)
+                🧪 Sandbox (testing)
               </button>
               <button
                 type="button"
                 @click="goCardlessForm.gocardless_environment = 'live'"
                 :class="['p-2.5 rounded-xl border text-center font-bold text-xs cursor-pointer transition-all', goCardlessForm.gocardless_environment === 'live' ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-200 shadow-sm' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300']"
               >
-                ⚡ Live Production
+                ⚡ Live production
               </button>
             </div>
           </div>
@@ -56,7 +56,7 @@ defineProps({
             <div class="flex items-center justify-between mb-1">
               <label class="font-bold text-slate-700 dark:text-slate-200">GoCardless Access Token *</label>
               <button type="button" @click="showGoCardlessToken = !showGoCardlessToken" class="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 cursor-pointer">
-                {{ showGoCardlessToken ? 'Hide' : 'Show Token' }}
+                {{ showGoCardlessToken ? 'Hide' : 'Show token' }}
               </button>
             </div>
             <input :type="showGoCardlessToken ? 'text' : 'password'" v-model="goCardlessForm.gocardless_access_token" required placeholder="live_... or sandbox_..." class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-mono text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
@@ -66,7 +66,7 @@ defineProps({
             <div class="flex items-center justify-between mb-1">
               <label class="font-bold text-slate-700 dark:text-slate-200">Webhook Secret (Optional)</label>
               <button type="button" @click="showGoCardlessSecret = !showGoCardlessSecret" class="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 cursor-pointer">
-                {{ showGoCardlessSecret ? 'Hide' : 'Show Secret' }}
+                {{ showGoCardlessSecret ? 'Hide' : 'Show secret' }}
               </button>
             </div>
             <input :type="showGoCardlessSecret ? 'text' : 'password'" v-model="goCardlessForm.gocardless_webhook_secret" placeholder="GoCardless Webhook Secret Key" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-mono text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
@@ -93,7 +93,7 @@ defineProps({
               Cancel
             </button>
             <button type="submit" :disabled="goCardlessForm.processing" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md shadow-amber-600/20 cursor-pointer">
-              Save &amp; Connect GoCardless
+              Save &amp; connect GoCardless
             </button>
           </div>
         </form>

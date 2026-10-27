@@ -67,7 +67,7 @@
                                         type="button"
                                         wire:click="updateAttendance({{ $att->id }}, '{{ $type }}')"
                                         aria-pressed="{{ $att->attendance_type->value === $type ? 'true' : 'false' }}"
-                                        class="px-2 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer {{ $att->attendance_type->value === $type ? 'bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white' : 'border border-transparent text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white' }}"
+                                        class="px-2 py-1 rounded-xl text-xs font-medium transition-colors cursor-pointer {{ $att->attendance_type->value === $type ? 'bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white' : 'border border-transparent text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white' }}"
                                     >
                                         {{ $icon }}
                                     </button>
@@ -76,7 +76,7 @@
                                 <button
                                     type="button"
                                     wire:click="removeAttendee({{ $att->id }})"
-                                    class="ml-1 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-800 dark:hover:text-rose-400 cursor-pointer"
+                                    class="ml-1 rounded-xl p-1 text-slate-400 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-800 dark:hover:text-rose-400 cursor-pointer"
                                     title="Remove from roll call"
                                     aria-label="Remove {{ $att->name }} from roll call"
                                 >
@@ -390,7 +390,7 @@
             <button
                 type="button"
                 @click="complianceModal = null"
-                class="absolute top-4 right-4 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 cursor-pointer"
+                class="absolute top-4 right-4 rounded-xl p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 cursor-pointer"
                 aria-label="Close explainer"
             >
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>

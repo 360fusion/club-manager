@@ -338,7 +338,7 @@ const isImage = (mimeOrUrl) => {
           >
             <span v-if="isUploading" class="animate-spin">⏳</span>
             <span v-else>📤</span>
-            <span>Upload New File</span>
+            <span>Upload new file</span>
           </button>
           <input
             ref="uploadFileInput"

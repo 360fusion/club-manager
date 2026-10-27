@@ -109,12 +109,12 @@ function removeRulerField(index) {
                 </div>
                 <button
                     @click="showCreateModal = true"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-sm shadow-sm transition inline-flex items-center gap-2"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-sm shadow-sm transition inline-flex items-center gap-2"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
-                    Add Masonic Order Preset
+                    Add Masonic order preset
                 </button>
             </div>
 
@@ -162,31 +162,31 @@ function removeRulerField(index) {
                         <div class="flex items-center gap-2">
                             <Link
                                 :href="route('superadmin.club_types.show', selectedType.id)"
-                                class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-lg border border-blue-300 transition flex items-center gap-1 dark:bg-blue-950/60 dark:hover:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700"
+                                class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl border border-blue-300 transition flex items-center gap-1 dark:bg-blue-950/60 dark:hover:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700"
                             >
-                                <span>View Order Page</span>
+                                <span>View order page</span>
                                 <span>↗</span>
                             </Link>
                             <button
                                 v-if="!isEditing"
                                 @click="isEditing = true"
-                                class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium text-xs rounded-lg border border-slate-300 transition dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
+                                class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium text-xs rounded-xl border border-slate-300 transition dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
                             >
-                                Edit Preset
+                                Edit preset
                             </button>
                             <template v-else>
                                 <button
                                     @click="isEditing = false"
-                                    class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-lg border border-slate-300 transition dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
+                                    class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-xl border border-slate-300 transition dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     @click="updateClubType"
                                     :disabled="editForm.processing"
-                                    class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs rounded-lg transition"
+                                    class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs rounded-xl transition"
                                 >
-                                    {{ editForm.processing ? 'Saving...' : 'Save Changes' }}
+                                    {{ editForm.processing ? 'Saving...' : 'Save changes' }}
                                 </button>
                             </template>
                         </div>
@@ -301,7 +301,7 @@ function removeRulerField(index) {
                                     type="button"
                                     class="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 dark:text-blue-400 dark:hover:text-blue-300"
                                 >
-                                    + Add Field
+                                    + Add field
                                 </button>
                             </div>
                             <p class="text-xs text-slate-500 dark:text-slate-400">Specifies executive ruler titles rendered on the Province Settings page for clubs of this type.</p>
@@ -313,7 +313,7 @@ function removeRulerField(index) {
                                         type="text"
                                         class="flex-1 bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-1.5 focus:ring-1 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                                     />
-                                    <button @click="removeRulerField(idx)" type="button" class="text-red-700 hover:text-red-800 p-1 dark:text-red-400 dark:hover:text-red-300">
+                                    <button @click="removeRulerField(idx)" type="button" class="text-rose-700 hover:text-rose-800 p-1 dark:text-rose-400 dark:hover:text-rose-300">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
@@ -407,7 +407,7 @@ function removeRulerField(index) {
                             :disabled="createForm.processing"
                             class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-500"
                         >
-                            Create Order
+                            Create order
                         </button>
                     </div>
                 </form>

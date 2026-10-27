@@ -89,7 +89,7 @@ const submitGiving = () => {
             class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
           >
             <span>⚙️</span>
-            <span>Edit Festival Milestones</span>
+            <span>Edit Festival milestones</span>
           </button>
         </div>
       </div>
@@ -186,8 +186,8 @@ const submitGiving = () => {
                   </div>
                 </td>
                 <td class="py-3 px-4 text-right">
-                  <button type="button" @click="openGivingModal(m)" class="px-3 py-1 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-extrabold text-[10px] rounded-lg shadow-sm transition">
-                    Edit Giving
+                  <button type="button" @click="openGivingModal(m)" class="px-3 py-1 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-extrabold text-[10px] rounded-xl shadow-sm transition">
+                    Edit giving
                   </button>
                 </td>
               </tr>
@@ -242,7 +242,7 @@ const submitGiving = () => {
 
             <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
               <button type="button" @click="showTargetModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
-              <button type="submit" class="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-black rounded-xl shadow-md transition">Save Milestones</button>
+              <button type="submit" class="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-black rounded-xl shadow-md transition">Save milestones</button>
             </div>
           </form>
         </div>
@@ -284,7 +284,7 @@ const submitGiving = () => {
 
             <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
               <button type="button" @click="showGivingModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
-              <button type="submit" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white font-black rounded-xl shadow-md transition">Save Member Giving</button>
+              <button type="submit" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white font-black rounded-xl shadow-md transition">Save member giving</button>
             </div>
           </form>
         </div>

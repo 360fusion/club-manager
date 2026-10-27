@@ -79,7 +79,7 @@ const confirmInsertion = () => {
             activeTab === 'updates' ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           ]"
         >
-          <span>📜</span> Approved Updates ({{ updates.length }})
+          <span>📜</span> Approved updates ({{ updates.length }})
         </button>
         <button
           type="button"
@@ -249,7 +249,7 @@ const confirmInsertion = () => {
             :disabled="!totalSelected"
             class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
           >
-            Insert Selected Items →
+            Insert selected items →
           </button>
         </div>
       </div>

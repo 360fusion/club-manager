@@ -142,7 +142,7 @@
                     <legend class="sr-only">Type of entry</legend>
                     <div class="flex gap-2">
                         @foreach(['note' => 'Note', 'call' => 'Call', 'meeting' => 'Meeting'] as $val => $noteLabel)
-                            <label class="flex-1 text-center px-2 py-1.5 rounded-lg border text-xs font-medium cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-500 {{ $note_type === $val ? 'border-blue-400 bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200' : 'border-slate-200 text-slate-700 dark:border-slate-800 dark:text-slate-200' }}">
+                            <label class="flex-1 text-center px-2 py-1.5 rounded-xl border text-xs font-medium cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue-500 {{ $note_type === $val ? 'border-blue-400 bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200' : 'border-slate-200 text-slate-700 dark:border-slate-800 dark:text-slate-200' }}">
                                 <input type="radio" wire:model.live="note_type" value="{{ $val }}" class="sr-only" />{{ $noteLabel }}
                             </label>
                         @endforeach

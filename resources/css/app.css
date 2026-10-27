@@ -110,14 +110,15 @@
     }
 }
 
-/* Self-hosted fonts for the "Traditional Lodge" website theme (latin subset, no visitor data goes to a font service).
+/* Self-hosted fonts for the app and the "Traditional Lodge" website theme (latin subset, no visitor data goes to a font
+   service). The relative path lets Vite resolve them: a root path breaks on pages that link the CSS from the dev server.
    Playfair Display and Inter are licensed under the SIL Open Font License 1.1 (https://openfontlicense.org). */
 @font-face {
     font-family: 'Playfair Display';
     font-style: normal;
     font-weight: 400 900;
     font-display: swap;
-    src: url('/fonts/playfair-display-latin.woff2') format('woff2');
+    src: url('../../public/fonts/playfair-display-latin.woff2') format('woff2');
 }
 
 @font-face {
@@ -125,7 +126,7 @@
     font-style: italic;
     font-weight: 400 700;
     font-display: swap;
-    src: url('/fonts/playfair-display-latin-italic.woff2') format('woff2');
+    src: url('../../public/fonts/playfair-display-latin-italic.woff2') format('woff2');
 }
 
 @font-face {
@@ -133,7 +134,7 @@
     font-style: normal;
     font-weight: 300 700;
     font-display: swap;
-    src: url('/fonts/inter-latin.woff2') format('woff2');
+    src: url('../../public/fonts/inter-latin.woff2') format('woff2');
 }
 
 /* Slow zoom on the visible slide of a website slideshow (only applied when the visitor has not asked for reduced motion). */

@@ -24,7 +24,7 @@ defineProps({
         ]"
       >
         <span>📊</span>
-        <span>Charity Dashboard</span>
+        <span>Charity dashboard</span>
       </Link>
 
       <Link
@@ -35,7 +35,7 @@ defineProps({
         ]"
       >
         <span>🏛️</span>
-        <span>Gift Aid Page</span>
+        <span>Gift Aid page</span>
       </Link>
 
       <Link
@@ -46,7 +46,7 @@ defineProps({
         ]"
       >
         <span>🏆</span>
-        <span>Festival Information</span>
+        <span>Festival information</span>
       </Link>
     </div>
   </div>

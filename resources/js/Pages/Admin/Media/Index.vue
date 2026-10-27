@@ -923,7 +923,7 @@ const isImage = (mimeOrUrl) => {
           >
             <span v-if="isUploading" class="animate-spin text-sm">🔄</span>
             <span v-else class="text-sm">📤</span>
-            <span>{{ isUploading ? 'Uploading...' : 'Upload New File' }}</span>
+            <span>{{ isUploading ? 'Uploading...' : 'Upload new file' }}</span>
           </button>
           <input
             ref="uploadFileInput"
@@ -1034,7 +1034,7 @@ const isImage = (mimeOrUrl) => {
                 @click="showNewFolderForm = !showNewFolderForm; newFolderError = ''; newFolderName = ''"
                 class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
               >
-                + New Folder
+                + New folder
               </button>
             </div>
 
@@ -1170,7 +1170,7 @@ const isImage = (mimeOrUrl) => {
                 class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer flex items-center gap-1"
                 title="Reset all search and filter settings"
               >
-                <span>✕ Reset Filters</span>
+                <span>✕ Reset filters</span>
               </button>
             </div>
           </div>
@@ -1190,7 +1190,7 @@ const isImage = (mimeOrUrl) => {
                 @click="toggleSelectAll"
                 class="text-xs font-bold text-slate-300 hover:text-white underline cursor-pointer"
               >
-                {{ selectedMediaIds.length === mediaItems.length ? 'Deselect All' : 'Select All' }}
+                {{ selectedMediaIds.length === mediaItems.length ? 'Deselect all' : 'Select all' }}
               </button>
             </div>
 
@@ -1201,14 +1201,14 @@ const isImage = (mimeOrUrl) => {
                   @click="handleBulkRestore"
                   class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
                 >
-                  ↻ Restore Selected
+                  ↻ Restore selected
                 </button>
                 <button
                   type="button"
                   @click="handleBulkForceDelete"
                   class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
                 >
-                  🔥 Delete Permanently
+                  🔥 Delete permanently
                 </button>
               </template>
               <template v-else>
@@ -1233,7 +1233,7 @@ const isImage = (mimeOrUrl) => {
                   @click="handleBulkDelete"
                   class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
                 >
-                  🗑️ Move to Trash
+                  🗑️ Move to trash
                 </button>
               </template>
 
@@ -1283,7 +1283,7 @@ const isImage = (mimeOrUrl) => {
                 @click="triggerUpload"
                 class="px-4 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all inline-flex items-center gap-1.5 cursor-pointer mt-2"
               >
-                <span>📤 Choose Files to Upload</span>
+                <span>📤 Choose files to upload</span>
               </button>
             </div>
 
@@ -1365,7 +1365,7 @@ const isImage = (mimeOrUrl) => {
                   <button
                     type="button"
                     @click="openPreview(item)"
-                    class="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded-lg border border-slate-300 dark:border-slate-700 transition-all cursor-pointer flex items-center gap-1"
+                    class="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all cursor-pointer flex items-center gap-1"
                     title="View details & edit metadata"
                   >
                     🔍 Details
@@ -1384,7 +1384,7 @@ const isImage = (mimeOrUrl) => {
                     <button
                       type="button"
                       @click="restoreItem(item)"
-                      class="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold rounded-lg border border-emerald-200 dark:border-emerald-800/60 transition-colors cursor-pointer flex items-center gap-0.5"
+                      class="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold rounded-xl border border-emerald-200 dark:border-emerald-800/60 transition-colors cursor-pointer flex items-center gap-0.5"
                       title="Restore file from Trash"
                     >
                       ↻ Restore

@@ -59,7 +59,7 @@ defineProps({
                 gatewaySyncType === 'stripe' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20' : (gatewaySyncType === 'sumup' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20')
               ]"
             >
-              <span>⚡ Pull {{ gatewaySyncType === 'stripe' ? 'Stripe' : (gatewaySyncType === 'sumup' ? 'SumUp' : 'PayPal') }} Transactions</span>
+              <span>⚡ Pull {{ gatewaySyncType === 'stripe' ? 'Stripe' : (gatewaySyncType === 'sumup' ? 'SumUp' : 'PayPal') }} transactions</span>
             </button>
           </div>
         </form>

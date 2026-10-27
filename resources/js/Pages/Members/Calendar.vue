@@ -84,9 +84,9 @@ const webcal = computed(() => props.feedUrl.replace(/^https?:/, 'webcal:'));
                 <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Calendar</h1>
                 <div class="flex items-center gap-2">
                     <Button size="sm" variant="secondary" :href="route(routeName, routeParams)">Today</Button>
-                    <Link :href="route(routeName, routeParams)" :data="{ month: shiftMonth(-1), club: urlScoped ? undefined : scopeClub?.slug }" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Previous month" preserve-scroll>‹</Link>
+                    <Link :href="route(routeName, routeParams)" :data="{ month: shiftMonth(-1), club: urlScoped ? undefined : scopeClub?.slug }" class="rounded-xl border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Previous month" preserve-scroll>‹</Link>
                     <span class="min-w-[9rem] text-center text-sm font-semibold text-slate-900 dark:text-white">{{ monthLabel }}</span>
-                    <Link :href="route(routeName, routeParams)" :data="{ month: shiftMonth(1), club: urlScoped ? undefined : scopeClub?.slug }" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Next month" preserve-scroll>›</Link>
+                    <Link :href="route(routeName, routeParams)" :data="{ month: shiftMonth(1), club: urlScoped ? undefined : scopeClub?.slug }" class="rounded-xl border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800" aria-label="Next month" preserve-scroll>›</Link>
                 </div>
             </div>
 

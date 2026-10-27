@@ -25,7 +25,7 @@ defineProps({
                     ↩️ Restore
                 </button>
                 <button @click="forceDeletePage(tp)" class="py-1.5 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold text-[11px] cursor-pointer transition-colors">
-                    Delete Forever
+                    Delete forever
                 </button>
             </div>
         </div>

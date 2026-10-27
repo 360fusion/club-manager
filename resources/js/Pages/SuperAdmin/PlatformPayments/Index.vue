@@ -51,7 +51,7 @@ const input = 'w-24 rounded-lg border border-slate-300 bg-slate-50 px-2 py-1.5 t
                 <form class="flex items-center gap-1.5" @submit.prevent="save(lodge)">
                   <input v-model="rows[lodge.id].commission_percent" type="number" step="0.01" min="0" max="100" :placeholder="`${defaults.percent}%`" :class="input" />
                   <input v-model="rows[lodge.id].commission_fixed" type="number" step="0.01" min="0" max="1000" :placeholder="String(defaults.fixed)" :class="input" />
-                  <button type="submit" class="rounded-lg border border-slate-300 px-2 py-1.5 font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200">Save</button>
+                  <button type="submit" class="rounded-xl border border-slate-300 px-2 py-1.5 font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200">Save</button>
                 </form>
               </td>
               <td class="p-3 font-mono">{{ lodge.totals.reduce((n, t) => n + t.payments, 0) }}</td>

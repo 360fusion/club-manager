@@ -42,7 +42,7 @@ const submitRecurringBill = () => {
           <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">A daily scheduled task turns a due schedule into a real bill automatically.</p>
         </div>
         <button type="button" @click="showAddRecurringBillForm = !showAddRecurringBillForm" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer">
-          ➕ Add Schedule
+          ➕ Add schedule
         </button>
       </div>
 
@@ -57,7 +57,7 @@ const submitRecurringBill = () => {
         </select>
         <input v-model="recurringBillForm.next_run_date" type="date" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
         <button type="submit" :disabled="recurringBillForm.processing" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50 sm:col-span-3">
-          Schedule Recurring Bill
+          Schedule recurring bill
         </button>
       </form>
 

@@ -64,14 +64,14 @@ defineProps({
                     @click="applyPreviewTheme()"
                     class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
-                    <span>✨ Apply This Theme</span>
+                    <span>✨ Apply this theme</span>
                 </button>
                 <a
                     :href="`/site/${club.slug}?preview_theme=${effectivePreviewThemeKey}`"
                     target="_blank"
                     class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
-                    <span>🌐 Open Full Site ↗</span>
+                    <span>🌐 Open full site ↗</span>
                 </a>
             </div>
         </div>

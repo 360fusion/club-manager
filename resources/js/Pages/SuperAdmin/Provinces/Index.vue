@@ -120,12 +120,12 @@ function getCountryFlag(country) {
                 </div>
                 <button
                     @click="openCreateModal"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-sm shadow-sm transition inline-flex items-center gap-2"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-sm shadow-sm transition inline-flex items-center gap-2"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
-                    Add Masonic Province
+                    Add Masonic province
                 </button>
             </div>
 
@@ -205,18 +205,18 @@ function getCountryFlag(country) {
                         <button
                             @click="selectedCountryFilter = 'All'"
                             :class="[
-                                'px-3 py-1.5 rounded-lg text-xs font-bold transition',
+                                'px-3 py-1.5 rounded-xl text-xs font-bold transition',
                                 selectedCountryFilter === 'All' ? 'bg-blue-600 text-white shadow' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-900 dark:bg-slate-800 dark:border-slate-800 dark:text-slate-400 dark:hover:text-white'
                             ]"
                         >
-                            All Countries ({{ provinces.length }})
+                            All countries ({{ provinces.length }})
                         </button>
                         <button
                             v-for="c in countriesList"
                             :key="c"
                             @click="selectedCountryFilter = c"
                             :class="[
-                                'px-3 py-1.5 rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5',
+                                'px-3 py-1.5 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5',
                                 selectedCountryFilter === c ? 'bg-blue-600 text-white shadow' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-900 dark:bg-slate-800 dark:border-slate-800 dark:text-slate-400 dark:hover:text-white'
                             ]"
                         >
@@ -409,7 +409,7 @@ function getCountryFlag(country) {
                             :disabled="createForm.processing"
                             class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-500"
                         >
-                            Add Province
+                            Add province
                         </button>
                     </div>
                 </form>
@@ -487,7 +487,7 @@ function getCountryFlag(country) {
                             :disabled="editForm.processing"
                             class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-500"
                         >
-                            Save Changes
+                            Save changes
                         </button>
                     </div>
                 </form>

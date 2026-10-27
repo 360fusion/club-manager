@@ -35,7 +35,7 @@ defineProps({
             <div class="flex items-center justify-between mb-1">
               <label class="font-bold text-slate-700 dark:text-slate-200">SumUp API Access Token / Key *</label>
               <button type="button" @click="showSumUpKey = !showSumUpKey" class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200 cursor-pointer">
-                {{ showSumUpKey ? 'Hide' : 'Show Key' }}
+                {{ showSumUpKey ? 'Hide' : 'Show key' }}
               </button>
             </div>
             <input :type="showSumUpKey ? 'text' : 'password'" v-model="sumUpForm.sumup_api_key" required placeholder="sup_sk_... or SumUp API Key" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-mono text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
@@ -62,7 +62,7 @@ defineProps({
               Cancel
             </button>
             <button type="submit" :disabled="sumUpForm.processing" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 cursor-pointer">
-              Save &amp; Connect SumUp
+              Save &amp; connect SumUp
             </button>
           </div>
         </form>

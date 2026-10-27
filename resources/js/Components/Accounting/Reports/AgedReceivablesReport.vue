@@ -59,7 +59,7 @@ defineProps({
                 <span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60">
                   {{ inv.bucket }}
                 </span>
-                <span v-if="inv.status === 'pending_approval'" class="ml-1 px-2 py-0.5 rounded text-[10px] font-black bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800/60">
+                <span v-if="inv.status === 'pending_approval'" class="ml-1 px-2 py-0.5 rounded text-[10px] font-black bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800/60">
                   ⏳ Pending Approval
                 </span>
               </td>

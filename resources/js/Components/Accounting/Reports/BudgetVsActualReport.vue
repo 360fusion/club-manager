@@ -63,7 +63,7 @@ defineProps({
         </table>
         <div v-if="canManageBilling" class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800">
           <button type="submit" :disabled="budgetForm.processing" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-50">
-            Save Budget
+            Save budget
           </button>
         </div>
       </form>

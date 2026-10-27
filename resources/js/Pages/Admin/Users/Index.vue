@@ -246,7 +246,7 @@ const submitAddMember = () => {
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            <span>Add Member</span>
+            <span>Add member</span>
           </button>
         </div>
       </div>
@@ -273,13 +273,13 @@ const submitAddMember = () => {
             <div class="flex items-center gap-1.5 flex-shrink-0">
               <button
                 @click="approveMember(pending.id)"
-                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg transition-all shadow-sm"
+                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-xl transition-all shadow-sm"
               >
                 Approve
               </button>
               <button
                 @click="rejectMember(pending.id)"
-                class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 text-[11px] font-bold rounded-lg transition-all"
+                class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 text-[11px] font-bold rounded-xl transition-all"
               >
                 Reject
               </button>
@@ -299,7 +299,7 @@ const submitAddMember = () => {
               : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
           ]"
         >
-          <span>👥 All Members</span>
+          <span>👥 All members</span>
           <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200']">
             {{ counts.all }}
           </span>
@@ -329,7 +329,7 @@ const submitAddMember = () => {
               : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
           ]"
         >
-          <span>✉️ Invited & Pending</span>
+          <span>✉️ Invited & pending</span>
           <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'invited_pending' ? 'bg-amber-700 text-white' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60']">
             {{ counts.invited_pending }}
           </span>
@@ -359,7 +359,7 @@ const submitAddMember = () => {
               : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
           ]"
         >
-          <span>📜 Past Members</span>
+          <span>📜 Past members</span>
           <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'past' ? 'bg-rose-700 text-white' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60']">
             {{ counts.past }}
           </span>
@@ -559,7 +559,7 @@ const submitAddMember = () => {
                   <template v-if="m.status === 'pending' && !m.invitation_accepted_at">
                     <button
                       @click="sendInviteEmail(m.id)"
-                      class="px-2 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-xs font-bold rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                      class="px-2 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1 cursor-pointer"
                       :title="m.invitation_token ? `Invited on ${m.invited_at}` : 'Send activation email'"
                     >
                       <span>✉️</span>
@@ -568,7 +568,7 @@ const submitAddMember = () => {
                     <button
                       v-if="m.invitation_token || m.invited_at"
                       @click="revokeInviteEmail(m.id, m.name)"
-                      class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                      class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
                       title="Revoke active invitation token"
                     >
                       <span>Revoke</span>
@@ -580,9 +580,9 @@ const submitAddMember = () => {
                   <template v-if="m.status === 'inactive'">
                     <button
                       @click="restoreMember(m.id, m.name)"
-                      class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                      class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold rounded-xl transition-all cursor-pointer"
                     >
-                      ✓ Restore Access
+                      ✓ Restore access
                     </button>
                   </template>
 
@@ -590,13 +590,13 @@ const submitAddMember = () => {
                   <template v-else-if="m.status === 'past'">
                     <button
                       @click="restoreMember(m.id, m.name)"
-                      class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                      class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold rounded-xl transition-all cursor-pointer"
                     >
-                      ↺ Restore Member
+                      ↺ Restore member
                     </button>
                     <button
                       @click="forceDeleteMember(m.id, m.name)"
-                      class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all cursor-pointer shadow-sm"
+                      class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
                       title="Delete from member directory (preserves historical records)"
                     >
                       Delete
@@ -647,7 +647,7 @@ const submitAddMember = () => {
             <svg v-else class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
-            <span>{{ inviteCopied ? 'Copied!' : 'Copy Link' }}</span>
+            <span>{{ inviteCopied ? 'Copied!' : 'Copy link' }}</span>
           </button>
         </div>
       </div>
@@ -762,7 +762,7 @@ const submitAddMember = () => {
               :disabled="addForm.processing"
               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20"
             >
-              Add Member
+              Add member
             </button>
           </div>
         </form>

@@ -43,7 +43,7 @@ const reset = () => {
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div class="space-y-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-4">
-          <button v-for="template in templates" :key="template.key" type="button" :class="['w-full rounded-lg border p-3 text-left text-sm transition-all', selectedKey === template.key ? 'border-blue-400 bg-blue-50 dark:border-blue-600 dark:bg-blue-950/60' : 'border-slate-200 bg-slate-50 hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900/60']" @click="selectedKey = template.key">
+          <button v-for="template in templates" :key="template.key" type="button" :class="['w-full rounded-xl border p-3 text-left text-sm transition-all', selectedKey === template.key ? 'border-blue-400 bg-blue-50 dark:border-blue-600 dark:bg-blue-950/60' : 'border-slate-200 bg-slate-50 hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900/60']" @click="selectedKey = template.key">
             <span class="font-semibold text-slate-900 dark:text-white">{{ template.name }}</span>
             <span v-if="template.customised" class="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Customised</span>
           </button>

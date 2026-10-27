@@ -137,7 +137,7 @@ const filterClass = 'bg-slate-100 border border-slate-300 text-slate-900 text-xs
                         <Link :href="route('lodges.index')" class="text-blue-600 hover:underline dark:text-blue-400">/lodges</Link>.
                     </p>
                 </div>
-                <button @click="openCreate" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-sm shadow-sm transition">+ Add Lodge</button>
+                <button @click="openCreate" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-sm shadow-sm transition">+ Add lodge</button>
             </div>
 
             <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg grid gap-3 md:grid-cols-3 lg:grid-cols-6 dark:bg-slate-900 dark:border-slate-800">

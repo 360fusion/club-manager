@@ -136,11 +136,11 @@ const openMeetingRsvpModal = (meeting) => {
                   </div>
 
                   <button @click="openMeetingRsvpModal(m)" :disabled="m.is_cutoff_passed" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer text-center justify-center flex items-center gap-1">
-                    ✍️ {{ m.user_rsvp ? 'Edit Response' : 'Respond' }}
+                    ✍️ {{ m.user_rsvp ? 'Edit response' : 'Respond' }}
                   </button>
 
                   <Link :href="route('member.meetings.summons', { slug: club.slug, id: m.id })" class="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-1 text-center">
-                    📄 View Summons
+                    📄 View summons
                   </Link>
                 </div>
               </div>
@@ -179,7 +179,7 @@ const openMeetingRsvpModal = (meeting) => {
                 </div>
 
                 <button @click="openRsvpModal(event)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all self-start sm:self-auto cursor-pointer">
-                  {{ event.user_rsvp ? 'Edit RSVP & Dining' : 'RSVP & Select Menu' }}
+                  {{ event.user_rsvp ? 'Edit RSVP & dining' : 'RSVP & select menu' }}
                 </button>
               </div>
             </div>

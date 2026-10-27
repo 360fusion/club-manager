@@ -88,7 +88,7 @@ const submit = () => {
                     </label>
 
                     <Link :href="route('password.request')" class="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
-                        Forgot / Reset Password?
+                        Forgot / reset password?
                     </Link>
                 </div>
 
@@ -97,13 +97,13 @@ const submit = () => {
                     :disabled="form.processing" 
                     class="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white font-bold text-sm shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.02]"
                 >
-                    Log In to Admin Workspace →
+                    Log in to admin workspace →
                 </button>
             </form>
 
             <div class="text-center pt-2">
                 <Link href="/" class="text-xs text-slate-400 hover:text-white transition-colors">
-                    ← Back to Platform Hub
+                    ← Back to platform hub
                 </Link>
             </div>
         </div>

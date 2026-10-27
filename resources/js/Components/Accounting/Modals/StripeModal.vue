@@ -35,7 +35,7 @@ defineProps({
             <div class="flex items-center justify-between mb-1">
               <label class="font-bold text-slate-700 dark:text-slate-200">Stripe Secret Key *</label>
               <button type="button" @click="showStripeSecret = !showStripeSecret" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 cursor-pointer">
-                {{ showStripeSecret ? 'Hide' : 'Show Key' }}
+                {{ showStripeSecret ? 'Hide' : 'Show key' }}
               </button>
             </div>
             <input :type="showStripeSecret ? 'text' : 'password'" v-model="stripeForm.stripe_secret_key" required placeholder="sk_live_... or sk_test_..." class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-mono text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
@@ -62,7 +62,7 @@ defineProps({
               Cancel
             </button>
             <button type="submit" :disabled="stripeForm.processing" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 cursor-pointer">
-              Save &amp; Connect Stripe
+              Save &amp; connect Stripe
             </button>
           </div>
         </form>

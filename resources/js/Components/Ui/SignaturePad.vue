@@ -96,14 +96,14 @@ onBeforeUnmount(() => {
             <button
                 type="button"
                 @click="setMode('typed')"
-                :class="['px-3 py-1.5 text-xs font-bold rounded-lg cursor-pointer', mode === 'typed' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300']"
+                :class="['px-3 py-1.5 text-xs font-bold rounded-xl cursor-pointer', mode === 'typed' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300']"
             >
                 Type your name
             </button>
             <button
                 type="button"
                 @click="setMode('drawn')"
-                :class="['px-3 py-1.5 text-xs font-bold rounded-lg cursor-pointer', mode === 'drawn' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300']"
+                :class="['px-3 py-1.5 text-xs font-bold rounded-xl cursor-pointer', mode === 'drawn' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300']"
             >
                 Draw
             </button>

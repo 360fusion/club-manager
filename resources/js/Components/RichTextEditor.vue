@@ -266,17 +266,17 @@ const removeLink = () => {
       <button 
         type="button" 
         @click="applyLink" 
-        class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm cursor-pointer"
+        class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm cursor-pointer"
       >
-        Apply Link
+        Apply link
       </button>
       <button 
         v-if="editor && editor.isActive('link')"
         type="button" 
         @click="removeLink" 
-        class="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold rounded-lg cursor-pointer"
+        class="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold rounded-xl cursor-pointer"
       >
-        Remove Link
+        Remove link
       </button>
       <button 
         type="button" 

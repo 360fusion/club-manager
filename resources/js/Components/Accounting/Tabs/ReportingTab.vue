@@ -104,7 +104,7 @@ defineProps({
             @click="navigateTo('reporting', null)"
             class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
           >
-            ← Back to All Reports
+            ← Back to all reports
           </button>
         </div>
       </div>
@@ -122,41 +122,41 @@ defineProps({
               type="button"
               @click="setQuickRange('this_month')"
               :class="[
-                'px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer',
+                'px-3 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer',
                 reportQuickRange === 'this_month' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
               ]"
             >
-              This Month
+              This month
             </button>
             <button
               type="button"
               @click="setQuickRange('last_month')"
               :class="[
-                'px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer',
+                'px-3 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer',
                 reportQuickRange === 'last_month' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
               ]"
             >
-              Last Month
+              Last month
             </button>
             <button
               type="button"
               @click="setQuickRange('this_year')"
               :class="[
-                'px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer',
+                'px-3 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer',
                 reportQuickRange === 'this_year' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
               ]"
             >
-              This Year
+              This year
             </button>
             <button
               type="button"
               @click="setQuickRange('all_time')"
               :class="[
-                'px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer',
+                'px-3 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer',
                 reportQuickRange === 'all_time' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
               ]"
             >
-              All Time
+              All time
             </button>
           </div>
         </div>
@@ -223,13 +223,13 @@ defineProps({
         <div v-if="charityCommission.registered" @click="navigateTo('reporting', 'independent_examiner')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
           <div class="flex items-center justify-between">
             <span class="text-2xl group-hover:scale-110 transition-transform">🖋️</span>
-            <span class="text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded-full">Charity</span>
+            <span class="text-[10px] font-black uppercase tracking-wider bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded-full">Charity</span>
           </div>
           <div>
             <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">Independent Examiner's Report</h4>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Annual examination of the registered Charity Fund, signed by your examiner.</p>
           </div>
-          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end text-xs font-bold text-purple-700 dark:text-purple-300">
+          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end text-xs font-bold text-blue-700 dark:text-blue-300">
             <span>View Report →</span>
           </div>
         </div>
@@ -366,13 +366,13 @@ defineProps({
         <div v-if="vatSettings.enabled" @click="navigateTo('reporting', 'vat_return')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
           <div class="flex items-center justify-between">
             <span class="text-2xl group-hover:scale-110 transition-transform">🧮</span>
-            <span class="text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-900/40 text-purple-900 dark:text-purple-200 px-2 py-0.5 rounded-full">Tax</span>
+            <span class="text-[10px] font-black uppercase tracking-wider bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 px-2 py-0.5 rounded-full">Tax</span>
           </div>
           <div>
             <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">VAT Return</h4>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Output VAT minus input VAT for the current quarter, exportable for HMRC filing.</p>
           </div>
-          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-purple-800 dark:text-purple-200">
+          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-blue-800 dark:text-blue-200">
             <span>{{ reports.vat_return?.quarter_label }}: {{ formatMoney(reports.vat_return?.net_vat_due) }} due</span>
             <span>View Return →</span>
           </div>
@@ -382,13 +382,13 @@ defineProps({
         <div @click="navigateTo('reporting', 'fixed_assets')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
           <div class="flex items-center justify-between">
             <span class="text-2xl group-hover:scale-110 transition-transform">🚣</span>
-            <span class="text-[10px] font-black uppercase tracking-wider bg-teal-100 dark:bg-teal-900/40 text-teal-900 dark:text-teal-200 px-2 py-0.5 rounded-full">Assets</span>
+            <span class="text-[10px] font-black uppercase tracking-wider bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 px-2 py-0.5 rounded-full">Assets</span>
           </div>
           <div>
             <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">Fixed Asset Register</h4>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Boats, equipment, regalia and property — cost, depreciation and net book value.</p>
           </div>
-          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-teal-800 dark:text-teal-200">
+          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-blue-800 dark:text-blue-200">
             <span>{{ fixedAssets.length }} asset{{ fixedAssets.length === 1 ? '' : 's' }} registered</span>
             <span>View Register →</span>
           </div>
@@ -398,13 +398,13 @@ defineProps({
         <div @click="navigateTo('reporting', 'budget_vs_actual')" class="bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all cursor-pointer space-y-3 group">
           <div class="flex items-center justify-between">
             <span class="text-2xl group-hover:scale-110 transition-transform">🎯</span>
-            <span class="text-[10px] font-black uppercase tracking-wider bg-indigo-100 dark:bg-indigo-900/40 text-indigo-900 dark:text-indigo-200 px-2 py-0.5 rounded-full">Planning</span>
+            <span class="text-[10px] font-black uppercase tracking-wider bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 px-2 py-0.5 rounded-full">Planning</span>
           </div>
           <div>
             <h4 class="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-800 dark:group-hover:text-blue-200">Budget vs Actual</h4>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Set an annual budget per account and track variance against real income/expenditure.</p>
           </div>
-          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-indigo-800 dark:text-indigo-200">
+          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-xs font-bold text-blue-800 dark:text-blue-200">
             <span>{{ budgetVsActual.financial_year }}: {{ formatMoney(budgetVsActual.total_actual) }} of {{ formatMoney(budgetVsActual.total_budgeted) }}</span>
             <span>View Budget →</span>
           </div>
@@ -506,7 +506,7 @@ defineProps({
               </select>
               <p v-if="examinerForm.errors.examiner_user_id" class="text-rose-600 dark:text-rose-400 font-semibold">{{ examinerForm.errors.examiner_user_id }}</p>
               <textarea v-model="examinerForm.notes" rows="2" placeholder="Notes for the report (optional)" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl"></textarea>
-              <button type="submit" :disabled="!examinerForm.examiner_user_id || examinerForm.processing" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-xl cursor-pointer disabled:opacity-50">Send signature request</button>
+              <button type="submit" :disabled="!examinerForm.examiner_user_id || examinerForm.processing" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl cursor-pointer disabled:opacity-50">Send signature request</button>
             </template>
           </form>
         </div>

@@ -369,7 +369,7 @@ const canSubmit = computed(() => !form.processing && !loading.value && !(editing
                     </div>
                     <span v-if="event.capacity" class="text-slate-500 dark:text-slate-400">{{ event.places_taken }} of {{ event.capacity }} places taken</span>
                 </div>
-                <label v-if="showOverride" class="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3 font-semibold text-amber-800 dark:text-amber-200">
+                <label v-if="showOverride" class="flex items-start gap-2 rounded-xl bg-amber-500/10 p-3 font-semibold text-amber-800 dark:text-amber-200">
                     <input v-model="form.over_capacity" type="checkbox" class="mt-0.5 rounded" />
                     <span>The event is full. Add them anyway (over capacity)? Otherwise they go on the waiting list, or the booking is refused if there isn't one.</span>
                 </label>

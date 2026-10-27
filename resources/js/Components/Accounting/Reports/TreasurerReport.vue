@@ -96,7 +96,7 @@ defineProps({
           <p class="text-[11px] text-slate-500 dark:text-slate-400">Blocks new entries dated in {{ annualTreasurerReport.financial_year }}. A super admin can reopen it later if needed.</p>
           <input v-model="closeYearForm.notes" placeholder="Notes (optional)" class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
           <button type="submit" :disabled="annualTreasurerReport.is_closed || closeYearForm.processing" class="px-3 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl cursor-pointer disabled:opacity-50">
-            {{ annualTreasurerReport.is_closed ? 'Already Closed' : `Close ${annualTreasurerReport.financial_year}` }}
+            {{ annualTreasurerReport.is_closed ? 'Already closed' : `Close ${annualTreasurerReport.financial_year}` }}
           </button>
         </form>
 

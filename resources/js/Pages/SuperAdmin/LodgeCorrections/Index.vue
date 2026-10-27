@@ -74,7 +74,7 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
 
             <div class="flex flex-wrap gap-2">
                 <Link v-for="tab in TABS" :key="tab.key" :href="route('superadmin.lodge_corrections.index', { status: tab.key })" preserve-scroll
-                    :class="['rounded-lg px-3 py-1.5 text-xs font-bold', status === tab.key ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300']">
+                    :class="['rounded-xl px-3 py-1.5 text-xs font-bold', status === tab.key ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300']">
                     {{ tab.label }}<span v-if="tab.key === 'open' && counts.open"> ({{ counts.open }})</span><span v-if="tab.key === 'applied'"> ({{ counts.applied }})</span>
                 </Link>
             </div>

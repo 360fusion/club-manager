@@ -92,7 +92,7 @@ defineProps({
               @click="submitReconcile(manualMatchType, manualTargetId || 0, manualNominalCode)"
               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer"
             >
-              Confirm Allocation &amp; Reconcile
+              Confirm allocation &amp; reconcile
             </button>
           </div>
         </div>

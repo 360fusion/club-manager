@@ -27,7 +27,7 @@ defineProps({
         </div>
         <div class="flex items-center gap-2">
           <button type="button" @click="printReport" class="px-4 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer shadow-sm flex items-center gap-1.5">
-            🖨️ Print / Export PDF
+            🖨️ Print / export PDF
           </button>
         </div>
       </div>

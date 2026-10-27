@@ -66,21 +66,21 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
         <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl self-start md:self-auto text-xs font-bold">
           <button
             @click="activeFilter = 'all'"
-            :class="['px-3 py-1.5 rounded-lg transition-all cursor-pointer', activeFilter === 'all' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white']"
+            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer', activeFilter === 'all' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white']"
           >
             All ({{ totalScheduleCount }})
           </button>
           <button
             @click="activeFilter = 'meetings'"
-            :class="['px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1', activeFilter === 'meetings' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white']"
+            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1', activeFilter === 'meetings' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white']"
           >
             📜 Meetings ({{ meetings.length }})
           </button>
           <button
             @click="activeFilter = 'events'"
-            :class="['px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1', activeFilter === 'events' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white']"
+            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1', activeFilter === 'events' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white']"
           >
-            🎪 Social Events ({{ events.length }})
+            🎪 Social events ({{ events.length }})
           </button>
         </div>
       </div>
@@ -143,7 +143,7 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
                   :href="route('member.meetings.summons', { slug: club.slug, id: meeting.id })"
                   class="px-3.5 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold text-xs rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all flex items-center gap-1.5"
                 >
-                  📜 View Summons
+                  📜 View summons
                 </Link>
 
                 <a
@@ -158,7 +158,7 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
                   @click="openMeetingRsvpModal(meeting)"
                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  ✍️ {{ meeting.user_rsvp ? 'Edit Response' : 'Respond to Summons' }}
+                  ✍️ {{ meeting.user_rsvp ? 'Edit response' : 'Respond to summons' }}
                 </button>
               </div>
             </div>
@@ -212,7 +212,7 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
                 @click="openRsvpModal(event)"
                 class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all self-start sm:self-auto cursor-pointer"
               >
-                {{ event.user_rsvp ? 'Edit RSVP & Dining' : 'RSVP & Select Menu' }}
+                {{ event.user_rsvp ? 'Edit RSVP & dining' : 'RSVP & select menu' }}
               </button>
               <span v-else class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-800 self-start sm:self-auto">
                 Bookings Closed

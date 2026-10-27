@@ -943,7 +943,7 @@ const confirmDeleteActivePage = () => {
 
                 <div class="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
                     <a :href="`/site/${club.slug}`" target="_blank" class="py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-2">
-                        <span>🌐 View Live Site</span>
+                        <span>🌐 View live site</span>
                     </a>
                 </div>
             </div>
@@ -1013,7 +1013,7 @@ const confirmDeleteActivePage = () => {
                                 ]"
                             >
                                 <span class="text-sm leading-none">➕</span>
-                                <span>Add New Custom Page</span>
+                                <span>Add new custom page</span>
                             </a>
                         </div>
 
@@ -1030,7 +1030,7 @@ const confirmDeleteActivePage = () => {
                                         activeNavSelection === 'settings' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
-                                    <span>⚙️</span> Website & SEO Settings
+                                    <span>⚙️</span> Website & SEO settings
                                 </a>
 
                                 <a
@@ -1042,7 +1042,7 @@ const confirmDeleteActivePage = () => {
                                         activeNavSelection === 'header_footer' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
-                                    <span>🧭</span> Header & Footer
+                                    <span>🧭</span> Header & footer
                                 </a>
 
                                 <a
@@ -1054,7 +1054,7 @@ const confirmDeleteActivePage = () => {
                                         activeNavSelection === 'themes' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
-                                    <span>🎨</span> Website Themes
+                                    <span>🎨</span> Website themes
                                 </a>
 
                                 <a
@@ -1078,7 +1078,7 @@ const confirmDeleteActivePage = () => {
                                         activeNavSelection === 'overview' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
-                                    <span>📋</span> Manage Pages
+                                    <span>📋</span> Manage pages
                                 </a>
                             </div>
                         </div>
@@ -1112,7 +1112,7 @@ const confirmDeleteActivePage = () => {
                                         pageViewMode === 'edit' ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-md shadow-slate-200' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
-                                    <span>✏️ Edit Builder</span>
+                                    <span>✏️ Edit builder</span>
                                 </a>
 
                                 <a
@@ -1124,7 +1124,7 @@ const confirmDeleteActivePage = () => {
                                         pageViewMode === 'preview' ? 'bg-amber-400 text-amber-950 shadow-md shadow-amber-500/20' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                                     ]"
                                 >
-                                    <span>👁️ Live Preview</span>
+                                    <span>👁️ Live preview</span>
                                 </a>
                             </div>
                         </div>
@@ -1173,7 +1173,7 @@ const confirmDeleteActivePage = () => {
                 <p class="text-xs text-slate-600 dark:text-slate-300">Are you sure you want to delete <strong>{{ pageToDelete ? pageToDelete.title : form.title }}</strong>? This action cannot be undone.</p>
                 <div class="flex items-center justify-end gap-3 pt-2">
                     <button @click="showDeleteConfirmModal = false; pageToDelete = null;" class="py-2 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer">Cancel</button>
-                    <button @click="confirmDeleteActivePage" class="py-2 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md cursor-pointer">Confirm Delete</button>
+                    <button @click="confirmDeleteActivePage" class="py-2 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md cursor-pointer">Confirm delete</button>
                 </div>
             </div>
         </div>
@@ -1251,7 +1251,7 @@ const confirmDeleteActivePage = () => {
                         >
                             <span class="flex items-center gap-2">
                                 <span>💾</span>
-                                <span>{{ form.processing ? 'Saving Changes...' : 'Save Changes & Proceed' }}</span>
+                                <span>{{ form.processing ? 'Saving changes...' : 'Save changes & proceed' }}</span>
                             </span>
                             <span class="text-[10px] bg-white/20 dark:bg-slate-900/20 px-2 py-0.5 rounded font-black">Recommended</span>
                         </button>
@@ -1262,7 +1262,7 @@ const confirmDeleteActivePage = () => {
                             class="w-full py-3 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                         >
                             <span>🗑️</span>
-                            <span>Discard Changes & Switch Page</span>
+                            <span>Discard changes & switch page</span>
                         </button>
 
                         <button
@@ -1271,7 +1271,7 @@ const confirmDeleteActivePage = () => {
                             class="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                         >
                             <span>✏️</span>
-                            <span>Stay & Continue Editing</span>
+                            <span>Stay & continue editing</span>
                         </button>
                     </div>
                 </div>
@@ -1326,7 +1326,7 @@ const confirmDeleteActivePage = () => {
                             :disabled="themeForm.processing"
                             class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-2"
                         >
-                            <span>{{ themeForm.processing ? 'Applying Theme...' : '✨ Apply Theme to Live Site' }}</span>
+                            <span>{{ themeForm.processing ? 'Applying theme...' : '✨ Apply theme to live site' }}</span>
                         </button>
                     </div>
                 </div>

@@ -192,7 +192,7 @@ defineProps({
                     role="radio"
                     :aria-checked="themeForm.corner_style === c.id"
                     @click="themeForm.corner_style = c.id"
-                    :class="['px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer', themeForm.corner_style === c.id ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300']"
+                    :class="['px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer', themeForm.corner_style === c.id ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300']"
                 >{{ c.name }}</button>
             </div>
             <p v-if="themeForm.errors.font_pairing || themeForm.errors.corner_style" class="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1">{{ themeForm.errors.font_pairing || themeForm.errors.corner_style }}</p>
@@ -208,7 +208,7 @@ defineProps({
                     class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1"
                     title="Preview this combination in the Website Builder"
                 >
-                    <span>👁️ Preview in Builder</span>
+                    <span>👁️ Preview in builder</span>
                 </button>
                 <a
                     :href="`/site/${club.slug}?preview_theme=${effectivePreviewThemeKey}`"
@@ -224,7 +224,7 @@ defineProps({
                     disabled
                     class="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-extrabold text-xs flex items-center gap-1.5 cursor-default"
                 >
-                    <span>✓ Active Theme</span>
+                    <span>✓ Active theme</span>
                 </button>
 
                 <button
@@ -233,7 +233,7 @@ defineProps({
                     @click="openApplyThemeModal(effectivePreviewThemeKey, themeLabel(effectivePreviewThemeKey))"
                     class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                    <span>✨ Apply This Combination</span>
+                    <span>✨ Apply this combination</span>
                 </button>
             </div>
         </div>

@@ -35,7 +35,7 @@ defineProps({
           :href="route('admin.settings.show', club.slug) + '#accounting'"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5 self-start sm:self-auto"
         >
-          <span>⚙️ Full System Settings</span>
+          <span>⚙️ Full system settings</span>
         </Link>
       </div>
 
@@ -75,7 +75,7 @@ defineProps({
                 <button
                   type="submit"
                   :disabled="financialYearEndForm.processing"
-                  class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                  class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50"
                 >
                   Save
                 </button>
@@ -156,9 +156,9 @@ defineProps({
               v-if="canManageBilling"
               type="submit"
               :disabled="vatSettingsForm.processing"
-              class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-lg transition-all cursor-pointer disabled:opacity-50"
+              class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50"
             >
-              Save VAT Settings
+              Save VAT settings
             </button>
 
             <div>
@@ -219,7 +219,7 @@ defineProps({
             <button
               type="submit"
               :disabled="approvalThresholdForm.processing"
-              class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-lg transition-all cursor-pointer disabled:opacity-50"
+              class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50"
             >
               Save
             </button>
@@ -248,7 +248,7 @@ defineProps({
               <input type="text" v-model="charityCommissionForm.charity_number" class="w-full px-3 py-2 text-sm font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <p v-if="charityCommissionForm.errors.charity_number" class="text-[10px] text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ charityCommissionForm.errors.charity_number }}</p>
             </div>
-            <button type="submit" :disabled="charityCommissionForm.processing" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-lg transition-all cursor-pointer disabled:opacity-50">Save</button>
+            <button type="submit" :disabled="charityCommissionForm.processing" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50">Save</button>
           </form>
           <span v-else class="font-bold text-slate-900 dark:text-white block">{{ charityCommission.registered ? `Registered — ${charityCommission.charity_number}` : 'Not registered' }}</span>
         </div>
@@ -274,7 +274,7 @@ defineProps({
           :href="route('admin.settings.show', club.slug) + '#accounting'"
           class="px-3.5 py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl shadow-sm transition-all whitespace-nowrap"
         >
-          Edit Settings →
+          Edit settings →
         </Link>
       </div>
     </div>

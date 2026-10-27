@@ -196,7 +196,7 @@
                         type="button"
                         wire:click="$set('manualAllocationType', 'member_subscription')"
                         aria-pressed="{{ $manualAllocationType === 'member_subscription' ? 'true' : 'false' }}"
-                        class="flex-1 py-1.5 px-3 rounded-lg transition-colors cursor-pointer {{ $manualAllocationType === 'member_subscription' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
+                        class="flex-1 py-1.5 px-3 rounded-xl transition-colors cursor-pointer {{ $manualAllocationType === 'member_subscription' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         Member dues
                     </button>
@@ -204,7 +204,7 @@
                         type="button"
                         wire:click="$set('manualAllocationType', 'supplier_bill')"
                         aria-pressed="{{ $manualAllocationType === 'supplier_bill' ? 'true' : 'false' }}"
-                        class="flex-1 py-1.5 px-3 rounded-lg transition-colors cursor-pointer {{ $manualAllocationType === 'supplier_bill' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
+                        class="flex-1 py-1.5 px-3 rounded-xl transition-colors cursor-pointer {{ $manualAllocationType === 'supplier_bill' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         Vendor bill
                     </button>
@@ -212,7 +212,7 @@
                         type="button"
                         wire:click="$set('manualAllocationType', 'invoice')"
                         aria-pressed="{{ $manualAllocationType === 'invoice' ? 'true' : 'false' }}"
-                        class="flex-1 py-1.5 px-3 rounded-lg transition-colors cursor-pointer {{ $manualAllocationType === 'invoice' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
+                        class="flex-1 py-1.5 px-3 rounded-xl transition-colors cursor-pointer {{ $manualAllocationType === 'invoice' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         Invoice
                     </button>
@@ -220,7 +220,7 @@
                         type="button"
                         wire:click="$set('manualAllocationType', 'ledger_account')"
                         aria-pressed="{{ $manualAllocationType === 'ledger_account' ? 'true' : 'false' }}"
-                        class="flex-1 py-1.5 px-3 rounded-lg transition-colors cursor-pointer {{ $manualAllocationType === 'ledger_account' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
+                        class="flex-1 py-1.5 px-3 rounded-xl transition-colors cursor-pointer {{ $manualAllocationType === 'ledger_account' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'hover:text-slate-900 dark:hover:text-white' }}"
                     >
                         Nominal code
                     </button>

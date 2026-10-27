@@ -78,9 +78,9 @@ const errorFor = (index, field) => props.errors[`${props.idPrefix}.${index}.${fi
           {{ usedBy(row) }} {{ usedBy(row) === 1 ? 'member' : 'members' }}
         </span>
         <div class="flex items-center gap-1 self-center">
-          <button type="button" @click="move(index, -1)" :disabled="index === 0" aria-label="Move up" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer">↑</button>
-          <button type="button" @click="move(index, 1)" :disabled="index === rows.length - 1" aria-label="Move down" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer">↓</button>
-          <button type="button" @click="remove(index)" aria-label="Remove" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer">✕</button>
+          <button type="button" @click="move(index, -1)" :disabled="index === 0" aria-label="Move up" class="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer">↑</button>
+          <button type="button" @click="move(index, 1)" :disabled="index === rows.length - 1" aria-label="Move down" class="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 cursor-pointer">↓</button>
+          <button type="button" @click="remove(index)" aria-label="Remove" class="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer">✕</button>
         </div>
       </li>
     </ul>

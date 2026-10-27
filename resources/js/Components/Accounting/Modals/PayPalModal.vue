@@ -40,7 +40,7 @@ defineProps({
             <div class="flex items-center justify-between mb-1">
               <label class="font-bold text-slate-700 dark:text-slate-200">PayPal Client Secret *</label>
               <button type="button" @click="showPayPalSecret = !showPayPalSecret" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 cursor-pointer">
-                {{ showPayPalSecret ? 'Hide' : 'Show Secret' }}
+                {{ showPayPalSecret ? 'Hide' : 'Show secret' }}
               </button>
             </div>
             <input :type="showPayPalSecret ? 'text' : 'password'" v-model="payPalForm.paypal_client_secret" required placeholder="PayPal API Secret Key" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-mono text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900" />
@@ -75,7 +75,7 @@ defineProps({
               Cancel
             </button>
             <button type="submit" :disabled="payPalForm.processing" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 cursor-pointer">
-              Save &amp; Connect PayPal
+              Save &amp; connect PayPal
             </button>
           </div>
         </form>

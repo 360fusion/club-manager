@@ -63,9 +63,9 @@ function setCalendar(event) {
 
                     <div class="mt-4 flex flex-wrap items-center gap-3">
                         <template v-if="signedIn">
-                            <button v-if="!lodge.following" type="button" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500" @click="follow">Follow this lodge</button>
+                            <button v-if="!lodge.following" type="button" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500" @click="follow">Follow this lodge</button>
                             <template v-else>
-                                <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800" @click="unfollow">Following ✓ Unfollow</button>
+                                <button type="button" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800" @click="unfollow">Following ✓ unfollow</button>
                                 <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                                     <input type="checkbox" :checked="lodge.in_calendar" @change="setCalendar" /> Show in my calendar
                                 </label>
@@ -74,7 +74,7 @@ function setCalendar(event) {
                                 </label>
                             </template>
                         </template>
-                        <Link v-else :href="route('login')" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Sign in to follow this lodge</Link>
+                        <Link v-else :href="route('login')" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Sign in to follow this lodge</Link>
                     </div>
                 </div>
 
@@ -131,7 +131,7 @@ function setCalendar(event) {
                                     <input v-model="request.rank" placeholder="Your rank" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
                                 </div>
                                 <textarea v-model="request.message" rows="2" placeholder="Anything else (optional)" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
-                                <button type="submit" class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500">Ask to receive their summonses</button>
+                                <button type="submit" class="rounded-xl bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500">Ask to receive their summonses</button>
                             </form>
                             <p v-else-if="!signedIn" class="mt-1"><Link :href="route('login')" class="text-blue-600 hover:underline dark:text-blue-400">Sign in</Link> to ask to receive their summonses.</p>
                         </template>
@@ -173,7 +173,7 @@ function setCalendar(event) {
                         <ul class="mt-2 space-y-2">
                             <li v-for="bulletin in lodge.bulletins" :key="bulletin.id" class="flex items-center justify-between gap-3 text-sm">
                                 <span><strong>{{ bulletin.name }}</strong><span v-if="bulletin.description" class="text-slate-500 dark:text-slate-400"> · {{ bulletin.description }}</span></span>
-                                <button v-if="signedIn" type="button" class="shrink-0 rounded-lg border border-blue-600 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40" @click="subscribe(bulletin)">{{ bulletin.needs_approval ? 'Ask to subscribe' : 'Subscribe' }}</button>
+                                <button v-if="signedIn" type="button" class="shrink-0 rounded-xl border border-blue-600 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40" @click="subscribe(bulletin)">{{ bulletin.needs_approval ? 'Ask to subscribe' : 'Subscribe' }}</button>
                             </li>
                         </ul>
                     </div>
@@ -207,8 +207,8 @@ function setCalendar(event) {
                     </p>
                     <template v-else>
                         <p class="mt-2 text-slate-600 dark:text-slate-400">Officers can ask to manage this listing, keep the details right, and run the lodge's meetings and members here.</p>
-                        <Link v-if="signedIn" :href="route('lodges.claim', lodge.slug)" class="mt-3 inline-block rounded-lg border border-blue-600 px-3 py-1.5 font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40">Claim this lodge</Link>
-                        <Link v-else :href="route('login')" class="mt-3 inline-block rounded-lg border border-blue-600 px-3 py-1.5 font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40">Sign in to claim this lodge</Link>
+                        <Link v-if="signedIn" :href="route('lodges.claim', lodge.slug)" class="mt-3 inline-block rounded-xl border border-blue-600 px-3 py-1.5 font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40">Claim this lodge</Link>
+                        <Link v-else :href="route('login')" class="mt-3 inline-block rounded-xl border border-blue-600 px-3 py-1.5 font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40">Sign in to claim this lodge</Link>
                     </template>
                 </section>
 
@@ -226,8 +226,8 @@ function setCalendar(event) {
                     </p>
                     <template v-else>
                         <p class="mt-2 text-slate-600 dark:text-slate-400">These details come from public sources and can go out of date. Tell us what has changed and we will check it.</p>
-                        <Link v-if="signedIn" :href="route('lodges.correction', lodge.slug)" class="mt-3 inline-block rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Suggest a fix</Link>
-                        <Link v-else :href="route('login')" class="mt-3 inline-block rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Sign in to suggest a fix</Link>
+                        <Link v-if="signedIn" :href="route('lodges.correction', lodge.slug)" class="mt-3 inline-block rounded-xl border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Suggest a fix</Link>
+                        <Link v-else :href="route('login')" class="mt-3 inline-block rounded-xl border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Sign in to suggest a fix</Link>
                     </template>
                 </section>
             </aside>

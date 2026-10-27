@@ -43,7 +43,7 @@ const user = page.props.auth?.user;
             ]"
           >
             <span class="text-base">📊</span>
-            <span>Platform Overview</span>
+            <span>Platform overview</span>
           </Link>
 
           <Link
@@ -54,7 +54,7 @@ const user = page.props.auth?.user;
             ]"
           >
             <span class="text-base">🏛️</span>
-            <span>Club Types &amp; Orders</span>
+            <span>Club types &amp; orders</span>
           </Link>
 
           <Link
@@ -65,7 +65,7 @@ const user = page.props.auth?.user;
             ]"
           >
             <span class="text-base">👑</span>
-            <span>Grand Lodges &amp; Country Heads</span>
+            <span>Grand Lodges &amp; country heads</span>
           </Link>
 
           <Link
@@ -87,7 +87,7 @@ const user = page.props.auth?.user;
             ]"
           >
             <span class="text-base">🌍</span>
-            <span>Districts &amp; Groups</span>
+            <span>Districts &amp; groups</span>
           </Link>
 
           <Link
@@ -98,7 +98,7 @@ const user = page.props.auth?.user;
             ]"
           >
             <span class="text-base">🔑</span>
-            <span>Lodge Claims</span>
+            <span>Lodge claims</span>
             <span v-if="$page.props.pendingLodgeClaims" class="ml-auto rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white">{{ $page.props.pendingLodgeClaims }}</span>
           </Link>
 
@@ -110,7 +110,7 @@ const user = page.props.auth?.user;
             ]"
           >
             <span class="text-base">✏️</span>
-            <span>Suggested Fixes</span>
+            <span>Suggested fixes</span>
             <span v-if="$page.props.pendingLodgeCorrections" class="ml-auto rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white">{{ $page.props.pendingLodgeCorrections }}</span>
           </Link>
 
@@ -122,7 +122,7 @@ const user = page.props.auth?.user;
             ]"
           >
             <span class="text-base">📜</span>
-            <span>Lodge Directory</span>
+            <span>Lodge directory</span>
           </Link>
 
           <Link
@@ -133,7 +133,7 @@ const user = page.props.auth?.user;
             ]"
           >
             <span class="text-base">🏛️</span>
-            <span>Masonic Halls</span>
+            <span>Masonic halls</span>
           </Link>
 
           <Link
@@ -166,7 +166,7 @@ const user = page.props.auth?.user;
             ]"
           >
             <span class="text-base">✉️</span>
-            <span>Default Email Templates</span>
+            <span>Default email templates</span>
           </Link>
 
           <Link
@@ -177,7 +177,7 @@ const user = page.props.auth?.user;
             ]"
           >
             <span class="text-base">💳</span>
-            <span>Platform Payments</span>
+            <span>Platform payments</span>
           </Link>
         </nav>
 
@@ -198,14 +198,14 @@ const user = page.props.auth?.user;
             :href="route('home')"
             class="flex items-center justify-center gap-2 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
           >
-            <span>← Return to App</span>
+            <span>← Return to app</span>
           </Link>
           <form method="POST" action="/logout" class="block">
             <button
               type="submit"
               class="flex items-center justify-center gap-2 w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition border border-rose-200 dark:bg-rose-950/50 dark:hover:bg-rose-900/40 dark:text-rose-400 dark:border-rose-800/50"
             >
-              <span>🚪 Log Out</span>
+              <span>🚪 Log out</span>
             </button>
           </form>
         </div>

@@ -48,7 +48,7 @@ defineProps({
                 :disabled="headerFooterForm.processing"
                 class="py-2.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
-                <span>💾 Save Header & Footer</span>
+                <span>💾 Save header & footer</span>
             </button>
         </div>
 
@@ -107,7 +107,7 @@ defineProps({
                     <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
                         <div class="flex items-center gap-2" role="group" aria-label="Bar colour">
                             <span class="font-bold text-slate-700 dark:text-slate-200">Colour</span>
-                            <button v-for="opt in announcementStyles" :key="opt.id" type="button" @click="headerFooterForm.announcement_style = opt.id" :aria-pressed="headerFooterForm.announcement_style === opt.id" :class="['px-3 py-1.5 rounded-lg border font-bold cursor-pointer', headerFooterForm.announcement_style === opt.id ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300']">{{ opt.name }}</button>
+                            <button v-for="opt in announcementStyles" :key="opt.id" type="button" @click="headerFooterForm.announcement_style = opt.id" :aria-pressed="headerFooterForm.announcement_style === opt.id" :class="['px-3 py-1.5 rounded-xl border font-bold cursor-pointer', headerFooterForm.announcement_style === opt.id ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300']">{{ opt.name }}</button>
                         </div>
                         <label class="flex items-center gap-2.5 cursor-pointer font-bold text-slate-700 dark:text-slate-200 select-none">
                             <input type="checkbox" v-model="headerFooterForm.announcement_dismissible" class="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
@@ -234,7 +234,7 @@ defineProps({
                     <div class="flex items-center justify-between gap-2 h-8">
                         <label class="block font-bold text-slate-700 dark:text-slate-200">Navigation Links</label>
                         <div class="flex items-center gap-3">
-                            <button v-if="headerFooterForm.footer_show_nav" type="button" @click="$emit('choose-nav')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] transition-colors cursor-pointer">Choose Pages</button>
+                            <button v-if="headerFooterForm.footer_show_nav" type="button" @click="$emit('choose-nav')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] transition-colors cursor-pointer">Choose pages</button>
                             <ToggleSwitch v-model="headerFooterForm.footer_show_nav" label="Show navigation links in the footer" />
                         </div>
                     </div>
@@ -308,7 +308,7 @@ defineProps({
                             :disabled="headerFooterForm.footer_link_columns.length >= maxFooterColumns"
                             class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            ➕ Add Column
+                            ➕ Add column
                         </button>
                         <ToggleSwitch v-model="headerFooterForm.footer_show_custom_columns" label="Show custom link columns in the footer" />
                         </div>
@@ -329,7 +329,7 @@ defineProps({
                     >
                         <div class="flex items-center gap-2">
                             <input v-model="column.title" type="text" :aria-label="`Column ${colIndex + 1} heading`" placeholder="Heading, e.g. Useful Links" class="flex-1 min-w-0 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
-                            <button type="button" @click="removeFooterColumn(colIndex)" class="px-3 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-bold text-[11px] transition-colors cursor-pointer" title="Remove column">
+                            <button type="button" @click="removeFooterColumn(colIndex)" class="px-3 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 font-bold text-[11px] transition-colors cursor-pointer" title="Remove column">
                                 🗑️
                             </button>
                         </div>
@@ -350,7 +350,7 @@ defineProps({
                             :disabled="column.links.length >= maxFooterColumnLinks"
                             class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[11px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            ➕ Add Link
+                            ➕ Add link
                         </button>
                     </div>
                     </div>
@@ -390,7 +390,7 @@ defineProps({
                     :disabled="headerFooterForm.processing"
                     class="py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
-                    <span>💾 Save Header & Footer</span>
+                    <span>💾 Save header & footer</span>
                 </button>
             </div>
         </form>

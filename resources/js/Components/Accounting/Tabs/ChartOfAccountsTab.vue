@@ -23,14 +23,14 @@ const showAccountModal = defineModel('showAccountModal', { type: Boolean, defaul
             @click="openOpeningBalanceModal()"
             class="px-3.5 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
           >
-            <span>⚖️ Set Opening Balances</span>
+            <span>⚖️ Set opening balances</span>
           </button>
           <button
             type="button"
             @click="showAccountModal = true"
             class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm"
           >
-            + Add Account
+            + Add account
           </button>
         </div>
       </div>
@@ -60,10 +60,10 @@ const showAccountModal = defineModel('showAccountModal', { type: Boolean, defaul
                   <button
                     type="button"
                     @click="openOpeningBalanceModal(acc.id)"
-                    class="px-2.5 py-1 text-[10px] font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer"
+                    class="px-2.5 py-1 text-[10px] font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer"
                     title="Set opening / carry-over balance for this account"
                   >
-                    ⚖️ Carry Over
+                    ⚖️ Carry over
                   </button>
                 </div>
               </td>

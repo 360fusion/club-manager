@@ -63,7 +63,7 @@ defineProps({
                         <td class="p-3 text-slate-700 dark:text-slate-200 break-all">/site/{{ club.slug }}{{ r.from_path }}</td>
                         <td class="p-3 text-slate-500 dark:text-slate-400 break-all">{{ r.to_url }}</td>
                         <td class="p-3 font-sans font-bold text-slate-500">{{ r.is_permanent ? 'Permanent' : 'Temporary' }}</td>
-                        <td class="p-3 text-right"><button type="button" @click="removeRedirect(r.id)" class="px-2.5 py-1 rounded-lg font-sans font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 cursor-pointer" :aria-label="`Remove redirect from ${r.from_path}`">Remove</button></td>
+                        <td class="p-3 text-right"><button type="button" @click="removeRedirect(r.id)" class="px-2.5 py-1 rounded-xl font-sans font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 cursor-pointer" :aria-label="`Remove redirect from ${r.from_path}`">Remove</button></td>
                     </tr>
                 </tbody>
             </table>

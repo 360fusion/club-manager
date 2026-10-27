@@ -51,7 +51,7 @@ function getCountryFlag(country) {
           <div class="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
             <Link :href="route('superadmin.dashboard')" class="hover:text-slate-900 transition dark:hover:text-white">Dashboard</Link>
             <span>/</span>
-            <Link :href="route('superadmin.provinces.index')" class="hover:text-slate-900 transition dark:hover:text-white">Masonic Provinces</Link>
+            <Link :href="route('superadmin.provinces.index')" class="hover:text-slate-900 transition dark:hover:text-white">Masonic provinces</Link>
             <span>/</span>
             <span class="text-blue-700 font-bold dark:text-blue-300">{{ province.name }}</span>
           </div>
@@ -101,7 +101,7 @@ function getCountryFlag(country) {
               :href="route('superadmin.provinces.edit', province.id)"
               class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center gap-2"
             >
-              <span>✏️ Edit Province Info</span>
+              <span>✏️ Edit province info</span>
             </Link>
             <a
               v-if="province.website_url"
@@ -110,7 +110,7 @@ function getCountryFlag(country) {
               rel="noopener noreferrer"
               class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center gap-2"
             >
-              <span>🌐 Visit Website</span>
+              <span>🌐 Visit website</span>
               <span>↗</span>
             </a>
           </div>

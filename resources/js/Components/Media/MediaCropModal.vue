@@ -40,14 +40,14 @@ defineProps({
               @click="setCropAspect('free')"
               :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === 'free' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
-              Free Crop
+              Free crop
             </button>
             <button
               type="button"
               @click="setCropAspect('1:1')"
               :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', cropAspect === '1:1' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800']"
             >
-              1:1 Square (Logo)
+              1:1 Square (logo)
             </button>
             <button
               type="button"
@@ -100,7 +100,7 @@ defineProps({
               :disabled="isCropping"
               class="px-4 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-700 dark:text-blue-300 font-extrabold text-xs rounded-xl border border-blue-200 dark:border-blue-800/60 shadow-sm transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
-              <span>➕ Save as New Copy (Variant)</span>
+              <span>➕ Save as new copy (variant)</span>
             </button>
             <button
               type="button"
@@ -110,7 +110,7 @@ defineProps({
             >
               <span v-if="isCropping" class="animate-spin text-sm">🔄</span>
               <span v-else>⚡</span>
-              <span>{{ isCropping ? 'Cropping & Saving...' : 'Update & Keep Master Backup' }}</span>
+              <span>{{ isCropping ? 'Cropping & saving...' : 'Update & keep master backup' }}</span>
             </button>
           </div>
         </div>

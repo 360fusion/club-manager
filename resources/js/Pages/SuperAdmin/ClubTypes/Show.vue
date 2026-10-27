@@ -40,7 +40,7 @@ function handleSwitchOrder(event) {
           <div class="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
             <Link :href="route('superadmin.dashboard')" class="hover:text-slate-900 transition dark:hover:text-white">Dashboard</Link>
             <span>/</span>
-            <Link :href="route('superadmin.club_types.index')" class="hover:text-slate-900 transition dark:hover:text-white">Masonic Orders</Link>
+            <Link :href="route('superadmin.club_types.index')" class="hover:text-slate-900 transition dark:hover:text-white">Masonic orders</Link>
             <span>/</span>
             <span class="inline-flex items-center gap-2 text-blue-700 font-bold dark:text-blue-300"><span :class="['h-3 w-3 rounded-full', orderColour(clubType.colour).dot]" aria-hidden="true" />{{ clubType.name }}</span>
           </div>
@@ -86,14 +86,14 @@ function handleSwitchOrder(event) {
               rel="noopener noreferrer"
               class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center gap-2"
             >
-              <span>🌐 Visit Official Website</span>
+              <span>🌐 Visit official website</span>
               <span>↗</span>
             </a>
             <Link
               :href="route('superadmin.club_types.index')"
               class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs rounded-xl border border-slate-300 transition flex items-center gap-2 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
             >
-              <span>⚙️ Manage Order Presets</span>
+              <span>⚙️ Manage order presets</span>
             </Link>
           </div>
         </div>
@@ -133,7 +133,7 @@ function handleSwitchOrder(event) {
                 rel="noopener noreferrer"
                 class="px-3.5 py-2 bg-blue-600/80 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 self-start sm:self-auto"
               >
-                <span>Open External Link</span>
+                <span>Open external link</span>
                 <span>↗</span>
               </a>
             </div>
@@ -275,9 +275,9 @@ function handleSwitchOrder(event) {
                 <td class="py-3.5 px-4 text-right">
                   <Link
                     :href="route('admin.club_acc.charity.index', c.slug)"
-                    class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-lg transition"
+                    class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded-xl transition"
                   >
-                    View Workspace →
+                    View workspace →
                   </Link>
                 </td>
               </tr>

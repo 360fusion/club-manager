@@ -68,7 +68,7 @@ const inputClass = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2
                 </label>
                 <p v-if="form.errors.confirm" class="text-xs text-rose-600">Please tick to confirm.</p>
 
-                <button type="submit" :disabled="form.processing" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-60">Send my claim</button>
+                <button type="submit" :disabled="form.processing" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-60">Send my claim</button>
             </form>
         </div>
     </PublicLayout>

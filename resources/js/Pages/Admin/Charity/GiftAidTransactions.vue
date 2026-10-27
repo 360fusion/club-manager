@@ -91,7 +91,7 @@ const resetFilters = () => {
             as="button"
             class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
           >
-            <span>⚡ Auto-Match Deposits</span>
+            <span>⚡ Auto-match deposits</span>
           </Link>
 
           <a
@@ -165,7 +165,7 @@ const resetFilters = () => {
               @click="resetFilters"
               class="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 underline font-bold cursor-pointer"
             >
-              Reset All Filters
+              Reset all filters
             </button>
           </div>
 

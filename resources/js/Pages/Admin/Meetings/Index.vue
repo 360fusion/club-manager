@@ -264,7 +264,7 @@ const duplicateMeeting = (id) => {
         <fieldset>
           <legend class="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">Active meeting months (recess skipped)</legend>
           <div class="grid grid-cols-4 gap-2 text-sm text-slate-700 dark:text-slate-200">
-            <label v-for="(mName, idx) in MONTH_NAMES" :key="idx" class="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800/50">
+            <label v-for="(mName, idx) in MONTH_NAMES" :key="idx" class="flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800/50">
               <input v-model="seasonForm.active_months" type="checkbox" :value="idx + 1" class="h-4 w-4 rounded accent-blue-600" />
               <span>{{ mName }}</span>
             </label>

@@ -99,12 +99,12 @@ const submit = () => {
           :disabled="form.processing"
           class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 mt-2"
         >
-          {{ form.processing ? 'Creating Account...' : 'Register Account' }}
+          {{ form.processing ? 'Creating account...' : 'Register account' }}
         </button>
 
         <div class="text-center pt-2">
           <Link :href="route('login')" class="text-xs text-slate-400 hover:text-white transition-colors">
-            Already have an account? <strong class="text-blue-400">Log In</strong>
+            Already have an account? <strong class="text-blue-400">Log in</strong>
           </Link>
         </div>
       </form>

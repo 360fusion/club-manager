@@ -20,7 +20,7 @@ defineProps({
 
 <template>
     <div class="space-y-6">
-      <div class="bg-gradient-to-br from-amber-50 dark:from-amber-950/40 to-orange-50 dark:to-orange-950/40 border border-amber-200/80 dark:border-amber-800/80 rounded-2xl p-6 shadow-sm space-y-4">
+      <div class="bg-gradient-to-br from-amber-50 dark:from-amber-950/40 to-amber-50 dark:to-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 rounded-2xl p-6 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div class="flex items-center gap-2">
@@ -39,14 +39,14 @@ defineProps({
               as="button"
               class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
             >
-              <span>⚡ Auto-Match Gift Aid &amp; Relief Chest Deposits</span>
+              <span>⚡ Auto-match Gift Aid &amp; Relief Chest deposits</span>
             </Link>
             <a
               :href="route('admin.accounting.giftaid.export_schedule', club.slug)"
               target="_blank"
               class="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5"
             >
-              <span>📥 Export HMRC Schedule (CSV)</span>
+              <span>📥 Export HMRC schedule (CSV)</span>
             </a>
           </div>
         </div>
@@ -144,7 +144,7 @@ defineProps({
               @click="resetGiftAidFilters"
               class="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 underline font-bold cursor-pointer"
             >
-              Reset Filters
+              Reset filters
             </button>
           </div>
 

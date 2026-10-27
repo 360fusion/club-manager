@@ -131,7 +131,7 @@ defineProps({
                                 <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved!' : 'Save Page') }}</span>
+                                <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved!' : 'Save page') }}</span>
                             </button>
                                 <span id="tip-save" role="tooltip" class="pointer-events-none absolute top-full mt-2 z-50 w-64 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-[11px] font-medium leading-snug p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-opacity duration-150 left-0">{{ hasDraft ? 'Saves the page as it looks here and makes it live straight away, replacing the draft. To publish the draft as it was saved, use Publish draft.' : 'Saves your changes and makes them live straight away.' }}</span>
                             </div>
@@ -300,8 +300,8 @@ defineProps({
                         <div class="flex items-center justify-between mb-1.5">
                             <label for="page-share-image" class="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px]">Share image</label>
                             <div class="flex items-center gap-1.5">
-                                <button v-if="form.share_image" type="button" @click="form.share_image = ''" class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-lg border border-rose-200 dark:border-rose-800/60 cursor-pointer">🗑️ Clear</button>
-                                <button type="button" @click="openMediaLibrary('page_share_image', null, 'pages')" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 cursor-pointer">📁 Media Library</button>
+                                <button v-if="form.share_image" type="button" @click="form.share_image = ''" class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 cursor-pointer">🗑️ Clear</button>
+                                <button type="button" @click="openMediaLibrary('page_share_image', null, 'pages')" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer">📁 Media library</button>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -539,7 +539,7 @@ defineProps({
                                 @click="submitForm()"
                                 :disabled="form.processing"
                                 :class="[
-                                    'mr-1 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer border transition-colors disabled:opacity-60 disabled:cursor-wait',
+                                    'mr-1 px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 cursor-pointer border transition-colors disabled:opacity-60 disabled:cursor-wait',
                                     isSavedSuccess
                                         ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
                                         : isDirty
@@ -632,16 +632,16 @@ defineProps({
                                                 v-if="block.url"
                                                 type="button"
                                                 @click="removeBlockImage(block)"
-                                                class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-lg border border-rose-200 dark:border-rose-800/60 cursor-pointer"
+                                                class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 cursor-pointer"
                                             >
                                                 🗑️ Clear
                                             </button>
                                             <button
                                                 type="button"
                                                 @click="openMediaLibrary('block_image', block, 'pages')"
-                                                class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 cursor-pointer"
+                                                class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer"
                                             >
-                                                📁 Media Library
+                                                📁 Media library
                                             </button>
                                         </div>
                                     </div>
@@ -707,7 +707,7 @@ defineProps({
                                     @click="addGalleryImage(block)"
                                     class="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer flex items-center gap-1"
                                 >
-                                    ➕ Add Image Item
+                                    ➕ Add image item
                                 </button>
                             </div>
 
@@ -719,9 +719,9 @@ defineProps({
                                             <button
                                                 type="button"
                                                 @click="openMediaLibrary('gallery_image', gItem, 'pages')"
-                                                class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 cursor-pointer"
+                                                class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer"
                                             >
-                                                📁 Media Library
+                                                📁 Media library
                                             </button>
                                             <button
                                                 type="button"
@@ -843,11 +843,11 @@ defineProps({
                                 <div class="flex items-center justify-between mb-1">
                                     <label :for="`block-${bIdx}-yt-cover`" class="block font-bold text-slate-700 dark:text-slate-200">Cover Image <span class="font-normal text-slate-400">(optional)</span></label>
                                     <div class="flex items-center gap-1.5">
-                                        <button v-if="block.cover_url" type="button" @click="block.cover_url = ''" class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-lg border border-rose-200 dark:border-rose-800/60 cursor-pointer">
+                                        <button v-if="block.cover_url" type="button" @click="block.cover_url = ''" class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 cursor-pointer">
                                             🗑️ Clear
                                         </button>
-                                        <button type="button" @click="openMediaLibrary('video_cover', block, 'pages')" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 cursor-pointer">
-                                            📁 Media Library
+                                        <button type="button" @click="openMediaLibrary('video_cover', block, 'pages')" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer">
+                                            📁 Media library
                                         </button>
                                     </div>
                                 </div>
@@ -1093,7 +1093,7 @@ defineProps({
                                                     @click="block.recipient_email = ''"
                                                     class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800/60 transition-colors cursor-pointer"
                                                 >
-                                                    ⚡ Use Organization Default (Dynamic)
+                                                    ⚡ Use organization default (dynamic)
                                                 </button>
                                                 <button 
                                                     v-if="settingsForm.contact_email || club.contact_email"
@@ -1217,7 +1217,7 @@ defineProps({
                 <span class="text-3xl">🧩</span>
                 <p class="text-xs font-bold text-slate-500 dark:text-slate-400">No content elements added yet.</p>
                 <button type="button" @click="addBlock('text')" class="py-2 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md">
-                    ➕ Add First Text Block
+                    ➕ Add first text block
                 </button>
             </div>
         </div>
@@ -1230,7 +1230,7 @@ defineProps({
                 type="button"
                 class="py-2.5 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800/60 transition-colors cursor-pointer"
             >
-                🗑️ Delete Custom Page
+                🗑️ Delete custom page
             </button>
             <span v-else class="text-xs text-slate-400 font-semibold">
                 ℹ️ Default system pages cannot be deleted (only published/unpublished).
@@ -1246,7 +1246,7 @@ defineProps({
                     'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
                 ]"
             >
-                <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved Successfully!' : '💾 Save & Publish Page') }}</span>
+                <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved successfully!' : '💾 Save & publish page') }}</span>
             </button>
         </div>
     </div>

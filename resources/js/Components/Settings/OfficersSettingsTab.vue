@@ -59,7 +59,7 @@ defineProps({
           :href="route('admin.officers.index', { clubSlug: club.slug })"
           class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex-shrink-0 flex items-center gap-1.5"
         >
-          <span>Manage Officers Roster</span>
+          <span>Manage officers roster</span>
           <span>→</span>
         </a>
       </div>

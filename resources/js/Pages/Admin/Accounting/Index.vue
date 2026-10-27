@@ -641,9 +641,9 @@ const getTypeBadge = (type) => {
       <AccountingNavBar :active-tab="activeTab" :can-manage-billing="canManageBilling" :club="club" :navigate-to="navigateTo" :open-opening-balance-modal="openOpeningBalanceModal" :reconciliation="reconciliation" :toggle-accounting-dropdown="toggleAccountingDropdown" v-model:show-accounting-dropdown="showAccountingDropdown" v-model:show-add-menu="showAddMenu" />
 
       <!-- Read-Only Access Notice (examiner role) -->
-      <div v-if="!canManageBilling" class="bg-purple-50 dark:bg-purple-950/30 rounded-2xl border border-purple-200 dark:border-purple-800/60 px-4 py-3 flex items-center gap-2.5 text-xs">
+      <div v-if="!canManageBilling" class="bg-blue-50 dark:bg-blue-950/30 rounded-2xl border border-blue-200 dark:border-blue-800/60 px-4 py-3 flex items-center gap-2.5 text-xs">
         <span class="text-base">🔎</span>
-        <span class="font-semibold text-purple-800 dark:text-purple-200">You have read-only access to this club's accounting records. Actions that change the books are hidden.</span>
+        <span class="font-semibold text-blue-800 dark:text-blue-200">You have read-only access to this club's accounting records. Actions that change the books are hidden.</span>
       </div>
 
       <HomeTab v-if="activeTab === 'home'" :dismiss-onboarding="dismissOnboarding" :navigate-to="navigateTo" :onboarding="onboarding" :reconciliation="reconciliation" :show-onboarding="showOnboarding" :summary="summary" />

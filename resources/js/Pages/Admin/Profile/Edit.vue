@@ -77,7 +77,7 @@ const updatePassword = () => {
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage your account details, upload your profile photo, password, and two-factor authentication.</p>
         </div>
         <Link :href="route('admin.profile.two-factor')" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all text-center flex items-center gap-1.5 justify-center">
-          <span>🔐 2FA Settings</span>
+          <span>🔐 2FA settings</span>
         </Link>
       </div>
 
@@ -123,7 +123,7 @@ const updatePassword = () => {
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
-                  <span>Upload Photo</span>
+                  <span>Upload photo</span>
                 </button>
                 <button 
                   v-if="avatarPreview"
@@ -131,7 +131,7 @@ const updatePassword = () => {
                   @click="removePhoto" 
                   class="px-3 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all"
                 >
-                  Remove Photo
+                  Remove photo
                 </button>
               </div>
               <p class="text-[11px] text-slate-500 dark:text-slate-400">Upload a headshot photo (JPG, PNG, GIF, or WebP up to 4MB).</p>
@@ -172,7 +172,7 @@ const updatePassword = () => {
             :disabled="profileForm.processing"
             class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-600/20"
           >
-            {{ profileForm.processing ? 'Saving...' : 'Save Profile & Photo' }}
+            {{ profileForm.processing ? 'Saving...' : 'Save profile & photo' }}
           </button>
         </form>
       </div>
@@ -231,7 +231,7 @@ const updatePassword = () => {
             :disabled="passwordForm.processing"
             class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-600/20"
           >
-            {{ passwordForm.processing ? 'Updating Password...' : 'Update Password' }}
+            {{ passwordForm.processing ? 'Updating password...' : 'Update password' }}
           </button>
         </form>
       </div>

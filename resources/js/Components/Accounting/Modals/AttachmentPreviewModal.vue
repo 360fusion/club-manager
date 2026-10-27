@@ -43,7 +43,7 @@ defineProps({
                 type="button"
                 @click="zoomOut"
                 title="Zoom Out"
-                class="px-2.5 py-1 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors cursor-pointer"
+                class="px-2.5 py-1 hover:bg-slate-700 text-slate-200 rounded-xl transition-colors cursor-pointer"
               >
                 🔍−
               </button>
@@ -54,7 +54,7 @@ defineProps({
                 type="button"
                 @click="zoomIn"
                 title="Zoom In"
-                class="px-2.5 py-1 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors cursor-pointer"
+                class="px-2.5 py-1 hover:bg-slate-700 text-slate-200 rounded-xl transition-colors cursor-pointer"
               >
                 🔍+
               </button>
@@ -62,7 +62,7 @@ defineProps({
                 type="button"
                 @click="resetZoom"
                 title="Reset Zoom"
-                class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors cursor-pointer border-l border-slate-700 ml-1 text-[11px]"
+                class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors cursor-pointer border-l border-slate-700 ml-1 text-[11px]"
               >
                 ↺ Reset
               </button>
@@ -85,7 +85,7 @@ defineProps({
               target="_blank"
               class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
             >
-              ↗ New Tab
+              ↗ New tab
             </a>
 
             <!-- Delete Attachment -->

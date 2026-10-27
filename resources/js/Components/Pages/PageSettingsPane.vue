@@ -31,7 +31,7 @@ defineProps({
                 :disabled="settingsForm.processing"
                 class="py-2.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
-                <span>💾 Save Website Settings</span>
+                <span>💾 Save website settings</span>
             </button>
         </div>
 
@@ -97,8 +97,8 @@ defineProps({
                         <div class="flex items-center justify-between mb-1">
                             <label for="site-share-image" class="block font-bold text-slate-700 dark:text-slate-200 mb-1 !mb-0">Default share image</label>
                             <div class="flex items-center gap-1.5">
-                                <button v-if="settingsForm.share_image_url" type="button" @click="settingsForm.share_image_url = ''" class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-lg border border-rose-200 dark:border-rose-800/60 cursor-pointer">🗑️ Clear</button>
-                                <button type="button" @click="openMediaLibrary('site_share_image', null, 'pages')" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 cursor-pointer">📁 Media Library</button>
+                                <button v-if="settingsForm.share_image_url" type="button" @click="settingsForm.share_image_url = ''" class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 cursor-pointer">🗑️ Clear</button>
+                                <button type="button" @click="openMediaLibrary('site_share_image', null, 'pages')" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer">📁 Media library</button>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -112,8 +112,8 @@ defineProps({
                         <div class="flex items-center justify-between mb-1">
                             <label for="site-icon" class="block font-bold text-slate-700 dark:text-slate-200 mb-1 !mb-0">Site icon (favicon)</label>
                             <div class="flex items-center gap-1.5">
-                                <button v-if="settingsForm.site_icon_url" type="button" @click="settingsForm.site_icon_url = ''" class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-lg border border-rose-200 dark:border-rose-800/60 cursor-pointer">🗑️ Clear</button>
-                                <button type="button" @click="openMediaLibrary('site_icon', null, 'pages')" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/60 cursor-pointer">📁 Media Library</button>
+                                <button v-if="settingsForm.site_icon_url" type="button" @click="settingsForm.site_icon_url = ''" class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[10px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 cursor-pointer">🗑️ Clear</button>
+                                <button type="button" @click="openMediaLibrary('site_icon', null, 'pages')" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 cursor-pointer">📁 Media library</button>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -140,7 +140,7 @@ defineProps({
             <!-- Section 3: Public Contact Details -->
             <div class="space-y-4">
                 <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Public Contact Details</h3>
-                <p class="text-[10px] text-slate-400 -mt-2">Header CTA, social links and footer branding have moved to the <button type="button" @click="requestNavigation('header_footer')" class="underline font-bold text-blue-600 dark:text-blue-400 cursor-pointer">Header & Footer</button> tab.</p>
+                <p class="text-[10px] text-slate-400 -mt-2">Header CTA, social links and footer branding have moved to the <button type="button" @click="requestNavigation('header_footer')" class="underline font-bold text-blue-600 dark:text-blue-400 cursor-pointer">Header & footer</button> tab.</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label for="public-contact-email" class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Public Contact Email</label>
@@ -252,7 +252,7 @@ defineProps({
                     :disabled="settingsForm.processing"
                     class="py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
-                    <span>💾 Save Website Settings</span>
+                    <span>💾 Save website settings</span>
                 </button>
             </div>
         </form>

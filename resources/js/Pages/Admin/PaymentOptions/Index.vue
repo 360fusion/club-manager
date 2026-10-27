@@ -182,10 +182,10 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
 
             <div class="flex items-center gap-2">
               <template v-if="card.method && methods.length > 1">
-                <button type="button" class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" :aria-label="`Move ${card.method.label} up`" @click="move(card, -1)">&uarr;</button>
-                <button type="button" class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" :aria-label="`Move ${card.method.label} down`" @click="move(card, 1)">&darr;</button>
+                <button type="button" class="rounded-xl border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" :aria-label="`Move ${card.method.label} up`" @click="move(card, -1)">&uarr;</button>
+                <button type="button" class="rounded-xl border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" :aria-label="`Move ${card.method.label} down`" @click="move(card, 1)">&darr;</button>
               </template>
-              <button type="button" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" :aria-label="`Edit ${card.method?.label ?? card.type.label}`" title="Edit details" @click="edit(card)">
+              <button type="button" class="rounded-xl border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" :aria-label="`Edit ${card.method?.label ?? card.type.label}`" title="Edit details" @click="edit(card)">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" /></svg>
               </button>
               <label class="flex cursor-pointer items-center gap-2 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
@@ -248,8 +248,8 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
           <template v-if="!platform.account">
             <p class="text-slate-600 dark:text-slate-300">Payments go straight to your own Stripe account and Stripe pays you out. The platform takes <span class="font-semibold">{{ platform.fee }}</span>.</p>
             <div class="flex flex-wrap gap-2">
-              <button v-if="platform.can_connect_existing" type="button" class="rounded-lg bg-indigo-600 px-3 py-2 font-bold text-white hover:bg-indigo-500" @click="stripeAction('connect')">Connect my Stripe account</button>
-              <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200" @click="stripeAction('express')">I don't have one, create one for me</button>
+              <button v-if="platform.can_connect_existing" type="button" class="rounded-xl bg-indigo-600 px-3 py-2 font-bold text-white hover:bg-indigo-500" @click="stripeAction('connect')">Connect my Stripe account</button>
+              <button type="button" class="rounded-xl border border-slate-300 px-3 py-2 font-bold text-slate-700 dark:border-slate-700 dark:text-slate-200" @click="stripeAction('express')">I don't have one, create one for me</button>
             </div>
           </template>
           <template v-else>
@@ -260,12 +260,12 @@ const label = 'block text-[11px] font-semibold text-slate-600 dark:text-slate-30
             </div>
             <div v-if="!platform.account.charges_enabled && platform.account.type === 'express'">
               <p class="mb-2 text-slate-600 dark:text-slate-300">Stripe needs a few more details (identity and bank account) before it can take payments.</p>
-              <button type="button" class="rounded-lg bg-indigo-600 px-3 py-2 font-bold text-white hover:bg-indigo-500" @click="stripeAction('express')">Continue setup on Stripe</button>
+              <button type="button" class="rounded-xl bg-indigo-600 px-3 py-2 font-bold text-white hover:bg-indigo-500" @click="stripeAction('express')">Continue setup on Stripe</button>
             </div>
             <p v-else-if="!platform.account.charges_enabled" class="text-slate-600 dark:text-slate-300">Stripe hasn't enabled payments on this account yet. Finish any steps in your Stripe dashboard.</p>
             <div v-if="!platform.account.terms_accepted" class="space-y-2 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
               <label class="flex items-start gap-2 font-semibold text-slate-700 dark:text-slate-200"><input v-model="agreeTerms" type="checkbox" class="mt-0.5 rounded" /> I agree that the platform takes {{ platform.fee }}, and to the platform payment terms<template v-if="platform.terms_url"> (<a :href="platform.terms_url" target="_blank" rel="noopener" class="text-blue-600 underline">read them</a>)</template>.</label>
-              <button type="button" :disabled="!agreeTerms" class="rounded-lg bg-blue-600 px-3 py-2 font-bold text-white hover:bg-blue-500 disabled:opacity-50" @click="stripeAction('terms', { agree: true })">Accept</button>
+              <button type="button" :disabled="!agreeTerms" class="rounded-xl bg-blue-600 px-3 py-2 font-bold text-white hover:bg-blue-500 disabled:opacity-50" @click="stripeAction('terms', { agree: true })">Accept</button>
             </div>
             <p v-else-if="platform.account.ready" class="font-semibold text-emerald-600">Card payments are ready. The platform takes {{ platform.fee }}.</p>
             <button type="button" class="font-semibold text-rose-600 hover:underline" @click="disconnectStripe">Disconnect Stripe</button>

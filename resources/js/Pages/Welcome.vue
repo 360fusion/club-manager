@@ -71,10 +71,10 @@ const getIcon = (typeCode) => {
 
                 <div class="flex items-center gap-4 text-sm font-medium">
                     <Link :href="`/${defaultClubSlug}/admin/pages`" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
-                        🎨 CMS Pages
+                        🎨 CMS pages
                     </Link>
                     <a :href="`/site/${defaultClubSlug}`" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
-                        🌐 Live Site
+                        🌐 Live site
                     </a>
                     <Link :href="`/${defaultClubSlug}/admin/subscriptions`" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
                         💳 Subscriptions
@@ -88,11 +88,11 @@ const getIcon = (typeCode) => {
                         </span>
                     </template>
                     <template v-else>
-                        <Link href="/register" class="px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 border border-blue-500/30 text-xs font-semibold transition-all">
+                        <Link href="/register" class="px-3 py-1.5 rounded-xl bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 border border-blue-500/30 text-xs font-semibold transition-all">
                             Register
                         </Link>
-                        <Link href="/login" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20">
-                            Log In
+                        <Link href="/login" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20">
+                            Log in
                         </Link>
                     </template>
                 </div>
@@ -140,14 +140,14 @@ const getIcon = (typeCode) => {
                                 :href="route('admin.analytics', { slug: userClub.slug })"
                                 class="flex-1 text-center py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all"
                             >
-                                Open Admin Dashboard &rarr;
+                                Open admin dashboard &rarr;
                             </Link>
                             <Link
                                 v-else
                                 :href="route('member.dashboard', { slug: userClub.slug })"
                                 class="flex-1 text-center py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all"
                             >
-                                Enter Member Portal &rarr;
+                                Enter member portal &rarr;
                             </Link>
                         </div>
                     </div>
@@ -179,7 +179,7 @@ const getIcon = (typeCode) => {
                             : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700'"
                         class="px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200"
                     >
-                        All Clubs ({{ clubs.length }})
+                        All clubs ({{ clubs.length }})
                     </button>
                     <button 
                         v-for="type in clubTypes" 
@@ -255,7 +255,7 @@ const getIcon = (typeCode) => {
                             :href="`/${club.slug}/overview`"
                             class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 group/btn transition-all"
                         >
-                            <span>Enter Club Hub</span>
+                            <span>Enter club hub</span>
                             <span class="group-hover/btn:translate-x-1 transition-transform">→</span>
                         </Link>
                     </div>

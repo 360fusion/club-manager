@@ -46,7 +46,7 @@ function submitUpdate() {
                     <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">
                         <Link :href="route('superadmin.dashboard')" class="hover:text-slate-900 transition dark:hover:text-white">Dashboard</Link>
                         <span>/</span>
-                        <Link :href="route('superadmin.districts.index')" class="hover:text-slate-900 transition dark:hover:text-white">Districts &amp; Groups</Link>
+                        <Link :href="route('superadmin.districts.index')" class="hover:text-slate-900 transition dark:hover:text-white">Districts &amp; groups</Link>
                         <span>/</span>
                         <Link :href="route('superadmin.districts.show', district.id)" class="hover:text-slate-900 transition dark:hover:text-white">{{ district.name }}</Link>
                         <span>/</span>
@@ -60,7 +60,7 @@ function submitUpdate() {
                     :href="route('superadmin.districts.show', district.id)"
                     class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl border border-slate-300 transition flex-shrink-0 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
                 >
-                    ← Cancel &amp; Back
+                    ← Cancel &amp; back
                 </Link>
             </div>
 
@@ -325,7 +325,7 @@ function submitUpdate() {
                         :disabled="form.processing"
                         class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-2"
                     >
-                        <span>{{ form.processing ? 'Saving...' : 'Save Changes' }}</span>
+                        <span>{{ form.processing ? 'Saving...' : 'Save changes' }}</span>
                     </button>
                 </div>
 

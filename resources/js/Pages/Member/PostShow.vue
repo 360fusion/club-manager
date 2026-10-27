@@ -47,7 +47,7 @@ const getFileIcon = (mimeOrName) => {
           :href="route('member.dashboard', club.slug)"
           class="inline-flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
         >
-          ← Back to Portal Dashboard
+          ← Back to portal dashboard
         </Link>
       </div>
 

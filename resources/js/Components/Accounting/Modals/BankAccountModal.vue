@@ -97,7 +97,7 @@ defineProps({
                 @click="proceedWithCurrentTypeAnyway"
                 class="w-full sm:w-auto px-3 py-2 bg-amber-100 dark:bg-amber-900/40 hover:bg-amber-200 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold text-[11px] rounded-xl cursor-pointer transition-all text-center"
               >
-                Keep Selection &amp; Save
+                Keep selection &amp; save
               </button>
             </div>
           </div>
@@ -111,7 +111,7 @@ defineProps({
               Cancel
             </button>
             <button type="submit" :disabled="bankAccountForm.processing" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 cursor-pointer">
-              Save &amp; Link Account
+              Save &amp; link account
             </button>
           </div>
         </form>

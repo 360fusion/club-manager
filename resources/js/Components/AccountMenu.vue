@@ -74,7 +74,7 @@ const item = 'block rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 ho
             <div v-if="navChoice" class="hidden border-t border-slate-100 px-3 py-2 dark:border-slate-800 lg:block">
                 <p class="mb-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">Navigation</p>
                 <div class="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800" role="group" aria-label="Navigation position">
-                    <button v-for="mode in [{ value: 'top', label: 'Top bar' }, { value: 'side', label: 'Sidebar' }]" :key="mode.value" type="button" :aria-pressed="navMode === mode.value" :class="['rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors', navMode === mode.value ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white']" @click="setNavMode(mode.value)">{{ mode.label }}</button>
+                    <button v-for="mode in [{ value: 'top', label: 'Top bar' }, { value: 'side', label: 'Sidebar' }]" :key="mode.value" type="button" :aria-pressed="navMode === mode.value" :class="['rounded-xl px-2 py-1.5 text-xs font-semibold transition-colors', navMode === mode.value ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white']" @click="setNavMode(mode.value)">{{ mode.label }}</button>
                 </div>
             </div>
 

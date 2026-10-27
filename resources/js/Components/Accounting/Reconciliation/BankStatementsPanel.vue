@@ -37,7 +37,7 @@ defineProps({
             v-if="deletableStatementLines.length > 0"
             type="button"
             @click="deleteSelectedStatementLines"
-            class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-lg shadow transition-all cursor-pointer flex items-center gap-1.5"
+            class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer flex items-center gap-1.5"
           >
             Delete ({{ deletableStatementLines.length }})
           </button>
@@ -45,12 +45,12 @@ defineProps({
             v-if="restorableStatementLines.length > 0"
             type="button"
             @click="restoreSelectedStatementLines"
-            class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-lg shadow transition-all cursor-pointer flex items-center gap-1.5"
+            class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer flex items-center gap-1.5"
           >
             Restore ({{ restorableStatementLines.length }})
           </button>
-          <button type="button" @click="$emit('open-import')" class="px-3.5 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-extrabold text-xs rounded-lg shadow cursor-pointer">
-            + Upload Statement
+          <button type="button" @click="$emit('open-import')" class="px-3.5 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer">
+            + Upload statement
           </button>
         </div>
       </div>

@@ -83,7 +83,7 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
             <span class="font-mono font-bold text-slate-900 dark:text-white block truncate">{{ rule.pattern }}</span>
             <span class="text-slate-500 dark:text-slate-400">{{ rule.match_type === 'charity_relief' ? 'Charity relief' : `Ledger ${rule.nominal_code}` }} · used {{ rule.hit_count }}×</span>
           </span>
-          <button type="button" @click="forgetMatchRule(rule.id)" class="px-2.5 py-1 text-[10px] font-extrabold text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 rounded-lg cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-950/40">Forget</button>
+          <button type="button" @click="forgetMatchRule(rule.id)" class="px-2.5 py-1 text-[10px] font-extrabold text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 rounded-xl cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-950/40">Forget</button>
         </li>
       </ul>
     </details>
@@ -137,22 +137,22 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
           @click="navigateTo('reporting', 'reconciliation_summary')"
           class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline mr-2 cursor-pointer"
         >
-          Reconciliation Report
+          Reconciliation report
         </button>
 
         <div class="relative manage-account-container">
           <button
             type="button"
             @click.stop="showManageAccountMenu = !showManageAccountMenu"
-            class="px-3 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-bold text-xs rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+            class="px-3 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1 cursor-pointer"
           >
-            <span>Manage Account</span>
+            <span>Manage account</span>
             <span>▾</span>
           </button>
           <div v-if="showManageAccountMenu" class="absolute right-0 mt-1 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg py-1 z-30 text-xs font-semibold text-slate-700 dark:text-slate-200">
-            <button type="button" @click="showImportModal = true; showManageAccountMenu = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">📂 Import Bank Statement</button>
-            <button type="button" @click="reconSubTab = 'bank_statements'; showManageAccountMenu = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">📜 Bank Statement History</button>
-            <button type="button" @click="reconSubTab = 'cash_coding'; showManageAccountMenu = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">⚡ Bulk Cash Coding</button>
+            <button type="button" @click="showImportModal = true; showManageAccountMenu = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">📂 Import bank statement</button>
+            <button type="button" @click="reconSubTab = 'bank_statements'; showManageAccountMenu = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">📜 Bank statement history</button>
+            <button type="button" @click="reconSubTab = 'cash_coding'; showManageAccountMenu = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">⚡ Bulk cash coding</button>
           </div>
         </div>
       </div>
@@ -239,7 +239,7 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
           type="button"
           @click="showFilterPanel = !showFilterPanel"
           :class="[
-            'px-3.5 py-1.5 font-extrabold text-xs rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap',
+            'px-3.5 py-1.5 font-extrabold text-xs rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap',
             showFilterPanel ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700/60' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'
           ]"
         >
@@ -274,7 +274,7 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
             @click="filterType = 'all'; filterMinAmount = ''; filterMaxAmount = ''; reconSearch = ''"
             class="w-full py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 font-bold rounded"
           >
-            Reset Filters
+            Reset filters
           </button>
         </div>
       </div>

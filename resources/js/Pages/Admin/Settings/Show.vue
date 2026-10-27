@@ -620,7 +620,7 @@ const updateMemberRank = (userId, newRank) => {
           <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
-          <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved Successfully!' : 'Save Changes') }}</span>
+          <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved successfully!' : 'Save changes') }}</span>
         </button>
       </div>
 
@@ -681,7 +681,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'positions' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>🎖️</span> Club Positions</span>
+                  <span class="flex items-center gap-2.5"><span>🎖️</span> Club positions</span>
                 </button>
 
                 <button
@@ -691,7 +691,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'ranks' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>🏅</span> Grand &amp; Provincial Ranks</span>
+                  <span class="flex items-center gap-2.5"><span>🏅</span> Grand &amp; Provincial ranks</span>
                 </button>
 
                 <button
@@ -701,7 +701,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'officers' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>👔</span> Officers Roster</span>
+                  <span class="flex items-center gap-2.5"><span>👔</span> Officers roster</span>
                 </button>
 
                 <button
@@ -711,7 +711,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'branding' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>🎨</span> Branding & Styling</span>
+                  <span class="flex items-center gap-2.5"><span>🎨</span> Branding & styling</span>
                 </button>
 
                 <button
@@ -721,7 +721,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'roles' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>🛡️</span> Roles & Permissions</span>
+                  <span class="flex items-center gap-2.5"><span>🛡️</span> Roles & permissions</span>
                 </button>
 
                 <button
@@ -731,7 +731,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'modules' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>⚡</span> Feature Modules</span>
+                  <span class="flex items-center gap-2.5"><span>⚡</span> Feature modules</span>
                 </button>
               </div>
             </div>
@@ -757,7 +757,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'subscriptions' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>💳</span> Subscriptions & Dues</span>
+                  <span class="flex items-center gap-2.5"><span>💳</span> Subscriptions & dues</span>
                 </button>
 
                 <button
@@ -767,7 +767,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'payments' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>💳</span> Payment Gateways</span>
+                  <span class="flex items-center gap-2.5"><span>💳</span> Payment gateways</span>
                 </button>
 
                 <button
@@ -777,7 +777,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'events' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>📅</span> Events & Check-Ins</span>
+                  <span class="flex items-center gap-2.5"><span>📅</span> Events & check-ins</span>
                 </button>
 
                 <button
@@ -807,7 +807,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'news-tags' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>🏷️</span> News Tags</span>
+                  <span class="flex items-center gap-2.5"><span>🏷️</span> News tags</span>
                 </button>
               </div>
             </div>
@@ -823,7 +823,7 @@ const updateMemberRank = (userId, newRank) => {
                     activeTab === 'bookings' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>🚣</span> Equipment Bookings</span>
+                  <span class="flex items-center gap-2.5"><span>🚣</span> Equipment bookings</span>
                 </button>
               </div>
             </div>
@@ -977,7 +977,7 @@ const updateMemberRank = (userId, newRank) => {
                   @click="addRank"
                   class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1"
                 >
-                  <span>+</span> Add Position
+                  <span>+</span> Add position
                 </button>
               </div>
             </div>
@@ -1067,14 +1067,14 @@ const updateMemberRank = (userId, newRank) => {
                   @click="switchProvider('stripe')"
                   :disabled="processingProvider"
                   :class="[
-                    'px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer',
+                    'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer',
                     selectedProvider === 'stripe'
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
                   <span class="w-2 h-2 rounded-full bg-blue-300"></span>
-                  Stripe (Direct / Cards)
+                  Stripe (direct / cards)
                 </button>
 
                 <button
@@ -1082,19 +1082,19 @@ const updateMemberRank = (userId, newRank) => {
                   @click="switchProvider('paddle')"
                   :disabled="processingProvider"
                   :class="[
-                    'px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer',
+                    'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer',
                     selectedProvider === 'paddle'
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
                   <span class="w-2 h-2 rounded-full bg-blue-300"></span>
-                  Paddle (MoR / Tax Compliant)
+                  Paddle (MoR / tax compliant)
                 </button>
               </div>
 
               <a :href="route('billing.portal', { clubSlug: props.club.slug })" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1.5">
-                <span>⚙️ Customer Portal</span>
+                <span>⚙️ Customer portal</span>
               </a>
             </div>
           </div>
@@ -1166,7 +1166,7 @@ const updateMemberRank = (userId, newRank) => {
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
-          <span>Save All Settings</span>
+          <span>Save all settings</span>
         </button>
       </div>
 
@@ -1247,7 +1247,7 @@ const updateMemberRank = (userId, newRank) => {
             @click="confirmDeleteRank"
             class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md shadow-rose-600/20 cursor-pointer"
           >
-            Confirm Delete
+            Confirm delete
           </button>
         </div>
       </div>
@@ -1344,7 +1344,7 @@ const updateMemberRank = (userId, newRank) => {
         <div class="text-xs">
           <span class="block font-semibold text-slate-600 dark:text-slate-300 uppercase mb-2">Meeting Months (Recess Unticked)</span>
           <div class="grid grid-cols-4 gap-2">
-            <label v-for="(mName, idx) in MONTH_NAMES" :key="idx" class="flex items-center gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer">
+            <label v-for="(mName, idx) in MONTH_NAMES" :key="idx" class="flex items-center gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
               <input type="checkbox" :value="idx + 1" v-model="formulaBuilder.months" class="rounded text-blue-600 dark:text-blue-400" />
               <span>{{ mName }}</span>
             </label>

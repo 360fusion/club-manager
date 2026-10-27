@@ -55,7 +55,7 @@ const generateNewRecoveryCodes = () => {
         </div>
 
         <Link :href="route('profile.edit')" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 transition-all flex items-center gap-1.5 justify-center self-start sm:self-auto">
-          <span>&larr; Back to Profile</span>
+          <span>&larr; Back to profile</span>
         </Link>
       </div>
 
@@ -96,7 +96,7 @@ const generateNewRecoveryCodes = () => {
             @click="enable2FA"
             class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-blue-600/20"
           >
-            Enable Two-Factor Authentication &rarr;
+            Enable two-factor authentication &rarr;
           </button>
         </div>
 
@@ -137,7 +137,7 @@ const generateNewRecoveryCodes = () => {
               :disabled="confirmForm.processing"
               class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-600/20"
             >
-              {{ confirmForm.processing ? 'Confirming...' : 'Confirm & Activate 2FA' }}
+              {{ confirmForm.processing ? 'Confirming...' : 'Confirm & activate 2FA' }}
             </button>
           </form>
         </div>
@@ -152,7 +152,7 @@ const generateNewRecoveryCodes = () => {
                 @click="generateNewRecoveryCodes"
                 class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 transition-all"
               >
-                Regenerate Codes
+                Regenerate codes
               </button>
             </div>
             <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -172,7 +172,7 @@ const generateNewRecoveryCodes = () => {
               @click="disable2FA"
               class="px-4 py-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-xs font-bold rounded-xl transition-all"
             >
-              Disable Two-Factor Authentication
+              Disable two-factor authentication
             </button>
           </div>
         </div>

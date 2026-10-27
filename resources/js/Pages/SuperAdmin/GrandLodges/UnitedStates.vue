@@ -200,7 +200,7 @@ function dbEntry(code) {
                         :key="region"
                         @click="activeRegion = region"
                         :class="[
-                            'px-3 py-1.5 rounded-lg text-[11px] font-bold transition border',
+                            'px-3 py-1.5 rounded-xl text-[11px] font-bold transition border',
                             activeRegion === region
                                 ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
                                 : 'bg-slate-100 text-slate-500 border-slate-300 hover:text-slate-900 hover:border-slate-400 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:text-white dark:hover:border-slate-600'

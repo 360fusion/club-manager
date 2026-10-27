@@ -59,7 +59,7 @@ const filteredMemberClubs = computed(() => {
             href="/"
             class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-1.5"
           >
-            <span>+ Join or Register Club</span>
+            <span>+ Join or register club</span>
           </Link>
         </div>
       </div>
@@ -131,13 +131,13 @@ const filteredMemberClubs = computed(() => {
                 :href="route('admin.analytics', { slug: club.slug })"
                 class="flex-1 text-center py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all"
               >
-                Admin Portal &rarr;
+                Admin portal &rarr;
               </Link>
               <Link
                 :href="route('member.dashboard', { slug: club.slug })"
                 class="flex-1 text-center py-2.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold rounded-xl transition-all"
               >
-                Member View &rarr;
+                Member view &rarr;
               </Link>
             </div>
           </div>
@@ -192,7 +192,7 @@ const filteredMemberClubs = computed(() => {
                 :href="route('member.dashboard', { slug: club.slug })"
                 class="block w-full text-center py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all"
               >
-                Enter Member Portal &rarr;
+                Enter member portal &rarr;
               </Link>
             </div>
           </div>

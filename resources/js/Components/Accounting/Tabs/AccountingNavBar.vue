@@ -87,7 +87,7 @@ const showAddMenu = defineModel('showAddMenu', { type: Boolean, default: false }
             class="w-full text-left px-4 py-2.5 hover:bg-slate-800 dark:hover:bg-slate-600 hover:text-white flex items-center gap-2 cursor-pointer transition-colors"
           >
             <span>🏦</span>
-            <span>Bank & Payment Accounts</span>
+            <span>Bank & payment accounts</span>
           </button>
 
           <button
@@ -96,7 +96,7 @@ const showAddMenu = defineModel('showAddMenu', { type: Boolean, default: false }
             class="w-full text-left px-4 py-2.5 hover:bg-slate-800 dark:hover:bg-slate-600 hover:text-white flex items-center gap-2 cursor-pointer transition-colors"
           >
             <span>📋</span>
-            <span>Chart of Accounts</span>
+            <span>Chart of accounts</span>
           </button>
 
           <button
@@ -105,7 +105,7 @@ const showAddMenu = defineModel('showAddMenu', { type: Boolean, default: false }
             class="w-full text-left px-4 py-2.5 hover:bg-slate-800 dark:hover:bg-slate-600 hover:text-white flex items-center gap-2 border-t border-slate-800 mt-1 pt-2 cursor-pointer transition-colors"
           >
             <span>📖</span>
-            <span>General Ledger & Journals</span>
+            <span>General ledger & journals</span>
           </button>
 
           <button
@@ -115,7 +115,7 @@ const showAddMenu = defineModel('showAddMenu', { type: Boolean, default: false }
             class="w-full text-left px-4 py-2.5 hover:bg-slate-800 dark:hover:bg-slate-600 hover:text-white flex items-center gap-2 cursor-pointer transition-colors"
           >
             <span>⚖️</span>
-            <span>Set Opening Balances</span>
+            <span>Set opening balances</span>
           </button>
         </div>
       </div>
@@ -171,7 +171,7 @@ const showAddMenu = defineModel('showAddMenu', { type: Boolean, default: false }
             class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white"
           >
             <span>🧾</span>
-            <span>Create Invoice</span>
+            <span>Create invoice</span>
           </Link>
           <Link
             :href="route('admin.accounting.bills.create', club.slug)"
@@ -179,7 +179,7 @@ const showAddMenu = defineModel('showAddMenu', { type: Boolean, default: false }
             class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white"
           >
             <span>📄</span>
-            <span>Add Bill</span>
+            <span>Add bill</span>
           </Link>
           <Link
             :href="route('admin.accounting.journal.create', club.slug)"
@@ -187,7 +187,7 @@ const showAddMenu = defineModel('showAddMenu', { type: Boolean, default: false }
             class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white"
           >
             <span>📖</span>
-            <span>Post Journal</span>
+            <span>Post journal</span>
           </Link>
         </div>
       </div>

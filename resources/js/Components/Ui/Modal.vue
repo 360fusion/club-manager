@@ -42,7 +42,7 @@ const SIZES = {
                 </div>
                 <button
                     type="button"
-                    class="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                    class="shrink-0 rounded-xl p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
                     aria-label="Close"
                     @click="emit('close')"
                 >

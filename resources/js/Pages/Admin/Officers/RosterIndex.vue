@@ -588,7 +588,7 @@ const installCurrentRoster = () => {
 
           <div class="flex items-center gap-2">
             <button @click="openNewYearModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer">
-              ➕ Add Masonic Year
+              ➕ Add Masonic year
             </button>
           </div>
         </div>
@@ -615,7 +615,7 @@ const installCurrentRoster = () => {
             >
               <span>{{ activeYear }}</span>
               <span class="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-slate-700 text-slate-200">
-                New Draft
+                New draft
               </span>
             </button>
           </div>
@@ -694,10 +694,10 @@ const installCurrentRoster = () => {
                     type="button"
                     @click="openQuickMemberModal(null, 'steward')"
                     title="Quickly add new historic member as Steward"
-                    class="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/60 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs"
+                    class="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/60 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs"
                   >
                     <span>➕</span>
-                    <span class="text-[10px]">Add Member</span>
+                    <span class="text-[10px]">Add member</span>
                   </button>
                 </div>
               </div>
@@ -834,10 +834,10 @@ const installCurrentRoster = () => {
                   type="button"
                   @click="openQuickMemberModal(null, 'committee')"
                   title="Quickly add new historic member to Committee"
-                  class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs"
+                  class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs"
                 >
                   <span>➕</span>
-                  <span class="text-[10px]">Add Member</span>
+                  <span class="text-[10px]">Add member</span>
                 </button>
               </div>
             </div>
@@ -902,15 +902,15 @@ const installCurrentRoster = () => {
 
         <div class="flex flex-wrap items-center gap-3">
           <button @click="saveRoster('draft')" :disabled="isSaving" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">
-            💾 Save Draft
+            💾 Save draft
           </button>
 
           <button @click="saveRoster('confirmed')" :disabled="isSaving" class="px-4 py-2.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/60 font-bold text-xs rounded-xl transition-all cursor-pointer">
-            📜 Approve in Committee
+            📜 Approve in committee
           </button>
 
           <button v-if="currentRoster" @click="installCurrentRoster" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer">
-            ✨ Install &amp; Activate Officers
+            ✨ Install &amp; activate officers
           </button>
         </div>
       </div>

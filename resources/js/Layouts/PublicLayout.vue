@@ -30,8 +30,8 @@ const followError = computed(() => page.props.errors?.follow ?? null);
                 </div>
                 <div class="flex items-center gap-2 text-sm">
                     <ThemeToggle />
-                    <Link v-if="user" :href="route('members.dashboard')" class="rounded-lg bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-500">My area</Link>
-                    <Link v-else :href="route('login')" class="rounded-lg bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-500">Sign in</Link>
+                    <Link v-if="user" :href="route('members.dashboard')" class="rounded-xl bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-500">My area</Link>
+                    <Link v-else :href="route('login')" class="rounded-xl bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-500">Sign in</Link>
                 </div>
             </div>
         </header>
