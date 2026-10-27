@@ -19,6 +19,7 @@ npm run check:components                        # renders every component split 
 npm run check:urls                              # which accounting tab and report an address names, the website builder's page and screen addresses, and its page-settings rules
 npm run check:ranges                            # the reports tab's preset date ranges and the financial-year labels, including January and leap-year edges
 npm run check:blocks                            # every element in the page editor's palette builds a block of its own type and appears in the insert menu
+npm run check:design                            # no new off-palette or hex colours, 6px buttons, emoji in buttons or Title Case labels; known cases are in tests/js/design-baseline.json (lower it with `node tests/js/design-check.mjs --update` after fixing some; the counts should only go down)
 ```
 
 Herd serves the app at `club-manager.test`. The CLI PHP memory limit (128M) is low: tests that decode large images set `memory_limit` themselves.

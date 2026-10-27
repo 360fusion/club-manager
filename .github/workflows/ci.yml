@@ -54,6 +54,9 @@ jobs:
       - name: Check the accounting screen's addresses
         run: npm run check:urls
 
+      - name: No new off-system colours, button corners, emoji or Title Case labels
+        run: npm run check:design
+
       - name: Prepare environment
         run: |
           cp .env.example .env

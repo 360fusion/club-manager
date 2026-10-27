@@ -10,7 +10,8 @@
         "check:blocks": "node tests/js/block-catalog-check.mjs",
         "check:ranges": "node tests/js/report-range-check.mjs && node tests/js/financial-year-check.mjs",
         "check:urls": "node tests/js/accounting-url-check.mjs && node tests/js/page-builder-url-check.mjs && node tests/js/page-builder-settings-check.mjs",
-        "check:templates": "node tests/js/template-names-check.mjs"
+        "check:templates": "node tests/js/template-names-check.mjs",
+        "check:design": "node tests/js/design-check.mjs"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
