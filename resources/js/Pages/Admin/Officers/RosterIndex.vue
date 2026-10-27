@@ -5,6 +5,14 @@ import { ref, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Tabs from '@/Components/Ui/Tabs.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Input from '@/Components/Ui/Input.vue';
+import PageHeader from '@/Components/Ui/PageHeader.vue';
+import Select from '@/Components/Ui/Select.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   club: Object,
@@ -557,185 +565,156 @@ const createNewMasonicYear = () => {
 
 const installCurrentRoster = () => {
   if (!currentRoster.value) return;
-  if (confirm(`Install and Activate Officers for ${activeYear.value}? This will update member badges across the portal.`)) {
+  if (confirm(`Install and activate the officers for ${activeYear.value}? This will update member badges across the portal.`)) {
     router.post(route('admin.officers.install', { clubSlug: props.club.slug, id: currentRoster.value.id }));
   }
 };
 </script>
 
 <template>
-  <AdminLayout title="Annual Officer Rosters & History" :club="club" active-tab="members">
+  <AdminLayout title="Annual officer rosters and history" :club="club" active-tab="members">
     <div class="space-y-6">
 
       <Tabs :items="memberAreaTabs" active="officers" label="Members" />
 
-      <!-- Header Banner -->
-      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-4">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-slate-400">Lodge Governance &amp; Ritual</span>
-              <span class="text-slate-300">•</span>
-              <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/60">
-                Installation Month: {{ installationMonth }}
-              </span>
-            </div>
-            <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Annual Officer Rosters &amp; History</h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400">
-              Manage annual officer rosters, committee approvals, and installation rollovers.
-            </p>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button @click="openNewYearModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer">
-              ➕ Add Masonic year
-            </button>
-          </div>
+      <Card class="space-y-4">
+        <div class="border-b border-slate-200 dark:border-slate-800 pb-6">
+          <PageHeader title="Annual officer rosters and history" description="Manage annual officer rosters, committee approvals and installation rollovers.">
+            <template #badge>
+              <Badge variant="info">Installation month: {{ installationMonth }}</Badge>
+            </template>
+            <template #actions>
+              <Button variant="secondary" @click="openNewYearModal()">
+                <template #icon><UiIcon name="plus" /></template>
+                Add a Masonic year
+              </Button>
+            </template>
+          </PageHeader>
         </div>
 
-        <!-- Year Tabs & Historical Selector Bar -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 text-xs">
-          <!-- Recent Active Roster Tabs -->
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div class="flex items-center gap-2 overflow-x-auto">
             <button
               v-for="r in rosters.slice(0, 6)"
               :key="r.id"
               @click="loadRosterAssignments(r.masonic_year)"
-              :class="['px-4 py-2.5 rounded-xl font-extrabold transition-all flex items-center gap-2 cursor-pointer flex-shrink-0', activeYear === r.masonic_year ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700']"
+              :class="['px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer flex-shrink-0 border', activeYear === r.masonic_year ? 'bg-slate-900 dark:bg-slate-700 text-white border-transparent' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800']"
             >
               <span>{{ r.masonic_year }}</span>
-              <span :class="['text-[10px] uppercase font-black px-2 py-0.5 rounded-md', r.status === 'installed' ? 'bg-emerald-400 text-slate-950' : (r.status === 'confirmed' ? 'bg-amber-300 text-slate-950' : 'bg-slate-700 text-slate-200')]">
+              <Badge :variant="r.status === 'installed' ? 'success' : (r.status === 'confirmed' ? 'warning' : 'neutral')" class="capitalize">
                 {{ r.status }}
-              </span>
+              </Badge>
             </button>
 
             <button
               v-if="!rosters.some(r => r.masonic_year === activeYear)"
-              class="px-4 py-2.5 rounded-xl font-extrabold bg-slate-900 dark:bg-slate-700 text-white shadow-md flex items-center gap-2 flex-shrink-0"
+              class="px-4 py-2 rounded-xl text-sm font-medium bg-slate-900 dark:bg-slate-700 text-white flex items-center gap-2 flex-shrink-0"
             >
               <span>{{ activeYear }}</span>
-              <span class="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-slate-700 text-slate-200">
-                New draft
-              </span>
+              <Badge>New draft</Badge>
             </button>
           </div>
 
-          <!-- Jump to Saved Historical Roster Selector -->
-          <div v-if="rosters.length > 0" class="flex items-center gap-2 flex-shrink-0">
-            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">All Saved History:</span>
-            <select
-              :value="activeYear"
-              @change="loadRosterAssignments($event.target.value)"
-              class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option v-for="r in rosters" :key="r.id" :value="r.masonic_year">
-                📜 {{ r.masonic_year }} ({{ r.status }})
-              </option>
-            </select>
-          </div>
+          <Select
+            v-if="rosters.length > 0"
+            :model-value="activeYear"
+            @update:model-value="loadRosterAssignments"
+            label="All saved years"
+            :options="rosters.map(r => ({ value: r.masonic_year, label: `${r.masonic_year} (${r.status})` }))"
+            class="flex-shrink-0 sm:w-56"
+          />
         </div>
-      </div>
+      </Card>
 
-      <!-- Validation Error Alert -->
-      <div v-if="errorMessage" class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 p-4 rounded-2xl text-xs font-bold flex items-center gap-2">
-        <span>⚠️</span>
-        <span>{{ errorMessage }}</span>
-      </div>
+      <Alert v-if="errorMessage" variant="danger">
+        {{ errorMessage }}
+      </Alert>
 
       <!-- Main Officers Board -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <!-- Progressive Officers Card (Single Select Ladder + Multi-Select Stewards) -->
-        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
-          <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
-            <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <span>🪜</span>
-              <span>Progressive Officers (Ceremonial Ladder)</span>
-            </h2>
+        <Card class="space-y-4">
+          <div class="border-b border-slate-200 dark:border-slate-800 pb-3">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Progressive officers (ceremonial ladder)</h2>
           </div>
 
           <div class="space-y-3">
             <!-- Single Progressive Seats (WM down to Inner Guard) -->
-            <div v-for="off in singleProgressiveOffices" :key="off.value" class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <span class="font-extrabold text-slate-900 dark:text-white text-xs sm:w-1/3">{{ off.label }}</span>
+            <div v-for="off in singleProgressiveOffices" :key="off.value" class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span class="text-sm font-medium text-slate-900 dark:text-white sm:w-1/3">{{ off.label }}</span>
               <div class="flex items-center gap-1.5 w-full sm:w-2/3">
                 <select
                   v-model="progressiveAssignments[off.value]"
-                  class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
+                  :aria-label="off.label"
+                  class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option :value="null">-- Unassigned --</option>
+                  <option :value="null">Unassigned</option>
                   <option v-for="m in localMembers" :key="m.id" :value="m.id">
                     {{ m.name }}
                   </option>
                 </select>
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   @click="openQuickMemberModal(off.value, 'progressive')"
-                  title="Quickly add new historic member"
-                  class="px-2 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-black transition-all cursor-pointer flex-shrink-0 flex items-center justify-center h-[34px] w-[34px] shadow-xs"
+                  title="Add a historic member"
+                  aria-label="Add a historic member"
+                  class="flex-shrink-0"
                 >
-                  ➕
-                </button>
+                  <UiIcon name="user-add" />
+                </Button>
               </div>
             </div>
 
             <!-- Stewards (Multi-Select Checklist Grid with Non-Officers Filter) -->
-            <div class="p-3.5 bg-blue-50/50 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800/80 rounded-2xl space-y-2.5">
-              <div class="flex items-center justify-between">
-                <span class="font-extrabold text-blue-950 dark:text-blue-100 text-xs flex items-center gap-1.5">
-                  <span>🍷</span>
-                  <span>Lodge Stewards (Multi-Select)</span>
-                </span>
+            <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Lodge Stewards</h3>
                 <div class="flex items-center gap-2">
-                  <span class="text-[10px] bg-blue-600 text-white font-black px-2 py-0.5 rounded-md">
-                    {{ stewardAssignments.length }} Appointed
-                  </span>
-                  <button
-                    type="button"
+                  <Badge variant="info">{{ stewardAssignments.length }} appointed</Badge>
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     @click="openQuickMemberModal(null, 'steward')"
-                    title="Quickly add new historic member as Steward"
-                    class="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/60 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs"
+                    title="Add a historic member as a Steward"
                   >
-                    <span>➕</span>
-                    <span class="text-[10px]">Add member</span>
-                  </button>
+                    <template #icon><UiIcon name="user-add" :size="14" /></template>
+                    Add member
+                  </Button>
                 </div>
               </div>
 
               <!-- Search & Filter Controls -->
-              <div class="space-y-2 border-y border-blue-200/60 dark:border-blue-800/60 py-2.5">
+              <div class="space-y-2 border-y border-slate-200 dark:border-slate-800 py-2.5">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div class="relative w-full sm:w-64">
-                    <input
-                      type="text"
-                      v-model="stewardSearchQuery"
-                      placeholder="Search steward name..."
-                      class="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder-slate-400 dark:placeholder-slate-500"
-                    />
-                    <span class="absolute left-2.5 top-1.5 text-xs text-slate-400">🔍</span>
-                  </div>
-                  <span class="text-[10px] text-blue-700 dark:text-blue-300 font-semibold">
+                  <Input
+                    v-model="stewardSearchQuery"
+                    placeholder="Search by name"
+                    aria-label="Search Stewards by name"
+                    class="w-full sm:w-64"
+                  />
+                  <span class="text-xs text-slate-500 dark:text-slate-400">
                     Showing {{ stewardMembers.length }} of {{ localMembers.length }} members
                   </span>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 text-xs">
-                  <label class="flex items-center gap-1.5 cursor-pointer font-bold text-blue-950 dark:text-blue-100 select-none bg-white dark:bg-slate-900 px-2.5 py-1 rounded-xl border border-blue-200/80 dark:border-blue-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 select-none">
                     <input
                       type="checkbox"
                       v-model="excludeProgressiveForStewards"
-                      class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer"
+                      class="h-4 w-4 rounded accent-blue-600 cursor-pointer"
                     />
-                    <span>Hide Progressive Officers</span>
+                    <span>Hide progressive officers</span>
                   </label>
 
-                  <label class="flex items-center gap-1.5 cursor-pointer font-bold text-blue-950 dark:text-blue-100 select-none bg-white dark:bg-slate-900 px-2.5 py-1 rounded-xl border border-blue-200/80 dark:border-blue-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all">
+                  <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 select-none">
                     <input
                       type="checkbox"
                       v-model="excludeAdminForStewards"
-                      class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer"
+                      class="h-4 w-4 rounded accent-blue-600 cursor-pointer"
                     />
-                    <span>Hide Administrative &amp; Pastoral Support</span>
+                    <span>Hide administrative and pastoral officers</span>
                   </label>
                 </div>
               </div>
@@ -745,36 +724,33 @@ const installCurrentRoster = () => {
                   v-for="m in stewardMembers"
                   :key="m.id"
                   @click.prevent="toggleSteward(m.id)"
-                  :class="['p-2 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer border transition-all', isSteward(m.id) ? 'bg-blue-600 text-white border-blue-700 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800']"
+                  :class="['p-2 rounded-xl text-sm font-medium flex items-center gap-2 cursor-pointer border transition-colors', isSteward(m.id) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800']"
                 >
-                  <input type="checkbox" :checked="isSteward(m.id)" class="rounded text-blue-600 dark:text-blue-400 pointer-events-none" />
+                  <input type="checkbox" :checked="isSteward(m.id)" class="h-4 w-4 rounded accent-blue-600 pointer-events-none" />
                   <span class="truncate">{{ m.name }}</span>
                 </label>
-                <div v-if="!stewardMembers.length" class="col-span-2 text-center text-xs text-slate-500 dark:text-slate-400 py-2">
+                <div v-if="!stewardMembers.length" class="col-span-2 text-center text-sm text-slate-500 dark:text-slate-400 py-2">
                   No non-officer members found.
                 </div>
               </div>
             </div>
 
           </div>
-        </div>
+        </Card>
 
         <!-- Column 2: Administrative Officers + Lodge Committee Members -->
         <div class="space-y-6">
           <!-- Administrative & Pastoral Officers Card (Grouped Principals & Assistants) -->
-          <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
-            <div class="border-b border-slate-100 dark:border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span>📜</span>
-                <span>Administrative &amp; Pastoral Support</span>
-              </h2>
+          <Card class="space-y-4">
+            <div class="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h2 class="text-base font-semibold text-slate-900 dark:text-white">Administrative and pastoral officers</h2>
 
               <!-- Filter Toggle: Active by default -->
-              <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-200 select-none bg-slate-50 dark:bg-slate-800/50 px-3 py-1 rounded-xl border border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+              <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 select-none">
                 <input
                   type="checkbox"
                   v-model="onlyNonOfficersAdminFilter"
-                  class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer"
+                  class="h-4 w-4 rounded accent-blue-600 cursor-pointer"
                 />
                 <span>Only show non-officers</span>
               </label>
@@ -784,90 +760,84 @@ const installCurrentRoster = () => {
               <div
                 v-for="off in administrativeOffices"
                 :key="off.value"
-                :class="['p-3 rounded-2xl space-y-1.5 transition-all', off.is_assistant ? 'ml-6 bg-blue-50/60 dark:bg-blue-950/60 border border-blue-200/70 dark:border-blue-800/70' : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80']"
+                :class="['p-3 rounded-xl space-y-1.5 border', off.is_assistant ? 'ml-6 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800']"
               >
-                <div class="flex items-center justify-between">
-                  <span :class="['font-extrabold text-xs flex items-center gap-1.5', off.is_assistant ? 'text-blue-900 dark:text-blue-200' : 'text-slate-900 dark:text-white']">
-                    <span v-if="off.is_assistant" class="text-blue-500 font-black">↳</span>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span v-if="off.is_assistant" class="text-slate-400" aria-hidden="true">↳</span>
                     <span>{{ off.label }}</span>
                   </span>
-                  <span v-if="getPreviousYearOfficerName(off.value)" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-800/60">
-                    Prev Year: {{ getPreviousYearOfficerName(off.value) }}
-                  </span>
+                  <Badge v-if="getPreviousYearOfficerName(off.value)">
+                    Last year: {{ getPreviousYearOfficerName(off.value) }}
+                  </Badge>
                 </div>
 
                 <div class="flex items-center gap-1.5 w-full">
                   <select
                     v-model="adminAssignments[off.value]"
-                    class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
+                    :aria-label="off.label"
+                    class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option :value="null">-- Unassigned --</option>
+                    <option :value="null">Unassigned</option>
                     <option v-for="m in getAdminMemberOptions(off.value)" :key="m.id" :value="m.id">
                       {{ m.name }}
                     </option>
                   </select>
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
                     @click="openQuickMemberModal(off.value, 'admin')"
-                    title="Quickly add new historic member"
-                    class="px-2 py-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-black transition-all cursor-pointer flex-shrink-0 flex items-center justify-center h-[34px] w-[34px] shadow-xs"
+                    title="Add a historic member"
+                    aria-label="Add a historic member"
+                    class="flex-shrink-0"
                   >
-                    ➕
-                  </button>
+                    <UiIcon name="user-add" />
+                  </Button>
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
 
           <!-- Lodge Committee Members Card (Multi-Select Checklist Grid with Non-Officers Filter) -->
-          <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
-            <div class="border-b border-slate-100 dark:border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span>🏛️</span>
-                <span>Lodge Committee Members (Multi-Select)</span>
-              </h2>
+          <Card class="space-y-4">
+            <div class="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h2 class="text-base font-semibold text-slate-900 dark:text-white">Lodge committee members</h2>
               <div class="flex items-center gap-2">
-                <span class="text-[10px] bg-blue-600 text-white font-black px-2.5 py-0.5 rounded-md">
-                  {{ committeeAssignments.length }} Appointed
-                </span>
-                <button
-                  type="button"
+                <Badge variant="info">{{ committeeAssignments.length }} appointed</Badge>
+                <Button
+                  variant="secondary"
+                  size="sm"
                   @click="openQuickMemberModal(null, 'committee')"
-                  title="Quickly add new historic member to Committee"
-                  class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-xs"
+                  title="Add a historic member to the committee"
                 >
-                  <span>➕</span>
-                  <span class="text-[10px]">Add member</span>
-                </button>
+                  <template #icon><UiIcon name="user-add" :size="14" /></template>
+                  Add member
+                </Button>
               </div>
             </div>
 
             <div class="space-y-3">
               <!-- Search & Filter Controls -->
-              <div class="space-y-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div class="space-y-2 border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div class="relative w-full sm:w-64">
-                    <input
-                      type="text"
-                      v-model="committeeSearchQuery"
-                      placeholder="Search committee member name..."
-                      class="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder-slate-400 dark:placeholder-slate-500"
-                    />
-                    <span class="absolute left-2.5 top-1.5 text-xs text-slate-400">🔍</span>
-                  </div>
-                  <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                  <Input
+                    v-model="committeeSearchQuery"
+                    placeholder="Search by name"
+                    aria-label="Search committee members by name"
+                    class="w-full sm:w-64"
+                  />
+                  <span class="text-xs text-slate-500 dark:text-slate-400">
                     Showing {{ committeeMembers.length }} of {{ localMembers.length }} members
                   </span>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 text-xs">
-                  <label class="flex items-center gap-1.5 cursor-pointer font-bold text-slate-800 dark:text-slate-100 select-none bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                <div class="flex flex-wrap items-center gap-2">
+                  <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 select-none">
                     <input
                       type="checkbox"
                       v-model="onlyOfficersForCommittee"
-                      class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer"
+                      class="h-4 w-4 rounded accent-blue-600 cursor-pointer"
                     />
-                    <span>Only show officers (Progressive &amp; Administrative)</span>
+                    <span>Only show officers (progressive and administrative)</span>
                   </label>
                 </div>
               </div>
@@ -878,42 +848,45 @@ const installCurrentRoster = () => {
                   v-for="m in committeeMembers"
                   :key="m.id"
                   @click.prevent="toggleCommitteeMember(m.id)"
-                  :class="['p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer border transition-all', isCommitteeMember(m.id) ? 'bg-blue-600 text-white border-blue-700 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800']"
+                  :class="['p-2.5 rounded-xl text-sm font-medium flex items-center gap-2 cursor-pointer border transition-colors', isCommitteeMember(m.id) ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800']"
                 >
-                  <input type="checkbox" :checked="isCommitteeMember(m.id)" class="rounded text-blue-600 dark:text-blue-400 pointer-events-none" />
+                  <input type="checkbox" :checked="isCommitteeMember(m.id)" class="h-4 w-4 rounded accent-blue-600 pointer-events-none" />
                   <span class="truncate">{{ m.name }}</span>
                 </label>
-                <div v-if="!committeeMembers.length" class="col-span-2 text-center text-xs text-slate-400 py-3">
+                <div v-if="!committeeMembers.length" class="col-span-2 text-center text-sm text-slate-500 dark:text-slate-400 py-3">
                   No matching members found for committee appointment.
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
 
       </div>
 
       <!-- Action & Rollover Bar -->
-      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <Card class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Selected Masonic Year: <strong class="text-slate-900 dark:text-white">{{ activeYear }}</strong></span>
-          <p class="text-[11px] text-slate-400">Save drafts for committee discussions or execute installation rollover.</p>
+          <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Selected Masonic year: <strong class="font-semibold text-slate-900 dark:text-white">{{ activeYear }}</strong></span>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Save drafts for committee discussions or install the officers for the year.</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-          <button @click="saveRoster('draft')" :disabled="isSaving" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-all cursor-pointer">
-            💾 Save draft
-          </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" @click="saveRoster('draft')" :disabled="isSaving">
+            <template #icon><UiIcon name="save" /></template>
+            Save draft
+          </Button>
 
-          <button @click="saveRoster('confirmed')" :disabled="isSaving" class="px-4 py-2.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/60 font-bold text-xs rounded-xl transition-all cursor-pointer">
-            📜 Approve in committee
-          </button>
+          <Button variant="secondary" @click="saveRoster('confirmed')" :disabled="isSaving">
+            <template #icon><UiIcon name="check" /></template>
+            Approve in committee
+          </Button>
 
-          <button v-if="currentRoster" @click="installCurrentRoster" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer">
-            ✨ Install &amp; activate officers
-          </button>
+          <Button v-if="currentRoster" @click="installCurrentRoster">
+            <template #icon><UiIcon name="award" /></template>
+            Install and activate officers
+          </Button>
         </div>
-      </div>
+      </Card>
 
       <!-- Add New Masonic Year Modal (Strict Start Year Dropdown) -->
       <RosterNewYearModal v-if="showNewYearModal" :calculated-end-year="calculatedEndYear" :calculated-masonic-year="calculatedMasonicYear" :create-new-masonic-year="createNewMasonicYear" :current-year-num="currentYearNum" :filtered-start-year-options="filteredStartYearOptions" :installation-month="installationMonth" v-model:selected-start-year="selectedStartYear" v-model:year-search-input="yearSearchInput" @close="showNewYearModal = false" />

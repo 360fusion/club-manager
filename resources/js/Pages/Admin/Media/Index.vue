@@ -5,6 +5,14 @@ import { useClipboard } from '@/Composables/useClipboard';
 import { ref, watch, onMounted, nextTick, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import PageHeader from '@/Components/Ui/PageHeader.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
 
@@ -54,19 +62,19 @@ const newFolderError = ref('');
 // The 11 fixed folders. Custom folders are never listed here directly — each one
 // lives one level inside a fixed folder (see subfoldersOf / activeCustomFolder).
 const fixedFolders = [
-  { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-200' },
-  { id: 'summons', label: 'Summonses', icon: '📜', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'newsletters', label: 'Newsletters', icon: '✉️', bg: 'bg-emerald-50 dark:bg-emerald-950/40', text: 'text-emerald-700 dark:text-emerald-300' },
-  { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
+  { id: 'all', label: 'All files', icon: 'folder', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-200' },
+  { id: 'summons', label: 'Summonses', icon: 'mail', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'logos', label: 'Logos', icon: 'star', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'news', label: 'News items', icon: 'document', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'newsletters', label: 'Newsletters', icon: 'mail', bg: 'bg-emerald-50 dark:bg-emerald-950/40', text: 'text-emerald-700 dark:text-emerald-300' },
+  { id: 'images', label: 'Single images', icon: 'photo', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'galleries', label: 'Galleries', icon: 'photo', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'documents', label: 'Documents', icon: 'document', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
 ];
 
 const folders = computed(() => [
   ...fixedFolders,
-  { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50 dark:bg-rose-950/40', text: 'text-rose-700 dark:text-rose-300' },
+  { id: 'trash', label: 'Trash bin', icon: 'trash', bg: 'bg-rose-50 dark:bg-rose-950/40', text: 'text-rose-700 dark:text-rose-300' },
 ]);
 
 // Direct custom-folder children of a fixed folder id, for the subfolder strip.
@@ -873,12 +881,12 @@ const deleteItem = async (item) => {
 
 const getFileIcon = (mimeOrName) => {
   const name = (mimeOrName || '').toLowerCase();
-  if (name.includes('pdf')) return '📄';
-  if (name.includes('image') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.webp')) return '🖼️';
-  if (name.includes('sheet') || name.endsWith('.xls') || name.endsWith('.xlsx') || name.endsWith('.csv')) return '📊';
-  if (name.includes('word') || name.endsWith('.doc') || name.endsWith('.docx')) return '📝';
-  if (name.endsWith('.zip') || name.endsWith('.rar')) return '📦';
-  return '📎';
+  if (name.includes('pdf')) return 'document';
+  if (name.includes('image') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.webp')) return 'photo';
+  if (name.includes('sheet') || name.endsWith('.xls') || name.endsWith('.xlsx') || name.endsWith('.csv')) return 'chart';
+  if (name.includes('word') || name.endsWith('.doc') || name.endsWith('.docx')) return 'document';
+  if (name.endsWith('.zip') || name.endsWith('.rar')) return 'archive';
+  return 'link';
 };
 
 const isImage = (mimeOrUrl) => {
@@ -888,43 +896,29 @@ const isImage = (mimeOrUrl) => {
 </script>
 
 <template>
-  <AdminLayout title="File Manager" :club="club" active-tab="media">
-    <Head :title="`File Manager - ${club.name}`" />
+  <AdminLayout title="File manager" :club="club" active-tab="media">
+    <Head :title="`File manager - ${club.name}`" />
 
     <div class="space-y-6 max-w-6xl mx-auto">
-      
-      <!-- Top Action Bar -->
-      <div class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div class="flex items-center gap-3">
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">File Manager</h1>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-              {{ club.slug }}
-            </span>
-          </div>
-          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Organize, search, and upload club logos, news images, newsletters, galleries, and downloadable documents.</p>
-        </div>
 
-        <div class="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+      <PageHeader title="File manager" description="Organise, search and upload club logos, news images, newsletters, galleries and documents.">
+        <template #badge>
+          <Badge>{{ club.slug }}</Badge>
+        </template>
+        <template #actions>
           <!-- Target Folder Selection Dropdown -->
-          <div v-if="activeFolder === 'all'" class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
-            <span class="text-slate-400">Target:</span>
-            <select v-model="uploadFolder" class="bg-transparent font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
-              <option v-for="f in selectableFolders" :key="f.id" :value="f.id">{{ f.label }}</option>
-            </select>
-          </div>
+          <Select
+            v-if="activeFolder === 'all'"
+            v-model="uploadFolder"
+            aria-label="Upload to folder"
+            class="w-48"
+            :options="selectableFolders.map(f => ({ value: f.id, label: f.label }))"
+          />
 
-          <!-- Upload Button -->
-          <button
-            type="button"
-            @click="triggerUpload"
-            :disabled="isUploading"
-            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all duration-200 flex items-center gap-2 cursor-pointer disabled:opacity-50"
-          >
-            <span v-if="isUploading" class="animate-spin text-sm">🔄</span>
-            <span v-else class="text-sm">📤</span>
-            <span>{{ isUploading ? 'Uploading...' : 'Upload new file' }}</span>
-          </button>
+          <Button :loading="isUploading" @click="triggerUpload">
+            <template v-if="!isUploading" #icon><UiIcon name="upload" /></template>
+            {{ isUploading ? 'Uploading…' : 'Upload files' }}
+          </Button>
           <input
             ref="uploadFileInput"
             type="file"
@@ -933,16 +927,16 @@ const isImage = (mimeOrUrl) => {
             class="hidden"
             @change="handleFileUpload"
           />
-        </div>
-      </div>
+        </template>
+      </PageHeader>
 
       <!-- Main Layout: Folder Sidebar + Media Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        
+
         <!-- Left Sidebar Folders -->
-        <div class="lg:col-span-1 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-3 sticky top-6">
-          <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 px-3 pt-1">
-            Media Folders
+        <Card padding="sm" class="lg:col-span-1 space-y-3 sticky top-6">
+          <div class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 px-3 pt-1">
+            Folders
           </div>
 
           <div class="space-y-1">
@@ -951,33 +945,26 @@ const isImage = (mimeOrUrl) => {
               :key="folder.id"
               type="button"
               @click="activeFolder = folder.id"
+              :aria-current="activeFolder === folder.id ? 'true' : undefined"
               :class="[
-                'w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all text-left cursor-pointer',
+                'w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left',
                 activeFolder === folder.id
-                  ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md'
+                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
                   : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
               ]"
             >
               <span class="flex items-center gap-2.5">
-                <span class="text-sm">{{ folder.icon }}</span>
+                <UiIcon :name="folder.icon" />
                 <span>{{ folder.label }}</span>
               </span>
-              <span
-                v-if="folder.id === 'trash' && trashCount > 0"
-                :class="[
-                  'px-2 py-0.5 rounded-full text-[10px] font-black',
-                  activeFolder === 'trash' ? 'bg-rose-500 text-white' : 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
-                ]"
-              >
-                {{ trashCount }}
-              </span>
+              <Badge v-if="folder.id === 'trash' && trashCount > 0">{{ trashCount }}</Badge>
             </button>
           </div>
 
           <!-- Storage Usage -->
           <div v-if="storage.quota_bytes !== null" class="px-3 pt-2 pb-1 space-y-1.5">
-            <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              <span>Storage Used</span>
+            <div class="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <span>Storage used</span>
               <span>{{ storage.percent }}%</span>
             </div>
             <div class="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -987,11 +974,11 @@ const isImage = (mimeOrUrl) => {
                 :style="{ width: Math.min(100, storage.percent || 0) + '%' }"
               ></div>
             </div>
-            <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+            <div class="text-xs text-slate-500 dark:text-slate-400">
               {{ storage.used_human }} of {{ storage.quota_human }} used
             </div>
           </div>
-        </div>
+        </Card>
 
         <!-- Right Main Media Grid -->
         <div
@@ -1000,64 +987,56 @@ const isImage = (mimeOrUrl) => {
           @dragleave.prevent="isDragging = false"
           @drop.prevent="handleDrop"
           :class="[
-            'lg:col-span-3 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border transition-all duration-200 shadow-sm space-y-6 relative',
-            isDragging ? 'border-blue-500 ring-4 ring-blue-100 bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200/80 dark:border-slate-800/80'
+            'lg:col-span-3 bg-white dark:bg-slate-900 p-6 rounded-2xl border transition-colors shadow-sm space-y-6 relative',
+            isDragging ? 'border-blue-500 ring-4 ring-blue-100 dark:ring-blue-900/40' : 'border-slate-200 dark:border-slate-800'
           ]"
         >
           <!-- Drag Over Highlight Overlay -->
-          <div v-if="isDragging" class="absolute inset-0 bg-blue-500/10 backdrop-blur-[2px] rounded-3xl border-2 border-dashed border-blue-500 z-30 flex flex-col items-center justify-center p-6 text-blue-700 pointer-events-none">
-            <span class="text-5xl animate-bounce mb-2">📥</span>
-            <span class="text-base font-extrabold">Drop files here to upload</span>
-            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1">Target folder: {{ activeFolder !== 'all' ? activeFolder : uploadFolder }}</span>
+          <div v-if="isDragging" class="absolute inset-0 bg-blue-500/10 backdrop-blur-[2px] rounded-2xl border-2 border-dashed border-blue-500 z-30 flex flex-col items-center justify-center gap-1 p-6 text-blue-700 dark:text-blue-300 pointer-events-none">
+            <UiIcon name="upload" :size="20" class="animate-bounce" />
+            <span class="text-base font-semibold">Drop files here to upload</span>
+            <span class="text-xs font-medium text-blue-600 dark:text-blue-400">Target folder: {{ activeFolder !== 'all' ? activeFolder : uploadFolder }}</span>
           </div>
 
           <!-- Breadcrumb: viewing a custom folder, inside one of the fixed folders -->
-          <div v-if="activeCustomFolder" class="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 pb-1">
+          <nav v-if="activeCustomFolder" aria-label="Breadcrumb" class="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 pb-1">
             <button
               type="button"
               @click="activeFolder = activeCustomFolder.parent_slug"
-              class="hover:text-slate-900 dark:hover:text-white hover:underline cursor-pointer flex items-center gap-1"
+              class="hover:text-slate-900 dark:hover:text-white hover:underline flex items-center gap-1"
             >
-              <span>{{ fixedFolderById(activeCustomFolder.parent_slug)?.icon }}</span>
+              <UiIcon :name="fixedFolderById(activeCustomFolder.parent_slug)?.icon || 'folder'" />
               <span>{{ fixedFolderById(activeCustomFolder.parent_slug)?.label }}</span>
             </button>
-            <span class="text-slate-300 dark:text-slate-600">/</span>
-            <span class="text-slate-900 dark:text-white">🗂️ {{ activeCustomFolder.name }}</span>
-          </div>
+            <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">/</span>
+            <span class="flex items-center gap-1 text-slate-900 dark:text-white" aria-current="page"><UiIcon name="folder" /> {{ activeCustomFolder.name }}</span>
+          </nav>
 
           <!-- Subfolders: viewing one of the fixed folders -->
           <div v-if="activeFolder !== 'all' && activeFolder !== 'trash' && !activeCustomFolder" class="space-y-2 pb-1">
             <div class="flex items-center justify-between">
-              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Subfolders</span>
-              <button
-                type="button"
-                @click="showNewFolderForm = !showNewFolderForm; newFolderError = ''; newFolderName = ''"
-                class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-              >
-                + New folder
-              </button>
+              <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Subfolders</span>
+              <Button variant="ghost" size="sm" @click="showNewFolderForm = !showNewFolderForm; newFolderError = ''; newFolderName = ''">
+                <template #icon><UiIcon name="plus" /></template>
+                New folder
+              </Button>
             </div>
 
-            <div v-if="showNewFolderForm" class="flex items-center gap-1.5">
-              <input
+            <div v-if="showNewFolderForm" class="flex items-center gap-2">
+              <Input
                 v-model="newFolderName"
-                type="text"
-                :placeholder="`New folder inside ${fixedFolderById(activeFolder)?.label}...`"
+                :placeholder="`New folder inside ${fixedFolderById(activeFolder)?.label}`"
+                aria-label="New folder name"
                 maxlength="60"
+                class="flex-1"
                 @keyup.enter="createFolder"
                 @keyup.escape="showNewFolderForm = false"
-                class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
               />
-              <button
-                type="button"
-                @click="createFolder"
-                :disabled="isCreatingFolder || !newFolderName.trim()"
-                class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl disabled:opacity-50 cursor-pointer shrink-0"
-              >
-                {{ isCreatingFolder ? '...' : 'Add' }}
-              </button>
+              <Button size="sm" class="shrink-0" :loading="isCreatingFolder" :disabled="!newFolderName.trim()" @click="createFolder">
+                Add
+              </Button>
             </div>
-            <p v-if="newFolderError" class="text-[10px] font-semibold text-rose-600 dark:text-rose-400">{{ newFolderError }}</p>
+            <p v-if="newFolderError" class="text-xs text-rose-600 dark:text-rose-400">{{ newFolderError }}</p>
 
             <div v-if="subfoldersOf(activeFolder).length" class="flex flex-wrap gap-1.5">
               <div
@@ -1068,223 +1047,182 @@ const isImage = (mimeOrUrl) => {
                 <button
                   type="button"
                   @click="activeFolder = sub.slug"
-                  class="pl-3 pr-7 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer flex items-center gap-1.5"
+                  class="pl-3 pr-8 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium rounded-full flex items-center gap-1.5"
                 >
-                  <span>🗂️</span>
+                  <UiIcon name="folder" />
                   <span>{{ sub.name }}</span>
                 </button>
                 <button
                   type="button"
                   @click.stop="deleteFolder(sub)"
                   title="Delete folder"
-                  class="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-slate-400 hover:text-rose-600 cursor-pointer"
+                  :aria-label="`Delete the ${sub.name} folder`"
+                  class="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-0.5 rounded-full text-slate-400 hover:text-rose-600 dark:hover:text-rose-400"
                 >
-                  ✕
+                  <UiIcon name="x" />
                 </button>
               </div>
             </div>
           </div>
 
           <!-- Inline Search & Filter Controls Bar -->
-          <div class="space-y-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div class="space-y-4 pb-4 border-b border-slate-200 dark:border-slate-800">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-              
+
               <!-- Search Input Bar -->
               <div class="relative flex-1">
+                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><UiIcon name="search" /></span>
                 <input
                   v-model="searchQuery"
                   type="text"
-                  placeholder="Search files by name..."
-                  class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
+                  placeholder="Search files by name"
+                  aria-label="Search files by name"
+                  class="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-9 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder-slate-500"
                 />
-                <span class="absolute left-3.5 top-2.5 text-slate-400 text-xs">🔍</span>
                 <button
                   v-if="searchQuery"
                   type="button"
                   @click="searchQuery = ''"
-                  class="absolute right-3 top-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-bold"
+                  aria-label="Clear search"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 >
-                  ✕
+                  <UiIcon name="x" />
                 </button>
               </div>
 
               <!-- Counter Badge -->
-              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
-                Showing {{ mediaItems.length }}<template v-if="hasMore"> of {{ totalFiles }}</template> {{ totalFiles === 1 ? 'file' : 'files' }} in <span class="text-slate-900 dark:text-white font-extrabold">{{ activeFolderLabel }}</span>
+              <div class="text-xs font-medium text-slate-500 dark:text-slate-400 shrink-0">
+                Showing {{ mediaItems.length }}<template v-if="hasMore"> of {{ totalFiles }}</template> {{ totalFiles === 1 ? 'file' : 'files' }} in <span class="text-slate-900 dark:text-white font-semibold">{{ activeFolderLabel }}</span>
               </div>
             </div>
 
             <!-- Inline Filter Dropdowns Grid -->
-            <div class="flex flex-wrap items-center gap-2 pt-1">
-              
-              <!-- 1. Category / Type Filter -->
-              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <span class="text-slate-400">Type:</span>
-                <select v-model="filterType" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
-                  <option value="all">All Types</option>
-                  <option value="image">🖼️ Images Only</option>
-                  <option value="document">📄 Documents Only</option>
-                </select>
-              </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
+              <Select
+                v-model="filterType"
+                label="Type"
+                :options="[{ value: 'all', label: 'All types' }, { value: 'image', label: 'Images only' }, { value: 'document', label: 'Documents only' }]"
+              />
 
-              <!-- 2. Dynamic File Extension Filter (Only available extensions listed) -->
-              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <span class="text-slate-400">Extension:</span>
-                <select v-model="filterExtension" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
-                  <option value="all">All Extensions</option>
-                  <option v-for="ext in availableExtensions" :key="ext" :value="ext">
-                    .{{ ext.toUpperCase() }}
-                  </option>
-                </select>
-              </div>
+              <!-- Only the extensions the club's files actually have -->
+              <Select
+                v-model="filterExtension"
+                label="Extension"
+                :options="[{ value: 'all', label: 'All extensions' }, ...availableExtensions.map(ext => ({ value: ext, label: `.${ext.toUpperCase()}` }))]"
+              />
 
-              <!-- 3. Dynamic Date Added Filter (Year / Month) -->
-              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <span class="text-slate-400">Date:</span>
-                <select v-model="filterDate" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
-                  <option value="all">All Dates</option>
-                  <option v-for="m in availableMonths" :key="m.value" :value="m.value">
-                    📅 {{ m.label }}
-                  </option>
-                </select>
-              </div>
+              <Select
+                v-model="filterDate"
+                label="Date added"
+                :options="[{ value: 'all', label: 'All dates' }, ...availableMonths.map(m => ({ value: m.value, label: m.label }))]"
+              />
 
-              <!-- 4. Sort Order -->
-              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <span class="text-slate-400">Sort:</span>
-                <select v-model="sortBy" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="name_asc">Name (A to Z)</option>
-                  <option value="name_desc">Name (Z to A)</option>
-                  <option value="size_desc">Size (Largest)</option>
-                  <option value="size_asc">Size (Smallest)</option>
-                </select>
-              </div>
+              <Select
+                v-model="sortBy"
+                label="Sort"
+                :options="[
+                  { value: 'newest', label: 'Newest first' },
+                  { value: 'oldest', label: 'Oldest first' },
+                  { value: 'name_asc', label: 'Name (A to Z)' },
+                  { value: 'name_desc', label: 'Name (Z to A)' },
+                  { value: 'size_desc', label: 'Size (largest)' },
+                  { value: 'size_asc', label: 'Size (smallest)' },
+                ]"
+              />
+            </div>
 
-              <!-- Reset Filters Button -->
-              <button
-                v-if="searchQuery || filterType !== 'all' || filterExtension !== 'all' || filterDate !== 'all' || sortBy !== 'newest'"
-                type="button"
-                @click="resetFilters"
-                class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer flex items-center gap-1"
-                title="Reset all search and filter settings"
-              >
-                <span>✕ Reset filters</span>
-              </button>
+            <div v-if="searchQuery || filterType !== 'all' || filterExtension !== 'all' || filterDate !== 'all' || sortBy !== 'newest'">
+              <Button variant="ghost" size="sm" title="Reset all search and filter settings" @click="resetFilters">
+                <template #icon><UiIcon name="x" /></template>
+                Reset filters
+              </Button>
             </div>
           </div>
 
-          <p v-if="activeFolder === 'trash'" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-semibold text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200">
-            Files in the Trash bin are deleted for good 30 days after they were moved here. Restore anything you want to keep before then.
-          </p>
+          <Alert v-if="activeFolder === 'trash'" variant="warning">
+            Files in the trash bin are deleted for good 30 days after they were moved here. Restore anything you want to keep before then.
+          </Alert>
 
           <!-- Bulk Actions Floating Control Bar -->
-          <div v-if="selectedMediaIds.length > 0" class="p-4 bg-slate-900 dark:bg-slate-700 text-white rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+          <div v-if="selectedMediaIds.length > 0" class="p-3 bg-blue-50 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-800/60 rounded-2xl flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-              <span class="px-2.5 py-1 bg-blue-500 text-white rounded-xl text-xs font-black">
-                {{ selectedMediaIds.length }} Selected
-              </span>
-              <button
-                type="button"
-                @click="toggleSelectAll"
-                class="text-xs font-bold text-slate-300 hover:text-white underline cursor-pointer"
-              >
+              <Badge variant="info">{{ selectedMediaIds.length }} selected</Badge>
+              <Button variant="ghost" size="sm" @click="toggleSelectAll">
                 {{ selectedMediaIds.length === mediaItems.length ? 'Deselect all' : 'Select all' }}
-              </button>
+              </Button>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
               <template v-if="activeFolder === 'trash'">
-                <button
-                  type="button"
-                  @click="handleBulkRestore"
-                  class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
-                >
-                  ↻ Restore selected
-                </button>
-                <button
-                  type="button"
-                  @click="handleBulkForceDelete"
-                  class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
-                >
-                  🔥 Delete permanently
-                </button>
+                <Button variant="secondary" size="sm" @click="handleBulkRestore">
+                  <template #icon><UiIcon name="restore" /></template>
+                  Restore selected
+                </Button>
+                <Button variant="danger" size="sm" @click="handleBulkForceDelete">
+                  <template #icon><UiIcon name="trash" /></template>
+                  Delete permanently
+                </Button>
               </template>
               <template v-else>
                 <!-- Target Folder Selection for Bulk Move -->
-                <div class="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
-                  <span class="text-slate-400">Move to:</span>
-                  <select v-model="targetBulkFolder" class="bg-transparent font-bold text-white focus:outline-none cursor-pointer">
-                    <option v-for="f in selectableFolders" :key="f.id" :value="f.id" class="bg-slate-900 dark:bg-slate-700 text-white">{{ f.label }}</option>
-                  </select>
-                </div>
+                <Select
+                  v-model="targetBulkFolder"
+                  aria-label="Move selected files to"
+                  class="w-44"
+                  :options="selectableFolders.map(f => ({ value: f.id, label: f.label }))"
+                />
 
-                <button
-                  type="button"
-                  @click="handleBulkMove"
-                  class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
-                >
-                  📁 Move
-                </button>
+                <Button variant="secondary" size="sm" @click="handleBulkMove">
+                  <template #icon><UiIcon name="folder" /></template>
+                  Move
+                </Button>
 
-                <button
-                  type="button"
-                  @click="handleBulkDelete"
-                  class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition-all cursor-pointer flex items-center gap-1"
-                >
-                  🗑️ Move to trash
-                </button>
+                <Button variant="secondary" size="sm" @click="handleBulkDelete">
+                  <template #icon><UiIcon name="trash" /></template>
+                  Move to trash
+                </Button>
               </template>
 
-              <button
-                type="button"
-                @click="selectedMediaIds = []"
-                class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
-              >
-                ✕ Clear
-              </button>
+              <Button variant="ghost" size="sm" @click="selectedMediaIds = []">
+                <template #icon><UiIcon name="x" /></template>
+                Clear
+              </Button>
             </div>
           </div>
 
           <!-- Upload Status / Error / Success Alerts -->
-          <div v-if="uploadStatus" class="p-3.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-800 dark:text-blue-200 text-xs font-bold rounded-xl flex items-center gap-2.5 animate-pulse">
-            <span class="animate-spin text-sm">🔄</span>
-            <span>{{ uploadStatus }}</span>
-          </div>
+          <Alert v-if="uploadStatus" variant="info">
+            <span class="flex items-center gap-2">
+              <UiIcon name="refresh" class="animate-spin" />
+              <span>{{ uploadStatus }}</span>
+            </span>
+          </Alert>
 
-          <div v-if="uploadError" class="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 text-xs font-bold rounded-xl flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span>⚠️</span>
+          <Alert v-if="uploadError" variant="danger">
+            <div class="flex items-center justify-between gap-2">
               <span>{{ uploadError }}</span>
+              <button type="button" aria-label="Dismiss" @click="uploadError = ''" class="shrink-0 rounded-xl p-1 hover:bg-rose-100 dark:hover:bg-rose-900/40"><UiIcon name="x" /></button>
             </div>
-            <button type="button" @click="uploadError = ''" class="text-rose-500 hover:text-rose-800 dark:hover:text-rose-200 text-xs font-bold">✕</button>
-          </div>
+          </Alert>
 
-          <div v-if="copyToast" class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in">
-            <span>✓</span>
-            <span>{{ copyToast }}</span>
-          </div>
+          <Alert v-if="copyToast" variant="success">{{ copyToast }}</Alert>
 
           <!-- Files Grid -->
           <div>
-            <div v-if="isLoading" class="flex items-center justify-center py-20 text-slate-400 text-xs font-semibold">
-              <span class="animate-spin text-xl mr-2">🔄</span> Loading Media Library...
+            <div v-if="isLoading" class="flex items-center justify-center gap-2 py-20 text-slate-500 dark:text-slate-400 text-sm">
+              <UiIcon name="refresh" class="animate-spin" /> Loading files…
             </div>
 
-            <div v-else-if="!mediaItems.length" class="text-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-800/50 space-y-3">
-              <span class="text-4xl block">📁</span>
+            <div v-else-if="!mediaItems.length" class="text-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 space-y-3">
+              <span class="flex justify-center text-slate-400"><UiIcon name="folder" :size="20" /></span>
               <div>
-                <span class="text-sm font-bold text-slate-800 dark:text-slate-100 block">No media files in this folder</span>
-                <span class="text-xs text-slate-400">Drag & drop files here or click below to upload.</span>
+                <span class="text-sm font-medium text-slate-900 dark:text-white block">No files in this folder</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">Drag and drop files here, or choose them below.</span>
               </div>
-              <button
-                type="button"
-                @click="triggerUpload"
-                class="px-4 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all inline-flex items-center gap-1.5 cursor-pointer mt-2"
-              >
-                <span>📤 Choose files to upload</span>
-              </button>
+              <Button variant="secondary" size="sm" class="mt-2" @click="triggerUpload">
+                <template #icon><UiIcon name="upload" /></template>
+                Choose files to upload
+              </Button>
             </div>
 
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -1294,8 +1232,8 @@ const isImage = (mimeOrUrl) => {
                 :class="[
                   'group rounded-2xl border p-3 transition-all shadow-sm hover:shadow-md flex flex-col justify-between relative',
                   selectedMediaIds.includes(item.id)
-                    ? 'bg-blue-50/80 dark:bg-blue-950/80 border-blue-400 ring-2 ring-blue-300'
-                    : 'bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 border-slate-200 dark:border-slate-800'
+                    ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-400 ring-2 ring-blue-200 dark:ring-blue-800/60'
+                    : 'bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 border-slate-200 dark:border-slate-800'
                 ]"
               >
                 <!-- Image or Icon Box -->
@@ -1310,8 +1248,8 @@ const isImage = (mimeOrUrl) => {
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                   <div v-else class="flex flex-col items-center justify-center space-y-1">
-                    <span class="text-4xl">{{ getFileIcon(item.mime_type || item.file_name) }}</span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ item.file_name.split('.').pop() }}</span>
+                    <span class="text-slate-400"><UiIcon :name="getFileIcon(item.mime_type || item.file_name)" :size="20" /></span>
+                    <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ item.file_name.split('.').pop() }}</span>
                   </div>
 
                   <!-- Multi-Select Checkbox -->
@@ -1320,92 +1258,78 @@ const isImage = (mimeOrUrl) => {
                       type="checkbox"
                       :checked="selectedMediaIds.includes(item.id)"
                       @change="toggleSelectItem(item.id)"
-                      class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer shadow-sm"
+                      :aria-label="`Select ${item.name || item.file_name}`"
+                      class="h-4 w-4 cursor-pointer rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950"
                     />
                   </div>
 
                   <!-- Folder Collection Tag & Badges -->
                   <div class="absolute top-2 left-2 flex flex-col gap-1 items-start z-10">
-                    <span class="px-2 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider shadow-sm">
-                      {{ item.collection_name }}
-                    </span>
-                    <span v-if="item.is_variant" class="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
-                      ✂️ Variant
-                    </span>
-                    <span v-if="item.is_trashed" class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
-                      🗑️ Trashed
-                    </span>
-                    <span v-if="item.version_count > 0" class="px-2 py-0.5 rounded-md bg-amber-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
-                      🕓 {{ item.version_count }} {{ item.version_count === 1 ? 'Version' : 'Versions' }}
-                    </span>
+                    <Badge>{{ item.collection_name }}</Badge>
+                    <Badge v-if="item.is_variant" variant="info">Variant</Badge>
+                    <Badge v-if="item.is_trashed" variant="danger">Trashed</Badge>
+                    <Badge v-if="item.version_count > 0">
+                      {{ item.version_count }} {{ item.version_count === 1 ? 'version' : 'versions' }}
+                    </Badge>
                   </div>
 
                   <!-- Hover Inspect Overlay -->
-                  <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
-                    <span>🔍 Details & Edit</span>
+                  <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1">
+                    <UiIcon name="eye" />
+                    <span>Details and edit</span>
                   </div>
                 </div>
 
                 <!-- File Info -->
                 <div class="space-y-1 cursor-pointer" @click="openPreview(item)">
-                  <div class="font-bold text-slate-900 dark:text-white text-xs truncate group-hover:text-blue-700 dark:group-hover:text-blue-300" :title="item.name || item.file_name">
+                  <div class="font-medium text-slate-900 dark:text-white text-sm truncate group-hover:text-blue-700 dark:group-hover:text-blue-300" :title="item.name || item.file_name">
                     {{ item.name || item.file_name }}
                   </div>
-                  <div v-if="item.alt_text" class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold italic truncate">
+                  <div v-if="item.alt_text" class="text-[11px] text-slate-500 dark:text-slate-400 italic truncate">
                     Alt: "{{ item.alt_text }}"
                   </div>
-                  <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                  <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                     <span>{{ item.human_size }}</span>
                     <span>{{ item.created_at }}</span>
                   </div>
                 </div>
 
                 <!-- Card Bottom Controls -->
-                <div class="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 mt-3 flex items-center justify-between gap-1">
-                  <button
-                    type="button"
-                    @click="openPreview(item)"
-                    class="px-2.5 py-1 bg-white dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all cursor-pointer flex items-center gap-1"
-                    title="View details & edit metadata"
-                  >
-                    🔍 Details
-                  </button>
+                <div class="pt-3 border-t border-slate-200 dark:border-slate-800 mt-3 flex items-center justify-between gap-1">
+                  <Button variant="secondary" size="sm" title="View details and edit" @click="openPreview(item)">
+                    <template #icon><UiIcon name="eye" /></template>
+                    Details
+                  </Button>
 
-                  <button
-                    type="button"
-                    @click="copyUrl(item)"
-                    class="px-2 py-1 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-bold transition-colors cursor-pointer"
-                    title="Copy direct file URL"
-                  >
-                    📋 Copy
-                  </button>
+                  <Button variant="ghost" size="sm" title="Copy the file's link" @click="copyUrl(item)">
+                    <template #icon><UiIcon name="copy" /></template>
+                    Copy
+                  </Button>
 
                   <template v-if="activeFolder === 'trash' || item.is_trashed">
-                    <button
-                      type="button"
-                      @click="restoreItem(item)"
-                      class="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold rounded-xl border border-emerald-200 dark:border-emerald-800/60 transition-colors cursor-pointer flex items-center gap-0.5"
-                      title="Restore file from Trash"
-                    >
-                      ↻ Restore
-                    </button>
+                    <Button variant="secondary" size="sm" title="Restore the file from the trash" @click="restoreItem(item)">
+                      <template #icon><UiIcon name="restore" /></template>
+                      Restore
+                    </Button>
                     <button
                       type="button"
                       @click="forceDeleteItem(item)"
-                      class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 text-xs transition-colors cursor-pointer"
-                      title="Permanently delete file"
+                      class="rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                      title="Delete permanently"
+                      aria-label="Delete permanently"
                     >
-                      🔥
+                      <UiIcon name="trash" />
                     </button>
                   </template>
                   <template v-else>
                     <button
                       type="button"
                       @click="deleteItem(item)"
-                      class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 text-xs transition-colors cursor-pointer"
-                      title="Move file to Trash bin"
+                      class="rounded-xl p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                      title="Move to trash"
+                      aria-label="Move to trash"
                     >
-                      🗑️
+                      <UiIcon name="trash" />
                     </button>
                   </template>
                 </div>
@@ -1413,9 +1337,9 @@ const isImage = (mimeOrUrl) => {
             </div>
 
             <div v-if="hasMore && !isLoading" class="flex justify-center pt-2">
-              <button type="button" :disabled="isLoadingMore" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50" @click="fetchMedia(true)">
+              <Button variant="secondary" size="sm" :disabled="isLoadingMore" @click="fetchMedia(true)">
                 {{ isLoadingMore ? 'Loading…' : `Load more files (${mediaItems.length} of ${totalFiles})` }}
-              </button>
+              </Button>
             </div>
 
           </div>

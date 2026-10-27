@@ -1,7 +1,8 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import Tabs from '@/Components/Ui/Tabs.vue';
 
-defineProps({
+const props = defineProps({
   clubSlug: {
     type: String,
     required: true,
@@ -11,43 +12,14 @@ defineProps({
     default: 'dashboard',
   },
 });
+
+const items = computed(() => [
+  { key: 'dashboard', label: 'Charity dashboard', href: route('admin.club_acc.charity.index', props.clubSlug) },
+  { key: 'gift-aid', label: 'Gift Aid page', href: route('admin.charity.giftaid.transactions_page', props.clubSlug) },
+  { key: 'festival', label: 'Festival information', href: route('admin.club_acc.charity.festival', props.clubSlug) },
+]);
 </script>
 
 <template>
-  <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-2 shadow-sm flex items-center justify-between gap-2 overflow-x-auto mb-4">
-    <div class="flex items-center gap-1.5">
-      <Link
-        :href="route('admin.club_acc.charity.index', clubSlug)"
-        :class="[
-          'px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 whitespace-nowrap',
-          activeTab === 'dashboard' ? 'bg-blue-700 text-white shadow-md font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-        ]"
-      >
-        <span>📊</span>
-        <span>Charity dashboard</span>
-      </Link>
-
-      <Link
-        :href="route('admin.charity.giftaid.transactions_page', clubSlug)"
-        :class="[
-          'px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 whitespace-nowrap',
-          activeTab === 'gift-aid' ? 'bg-blue-700 text-white shadow-md font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-        ]"
-      >
-        <span>🏛️</span>
-        <span>Gift Aid page</span>
-      </Link>
-
-      <Link
-        :href="route('admin.club_acc.charity.festival', clubSlug)"
-        :class="[
-          'px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 whitespace-nowrap',
-          activeTab === 'festival' ? 'bg-blue-700 text-white shadow-md font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-        ]"
-      >
-        <span>🏆</span>
-        <span>Festival information</span>
-      </Link>
-    </div>
-  </div>
+  <Tabs :items="items" :active="activeTab" label="Charity" class="mb-4" />
 </template>

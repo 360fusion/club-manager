@@ -1,5 +1,9 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
+import Button from '@/Components/Ui/Button.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Select from '@/Components/Ui/Select.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   show: Boolean,
@@ -37,22 +41,22 @@ const customFolders = ref([]); // [{ id, name, slug }], from the server
 // The fixed folders. Custom folders are never listed here directly — each one lives
 // one level inside a fixed folder (see subfoldersOf / activeCustomFolder).
 const fixedFolders = [
-  { id: 'all', label: 'All Files', icon: '📁', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-200' },
-  { id: 'summons', label: 'Summonses', icon: '📜', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'logos', label: 'Logos', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'news', label: 'News Items', icon: '📰', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'events', label: 'Events', icon: '🎟️', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
-  { id: 'updates', label: 'Updates', icon: '📜', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'newsletters', label: 'Newsletters', icon: '✉️', bg: 'bg-emerald-50 dark:bg-emerald-950/40', text: 'text-emerald-700 dark:text-emerald-300' },
-  { id: 'pages', label: 'CMS Pages', icon: '📄', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'images', label: 'Single Images', icon: '📷', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'galleries', label: 'Galleries', icon: '🖼️', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
-  { id: 'documents', label: 'Documents', icon: '📄', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
+  { id: 'all', label: 'All files', icon: 'folder', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-200' },
+  { id: 'summons', label: 'Summonses', icon: 'mail', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'logos', label: 'Logos', icon: 'star', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'news', label: 'News items', icon: 'document', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'events', label: 'Events', icon: 'calendar', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
+  { id: 'updates', label: 'Updates', icon: 'document', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'newsletters', label: 'Newsletters', icon: 'mail', bg: 'bg-emerald-50 dark:bg-emerald-950/40', text: 'text-emerald-700 dark:text-emerald-300' },
+  { id: 'pages', label: 'CMS pages', icon: 'globe', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'images', label: 'Single images', icon: 'photo', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'galleries', label: 'Galleries', icon: 'photo', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300' },
+  { id: 'documents', label: 'Documents', icon: 'document', bg: 'bg-amber-50 dark:bg-amber-950/40', text: 'text-amber-700 dark:text-amber-300' },
 ];
 
 const folders = computed(() => [
   ...fixedFolders,
-  { id: 'trash', label: 'Trash Bin', icon: '🗑️', bg: 'bg-rose-50 dark:bg-rose-950/40', text: 'text-rose-700 dark:text-rose-300' },
+  { id: 'trash', label: 'Trash bin', icon: 'trash', bg: 'bg-rose-50 dark:bg-rose-950/40', text: 'text-rose-700 dark:text-rose-300' },
 ]);
 
 const subfoldersOf = (fixedId) => customFolders.value.filter(f => f.parent_slug === fixedId);
@@ -294,12 +298,12 @@ const deleteItem = async (item, e) => {
 
 const getFileIcon = (mimeOrName) => {
   const name = (mimeOrName || '').toLowerCase();
-  if (name.includes('pdf')) return '📄';
-  if (name.includes('image') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.webp')) return '🖼️';
-  if (name.includes('sheet') || name.endsWith('.xls') || name.endsWith('.xlsx') || name.endsWith('.csv')) return '📊';
-  if (name.includes('word') || name.endsWith('.doc') || name.endsWith('.docx')) return '📝';
-  if (name.endsWith('.zip') || name.endsWith('.rar')) return '📦';
-  return '📎';
+  if (name.includes('pdf')) return 'document';
+  if (name.includes('image') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.webp')) return 'photo';
+  if (name.includes('sheet') || name.endsWith('.xls') || name.endsWith('.xlsx') || name.endsWith('.csv')) return 'chart';
+  if (name.includes('word') || name.endsWith('.doc') || name.endsWith('.docx')) return 'document';
+  if (name.endsWith('.zip') || name.endsWith('.rar')) return 'archive';
+  return 'link';
 };
 
 const isImage = (mimeOrUrl) => {
@@ -315,31 +319,22 @@ const isImage = (mimeOrUrl) => {
       aria-modal="true"
       aria-labelledby="media-library-modal-title"
       v-focus-trap="() => emit('close')"
-      class="bg-white dark:bg-slate-900 rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+      class="bg-white dark:bg-slate-900 rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col outline-none"
     >
 
       <!-- Modal Header -->
-      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/80">
-        <div class="flex items-center gap-2.5">
-          <span class="text-xl">📁</span>
-          <div>
-            <h3 id="media-library-modal-title" class="text-base font-extrabold text-slate-900 dark:text-white">File Manager</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Centralized file repository for logos, news, newsletters, galleries, and documents.</p>
-          </div>
+      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h2 id="media-library-modal-title" class="text-base font-semibold text-slate-900 dark:text-white">File manager</h2>
+          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Choose a file, or upload a new one.</p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
           <!-- Upload Button -->
-          <button
-            type="button"
-            @click="triggerUpload"
-            :disabled="isUploading"
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-          >
-            <span v-if="isUploading" class="animate-spin">⏳</span>
-            <span v-else>📤</span>
-            <span>Upload new file</span>
-          </button>
+          <Button size="sm" :loading="isUploading" @click="triggerUpload">
+            <template v-if="!isUploading" #icon><UiIcon name="upload" /></template>
+            Upload files
+          </Button>
           <input
             ref="uploadFileInput"
             type="file"
@@ -353,20 +348,20 @@ const isImage = (mimeOrUrl) => {
             type="button"
             @click="emit('close')"
             aria-label="Close file manager"
-            class="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold rounded-xl transition-colors cursor-pointer text-sm"
+            class="shrink-0 rounded-xl p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
           >
-            ✕
+            <UiIcon name="x" :size="20" />
           </button>
         </div>
       </div>
 
       <!-- Modal Body (Sidebar + Content Area) -->
       <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
-        
+
         <!-- Folder Navigation Sidebar -->
         <div class="w-full md:w-64 bg-slate-50 dark:bg-slate-800/50 border-r border-slate-200 dark:border-slate-800 p-4 space-y-1 overflow-y-auto shrink-0">
-          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
-            Media Folders
+          <div class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 py-1">
+            Folders
           </div>
 
           <button
@@ -374,26 +369,19 @@ const isImage = (mimeOrUrl) => {
             :key="folder.id"
             type="button"
             @click="activeFolder = folder.id"
+            :aria-current="activeFolder === folder.id ? 'true' : undefined"
             :class="[
-              'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer',
+              'w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left',
               activeFolder === folder.id
-                ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-sm'
-                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
+                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
             ]"
           >
             <span class="flex items-center gap-2">
-              <span>{{ folder.icon }}</span>
+              <UiIcon :name="folder.icon" />
               <span>{{ folder.label }}</span>
             </span>
-            <span
-              v-if="folder.id === 'trash' && trashCount > 0"
-              :class="[
-                'px-2 py-0.5 rounded-full text-[10px] font-black',
-                activeFolder === 'trash' ? 'bg-rose-500 text-white' : 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
-              ]"
-            >
-              {{ trashCount }}
-            </span>
+            <Badge v-if="folder.id === 'trash' && trashCount > 0">{{ trashCount }}</Badge>
           </button>
         </div>
 
@@ -401,18 +389,18 @@ const isImage = (mimeOrUrl) => {
         <div class="flex-1 flex flex-col p-6 space-y-4 overflow-hidden bg-white dark:bg-slate-900">
 
           <!-- Breadcrumb: viewing a custom folder, inside one of the fixed folders -->
-          <div v-if="activeCustomFolder" class="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
+          <nav v-if="activeCustomFolder" aria-label="Breadcrumb" class="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 shrink-0">
             <button
               type="button"
               @click="activeFolder = activeCustomFolder.parent_slug"
-              class="hover:text-slate-900 dark:hover:text-white hover:underline cursor-pointer flex items-center gap-1"
+              class="hover:text-slate-900 dark:hover:text-white hover:underline flex items-center gap-1"
             >
-              <span>{{ fixedFolderById(activeCustomFolder.parent_slug)?.icon }}</span>
+              <UiIcon :name="fixedFolderById(activeCustomFolder.parent_slug)?.icon || 'folder'" />
               <span>{{ fixedFolderById(activeCustomFolder.parent_slug)?.label }}</span>
             </button>
-            <span class="text-slate-300 dark:text-slate-600">/</span>
-            <span class="text-slate-900 dark:text-white">🗂️ {{ activeCustomFolder.name }}</span>
-          </div>
+            <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">/</span>
+            <span class="flex items-center gap-1 text-slate-900 dark:text-white" aria-current="page"><UiIcon name="folder" /> {{ activeCustomFolder.name }}</span>
+          </nav>
 
           <!-- Subfolders: viewing one of the fixed folders (read-only here — no creation) -->
           <div v-if="activeFolder !== 'all' && activeFolder !== 'trash' && !activeCustomFolder && subfoldersOf(activeFolder).length" class="flex flex-wrap gap-1.5 shrink-0">
@@ -421,115 +409,98 @@ const isImage = (mimeOrUrl) => {
               :key="sub.id"
               type="button"
               @click="activeFolder = sub.slug"
-              class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer flex items-center gap-1.5"
+              class="px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium rounded-full flex items-center gap-1.5"
             >
-              <span>🗂️</span>
+              <UiIcon name="folder" />
               <span>{{ sub.name }}</span>
             </button>
           </div>
 
           <!-- Top Search & Inline Filter Controls Bar -->
-          <div class="space-y-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div class="space-y-3 pb-3 border-b border-slate-200 dark:border-slate-800">
             <div class="flex items-center justify-between gap-3">
               <!-- Search Box -->
               <div class="relative flex-1">
                 <label for="media-library-search" class="sr-only">Search files by name</label>
+                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><UiIcon name="search" /></span>
                 <input
                   id="media-library-search"
                   v-model="searchQuery"
                   type="text"
-                  placeholder="Search files by name..."
-                  class="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                  placeholder="Search files by name"
+                  class="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-9 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder-slate-500"
                 />
-                <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
                 <button
                   v-if="searchQuery"
                   type="button"
                   @click="searchQuery = ''"
-                  class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-bold"
+                  aria-label="Clear search"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 >
-                  ✕
+                  <UiIcon name="x" />
                 </button>
               </div>
 
               <!-- Counter -->
-              <div class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
+              <div class="text-xs font-medium text-slate-500 dark:text-slate-400 shrink-0">
                 Showing {{ mediaItems.length }}<template v-if="hasMore"> of {{ totalFiles }}</template> {{ totalFiles === 1 ? 'file' : 'files' }}
               </div>
             </div>
 
             <!-- Inline Filter Dropdowns Grid -->
-            <div class="flex flex-wrap items-center gap-2 pt-1">
-              
-              <!-- 1. Category / Type Filter -->
-              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <label for="media-library-filter-type" class="text-slate-400">Type:</label>
-                <select id="media-library-filter-type" v-model="filterType" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
-                  <option value="all">All Types</option>
-                  <option value="image">🖼️ Images Only</option>
-                  <option value="document">📄 Documents Only</option>
-                </select>
-              </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
+              <Select
+                v-model="filterType"
+                label="Type"
+                :options="[{ value: 'all', label: 'All types' }, { value: 'image', label: 'Images only' }, { value: 'document', label: 'Documents only' }]"
+              />
 
-              <!-- 2. Dynamic Extension Filter (Only available extensions listed) -->
-              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <label for="media-library-filter-extension" class="text-slate-400">Extension:</label>
-                <select id="media-library-filter-extension" v-model="filterExtension" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
-                  <option value="all">All Extensions</option>
-                  <option v-for="ext in availableExtensions" :key="ext" :value="ext">
-                    .{{ ext.toUpperCase() }}
-                  </option>
-                </select>
-              </div>
+              <!-- Only the extensions the club's files actually have -->
+              <Select
+                v-model="filterExtension"
+                label="Extension"
+                :options="[{ value: 'all', label: 'All extensions' }, ...availableExtensions.map(ext => ({ value: ext, label: `.${ext.toUpperCase()}` }))]"
+              />
 
-              <!-- 3. Dynamic Date Added Filter (Year / Month) -->
-              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <label for="media-library-filter-date" class="text-slate-400">Date:</label>
-                <select id="media-library-filter-date" v-model="filterDate" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
-                  <option value="all">All Dates</option>
-                  <option v-for="m in availableMonths" :key="m.value" :value="m.value">
-                    📅 {{ m.label }}
-                  </option>
-                </select>
-              </div>
+              <Select
+                v-model="filterDate"
+                label="Date added"
+                :options="[{ value: 'all', label: 'All dates' }, ...availableMonths.map(m => ({ value: m.value, label: m.label }))]"
+              />
 
-              <!-- 4. Sort Order -->
-              <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                <label for="media-library-sort" class="text-slate-400">Sort:</label>
-                <select id="media-library-sort" v-model="sortBy" class="bg-transparent font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer">
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="name_asc">Name (A to Z)</option>
-                  <option value="name_desc">Name (Z to A)</option>
-                  <option value="size_desc">Size (Largest)</option>
-                  <option value="size_asc">Size (Smallest)</option>
-                </select>
-              </div>
+              <Select
+                v-model="sortBy"
+                label="Sort"
+                :options="[
+                  { value: 'newest', label: 'Newest first' },
+                  { value: 'oldest', label: 'Oldest first' },
+                  { value: 'name_asc', label: 'Name (A to Z)' },
+                  { value: 'name_desc', label: 'Name (Z to A)' },
+                  { value: 'size_desc', label: 'Size (largest)' },
+                  { value: 'size_asc', label: 'Size (smallest)' },
+                ]"
+              />
+            </div>
 
-              <!-- Reset Filters Button -->
-              <button
-                v-if="searchQuery || filterType !== 'all' || filterExtension !== 'all' || filterDate !== 'all' || sortBy !== 'newest'"
-                type="button"
-                @click="resetFilters"
-                class="px-2 py-1 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer flex items-center gap-1"
-                title="Reset all search and filter settings"
-              >
-                <span>✕ Reset</span>
-              </button>
+            <div v-if="searchQuery || filterType !== 'all' || filterExtension !== 'all' || filterDate !== 'all' || sortBy !== 'newest'">
+              <Button variant="ghost" size="sm" title="Reset all search and filter settings" @click="resetFilters">
+                <template #icon><UiIcon name="x" /></template>
+                Reset filters
+              </Button>
             </div>
           </div>
 
           <!-- Media Files Scrollable Grid -->
           <div class="flex-1 overflow-y-auto">
-            
-            <div v-if="isLoading" class="flex items-center justify-center py-16 text-slate-400 text-xs font-semibold">
-              <span class="animate-spin text-lg mr-2">🔄</span> Loading Media Library...
+
+            <div v-if="isLoading" class="flex items-center justify-center gap-2 py-16 text-slate-500 dark:text-slate-400 text-sm">
+              <UiIcon name="refresh" class="animate-spin" /> Loading files…
             </div>
 
-            <div v-else-if="!mediaItems.length" class="text-center py-16 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50">
-              <span class="text-3xl block mb-2">📁</span>
-              <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">No media files in this folder</span>
-              <span class="text-[11px] text-slate-400">Click "Upload New File" above to add files to the media library.</span>
+            <div v-else-if="!mediaItems.length" class="text-center py-16 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 space-y-1">
+              <span class="flex justify-center text-slate-400 mb-2"><UiIcon name="folder" :size="20" /></span>
+              <span class="text-sm font-medium text-slate-900 dark:text-white block">No files in this folder</span>
+              <span class="text-xs text-slate-500 dark:text-slate-400">Use "Upload files" above to add one.</span>
             </div>
 
             <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-1">
@@ -537,7 +508,7 @@ const isImage = (mimeOrUrl) => {
                 v-for="item in mediaItems"
                 :key="item.id"
                 @click="selectItem(item)"
-                class="group relative bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/60 dark:hover:bg-blue-950/60 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 hover:border-blue-300 dark:hover:border-blue-700/60 p-2.5 transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col justify-between overflow-hidden"
+                class="group relative bg-white dark:bg-slate-900 hover:bg-blue-50/60 dark:hover:bg-blue-950/40 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700/60 p-2.5 transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col justify-between overflow-hidden"
               >
                 <!-- Thumbnail Preview -->
                 <div class="h-28 w-full rounded-xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-center relative mb-2">
@@ -548,71 +519,66 @@ const isImage = (mimeOrUrl) => {
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                   <div v-else class="flex flex-col items-center justify-center space-y-1">
-                    <span class="text-3xl">{{ getFileIcon(item.mime_type || item.file_name) }}</span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ item.file_name.split('.').pop() }}</span>
+                    <span class="text-slate-400"><UiIcon :name="getFileIcon(item.mime_type || item.file_name)" :size="20" /></span>
+                    <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ item.file_name.split('.').pop() }}</span>
                   </div>
 
                   <!-- Folder Collection Badge & Variant / Trashed Tags -->
                   <div class="absolute top-1.5 left-1.5 flex flex-col gap-1 items-start z-10">
-                    <span class="px-2 py-0.5 rounded-md bg-slate-900/75 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider">
-                      {{ item.collection_name }}
-                    </span>
-                    <span v-if="item.is_variant" class="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
-                      ✂️ Variant
-                    </span>
-                    <span v-if="item.is_trashed" class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-0.5">
-                      🗑️ Trashed
-                    </span>
+                    <Badge>{{ item.collection_name }}</Badge>
+                    <Badge v-if="item.is_variant" variant="info">Variant</Badge>
+                    <Badge v-if="item.is_trashed" variant="danger">Trashed</Badge>
                   </div>
                 </div>
 
                 <!-- File Info -->
                 <div class="space-y-1">
-                  <span class="block font-bold text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 text-xs truncate" :title="item.file_name">
+                  <span class="block font-medium text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 text-xs truncate" :title="item.file_name">
                     {{ item.file_name }}
                   </span>
-                  <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                  <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                     <span>{{ item.human_size }}</span>
                     <span>{{ item.created_at }}</span>
                   </div>
                 </div>
 
                 <!-- Action Button Overlay -->
-                <div class="pt-2 flex items-center justify-between border-t border-slate-200/60 dark:border-slate-800/60 mt-2">
-                  <span v-if="activeFolder !== 'trash' && !item.is_trashed" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:underline flex items-center gap-1">
-                    <span>✓</span> Select File
+                <div class="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-slate-800 mt-2">
+                  <span v-if="activeFolder !== 'trash' && !item.is_trashed" class="text-xs font-medium text-blue-600 dark:text-blue-400 group-hover:underline flex items-center gap-1">
+                    <UiIcon name="check" /> Select file
                   </span>
-                  <span v-else class="text-[11px] font-bold text-rose-600 dark:text-rose-400">
-                    Trashed File
-                  </span>
+                  <Badge v-else variant="danger">In the trash</Badge>
 
                   <div class="flex items-center gap-1">
                     <template v-if="activeFolder === 'trash' || item.is_trashed">
                       <button
                         type="button"
                         @click="restoreItem(item, $event)"
-                        class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-md border border-emerald-200 dark:border-emerald-800/60 transition-colors cursor-pointer"
-                        title="Restore File"
+                        class="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        title="Restore file"
                       >
-                        ↻ Restore
+                        <UiIcon name="restore" />
+                        Restore
                       </button>
                       <button
                         type="button"
                         @click="forceDeleteItem(item, $event)"
-                        class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 text-xs cursor-pointer"
-                        title="Delete Permanently"
+                        class="rounded-xl p-1 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                        title="Delete permanently"
+                        aria-label="Delete permanently"
                       >
-                        🔥
+                        <UiIcon name="trash" />
                       </button>
                     </template>
                     <template v-else>
                       <button
                         type="button"
                         @click="deleteItem(item, $event)"
-                        class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 text-xs cursor-pointer"
-                        title="Move to Trash"
+                        class="rounded-xl p-1 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                        title="Move to trash"
+                        aria-label="Move to trash"
                       >
-                        🗑️
+                        <UiIcon name="trash" />
                       </button>
                     </template>
                   </div>
@@ -621,9 +587,9 @@ const isImage = (mimeOrUrl) => {
             </div>
 
             <div v-if="hasMore && !isLoading" class="flex justify-center pt-3">
-              <button type="button" :disabled="isLoadingMore" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50" @click="fetchMedia(true)">
+              <Button variant="secondary" size="sm" :disabled="isLoadingMore" @click="fetchMedia(true)">
                 {{ isLoadingMore ? 'Loading…' : `Load more files (${mediaItems.length} of ${totalFiles})` }}
-              </button>
+              </Button>
             </div>
 
           </div>

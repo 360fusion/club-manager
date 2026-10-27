@@ -1,8 +1,18 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import CharitySubNav from '@/Components/CharitySubNav.vue';
+import PageHeader from '@/Components/Ui/PageHeader.vue';
+import Card from '@/Components/Ui/Card.vue';
+import StatCard from '@/Components/Ui/StatCard.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Modal from '@/Components/Ui/Modal.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   club: Object,
@@ -72,342 +82,253 @@ const submitGrant = () => {
 const updateGrantStatus = (grantId, status) => {
   useForm({ approval_status: status }).post(route('admin.charity.grants.update_status', { clubSlug: props.club.slug, grantId }));
 };
+
+// The member pickers stay native selects: their values are numeric ids or null, which the kit Select would turn into strings.
+const fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
+const labelClass = 'block space-y-1.5';
+const labelTextClass = 'block text-xs font-medium text-slate-700 dark:text-slate-300';
+const secondaryButton = 'inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950';
 </script>
 
 <template>
-  <Head :title="`Charity Dashboard — ${club.name}`" />
+  <Head :title="`Charity dashboard — ${club.name}`" />
 
   <AdminLayout :club="club" title="Charity" active-tab="charity">
     <div class="max-w-7xl mx-auto space-y-6 pb-12">
-      
-      <!-- Top Horizontal Sub-Navigation Bar -->
       <CharitySubNav :clubSlug="club.slug" activeTab="dashboard" />
 
-      <!-- Header Banner -->
-      <div class="p-6 bg-slate-900 dark:bg-slate-700 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div class="flex items-center gap-3">
-            <span class="p-2.5 bg-blue-500/20 text-blue-400 rounded-2xl border border-blue-500/30">🤝</span>
-            <div>
-              <h1 class="text-2xl font-black tracking-tight">Charity Dashboard</h1>
-              <p class="text-xs text-slate-400 mt-1 font-medium">Dual-Custody Meeting Collections, Grant Voting &amp; Relief Chest Integration</p>
-            </div>
+      <PageHeader title="Charity dashboard" description="Meeting collections counted under dual custody, grant voting and the Relief Chest.">
+        <template #actions>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button size="sm" @click="showCollectionModal = true">
+              <template #icon><UiIcon name="cash" /></template>
+              Record collection
+            </Button>
+            <Button variant="secondary" size="sm" @click="showGrantModal = true">
+              <template #icon><UiIcon name="gift" /></template>
+              Propose grant
+            </Button>
+            <a :href="route('admin.accounting.giftaid.export_schedule', club.slug)" target="_blank" :class="secondaryButton">
+              <UiIcon name="download" />
+              MCF Relief Chest CSV
+            </a>
           </div>
-        </div>
+        </template>
+      </PageHeader>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            @click="showCollectionModal = true"
-            class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <span>📥</span>
-            <span>Record collection</span>
-          </button>
-
-          <button
-            type="button"
-            @click="showGrantModal = true"
-            class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <span>🎁</span>
-            <span>Propose grant</span>
-          </button>
-
-          <a
-            :href="route('admin.accounting.giftaid.export_schedule', club.slug)"
-            target="_blank"
-            class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 transition-all flex items-center gap-2"
-          >
-            <span>📄</span>
-            <span>MCF Relief Chest CSV</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- KPI Summary Cards Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm space-y-1">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Raised to Date</span>
-          <div class="text-2xl font-black text-slate-900 dark:text-white">{{ formattedTotalRaised }}</div>
-          <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Collections &amp; Member Giving</span>
-        </div>
-
-        <div class="p-5 bg-amber-50/60 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/80 rounded-2xl shadow-sm space-y-1">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-200">Meeting Alms &amp; Raffles</span>
-          <div class="text-2xl font-black text-amber-950 dark:text-amber-100">{{ formattedTotalCollections }}</div>
-          <span class="text-[10px] text-amber-700 dark:text-amber-300 block">Dual-custody verified takings</span>
-        </div>
-
-        <div class="p-5 bg-blue-50/60 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/80 rounded-2xl shadow-sm space-y-1">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-blue-800 dark:text-blue-200">Grants Disbursed</span>
-          <div class="text-2xl font-black text-blue-950 dark:text-blue-100">{{ formattedTotalGrants }}</div>
-          <span class="text-[10px] text-blue-700 dark:text-blue-300 block">Approved relief grants paid</span>
-        </div>
-
-        <div class="p-5 bg-blue-50/60 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/80 rounded-2xl shadow-sm space-y-1">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-blue-800 dark:text-blue-200">Festival Jewel Holders</span>
-          <div class="text-2xl font-black text-blue-950 dark:text-blue-100">{{ jewelHoldersCount }}</div>
-          <span class="text-[10px] text-blue-700 dark:text-blue-300 block">Brethren qualifying for Festival Jewel</span>
-        </div>
+        <StatCard label="Total raised to date" :value="formattedTotalRaised" caption="Collections and member giving" />
+        <StatCard label="Meeting alms and raffles" :value="formattedTotalCollections" caption="Takings verified under dual custody" />
+        <StatCard label="Grants disbursed" :value="formattedTotalGrants" caption="Approved relief grants paid" />
+        <StatCard label="Festival jewel holders" :value="jewelHoldersCount" caption="Brethren qualifying for the Festival jewel" />
       </div>
 
-      <!-- Automated Gift Aid Reconciliation Position Banner -->
-      <div class="p-5 bg-gradient-to-r from-amber-500/10 via-blue-500/10 to-blue-500/10 border border-amber-300/80 dark:border-amber-700/80 rounded-3xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <span class="p-3 bg-amber-500/20 text-amber-800 rounded-2xl text-xl">🏛️</span>
+      <Card>
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h3 class="font-black text-slate-900 dark:text-white text-sm">Automated Gift Aid &amp; Relief Chest Reconciliation Position</h3>
-            <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-              Pending Gift Aid 25% Tax Reclaim: <strong class="text-amber-900 dark:text-amber-200 font-black">{{ giftAidSummary?.formatted_pending_gift_aid || ($cs + '0.00') }}</strong>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Gift Aid and Relief Chest position</h3>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              Pending Gift Aid reclaim (25%): <strong class="font-semibold text-slate-900 dark:text-white">{{ giftAidSummary?.formatted_pending_gift_aid || ($cs + '0.00') }}</strong>
               ({{ giftAidSummary?.pending_claim_count || 0 }} collection batches pending)
-              • Net Relief Chest Balance: <strong class="text-blue-900 dark:text-blue-200 font-black">{{ giftAidSummary?.formatted_net_relief_chest_balance || ($cs + '0.00') }}</strong>
+              · Net Relief Chest balance: <strong class="font-semibold text-slate-900 dark:text-white">{{ giftAidSummary?.formatted_net_relief_chest_balance || ($cs + '0.00') }}</strong>
             </p>
           </div>
-        </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <Link
-            :href="route('admin.charity.giftaid.transactions_page', club.slug)"
-            class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
-          >
-            <span>📜 View Gift Aid transactions ledger</span>
-          </Link>
-          <Link
-            :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'reconciliation' })"
-            class="px-4 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5"
-          >
-            <span>⚡ Open reconciliation workspace</span>
-          </Link>
-        </div>
-      </div>
-
-      <!-- Two-Column Layout: Recent Collections vs Grants Disbursed -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- Column 1: Dual-Custody Collections -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <div class="flex items-center gap-2">
-              <span class="text-lg">📥</span>
-              <h3 class="font-black text-slate-900 dark:text-white text-sm">Recent Dual-Custody Meeting Collections</h3>
-            </div>
-            <button type="button" @click="showCollectionModal = true" class="text-xs text-blue-700 dark:text-blue-300 font-bold hover:underline">
-              + New collection
-            </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" :href="route('admin.charity.giftaid.transactions_page', club.slug)">
+              <template #icon><UiIcon name="receipt" /></template>
+              View Gift Aid transactions
+            </Button>
+            <Button variant="secondary" size="sm" :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'reconciliation' })">
+              <template #icon><UiIcon name="refresh" /></template>
+              Open reconciliation workspace
+            </Button>
           </div>
+        </div>
+      </Card>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <template #header>
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white">Recent meeting collections</h3>
+              <Button variant="ghost" size="sm" @click="showCollectionModal = true">
+                <template #icon><UiIcon name="plus" /></template>
+                New collection
+              </Button>
+            </div>
+          </template>
 
           <div class="space-y-3">
             <div
               v-for="col in collections"
               :key="col.id"
-              class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl flex items-center justify-between gap-3 text-xs"
+              class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-3 text-xs"
             >
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
-                  <span class="font-black text-slate-900 dark:text-white">{{ col.collection_type }}</span>
-                  <span class="text-[10px] text-slate-400 font-mono">{{ col.created_at }}</span>
+                  <span class="font-semibold text-slate-900 dark:text-white">{{ col.collection_type }}</span>
+                  <span class="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">{{ col.created_at }}</span>
                 </div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400">
-                  <span>Counted by: <strong>{{ col.counted_by }}</strong></span> • <span>Witnessed by: <strong>{{ col.witnessed_by }}</strong></span>
+                <div class="text-slate-500 dark:text-slate-400">
+                  <span>Counted by <strong class="font-medium text-slate-700 dark:text-slate-200">{{ col.counted_by }}</strong></span> · <span>Witnessed by <strong class="font-medium text-slate-700 dark:text-slate-200">{{ col.witnessed_by }}</strong></span>
                 </div>
               </div>
               <div class="text-right whitespace-nowrap">
-                <div class="font-black text-amber-950 dark:text-amber-100 text-sm">{{ col.formatted_total }}</div>
-                <span class="text-[10px] text-slate-400 block font-mono">Cash: {{ $cs }}{{ col.cash_amount }} | Cheque: {{ $cs }}{{ col.cheque_amount }}</span>
+                <div class="font-semibold text-slate-900 dark:text-white text-sm tabular-nums">{{ col.formatted_total }}</div>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400 block tabular-nums">Cash: {{ $cs }}{{ col.cash_amount }} · Cheque: {{ $cs }}{{ col.cheque_amount }}</span>
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <!-- Column 2: Charity Grants -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <div class="flex items-center gap-2">
-              <span class="text-lg">🎁</span>
-              <h3 class="font-black text-slate-900 dark:text-white text-sm">Charity Grants &amp; Relief Voting</h3>
+        <Card>
+          <template #header>
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white">Charity grants and relief voting</h3>
+              <Button variant="ghost" size="sm" @click="showGrantModal = true">
+                <template #icon><UiIcon name="plus" /></template>
+                Propose grant
+              </Button>
             </div>
-            <button type="button" @click="showGrantModal = true" class="text-xs text-blue-700 dark:text-blue-300 font-bold hover:underline">
-              + Propose grant
-            </button>
-          </div>
+          </template>
 
           <div class="space-y-3">
             <div
               v-for="grant in grants"
               :key="grant.id"
-              class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl flex items-center justify-between gap-3 text-xs"
+              class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-3 text-xs"
             >
-              <div class="space-y-1">
-                <div class="flex items-center gap-2">
-                  <span class="font-black text-slate-900 dark:text-white">{{ grant.recipient_name }}</span>
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200">
-                    {{ grant.status_label }}
-                  </span>
-                  <span v-if="grant.meeting_title" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 border border-amber-300/70 dark:border-amber-700/70">
-                    📜 {{ grant.meeting_title }}
-                  </span>
+              <div class="space-y-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="font-semibold text-slate-900 dark:text-white">{{ grant.recipient_name }}</span>
+                  <Badge variant="info">{{ grant.status_label }}</Badge>
+                  <Badge v-if="grant.meeting_title">
+                    <UiIcon name="calendar" :size="12" />
+                    {{ grant.meeting_title }}
+                  </Badge>
                 </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">{{ grant.purpose }}</p>
+                <p class="text-slate-500 dark:text-slate-400 line-clamp-1">{{ grant.purpose }}</p>
               </div>
               <div class="text-right whitespace-nowrap space-y-1">
-                <div class="font-black text-blue-950 dark:text-blue-100 text-sm">{{ grant.formatted_amount }}</div>
-                <button
+                <div class="font-semibold text-slate-900 dark:text-white text-sm tabular-nums">{{ grant.formatted_amount }}</div>
+                <Button
                   v-if="grant.approval_status === 'proposed'"
-                  type="button"
+                  variant="secondary"
+                  size="sm"
                   @click="updateGrantStatus(grant.id, 'committee_approved')"
-                  class="px-2 py-0.5 bg-blue-600 text-white font-bold text-[10px] rounded cursor-pointer"
                 >
                   Approve committee
-                </button>
-                <button
+                </Button>
+                <Button
                   v-else-if="grant.approval_status === 'committee_approved'"
-                  type="button"
+                  variant="secondary"
+                  size="sm"
                   @click="updateGrantStatus(grant.id, 'lodge_voted')"
-                  class="px-2 py-0.5 bg-amber-600 text-white font-bold text-[10px] rounded cursor-pointer"
                 >
                   Lodge voted
-                </button>
-                <button
+                </Button>
+                <Button
                   v-else-if="grant.approval_status === 'lodge_voted'"
-                  type="button"
+                  variant="secondary"
+                  size="sm"
                   @click="updateGrantStatus(grant.id, 'disbursed')"
-                  class="px-2 py-0.5 bg-emerald-600 text-white font-bold text-[10px] rounded cursor-pointer"
                 >
                   Disburse payment
-                </button>
-                <span v-else class="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold block">Disbursed ✓</span>
+                </Button>
+                <Badge v-else variant="success">
+                  <UiIcon name="check" :size="12" />
+                  Disbursed
+                </Badge>
               </div>
             </div>
           </div>
-        </div>
-
+        </Card>
       </div>
-
-      <!-- Record Collection Modal -->
-      <div v-if="showCollectionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5 border border-slate-100 dark:border-slate-800">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">📥</span>
-              <h3 class="font-black text-slate-900 dark:text-white text-base">Record Meeting Collection</h3>
-            </div>
-            <button type="button" @click="showCollectionModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg">✕</button>
-          </div>
-
-          <form @submit.prevent="submitCollection" class="space-y-4 text-xs">
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Collection Type *</label>
-              <select v-model="collectionForm.collection_type" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500">
-                <option value="alms_plate">Alms Plate Collection</option>
-                <option value="raffle">Meeting Charity Raffle</option>
-                <option value="ladies_night">Festive Board Alms</option>
-                <option value="individual_envelope">Gift Aid Envelope</option>
-                <option value="festival_donation">Festival Direct Donation</option>
-              </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Cash Amount ({{ $cs }}) *</label>
-                <input type="number" step="0.01" v-model="collectionForm.cash_amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
-              </div>
-              <div>
-                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Cheque Amount ({{ $cs }})</label>
-                <input type="number" step="0.01" v-model="collectionForm.cheque_amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" />
-              </div>
-            </div>
-
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Counter (e.g. Steward) *</label>
-              <select v-model="collectionForm.counted_by_member_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500">
-                <option :value="null">-- Select Counter --</option>
-                <option v-for="m in activeMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Witness *</label>
-              <select v-model="collectionForm.witnessed_by_member_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500">
-                <option :value="null">-- Select Witness --</option>
-                <option v-for="m in activeMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Notes / Donor Details</label>
-              <textarea v-model="collectionForm.notes" rows="2" placeholder="e.g. Gift Aid Envelope #12 Bro. Smith..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500"></textarea>
-            </div>
-
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
-              <button type="button" @click="showCollectionModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
-              <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-md transition">Record collection</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Propose Grant Modal -->
-      <div v-if="showGrantModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5 border border-slate-100 dark:border-slate-800">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">🎁</span>
-              <h3 class="font-black text-slate-900 dark:text-white text-base">Propose Charity Grant</h3>
-            </div>
-            <button type="button" @click="showGrantModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg">✕</button>
-          </div>
-
-          <form @submit.prevent="submitGrant" class="space-y-4 text-xs">
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Recipient Name / Cause *</label>
-              <input type="text" v-model="grantForm.recipient_name" placeholder="e.g. Local Children's Hospice" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
-            </div>
-
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Grant Amount ({{ $cs }}) *</label>
-              <input type="number" step="0.01" v-model="grantForm.amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
-            </div>
-
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Purpose / Details *</label>
-              <textarea v-model="grantForm.purpose" rows="2" placeholder="Describe the cause and committee recommendation..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required></textarea>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Proposer</label>
-                <select v-model="grantForm.proposer_member_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500">
-                  <option :value="null">-- Select Proposer --</option>
-                  <option v-for="m in activeMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
-                </select>
-              </div>
-              <div>
-                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Seconder</label>
-                <select v-model="grantForm.seconder_member_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500">
-                  <option :value="null">-- Select Seconder --</option>
-                  <option v-for="m in activeMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Attach to Meeting / Summons Agenda (Optional)</label>
-              <select v-model="grantForm.meeting_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500">
-                <option :value="null">-- Do Not Attach to Summons --</option>
-                <option v-for="m in upcomingMeetings" :key="m.id" :value="m.id">{{ m.label }}</option>
-              </select>
-              <p class="text-[10px] text-slate-400 mt-1 font-medium">Attaching will automatically insert a formal Charity Ballot Proposition item on the Meeting Summons.</p>
-            </div>
-
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
-              <button type="button" @click="showGrantModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
-              <button type="submit" class="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-black rounded-xl shadow-md transition">Save grant proposal</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
     </div>
+
+    <Modal :open="showCollectionModal" title="Record a meeting collection" @close="showCollectionModal = false">
+      <form id="charity-collection-form" class="space-y-4" @submit.prevent="submitCollection">
+        <Select
+          v-model="collectionForm.collection_type"
+          label="Collection type"
+          required
+          :options="[
+            { value: 'alms_plate', label: 'Alms plate collection' },
+            { value: 'raffle', label: 'Meeting charity raffle' },
+            { value: 'ladies_night', label: 'Festive board alms' },
+            { value: 'individual_envelope', label: 'Gift Aid envelope' },
+            { value: 'festival_donation', label: 'Festival direct donation' },
+          ]"
+        />
+
+        <div class="grid grid-cols-2 gap-3">
+          <Input v-model="collectionForm.cash_amount" type="number" step="0.01" :label="`Cash amount (${$cs})`" required />
+          <Input v-model="collectionForm.cheque_amount" type="number" step="0.01" :label="`Cheque amount (${$cs})`" />
+        </div>
+
+        <label :class="labelClass">
+          <span :class="labelTextClass">Counter (e.g. Steward) <span class="text-rose-600 dark:text-rose-400" aria-hidden="true">*</span></span>
+          <select v-model="collectionForm.counted_by_member_id" :class="fieldClass">
+            <option :value="null">Choose a counter</option>
+            <option v-for="m in activeMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+
+        <label :class="labelClass">
+          <span :class="labelTextClass">Witness <span class="text-rose-600 dark:text-rose-400" aria-hidden="true">*</span></span>
+          <select v-model="collectionForm.witnessed_by_member_id" :class="fieldClass">
+            <option :value="null">Choose a witness</option>
+            <option v-for="m in activeMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+          </select>
+        </label>
+
+        <Textarea v-model="collectionForm.notes" label="Notes or donor details" :rows="2" placeholder="e.g. Gift Aid envelope #12, Bro. Smith" />
+      </form>
+      <template #footer>
+        <Button variant="secondary" @click="showCollectionModal = false">Cancel</Button>
+        <Button type="submit" form="charity-collection-form" :loading="collectionForm.processing">Record collection</Button>
+      </template>
+    </Modal>
+
+    <Modal :open="showGrantModal" title="Propose a charity grant" @close="showGrantModal = false">
+      <form id="charity-grant-form" class="space-y-4" @submit.prevent="submitGrant">
+        <Input v-model="grantForm.recipient_name" label="Recipient name or cause" placeholder="e.g. Local children's hospice" required />
+
+        <Input v-model="grantForm.amount" type="number" step="0.01" :label="`Grant amount (${$cs})`" required />
+
+        <Textarea v-model="grantForm.purpose" label="Purpose and details" :rows="2" placeholder="Describe the cause and the committee's recommendation" required />
+
+        <div class="grid grid-cols-2 gap-3">
+          <label :class="labelClass">
+            <span :class="labelTextClass">Proposer</span>
+            <select v-model="grantForm.proposer_member_id" :class="fieldClass">
+              <option :value="null">Choose a proposer</option>
+              <option v-for="m in activeMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+            </select>
+          </label>
+          <label :class="labelClass">
+            <span :class="labelTextClass">Seconder</span>
+            <select v-model="grantForm.seconder_member_id" :class="fieldClass">
+              <option :value="null">Choose a seconder</option>
+              <option v-for="m in activeMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+            </select>
+          </label>
+        </div>
+
+        <label :class="labelClass">
+          <span :class="labelTextClass">Add to a meeting summons (optional)</span>
+          <select v-model="grantForm.meeting_id" :class="fieldClass">
+            <option :value="null">Do not add to a summons</option>
+            <option v-for="m in upcomingMeetings" :key="m.id" :value="m.id">{{ m.label }}</option>
+          </select>
+          <span class="block text-xs text-slate-500 dark:text-slate-400">This adds a charity ballot item to that meeting's summons.</span>
+        </label>
+      </form>
+      <template #footer>
+        <Button variant="secondary" @click="showGrantModal = false">Cancel</Button>
+        <Button type="submit" form="charity-grant-form" :loading="grantForm.processing">Save grant proposal</Button>
+      </template>
+    </Modal>
   </AdminLayout>
 </template>

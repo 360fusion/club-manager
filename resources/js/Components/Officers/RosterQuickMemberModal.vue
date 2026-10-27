@@ -1,5 +1,9 @@
 <script setup>
-
+import Modal from '@/Components/Ui/Modal.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Alert from '@/Components/Ui/Alert.vue';
 
 // A dialog of the officer roster page, in its own file so the page stays readable.
 defineEmits(['close']);
@@ -12,106 +16,54 @@ defineProps({
     quickMemberForm: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
     submitQuickMember: { type: [Object, Array, Function, String, Number, Boolean], default: undefined }
 });
+
+const membershipStatusOptions = [
+    { value: 'historical', label: 'Historical member (default)' },
+    { value: 'active', label: 'Active member' },
+    { value: 'honorary', label: 'Honorary member' },
+    { value: 'resigned', label: 'Resigned' },
+    { value: 'excluded_rule_181', label: 'Excluded (Rule 181)' },
+    { value: 'deceased', label: 'Deceased' },
+];
+
+const masonicRankOptions = [
+    { value: 'Bro', label: 'Bro (Brother)' },
+    { value: 'WBro', label: 'WBro (Worshipful Brother)' },
+    { value: 'VWBro', label: 'VWBro (Very Worshipful Brother)' },
+    { value: 'RWBro', label: 'RWBro (Right Worshipful Brother)' },
+    { value: 'MWBro', label: 'MWBro (Most Worshipful Brother)' },
+];
 </script>
 
 <template>
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div>
-            <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-              <span>👤</span>
-              <span>Add Historic Member</span>
-            </h3>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">Quickly add a member to assign to roster entries.</p>
-          </div>
-          <button @click="$emit('close')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold cursor-pointer">✕</button>
-        </div>
-
-        <div v-if="quickMemberError" class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 p-3 rounded-xl text-xs font-bold">
+    <Modal :open="true" title="Add a historic member" subtitle="Quickly add a member to assign to roster entries." @close="$emit('close')">
+        <Alert v-if="quickMemberError" variant="danger" class="mb-4">
           {{ quickMemberError }}
-        </div>
+        </Alert>
 
         <form @submit.prevent="submitQuickMember" class="space-y-3">
           <div class="grid grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">First Name <span class="text-rose-500">*</span></label>
-              <input
-                type="text"
-                v-model="quickMemberForm.first_name"
-                placeholder="e.g. Thomas"
-                required
-                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div class="space-y-1">
-              <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Surname <span class="text-rose-500">*</span></label>
-              <input
-                type="text"
-                v-model="quickMemberForm.last_name"
-                placeholder="e.g. Dunckerley"
-                required
-                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <Input v-model="quickMemberForm.first_name" label="First name" placeholder="e.g. Thomas" required />
+            <Input v-model="quickMemberForm.last_name" label="Surname" placeholder="e.g. Dunckerley" required />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Member Status</label>
-              <select
-                v-model="quickMemberForm.membership_status"
-                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-              >
-                <option value="historical">Historical Member (Default)</option>
-                <option value="active">Active Member</option>
-                <option value="honorary">Honorary Member</option>
-                <option value="resigned">Resigned</option>
-                <option value="excluded_rule_181">Excluded (Rule 181)</option>
-                <option value="deceased">Deceased</option>
-              </select>
-            </div>
-
-            <div class="space-y-1">
-              <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Title / Rank <span class="text-slate-400 font-normal">(Optional)</span></label>
-              <select
-                v-model="quickMemberForm.masonic_rank"
-                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-              >
-                <option value="Bro">Bro (Brother)</option>
-                <option value="WBro">WBro (Worshipful Brother)</option>
-                <option value="VWBro">VWBro (Very Worshipful Brother)</option>
-                <option value="RWBro">RWBro (Right Worshipful Brother)</option>
-                <option value="MWBro">MWBro (Most Worshipful Brother)</option>
-              </select>
-            </div>
+            <Select v-model="quickMemberForm.membership_status" label="Member status" :options="membershipStatusOptions" />
+            <Select v-model="quickMemberForm.masonic_rank" label="Rank (optional)" :options="masonicRankOptions" />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Grand Rank <span class="text-slate-400 font-normal">(Optional)</span></label>
-              <select v-model="quickMemberForm.grand_rank" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">None</option>
-                <option v-for="rank in grandRanks" :key="rank.value" :value="rank.value">{{ rank.label }}</option>
-              </select>
-            </div>
-            <div class="space-y-1">
-              <label class="block text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200">Provincial Rank <span class="text-slate-400 font-normal">(Optional)</span></label>
-              <select v-model="quickMemberForm.provincial_rank" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">None</option>
-                <option v-for="rank in provincialRanks" :key="rank.value" :value="rank.value">{{ rank.label }}</option>
-              </select>
-            </div>
+            <Select v-model="quickMemberForm.grand_rank" label="Grand rank (optional)" :options="[{ value: '', label: 'None' }, ...(grandRanks || [])]" />
+            <Select v-model="quickMemberForm.provincial_rank" label="Provincial rank (optional)" :options="[{ value: '', label: 'None' }, ...(provincialRanks || [])]" />
           </div>
 
-          <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <button type="button" @click="$emit('close')" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer">Cancel</button>
-            <button type="submit" :disabled="isCreatingMember" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer flex items-center gap-1.5">
+          <div class="flex justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <Button variant="secondary" @click="$emit('close')">Cancel</Button>
+            <Button type="submit" :loading="isCreatingMember">
               <span v-if="isCreatingMember">Saving...</span>
-              <span v-else>Save &amp; select member</span>
-            </button>
+              <span v-else>Save and select member</span>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
 </template>

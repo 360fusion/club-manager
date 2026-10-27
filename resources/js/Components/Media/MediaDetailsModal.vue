@@ -1,5 +1,12 @@
 <script setup>
 import { ref } from 'vue';
+import Modal from '@/Components/Ui/Modal.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 // The file details dialog of the media library page (details, usage, version history), in its own file so the page stays readable.
 // The page opens the file picker through the exposed fileInput.
@@ -36,37 +43,20 @@ defineProps({
 </script>
 
 <template>
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="$emit('close')">
-      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full py-4 px-6 sm:px-8 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3.5 relative overflow-hidden" @click.stop>
-        
-        <!-- Modal Top Header -->
-        <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">{{ getFileIcon(previewItem.mime_type || previewItem.file_name) }}</span>
-            <div>
-              <h3 class="text-lg font-black text-slate-900 dark:text-white tracking-tight">Media Asset Inspector</h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400">View asset, edit display name & alt text, or copy direct asset URL.</p>
-            </div>
+    <Modal :open="true" title="File details" subtitle="See the file, edit its name and alt text, or copy its link." size="xl" @close="$emit('close')">
+      <div class="space-y-4">
+        <Alert v-if="saveSuccessMsg" variant="success">{{ saveSuccessMsg }}</Alert>
+
+        <Alert v-if="previewError" variant="danger">
+          <div class="flex items-center justify-between gap-2">
+            <span>{{ previewError }}</span>
+            <button type="button" aria-label="Dismiss" @click="$emit('clear-error')" class="shrink-0 rounded-xl p-1 hover:bg-rose-100 dark:hover:bg-rose-900/40"><UiIcon name="x" /></button>
           </div>
-
-          <button type="button" @click="$emit('close')" class="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold rounded-xl transition-colors cursor-pointer text-sm">✕</button>
-        </div>
-
-        <!-- Success Toast Alert -->
-        <div v-if="saveSuccessMsg" class="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold rounded-xl flex items-center gap-2 animate-in fade-in">
-          <span>✓</span>
-          <span>{{ saveSuccessMsg }}</span>
-        </div>
-
-        <!-- Error Toast Alert -->
-        <div v-if="previewError" class="p-2.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 text-xs font-bold rounded-xl flex items-center justify-between gap-2 animate-in fade-in">
-          <span class="flex items-center gap-2"><span>⚠️</span><span>{{ previewError }}</span></span>
-          <button type="button" @click="$emit('clear-error')" class="text-rose-500 hover:text-rose-800 dark:hover:text-rose-200">✕</button>
-        </div>
+        </Alert>
 
         <!-- Main Inspector Layout: Left Visual Preview + Right Editable Metadata -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-          
+
           <!-- Left Column: Visual Image / File Preview Box & Technical Specs -->
           <div class="space-y-3">
             <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center min-h-[160px] max-h-[240px] overflow-hidden relative">
@@ -77,87 +67,85 @@ defineProps({
                 class="max-h-[220px] w-auto object-contain rounded-xl shadow-sm"
               />
               <div v-else class="py-6 text-center space-y-1.5">
-                <span class="text-5xl block">{{ getFileIcon(previewItem.mime_type || previewItem.file_name) }}</span>
-                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">{{ previewItem.file_name }}</span>
-                <span class="text-[11px] font-semibold text-slate-400 block">{{ previewItem.human_size }}</span>
+                <span class="flex justify-center text-slate-400"><UiIcon :name="getFileIcon(previewItem.mime_type || previewItem.file_name)" :size="20" /></span>
+                <span class="text-sm font-medium text-slate-900 dark:text-white block">{{ previewItem.file_name }}</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400 block">{{ previewItem.human_size }}</span>
               </div>
             </div>
 
             <!-- Technical File Specifications Table -->
-            <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
-              <div class="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60 dark:border-slate-800/60">
-                Technical Specifications
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2 text-xs dark:border-slate-800 dark:bg-slate-800/50">
+              <div class="pb-1 border-b border-slate-200 text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                File information
               </div>
-              <div class="grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-300 font-semibold">
-                <div><span class="text-slate-400 block text-[10px]">Folder:</span> <span class="capitalize text-slate-900 dark:text-white font-bold">{{ previewItem.collection_name }}</span></div>
-                <div><span class="text-slate-400 block text-[10px]">File Size:</span> <span class="text-slate-900 dark:text-white font-bold">{{ previewItem.human_size }}</span></div>
-                <div><span class="text-slate-400 block text-[10px]">MIME Type:</span> <span class="text-slate-900 dark:text-white font-bold">{{ previewItem.mime_type }}</span></div>
-                <div><span class="text-slate-400 block text-[10px]">Uploaded On:</span> <span class="text-slate-900 dark:text-white font-bold">{{ previewItem.created_at }}</span></div>
-              </div>
+              <dl class="grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-300">
+                <div><dt class="text-slate-500 dark:text-slate-400">Folder</dt> <dd class="capitalize font-medium text-slate-900 dark:text-white">{{ previewItem.collection_name }}</dd></div>
+                <div><dt class="text-slate-500 dark:text-slate-400">File size</dt> <dd class="font-medium text-slate-900 dark:text-white">{{ previewItem.human_size }}</dd></div>
+                <div><dt class="text-slate-500 dark:text-slate-400">MIME type</dt> <dd class="font-medium text-slate-900 dark:text-white">{{ previewItem.mime_type }}</dd></div>
+                <div><dt class="text-slate-500 dark:text-slate-400">Uploaded on</dt> <dd class="font-medium text-slate-900 dark:text-white">{{ previewItem.created_at }}</dd></div>
+              </dl>
             </div>
 
             <!-- Asset Usage Tracking Section -->
-            <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
-              <div class="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between">
-                <span>Asset Usage Tracking</span>
-                <span v-if="isLoadingUsages" class="animate-spin text-blue-600 dark:text-blue-400">🔄</span>
-                <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="assetUsages.length ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
-                  {{ assetUsages.length }} {{ assetUsages.length === 1 ? 'Location' : 'Locations' }}
-                </span>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2 text-xs dark:border-slate-800 dark:bg-slate-800/50">
+              <div class="pb-1 border-b border-slate-200 text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:text-slate-400 flex items-center justify-between">
+                <span>Where it is used</span>
+                <UiIcon v-if="isLoadingUsages" name="refresh" class="animate-spin text-blue-600 dark:text-blue-400" />
+                <Badge v-else :variant="assetUsages.length ? 'success' : 'neutral'" class="normal-case tracking-normal">
+                  {{ assetUsages.length }} {{ assetUsages.length === 1 ? 'place' : 'places' }}
+                </Badge>
               </div>
 
-              <div v-if="isLoadingUsages" class="py-1.5 text-slate-400 font-semibold text-center">
-                Checking asset references across news & settings...
+              <div v-if="isLoadingUsages" class="py-1.5 text-slate-500 dark:text-slate-400 text-center">
+                Checking news, pages and settings…
               </div>
 
-              <div v-else-if="!assetUsages.length" class="py-1.5 text-slate-400 font-medium italic text-center text-[11px]">
-                This asset is not currently published on news articles or club settings.
+              <div v-else-if="!assetUsages.length" class="py-1.5 text-slate-500 dark:text-slate-400 text-center">
+                This file is not used in any news article or club setting.
               </div>
 
               <div v-else class="space-y-1 pt-0.5 max-h-[100px] overflow-y-auto">
                 <div
                   v-for="(u, idx) in assetUsages"
                   :key="idx"
-                  class="p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
+                  class="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
                 >
                   <div class="truncate pr-2">
-                    <span class="font-bold text-slate-900 dark:text-white block truncate">{{ u.title }}</span>
-                    <span class="text-[10px] text-slate-400 font-medium">{{ u.location }}</span>
+                    <span class="font-medium text-slate-900 dark:text-white block truncate">{{ u.title }}</span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ u.location }}</span>
                   </div>
-                  <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800/60 shrink-0">
-                    {{ u.type }}
-                  </span>
+                  <Badge variant="info" class="shrink-0">{{ u.type }}</Badge>
                 </div>
               </div>
             </div>
 
             <!-- Version History Section -->
-            <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
-              <div class="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between">
-                <span>Version History</span>
-                <span v-if="isLoadingVersions" class="animate-spin text-blue-600 dark:text-blue-400">🔄</span>
-                <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-black" :class="mediaVersions.length ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
-                  {{ mediaVersions.length }} {{ mediaVersions.length === 1 ? 'Version' : 'Versions' }}
-                </span>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2 text-xs dark:border-slate-800 dark:bg-slate-800/50">
+              <div class="pb-1 border-b border-slate-200 text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:text-slate-400 flex items-center justify-between">
+                <span>Version history</span>
+                <UiIcon v-if="isLoadingVersions" name="refresh" class="animate-spin text-blue-600 dark:text-blue-400" />
+                <Badge v-else :variant="mediaVersions.length ? 'success' : 'neutral'" class="normal-case tracking-normal">
+                  {{ mediaVersions.length }} {{ mediaVersions.length === 1 ? 'version' : 'versions' }}
+                </Badge>
               </div>
 
-              <div v-if="isLoadingVersions" class="py-1.5 text-slate-400 font-semibold text-center">
-                Loading version history...
+              <div v-if="isLoadingVersions" class="py-1.5 text-slate-500 dark:text-slate-400 text-center">
+                Loading version history…
               </div>
 
-              <div v-else-if="!mediaVersions.length" class="py-1.5 text-slate-400 font-medium italic text-center text-[11px]">
-                No previous versions. Replacing or cropping this file will save a version here.
+              <div v-else-if="!mediaVersions.length" class="py-1.5 text-slate-500 dark:text-slate-400 text-center">
+                No earlier versions. Replacing or cropping this file saves a version here.
               </div>
 
               <div v-else class="space-y-1 pt-0.5 max-h-[160px] overflow-y-auto">
                 <div
                   v-for="version in mediaVersions"
                   :key="version.id"
-                  class="p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs"
+                  class="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs"
                 >
                   <div class="truncate pr-2">
-                    <span class="font-bold text-slate-900 dark:text-white block truncate">{{ version.file_name }}</span>
-                    <span class="text-[10px] text-slate-400 font-medium">
+                    <span class="font-medium text-slate-900 dark:text-white block truncate">{{ version.file_name }}</span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">
                       {{ version.human_size }} · {{ version.created_at }}<template v-if="version.uploaded_by"> · {{ version.uploaded_by }}</template>
                       <template v-if="version.note"> · {{ version.note }}</template>
                     </span>
@@ -166,18 +154,15 @@ defineProps({
                     <a
                       :href="version.download_url"
                       target="_blank"
-                      class="px-2 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-bold border border-slate-200 dark:border-slate-800"
+                      aria-label="Download this version"
+                      title="Download this version"
+                      class="inline-flex items-center rounded-xl border border-slate-300 bg-white p-1.5 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                     >
-                      ⬇️
+                      <UiIcon name="download" />
                     </a>
-                    <button
-                      type="button"
-                      @click="restoreMediaVersion(version)"
-                      :disabled="restoringVersionId === version.id"
-                      class="px-2 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-[10px] font-bold border border-amber-300 dark:border-amber-700/60 disabled:opacity-50 cursor-pointer"
-                    >
-                      {{ restoringVersionId === version.id ? '...' : '↺ Restore' }}
-                    </button>
+                    <Button variant="secondary" size="sm" :disabled="restoringVersionId === version.id" @click="restoreMediaVersion(version)">
+                      {{ restoringVersionId === version.id ? 'Restoring…' : 'Restore' }}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -185,136 +170,90 @@ defineProps({
           </div>
 
           <!-- Right Column: Editable Metadata Form -->
-          <div class="space-y-3 bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-            <div class="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[10px] text-slate-400 pb-1 border-b border-slate-200 dark:border-slate-800">
-              Editable Asset Metadata
+          <div class="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+            <div class="pb-1 border-b border-slate-200 text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              Details
             </div>
 
-            <!-- 1. Display Title / Name -->
+            <Input v-model="previewItem.name" label="Display name" placeholder="Enter a display name" />
+
             <div class="space-y-1">
-              <label class="block text-xs font-extrabold text-slate-800 dark:text-slate-100">Display Title / Asset Name</label>
-              <input
-                v-model="previewItem.name"
-                type="text"
-                placeholder="Enter display title..."
-                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
-              />
+              <Input v-model="previewItem.alt_text" label="Alt text (accessibility and SEO)" placeholder="Describe the image for screen readers" />
+              <button
+                type="button"
+                @click="regenerateAltTextFromFilename"
+                class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                title="Fill in from the file name"
+              >
+                Generate from the file name
+              </button>
             </div>
 
-            <!-- 2. Alt Text (Accessibility & SEO) -->
-            <div class="space-y-1">
-              <label class="block text-xs font-extrabold text-slate-800 dark:text-slate-100 flex items-center justify-between">
-                <span>Alt Text (Accessibility & SEO)</span>
-                <button
-                  type="button"
-                  @click="regenerateAltTextFromFilename"
-                  class="text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer"
-                  title="Fill in from the file name"
-                >
-                  ↺ Generate from filename
-                </button>
-              </label>
-              <input
-                v-model="previewItem.alt_text"
-                type="text"
-                placeholder="Descriptive alt text for screen readers..."
-                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm"
-              />
-            </div>
+            <Textarea v-model="previewItem.caption" :rows="2" label="Caption or description" placeholder="Add an optional caption or description" />
 
-            <!-- 3. Caption / Description -->
-            <div class="space-y-1">
-              <label class="block text-xs font-extrabold text-slate-800 dark:text-slate-100">Caption / Description</label>
-              <textarea
-                v-model="previewItem.caption"
-                rows="2"
-                placeholder="Add optional caption or description..."
-                class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm resize-none"
-              ></textarea>
-            </div>
-
-            <!-- 4. Direct Asset Link Box -->
-            <div class="space-y-1 pt-0.5">
-              <label class="block text-xs font-extrabold text-slate-800 dark:text-slate-100">Direct Asset Link (URL)</label>
-              <div class="flex items-center gap-2">
-                <input
-                  :value="previewItem.original_url"
-                  readonly
-                  type="text"
-                  class="w-full px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] font-mono text-slate-600 dark:text-slate-300 focus:outline-none select-all"
-                />
-                <button
-                  type="button"
-                  @click="copyUrl(previewItem)"
-                  class="px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all shrink-0 cursor-pointer flex items-center gap-1"
-                >
-                  📋 Copy
-                </button>
+            <div class="space-y-1.5">
+              <div class="flex items-end gap-2">
+                <Input :model-value="previewItem.original_url" readonly label="Link to the file" class="flex-1 font-mono" />
+                <Button variant="secondary" class="shrink-0" @click="copyUrl(previewItem)">
+                  <template #icon><UiIcon name="copy" /></template>
+                  Copy
+                </Button>
               </div>
             </div>
-
           </div>
 
         </div>
+      </div>
 
-        <!-- Modal Bottom Actions Toolbar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 text-xs">
+      <template #footer>
+        <div class="flex w-full flex-wrap items-center justify-between gap-3">
           <div class="flex flex-wrap items-center gap-2">
-            <button
-              v-if="isImage(previewItem.mime_type || previewItem.file_name)"
-              type="button"
-              @click="openCropper"
-              class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer"
-            >
-              <span>✂️ Visual crop & resize</span>
-            </button>
+            <Button v-if="isImage(previewItem.mime_type || previewItem.file_name)" variant="secondary" size="sm" @click="openCropper">
+              <template #icon><UiIcon name="crop" /></template>
+              Crop and resize
+            </Button>
 
             <a
               :href="previewItem.original_url"
               download
-              class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all inline-flex items-center gap-1.5"
+              class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             >
-              <span>⬇️ Download file</span>
+              <UiIcon name="download" />
+              Download file
             </a>
             <a
               :href="previewItem.original_url"
               target="_blank"
-              class="px-3.5 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl border border-slate-200 dark:border-slate-800 transition-all inline-flex items-center gap-1.5"
+              class="inline-flex items-center gap-1.5 rounded-xl border border-transparent px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
             >
-              <span>↗️ Open in new tab</span>
+              <UiIcon name="external-link" />
+              Open in a new tab
             </a>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <template v-if="previewItem?.is_trashed || activeFolder === 'trash'">
-              <button
-                type="button"
-                @click="restoreItem(previewItem)"
-                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5"
-              >
-                ↻ Restore file
-              </button>
-              <button
-                type="button"
-                @click="forceDeleteItem(previewItem)"
-                class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5"
-              >
-                🔥 Delete permanently
-              </button>
+              <Button size="sm" @click="restoreItem(previewItem)">
+                <template #icon><UiIcon name="restore" /></template>
+                Restore file
+              </Button>
+              <Button variant="danger" size="sm" @click="forceDeleteItem(previewItem)">
+                <template #icon><UiIcon name="trash" /></template>
+                Delete permanently
+              </Button>
             </template>
             <template v-else>
-              <button
+              <Button
                 v-if="!previewItem?.is_accounting_protected"
-                type="button"
-                @click="triggerVersionUpload"
-                :disabled="isUploadingVersion"
-                class="px-3.5 py-1.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-200 font-bold text-xs rounded-xl border border-amber-300 dark:border-amber-700/60 transition-all cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+                variant="secondary"
+                size="sm"
+                :loading="isUploadingVersion"
                 title="Upload a new version of this file, saving the current one to history"
+                @click="triggerVersionUpload"
               >
-                <span v-if="isUploadingVersion" class="animate-spin">🔄</span>
-                <span v-else>⤴️</span>
-                <span>{{ isUploadingVersion ? 'Uploading...' : 'Upload new version' }}</span>
-              </button>
+                <template v-if="!isUploadingVersion" #icon><UiIcon name="upload" /></template>
+                {{ isUploadingVersion ? 'Uploading…' : 'Upload a new version' }}
+              </Button>
               <input
                 ref="fileInput"
                 type="file"
@@ -322,28 +261,18 @@ defineProps({
                 @change="uploadNewVersion"
               />
 
-              <button
-                type="button"
-                @click="saveMediaDetails"
-                :disabled="isSavingDetails"
-                class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-sm transition-all inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                <span v-if="isSavingDetails" class="animate-spin">🔄</span>
-                <span v-else>💾</span>
-                <span>{{ isSavingDetails ? 'Saving...' : 'Save asset details' }}</span>
-              </button>
+              <Button variant="secondary" size="sm" @click="deleteItem(previewItem)">
+                <template #icon><UiIcon name="trash" /></template>
+                Move to trash
+              </Button>
 
-              <button
-                type="button"
-                @click="deleteItem(previewItem)"
-                class="px-3.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 transition-all cursor-pointer inline-flex items-center gap-1.5"
-              >
-                <span>🗑️ Move to trash</span>
-              </button>
+              <Button size="sm" :loading="isSavingDetails" @click="saveMediaDetails">
+                <template v-if="!isSavingDetails" #icon><UiIcon name="save" /></template>
+                {{ isSavingDetails ? 'Saving…' : 'Save details' }}
+              </Button>
             </template>
           </div>
         </div>
-
-      </div>
-    </div>
+      </template>
+    </Modal>
 </template>

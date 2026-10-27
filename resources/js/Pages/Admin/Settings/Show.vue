@@ -16,8 +16,43 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import MediaLibraryModal from '@/Components/MediaLibraryModal.vue';
 import NewsTagsManager from '@/Components/NewsTagsManager.vue';
 import RankListEditor from '@/Components/RankListEditor.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Modal from '@/Components/Ui/Modal.vue';
+import Select from '@/Components/Ui/Select.vue';
+import ToggleSwitch from '@/Components/Ui/ToggleSwitch.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const showMediaModal = ref(false);
+
+// The settings sections, grouped as the side navigation (and the phone dropdown) shows them.
+const settingsNav = [
+  { label: 'Workspace', items: [
+    { key: 'general', label: 'General', icon: 'building' },
+    { key: 'positions', label: 'Club positions', icon: 'award' },
+    { key: 'ranks', label: 'Grand and Provincial ranks', icon: 'star' },
+    { key: 'officers', label: 'Officers roster', icon: 'users' },
+    { key: 'branding', label: 'Branding and styling', icon: 'palette' },
+    { key: 'roles', label: 'Roles and permissions', icon: 'shield' },
+    { key: 'modules', label: 'Feature modules', icon: 'lightning' },
+  ] },
+  { label: 'Operations', items: [
+    { key: 'accounting', label: 'Accounting', icon: 'chart' },
+    { key: 'subscriptions', label: 'Subscriptions and dues', icon: 'cash' },
+    { key: 'payments', label: 'Payment gateways', icon: 'bank' },
+    { key: 'events', label: 'Events and check-ins', icon: 'calendar' },
+    { key: 'dining', label: 'Dining and RSVPs', icon: 'clipboard' },
+    { key: 'communications', label: 'Communications', icon: 'mail' },
+    { key: 'news-tags', label: 'News tags', icon: 'tag' },
+  ] },
+  { label: 'Module policies', items: [
+    { key: 'bookings', label: 'Equipment bookings', icon: 'clock' },
+  ] },
+];
 
 const props = defineProps({
   club: {
@@ -583,46 +618,28 @@ const updateMemberRank = (userId, newRank) => {
 </script>
 
 <template>
-  <AdminLayout :title="`${club.name} Settings`" :club="club" active-tab="profile">
-    <Head :title="`${club.name} Settings`" />
+  <AdminLayout :title="`${club.name} settings`" :club="club" active-tab="profile">
+    <Head :title="`${club.name} settings`" />
 
     <div class="space-y-6 max-w-6xl mx-auto">
       
       <!-- Top Action Bar & Header -->
-      <div class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div class="flex items-center gap-3">
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Club Feature & Configuration Settings</h1>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-              {{ club.slug }}
-            </span>
+      <Card>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex flex-wrap items-center gap-3">
+              <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Club settings</h1>
+              <Badge variant="info">{{ club.slug }}</Badge>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure policies, feature modules, branding, automated notifications, and permission matrices for your club.</p>
           </div>
-          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Configure policies, feature modules, branding, automated notifications, and permission matrices for your club.</p>
-        </div>
 
-        <button
-          @click="submitSettings"
-          :disabled="form.processing"
-          :class="[
-            'px-5 py-2.5 font-bold text-xs rounded-xl shadow-md transition-all duration-300 flex items-center gap-2 self-start sm:self-auto cursor-pointer',
-            form.processing ? 'bg-blue-500 text-white cursor-wait opacity-80' :
-            isSavedSuccess ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30 scale-105 ring-2 ring-emerald-400/50' :
-            'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
-          ]"
-        >
-          <svg v-if="form.processing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <svg v-else-if="isSavedSuccess" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-          </svg>
-          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          <span>{{ form.processing ? 'Saving...' : (isSavedSuccess ? '✓ Saved successfully!' : 'Save changes') }}</span>
-        </button>
-      </div>
+          <Button class="shrink-0 self-start whitespace-nowrap sm:self-auto" :loading="form.processing" @click="submitSettings">
+            <template #icon><UiIcon v-if="!form.processing" name="check" /></template>
+            {{ form.processing ? 'Saving...' : (isSavedSuccess ? 'Saved' : 'Save changes') }}
+          </Button>
+        </div>
+      </Card>
 
       <!-- 2-Column Responsive Settings Layout -->
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
@@ -630,205 +647,39 @@ const updateMemberRank = (userId, newRank) => {
         <!-- Left Settings Sidebar Navigation -->
         <div class="lg:col-span-1 space-y-4">
           <!-- Mobile Category Dropdown Selector -->
-          <div class="lg:hidden bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-2">
-            <label class="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Settings Category</label>
-            <select v-model="activeTab" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-              <optgroup label="Workspace & Security">
-                <option value="general">🏢 General Profile & Access</option>
-                <option value="positions">🎖️ Club Positions & Ranks</option>
-                <option value="ranks">🏅 Grand & Provincial Ranks</option>
-                <option value="officers">👔 Provincial & Officers Roster</option>
-                <option value="branding">🎨 Branding & Styling</option>
-                <option value="roles">🛡️ Roles & Permissions</option>
-                <option value="modules">⚡ Active Feature Modules</option>
-              </optgroup>
-              <optgroup label="Operations & Finance">
-                <option value="accounting">📊 Accounting Settings</option>
-                <option value="subscriptions">💳 Subscriptions & Dues</option>
-                <option value="payments">💳 Payment Gateways</option>
-                <option value="events">📅 Events & Check-Ins</option>
-                <option value="dining">🍽️ Dining & Catering RSVPs</option>
-                <option value="communications">✉️ Communications & Emails</option>
-                <option value="news-tags">🏷️ News Tags</option>
-              </optgroup>
-              <optgroup label="Module Policies">
-                <option value="bookings">🚣 Pitch & Equipment Bookings</option>
-              </optgroup>
-            </select>
-          </div>
+          <Card padding="sm" class="lg:hidden">
+            <div class="space-y-1.5">
+              <label for="settings-section" class="block text-xs font-medium text-slate-700 dark:text-slate-300">Settings section</label>
+              <select id="settings-section" v-model="activeTab" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors cursor-pointer focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white">
+                <optgroup v-for="group in settingsNav" :key="group.label" :label="group.label">
+                  <option v-for="item in group.items" :key="item.key" :value="item.key">{{ item.label }}</option>
+                </optgroup>
+              </select>
+            </div>
+          </Card>
 
           <!-- Desktop Vertical Sidebar Navigation Card -->
-          <div class="hidden lg:block bg-white dark:bg-slate-900 p-3.5 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-5 sticky top-6">
-            
-            <!-- Group 1: Workspace -->
-            <div>
-              <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Workspace</div>
-              <div class="space-y-0.5 text-xs font-bold">
+          <nav aria-label="Settings sections" class="hidden lg:block bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 sticky top-6">
+            <div v-for="group in settingsNav" :key="group.label">
+              <div class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">{{ group.label }}</div>
+              <div class="space-y-0.5">
                 <button
-                  @click="activeTab = 'general'"
+                  v-for="item in group.items"
+                  :key="item.key"
+                  type="button"
+                  @click="activeTab = item.key"
+                  :aria-current="activeTab === item.key ? 'page' : undefined"
                   :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'general' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                    'w-full px-3 py-2 rounded-xl transition-colors flex items-center gap-2.5 cursor-pointer text-left text-sm font-medium',
+                    activeTab === item.key ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                   ]"
                 >
-                  <span class="flex items-center gap-2.5"><span>🏢</span> General</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'positions'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'positions' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🎖️</span> Club positions</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'ranks'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'ranks' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🏅</span> Grand &amp; Provincial ranks</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'officers'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'officers' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>👔</span> Officers roster</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'branding'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'branding' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🎨</span> Branding & styling</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'roles'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'roles' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🛡️</span> Roles & permissions</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'modules'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'modules' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>⚡</span> Feature modules</span>
+                  <UiIcon :name="item.icon" />
+                  {{ item.label }}
                 </button>
               </div>
             </div>
-
-            <!-- Group 2: Operations -->
-            <div>
-              <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Operations</div>
-              <div class="space-y-0.5 text-xs font-bold">
-                <button
-                  @click="activeTab = 'accounting'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'accounting' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>📊</span> Accounting</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'subscriptions'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'subscriptions' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>💳</span> Subscriptions & dues</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'payments'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'payments' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>💳</span> Payment gateways</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'events'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'events' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>📅</span> Events & check-ins</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'dining'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'dining' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🍽️</span> Dining & RSVPs</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'communications'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'communications' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>✉️</span> Communications</span>
-                </button>
-
-                <button
-                  @click="activeTab = 'news-tags'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'news-tags' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🏷️</span> News tags</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Group 3: Module Policies -->
-            <div>
-              <div class="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Module Policies</div>
-              <div class="space-y-0.5 text-xs font-bold">
-                <button
-                  @click="activeTab = 'bookings'"
-                  :class="[
-                    'w-full px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between cursor-pointer text-left',
-                    activeTab === 'bookings' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="flex items-center gap-2.5"><span>🚣</span> Equipment bookings</span>
-                </button>
-              </div>
-            </div>
-
-          </div>
+          </nav>
         </div>
 
         <!-- Right Content Panel -->
@@ -839,28 +690,25 @@ const updateMemberRank = (userId, newRank) => {
 
       <!-- TAB: CLUB POSITIONS & RANKS -->
       <div v-if="activeTab === 'positions'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">🎖️ Club Positions & Member Ranks</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Configure customizable member positions, ranks, and skill levels to categorize, select, and filter club members across the platform.</p>
-          </div>
+        <Card>
+          <template #header>
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">Club positions and member ranks</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Configure customizable member positions, ranks, and skill levels to categorize, select, and filter club members across the platform.</p>
+          </template>
 
           <div class="space-y-4">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-4">
               <div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Enable Member Ranks & Skill Levels</h3>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Member ranks and skill levels</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Enable customized member ranks (e.g. Novice, Captain, Veteran) to filter and select members across the platform.</p>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" v-model="form.enable_member_ranks" class="sr-only peer" />
-                <div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 dark:after:border-slate-700 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
+              <ToggleSwitch v-model="form.enable_member_ranks" label="Member ranks and skill levels" on-text="On" off-text="Off" />
             </div>
 
-            <div v-if="form.enable_member_ranks" class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div v-if="form.enable_member_ranks" class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
               <div>
-                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-0.5">Configured Ranks & Positions List</label>
-                <p class="text-[11px] text-slate-400">Define the positions or skill ranks available for members in your organization.</p>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Positions and ranks</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Define the positions or skill ranks available for members in your organization.</p>
               </div>
 
               <!-- Vertical Ranks List Container -->
@@ -868,139 +716,109 @@ const updateMemberRank = (userId, newRank) => {
                 <div
                   v-for="(rank, idx) in form.member_ranks"
                   :key="idx"
-                  class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl hover:border-slate-300 dark:hover:border-slate-700 transition-all group"
+                  class="flex items-center justify-between gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
                 >
                   <!-- Viewing State -->
                   <template v-if="editingRankIndex !== idx">
                     <div class="flex items-center gap-3">
                       <!-- Reorder Controls -->
-                      <div class="flex flex-col items-center justify-center gap-0.5 mr-0.5">
+                      <div class="flex flex-col items-center justify-center gap-0.5">
                         <button
                           type="button"
                           @click="moveRankUp(idx)"
                           :disabled="idx === 0"
-                          title="Move Up"
-                          aria-label="Move Up"
-                          class="w-5 h-4 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded disabled:opacity-20 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer transition-all"
+                          title="Move up"
+                          aria-label="Move up"
+                          class="flex items-center justify-center rounded text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 disabled:opacity-20 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer transition-colors"
                         >
-                          ▲
+                          <UiIcon name="chevron-down" :size="14" class="rotate-180" />
                         </button>
                         <button
                           type="button"
                           @click="moveRankDown(idx)"
                           :disabled="idx === form.member_ranks.length - 1"
-                          title="Move Down"
-                          aria-label="Move Down"
-                          class="w-5 h-4 flex items-center justify-center text-[10px] font-black text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded disabled:opacity-20 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer transition-all"
+                          title="Move down"
+                          aria-label="Move down"
+                          class="flex items-center justify-center rounded text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 disabled:opacity-20 disabled:hover:text-slate-400 disabled:hover:bg-transparent cursor-pointer transition-colors"
                         >
-                          ▼
+                          <UiIcon name="chevron-down" :size="14" />
                         </button>
                       </div>
 
-                      <span class="w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 font-bold flex items-center justify-center text-xs shadow-xs">
-                        🏅
+                      <span class="w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 flex items-center justify-center">
+                        <UiIcon name="award" :size="14" />
                       </span>
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ rank }}</span>
-                      <span
-                        v-if="getMemberCountForRank(rank) > 0"
-                        class="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold border border-blue-200/60 dark:border-blue-800/60"
-                      >
+                      <span class="text-sm font-medium text-slate-900 dark:text-white">{{ rank }}</span>
+                      <Badge v-if="getMemberCountForRank(rank) > 0" variant="info">
                         {{ getMemberCountForRank(rank) }} assigned
-                      </span>
+                      </Badge>
                     </div>
 
                     <div class="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        @click="startEditRank(idx)"
-                        class="px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl transition-all cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        @click="initiateRemoveRank(idx)"
-                        class="px-2.5 py-1 text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-800/60 rounded-xl transition-all cursor-pointer"
-                      >
-                        Remove
-                      </button>
+                      <Button variant="secondary" size="sm" @click="startEditRank(idx)">Edit</Button>
+                      <Button variant="secondary" size="sm" @click="initiateRemoveRank(idx)">Remove</Button>
                     </div>
                   </template>
 
                   <!-- Editing State -->
                   <template v-else>
                     <div class="flex items-center gap-2 w-full">
-                      <span class="w-7 h-7 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold flex items-center justify-center text-xs flex-shrink-0">
-                        ✏️
+                      <span class="w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                        <UiIcon name="pencil" :size="14" />
                       </span>
-                      <input
+                      <Input
                         v-model="editingRankValue"
                         @keydown.enter.prevent="saveEditRank(idx)"
                         @keydown.esc="cancelEditRank"
-                        type="text"
-                        class="flex-1 px-3 py-1.5 bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700/60 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-label="Position name"
+                        class="flex-1"
                       />
-                      <button
-                        type="button"
-                        @click="saveEditRank(idx)"
-                        class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer"
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        @click="cancelEditRank"
-                        class="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl cursor-pointer"
-                      >
-                        Cancel
-                      </button>
+                      <Button size="sm" variant="secondary" @click="saveEditRank(idx)">Save</Button>
+                      <Button size="sm" variant="ghost" @click="cancelEditRank">Cancel</Button>
                     </div>
                   </template>
                 </div>
 
-                <div v-if="form.member_ranks.length === 0" class="p-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                <div v-if="form.member_ranks.length === 0" class="p-4 text-center text-sm text-slate-500 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl">
                   No positions configured yet. Add your first position below.
                 </div>
               </div>
 
               <!-- Add New Rank Form Row -->
               <div class="flex gap-2 max-w-lg pt-1">
-                <input
+                <Input
                   v-model="newRankInput"
                   @keydown.enter.prevent="addRank"
-                  type="text"
-                  placeholder="Add a new position/rank (e.g. Captain, Coxswain, Senior)..."
-                  class="flex-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                  placeholder="Add a position or rank (e.g. Captain, Coxswain, Senior)"
+                  aria-label="New position or rank"
+                  class="flex-1"
                 />
-                <button
-                  type="button"
-                  @click="addRank"
-                  class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1"
-                >
-                  <span>+</span> Add position
-                </button>
+                <Button variant="secondary" @click="addRank">
+                  <template #icon><UiIcon name="plus" /></template>
+                  Add position
+                </Button>
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- TAB: GRAND & PROVINCIAL RANKS -->
       <div v-if="activeTab === 'ranks'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-8">
-          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div>
-              <h2 class="text-lg font-bold text-slate-900 dark:text-white">🏅 Grand &amp; Provincial Ranks</h2>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">The ranks you can pick from when adding or editing a member. The abbreviation is what appears after their name; the full title helps people choose the right one. Save the page to keep your changes.</p>
+        <Card>
+          <template #header>
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+              <div>
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">Grand and Provincial ranks</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">The ranks you can pick from when adding or editing a member. The abbreviation is what appears after their name; the full title helps people choose the right one. Save the page to keep your changes.</p>
+              </div>
+              <Button variant="secondary" size="sm" class="shrink-0" @click="resetRanks">
+                Reset to the {{ ranks.grandLodgeName || 'standard' }} list
+              </Button>
             </div>
-            <button
-              type="button"
-              @click="resetRanks"
-              class="shrink-0 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer"
-            >
-              Reset to the {{ ranks.grandLodgeName || 'standard' }} list
-            </button>
-          </div>
+          </template>
+
+          <div class="space-y-8">
 
           <RankListEditor
             v-model="form.grand_ranks"
@@ -1020,8 +838,9 @@ const updateMemberRank = (userId, newRank) => {
             :errors="form.errors"
           />
 
-          <p class="text-[11px] text-slate-500 dark:text-slate-400">Removing or renaming a rank here never changes a member who already holds it. Their rank stays selectable on their own record.</p>
-        </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Removing or renaming a rank here never changes a member who already holds it. Their rank stays selectable on their own record.</p>
+          </div>
+        </Card>
       </div>
 
       <!-- TAB 2: BRANDING & THEME -->
@@ -1041,91 +860,91 @@ const updateMemberRank = (userId, newRank) => {
 
       <!-- TAB: PAYMENT GATEWAYS & PROVIDERS -->
       <div v-if="activeTab === 'payments'" class="space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-800/60 dark:bg-blue-950/30">
-          <div>
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white">💳 Payment options for events and bookings</h3>
-            <p class="mt-1 text-xs text-slate-600 dark:text-slate-300">Bank transfer, card, PayPal, pay later and pay on the night. Set them up and switch them on once here, and every event offers them.</p>
+        <Alert title="Payment options for events and bookings">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <p>Bank transfer, card, PayPal, pay later and pay on the night. Set them up and switch them on once here, and every event offers them.</p>
+            <a :href="paymentOptionsUrl('payments')" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">Manage payment options</a>
           </div>
-          <a :href="paymentOptionsUrl('payments')" class="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700">Manage payment options</a>
-        </div>
+        </Alert>
 
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
-            <div>
-              <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <span>💳 Active Payment Gateway Provider</span>
-              </h2>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Select which payment gateway handles member subscription checkouts and recurring dues for this club. Payments for events and bookings are set up separately, in Payment options above.
-              </p>
-            </div>
-
-            <div class="flex items-center gap-3 flex-wrap">
-              <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
-                <button
-                  type="button"
-                  @click="switchProvider('stripe')"
-                  :disabled="processingProvider"
-                  :class="[
-                    'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer',
-                    selectedProvider === 'stripe'
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="w-2 h-2 rounded-full bg-blue-300"></span>
-                  Stripe (direct / cards)
-                </button>
-
-                <button
-                  type="button"
-                  @click="switchProvider('paddle')"
-                  :disabled="processingProvider"
-                  :class="[
-                    'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer',
-                    selectedProvider === 'paddle'
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                  ]"
-                >
-                  <span class="w-2 h-2 rounded-full bg-blue-300"></span>
-                  Paddle (MoR / tax compliant)
-                </button>
+        <Card>
+          <template #header>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">Subscription payment provider</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Select which payment gateway handles member subscription checkouts and recurring dues for this club. Payments for events and bookings are set up separately, in Payment options above.
+                </p>
               </div>
 
-              <a :href="route('billing.portal', { clubSlug: props.club.slug })" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1.5">
-                <span>⚙️ Customer portal</span>
-              </a>
+              <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-1 rounded-2xl border border-slate-300/60 bg-slate-200/80 p-1.5 dark:border-slate-700/60 dark:bg-slate-800/80">
+                  <button
+                    type="button"
+                    @click="switchProvider('stripe')"
+                    :disabled="processingProvider"
+                    :aria-pressed="selectedProvider === 'stripe'"
+                    :class="[
+                      'px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer disabled:opacity-50',
+                      selectedProvider === 'stripe'
+                        ? 'bg-slate-900 text-white shadow-sm dark:bg-slate-700'
+                        : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-white'
+                    ]"
+                  >
+                    Stripe (direct / cards)
+                  </button>
+
+                  <button
+                    type="button"
+                    @click="switchProvider('paddle')"
+                    :disabled="processingProvider"
+                    :aria-pressed="selectedProvider === 'paddle'"
+                    :class="[
+                      'px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer disabled:opacity-50',
+                      selectedProvider === 'paddle'
+                        ? 'bg-slate-900 text-white shadow-sm dark:bg-slate-700'
+                        : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-white'
+                    ]"
+                  >
+                    Paddle (MoR / tax compliant)
+                  </button>
+                </div>
+
+                <a :href="route('billing.portal', { clubSlug: props.club.slug })" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+                  <UiIcon name="settings" />
+                  Customer portal
+                </a>
+              </div>
             </div>
-          </div>
+          </template>
 
           <!-- Gateway Specs Grid -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-800/50 space-y-3">
+            <div class="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 space-y-3">
               <div class="flex items-center justify-between">
-                <span class="font-extrabold text-slate-900 dark:text-white text-xs">Stripe Integration</span>
-                <span :class="stripeConfigured ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60' : 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60'" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border">
-                  {{ stripeConfigured ? 'Keys Active' : 'Sandbox Demo Mode' }}
-                </span>
+                <span class="text-sm font-medium text-slate-900 dark:text-white">Stripe</span>
+                <Badge :variant="stripeConfigured ? 'success' : 'warning'">
+                  {{ stripeConfigured ? 'Keys active' : 'Sandbox demo mode' }}
+                </Badge>
               </div>
               <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                 Direct card processing with Stripe Elements &amp; Cashier subscription webhooks. Ideal for direct card payments.
               </p>
             </div>
 
-            <div class="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-800/50 space-y-3">
+            <div class="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 space-y-3">
               <div class="flex items-center justify-between">
-                <span class="font-extrabold text-slate-900 dark:text-white text-xs">Paddle Integration</span>
-                <span :class="paddleConfigured ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60' : 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60'" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border">
-                  {{ paddleConfigured ? 'Keys Active' : 'Sandbox Demo Mode' }}
-                </span>
+                <span class="text-sm font-medium text-slate-900 dark:text-white">Paddle</span>
+                <Badge :variant="paddleConfigured ? 'success' : 'warning'">
+                  {{ paddleConfigured ? 'Keys active' : 'Sandbox demo mode' }}
+                </Badge>
               </div>
               <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                 Merchant of Record billing, automatic international sales tax &amp; VAT remittance for international country members.
               </p>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- TAB 5: EVENTS & CHECK-INS -->
@@ -1141,13 +960,13 @@ const updateMemberRank = (userId, newRank) => {
 
       <!-- TAB: NEWS TAGS -->
       <div v-if="activeTab === 'news-tags'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-6">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">🏷️ News Tags</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">The tags available when writing a news item. Editors can only choose from this list, and members can filter news by them. Tags are saved as you add or edit them; you don't need to press Save Changes.</p>
-          </div>
+        <Card>
+          <template #header>
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">News tags</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">The tags available when writing a news item. Editors can only choose from this list, and members can filter news by them. Tags are saved as you add or edit them; you don't need to press Save changes.</p>
+          </template>
           <NewsTagsManager :club-slug="club.slug" :tags="newsTags" />
-        </div>
+        </Card>
       </div>
 
       <!-- TAB 9: BOOKINGS -->
@@ -1158,16 +977,10 @@ const updateMemberRank = (userId, newRank) => {
 
       <!-- Bottom Save Action Bar -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <button
-          @click="submitSettings"
-          :disabled="form.processing"
-          class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2 cursor-pointer"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          <span>Save all settings</span>
-        </button>
+        <Button variant="secondary" :disabled="form.processing" @click="submitSettings">
+          <template #icon><UiIcon name="check" /></template>
+          Save all settings
+        </Button>
       </div>
 
         </div>
@@ -1176,104 +989,64 @@ const updateMemberRank = (userId, newRank) => {
     </div>
 
     <!-- Modal: Position Deletion Warning & Confirmation Modal -->
-    <div
-      v-if="showDeleteWarningModal"
-      class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+    <ConfirmDialog
+      :open="showDeleteWarningModal"
+      title="Remove this position?"
+      confirm-label="Remove position"
+      @confirm="confirmDeleteRank"
+      @close="showDeleteWarningModal = false"
     >
-      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-100 dark:border-slate-800">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-sm">
-            <span class="text-base">⚠️</span>
-            <h3>Confirm Position Deletion</h3>
-          </div>
-          <button @click="showDeleteWarningModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold">
-            &times;
-          </button>
-        </div>
+      <div v-if="pendingDeleteRank" class="space-y-4">
+        <!-- Case 1: Assigned to active members -->
+        <template v-if="pendingDeleteRank.affectedMembers.length > 0">
+          <Alert variant="warning" :title="`“${pendingDeleteRank.rank}” is assigned to ${pendingDeleteRank.affectedMembers.length} member(s).`">
+            Affected members: <span class="font-medium">{{ pendingDeleteRank.affectedMembers.map(m => m.name).slice(0, 4).join(', ') }}{{ pendingDeleteRank.affectedMembers.length > 4 ? ` +${pendingDeleteRank.affectedMembers.length - 4} more` : '' }}</span>.
+          </Alert>
 
-        <div v-if="pendingDeleteRank" class="space-y-4 text-xs">
-          <!-- Case 1: Assigned to active members -->
-          <template v-if="pendingDeleteRank.affectedMembers.length > 0">
-            <div class="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl text-amber-900 dark:text-amber-200 space-y-1">
-              <p class="font-bold">
-                Warning: The position <span class="font-black text-slate-900 dark:text-white">"{{ pendingDeleteRank.rank }}"</span> is assigned to {{ pendingDeleteRank.affectedMembers.length }} member(s).
-              </p>
-              <p class="text-[11px] text-amber-700 dark:text-amber-300">
-                Affected members: <span class="font-semibold">{{ pendingDeleteRank.affectedMembers.map(m => m.name).slice(0, 4).join(', ') }}{{ pendingDeleteRank.affectedMembers.length > 4 ? ` +${pendingDeleteRank.affectedMembers.length - 4} more` : '' }}</span>.
-              </p>
-            </div>
+          <Select
+            v-model="pendingDeleteRank.reassignRank"
+            label="What happens to these members"
+            :options="[
+              { value: '', label: 'Clear their position' },
+              ...form.member_ranks.filter(r => r !== pendingDeleteRank.rank).map(r => ({ value: r, label: `Reassign to ${r}` })),
+            ]"
+          />
+        </template>
 
-            <div>
-              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1.5">Action for Affected Members</label>
-              <select
-                v-model="pendingDeleteRank.reassignRank"
-                class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Clear Position (Unassign Rank)</option>
-                <option
-                  v-for="r in form.member_ranks.filter(r => r !== pendingDeleteRank.rank)"
-                  :key="r"
-                  :value="r"
-                >
-                  Reassign to: 🏅 {{ r }}
-                </option>
-              </select>
-            </div>
-          </template>
-
-          <!-- Case 2: 0 members assigned -->
-          <template v-else>
-            <div class="p-3.5 bg-amber-50/80 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800/60 rounded-2xl text-amber-900 dark:text-amber-200">
-              <p class="font-bold">
-                Are you sure you want to delete the position <span class="font-black text-slate-900 dark:text-white">"{{ pendingDeleteRank.rank }}"</span>?
-              </p>
-              <p class="text-[11px] text-amber-700 dark:text-amber-300 mt-1">
-                This position will be removed from your club's active positions list. You can undo this action immediately after deleting.
-              </p>
-            </div>
-          </template>
-        </div>
-
-        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-          <button
-            type="button"
-            @click="showDeleteWarningModal = false"
-            class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            @click="confirmDeleteRank"
-            class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md shadow-rose-600/20 cursor-pointer"
-          >
-            Confirm delete
-          </button>
-        </div>
+        <!-- Case 2: 0 members assigned -->
+        <template v-else>
+          <p>
+            Remove the position <span class="font-medium text-slate-900 dark:text-white">“{{ pendingDeleteRank.rank }}”</span>?
+          </p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            This position will be removed from your club's active positions list. You can undo this action immediately after deleting.
+          </p>
+        </template>
       </div>
-    </div>
+    </ConfirmDialog>
 
     <!-- Toast Banner: Undo Position Deletion -->
     <div
       v-if="showUndoToast && lastDeletedRank"
-      class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-4 text-xs"
+      role="status"
+      class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-4 text-sm"
     >
       <div class="flex items-center gap-2.5">
-        <span class="text-sm">🗑️</span>
-        <span>Position <strong class="text-amber-400">"{{ lastDeletedRank.rank }}"</strong> was removed.</span>
+        <UiIcon name="trash" class="text-slate-400" />
+        <span>Position <strong class="font-semibold">“{{ lastDeletedRank.rank }}”</strong> was removed.</span>
       </div>
       <div class="flex items-center gap-3">
+        <Button size="sm" @click="undoDeleteRank">
+          <template #icon><UiIcon name="restore" :size="14" /></template>
+          Undo
+        </Button>
         <button
-          @click="undoDeleteRank"
-          class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
-        >
-          <span>↩️</span> Undo
-        </button>
-        <button
+          type="button"
           @click="showUndoToast = false"
-          class="text-slate-400 hover:text-white font-bold text-sm"
+          aria-label="Dismiss"
+          class="rounded-xl p-1 text-slate-400 hover:text-white cursor-pointer"
         >
-          &times;
+          <UiIcon name="x" />
         </button>
       </div>
     </div>
@@ -1287,11 +1060,13 @@ const updateMemberRank = (userId, newRank) => {
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div v-if="isSavedSuccess" class="fixed bottom-6 right-6 z-50 bg-emerald-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-emerald-700/80 flex items-center gap-3.5">
-        <span class="w-7 h-7 rounded-full bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-xs shadow-md">✓</span>
+      <div v-if="isSavedSuccess" role="status" class="fixed bottom-6 right-6 z-50 bg-emerald-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-emerald-700/80 flex items-center gap-3.5">
+        <span class="w-7 h-7 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center">
+          <UiIcon name="check" :size="14" />
+        </span>
         <div>
-          <div class="text-xs font-extrabold text-white">Club Settings Saved!</div>
-          <div class="text-[11px] text-emerald-200">Your organization configuration has been updated.</div>
+          <div class="text-sm font-semibold text-white">Club settings saved</div>
+          <div class="text-xs text-emerald-200">Your organization configuration has been updated.</div>
         </div>
       </div>
     </Transition>
@@ -1305,65 +1080,55 @@ const updateMemberRank = (userId, newRank) => {
     />
 
     <!-- Meeting Formula Rule Builder -->
-    <div v-if="showFormulaBuilder" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="formula-builder-title"
-        v-focus-trap="() => { showFormulaBuilder = false; }"
-        class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-lg w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h3 id="formula-builder-title" class="text-lg font-bold text-slate-900 dark:text-white">Generate Meeting Formula Rule</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Pick the occurrence, weekday and the months the lodge meets.</p>
-          </div>
-          <button type="button" @click="showFormulaBuilder = false" aria-label="Close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold cursor-pointer">✕</button>
+    <Modal
+      :open="showFormulaBuilder"
+      title="Build the meeting formula rule"
+      subtitle="Pick the occurrence, weekday and the months the lodge meets."
+      size="lg"
+      @close="showFormulaBuilder = false"
+    >
+      <div class="space-y-5">
+        <div class="grid grid-cols-2 gap-4">
+          <Select
+            v-model="formulaBuilder.occurrence"
+            label="Occurrence"
+            :options="[
+              { value: '1st', label: '1st' },
+              { value: '2nd', label: '2nd' },
+              { value: '3rd', label: '3rd' },
+              { value: '4th', label: '4th' },
+              { value: 'last', label: 'Last' },
+            ]"
+          />
+
+          <Select
+            v-model="formulaBuilder.day_of_week"
+            label="Day of the week"
+            :options="DAY_NAMES.map((d) => ({ value: d, label: d }))"
+          />
         </div>
 
-        <div class="grid grid-cols-2 gap-4 text-xs">
-          <div>
-            <label for="formula-occurrence" class="block font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Occurrence</label>
-            <select id="formula-occurrence" v-model="formulaBuilder.occurrence" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs">
-              <option value="1st">1st</option>
-              <option value="2nd">2nd</option>
-              <option value="3rd">3rd</option>
-              <option value="4th">4th</option>
-              <option value="last">Last</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="formula-day" class="block font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Day of Week</label>
-            <select id="formula-day" v-model="formulaBuilder.day_of_week" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs">
-              <option v-for="d in DAY_NAMES" :key="d" :value="d">{{ d }}</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="text-xs">
-          <span class="block font-semibold text-slate-600 dark:text-slate-300 uppercase mb-2">Meeting Months (Recess Unticked)</span>
-          <div class="grid grid-cols-4 gap-2">
-            <label v-for="(mName, idx) in MONTH_NAMES" :key="idx" class="flex items-center gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
-              <input type="checkbox" :value="idx + 1" v-model="formulaBuilder.months" class="rounded text-blue-600 dark:text-blue-400" />
+        <fieldset>
+          <legend class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">Meeting months (untick the recess)</legend>
+          <div class="grid grid-cols-4 gap-2 text-sm">
+            <label v-for="(mName, idx) in MONTH_NAMES" :key="idx" class="flex items-center gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer text-slate-700 dark:text-slate-200">
+              <input type="checkbox" :value="idx + 1" v-model="formulaBuilder.months" class="h-4 w-4 rounded accent-blue-600" />
               <span>{{ mName }}</span>
             </label>
           </div>
-        </div>
+        </fieldset>
 
-        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
-          <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Resulting rule</span>
-          <span class="font-mono font-bold text-sm text-slate-900 dark:text-white">{{ builtFormula }}</span>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <button type="button" @click="showFormulaBuilder = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl cursor-pointer">Cancel</button>
-          <button type="button" @click="applyFormulaBuilder" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer">
-            Use this rule
-          </button>
+        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+          <span class="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Resulting rule</span>
+          <span class="font-mono font-medium text-sm text-slate-900 dark:text-white">{{ builtFormula }}</span>
         </div>
       </div>
-    </div>
+
+      <template #footer>
+        <Button variant="secondary" @click="showFormulaBuilder = false">Cancel</Button>
+        <Button @click="applyFormulaBuilder">Use this rule</Button>
+      </template>
+    </Modal>
 
   </AdminLayout>
 </template>

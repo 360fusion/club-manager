@@ -4,6 +4,14 @@ import { ref, computed, watch } from 'vue';
 import { Link, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Pagination from '@/Components/Ui/Pagination.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Modal from '@/Components/Ui/Modal.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   club: {
@@ -84,9 +92,9 @@ const roleBadgeClass = (role) => {
     case 'treasurer':
       return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60';
     case 'examiner':
-      return 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/60';
+      return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700';
     default:
-      return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800';
+      return 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700';
   }
 };
 
@@ -203,571 +211,436 @@ const submitAddMember = () => {
 
 <template>
   <AdminLayout title="Members" :club="club" active-tab="members">
-    
+
     <div class="space-y-6">
-      
-      <!-- Top Action Bar & Summary Header -->
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <div class="flex items-center gap-3">
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Club Member Roster</h2>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-              {{ counts.all }} Total Members
-            </span>
+
+      <!-- Header and actions -->
+      <Card>
+        <div class="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+          <div>
+            <div class="flex flex-wrap items-center gap-3">
+              <h2 class="text-xl font-bold text-slate-900 dark:text-white">Member roster</h2>
+              <Badge variant="info">{{ counts.all }} members</Badge>
+            </div>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage the member directory, member numbers, roles, pending approvals and roster exports.</p>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage club member directory, member IDs, administrative roles, pending approvals, and roster exports.</p>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <a
+              :href="route('clubs.members.export', { slug: club.slug })"
+              class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              <UiIcon name="download" />
+              <span>Export CSV</span>
+            </a>
+
+            <a
+              :href="`/${club.slug}/admin/members/import`"
+              class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              <UiIcon name="upload" />
+              <span>Import CSV</span>
+            </a>
+
+            <Button size="sm" @click="showAddModal = true">
+              <template #icon><UiIcon name="plus" /></template>
+              Add member
+            </Button>
+          </div>
         </div>
+      </Card>
 
-        <div class="flex flex-wrap items-center gap-2.5">
-          <a
-            :href="route('clubs.members.export', { slug: club.slug })"
-            class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
-          >
-            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span>Export CSV</span>
-          </a>
+      <!-- Pending approval requests -->
+      <Alert v-if="pendingMembers.length > 0" variant="warning" :title="`Pending approval requests (${pendingMembers.length})`">
+        <p class="mb-3">Invite-only registrations waiting for an admin.</p>
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+          <div v-for="pending in pendingMembers" :key="pending.id" class="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-white p-3 dark:border-amber-800/40 dark:bg-slate-900">
+            <div class="overflow-hidden">
+              <div class="truncate text-sm font-medium text-slate-900 dark:text-white">{{ pending.name }}</div>
+              <div class="truncate text-xs text-slate-500 dark:text-slate-400">{{ pending.email }}</div>
+              <div v-if="pending.matching_member" class="truncate text-xs font-medium text-emerald-700 dark:text-emerald-400">Matches member record: {{ pending.matching_member }}</div>
+            </div>
+            <div class="flex flex-shrink-0 items-center gap-1.5">
+              <Button variant="secondary" size="sm" @click="approveMember(pending.id)">Approve</Button>
+              <Button variant="ghost" size="sm" @click="rejectMember(pending.id)">Reject</Button>
+            </div>
+          </div>
+        </div>
+      </Alert>
 
-          <a
-            :href="`/${club.slug}/admin/members/import`"
-            class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
-          >
-            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            <span>Import CSV</span>
-          </a>
-
+      <!-- Roster tabs -->
+      <nav aria-label="Roster" class="max-w-full overflow-x-auto">
+        <div class="flex w-fit items-center gap-1 rounded-2xl border border-slate-300/60 bg-slate-200/80 p-1.5 dark:border-slate-700/60 dark:bg-slate-800/80">
           <button
-            @click="showAddModal = true"
-            class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-1.5"
+            v-for="tab in [
+              { key: 'all', label: 'All members', count: counts.all },
+              { key: 'active', label: 'Active', count: counts.active },
+              { key: 'invited_pending', label: 'Invited and pending', count: counts.invited_pending },
+              { key: 'deactivated', label: 'Deactivated', count: counts.deactivated },
+              { key: 'past', label: 'Past members', count: counts.past },
+            ]"
+            :key="tab.key"
+            type="button"
+            :aria-pressed="activeRosterTab === tab.key"
+            :class="[
+              'inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold transition-colors',
+              activeRosterTab === tab.key
+                ? 'bg-slate-900 text-white shadow-sm dark:bg-slate-700'
+                : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-white'
+            ]"
+            @click="activeRosterTab = tab.key"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Add member</span>
+            <span>{{ tab.label }}</span>
+            <Badge>{{ tab.count }}</Badge>
           </button>
         </div>
-      </div>
+      </nav>
 
-      <!-- Pending Approval Banner (If Invite-Only Registrations are Pending) -->
-      <div v-if="pendingMembers.length > 0" class="bg-amber-50/80 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800/60 p-5 rounded-2xl shadow-sm space-y-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-            <h3 class="text-sm font-bold text-amber-900 dark:text-amber-200">
-              Pending Member Approval Requests ({{ pendingMembers.length }})
-            </h3>
-          </div>
-          <span class="text-xs text-amber-700 dark:text-amber-300 font-medium">Invite-Only Approvals</span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div v-for="pending in pendingMembers" :key="pending.id" class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-amber-200/90 dark:border-amber-800/90 shadow-sm flex items-center justify-between gap-3">
-            <div class="overflow-hidden">
-              <div class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ pending.name }}</div>
-              <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ pending.email }}</div>
-              <div v-if="pending.matching_member" class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 truncate">Matches member record: {{ pending.matching_member }}</div>
-            </div>
-            <div class="flex items-center gap-1.5 flex-shrink-0">
-              <button
-                @click="approveMember(pending.id)"
-                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-xl transition-all shadow-sm"
-              >
-                Approve
-              </button>
-              <button
-                @click="rejectMember(pending.id)"
-                class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 text-[11px] font-bold rounded-xl transition-all"
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Navigation Tabs along top of Roster -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200/80 dark:border-slate-800/80">
-        <button
-          @click="activeRosterTab = 'all'"
-          :class="[
-            'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
-            activeRosterTab === 'all'
-              ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-sm'
-              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
-          ]"
-        >
-          <span>👥 All members</span>
-          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200']">
-            {{ counts.all }}
-          </span>
-        </button>
-
-        <button
-          @click="activeRosterTab = 'active'"
-          :class="[
-            'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
-            activeRosterTab === 'active'
-              ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
-              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
-          ]"
-        >
-          <span>✅ Active</span>
-          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60']">
-            {{ counts.active }}
-          </span>
-        </button>
-
-        <button
-          @click="activeRosterTab = 'invited_pending'"
-          :class="[
-            'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
-            activeRosterTab === 'invited_pending'
-              ? 'bg-amber-600 text-white shadow-sm shadow-amber-600/20'
-              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
-          ]"
-        >
-          <span>✉️ Invited & pending</span>
-          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'invited_pending' ? 'bg-amber-700 text-white' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60']">
-            {{ counts.invited_pending }}
-          </span>
-        </button>
-
-        <button
-          @click="activeRosterTab = 'deactivated'"
-          :class="[
-            'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
-            activeRosterTab === 'deactivated'
-              ? 'bg-slate-700 text-white shadow-sm'
-              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
-          ]"
-        >
-          <span>⏸️ Deactivated</span>
-          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'deactivated' ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800']">
-            {{ counts.deactivated }}
-          </span>
-        </button>
-
-        <button
-          @click="activeRosterTab = 'past'"
-          :class="[
-            'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap',
-            activeRosterTab === 'past'
-              ? 'bg-rose-600 text-white shadow-sm shadow-rose-600/20'
-              : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80'
-          ]"
-        >
-          <span>📜 Past members</span>
-          <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold', activeRosterTab === 'past' ? 'bg-rose-700 text-white' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60']">
-            {{ counts.past }}
-          </span>
-        </button>
-      </div>
-
-      <!-- Filter & Search Controls -->
-      <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <!-- Search Input -->
+      <!-- Search and filters -->
+      <Card padding="sm" class="flex flex-col items-center justify-between gap-3 sm:flex-row">
         <div class="relative w-full sm:w-80">
-          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><UiIcon name="search" /></span>
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search by name, email, or MEM #..."
-            class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            aria-label="Search members"
+            placeholder="Search by name, email or member number"
+            class="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder-slate-500"
           />
         </div>
 
-        <!-- Filters -->
-        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+        <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
           <select
             v-if="enableMemberRanks"
             v-model="rankFilter"
-            class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-medium"
+            aria-label="Filter by rank"
+            class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
           >
-            <option value="">All Ranks</option>
-            <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
+            <option value="">All ranks</option>
+            <option v-for="r in memberRanks" :key="r" :value="r">{{ r }}</option>
           </select>
 
           <select
             v-model="roleFilter"
-            class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            aria-label="Filter by role"
+            class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
           >
-            <option value="">All Roles</option>
-            <option value="admin">Admin / Owner</option>
+            <option value="">All roles</option>
+            <option value="admin">Admin / owner</option>
             <option value="coach">Secretary</option>
             <option value="treasurer">Treasurer</option>
-            <option value="examiner">Examiner / Auditor</option>
-            <option value="member">Media Manager</option>
+            <option value="examiner">Examiner / auditor</option>
+            <option value="member">Media manager</option>
           </select>
 
           <select
             v-model="statusFilter"
-            class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            aria-label="Filter by status"
+            class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
           >
-            <option value="">All Statuses</option>
+            <option value="">All statuses</option>
             <option value="active">Active</option>
             <option value="inactive">Deactivated</option>
-            <option value="past">Past Member</option>
+            <option value="past">Past member</option>
             <option value="pending">Pending</option>
           </select>
 
           <select
             v-model="committeeRoleFilter"
-            class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-medium"
+            aria-label="Filter by committee role"
+            class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
           >
-            <option value="">All Committee Roles</option>
-            <option value="any">On Committee (Any)</option>
-            <option value="chair">👑 Chair</option>
-            <option value="secretary">✍️ Secretary</option>
-            <option value="member">🏛️ Member</option>
-            <option value="none">Not on Committee</option>
+            <option value="">All committee roles</option>
+            <option value="any">On committee (any)</option>
+            <option value="chair">Chair</option>
+            <option value="secretary">Secretary</option>
+            <option value="member">Member</option>
+            <option value="none">Not on committee</option>
           </select>
         </div>
-      </div>
+      </Card>
 
-      <!-- Members Directory Table -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 overflow-hidden">
+      <!-- Members table -->
+      <Card padding="none" class="overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+          <table class="w-full border-collapse text-left">
             <thead>
-              <tr class="bg-slate-50/80 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                <th class="py-3.5 px-6">Member Name & Email</th>
-                <th class="py-3.5 px-4">Member ID #</th>
-                <th v-if="enableMemberRanks" class="py-3.5 px-4">Rank</th>
-                <th class="py-3.5 px-4">Club Role</th>
-                <th class="py-3.5 px-4">Committee Role</th>
-                <th class="py-3.5 px-4">Status</th>
-                <th class="py-3.5 px-4">Joined Date</th>
-                <th class="py-3.5 px-6 text-right">Actions</th>
+              <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
+                <th class="px-6 py-3.5">Name and email</th>
+                <th class="px-4 py-3.5">Member number</th>
+                <th v-if="enableMemberRanks" class="px-4 py-3.5">Rank</th>
+                <th class="px-4 py-3.5">Club role</th>
+                <th class="px-4 py-3.5">Committee role</th>
+                <th class="px-4 py-3.5">Status</th>
+                <th class="px-4 py-3.5">Joined</th>
+                <th class="px-6 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200">
+            <tbody class="divide-y divide-slate-100 text-xs text-slate-700 dark:divide-slate-800 dark:text-slate-200">
               <tr
                 v-for="m in members.data"
                 :key="m.id"
-                class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
+                class="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
               >
                 <!-- Name & Email -->
-                <td class="py-4 px-6">
+                <td class="px-6 py-4">
                   <div class="flex items-center gap-3">
-                    <Link 
+                    <Link
                       :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
-                      class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-blue-700 text-white font-bold flex items-center justify-center text-xs uppercase flex-shrink-0 shadow-sm hover:opacity-90 transition-opacity"
+                      class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-blue-700 text-xs font-semibold uppercase text-white shadow-sm transition-opacity hover:opacity-90"
                     >
                       {{ m.name.substring(0, 2) }}
                     </Link>
                     <div class="overflow-hidden">
-                      <Link 
+                      <Link
                         :href="route('admin.users.show', { clubSlug: club.slug, userId: m.id })"
-                        class="font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate block"
+                        class="block truncate text-sm font-medium text-slate-900 transition-colors hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
                       >
                         {{ m.name }}
                       </Link>
-                      <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ m.email }}</div>
+                      <div class="truncate text-xs text-slate-500 dark:text-slate-400">{{ m.email }}</div>
                     </div>
                   </div>
                 </td>
 
                 <!-- Member Number -->
-                <td class="py-4 px-4 font-mono font-bold text-slate-800 dark:text-slate-100">
+                <td class="px-4 py-4 font-mono font-medium text-slate-800 dark:text-slate-100">
                   {{ m.member_number }}
                 </td>
 
                 <!-- Rank Selector -->
-                <td v-if="enableMemberRanks" class="py-4 px-4">
+                <td v-if="enableMemberRanks" class="px-4 py-4">
                   <select
                     :value="m.rank"
+                    aria-label="Rank"
                     @change="updateRank(m.id, $event.target.value)"
-                    class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 outline-none cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                    class="cursor-pointer rounded-xl border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
                   >
-                    <option value="">No Rank</option>
-                    <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
+                    <option value="">No rank</option>
+                    <option v-for="r in memberRanks" :key="r" :value="r">{{ r }}</option>
                   </select>
                 </td>
 
                 <!-- Role Selector -->
-                <td class="py-4 px-4">
+                <td class="px-4 py-4">
                   <select
                     :value="m.role"
+                    aria-label="Club role"
                     @change="updateRole(m.id, $event.target.value)"
                     :class="[
-                      'px-2.5 py-1 text-xs font-bold rounded-lg border outline-none cursor-pointer transition-all',
+                      'cursor-pointer rounded-xl border px-2.5 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500',
                       roleBadgeClass(m.role)
                     ]"
                   >
-                    <option value="member">Media Manager</option>
+                    <option value="member">Media manager</option>
                     <option value="coach">Secretary</option>
                     <option value="treasurer">Treasurer</option>
-                    <option value="examiner">Examiner / Auditor</option>
+                    <option value="examiner">Examiner / auditor</option>
                     <option value="admin">Admin</option>
                   </select>
                 </td>
 
                 <!-- Committee Role Selector -->
-                <td class="py-4 px-4">
+                <td class="px-4 py-4">
                   <select
                     :value="m.committee_role || ''"
+                    aria-label="Committee role"
                     @change="updateCommitteeRole(m.id, $event.target.value)"
                     :class="[
-                      'px-2.5 py-1 text-xs font-bold rounded-lg border outline-none cursor-pointer transition-all',
+                      'cursor-pointer rounded-xl border px-2.5 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500',
                       m.committee_role === 'chair'
                         ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700/60'
                         : m.committee_role === 'secretary'
                         ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700/60'
                         : m.committee_role === 'member'
                         ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700/60'
-                        : 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 border-slate-200 dark:border-slate-800'
+                        : 'bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-700'
                     ]"
                   >
-                    <option value="">— None —</option>
-                    <option value="chair">👑 Chair</option>
-                    <option value="secretary">✍️ Secretary</option>
-                    <option value="member">🏛️ Member</option>
+                    <option value="">None</option>
+                    <option value="chair">Chair</option>
+                    <option value="secretary">Secretary</option>
+                    <option value="member">Member</option>
                   </select>
                 </td>
 
                 <!-- Status -->
-                <td class="py-4 px-4">
-                  <span
-                    :class="[
-                      'px-2.5 py-0.5 rounded-full text-[11px] font-bold border uppercase tracking-wider',
-                      m.status === 'active'
-                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
-                        : m.status === 'inactive'
-                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700'
-                        : m.status === 'past'
-                        ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60'
-                        : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
-                    ]"
+                <td class="px-4 py-4">
+                  <Badge
+                    :variant="m.status === 'active' ? 'success' : m.status === 'inactive' ? 'neutral' : m.status === 'past' ? 'danger' : 'warning'"
+                    class="capitalize"
                   >
-                    {{ m.status === 'inactive' ? 'Deactivated' : m.status === 'past' ? 'Past Member' : m.status }}
-                  </span>
+                    {{ m.status === 'inactive' ? 'Deactivated' : m.status === 'past' ? 'Past member' : m.status }}
+                  </Badge>
                 </td>
 
                 <!-- Joined Date -->
-                <td class="py-4 px-4 text-slate-500 dark:text-slate-400">
+                <td class="px-4 py-4 text-slate-500 dark:text-slate-400">
                   {{ m.joined_at }}
                 </td>
 
                 <!-- Actions -->
-                <td class="py-4 px-6 text-right space-x-1.5 whitespace-nowrap">
+                <td class="space-x-1.5 whitespace-nowrap px-6 py-4 text-right">
                   <!-- 1. Invitation Actions for pending/unaccepted members -->
                   <template v-if="m.status === 'pending' && !m.invitation_accepted_at">
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       @click="sendInviteEmail(m.id)"
-                      class="px-2 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1 cursor-pointer"
                       :title="m.invitation_token ? `Invited on ${m.invited_at}` : 'Send activation email'"
                     >
-                      <span>✉️</span>
-                      <span>{{ m.invitation_token ? 'Resend' : 'Invite' }}</span>
-                    </button>
-                    <button
+                      <template #icon><UiIcon name="mail" /></template>
+                      {{ m.invitation_token ? 'Resend' : 'Invite' }}
+                    </Button>
+                    <Button
                       v-if="m.invitation_token || m.invited_at"
+                      variant="ghost"
+                      size="sm"
                       @click="revokeInviteEmail(m.id, m.name)"
-                      class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
                       title="Revoke active invitation token"
                     >
-                      <span>Revoke</span>
-                    </button>
+                      Revoke
+                    </Button>
                   </template>
 
                   <!-- 2. Status Actions depending on member status -->
                   <!-- Deactivated Member -->
                   <template v-if="m.status === 'inactive'">
-                    <button
-                      @click="restoreMember(m.id, m.name)"
-                      class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold rounded-xl transition-all cursor-pointer"
-                    >
-                      ✓ Restore access
-                    </button>
+                    <Button variant="secondary" size="sm" @click="restoreMember(m.id, m.name)">
+                      <template #icon><UiIcon name="restore" /></template>
+                      Restore access
+                    </Button>
                   </template>
 
                   <!-- Past Member -->
                   <template v-else-if="m.status === 'past'">
-                    <button
-                      @click="restoreMember(m.id, m.name)"
-                      class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold rounded-xl transition-all cursor-pointer"
-                    >
-                      ↺ Restore member
-                    </button>
-                    <button
+                    <Button variant="secondary" size="sm" @click="restoreMember(m.id, m.name)">
+                      <template #icon><UiIcon name="restore" /></template>
+                      Restore member
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
                       @click="forceDeleteMember(m.id, m.name)"
-                      class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
                       title="Delete from member directory (preserves historical records)"
                     >
                       Delete
-                    </button>
+                    </Button>
                   </template>
                 </td>
               </tr>
 
               <tr v-if="members.data.length === 0">
-                <td :colspan="enableMemberRanks ? 7 : 6" class="py-12 text-center text-slate-400">
-                  <p class="text-sm font-medium">No members found matching your search or filters.</p>
+                <td :colspan="enableMemberRanks ? 7 : 6" class="py-12 text-center text-slate-500 dark:text-slate-400">
+                  <p class="text-sm">No members found matching your search or filters.</p>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800"><Pagination :links="members.links" /></div>
-      </div>
+        <div class="border-t border-slate-100 px-6 py-3 dark:border-slate-800"><Pagination :links="members.links" /></div>
+      </Card>
 
-      <!-- Public Registration Link Widget Card (At Bottom) -->
-      <div class="bg-gradient-to-r from-blue-50/90 dark:from-blue-950/90 via-blue-50/70 dark:via-blue-950/70 to-white p-5 rounded-2xl border border-blue-100/90 dark:border-blue-900/90 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <!-- Public registration link -->
+      <Card padding="sm" class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div class="space-y-1">
           <div class="flex items-center gap-2">
-            <span class="text-base">🔗</span>
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Public Member Registration Link</h3>
-            <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">Invite Link</span>
+            <span class="text-blue-600 dark:text-blue-400"><UiIcon name="link" /></span>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Public registration link</h3>
+            <Badge variant="info">Invite link</Badge>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Share this direct URL with prospective members so they can register or submit membership requests.</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Share this link with prospective members so they can register or ask to join.</p>
         </div>
 
-        <div class="flex items-center gap-2 w-full sm:w-auto">
+        <div class="flex w-full items-center gap-2 sm:w-auto">
           <input
             type="text"
             readonly
+            aria-label="Public registration link"
             :value="registrationUrl"
-            class="w-full sm:w-80 px-3 py-2 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs font-mono text-slate-700 dark:text-slate-200 truncate outline-none select-all shadow-sm"
+            class="w-full truncate rounded-xl border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-700 select-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 sm:w-80"
           />
-          <button
-            @click="copyRegistrationLink"
-            :class="[
-              'px-4 py-2 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm whitespace-nowrap cursor-pointer',
-              inviteCopied ? 'bg-emerald-600 text-white' : 'bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white'
+          <Button variant="secondary" class="whitespace-nowrap" @click="copyRegistrationLink">
+            <template #icon><UiIcon :name="inviteCopied ? 'check' : 'copy'" /></template>
+            {{ inviteCopied ? 'Copied' : 'Copy link' }}
+          </Button>
+        </div>
+      </Card>
+
+    </div>
+
+    <!-- Add member -->
+    <Modal :open="showAddModal" title="Add a member" @close="showAddModal = false">
+      <form id="add-member-form" @submit.prevent="submitAddMember" class="space-y-4">
+        <Input
+          v-model="addForm.name"
+          label="Full name"
+          required
+          placeholder="e.g. Samuel Green"
+        />
+
+        <Input
+          v-model="addForm.email"
+          type="email"
+          label="Email address"
+          required
+          placeholder="samuel@example.com"
+        />
+
+        <div class="grid grid-cols-2 gap-3">
+          <Select
+            v-model="addForm.role"
+            label="Club role"
+            :options="[
+              { value: 'member', label: 'Media manager' },
+              { value: 'coach', label: 'Secretary' },
+              { value: 'treasurer', label: 'Treasurer' },
+              { value: 'examiner', label: 'Examiner / auditor' },
+              { value: 'admin', label: 'Admin' },
             ]"
-          >
-            <svg v-if="!inviteCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-            </svg>
-            <svg v-else class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span>{{ inviteCopied ? 'Copied!' : 'Copy link' }}</span>
-          </button>
+          />
+
+          <Select
+            v-model="addForm.committee_role"
+            label="Committee role"
+            :options="[
+              { value: '', label: 'Not on committee' },
+              { value: 'chair', label: 'Chair' },
+              { value: 'secretary', label: 'Secretary' },
+              { value: 'member', label: 'Committee member' },
+            ]"
+          />
+
+          <Select
+            v-if="enableMemberRanks"
+            v-model="addForm.rank"
+            label="Member rank"
+            :options="[{ value: '', label: 'No rank assigned' }, ...memberRanks.map((r) => ({ value: r, label: r }))]"
+          />
+
+          <Input
+            v-model="addForm.member_number"
+            label="Member number"
+            placeholder="OUBC-204"
+            :class="enableMemberRanks ? '' : 'col-span-2'"
+          />
         </div>
-      </div>
 
-    </div>
+        <label class="flex cursor-pointer items-center gap-2.5 pt-1">
+          <input
+            type="checkbox"
+            v-model="addForm.send_invite"
+            class="h-4 w-4 cursor-pointer rounded accent-blue-600"
+          />
+          <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Send an email invitation to activate the account</span>
+        </label>
+      </form>
 
-    <!-- Modal 1: Add Member Modal -->
-    <div
-      v-if="showAddModal"
-      class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
-    >
-      <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 border border-slate-100 dark:border-slate-800">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-          <h3 class="text-base font-bold text-slate-900 dark:text-white">Add New Club Member</h3>
-          <button @click="showAddModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg font-bold">
-            &times;
-          </button>
-        </div>
-
-        <form @submit.prevent="submitAddMember" class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Full Name</label>
-            <input
-              v-model="addForm.name"
-              type="text"
-              required
-              placeholder="e.g. Samuel Green"
-              class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Email Address</label>
-            <input
-              v-model="addForm.email"
-              type="email"
-              required
-              placeholder="samuel@example.com"
-              class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Club Role</label>
-              <select
-                v-model="addForm.role"
-                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="member">Media Manager</option>
-                <option value="coach">Secretary</option>
-                <option value="treasurer">Treasurer</option>
-                <option value="examiner">Examiner / Auditor</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Committee Role</label>
-              <select
-                v-model="addForm.committee_role"
-                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">— Not on Committee —</option>
-                <option value="chair">👑 Chair</option>
-                <option value="secretary">✍️ Secretary</option>
-                <option value="member">🏛️ Committee Member</option>
-              </select>
-            </div>
-
-            <div v-if="enableMemberRanks">
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Member Rank</label>
-              <select
-                v-model="addForm.rank"
-                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">No Rank Assigned</option>
-                <option v-for="r in memberRanks" :key="r" :value="r">🏅 {{ r }}</option>
-              </select>
-            </div>
-
-            <div :class="enableMemberRanks ? '' : 'col-span-2'">
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">Member Number</label>
-              <input
-                v-model="addForm.member_number"
-                type="text"
-                placeholder="OUBC-204"
-                class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          <label class="flex items-center gap-2.5 cursor-pointer pt-1">
-            <input
-              type="checkbox"
-              v-model="addForm.send_invite"
-              class="w-4 h-4 rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer"
-            />
-            <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Send email invitation to activate account</span>
-          </label>
-
-          <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <button
-              type="button"
-              @click="showAddModal = false"
-              class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="addForm.processing"
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20"
-            >
-              Add member
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      <template #footer>
+        <Button variant="secondary" @click="showAddModal = false">Cancel</Button>
+        <Button type="submit" form="add-member-form" :disabled="addForm.processing">Add member</Button>
+      </template>
+    </Modal>
 
   </AdminLayout>
 </template>

@@ -3,6 +3,13 @@ import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import CharitySubNav from '@/Components/CharitySubNav.vue';
+import PageHeader from '@/Components/Ui/PageHeader.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Modal from '@/Components/Ui/Modal.vue';
+import Input from '@/Components/Ui/Input.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   club: Object,
@@ -59,237 +66,174 @@ const submitGiving = () => {
     },
   });
 };
+
+const tierClass = (reached) => [
+  'p-3 rounded-xl border',
+  reached
+    ? 'bg-gold-50 border-gold-300 text-gold-900 dark:bg-gold-950/40 dark:border-gold-700/60 dark:text-gold-100'
+    : 'bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-800/50 dark:border-slate-800 dark:text-slate-400',
+];
 </script>
 
 <template>
-  <Head :title="`Festival Information — ${club.name}`" />
+  <Head :title="`Festival information — ${club.name}`" />
 
   <AdminLayout :club="club" title="Festival" active-tab="charity">
     <div class="max-w-7xl mx-auto space-y-6 pb-12">
-      
-      <!-- Top Horizontal Sub-Navigation Bar -->
       <CharitySubNav :clubSlug="club.slug" activeTab="festival" />
 
-      <!-- Header Banner -->
-      <div class="p-6 bg-slate-900 dark:bg-slate-700 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div class="flex items-center gap-3">
-            <span class="p-2.5 bg-blue-500/20 text-blue-400 rounded-2xl border border-blue-500/30">🏆</span>
+      <PageHeader title="Provincial Festival information" :description="`Relief Chest ref: ${target.relief_chest_ref} · target milestones and member honour qualifications`">
+        <template #actions>
+          <Button size="sm" @click="showTargetModal = true">
+            <template #icon><UiIcon name="settings" /></template>
+            Edit Festival milestones
+          </Button>
+        </template>
+      </PageHeader>
+
+      <Card>
+        <template #header>
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
-              <h1 class="text-2xl font-black tracking-tight">Provincial Festival Information</h1>
-              <p class="text-xs text-slate-400 mt-1 font-medium">Relief Chest Ref: {{ target.relief_chest_ref }} • Target Milestones &amp; Member Honor Qualifications</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ target.festival_name }}</h2>
+                <Badge>Relief Chest ref: {{ target.relief_chest_ref }}</Badge>
+              </div>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Provincial honour milestone target: {{ $cs }}{{ Number(target.target_amount).toLocaleString('en-GB', { minimumFractionDigits: 2 }) }}</p>
             </div>
-          </div>
-        </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            @click="showTargetModal = true"
-            class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <span>⚙️</span>
-            <span>Edit Festival milestones</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Festival Target Milestone Progress Card -->
-      <div class="p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm space-y-4">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div>
-            <div class="flex items-center gap-2">
-              <h2 class="text-base font-black text-slate-900 dark:text-white">{{ target.festival_name }}</h2>
-              <span class="px-2.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 text-[10px] font-black rounded-full">Chest Ref: {{ target.relief_chest_ref }}</span>
-            </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Provincial Honor Milestone Target: {{ $cs }}{{ Number(target.target_amount).toLocaleString('en-GB', { minimumFractionDigits: 2 }) }}</p>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <span class="px-3 py-1 bg-amber-500 text-slate-950 font-black text-xs rounded-full shadow-sm">
-              🏆 Honor Tier: {{ currentHonorTier }}
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-gold-300 bg-gold-50 text-[11px] font-medium text-gold-900 whitespace-nowrap dark:border-gold-700/60 dark:bg-gold-950/40 dark:text-gold-100">
+              <UiIcon name="award" :size="12" />
+              Honour tier: {{ currentHonorTier }}
             </span>
           </div>
-        </div>
+        </template>
 
-        <!-- Progress Bar & Milestone Cards -->
         <div class="space-y-2">
-          <div class="flex items-center justify-between text-xs font-black">
-            <span class="text-slate-700 dark:text-slate-200">Total Raised to Date: {{ formattedTotalRaised }}</span>
-            <span class="text-blue-700 dark:text-blue-300 font-extrabold">{{ targetPercentage }}% Complete</span>
+          <div class="flex items-center justify-between text-sm font-medium">
+            <span class="text-slate-700 dark:text-slate-200">Total raised to date: {{ formattedTotalRaised }}</span>
+            <span class="text-blue-700 dark:text-blue-300 tabular-nums">{{ targetPercentage }}% complete</span>
           </div>
 
-          <!-- Gauge Progress Track -->
-          <div class="w-full bg-slate-100 dark:bg-slate-800 h-5 rounded-full overflow-hidden p-1 border border-slate-200 dark:border-slate-800 relative">
-            <div class="bg-gradient-to-r from-amber-500 via-blue-600 to-blue-600 h-full rounded-full transition-all duration-500 shadow" :style="{ width: targetPercentage + '%' }"></div>
+          <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden" role="progressbar" :aria-valuenow="targetPercentage" aria-valuemin="0" aria-valuemax="100" aria-label="Festival target progress">
+            <div class="bg-blue-600 h-full rounded-full transition-all duration-500" :style="{ width: targetPercentage + '%' }"></div>
           </div>
 
-          <!-- Milestone Markers Bar -->
-          <div class="grid grid-cols-4 gap-2 pt-2 text-[10px] font-bold text-center">
-            <div :class="['p-3 rounded-xl border', totalRaisedForFestival >= target.bronze_tier ? 'bg-amber-100/70 dark:bg-amber-900/70 border-amber-300 dark:border-amber-700/60 text-amber-950 dark:text-amber-100' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-400']">
-              <span>🥉 Bronze Tier</span>
-              <span class="block font-black text-xs">{{ $cs }}{{ Number(target.bronze_tier).toLocaleString('en-GB') }}</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs font-medium text-center">
+            <div :class="tierClass(totalRaisedForFestival >= target.bronze_tier)">
+              <span>Bronze tier</span>
+              <span class="block text-sm font-semibold tabular-nums">{{ $cs }}{{ Number(target.bronze_tier).toLocaleString('en-GB') }}</span>
+              <span v-if="totalRaisedForFestival >= target.bronze_tier" class="mt-1 inline-flex items-center gap-1 text-[11px]"><UiIcon name="check" :size="12" />Reached</span>
             </div>
-            <div :class="['p-3 rounded-xl border', totalRaisedForFestival >= target.silver_tier ? 'bg-slate-200 dark:bg-slate-700 border-slate-400 text-slate-900 dark:text-white' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-400']">
-              <span>🥈 Silver Tier</span>
-              <span class="block font-black text-xs">{{ $cs }}{{ Number(target.silver_tier).toLocaleString('en-GB') }}</span>
+            <div :class="tierClass(totalRaisedForFestival >= target.silver_tier)">
+              <span>Silver tier</span>
+              <span class="block text-sm font-semibold tabular-nums">{{ $cs }}{{ Number(target.silver_tier).toLocaleString('en-GB') }}</span>
+              <span v-if="totalRaisedForFestival >= target.silver_tier" class="mt-1 inline-flex items-center gap-1 text-[11px]"><UiIcon name="check" :size="12" />Reached</span>
             </div>
-            <div :class="['p-3 rounded-xl border', totalRaisedForFestival >= target.gold_tier ? 'bg-yellow-100 dark:bg-yellow-900/40 border-yellow-300 dark:border-yellow-700/60 text-yellow-950 dark:text-yellow-100' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-400']">
-              <span>🥇 Gold Tier</span>
-              <span class="block font-black text-xs">{{ $cs }}{{ Number(target.gold_tier).toLocaleString('en-GB') }}</span>
+            <div :class="tierClass(totalRaisedForFestival >= target.gold_tier)">
+              <span>Gold tier</span>
+              <span class="block text-sm font-semibold tabular-nums">{{ $cs }}{{ Number(target.gold_tier).toLocaleString('en-GB') }}</span>
+              <span v-if="totalRaisedForFestival >= target.gold_tier" class="mt-1 inline-flex items-center gap-1 text-[11px]"><UiIcon name="check" :size="12" />Reached</span>
             </div>
-            <div :class="['p-3 rounded-xl border', totalRaisedForFestival >= target.platinum_tier ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700/60 text-blue-950 dark:text-blue-100' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-400']">
-              <span>💎 Platinum Tier</span>
-              <span class="block font-black text-xs">{{ $cs }}{{ Number(target.platinum_tier).toLocaleString('en-GB') }}</span>
+            <div :class="tierClass(totalRaisedForFestival >= target.platinum_tier)">
+              <span>Platinum tier</span>
+              <span class="block text-sm font-semibold tabular-nums">{{ $cs }}{{ Number(target.platinum_tier).toLocaleString('en-GB') }}</span>
+              <span v-if="totalRaisedForFestival >= target.platinum_tier" class="mt-1 inline-flex items-center gap-1 text-[11px]"><UiIcon name="check" :size="12" />Reached</span>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
-      <!-- Member Festival Giving Roster & Jewel Qualification Table -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🏅</span>
-            <h3 class="font-black text-slate-900 dark:text-white text-sm">Member Festival Giving &amp; Jewel Qualifications</h3>
+      <Card>
+        <template #header>
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Member Festival giving and jewel qualifications</h3>
+            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Confidential stewardship roster</span>
           </div>
-          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Confidential Stewardship Roster</span>
-        </div>
+        </template>
 
-        <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="bg-slate-900 dark:bg-slate-700 text-white text-[10px] font-black uppercase tracking-wider">
-                <th class="py-3 px-4">Member Name &amp; Rank</th>
-                <th class="py-3 px-4 text-right">Regular Giving / mo</th>
-                <th class="py-3 px-4 text-right">Total Donated to Date</th>
-                <th class="py-3 px-4">Jewel Qualification</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+        <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-700 dark:text-slate-200">
+            <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+              <tr>
+                <th scope="col" class="py-3 px-4 font-medium">Member name and rank</th>
+                <th scope="col" class="py-3 px-4 font-medium text-right">Regular giving / month</th>
+                <th scope="col" class="py-3 px-4 font-medium text-right">Total donated to date</th>
+                <th scope="col" class="py-3 px-4 font-medium">Jewel qualification</th>
+                <th scope="col" class="py-3 px-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
-              <tr v-for="m in activeMembers" :key="m.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
-                <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">{{ m.name }} ({{ m.rank }})</td>
-                <td class="py-3 px-4 text-right font-semibold text-slate-800 dark:text-slate-100">
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr v-for="m in activeMembers" :key="m.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                <td class="py-3 px-4 font-medium text-slate-900 dark:text-white">{{ m.name }} ({{ m.rank }})</td>
+                <td class="py-3 px-4 text-right tabular-nums">
                   {{ m.regular_giving > 0 ? $money(m.regular_giving) : '—' }}
                 </td>
-                <td class="py-3 px-4 text-right font-black text-blue-950 dark:text-blue-100">{{ m.formatted_donated }}</td>
+                <td class="py-3 px-4 text-right font-semibold text-slate-900 dark:text-white tabular-nums">{{ m.formatted_donated }}</td>
                 <td class="py-3 px-4">
                   <div class="flex items-center gap-1.5">
-                    <span v-if="m.qualifies_for_jewel" class="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-950 dark:text-amber-100 border border-amber-300 dark:border-amber-700/60 rounded font-black text-[10px]">
-                      🏅 Festival Jewel
-                    </span>
-                    <span v-if="m.qualifies_for_bar" class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-950 dark:text-blue-100 border border-blue-300 dark:border-blue-700/60 rounded font-black text-[10px]">
-                      🎗️ Honor Bar
-                    </span>
-                    <span v-if="!m.qualifies_for_jewel && !m.qualifies_for_bar" class="text-slate-400 text-[11px] italic">In Progress</span>
+                    <Badge v-if="m.qualifies_for_jewel" variant="success">
+                      <UiIcon name="award" :size="12" />
+                      Festival jewel
+                    </Badge>
+                    <Badge v-if="m.qualifies_for_bar" variant="info">Honour bar</Badge>
+                    <span v-if="!m.qualifies_for_jewel && !m.qualifies_for_bar" class="text-slate-500 dark:text-slate-400 text-xs">In progress</span>
                   </div>
                 </td>
                 <td class="py-3 px-4 text-right">
-                  <button type="button" @click="openGivingModal(m)" class="px-3 py-1 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-extrabold text-[10px] rounded-xl shadow-sm transition">
-                    Edit giving
-                  </button>
+                  <Button variant="secondary" size="sm" @click="openGivingModal(m)">Edit giving</Button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
-
-      <!-- Target Modal -->
-      <div v-if="showTargetModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5 border border-slate-100 dark:border-slate-800">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">⚙️</span>
-              <h3 class="font-black text-slate-900 dark:text-white text-base">Edit Festival Target Milestones</h3>
-            </div>
-            <button type="button" @click="showTargetModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg">✕</button>
-          </div>
-
-          <form @submit.prevent="submitTarget" class="space-y-4 text-xs">
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Festival Name *</label>
-              <input type="text" v-model="targetForm.festival_name" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
-            </div>
-
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">MCF Relief Chest Reference *</label>
-              <input type="text" v-model="targetForm.relief_chest_ref" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Bronze Tier ({{ $cs }})</label>
-                <input type="number" step="0.01" v-model="targetForm.bronze_tier" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
-              </div>
-              <div>
-                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Silver Tier ({{ $cs }})</label>
-                <input type="number" step="0.01" v-model="targetForm.silver_tier" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Gold Tier ({{ $cs }})</label>
-                <input type="number" step="0.01" v-model="targetForm.gold_tier" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
-              </div>
-              <div>
-                <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Platinum Tier ({{ $cs }})</label>
-                <input type="number" step="0.01" v-model="targetForm.platinum_tier" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
-              </div>
-            </div>
-
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
-              <button type="button" @click="showTargetModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
-              <button type="submit" class="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-black rounded-xl shadow-md transition">Save milestones</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Giving Modal -->
-      <div v-if="showGivingModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-5 border border-slate-100 dark:border-slate-800">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">🏅</span>
-              <h3 class="font-black text-slate-900 dark:text-white text-base">Edit Member Festival Giving</h3>
-            </div>
-            <button type="button" @click="showGivingModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg">✕</button>
-          </div>
-
-          <form @submit.prevent="submitGiving" class="space-y-4 text-xs">
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Monthly Regular Giving Commitment ({{ $cs }})</label>
-              <input type="number" step="0.01" v-model="givingForm.regular_giving_amount" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            <div>
-              <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Total Donated to Date ({{ $cs }}) *</label>
-              <input type="number" step="0.01" v-model="givingForm.total_donated_to_date" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500" required />
-            </div>
-
-            <div class="space-y-2 p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl">
-              <label class="flex items-center gap-2 font-bold text-blue-950 dark:text-blue-100 cursor-pointer">
-                <input type="checkbox" v-model="givingForm.qualifies_for_jewel" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-                <span>Qualifies for Festival Jewel (&gt;= {{ $cs }}250)</span>
-              </label>
-
-              <label class="flex items-center gap-2 font-bold text-blue-950 dark:text-blue-100 cursor-pointer">
-                <input type="checkbox" v-model="givingForm.qualifies_for_bar" class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500" />
-                <span>Qualifies for Honor Bar (&gt;= {{ $cs }}500)</span>
-              </label>
-            </div>
-
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
-              <button type="button" @click="showGivingModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
-              <button type="submit" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white font-black rounded-xl shadow-md transition">Save member giving</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
+      </Card>
     </div>
+
+    <Modal :open="showTargetModal" title="Edit Festival target milestones" @close="showTargetModal = false">
+      <form id="festival-target-form" class="space-y-4" @submit.prevent="submitTarget">
+        <Input v-model="targetForm.festival_name" label="Festival name" required />
+
+        <Input v-model="targetForm.relief_chest_ref" label="MCF Relief Chest reference" required />
+
+        <div class="grid grid-cols-2 gap-3">
+          <Input v-model="targetForm.bronze_tier" type="number" step="0.01" :label="`Bronze tier (${$cs})`" required />
+          <Input v-model="targetForm.silver_tier" type="number" step="0.01" :label="`Silver tier (${$cs})`" required />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <Input v-model="targetForm.gold_tier" type="number" step="0.01" :label="`Gold tier (${$cs})`" required />
+          <Input v-model="targetForm.platinum_tier" type="number" step="0.01" :label="`Platinum tier (${$cs})`" required />
+        </div>
+      </form>
+      <template #footer>
+        <Button variant="secondary" @click="showTargetModal = false">Cancel</Button>
+        <Button type="submit" form="festival-target-form" :loading="targetForm.processing">Save milestones</Button>
+      </template>
+    </Modal>
+
+    <Modal :open="showGivingModal" title="Edit member Festival giving" @close="showGivingModal = false">
+      <form id="festival-giving-form" class="space-y-4" @submit.prevent="submitGiving">
+        <Input v-model="givingForm.regular_giving_amount" type="number" step="0.01" :label="`Monthly regular giving (${$cs})`" />
+
+        <Input v-model="givingForm.total_donated_to_date" type="number" step="0.01" :label="`Total donated to date (${$cs})`" required />
+
+        <div class="space-y-2">
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer">
+            <input type="checkbox" v-model="givingForm.qualifies_for_jewel" class="h-4 w-4 rounded accent-blue-600" />
+            <span>Qualifies for the Festival jewel (at least {{ $cs }}250)</span>
+          </label>
+
+          <label class="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer">
+            <input type="checkbox" v-model="givingForm.qualifies_for_bar" class="h-4 w-4 rounded accent-blue-600" />
+            <span>Qualifies for the honour bar (at least {{ $cs }}500)</span>
+          </label>
+        </div>
+      </form>
+      <template #footer>
+        <Button variant="secondary" @click="showGivingModal = false">Cancel</Button>
+        <Button type="submit" form="festival-giving-form" :loading="givingForm.processing">Save member giving</Button>
+      </template>
+    </Modal>
   </AdminLayout>
 </template>
