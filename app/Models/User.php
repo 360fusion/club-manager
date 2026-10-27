@@ -90,6 +90,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * The provinces whose lodge listings this user looks after (see Province::admins).
+     *
+     * @return BelongsToMany<Province, $this>
+     */
+    public function administeredProvinces(): BelongsToMany
+    {
+        return $this->belongsToMany(Province::class, 'province_admins')->withTimestamps();
+    }
+
+    /**
      * The lodges this user follows in the public directory. Private: a lodge never sees who follows it.
      *
      * @return BelongsToMany<Lodge, $this>

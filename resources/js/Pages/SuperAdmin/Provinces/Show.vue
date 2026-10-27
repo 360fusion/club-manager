@@ -1,11 +1,16 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 
-defineProps({
+const props = defineProps({
   province: {
     type: Object,
     required: true,
+  },
+  // People who review suggested fixes to this province's lodge listings.
+  admins: {
+    type: Array,
+    default: () => [],
   },
   allProvinces: {
     type: Array,
@@ -16,6 +21,21 @@ defineProps({
     default: () => [],
   },
 });
+
+const adminForm = useForm({ email: '' });
+
+function addAdmin() {
+  adminForm.post(route('superadmin.provinces.admins.store', props.province.id), {
+    preserveScroll: true,
+    onSuccess: () => adminForm.reset(),
+  });
+}
+
+function removeAdmin(admin) {
+  if (confirm(`Remove ${admin.name} as an admin of this province?`)) {
+    router.delete(route('superadmin.provinces.admins.destroy', [props.province.id, admin.id]), { preserveScroll: true });
+  }
+}
 
 function handleSwitchProvince(event) {
   const selectedId = event.target.value;
@@ -241,6 +261,31 @@ function getCountryFlag(country) {
                 {{ province.description || 'No detailed background notes recorded for this province.' }}
               </p>
             </div>
+          </div>
+
+          <!-- Provincial admins -->
+          <div class="bg-white/90 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900/90 dark:border-slate-800">
+            <div class="border-b border-slate-200 pb-3 dark:border-slate-800">
+              <h3 class="text-sm font-black text-slate-900 dark:text-white">Provincial admins</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">They review suggested fixes to this province's lodge listings, from My lodges in the members area. They see no other province.</p>
+            </div>
+
+            <ul v-if="admins.length" class="divide-y divide-slate-200 text-xs dark:divide-slate-800">
+              <li v-for="admin in admins" :key="admin.id" class="flex items-center justify-between gap-3 py-2">
+                <span><strong class="text-slate-900 dark:text-white">{{ admin.name }}</strong> <span class="text-slate-500 dark:text-slate-400">{{ admin.email }}</span></span>
+                <button type="button" class="text-rose-600 font-bold hover:underline dark:text-rose-400" @click="removeAdmin(admin)">Remove</button>
+              </li>
+            </ul>
+            <p v-else class="text-xs text-slate-500 dark:text-slate-400">No one yet.</p>
+
+            <form class="flex flex-wrap items-start gap-2" @submit.prevent="addAdmin">
+              <div class="flex-1 min-w-56">
+                <label for="province-admin-email" class="sr-only">Email address</label>
+                <input id="province-admin-email" v-model="adminForm.email" type="email" required placeholder="Their account email address" class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-md px-3 py-2 text-xs dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+                <p v-if="adminForm.errors.email" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ adminForm.errors.email }}</p>
+              </div>
+              <button type="submit" :disabled="adminForm.processing" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-md disabled:opacity-60">Add admin</button>
+            </form>
           </div>
 
           <!-- Associated Registered Lodges -->

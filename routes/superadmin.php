@@ -38,6 +38,8 @@ Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
     Route::post('/superadmin/provinces', [SuperAdminProvinceController::class, 'storeProvince'])->name('superadmin.provinces.store');
     Route::put('/superadmin/provinces/{id}', [SuperAdminProvinceController::class, 'updateProvince'])->name('superadmin.provinces.update');
     Route::delete('/superadmin/provinces/{id}', [SuperAdminProvinceController::class, 'destroyProvince'])->name('superadmin.provinces.destroy');
+    Route::post('/superadmin/provinces/{id}/admins', [SuperAdminProvinceController::class, 'addAdmin'])->name('superadmin.provinces.admins.store');
+    Route::delete('/superadmin/provinces/{id}/admins/{userId}', [SuperAdminProvinceController::class, 'removeAdmin'])->name('superadmin.provinces.admins.destroy');
 
     // Districts and Groups
     Route::get('/superadmin/districts', [SuperAdminProvinceController::class, 'districtsIndex'])->name('superadmin.districts.index');

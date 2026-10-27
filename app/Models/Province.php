@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Province extends Model
@@ -76,5 +77,15 @@ class Province extends Model
     public function lodges(): HasMany
     {
         return $this->hasMany(Lodge::class);
+    }
+
+    /**
+     * People who review suggested fixes to this province's lodge listings (appointed by a superadmin).
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function admins(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'province_admins')->withTimestamps();
     }
 }

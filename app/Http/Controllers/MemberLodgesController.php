@@ -81,11 +81,18 @@ class MemberLodgesController extends Controller
                 'created_at' => $correction->created_at->toDateString(),
             ]);
 
+        $provinces = $request->user()->administeredProvinces()->get(['provinces.id', 'provinces.name']);
+
         return Inertia::render('Members/Lodges', [
             'claims' => $claims->values(),
             'corrections' => $corrections->values(),
             'lodges' => $lodges->values(),
             'limit' => LodgeFollowController::MAX_FOLLOWS,
+            // For a provincial admin: their provinces and how many suggested fixes wait for them.
+            'province' => $provinces->isEmpty() ? null : [
+                'names' => $provinces->pluck('name')->all(),
+                'waiting' => LodgeCorrection::open()->whereHas('lodge', fn ($lodge) => $lodge->whereIn('province_id', $provinces->pluck('id')))->count(),
+            ],
         ]);
     }
 }

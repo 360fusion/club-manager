@@ -10,6 +10,7 @@ use App\Models\MasonicHall;
 use App\Services\Lodges\LodgeCorrectionService;
 use App\Support\MeetingScheduleParser;
 use App\Support\Months;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,12 +24,32 @@ class SuperAdminLodgeCorrectionController extends Controller
 {
     public function __construct(private readonly LodgeCorrectionService $corrections) {}
 
+    /**
+     * The suggestions this screen may list and decide: every one, for a superadmin.
+     *
+     * @return Builder<LodgeCorrection>
+     */
+    protected function scope(Request $request): Builder
+    {
+        return LodgeCorrection::query();
+    }
+
+    /**
+     * The route names (index, apply, reject) and layout the page uses.
+     *
+     * @return array{routes: string, layout: string}
+     */
+    protected function screen(): array
+    {
+        return ['routes' => 'superadmin.lodge_corrections', 'layout' => 'superadmin'];
+    }
+
     public function index(Request $request): Response
     {
         $status = $request->query('status', 'open');
         $status = in_array($status, ['open', 'applied', 'rejected', 'all'], true) ? $status : 'open';
 
-        $query = LodgeCorrection::query()
+        $query = $this->scope($request)
             ->with(['lodge.clubType:id,code,name', 'lodge.province:id,name', 'lodge.masonicHall:id,name,town', 'lodge.club:id,name,slug', 'user', 'decidedBy:id,name'])
             ->when($status === 'open', fn ($q) => $q->open())
             ->when(in_array($status, ['applied', 'rejected'], true), fn ($q) => $q->where('status', $status))
@@ -39,11 +60,12 @@ class SuperAdminLodgeCorrectionController extends Controller
         $hallNames = $halls->mapWithKeys(fn (MasonicHall $hall) => [$hall->id => $hall->name.($hall->town ? ', '.$hall->town : '')]);
 
         return Inertia::render('SuperAdmin/LodgeCorrections/Index', [
+            ...$this->screen(),
             'corrections' => $query->paginate(25)->withQueryString()->through(fn (LodgeCorrection $correction) => $this->present($correction, $hallNames->all())),
             'status' => $status,
             'counts' => [
-                'open' => LodgeCorrection::open()->count(),
-                'applied' => LodgeCorrection::where('status', LodgeCorrection::APPLIED)->count(),
+                'open' => $this->scope($request)->open()->count(),
+                'applied' => $this->scope($request)->where('status', LodgeCorrection::APPLIED)->count(),
             ],
             'fields' => LodgeCorrection::FIELDS,
             'halls' => $halls,
@@ -58,7 +80,7 @@ class SuperAdminLodgeCorrectionController extends Controller
         // A ticked field the form sent no value for is being emptied.
         $values = collect($validated['fields'])->mapWithKeys(fn (string $field) => [$field => $validated['values'][$field] ?? null])->all();
 
-        $this->corrections->apply(LodgeCorrection::findOrFail($id), $request->user(), $values, $validated['note'] ?? null);
+        $this->corrections->apply($this->scope($request)->findOrFail($id), $request->user(), $values, $validated['note'] ?? null);
 
         return back()->with('success', 'Applied. The listing is updated and the person has been thanked.');
     }
@@ -67,7 +89,7 @@ class SuperAdminLodgeCorrectionController extends Controller
     {
         $validated = $request->validated();
 
-        $this->corrections->reject(LodgeCorrection::findOrFail($id), $request->user(), $validated['reason']);
+        $this->corrections->reject($this->scope($request)->findOrFail($id), $request->user(), $validated['reason']);
 
         return back()->with('success', 'Turned down, and the person has been told why.');
     }

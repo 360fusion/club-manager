@@ -82,6 +82,7 @@ use App\Http\Controllers\PageSiteSettingsController;
 use App\Http\Controllers\PageThemeController;
 use App\Http\Controllers\PaymentOptionsController;
 use App\Http\Controllers\PostAdminController;
+use App\Http\Controllers\ProvinceLodgeCorrectionController;
 use App\Http\Controllers\QuickRsvpController;
 use App\Http\Controllers\SignatureAdminController;
 use App\Http\Controllers\StripeConnectController;
@@ -270,6 +271,10 @@ Route::middleware(['auth'])->group(function () {
 
     // National Directory & Member Subscriptions Hub Routes
     Route::get('/members/lodges', [MemberLodgesController::class, 'index'])->name('members.lodges');
+    // A provincial admin's queue of suggested fixes to their province's lodges (the superadmin screen, scoped).
+    Route::get('/members/lodges/fixes', [ProvinceLodgeCorrectionController::class, 'index'])->name('members.lodges.fixes.index');
+    Route::post('/members/lodges/fixes/{id}/apply', [ProvinceLodgeCorrectionController::class, 'apply'])->name('members.lodges.fixes.apply');
+    Route::post('/members/lodges/fixes/{id}/reject', [ProvinceLodgeCorrectionController::class, 'reject'])->name('members.lodges.fixes.reject');
     Route::post('/lodges/{slug}/visitor-access', [LodgeVisitorController::class, 'store'])->middleware('throttle:10,1')->name('lodges.visitor_access');
     Route::delete('/lodges/{slug}/visitor-access', [LodgeVisitorController::class, 'destroy'])->middleware('throttle:20,1')->name('lodges.visitor_access.withdraw');
     Route::get('/lodges/{slug}/claim', [LodgeClaimController::class, 'create'])->name('lodges.claim');

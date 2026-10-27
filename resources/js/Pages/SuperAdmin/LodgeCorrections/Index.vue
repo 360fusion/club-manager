@@ -2,6 +2,7 @@
 import { ref, reactive } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
+import MembersLayout from '@/Layouts/MembersLayout.vue';
 import { describePattern } from '@/Utils/lodgeDates';
 
 const props = defineProps({
@@ -11,7 +12,12 @@ const props = defineProps({
     fields: { type: Object, required: true },
     halls: { type: Array, default: () => [] },
     statuses: { type: Array, default: () => [] },
+    // A provincial admin sees this screen in the members area, limited to their province (ProvinceLodgeCorrectionController).
+    routes: { type: String, default: 'superadmin.lodge_corrections' },
+    layout: { type: String, default: 'superadmin' },
 });
+
+const Layout = props.layout === 'members' ? MembersLayout : SuperAdminLayout;
 
 const TABS = [
     { key: 'open', label: 'Waiting' },
@@ -51,7 +57,7 @@ function send(correction) {
     const apply = acting.value.kind === 'apply';
     const payload = apply ? { fields: form.fields, values: form.values, note: form.note } : { reason: form.reason };
 
-    router.post(route(apply ? 'superadmin.lodge_corrections.apply' : 'superadmin.lodge_corrections.reject', correction.id), payload, {
+    router.post(route(`${props.routes}.${apply ? 'apply' : 'reject'}`, correction.id), payload, {
         preserveScroll: true,
         onSuccess: () => { acting.value = null; },
         onError: (e) => { errors.value = e; },
@@ -63,8 +69,8 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
 </script>
 
 <template>
-    <SuperAdminLayout title="Suggested Fixes">
-        <Head title="Superadmin - Suggested Fixes" />
+    <component :is="Layout" title="Suggested Fixes" active-tab="lodges">
+        <Head title="Suggested Fixes" />
 
         <div class="space-y-6">
             <div class="border-b border-slate-200 pb-5 dark:border-slate-800">
@@ -73,7 +79,7 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
             </div>
 
             <div class="flex flex-wrap gap-2">
-                <Link v-for="tab in TABS" :key="tab.key" :href="route('superadmin.lodge_corrections.index', { status: tab.key })" preserve-scroll
+                <Link v-for="tab in TABS" :key="tab.key" :href="route(`${routes}.index`, { status: tab.key })" preserve-scroll
                     :class="['rounded-xl px-3 py-1.5 text-xs font-bold', status === tab.key ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300']">
                     {{ tab.label }}<span v-if="tab.key === 'open' && counts.open"> ({{ counts.open }})</span><span v-if="tab.key === 'applied'"> ({{ counts.applied }})</span>
                 </Link>
@@ -162,7 +168,7 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
                                         <p v-if="errors[field] || errors[`values.${field}`]" class="text-xs text-rose-600">{{ errors[field] || errors[`values.${field}`] }}</p>
                                     </div>
                                 </div>
-                                <p v-if="correction.changes.some((c) => c.field === 'hall_text')" class="text-xs text-slate-500">The hall they named is not on our list: add it on the Masonic Halls page, reload this page, then pick it above.</p>
+                                <p v-if="correction.changes.some((c) => c.field === 'hall_text')" class="text-xs text-slate-500">The hall they named is not on our list: {{ layout === 'members' ? 'ask the platform team to add it, then pick it above' : 'add it on the Masonic Halls page, reload this page, then pick it above' }}.</p>
                                 <textarea v-model="form.note" rows="2" placeholder="A note for the record (optional)" :class="inputClass" />
                                 <p v-if="errors.fields" class="text-xs text-rose-600">{{ errors.fields }}</p>
                             </template>
@@ -187,5 +193,5 @@ const inputClass = 'w-full bg-slate-100 border border-slate-300 text-slate-900 r
                 </template>
             </nav>
         </div>
-    </SuperAdminLayout>
+    </component>
 </template>

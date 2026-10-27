@@ -11,6 +11,7 @@ defineProps({
     corrections: { type: Array, default: () => [] },
     lodges: { type: Array, default: () => [] },
     limit: { type: Number, default: 100 },
+    province: { type: Object, default: null },
 });
 
 const replies = reactive({});
@@ -62,6 +63,13 @@ function unfollow(lodge) {
                 </div>
                 <Link :href="route('lodges.index')" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Find more lodges</Link>
             </div>
+
+            <Card v-if="province">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-sm text-slate-600 dark:text-slate-300">You look after the listings for {{ province.names.join(', ') }}. <strong>{{ province.waiting }}</strong> suggested {{ province.waiting === 1 ? 'fix is' : 'fixes are' }} waiting.</p>
+                    <Link :href="route('members.lodges.fixes.index')" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Review suggested fixes</Link>
+                </div>
+            </Card>
 
             <Card v-if="!lodges.length">
                 <p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">

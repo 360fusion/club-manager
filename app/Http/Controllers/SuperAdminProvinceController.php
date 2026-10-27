@@ -9,7 +9,9 @@ use App\Http\Requests\SuperAdminProvince\UpdateProvinceRequest;
 use App\Models\District;
 use App\Models\GrandLodge;
 use App\Models\Province;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,9 +48,35 @@ class SuperAdminProvinceController extends Controller
 
         return Inertia::render('SuperAdmin/Provinces/Show', [
             'province' => $province,
+            'admins' => $province->admins()->orderBy('name')->get(['users.id', 'users.name', 'users.email']),
             'allProvinces' => $allProvinces,
             'grandLodges' => $grandLodges,
         ]);
+    }
+
+    /**
+     * Make someone with an account an admin of the province: they review suggested fixes to its lodges' listings.
+     */
+    public function addAdmin(Request $request, int $id): RedirectResponse
+    {
+        $province = Province::findOrFail($id);
+        $validated = $request->validate(['email' => 'required|email|max:255']);
+        $user = User::where('email', $validated['email'])->first();
+
+        if (! $user) {
+            return back()->withErrors(['email' => 'No one has an account with that email address yet.']);
+        }
+
+        $province->admins()->syncWithoutDetaching([$user->id]);
+
+        return back()->with('success', "{$user->name} now looks after the {$province->name} lodge listings.");
+    }
+
+    public function removeAdmin(int $id, int $userId): RedirectResponse
+    {
+        Province::findOrFail($id)->admins()->detach($userId);
+
+        return back()->with('success', 'Removed as an admin of this province.');
     }
 
     /**
