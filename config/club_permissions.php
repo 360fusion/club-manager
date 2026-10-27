@@ -22,7 +22,8 @@ return [
         'manage_meetings' => [
             'label' => 'Meetings & Summonses',
             'description' => 'Create, edit, generate recurring rules, and publish summonses for lodge/club meetings',
-            'roles' => ['owner', 'admin', 'coach'],
+            // The screens call the coach role "Secretary"; 'secretary' is kept for any older memberships that hold it.
+            'roles' => ['owner', 'admin', 'coach', 'secretary'],
         ],
         'manage_events' => [
             'label' => 'Events',
