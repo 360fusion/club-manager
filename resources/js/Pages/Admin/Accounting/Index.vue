@@ -13,6 +13,7 @@ import SumUpModal from '@/Components/Accounting/Modals/SumUpModal.vue';
 import StripeModal from '@/Components/Accounting/Modals/StripeModal.vue';
 import PayPalModal from '@/Components/Accounting/Modals/PayPalModal.vue';
 import BankAccountModal from '@/Components/Accounting/Modals/BankAccountModal.vue';
+import ChartOfAccountsTab from '@/Components/Accounting/Tabs/ChartOfAccountsTab.vue';
 import ContactsTab from '@/Components/Accounting/Tabs/ContactsTab.vue';
 import HomeTab from '@/Components/Accounting/Tabs/HomeTab.vue';
 import BankAccountsTab from '@/Components/Accounting/Tabs/BankAccountsTab.vue';
@@ -847,69 +848,8 @@ const getTypeBadge = (type) => {
       <BankAccountsTab v-if="activeTab === 'accounting' || activeTab === 'bank-accounts'" :bank-accounts="bankAccounts" :can-manage-billing="canManageBilling" :club="club" :journal-entries="journalEntries" :navigate-to="navigateTo" :reconciliation="reconciliation" v-model:show-bank-account-modal="showBankAccountModal" v-model:show-connect-bank-dropdown="showConnectBankDropdown" v-model:show-go-cardless-modal="showGoCardlessModal" v-model:show-pay-pal-modal="showPayPalModal" v-model:show-stripe-modal="showStripeModal" v-model:show-sum-up-modal="showSumUpModal" :sync-go-cardless-now="syncGoCardlessNow" :sync-pay-pal-now="syncPayPalNow" :sync-stripe-now="syncStripeNow" :sync-sum-up-now="syncSumUpNow" :toggle-bank-account-active="toggleBankAccountActive" />
 
       <!-- VIEW 7: CHART OF ACCOUNTS (Dedicated View & Nominal Ledger) -->
-      <div v-if="activeTab === 'chart-of-accounts'" class="space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <div>
-              <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Chart of Accounts</h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400">Categorized nominal ledger accounts for club bookkeeping.</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                @click="openOpeningBalanceModal()"
-                class="px-3.5 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
-              >
-                <span>⚖️ Set Opening Balances</span>
-              </button>
-              <button
-                type="button"
-                @click="showAccountModal = true"
-                class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm"
-              >
-                + Add Account
-              </button>
-            </div>
-          </div>
+      <ChartOfAccountsTab v-if="activeTab === 'chart-of-accounts'" :accounts="accounts" :get-type-badge="getTypeBadge" :open-opening-balance-modal="openOpeningBalanceModal" v-model:show-account-modal="showAccountModal" />
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <th class="py-3 px-6">Code</th>
-                  <th class="py-3 px-6">Account Name</th>
-                  <th class="py-3 px-6">Account Type</th>
-                  <th class="py-3 px-6 text-right">Current Balance</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
-                <tr v-for="acc in accounts" :key="acc.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
-                  <td class="py-3 px-6 font-mono text-slate-500 dark:text-slate-400 font-bold">{{ acc.code }}</td>
-                  <td class="py-3 px-6 font-bold text-slate-900 dark:text-white">{{ acc.name }}</td>
-                  <td class="py-3 px-6">
-                    <span :class="['px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border', getTypeBadge(acc.type)]">
-                      {{ acc.type }}
-                    </span>
-                  </td>
-                  <td class="py-3 px-6 text-right font-black text-slate-900 dark:text-white font-mono">
-                    <div class="flex items-center justify-end gap-3">
-                      <span>{{ acc.formatted_balance }}</span>
-                      <button
-                        type="button"
-                        @click="openOpeningBalanceModal(acc.id)"
-                        class="px-2.5 py-1 text-[10px] font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg border border-blue-200 dark:border-blue-800/60 transition-all cursor-pointer"
-                        title="Set opening / carry-over balance for this account"
-                      >
-                        ⚖️ Carry Over
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
 
       <!-- VIEW 8: CONTACTS (Members, Vendors & Business Directory) -->
       <ContactsTab v-if="activeTab === 'contacts'" :can-manage-billing="canManageBilling" :club="club" v-model:contact-filter="contactFilter" :contacts="contacts" :filtered-contacts="filteredContacts" :members="members" />
