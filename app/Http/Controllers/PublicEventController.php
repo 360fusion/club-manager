@@ -10,6 +10,7 @@ use App\Models\EventRegistration;
 use App\Services\Events\EventOnlinePayment;
 use App\Services\Events\EventPayload;
 use App\Services\Events\EventRegistrationService;
+use App\Support\ClubDomain;
 use App\Support\SiteChrome;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -141,7 +142,7 @@ class PublicEventController extends Controller
 
     private function manageUrl(Club $club, string $token): string
     {
-        return route('public.event.booking', ['clubSlug' => $club->slug, 'token' => $token]);
+        return ClubDomain::publicUrl($club, route('public.event.booking', ['clubSlug' => $club->slug, 'token' => $token]));
     }
 
     private function thanks(Club $club, Event $event): RedirectResponse

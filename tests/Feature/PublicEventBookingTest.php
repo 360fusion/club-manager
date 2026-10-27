@@ -89,6 +89,16 @@ class PublicEventBookingTest extends TestCase
         Mail::assertQueued(EventBookingMail::class, fn (EventBookingMail $mail) => $mail->hasTo('pat@example.test') && str_contains($mail->manageUrl, '/site/club-a/booking/'));
     }
 
+    public function test_the_emailed_link_uses_the_lodges_own_domain_once_it_is_live(): void
+    {
+        Mail::fake();
+        $this->club->update(['custom_domain' => 'www.club-a.example', 'domain_status' => 'active']);
+
+        $this->register()->assertSessionHasNoErrors();
+
+        Mail::assertQueued(EventBookingMail::class, fn (EventBookingMail $mail) => str_starts_with($mail->manageUrl, 'https://www.club-a.example/booking/'));
+    }
+
     public function test_bots_that_fill_the_hidden_field_and_oversized_bookings_are_refused(): void
     {
         Mail::fake();

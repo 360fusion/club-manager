@@ -7,6 +7,7 @@ use App\Mail\EventPaymentReceivedMail;
 use App\Mail\EventPlaceAvailableMail;
 use App\Mail\EventRefundMail;
 use App\Models\EventRegistration;
+use App\Support\ClubDomain;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -60,7 +61,9 @@ class EventMailer
             $registration = $registration->fresh(['event.club', 'attendees']);
             $token = $plainToken ?? app(EventRegistrationService::class)->renewToken($registration);
 
-            return new EventBookingMail($registration->event, $registration, route('public.event.booking', ['clubSlug' => $registration->event->club->slug, 'token' => $token]));
+            $club = $registration->event->club;
+
+            return new EventBookingMail($registration->event, $registration, ClubDomain::publicUrl($club, route('public.event.booking', ['clubSlug' => $club->slug, 'token' => $token])));
         });
     }
 
