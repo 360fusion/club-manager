@@ -1,4 +1,5 @@
 <script setup>
+import { reactive } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import MeetingsTabs from '@/Components/MeetingsTabs.vue';
@@ -8,6 +9,8 @@ const props = defineProps({
     club: { type: Object, required: true },
     // One page of visiting brethren's requests (a Laravel paginator): pending first, then approved, then the rest.
     requests: { type: Object, required: true },
+    // Requests to attend a meeting (from 30 days ago on): waiting first, then by date.
+    visits: { type: Array, default: () => [] },
     visibility: { type: String, required: true },
     visibilityOptions: { type: Object, required: true },
 });
@@ -18,6 +21,13 @@ const STATUS = {
     declined: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
     revoked: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
 };
+
+// The optional reply typed for each visit request, by id.
+const replies = reactive({});
+
+function answer(visit, accept) {
+    router.post(route('admin.visitors.visits.answer', { clubSlug: props.club.slug, id: visit.id }), { accept, reply: replies[visit.id] || null }, { preserveScroll: true });
+}
 
 function act(request, action) {
     if (action === 'revoke' && !confirm(`Stop sharing your summonses with ${request.name}?`)) {
@@ -43,6 +53,37 @@ function act(request, action) {
                 </p>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Approved visitors see only the date, time, venue, dress and dining for each meeting. They never see your sick list, candidates, dues or the rest of the summons.</p>
             </div>
+
+            <section class="space-y-3">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Requests to visit a meeting</h2>
+                <p v-if="!visits.length" class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">No one has asked to visit yet. Anyone signed in can ask from your lodge's directory page.</p>
+                <ul v-else class="space-y-3">
+                    <li v-for="visit in visits" :key="visit.id" class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <p class="font-bold text-slate-900 dark:text-white">{{ visit.name }} · {{ visit.meeting_date }}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">
+                                    {{ visit.home_lodge_name }}<span v-if="visit.home_lodge_number"> No. {{ visit.home_lodge_number }}</span><span v-if="visit.rank"> · {{ visit.rank }}</span><span v-if="visit.dining"> · would like to dine</span>
+                                </p>
+                                <p class="text-xs"><a :href="`mailto:${visit.email}`" class="text-blue-600 hover:underline dark:text-blue-400">{{ visit.email }}</a> · asked {{ visit.requested_at }}</p>
+                            </div>
+                            <span :class="['rounded-full px-2.5 py-1 text-[11px] font-bold', STATUS[visit.status === 'accepted' ? 'approved' : visit.status]]">{{ visit.status }}</span>
+                        </div>
+                        <p v-if="visit.message" class="mt-3 whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-800/60">{{ visit.message }}</p>
+                        <p v-if="visit.decided_by" class="mt-2 text-xs text-slate-500 dark:text-slate-400">Answered by {{ visit.decided_by }}<span v-if="visit.reply">: "{{ visit.reply }}"</span></p>
+                        <div v-if="visit.status === 'pending'" class="mt-3 space-y-2">
+                            <label :for="`visit-reply-${visit.id}`" class="sr-only">Reply</label>
+                            <input :id="`visit-reply-${visit.id}`" v-model="replies[visit.id]" maxlength="1000" placeholder="Reply (optional), such as the start time or dining cost" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                            <div class="flex gap-2">
+                                <button class="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500" @click="answer(visit, true)">Accept</button>
+                                <button class="rounded-xl bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100" @click="answer(visit, false)">Decline</button>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </section>
+
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Requests to receive your summonses</h2>
 
             <p v-if="visibility !== 'approved_visitors'" class="rounded-xl bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
                 Visitors can only ask to receive your summonses when your lodge shares with <em>{{ visibilityOptions.approved_visitors }}</em>.

@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Mail\LodgeClaimMail;
+use App\Models\Club;
+use App\Models\ClubVisitRequest;
 use App\Models\Lodge;
 use App\Models\LodgeClaim;
 use Illuminate\Notifications\Notification;
@@ -97,6 +99,37 @@ class LodgeClaimNotification extends Notification
             'members.lodges',
             [],
             'See your claims',
+        );
+    }
+
+    public static function visitRequested(ClubVisitRequest $visit, Club $club): self
+    {
+        return new self(
+            ClubNotification::MEMBERSHIP,
+            $visit->user->name.' asks to visit on '.$visit->meeting_date->format('j M Y'),
+            'From '.$visit->home_lodge_name.($visit->home_lodge_number ? ' No. '.$visit->home_lodge_number : '').($visit->rank ? ', '.$visit->rank : '').'.'
+                .($visit->dining ? ' He would like to dine.' : '').($visit->message ? ' "'.$visit->message.'"' : ''),
+            $club->name,
+            'admin.visitors.index',
+            ['clubSlug' => $club->slug],
+            'Answer the request',
+            true,
+        );
+    }
+
+    public static function visitAnswered(ClubVisitRequest $visit, Club $club): self
+    {
+        $accepted = $visit->status === ClubVisitRequest::ACCEPTED;
+        $lodge = $club->lodge;
+
+        return new self(
+            ClubNotification::MEMBERSHIP,
+            $club->name.($accepted ? ' looks forward to your visit on ' : ' cannot host you on ').$visit->meeting_date->format('j M Y'),
+            $visit->reply ?: ($accepted ? 'See the lodge page for the time and venue.' : 'You can ask about another date.'),
+            $club->name,
+            $lodge ? 'lodges.show' : 'members.lodges',
+            $lodge ? ['slug' => $lodge->slug] : [],
+            'Open the lodge page',
         );
     }
 

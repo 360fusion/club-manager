@@ -3,14 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LodgeVisitor\StoreLodgeVisitorRequest;
+use App\Http\Requests\LodgeVisitor\StoreLodgeVisitRequest;
 use App\Models\ClubVisitorAccess;
+use App\Models\ClubVisitRequest;
 use App\Models\Lodge;
 use App\Services\Lodges\VisitorAccessService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
- * A visitor asking a managed lodge to share its summonses with them.
+ * A visitor asking a managed lodge to share its summonses with them, or to attend one of its meetings.
  */
 class LodgeVisitorController extends Controller
 {
@@ -34,6 +36,26 @@ class LodgeVisitorController extends Controller
 
         $access = ClubVisitorAccess::where('club_id', $lodge->club_id)->where('user_id', $request->user()->id)->firstOrFail();
         $this->access->withdraw($access);
+
+        return back()->with('success', 'Your request has been withdrawn.');
+    }
+
+    public function storeVisit(StoreLodgeVisitRequest $request, string $slug): RedirectResponse
+    {
+        $lodge = Lodge::listed()->with('club')->where('slug', $slug)->firstOrFail();
+        abort_if($lodge->club === null, 404);
+
+        $this->access->requestVisit($lodge->club, $request->user(), $request->validated());
+
+        return back()->with('success', 'Your request has been sent to the lodge secretary. You will be told when they answer.');
+    }
+
+    public function destroyVisit(Request $request, string $slug, int $id): RedirectResponse
+    {
+        $lodge = Lodge::where('slug', $slug)->whereNotNull('club_id')->firstOrFail();
+
+        $visit = ClubVisitRequest::where('club_id', $lodge->club_id)->where('user_id', $request->user()->id)->findOrFail($id);
+        $this->access->withdrawVisit($visit);
 
         return back()->with('success', 'Your request has been withdrawn.');
     }

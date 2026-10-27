@@ -262,6 +262,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/visitors/{id}/approve', [VisitorAccessAdminController::class, 'approve'])->name('admin.visitors.approve');
     Route::post('/{clubSlug}/admin/visitors/{id}/decline', [VisitorAccessAdminController::class, 'decline'])->name('admin.visitors.decline');
     Route::post('/{clubSlug}/admin/visitors/{id}/revoke', [VisitorAccessAdminController::class, 'revoke'])->name('admin.visitors.revoke');
+    Route::post('/{clubSlug}/admin/visitors/visits/{id}/answer', [VisitorAccessAdminController::class, 'answerVisit'])->name('admin.visitors.visits.answer');
 
     // Admin Updates & Weekly Digest Routes
     Route::get('/{clubSlug}/admin/updates', [UpdateAdminController::class, 'index'])->name('admin.updates.index');
@@ -278,6 +279,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/lodges/fixes/{id}/reject', [ProvinceLodgeCorrectionController::class, 'reject'])->name('members.lodges.fixes.reject');
     Route::post('/lodges/{slug}/visitor-access', [LodgeVisitorController::class, 'store'])->middleware('throttle:10,1')->name('lodges.visitor_access');
     Route::delete('/lodges/{slug}/visitor-access', [LodgeVisitorController::class, 'destroy'])->middleware('throttle:20,1')->name('lodges.visitor_access.withdraw');
+    Route::post('/lodges/{slug}/visits', [LodgeVisitorController::class, 'storeVisit'])->middleware('throttle:10,1')->name('lodges.visits.store');
+    Route::delete('/lodges/{slug}/visits/{id}', [LodgeVisitorController::class, 'destroyVisit'])->middleware('throttle:20,1')->name('lodges.visits.withdraw');
     Route::get('/lodges/{slug}/claim', [LodgeClaimController::class, 'create'])->name('lodges.claim');
     Route::post('/lodges/{slug}/claim', [LodgeClaimController::class, 'store'])->middleware('throttle:6,1')->name('lodges.claim.store');
     Route::post('/members/lodges/claims/{id}/respond', [LodgeClaimController::class, 'respond'])->middleware('throttle:20,1')->name('lodges.claim.respond');

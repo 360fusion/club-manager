@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\ClubNotification;
 use App\Support\ClubAccess;
 use App\Support\VisitorSummons;
+use Illuminate\Notifications\Notification as BaseNotification;
 use Illuminate\Support\Facades\Notification;
 
 /**
@@ -29,7 +30,7 @@ class ClubNotifier
         Notification::sendNow($members, $notification);
     }
 
-    public function toUser(User $user, ClubNotification $notification): void
+    public function toUser(User $user, BaseNotification $notification): void
     {
         $user->notifyNow($notification);
     }
@@ -37,7 +38,7 @@ class ClubNotifier
     /**
      * Notify the club's people who hold a capability, such as the secretary for visitor requests.
      */
-    public function toStaff(Club $club, ClubNotification $notification, string $capability): void
+    public function toStaff(Club $club, BaseNotification $notification, string $capability): void
     {
         $staff = $club->users()->wherePivot('status', ClubMemberStatus::Active->value)->get()
             ->filter(fn (User $user) => ClubAccess::can($user, $club, $capability));

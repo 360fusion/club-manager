@@ -4,15 +4,18 @@ namespace App\Services\Lodges;
 
 use App\Models\Club;
 use App\Models\ClubVisitorAccess;
+use App\Models\ClubVisitRequest;
 use App\Models\User;
 use App\Notifications\ClubNotification;
+use App\Notifications\LodgeClaimNotification;
 use App\Services\ClubNotifier;
 use App\Support\ClubAccess;
 use App\Support\VisitorSummons;
 use Illuminate\Validation\ValidationException;
 
 /**
- * A visiting brother asks a lodge to share its summonses; the lodge's secretary answers.
+ * A visiting brother asks a lodge to share its summonses, or to attend one of its meetings; the lodge's secretary
+ * answers.
  */
 class VisitorAccessService
 {
@@ -48,6 +51,54 @@ class VisitorAccessService
         $this->notifier->toStaff($club, ClubNotification::visitorRequested($access->load('user'), $club), 'manage_meetings');
 
         return $access;
+    }
+
+    /**
+     * @param  array{meeting_date: string, home_lodge_name: string, home_lodge_number?: ?string, rank?: ?string, dining?: bool, message?: ?string}  $data
+     */
+    public function requestVisit(Club $club, User $user, array $data): ClubVisitRequest
+    {
+        if (ClubAccess::isActiveMember($user, $club)) {
+            throw ValidationException::withMessages(['visit' => 'You are already a member of this lodge.']);
+        }
+
+        $alreadyAsked = ClubVisitRequest::where('club_id', $club->id)->where('user_id', $user->id)
+            ->whereDate('meeting_date', $data['meeting_date'])
+            ->whereIn('status', [ClubVisitRequest::PENDING, ClubVisitRequest::ACCEPTED])
+            ->exists();
+
+        if ($alreadyAsked) {
+            throw ValidationException::withMessages(['visit' => 'You have already asked to visit on that date.']);
+        }
+
+        $visit = ClubVisitRequest::create([...$data, 'club_id' => $club->id, 'user_id' => $user->id]);
+
+        $this->notifier->toStaff($club, LodgeClaimNotification::visitRequested($visit->load('user'), $club), 'manage_meetings');
+
+        return $visit;
+    }
+
+    public function withdrawVisit(ClubVisitRequest $visit): void
+    {
+        if ($visit->status === ClubVisitRequest::PENDING) {
+            $visit->delete();
+        }
+    }
+
+    public function answerVisit(ClubVisitRequest $visit, User $by, bool $accept, ?string $reply = null): void
+    {
+        if ($visit->fresh()->status !== ClubVisitRequest::PENDING) {
+            throw ValidationException::withMessages(['visit' => 'That request has already been answered.']);
+        }
+
+        $visit->forceFill([
+            'status' => $accept ? ClubVisitRequest::ACCEPTED : ClubVisitRequest::DECLINED,
+            'reply' => $reply,
+            'decided_by' => $by->id,
+            'decided_at' => now(),
+        ])->save();
+
+        $this->notifier->toUser($visit->user, LodgeClaimNotification::visitAnswered($visit->load('club.lodge'), $visit->club));
     }
 
     public function withdraw(ClubVisitorAccess $access): void

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import PublicLayout from '@/Layouts/PublicLayout.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import ReferenceLinks from '@/Components/ReferenceLinks.vue';
@@ -31,6 +31,18 @@ function requestAccess() {
 
 function withdrawRequest() {
     router.delete(route('lodges.visitor_access.withdraw', props.lodge.slug), { preserveScroll: true });
+}
+
+const visit = useForm({ meeting_date: '', home_lodge_name: '', home_lodge_number: '', rank: '', dining: false, message: '' });
+const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+const VISIT_STATUS = { pending: 'Waiting for the secretary', accepted: 'Accepted', declined: 'Declined' };
+
+function requestVisit() {
+    visit.post(route('lodges.visits.store', props.lodge.slug), { preserveScroll: true, onSuccess: () => visit.reset() });
+}
+
+function withdrawVisit(request) {
+    router.delete(route('lodges.visits.withdraw', { slug: props.lodge.slug, id: request.id }), { preserveScroll: true });
 }
 
 function setNotify(event) {
@@ -137,6 +149,31 @@ const confirmListing = () => router.post(route('lodges.listing_checked', props.l
                             </form>
                             <p v-else-if="!signedIn" class="mt-1"><Link :href="route('login')" class="text-blue-600 hover:underline dark:text-blue-400">Sign in</Link> to ask to receive their summonses.</p>
                         </template>
+                    </div>
+
+                    <div v-if="lodge.visitor && !lodge.visitor.is_member" class="mt-5 rounded-lg bg-slate-50 p-4 text-sm dark:bg-slate-800/60">
+                        <p><strong>Visit this lodge</strong></p>
+                        <ul v-if="lodge.visitor.visits.length" class="mt-2 space-y-1">
+                            <li v-for="myVisit in lodge.visitor.visits" :key="myVisit.id">
+                                {{ formatMeetingDate(myVisit.date) }}: {{ VISIT_STATUS[myVisit.status] }}<span v-if="myVisit.reply" class="text-slate-500 dark:text-slate-400"> ("{{ myVisit.reply }}")</span>
+                                <button v-if="myVisit.status === 'pending'" type="button" class="ml-1 text-blue-600 hover:underline dark:text-blue-400" @click="withdrawVisit(myVisit)">Withdraw</button>
+                            </li>
+                        </ul>
+                        <form v-if="lodge.visitor.can_visit" class="mt-3 space-y-2" @submit.prevent="requestVisit">
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Ask the secretary if you can attend a meeting. They will see your name and email address.</p>
+                            <label class="block text-xs font-medium" for="visit-date">Meeting date</label>
+                            <input id="visit-date" v-model="visit.meeting_date" type="date" required :min="tomorrow" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                            <input v-model="visit.home_lodge_name" required placeholder="Your lodge" aria-label="Your lodge" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                            <div class="grid grid-cols-2 gap-2">
+                                <input v-model="visit.home_lodge_number" placeholder="Its number" aria-label="Its number" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                                <input v-model="visit.rank" placeholder="Your rank" aria-label="Your rank" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                            </div>
+                            <label class="flex items-center gap-2"><input v-model="visit.dining" type="checkbox" class="rounded" /> I would like to dine</label>
+                            <textarea v-model="visit.message" rows="2" placeholder="Anything else (optional)" aria-label="Anything else" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                            <p v-for="(error, field) in visit.errors" :key="field" class="text-xs text-rose-600 dark:text-rose-400">{{ error }}</p>
+                            <button type="submit" :disabled="visit.processing" class="rounded-xl bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-60">Ask to visit</button>
+                        </form>
+                        <p v-else-if="!signedIn" class="mt-1"><Link :href="route('login')" class="text-blue-600 hover:underline dark:text-blue-400">Sign in</Link> to ask to visit a meeting.</p>
                     </div>
 
                     <div v-if="lodge.upcoming.length" class="mt-5">

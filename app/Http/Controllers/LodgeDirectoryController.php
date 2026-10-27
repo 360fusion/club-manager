@@ -6,6 +6,7 @@ use App\Http\Requests\LodgeDirectory\IndexLodgeDirectoryRequest;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\ClubVisitorAccess;
+use App\Models\ClubVisitRequest;
 use App\Models\Lodge;
 use App\Models\LodgeSchedule;
 use App\Models\MasonicHall;
@@ -246,6 +247,12 @@ class LodgeDirectoryController extends Controller
             'can_see' => VisitorSummons::canSee($club, $viewer),
             'request_status' => $status,
             'can_request' => $visibility === VisitorSummons::APPROVED_VISITORS && $viewer !== null && ! $isMember && ! in_array($status, [ClubVisitorAccess::PENDING, ClubVisitorAccess::APPROVED], true),
+            // Asking to attend a meeting is open to anyone signed in who is not already a member.
+            'can_visit' => $viewer !== null && ! $isMember,
+            'visits' => $viewer && ! $isMember ? ClubVisitRequest::where('club_id', $club->id)->where('user_id', $viewer->id)
+                ->whereDate('meeting_date', '>=', now()->toDateString())->orderBy('meeting_date')->get()
+                ->map(fn (ClubVisitRequest $visit) => ['id' => $visit->id, 'date' => $visit->meeting_date->toDateString(), 'status' => $visit->status, 'reply' => $visit->reply])
+                ->all() : [],
         ];
     }
 
