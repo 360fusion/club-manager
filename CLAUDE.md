@@ -71,6 +71,8 @@ Multi-tenant club manager (Masonic lodges and rowing clubs) on Laravel 13 / Iner
 
 **Files.** Media goes through Spatie MediaLibrary on the public disk. Accounting invoice/bill attachments are the exception: they are stored on the private `local` disk and served only by `admin.accounting.attachments.show` (needs `manage_billing`). Gateway secrets in club settings are encrypted and never sent back to the browser.
 
+**Database.** PostgreSQL is the intended database for production and what local dev runs (`DB_CONNECTION=pgsql`); the test suite runs on in-memory SQLite. Raw SQL and migrations must work on PostgreSQL first. Migrations that special-case a driver (`protect_financial_records_from_cascade_deletes`, `drop_status_check_constraint_from_accounting_bills`) only act on `pgsql`. The Forge staging server is still shared MySQL 8.4 until it is moved to PostgreSQL, so the cascade protection is not active there.
+
 **Environment.** The "dev" site is a staging server (`APP_ENV=development`, `APP_DEBUG=false`); production password checks (`uncompromised`) only run when `APP_ENV=production`. `SESSION_SECURE_COOKIE` and `TRUSTED_PROXIES` are set per server.
 
 <laravel-boost-guidelines>
