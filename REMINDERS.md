@@ -65,9 +65,11 @@ Still to do in the app (not built):
 
 - [ ] Emails (booking links, newsletters) still use `APP_URL`; they work, and forward to the domain if the lodge chose that.
 - [ ] `robots.txt` on a lodge domain is the main site's file from `public/` (Caddy serves it before PHP).
-- [ ] Set `services.club_domain.target` in `config/services.php` to the real target hostname (the code currently falls back to `manager.360fusionhosting.co.uk`).
+- [ ] Set `CLUB_DOMAIN_TARGET` in each server's `.env` to the hostname lodges point their domain at (defaults to `manager.360fusionhosting.co.uk`).
 
-Server setup (outside the code):
+For now (Forge, a handful of lodges): add each Active lodge domain as an alias on the Forge site (Site → Domains) and issue a Let's Encrypt certificate that includes it (Site → SSL). No Caddy needed. One Let's Encrypt certificate covers all the aliases, so a lodge domain that stops pointing here can make the renewal fail for all of them; move to Caddy or Cloudflare for SaaS before there are many.
+
+Server setup with Caddy (later, outside the code):
 
 - [ ] Install Caddy and PHP-FPM on the droplet; open ports 80 and 443 in the DigitalOcean firewall and `ufw`.
 - [ ] Caddyfile: a global `on_demand_tls { ask http://127.0.0.1/internal/domain-allowed }` (so `http://127.0.0.1` needs its own site block running the app, reachable only locally), then a catch-all `https://` block with `tls { on_demand }`, `root * /var/www/<app>/public`, `php_fastcgi unix//run/php/php8.4-fpm.sock`, `file_server`, `encode zstd gzip`. The main domain gets its own normal site block.

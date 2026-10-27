@@ -52,4 +52,9 @@ return [
         // Nominatim allows one request a second; follow-up attempts within a search wait this long.
         'gap_ms' => 1100,
     ],
+
+    // The host a lodge's custom domain must point at (CNAME, or the same A record); each server sets its own.
+    'club_domain' => [
+        'target' => env('CLUB_DOMAIN_TARGET', 'manager.360fusionhosting.co.uk'),
+    ],
 ];
