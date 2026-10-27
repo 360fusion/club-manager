@@ -4,9 +4,12 @@ import EventBookingModal from '@/Components/Events/EventBookingModal.vue';
 import MeetingRsvpModal from '@/Components/MeetingRsvpModal.vue';
 import { formatMoney } from '@/Utils/currency';
 import { ref, computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
 
 const props = defineProps({
   club: { type: Object, required: true },
@@ -41,165 +44,146 @@ const openMeetingRsvpModal = (meeting) => {
 
 
 const totalScheduleCount = computed(() => props.meetings.length + props.events.length);
+
+const filterClass = (isActive) => [
+  'inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 font-medium transition-colors',
+  isActive
+    ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white'
+    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white',
+];
 </script>
 
 <template>
-  <MembersLayout title="My Events & RSVPs" :club="club" :member-role="memberRole" active-tab="events">
-    
+  <MembersLayout title="My events and RSVPs" :club="club" :member-role="memberRole" active-tab="events">
+
     <div class="space-y-6">
-      <div v-if="returned === 'success'" class="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-200" role="status">Thank you. Your payment is being confirmed and will show on your booking in a moment.</div>
-      <div v-else-if="returned === 'cancelled'" class="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-200" role="status">Payment cancelled. You have not been charged, and you can pay any time from your booking.</div>
+      <Alert v-if="returned === 'success'" variant="success">Thank you. Your payment is being confirmed and will show on your booking in a moment.</Alert>
+      <Alert v-else-if="returned === 'cancelled'" variant="warning">Payment cancelled. You have not been charged, and you can pay any time from your booking.</Alert>
 
-      
       <!-- Top Action & Summary Header -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <div class="flex items-center gap-3 flex-wrap">
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Meetings, Events & Training Schedule</h2>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-              {{ totalScheduleCount }} Scheduled
-            </span>
+      <Card>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <h2 class="text-xl font-bold text-slate-900 dark:text-white">Meetings, events and training</h2>
+              <Badge variant="info">{{ totalScheduleCount }} scheduled</Badge>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">See lodge meeting summonses, reply for the meeting and dining, choose your menu and download summons PDFs.</p>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">View official lodge meeting summons, confirm attendance & dining RSVPs, select 3-course menus, and access summons PDFs.</p>
-        </div>
 
-        <!-- Filter Tab Pill Buttons -->
-        <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl self-start md:self-auto text-xs font-bold">
-          <button
-            @click="activeFilter = 'all'"
-            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer', activeFilter === 'all' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white']"
-          >
-            All ({{ totalScheduleCount }})
-          </button>
-          <button
-            @click="activeFilter = 'meetings'"
-            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1', activeFilter === 'meetings' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white']"
-          >
-            <UiIcon name="document" class="inline-block align-text-bottom" /> Meetings ({{ meetings.length }})
-          </button>
-          <button
-            @click="activeFilter = 'events'"
-            :class="['px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1', activeFilter === 'events' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white']"
-          >
-            <UiIcon name="sparkles" class="inline-block align-text-bottom" /> Social events ({{ events.length }})
-          </button>
+          <!-- Filter Tab Pill Buttons -->
+          <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl self-start md:self-auto text-xs">
+            <button type="button" :class="filterClass(activeFilter === 'all')" @click="activeFilter = 'all'">
+              All ({{ totalScheduleCount }})
+            </button>
+            <button type="button" :class="filterClass(activeFilter === 'meetings')" @click="activeFilter = 'meetings'">
+              <UiIcon name="document" /> Meetings ({{ meetings.length }})
+            </button>
+            <button type="button" :class="filterClass(activeFilter === 'events')" @click="activeFilter = 'events'">
+              <UiIcon name="sparkles" /> Social events ({{ events.length }})
+            </button>
+          </div>
         </div>
-      </div>
+      </Card>
 
       <!-- SECTION 1: Official Lodge Meetings & Summons -->
-      <div v-if="(activeFilter === 'all' || activeFilter === 'meetings') && meetings.length > 0" class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <span>📜 Official Meetings & Summons</span>
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{{ meetings.length }}</span>
-          </h3>
-        </div>
+      <section v-if="(activeFilter === 'all' || activeFilter === 'meetings') && meetings.length > 0" class="space-y-4">
+        <h3 class="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+          <UiIcon name="document" class="text-slate-400" /> Meetings and summonses
+          <Badge>{{ meetings.length }}</Badge>
+        </h3>
 
         <div class="space-y-4">
-          <div
-            v-for="meeting in meetings"
-            :key="meeting.id"
-            class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all space-y-4"
-          >
+          <Card v-for="meeting in meetings" :key="meeting.id">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div class="space-y-2">
                 <div class="flex items-center gap-2 flex-wrap">
                   <!-- Attendance Status Badge -->
-                  <span v-if="meeting.user_rsvp?.attendance_status === 'attending_dining'" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
-                    🟢 Attending Dining
-                  </span>
-                  <span v-else-if="meeting.user_rsvp?.attendance_status === 'attending_meeting_only'" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                    🔵 Attending Meeting Only
-                  </span>
-                  <span v-else-if="meeting.user_rsvp?.attendance_status === 'apologies'" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">
-                    🔴 Apologies Sent
-                  </span>
-                  <span v-else class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
-                    ⚠️ Response Required
-                  </span>
+                  <Badge v-if="meeting.user_rsvp?.attendance_status === 'attending_dining'" variant="success">
+                    <UiIcon name="check" /> Attending with dining
+                  </Badge>
+                  <Badge v-else-if="meeting.user_rsvp?.attendance_status === 'attending_meeting_only'" variant="info">
+                    <UiIcon name="check" /> Attending meeting only
+                  </Badge>
+                  <Badge v-else-if="meeting.user_rsvp?.attendance_status === 'apologies'" variant="danger">
+                    <UiIcon name="x" /> Apologies sent
+                  </Badge>
+                  <Badge v-else variant="warning">
+                    <UiIcon name="warning" /> Reply needed
+                  </Badge>
 
                   <!-- Payment Status Badge if dining -->
-                  <span v-if="meeting.user_rsvp && meeting.user_rsvp.attendance_status === 'attending_dining'" class="px-2 py-0.5 rounded text-xs font-bold" :class="meeting.user_rsvp.payment_status === 'paid' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200' : (meeting.user_rsvp.payment_status === 'waived' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200')">
-                    {{ meeting.user_rsvp.payment_status === 'paid' ? '✅ PAID' : (meeting.user_rsvp.payment_status === 'waived' ? '🎁 WAIVED' : '💳 UNPAID') }}
-                  </span>
+                  <Badge v-if="meeting.user_rsvp && meeting.user_rsvp.attendance_status === 'attending_dining'" :variant="meeting.user_rsvp.payment_status === 'paid' ? 'success' : (meeting.user_rsvp.payment_status === 'waived' ? 'info' : 'warning')">
+                    {{ meeting.user_rsvp.payment_status === 'paid' ? 'Paid' : (meeting.user_rsvp.payment_status === 'waived' ? 'Waived' : 'Unpaid') }}
+                  </Badge>
 
                   <!-- Dining Cutoff Badge -->
-                  <span v-if="meeting.rsvp_cutoff_at" class="px-2 py-0.5 rounded text-xs font-semibold" :class="meeting.is_cutoff_passed ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'">
-                    ⏰ Cutoff: {{ meeting.rsvp_cutoff_at }}
-                  </span>
+                  <Badge v-if="meeting.rsvp_cutoff_at" :variant="meeting.is_cutoff_passed ? 'danger' : 'neutral'">
+                    <UiIcon name="clock" /> Replies close {{ meeting.rsvp_cutoff_at }}
+                  </Badge>
                 </div>
 
-                <h4 class="text-lg font-bold text-slate-900 dark:text-white">{{ meeting.title || 'Regular Meeting' }}</h4>
+                <h4 class="text-lg font-semibold text-slate-900 dark:text-white">{{ meeting.title || 'Regular meeting' }}</h4>
                 <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-600 dark:text-slate-300">
-                  <span>📅 <strong>Date:</strong> {{ formatMeetingDate(meeting.raw_meeting_date || meeting.meeting_date) }}</span>
-                  <span>🕒 <strong>Start:</strong> {{ meeting.starts_at }} <span v-if="meeting.rehearsal_starts_at" class="text-slate-400">(Rehearsal: {{ meeting.rehearsal_starts_at }})</span></span>
-                  <span>📍 <strong>Venue:</strong> {{ meeting.venue }}</span>
-                  <span v-if="meeting.dress_code">👔 <strong>Dress:</strong> {{ meeting.dress_code }}</span>
+                  <span class="inline-flex items-center gap-1.5"><UiIcon name="calendar" class="text-slate-400" /> {{ formatMeetingDate(meeting.raw_meeting_date || meeting.meeting_date) }}</span>
+                  <span class="inline-flex items-center gap-1.5"><UiIcon name="clock" class="text-slate-400" /> Starts {{ meeting.starts_at }} <span v-if="meeting.rehearsal_starts_at" class="text-slate-400">(rehearsal {{ meeting.rehearsal_starts_at }})</span></span>
+                  <span class="inline-flex items-center gap-1.5"><UiIcon name="building" class="text-slate-400" /> {{ meeting.venue }}</span>
+                  <span v-if="meeting.dress_code" class="inline-flex items-center gap-1.5"><UiIcon name="user" class="text-slate-400" /> Dress: {{ meeting.dress_code }}</span>
                 </div>
               </div>
 
               <!-- Meeting Actions -->
               <div class="flex flex-wrap items-center gap-2 self-start lg:self-center">
-                <Link
-                  :href="route('member.meetings.summons', { slug: club.slug, id: meeting.id })"
-                  class="px-3.5 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold text-xs rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all flex items-center gap-1.5"
-                >
-                  <UiIcon name="document" class="inline-block align-text-bottom" /> View summons
-                </Link>
+                <Button variant="secondary" size="sm" :href="route('member.meetings.summons', { slug: club.slug, id: meeting.id })">
+                  <UiIcon name="document" /> View summons
+                </Button>
 
                 <a
                   :href="route('member.meetings.pdf', { slug: club.slug, id: meeting.id })"
                   target="_blank"
-                  class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5"
+                  class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
-                  <UiIcon name="printer" class="inline-block align-text-bottom" /> PDF
+                  <UiIcon name="printer" /> PDF
                 </a>
 
-                <button
-                  @click="openMeetingRsvpModal(meeting)"
-                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1.5"
-                >
-                  <UiIcon name="pencil" class="inline-block align-text-bottom" /> {{ meeting.user_rsvp ? 'Edit response' : 'Respond to summons' }}
-                </button>
+                <Button size="sm" :variant="meeting.user_rsvp ? 'secondary' : 'primary'" @click="openMeetingRsvpModal(meeting)">
+                  <UiIcon name="pencil" /> {{ meeting.user_rsvp ? 'Edit response' : 'Respond to summons' }}
+                </Button>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
-      </div>
+      </section>
 
       <!-- SECTION 2: Social Events, Regattas & Activities -->
-      <div v-if="(activeFilter === 'all' || activeFilter === 'events') && events.length > 0" class="space-y-4">
-        <div class="flex items-center justify-between pt-2">
-          <h3 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <span>🎪 Social Events, Regattas & Activities</span>
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{{ events.length }}</span>
-          </h3>
-        </div>
+      <section v-if="(activeFilter === 'all' || activeFilter === 'events') && events.length > 0" class="space-y-4">
+        <h3 class="pt-2 text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+          <UiIcon name="sparkles" class="text-slate-400" /> Social events and activities
+          <Badge>{{ events.length }}</Badge>
+        </h3>
 
         <div class="space-y-4">
-          <div
-            v-for="event in events"
-            :key="event.id"
-            class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all space-y-4"
-          >
+          <Card v-for="event in events" :key="event.id">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div class="space-y-1.5">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span v-if="event.user_rsvp?.checked_in_at" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
-                    ✓ CHECKED IN @ {{ event.user_rsvp.checked_in_at }}
-                  </span>
-                  <span v-else-if="event.user_rsvp?.attendance_status === 'attending'" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                    RSVP CONFIRMED
-                  </span>
-                  <span v-if="event.has_dining" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                    🍽️ 3-COURSE DINING
-                  </span>
-                  <span v-if="event.booking_cutoff_days" class="px-2.5 py-0.5 rounded text-[10px] font-bold" :class="event.is_booking_closed ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60'">
-                    {{ event.is_booking_closed ? '🔒 BOOKINGS CLOSED' : `⏰ Cutoff: ${event.booking_cutoff_days} days before` }}
-                  </span>
+                  <Badge v-if="event.user_rsvp?.checked_in_at" variant="success">
+                    <UiIcon name="check" /> Checked in at {{ event.user_rsvp.checked_in_at }}
+                  </Badge>
+                  <Badge v-else-if="event.user_rsvp?.attendance_status === 'attending'" variant="success">
+                    <UiIcon name="check" /> RSVP confirmed
+                  </Badge>
+                  <Badge v-if="event.has_dining" variant="info">3-course dining</Badge>
+                  <Badge v-if="event.booking_cutoff_days" :variant="event.is_booking_closed ? 'danger' : 'warning'">
+                    <UiIcon :name="event.is_booking_closed ? 'lock' : 'clock'" />
+                    {{ event.is_booking_closed ? 'Bookings closed' : `Bookings close ${event.booking_cutoff_days} days before` }}
+                  </Badge>
                 </div>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ event.title }}</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400">📍 {{ event.location }} • 🕒 {{ event.starts_at }}</p>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ event.title }}</h3>
+                <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                  <span class="inline-flex items-center gap-1.5"><UiIcon name="building" /> {{ event.location }}</span>
+                  <span class="inline-flex items-center gap-1.5"><UiIcon name="clock" /> {{ event.starts_at }}</span>
+                </p>
                 <p v-if="event.requires_payment && event.advertised && Number(event.advertised.headline) > 0" class="text-xs font-semibold text-slate-700 dark:text-slate-200">
                   {{ formatMoney(event.advertised.headline) }}
                   <span v-if="event.advertised.has_saving" class="font-normal text-emerald-600 dark:text-emerald-400">or {{ formatMoney(event.advertised.lowest) }} if you pay online</span>
@@ -208,25 +192,25 @@ const totalScheduleCount = computed(() => props.meetings.length + props.events.l
                 <p v-if="event.description" class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{{ event.description }}</p>
               </div>
 
-              <button
+              <Button
                 v-if="!event.is_booking_closed"
+                size="sm"
+                :variant="event.user_rsvp ? 'secondary' : 'primary'"
+                class="self-start sm:self-auto"
                 @click="openRsvpModal(event)"
-                class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all self-start sm:self-auto cursor-pointer"
               >
                 {{ event.user_rsvp ? 'Edit RSVP & dining' : 'RSVP & select menu' }}
-              </button>
-              <span v-else class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-800 self-start sm:self-auto">
-                Bookings Closed
-              </span>
+              </Button>
+              <Badge v-else class="self-start sm:self-auto">Bookings closed</Badge>
             </div>
-          </div>
+          </Card>
         </div>
-      </div>
+      </section>
 
       <!-- Empty State if no meetings or events found for filter -->
-      <div v-if="totalScheduleCount === 0" class="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200/80 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 text-sm">
-        No upcoming meetings, events, or regattas scheduled for {{ club.name }} at this time.
-      </div>
+      <Card v-if="totalScheduleCount === 0" class="text-center">
+        <p class="py-6 text-sm text-slate-500 dark:text-slate-400">No upcoming meetings, events, or regattas scheduled for {{ club.name }} at this time.</p>
+      </Card>
 
     </div>
 

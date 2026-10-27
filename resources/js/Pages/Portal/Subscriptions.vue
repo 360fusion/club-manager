@@ -1,8 +1,11 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
 
 defineProps({
   clubMatrix: Array,
@@ -19,68 +22,76 @@ const toggleChannel = (clubSlug, typeId) => {
     { preserveScroll: true }
   );
 };
+
+const tabClass = (isActive) => [
+  'inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer',
+  isActive
+    ? 'bg-slate-900 text-white shadow-sm dark:bg-slate-700'
+    : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-white',
+];
 </script>
 
 <template>
   <MembersLayout title="Subscriptions" active-tab="subscriptions">
-    <Head title="My Subscriptions & News Hub" />
+    <Head title="My subscriptions and news" />
 
     <div class="space-y-6">
-      
+
       <!-- Top Action Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
+      <Card class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 class="text-xl font-bold text-slate-900 dark:text-white">
-            📬 Multi-Club Subscriptions & Broadcast Feed
+            Subscriptions and broadcast feed
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Manage your newsletter & summons subscriptions across all your enrolled clubs and visiting brethren memberships.
+            Manage your newsletter and summons subscriptions across all your enrolled clubs and visiting brethren memberships.
           </p>
         </div>
 
         <div class="flex items-center gap-3">
-          <Link
-            :href="route('members.dashboard', { tab: 'directory' })"
-            class="px-4 py-2 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-xl border border-blue-200 dark:border-blue-800/60 transition-all flex items-center gap-1"
-          >
-            <UiIcon name="building" class="inline-block align-text-bottom" /> Find other lodges in directory
-          </Link>
+          <Button variant="secondary" size="sm" :href="route('members.dashboard', { tab: 'directory' })">
+            <UiIcon name="building" /> Find other lodges in directory
+          </Button>
         </div>
-      </div>
+      </Card>
 
       <!-- Navigation Tabs -->
-      <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-        <button
-          @click="activeTab = 'matrix'"
-          :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer', activeTab === 'matrix' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']"
-        >
-          <UiIcon name="settings" class="inline-block align-text-bottom" /> Subscription preferences matrix
-        </button>
-        <button
-          @click="activeTab = 'feed'"
-          :class="['px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer', activeTab === 'feed' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800']"
-        >
-          <UiIcon name="document" class="inline-block align-text-bottom" /> Unified broadcast inbox ({{ broadcastFeed.length }})
-        </button>
-      </div>
+      <nav aria-label="Subscriptions" class="max-w-full overflow-x-auto">
+        <div class="flex w-fit items-center gap-1 rounded-2xl border border-slate-300/60 bg-slate-200/80 p-1.5 dark:border-slate-700/60 dark:bg-slate-800/80">
+          <button
+            type="button"
+            @click="activeTab = 'matrix'"
+            :class="tabClass(activeTab === 'matrix')"
+            :aria-pressed="activeTab === 'matrix'"
+          >
+            <UiIcon name="settings" /> Subscription preferences
+          </button>
+          <button
+            type="button"
+            @click="activeTab = 'feed'"
+            :class="tabClass(activeTab === 'feed')"
+            :aria-pressed="activeTab === 'feed'"
+          >
+            <UiIcon name="document" /> Unified broadcast inbox ({{ broadcastFeed.length }})
+          </button>
+        </div>
+      </nav>
 
       <!-- Tab 1: Preferences Matrix -->
       <div v-if="activeTab === 'matrix'" class="space-y-6">
-        <div
+        <Card
           v-for="club in clubMatrix"
           :key="club.id"
-          class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-4"
+          class="space-y-4"
         >
           <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <div>
+            <div class="space-y-1">
               <div class="flex items-center gap-2">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ club.name }}</h3>
-                <span v-if="club.lodge_number" class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                  No. {{ club.lodge_number }}
-                </span>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">{{ club.name }}</h3>
+                <Badge v-if="club.lodge_number">No. {{ club.lodge_number }}</Badge>
               </div>
-              <span v-if="club.is_member" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">🏠 Enrolled Club Member</span>
-              <span v-else class="text-[11px] font-semibold text-blue-600 dark:text-blue-400">🌐 Visiting Brother Subscription</span>
+              <Badge v-if="club.is_member" variant="success">Enrolled member</Badge>
+              <Badge v-else variant="info">Visiting subscription</Badge>
             </div>
           </div>
 
@@ -88,47 +99,48 @@ const toggleChannel = (clubSlug, typeId) => {
             <div
               v-for="channel in club.channels"
               :key="channel.id"
-              class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between"
+              class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3"
             >
               <div class="space-y-0.5">
-                <div class="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                <div class="font-semibold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                   <span>{{ channel.icon }}</span>
                   <span>{{ channel.name }}</span>
                 </div>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ channel.description }}</p>
               </div>
 
-              <div>
-                <div v-if="channel.is_mandatory" class="px-3 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold rounded-lg text-[10px] border border-blue-200 dark:border-blue-800/60">
-                  🔒 Mandatory Notice
-                </div>
-                <button
+              <div class="shrink-0">
+                <Badge v-if="channel.is_mandatory" variant="info">
+                  <UiIcon name="lock" :size="12" /> Mandatory notice
+                </Badge>
+                <Button
                   v-else
+                  variant="secondary"
+                  size="sm"
                   @click="toggleChannel(club.slug, channel.id)"
-                  :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer', channel.is_active ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm' : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200']"
                 >
-                  <UiIcon :name="channel.is_active ? 'check' : 'plus'" class="inline-block align-text-bottom" /> {{ channel.is_active ? 'Subscribed' : 'Subscribe' }}
-                </button>
+                  <UiIcon :name="channel.is_active ? 'check' : 'plus'" /> {{ channel.is_active ? 'Subscribed' : 'Subscribe' }}
+                </Button>
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       <!-- Tab 2: Unified News Inbox Feed -->
       <div v-if="activeTab === 'feed'" class="space-y-4">
         <div v-if="broadcastFeed.length" class="space-y-4">
-          <div
+          <Card
             v-for="item in broadcastFeed"
             :key="item.id"
-            class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 space-y-3"
+            class="space-y-3"
           >
             <div class="flex items-center justify-between text-xs">
               <div class="flex items-center gap-2">
-                <span class="font-bold text-slate-900 dark:text-white">{{ item.club_name }}</span>
+                <span class="font-semibold text-slate-900 dark:text-white">{{ item.club_name }}</span>
                 <span
                   :style="{ backgroundColor: item.channel_color + '15', color: item.channel_color, borderColor: item.channel_color + '30' }"
-                  class="px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider"
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-medium border uppercase tracking-wider"
                 >
                   {{ item.channel_icon }} {{ item.channel_name }}
                 </span>
@@ -136,18 +148,18 @@ const toggleChannel = (clubSlug, typeId) => {
               <span class="text-slate-400 font-mono text-[11px]">{{ item.sent_at }}</span>
             </div>
 
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ item.subject }}</h3>
-            
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ item.subject }}</h3>
+
             <div
               class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 prose max-w-none"
               v-html="item.content"
             ></div>
-          </div>
+          </Card>
         </div>
 
-        <div v-else class="bg-white dark:bg-slate-900 p-12 text-center rounded-2xl border border-slate-200 dark:border-slate-800">
+        <Card v-else padding="lg" class="text-center">
           <p class="text-slate-500 dark:text-slate-400 text-sm">No recent newsletter broadcasts found in your inbox.</p>
-        </div>
+        </Card>
       </div>
 
     </div>

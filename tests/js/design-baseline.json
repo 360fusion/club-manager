@@ -2,9 +2,6 @@
   "resources/js/Layouts/SuperAdminLayout.vue": {
     "emoji in a button or link": 13
   },
-  "resources/js/Pages/Club/Show.vue": {
-    "emoji in a button or link": 13
-  },
   "resources/js/Pages/SuperAdmin/ClubTypes/Index.vue": {
     "emoji in a button or link": 1
   },

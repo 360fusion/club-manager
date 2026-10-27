@@ -1,6 +1,12 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Modal from '@/Components/Ui/Modal.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     club: Object,
@@ -33,7 +39,7 @@ const rsvpForm = ref({
 const openRsvp = (event) => {
     selectedEvent.value = event;
     const defaultTier = event.ticket_tiers && event.ticket_tiers.length > 0 ? event.ticket_tiers[0] : null;
-    
+
     rsvpForm.value = {
         attendance_status: 'attending',
         selected_tier_id: defaultTier ? defaultTier.id : null,
@@ -85,61 +91,63 @@ const saveDomain = () => {
     });
 };
 
-const getIcon = (typeCode) => {
-    switch (typeCode) {
-        case 'rowing': return '🌊';
-        case 'rugby': return '🏉';
-        case 'tennis': return '🎾';
-        default: return '🏆';
-    }
-};
+const tabClass = (isActive) => [
+    'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold whitespace-nowrap transition-colors',
+    isActive
+        ? 'bg-slate-900 text-white shadow-sm dark:bg-slate-700'
+        : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-white',
+];
+
+// A link styled as the kit's secondary button, for the places Button cannot be: new-tab, download and POST links.
+const secondaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800';
+const primaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl border border-transparent bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-500';
 </script>
 
 <template>
     <Head :title="`${club.name} - Workspace`" />
 
-    <div class="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div class="min-h-screen bg-slate-100 text-slate-800 font-sans dark:bg-slate-950 dark:text-slate-200">
         <!-- Header -->
-        <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-slate-800">
-            <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <header class="sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-slate-200 dark:bg-slate-950/80 dark:border-slate-800">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
-                    <Link href="/" class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors">
-                        ← Back to hub
-                    </Link>
-                    <div class="h-6 w-px bg-slate-800"></div>
+                    <Button variant="ghost" size="sm" href="/">
+                        <UiIcon name="arrow-left" /> Back to hub
+                    </Button>
+                    <div class="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xl">
-                            {{ getIcon(club.type_code) }}
+                        <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400">
+                            <UiIcon name="award" :size="20" />
                         </div>
                         <div>
-                            <h1 class="font-extrabold text-lg text-white leading-none">
+                            <h1 class="font-semibold text-lg text-slate-900 leading-none dark:text-white">
                                 {{ club.name }}
                             </h1>
-                            <span class="text-xs text-slate-400">
-                                {{ club.type_name }} • <span class="text-emerald-400">PostgreSQL Tenant #{{ club.id }}</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">
+                                {{ club.type_name }} · PostgreSQL tenant #{{ club.id }}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <Link :href="`/${club.slug}/admin/events`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20">
-                        🎫 Events
-                    </Link>
-                    <Link :href="`/${club.slug}/admin/posts`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20">
-                        📰 Blog & news
-                    </Link>
-                    <Link :href="`/${club.slug}/admin/memberships`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20">
-                        💳 Memberships
-                    </Link>
-                    <Link :href="`/${club.slug}/admin/pages`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20">
-                        🎨 CMS builder
-                    </Link>
-                    <Link :href="`/${club.slug}/admin/analytics`" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        📊 Analytics
-                    </Link>
-                    <a :href="`/site/${club.slug}`" target="_blank" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:text-white">
-                        🌐 Live site
+                <div class="flex flex-wrap items-center gap-2">
+                    <Button variant="secondary" size="sm" :href="`/${club.slug}/admin/events`">
+                        <UiIcon name="calendar" /> Events
+                    </Button>
+                    <Button variant="secondary" size="sm" :href="`/${club.slug}/admin/posts`">
+                        <UiIcon name="document" /> Blog & news
+                    </Button>
+                    <Button variant="secondary" size="sm" :href="`/${club.slug}/admin/memberships`">
+                        <UiIcon name="users" /> Memberships
+                    </Button>
+                    <Button variant="secondary" size="sm" :href="`/${club.slug}/admin/pages`">
+                        <UiIcon name="palette" /> CMS builder
+                    </Button>
+                    <Button variant="secondary" size="sm" :href="`/${club.slug}/admin/analytics`">
+                        <UiIcon name="chart" /> Analytics
+                    </Button>
+                    <a :href="`/site/${club.slug}`" target="_blank" :class="secondaryLink">
+                        <UiIcon name="globe" /> Live site
                     </a>
                 </div>
             </div>
@@ -148,143 +156,126 @@ const getIcon = (typeCode) => {
         <!-- Main Workspace -->
         <main class="max-w-7xl mx-auto px-6 py-8">
             <!-- Navigation Tabs -->
-            <div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-4 mb-8">
-                <button 
-                    @click="activeTab = 'events'"
-                    :class="activeTab === 'events' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
-                    class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
-                >
-                    <span>🎫</span> Events & Eventbrite ticketing ({{ club.events.length }})
-                </button>
-                <button 
-                    @click="activeTab = 'domain'"
-                    :class="activeTab === 'domain' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
-                    class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
-                >
-                    <span>🌐</span> Custom domain setup
-                </button>
-                <button 
-                    @click="activeTab = 'members'"
-                    :class="activeTab === 'members' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'"
-                    class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
-                >
-                    <span>👥</span> Member roster ({{ club.members.length }})
-                </button>
+            <div class="mb-8 max-w-full overflow-x-auto">
+                <div class="flex w-fit items-center gap-1 rounded-2xl border border-slate-300/60 bg-slate-200/80 p-1.5 dark:border-slate-700/60 dark:bg-slate-800/80">
+                    <button type="button" :class="tabClass(activeTab === 'events')" @click="activeTab = 'events'">
+                        <UiIcon name="calendar" /> Events and Eventbrite ticketing ({{ club.events.length }})
+                    </button>
+                    <button type="button" :class="tabClass(activeTab === 'domain')" @click="activeTab = 'domain'">
+                        <UiIcon name="globe" /> Custom domain setup
+                    </button>
+                    <button type="button" :class="tabClass(activeTab === 'members')" @click="activeTab = 'members'">
+                        <UiIcon name="users" /> Member roster ({{ club.members.length }})
+                    </button>
+                </div>
             </div>
 
             <!-- Tab Content: Events with Ticket Tiers & Scannable QR Passes -->
             <div v-if="activeTab === 'events'" class="space-y-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-2xl font-bold text-white">Eventbrite-Grade Event Ticketing & QR Passes</h2>
-                        <p class="text-sm text-slate-400">Multiple ticket tiers, capacity limits, promo codes, 3-course dining, and scannable digital QR passes.</p>
-                    </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Event ticketing and QR passes</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Multiple ticket types, capacity limits, promo codes, 3-course dining, and scannable digital QR passes.</p>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div v-for="event in club.events" :key="event.id" class="rounded-2xl bg-slate-900/70 border border-slate-800 p-6 flex flex-col justify-between space-y-6">
+                    <Card v-for="event in club.events" :key="event.id" class="flex flex-col justify-between space-y-6">
                         <div class="space-y-4">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span v-if="event.ticket_tiers.length > 0" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                            🎟️ {{ event.ticket_tiers.length }} Ticket Tiers
-                                        </span>
-                                        <span v-if="event.has_dining" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                            🍽️ 3-Course Dining
-                                        </span>
-                                    </div>
-                                    <h3 class="text-xl font-bold text-white">{{ event.title }}</h3>
-                                    <p class="text-xs text-slate-400 mt-1">📍 {{ event.location }} • 🕒 {{ event.starts_at }}</p>
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2 mb-1">
+                                    <Badge v-if="event.ticket_tiers.length > 0" variant="info">{{ event.ticket_tiers.length }} ticket types</Badge>
+                                    <Badge v-if="event.has_dining" variant="info">3-course dining</Badge>
                                 </div>
+                                <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ event.title }}</h3>
+                                <p class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                                    <span class="inline-flex items-center gap-1.5"><UiIcon name="building" /> {{ event.location }}</span>
+                                    <span class="inline-flex items-center gap-1.5"><UiIcon name="clock" /> {{ event.starts_at }}</span>
+                                </p>
                             </div>
 
-                            <p class="text-sm text-slate-300">{{ event.description }}</p>
+                            <p class="text-sm text-slate-600 dark:text-slate-300">{{ event.description }}</p>
 
                             <!-- Eventbrite Ticket Tiers Preview -->
-                            <div v-if="event.ticket_tiers.length > 0" class="p-4 rounded-xl bg-slate-950 border border-blue-500/20 space-y-2">
-                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">🎟️ Available Ticket Tiers & Capacity:</span>
+                            <div v-if="event.ticket_tiers.length > 0" class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 dark:bg-slate-950 dark:border-slate-800">
+                                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">Ticket types and places</span>
                                 <div class="space-y-1.5 text-xs">
-                                    <div v-for="tier in event.ticket_tiers" :key="tier.id" class="p-2 rounded bg-slate-900 flex items-center justify-between">
-                                        <span class="font-bold text-white">{{ tier.name }}</span>
+                                    <div v-for="tier in event.ticket_tiers" :key="tier.id" class="p-2 rounded-xl bg-white border border-slate-200 flex items-center justify-between dark:bg-slate-900 dark:border-slate-800">
+                                        <span class="font-medium text-slate-900 dark:text-white">{{ tier.name }}</span>
                                         <div class="flex items-center gap-3">
-                                            <span class="text-slate-400">Available: <strong class="text-amber-400 font-mono">{{ tier.available }}</strong></span>
-                                            <span class="text-emerald-400 font-bold">{{ $cs }}{{ tier.price }}</span>
+                                            <span class="text-slate-500 dark:text-slate-400">Available: <strong class="text-slate-900 font-mono dark:text-white">{{ tier.available }}</strong></span>
+                                            <span class="font-semibold text-slate-900 dark:text-white">{{ $cs }}{{ tier.price }}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Attendees & Digital QR Pass -->
-                            <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
-                                <div class="flex items-center justify-between text-xs font-bold text-slate-400">
-                                    <span>Issued Digital E-Tickets ({{ event.attendees.length }})</span>
+                            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 dark:bg-slate-950/60 dark:border-slate-800">
+                                <div class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                    Issued e-tickets ({{ event.attendees.length }})
                                 </div>
 
-                                <div v-for="att in event.attendees" :key="att.id" class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
+                                <div v-for="att in event.attendees" :key="att.id" class="p-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between text-xs dark:bg-slate-900 dark:border-slate-800">
                                     <div class="space-y-1">
-                                        <div class="font-bold text-white">{{ att.name }}</div>
-                                        <div class="font-mono text-[10px] text-blue-400">📱 QR Pass: {{ att.ticket_qr_code }}</div>
+                                        <div class="font-medium text-slate-900 dark:text-white">{{ att.name }}</div>
+                                        <div class="font-mono text-[11px] text-slate-500 dark:text-slate-400">QR pass: {{ att.ticket_qr_code }}</div>
                                     </div>
-                                    <span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 font-bold uppercase text-[10px]">
-                                        PAID {{ $cs }}{{ att.amount_paid }}
-                                    </span>
+                                    <Badge variant="success">Paid {{ $cs }}{{ att.amount_paid }}</Badge>
                                 </div>
                             </div>
                         </div>
 
-                        <button @click="openRsvp(event)" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-600/20">
-                            🎟️ Select ticket tier & generate QR pass
-                        </button>
-                    </div>
+                        <Button block @click="openRsvp(event)">
+                            Select ticket type and generate QR pass
+                        </Button>
+                    </Card>
                 </div>
             </div>
 
             <!-- Tab Content: Custom Domain Setup -->
             <div v-if="activeTab === 'domain'" class="space-y-6">
-                <div class="p-8 rounded-3xl bg-slate-900/70 border border-slate-800 max-w-4xl space-y-6">
-                    <div class="flex items-start justify-between border-b border-slate-800 pb-4">
-                        <div>
-                            <h2 class="text-2xl font-bold text-white">Custom Domain Mapping</h2>
-                            <p class="text-xs text-slate-400 mt-1">Connect your club's domain name (e.g. <strong class="text-slate-300">{{ domainExample }}</strong>).</p>
-                        </div>
-                    </div>
+                <Card padding="lg" class="max-w-4xl">
+                    <template #header>
+                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Custom domain</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Connect your club's domain name (e.g. <strong class="text-slate-700 dark:text-slate-300">{{ domainExample }}</strong>).</p>
+                    </template>
 
                     <form @submit.prevent="saveDomain" class="space-y-4">
-                        <input v-model="domainForm.custom_domain" type="text" :placeholder="domainExample" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-mono text-sm" />
-                        <button type="submit" class="py-3 px-6 rounded-xl bg-emerald-600 text-white font-bold text-sm">Connect domain</button>
+                        <Input v-model="domainForm.custom_domain" label="Domain name" :placeholder="domainExample" class="font-mono" />
+                        <Button type="submit">Connect domain</Button>
                     </form>
-                </div>
+                </Card>
             </div>
 
             <!-- Tab Content: Members -->
             <div v-if="activeTab === 'members'" class="space-y-6">
-                <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                <Card class="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h3 class="font-bold text-white text-lg">Member Roster & Invite Approvals</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">Manage active club members and approve invite-only registration requests.</p>
+                        <h3 class="font-semibold text-slate-900 text-lg dark:text-white">Member roster and invite approvals</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage active club members and approve invite-only registration requests.</p>
                     </div>
-                    <a :href="`/${club.slug}/members/export`" class="py-2.5 px-4 rounded-xl bg-slate-800 text-white text-xs font-bold">Export roster CSV</a>
-                </div>
+                    <a :href="`/${club.slug}/members/export`" :class="secondaryLink">
+                        <UiIcon name="download" /> Export roster CSV
+                    </a>
+                </Card>
 
                 <!-- Pending Member Invites Banner -->
-                <div v-if="club.members.filter(m => m.status === 'pending').length > 0" class="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-4">
-                    <div class="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider">
-                        <span>⏳ Pending Registration Approvals ({{ club.members.filter(m => m.status === 'pending').length }})</span>
+                <div v-if="club.members.filter(m => m.status === 'pending').length > 0" class="p-6 rounded-2xl bg-amber-50 border border-amber-200 space-y-4 dark:bg-amber-950/30 dark:border-amber-800/40">
+                    <div class="flex items-center gap-2 text-amber-700 font-semibold text-xs uppercase tracking-wider dark:text-amber-300">
+                        <UiIcon name="clock" /> Waiting for approval ({{ club.members.filter(m => m.status === 'pending').length }})
                     </div>
 
                     <div class="space-y-2">
-                        <div v-for="m in club.members.filter(m => m.status === 'pending')" :key="m.id" class="p-4 rounded-xl bg-slate-950 border border-amber-500/20 flex items-center justify-between">
+                        <div v-for="m in club.members.filter(m => m.status === 'pending')" :key="m.id" class="p-4 rounded-xl bg-white border border-amber-200 flex flex-wrap items-center justify-between gap-3 dark:bg-slate-900 dark:border-amber-800/40">
                             <div>
-                                <div class="font-bold text-white text-sm">{{ m.name }}</div>
-                                <div class="text-xs text-slate-400">{{ m.email }} • #{{ m.member_number }}</div>
+                                <div class="font-medium text-slate-900 text-sm dark:text-white">{{ m.name }}</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400">{{ m.email }} · #{{ m.member_number }}</div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <Link :href="route('clubs.members.approve', { slug: club.slug, userId: m.id })" method="post" as="button" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md">
-                                    ✓ Approve member
+                                <Link :href="route('clubs.members.approve', { slug: club.slug, userId: m.id })" method="post" as="button" :class="primaryLink">
+                                    <UiIcon name="check" /> Approve member
                                 </Link>
-                                <Link :href="route('clubs.members.reject', { slug: club.slug, userId: m.id })" method="post" as="button" class="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-xs rounded-xl border border-rose-500/20">
-                                    ✕ Reject
+                                <Link :href="route('clubs.members.reject', { slug: club.slug, userId: m.id })" method="post" as="button" :class="secondaryLink">
+                                    <UiIcon name="x" /> Reject
                                 </Link>
                             </div>
                         </div>
@@ -292,103 +283,83 @@ const getIcon = (typeCode) => {
                 </div>
 
                 <!-- Active Members Roster -->
-                <div class="rounded-2xl bg-slate-900/70 border border-slate-800 overflow-hidden">
+                <Card padding="none" class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-950 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider dark:bg-slate-950 dark:border-slate-800 dark:text-slate-400">
                             <tr>
-                                <th class="p-4">Member Name</th>
+                                <th class="p-4">Member name</th>
                                 <th class="p-4">Email</th>
                                 <th class="p-4">Member #</th>
                                 <th class="p-4">Role</th>
                                 <th class="p-4">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-800">
-                            <tr v-for="m in club.members.filter(m => m.status !== 'pending')" :key="m.id" class="hover:bg-slate-900/50">
-                                <td class="p-4 font-bold text-white">{{ m.name }}</td>
-                                <td class="p-4 text-slate-400">{{ m.email }}</td>
-                                <td class="p-4 font-mono text-slate-400">{{ m.member_number }}</td>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                            <tr v-for="m in club.members.filter(m => m.status !== 'pending')" :key="m.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                <td class="p-4 font-medium text-slate-900 dark:text-white">{{ m.name }}</td>
+                                <td class="p-4 text-slate-500 dark:text-slate-400">{{ m.email }}</td>
+                                <td class="p-4 font-mono text-slate-500 dark:text-slate-400">{{ m.member_number }}</td>
                                 <td class="p-4">
-                                    <span class="px-2.5 py-0.5 rounded-full font-bold uppercase text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                        {{ m.role }}
-                                    </span>
+                                    <Badge variant="info" class="capitalize">{{ m.role }}</Badge>
                                 </td>
                                 <td class="p-4">
-                                    <span class="px-2.5 py-0.5 rounded font-bold uppercase text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                        Active
-                                    </span>
+                                    <Badge variant="success">Active</Badge>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </Card>
             </div>
         </main>
 
         <!-- Ticket Tier Selection & QR Pass RSVP Modal -->
-        <div v-if="showRsvpModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 space-y-6 shadow-2xl">
-                <div class="flex items-start justify-between border-b border-slate-800 pb-4">
-                    <div>
-                        <h3 class="text-xl font-bold text-white">Ticket Selection & QR Pass Generator</h3>
-                        <p class="text-xs text-slate-400">{{ selectedEvent?.title }}</p>
-                    </div>
-                    <button @click="showRsvpModal = false" class="text-slate-400 hover:text-white font-bold">✕</button>
-                </div>
-
-                <div class="space-y-4 text-sm">
-                    <!-- Ticket Tier Radio Selection -->
-                    <div v-if="selectedEvent?.ticket_tiers.length > 0">
-                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Select Ticket Tier</label>
-                        <div class="space-y-2">
-                            <div 
-                                v-for="tier in selectedEvent.ticket_tiers" 
-                                :key="tier.id"
-                                @click="rsvpForm.selected_tier_id = tier.id"
-                                :class="rsvpForm.selected_tier_id === tier.id ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'"
-                                class="p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all"
-                            >
-                                <div>
-                                    <span class="font-bold">{{ tier.name }}</span>
-                                    <span class="text-xs text-slate-400 block">Available: {{ tier.available }}</span>
-                                </div>
-                                <span class="font-bold text-emerald-400 text-base">{{ $cs }}{{ tier.price }}</span>
+        <Modal :open="showRsvpModal" title="Choose a ticket" :subtitle="selectedEvent?.title ?? ''" size="lg" @close="showRsvpModal = false">
+            <div class="space-y-4 text-sm">
+                <!-- Ticket Tier Radio Selection -->
+                <div v-if="selectedEvent?.ticket_tiers.length > 0">
+                    <span class="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">Ticket type</span>
+                    <div class="space-y-2">
+                        <div
+                            v-for="tier in selectedEvent.ticket_tiers"
+                            :key="tier.id"
+                            @click="rsvpForm.selected_tier_id = tier.id"
+                            :class="rsvpForm.selected_tier_id === tier.id ? 'bg-blue-50 border-blue-500 text-slate-900 dark:bg-blue-950/40 dark:text-white' : 'bg-white border-slate-200 text-slate-600 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-400'"
+                            class="p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-colors"
+                        >
+                            <div>
+                                <span class="font-medium">{{ tier.name }}</span>
+                                <span class="text-xs text-slate-500 block dark:text-slate-400">Available: {{ tier.available }}</span>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Promo Code Box -->
-                    <div v-if="selectedEvent?.promos.length > 0">
-                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Promo Code (e.g. EARLYBIRD10)</label>
-                        <div class="flex gap-2">
-                            <input v-model="rsvpForm.promo_code" type="text" placeholder="EARLYBIRD10" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white font-mono uppercase" />
-                            <button @click="applyPromo" class="py-2.5 px-4 rounded-xl bg-slate-800 text-white font-bold text-xs">Apply</button>
-                        </div>
-                    </div>
-
-                    <!-- Dietary Requirements -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Dietary Requirements</label>
-                        <input v-model="rsvpForm.dietary_requirements" type="text" placeholder="e.g. Vegetarian, Gluten-Free" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white" />
-                    </div>
-
-                    <!-- Total & Scannable QR Pass Preview -->
-                    <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-3">
-                        <div class="flex items-center justify-between font-bold text-emerald-300">
-                            <span>Total Due for Ticket:</span>
-                            <span class="text-2xl">{{ $cs }}{{ calculateTotal(selectedEvent) }}</span>
-                        </div>
-                        <div class="text-center p-3 rounded-lg bg-slate-950 font-mono text-xs text-blue-400">
-                            📱 Scannable QR Pass: <strong>TICKET-OUBC-{{ Math.floor(1000 + Math.random() * 9000) }}</strong>
+                            <span class="font-semibold text-slate-900 text-base dark:text-white">{{ $cs }}{{ tier.price }}</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex gap-3 pt-2">
-                    <button @click="showRsvpModal = false" class="w-full py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-sm">Cancel</button>
-                    <button @click="showRsvpModal = false" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 text-white font-bold text-sm">Checkout & issue QR pass</button>
+                <!-- Promo Code Box -->
+                <div v-if="selectedEvent?.promos.length > 0" class="flex items-end gap-2">
+                    <Input v-model="rsvpForm.promo_code" label="Promo code" placeholder="EARLYBIRD10" class="flex-1 font-mono uppercase" />
+                    <Button variant="secondary" @click="applyPromo">Apply</Button>
+                </div>
+
+                <!-- Dietary Requirements -->
+                <Input v-model="rsvpForm.dietary_requirements" label="Dietary requirements" placeholder="e.g. vegetarian, gluten-free" />
+
+                <!-- Total & Scannable QR Pass Preview -->
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 dark:bg-slate-950 dark:border-slate-800">
+                    <div class="flex items-center justify-between font-medium text-slate-700 dark:text-slate-300">
+                        <span>Total due</span>
+                        <span class="text-2xl font-semibold text-slate-900 dark:text-white">{{ $cs }}{{ calculateTotal(selectedEvent) }}</span>
+                    </div>
+                    <div class="text-center p-3 rounded-xl bg-white border border-slate-200 font-mono text-xs text-slate-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300">
+                        QR pass: <strong>TICKET-OUBC-{{ Math.floor(1000 + Math.random() * 9000) }}</strong>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <template #footer>
+                <Button variant="secondary" @click="showRsvpModal = false">Cancel</Button>
+                <Button @click="showRsvpModal = false">Check out and issue QR pass</Button>
+            </template>
+        </Modal>
     </div>
 </template>

@@ -3,6 +3,11 @@ import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Alert from '@/Components/Ui/Alert.vue';
 
 const props = defineProps({
   club: Object,
@@ -36,7 +41,7 @@ const updateProvider = (providerName) => {
   providerForm.post(route('billing.provider.update', { clubSlug: props.club.slug }), {
     preserveScroll: true,
     onSuccess: () => {
-      successToast.value = `Active payment gateway set to ${providerName.toUpperCase()}.`;
+      successToast.value = `Active payment gateway set to ${providerName.charAt(0).toUpperCase()}${providerName.slice(1)}.`;
       setTimeout(() => { successToast.value = ''; }, 3000);
     }
   });
@@ -46,7 +51,7 @@ const saveBusinessAccount = () => {
   businessForm.post(route('billing.business.update', { clubSlug: props.club.slug }), {
     preserveScroll: true,
     onSuccess: () => {
-      successToast.value = 'Main Business Account and Merchant Gateway credentials saved successfully!';
+      successToast.value = 'Main business account and merchant gateway credentials saved.';
       setTimeout(() => { successToast.value = ''; }, 3000);
     },
   });
@@ -54,252 +59,192 @@ const saveBusinessAccount = () => {
 </script>
 
 <template>
-  <AdminLayout title="Main Business Account & Billing Setup" :club="club" active-tab="settings">
+  <AdminLayout title="Main business account and billing setup" :club="club" active-tab="settings">
     <div class="max-w-5xl mx-auto space-y-6">
 
       <!-- Toast Notification -->
-      <div v-if="successToast" class="p-4 bg-emerald-600 text-white font-bold text-xs rounded-2xl shadow-lg flex items-center justify-between animate-in fade-in duration-200">
-        <div class="flex items-center gap-2">
-          <span>✅</span>
-          <span>{{ successToast }}</span>
+      <Alert v-if="successToast" variant="success">
+        <div class="flex items-center justify-between gap-3">
+          <span class="flex items-center gap-2"><UiIcon name="check" /> {{ successToast }}</span>
+          <button type="button" @click="successToast = ''" class="rounded-xl p-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/40" aria-label="Dismiss"><UiIcon name="x" /></button>
         </div>
-        <button type="button" @click="successToast = ''" class="text-white hover:opacity-80" aria-label="Dismiss"><UiIcon name="x" class="inline-block align-text-bottom" /></button>
-      </div>
+      </Alert>
 
       <!-- Main Header Banner -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
+      <Card class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-2">
-            <span class="px-2.5 py-1 bg-slate-900 dark:bg-slate-700 text-white font-extrabold text-[10px] rounded-full uppercase tracking-wider">Business Administration</span>
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">• {{ club.name }}</span>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Business administration</span>
+            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">• {{ club.name }}</span>
           </div>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1">Main Business Account & Merchant Gateway Administration</h2>
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-1">Main business account and merchant gateway administration</h2>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Configure your lodge/club legal corporate business entity, merchant payment gateway API credentials for collecting member dues, and manage SaaS platform subscription billing.</p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 shrink-0">
           <a
             :href="route('billing.portal', { clubSlug: club.slug })"
-            class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-2 cursor-pointer"
+            class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
           >
-            <UiIcon name="external-link" class="inline-block align-text-bottom" />
+            <UiIcon name="external-link" />
             <span>External Stripe portal</span>
           </a>
         </div>
-      </div>
+      </Card>
 
       <!-- Main Business Entity Setup Form Card -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+      <Card padding="none" class="overflow-hidden">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/50">
           <div>
-            <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>🏛️</span> Organization Legal Business Entity Account
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">
+              Organization legal business entity account
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Official company, lodge, or charity business details used for invoicing, tax receipts, and merchant registration.</p>
           </div>
-          <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-200/80 dark:bg-slate-700/80 px-2.5 py-1 rounded-lg">Corporate Entity</span>
+          <Badge>Corporate entity</Badge>
         </div>
 
         <form @submit.prevent="saveBusinessAccount" class="p-6 space-y-5 text-xs">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            <!-- Legal Business / Lodge Name -->
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Legal Business / Organization Name <span class="text-rose-500">*</span></label>
-              <input
-                v-model="businessForm.business_name"
-                type="text"
-                required
-                placeholder="e.g. Lodge of Fraternity No. 1418 Ltd"
-                class="w-full p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Company / Charity Registration No. -->
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Company / Charity Registration Number</label>
-              <input
-                v-model="businessForm.company_number"
-                type="text"
-                placeholder="e.g. 12948573 or Charity No. 110928"
-                class="w-full p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Tax / VAT Registration Number -->
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Tax / VAT Registration ID</label>
-              <input
-                v-model="businessForm.tax_id"
-                type="text"
-                placeholder="e.g. GB 987 6543 21"
-                class="w-full p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Official Billing Contact Email -->
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Official Accounts / Billing Email <span class="text-rose-500">*</span></label>
-              <input
-                v-model="businessForm.billing_contact_email"
-                type="email"
-                required
-                placeholder="accounts@lodge-of-fraternity.example"
-                class="w-full p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Official Billing Contact Phone -->
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Accounts / Treasurer Phone</label>
-              <input
-                v-model="businessForm.billing_phone"
-                type="text"
-                placeholder="+44 20 7946 0912"
-                class="w-full p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Registered Legal Business Address -->
-            <div class="space-y-1">
-              <label class="block font-bold text-slate-700 dark:text-slate-200">Registered Business / Clubhouse Address</label>
-              <input
-                v-model="businessForm.address"
-                type="text"
-                placeholder="100 Boathouse Way, Oxford, OX1 1AA, UK"
-                class="w-full p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
+            <Input
+              v-model="businessForm.business_name"
+              label="Legal business / organization name"
+              required
+              placeholder="e.g. Lodge of Fraternity No. 1418 Ltd"
+            />
+            <Input
+              v-model="businessForm.company_number"
+              label="Company / charity registration number"
+              placeholder="e.g. 12948573 or Charity No. 110928"
+            />
+            <Input
+              v-model="businessForm.tax_id"
+              label="Tax / VAT registration ID"
+              placeholder="e.g. GB 987 6543 21"
+            />
+            <Input
+              v-model="businessForm.billing_contact_email"
+              type="email"
+              label="Official accounts / billing email"
+              required
+              placeholder="accounts@lodge-of-fraternity.example"
+            />
+            <Input
+              v-model="businessForm.billing_phone"
+              label="Accounts / Treasurer phone"
+              placeholder="+44 20 7946 0912"
+            />
+            <Input
+              v-model="businessForm.address"
+              label="Registered business / clubhouse address"
+              placeholder="100 Boathouse Way, Oxford, OX1 1AA, UK"
+            />
           </div>
 
           <!-- Merchant Gateway Credentials Header & Divider -->
           <div class="pt-5 border-t border-slate-100 dark:border-slate-800">
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between gap-3 mb-3">
               <div>
-                <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <span>💳</span> Merchant Payment Gateway API Credentials
-                </h4>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">
+                  Merchant payment gateway API credentials
+                </h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Provide live API keys for your club's merchant account so member payments and event ticket fees flow directly to your business bank account.</p>
               </div>
-              <button
-                type="button"
-                @click="showSecretKeys = !showSecretKeys"
-                class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl transition-all"
-              >
-                <UiIcon :name="showSecretKeys ? 'eye-off' : 'eye'" class="inline-block align-text-bottom" /> {{ showSecretKeys ? 'Hide API keys' : 'Show API keys' }}
-              </button>
+              <Button variant="secondary" size="sm" class="shrink-0" @click="showSecretKeys = !showSecretKeys">
+                <UiIcon :name="showSecretKeys ? 'eye-off' : 'eye'" /> {{ showSecretKeys ? 'Hide API keys' : 'Show API keys' }}
+              </Button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800/80">
-              <div class="space-y-1">
-                <label class="block font-bold text-slate-700 dark:text-slate-200">Stripe Publishable Key</label>
-                <input
-                  v-model="businessForm.stripe_publishable_key"
-                  :type="showSecretKeys ? 'text' : 'password'"
-                  placeholder="pk_live_..."
-                  class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-mono text-[11px] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div class="space-y-1">
-                <label class="block font-bold text-slate-700 dark:text-slate-200">Stripe Secret Key</label>
-                <input
-                  v-model="businessForm.stripe_secret_key"
-                  :type="showSecretKeys ? 'text' : 'password'"
-                  :placeholder="businessDetails?.has_stripe_secret_key ? 'Saved - leave blank to keep' : 'sk_live_...'"
-                  class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-mono text-[11px] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div class="space-y-1">
-                <label class="block font-bold text-slate-700 dark:text-slate-200">Stripe Webhook Secret</label>
-                <input
-                  v-model="businessForm.stripe_webhook_secret"
-                  :type="showSecretKeys ? 'text' : 'password'"
-                  :placeholder="businessDetails?.has_stripe_webhook_secret ? 'Saved - leave blank to keep' : 'whsec_...'"
-                  class="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg font-mono text-[11px] text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
+              <Input
+                v-model="businessForm.stripe_publishable_key"
+                :type="showSecretKeys ? 'text' : 'password'"
+                label="Stripe publishable key"
+                placeholder="pk_live_..."
+              />
+              <Input
+                v-model="businessForm.stripe_secret_key"
+                :type="showSecretKeys ? 'text' : 'password'"
+                label="Stripe secret key"
+                :placeholder="businessDetails?.has_stripe_secret_key ? 'Saved - leave blank to keep' : 'sk_live_...'"
+              />
+              <Input
+                v-model="businessForm.stripe_webhook_secret"
+                :type="showSecretKeys ? 'text' : 'password'"
+                label="Stripe webhook secret"
+                :placeholder="businessDetails?.has_stripe_webhook_secret ? 'Saved - leave blank to keep' : 'whsec_...'"
+              />
             </div>
           </div>
 
           <div class="flex justify-end pt-2">
-            <button
-              type="submit"
-              :disabled="businessForm.processing"
-              class="px-5 py-2.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <span v-if="businessForm.processing">Saving...</span>
-              <span v-else><UiIcon name="save" class="inline-block align-text-bottom" /> Save main business account details</span>
-            </button>
+            <Button type="submit" :loading="businessForm.processing">
+              <UiIcon v-if="!businessForm.processing" name="save" />
+              {{ businessForm.processing ? 'Saving...' : 'Save main business account details' }}
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
 
       <!-- Active Plan Overview & Gateway Selector Card -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         <!-- Left: Current Plan Summary -->
-        <div class="md:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
-          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+        <Card class="md:col-span-2 space-y-5">
+          <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full border border-blue-100 dark:border-blue-900/40">
-                Active Platform Subscription
-              </span>
-              <h3 class="text-lg font-bold text-slate-900 dark:text-white mt-2">{{ currentPlan.name }}</h3>
+              <Badge variant="info">Active platform subscription</Badge>
+              <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-2">{{ currentPlan.name }}</h3>
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ currentPlan.billing_cycle }}</p>
             </div>
-            <div class="text-right">
-              <span class="text-2xl font-black text-slate-900 dark:text-white block">{{ currentPlan.price }}</span>
-              <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-1 mt-0.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Active & In Good Standing</span>
-              </span>
+            <div class="text-right space-y-1">
+              <span class="text-2xl font-bold text-slate-900 dark:text-white block">{{ currentPlan.price }}</span>
+              <Badge variant="success">Active and in good standing</Badge>
             </div>
           </div>
 
           <!-- Included Platform Modules -->
           <div>
-            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-3">Included Platform Features & Modules</h4>
+            <h4 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Included platform features and modules</h4>
             <div class="flex flex-wrap gap-2">
-              <span v-for="(module, idx) in currentPlan.modules" :key="idx" class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
-                <span class="text-emerald-500">✓</span>
+              <Badge v-for="(module, idx) in currentPlan.modules" :key="idx">
+                <UiIcon name="check" :size="12" class="text-emerald-600 dark:text-emerald-400" />
                 <span>{{ module }}</span>
-              </span>
+              </Badge>
             </div>
           </div>
 
           <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-            <span>Next Automated Renewal Date: <strong class="text-slate-900 dark:text-white">{{ currentPlan.next_billing_date }}</strong></span>
+            <span>Next automated renewal date: <strong class="text-slate-900 dark:text-white">{{ currentPlan.next_billing_date }}</strong></span>
           </div>
-        </div>
+        </Card>
 
         <!-- Right: Active Payment Gateway Selector Card -->
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between">
+        <Card class="space-y-4 flex flex-col justify-between">
           <div>
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>💳</span> Active Payment Gateway
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">
+              Active payment gateway
             </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Select your preferred payment processor for member dues & SaaS checkouts.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Select your preferred payment processor for member dues and SaaS checkouts.</p>
 
             <div class="space-y-2 mt-4">
               <!-- Stripe Option -->
               <button
                 type="button"
                 @click="updateProvider('stripe')"
+                :aria-pressed="providerForm.provider === 'stripe'"
                 :class="[
-                  'w-full p-3 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer',
+                  'w-full p-3 rounded-xl border text-left text-xs font-medium transition-colors flex items-center justify-between cursor-pointer',
                   providerForm.provider === 'stripe'
                     ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 text-blue-900 dark:text-blue-200 shadow-sm'
                     : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                 ]"
               >
                 <div class="flex items-center gap-2.5">
-                  <UiIcon name="cash" :size="18" class="inline-block align-text-bottom" />
+                  <UiIcon name="cash" :size="18" />
                   <div>
-                    <span class="block">Stripe Gateway</span>
-                    <span class="text-[10px] font-semibold text-slate-400">Cards, Apple Pay, Google Pay</span>
+                    <span class="block">Stripe gateway</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Cards, Apple Pay, Google Pay</span>
                   </div>
                 </div>
                 <span v-if="providerForm.provider === 'stripe'" class="inline-flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400"><UiIcon name="check" :size="14" /> Active</span>
@@ -309,18 +254,19 @@ const saveBusinessAccount = () => {
               <button
                 type="button"
                 @click="updateProvider('paddle')"
+                :aria-pressed="providerForm.provider === 'paddle'"
                 :class="[
-                  'w-full p-3 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer',
+                  'w-full p-3 rounded-xl border text-left text-xs font-medium transition-colors flex items-center justify-between cursor-pointer',
                   providerForm.provider === 'paddle'
                     ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700/60 text-blue-900 dark:text-blue-200 shadow-sm'
                     : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                 ]"
               >
                 <div class="flex items-center gap-2.5">
-                  <UiIcon name="globe" :size="18" class="inline-block align-text-bottom" />
+                  <UiIcon name="globe" :size="18" />
                   <div>
                     <span class="block">Paddle Billing</span>
-                    <span class="text-[10px] font-semibold text-slate-400">Merchant of Record & International Tax</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">Merchant of record and international tax</span>
                   </div>
                 </div>
                 <span v-if="providerForm.provider === 'paddle'" class="inline-flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400"><UiIcon name="check" :size="14" /> Active</span>
@@ -328,58 +274,59 @@ const saveBusinessAccount = () => {
             </div>
           </div>
 
-          <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400">
-            🔒 Gateways use 256-bit SSL encryption. Payment data is securely stored.
+          <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-2">
+            <UiIcon name="lock" :size="14" class="shrink-0 mt-px" />
+            <span>Gateways use 256-bit SSL encryption. Payment data is securely stored.</span>
           </div>
-        </div>
+        </Card>
 
       </div>
 
       <!-- SaaS Invoices & Billing History Table -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-4 p-6">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+      <Card class="overflow-hidden space-y-4">
+        <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
-            <h3 class="text-base font-bold text-slate-900 dark:text-white">📄 SaaS Platform Invoices & Receipts</h3>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">SaaS platform invoices and receipts</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">View recent platform subscription payments and download tax receipts.</p>
           </div>
-          <button type="button" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-all cursor-pointer">
+          <Button variant="secondary" size="sm" class="shrink-0">
             Download all receipts (PDF)
-          </button>
+          </Button>
         </div>
 
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead>
-              <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800/80">
-                <th class="p-3">Invoice Ref</th>
+              <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-800/80">
+                <th class="p-3">Invoice ref</th>
                 <th class="p-3">Date</th>
                 <th class="p-3">Description</th>
                 <th class="p-3">Amount</th>
-                <th class="p-3">Payment Status</th>
+                <th class="p-3">Payment status</th>
                 <th class="p-3 text-right">Receipt</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
               <tr v-for="inv in billingHistory" :key="inv.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
-                <td class="p-3 font-mono font-bold text-slate-900 dark:text-white">{{ inv.id }}</td>
+                <td class="p-3 font-mono font-semibold text-slate-900 dark:text-white">{{ inv.id }}</td>
                 <td class="p-3 font-medium text-slate-600 dark:text-slate-300">{{ inv.date }}</td>
                 <td class="p-3 font-medium text-slate-800 dark:text-slate-100">{{ inv.description }}</td>
-                <td class="p-3 font-bold text-slate-900 dark:text-white">{{ inv.amount }}</td>
+                <td class="p-3 font-semibold text-slate-900 dark:text-white">{{ inv.amount }}</td>
                 <td class="p-3">
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60">
-                    ✓ {{ inv.status }}
-                  </span>
+                  <Badge variant="success" class="capitalize">
+                    <UiIcon name="check" :size="12" /> {{ inv.status }}
+                  </Badge>
                 </td>
                 <td class="p-3 text-right">
-                  <span class="text-blue-600 dark:text-blue-400 font-bold hover:underline cursor-pointer">
-                    PDF Receipt &rarr;
+                  <span class="text-blue-600 dark:text-blue-400 font-medium hover:underline cursor-pointer">
+                    PDF receipt
                   </span>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
     </div>
 
