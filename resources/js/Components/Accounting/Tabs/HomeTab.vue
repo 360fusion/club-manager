@@ -1,5 +1,10 @@
 <script setup>
 import { formatMoney } from '@/Utils/currency';
+import Card from '@/Components/Ui/Card.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import StatCard from '@/Components/Ui/StatCard.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 // The Home tab of the accounting screen: set-up checklist, headline figures, balance sheet and profit & loss previews, and the Gift Aid summary.
 defineProps({
@@ -14,20 +19,17 @@ defineProps({
 
 <template>
   <div class="space-y-6">
-      <!-- Guided First-Run Setup Checklist -->
-      <div v-if="showOnboarding" class="bg-blue-50 dark:bg-blue-950/30 rounded-3xl border border-blue-200 dark:border-blue-800/60 shadow-sm p-6 space-y-4">
+      <!-- Guided first-run setup checklist -->
+      <div v-if="showOnboarding" class="bg-blue-50 dark:bg-blue-950/30 rounded-2xl border border-blue-200 dark:border-blue-800/60 shadow-sm p-6 space-y-4">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h3 class="text-sm font-black text-blue-900 dark:text-blue-100">Get your accounting set up</h3>
-            <p class="text-xs text-blue-700 dark:text-blue-300 mt-0.5">A few quick steps before the figures above mean anything.</p>
+            <h3 class="text-base font-semibold text-blue-900 dark:text-blue-100">Get your accounting set up</h3>
+            <p class="text-xs text-blue-700 dark:text-blue-300 mt-0.5">A few quick steps before the figures below mean anything.</p>
           </div>
-          <button
-            type="button"
-            @click="dismissOnboarding"
-            class="text-[11px] font-bold text-blue-500 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 cursor-pointer whitespace-nowrap"
-          >
-            Dismiss ✕
-          </button>
+          <Button variant="ghost" size="sm" @click="dismissOnboarding">
+            <template #icon><UiIcon name="x" /></template>
+            Dismiss
+          </Button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
@@ -35,194 +37,150 @@ defineProps({
             :key="step.key"
             type="button"
             @click="navigateTo(step.tab)"
-            class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-blue-100 dark:border-blue-900/60 text-left hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer"
+            class="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-blue-100 dark:border-blue-900/60 text-left hover:border-blue-300 dark:hover:border-blue-700 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <span class="text-lg shrink-0">{{ step.done ? '✅' : '⬜️' }}</span>
-            <span class="min-w-0">
-              <span class="block text-xs font-extrabold text-slate-900 dark:text-white">{{ step.label }}</span>
-              <span v-if="step.skippable" class="block text-[10px] text-slate-400 dark:text-slate-500 font-semibold">Optional</span>
+            <span
+              v-if="step.done"
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white"
+            ><UiIcon name="check" :size="16" /></span>
+            <span v-else class="h-6 w-6 shrink-0 rounded-full border-2 border-slate-300 dark:border-slate-600" aria-hidden="true"></span>
+            <span class="min-w-0 flex-1 text-sm font-medium text-slate-900 dark:text-white">{{ step.label }}</span>
+            <span class="flex shrink-0 items-center gap-1.5">
+              <Badge v-if="step.skippable" variant="neutral">Optional</Badge>
+              <Badge :variant="step.done ? 'success' : 'neutral'">{{ step.done ? 'Done' : 'To do' }}</Badge>
             </span>
           </button>
         </div>
       </div>
 
-      <!-- Financial KPIs Overview Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <!-- 1. Total Assets -->
-        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Assets</span>
-          <span class="text-lg font-black text-emerald-700 dark:text-emerald-300 block">{{ formatMoney(summary.total_assets) }}</span>
-          <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Bank & Receivables</span>
-        </div>
+      <!-- Headline figures -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatCard label="Total assets" :value="formatMoney(summary.total_assets)" caption="Bank and receivables" />
+        <StatCard label="Liabilities" :value="formatMoney(summary.total_liabilities)" caption="Payables and prepayments" />
+        <StatCard label="Club equity" :value="formatMoney(summary.total_equity)" caption="Retained reserves" />
+        <StatCard label="Total income" :value="formatMoney(summary.total_revenue)" caption="Dues and tickets" />
+        <StatCard label="Total expenses" :value="formatMoney(summary.total_expenses)" caption="Operational costs" />
 
-        <!-- 2. Total Liabilities -->
-        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Liabilities</span>
-          <span class="text-lg font-black text-amber-700 dark:text-amber-300 block">{{ formatMoney(summary.total_liabilities) }}</span>
-          <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Payables & Prepayments</span>
-        </div>
-
-        <!-- 3. Total Equity -->
-        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Club Equity</span>
-          <span class="text-lg font-black text-blue-700 dark:text-blue-300 block">{{ formatMoney(summary.total_equity) }}</span>
-          <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Retained Reserves</span>
-        </div>
-
-        <!-- 4. Total Revenue -->
-        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Income</span>
-          <span class="text-lg font-black text-blue-700 dark:text-blue-300 block">{{ formatMoney(summary.total_revenue) }}</span>
-          <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Dues & Tickets</span>
-        </div>
-
-        <!-- 5. Total Expenses -->
-        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Expenses</span>
-          <span class="text-lg font-black text-rose-700 dark:text-rose-300 block">{{ formatMoney(summary.total_expenses) }}</span>
-          <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Operational Costs</span>
-        </div>
-
-        <!-- 6. Net Surplus / Profit -->
-        <div class="bg-slate-900 dark:bg-slate-700 text-white p-4 rounded-2xl border border-slate-800 shadow-md space-y-1">
-          <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Net Income</span>
-          <span class="text-lg font-black block" :class="summary.net_income >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+        <!-- Net surplus / deficit, coloured by its sign and named in the caption -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+          <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Net income</p>
+          <p class="mt-1 font-display text-2xl font-semibold lining-nums tabular-nums" :class="summary.net_income >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'">
             {{ formatMoney(summary.net_income) }}
-          </span>
-          <span class="text-[10px] text-slate-400 block font-medium">Surplus / (Deficit)</span>
+          </p>
+          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ summary.net_income >= 0 ? 'Surplus' : 'Deficit' }}</p>
         </div>
       </div>
 
-      <!-- VIEW 1: HOME (Dashboard & Financial Statements Overview) -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Balance Sheet Preview Box -->
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Balance Sheet Summary</h3>
-            <span class="text-xs font-semibold text-slate-400">As of today</span>
-          </div>
+        <!-- Balance sheet preview -->
+        <Card>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white">Balance sheet summary</h3>
+              <span class="text-xs text-slate-500 dark:text-slate-400">As of today</span>
+            </div>
+          </template>
 
-          <div class="space-y-3 text-xs">
-            <div class="flex items-center justify-between p-3 bg-emerald-50/50 dark:bg-emerald-950/50 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
-              <span class="font-bold text-slate-800 dark:text-slate-100">Total Assets</span>
-              <span class="font-black text-emerald-700 dark:text-emerald-300 text-sm">{{ formatMoney(summary.total_assets) }}</span>
+          <dl class="space-y-2 text-sm">
+            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+              <dt class="text-slate-700 dark:text-slate-200">Total assets</dt>
+              <dd class="font-semibold tabular-nums text-slate-900 dark:text-white">{{ formatMoney(summary.total_assets) }}</dd>
             </div>
 
-            <div class="flex items-center justify-between p-3 bg-amber-50/50 dark:bg-amber-950/50 rounded-xl border border-amber-100 dark:border-amber-900/40">
-              <span class="font-bold text-slate-800 dark:text-slate-100">Total Liabilities</span>
-              <span class="font-black text-amber-700 dark:text-amber-300 text-sm">{{ formatMoney(summary.total_liabilities) }}</span>
+            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+              <dt class="text-slate-700 dark:text-slate-200">Total liabilities</dt>
+              <dd class="font-semibold tabular-nums text-slate-900 dark:text-white">{{ formatMoney(summary.total_liabilities) }}</dd>
             </div>
 
-            <div class="flex items-center justify-between p-3 bg-blue-50/50 dark:bg-blue-950/50 rounded-xl border border-blue-100 dark:border-blue-900/40">
-              <span class="font-bold text-slate-800 dark:text-slate-100">Total Club Equity</span>
-              <span class="font-black text-blue-700 dark:text-blue-300 text-sm">{{ formatMoney(summary.total_equity) }}</span>
+            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+              <dt class="text-slate-700 dark:text-slate-200">Total club equity</dt>
+              <dd class="font-semibold tabular-nums text-slate-900 dark:text-white">{{ formatMoney(summary.total_equity) }}</dd>
             </div>
+          </dl>
 
-            <div class="p-3.5 bg-slate-900 dark:bg-slate-700 text-white rounded-2xl flex items-center justify-between mt-4">
-              <div>
-                <span class="font-extrabold block text-xs">Accounting Equation Status</span>
-                <span class="text-[10px] text-slate-400 block">Assets = Liabilities + Equity</span>
-              </div>
-              <span class="px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-500 text-slate-950">
-                BALANCED ✓
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Profit & Loss Summary Box -->
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Income Statement (P&L)</h3>
-            <span class="text-xs font-semibold text-slate-400">Year to Date</span>
-          </div>
-
-          <div class="space-y-3 text-xs">
-            <div class="flex items-center justify-between p-3 bg-blue-50/50 dark:bg-blue-950/50 rounded-xl border border-blue-100 dark:border-blue-900/40">
-              <span class="font-bold text-slate-800 dark:text-slate-100">Operating Income / Dues</span>
-              <span class="font-black text-blue-700 dark:text-blue-300 text-sm">{{ formatMoney(summary.total_revenue) }}</span>
-            </div>
-
-            <div class="flex items-center justify-between p-3 bg-rose-50/50 dark:bg-rose-950/50 rounded-xl border border-rose-100 dark:border-rose-900/40">
-              <span class="font-bold text-slate-800 dark:text-slate-100">Operating Expenses</span>
-              <span class="font-black text-rose-700 dark:text-rose-300 text-sm">{{ formatMoney(summary.total_expenses) }}</span>
-            </div>
-
-            <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between mt-4">
-              <div>
-                <span class="font-extrabold text-slate-900 dark:text-white block text-xs">Net Operating Surplus</span>
-                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Revenue minus Expenses</span>
-              </div>
-              <span class="text-base font-black" :class="summary.net_income >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-                {{ formatMoney(summary.net_income) }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Donations & Gift Aid Tax Recovery Summary Box -->
-      <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-3">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-lg border border-blue-100 dark:border-blue-900/40 shadow-sm">
-              🏛️
-            </div>
+          <div class="mt-4 p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-3">
             <div>
-              <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Donations & Gift Aid Tax Recovery Summary</h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">HMRC 25% Tax Relief & Relief Chest Bank Reconciliation Overview</p>
+              <span class="font-medium text-slate-900 dark:text-white block text-sm">Accounting equation</span>
+              <span class="text-xs text-slate-500 dark:text-slate-400 block">Assets = liabilities + equity</span>
             </div>
+            <Badge variant="success"><UiIcon name="check" :size="16" />Balanced</Badge>
           </div>
-          <button
-            @click="navigateTo('reconciliation')"
-            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-xl border border-blue-200/60 dark:border-blue-800/60 transition shadow-xs self-start sm:self-auto cursor-pointer"
-          >
-            <span>Manage claims & reconciliation</span>
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+        </Card>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-          <!-- 1. Total Eligible Donations -->
-          <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/70 dark:border-slate-800/70 space-y-1">
-            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Eligible Donations</span>
-            <span class="text-lg font-black text-slate-900 dark:text-white block">
-              {{ reconciliation.gift_aid_summary?.formatted_total_donations || ($cs + '0.00') }}
-            </span>
-            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
-              {{ reconciliation.gift_aid_summary?.total_eligible_count || 0 }} charity collections
-            </span>
-          </div>
+        <!-- Profit and loss preview -->
+        <Card>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white">Income statement (P&amp;L)</h3>
+              <span class="text-xs text-slate-500 dark:text-slate-400">Year to date</span>
+            </div>
+          </template>
 
-          <!-- 2. Calculated 25% Gift Aid -->
-          <div class="p-4 bg-blue-50/60 dark:bg-blue-950/60 rounded-2xl border border-blue-100/80 dark:border-blue-900/80 space-y-1">
-            <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">25% Gift Aid Claimable</span>
-            <span class="text-lg font-black text-blue-700 dark:text-blue-300 block">
-              {{ reconciliation.gift_aid_summary?.formatted_claimable_gift_aid || ($cs + '0.00') }}
-            </span>
-            <span class="text-[10px] text-blue-600/80 dark:text-blue-400/80 block font-medium">Standard HMRC reclaim rate</span>
-          </div>
+          <dl class="space-y-2 text-sm">
+            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+              <dt class="text-slate-700 dark:text-slate-200">Operating income and dues</dt>
+              <dd class="font-semibold tabular-nums text-slate-900 dark:text-white">{{ formatMoney(summary.total_revenue) }}</dd>
+            </div>
 
-          <!-- 3. Unclaimed Gift Aid -->
-          <div class="p-4 bg-amber-50/60 dark:bg-amber-950/60 rounded-2xl border border-amber-100/80 dark:border-amber-900/80 space-y-1">
-            <span class="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 uppercase tracking-wider block">Unclaimed Relief</span>
-            <span class="text-lg font-black text-amber-700 dark:text-amber-300 block">
-              {{ reconciliation.gift_aid_summary?.formatted_unclaimed_gift_aid || ($cs + '0.00') }}
-            </span>
-            <span class="text-[10px] text-amber-700/80 dark:text-amber-300/80 block font-medium">Awaiting schedule export</span>
-          </div>
+            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+              <dt class="text-slate-700 dark:text-slate-200">Operating expenses</dt>
+              <dd class="font-semibold tabular-nums text-slate-900 dark:text-white">{{ formatMoney(summary.total_expenses) }}</dd>
+            </div>
+          </dl>
 
-          <!-- 4. Reconciled Bank Credits -->
-          <div class="p-4 bg-emerald-50/60 dark:bg-emerald-950/60 rounded-2xl border border-emerald-100/80 dark:border-emerald-900/80 space-y-1">
-            <span class="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider block">Reconciled Credits</span>
-            <span class="text-lg font-black text-emerald-700 dark:text-emerald-300 block">
-              {{ reconciliation.gift_aid_summary?.formatted_reconciled_gift_aid || ($cs + '0.00') }}
+          <div class="mt-4 p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-3">
+            <div>
+              <span class="font-medium text-slate-900 dark:text-white block text-sm">Net operating surplus</span>
+              <span class="text-xs text-slate-500 dark:text-slate-400 block">Income minus expenses</span>
+            </div>
+            <span class="text-base font-semibold tabular-nums" :class="summary.net_income >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'">
+              {{ formatMoney(summary.net_income) }}
             </span>
-            <span class="text-[10px] text-emerald-700/80 dark:text-emerald-300/80 block font-medium">Matched to bank deposits</span>
           </div>
-        </div>
+        </Card>
       </div>
+
+      <!-- Donations and Gift Aid summary -->
+      <Card>
+        <template #header>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 shrink-0 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-900/40">
+                <UiIcon name="gift" :size="20" />
+              </div>
+              <div>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">Donations and Gift Aid tax recovery</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">HMRC 25% tax relief and Relief Chest bank reconciliation</p>
+              </div>
+            </div>
+            <Button variant="secondary" size="sm" class="self-start sm:self-auto" @click="navigateTo('reconciliation')">
+              Manage claims and reconciliation
+            </Button>
+          </div>
+        </template>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard
+            label="Eligible donations"
+            :value="reconciliation.gift_aid_summary?.formatted_total_donations || ($cs + '0.00')"
+            :caption="`${reconciliation.gift_aid_summary?.total_eligible_count || 0} charity collections`"
+          />
+          <StatCard
+            label="25% Gift Aid claimable"
+            :value="reconciliation.gift_aid_summary?.formatted_claimable_gift_aid || ($cs + '0.00')"
+            caption="Standard HMRC reclaim rate"
+          />
+          <StatCard
+            label="Unclaimed relief"
+            :value="reconciliation.gift_aid_summary?.formatted_unclaimed_gift_aid || ($cs + '0.00')"
+            caption="Awaiting schedule export"
+          />
+          <StatCard
+            label="Reconciled credits"
+            :value="reconciliation.gift_aid_summary?.formatted_reconciled_gift_aid || ($cs + '0.00')"
+            caption="Matched to bank deposits"
+          />
+        </div>
+      </Card>
   </div>
 </template>

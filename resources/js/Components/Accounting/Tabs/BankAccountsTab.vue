@@ -1,6 +1,9 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
 import { formatMoney } from '@/Utils/currency';
+import Card from '@/Components/Ui/Card.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 // A tab of the accounting screen, in its own file so the page stays readable.
 const showConnectBankDropdown = defineModel('showConnectBankDropdown', { type: [String, Number, Boolean, Array, Object], default: undefined });
@@ -23,312 +26,236 @@ defineProps({
     syncSumUpNow: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
     toggleBankAccountActive: { type: [Object, Array, Function, String, Number, Boolean], default: undefined }
 });
+
+const MENU_ITEM = 'flex w-full flex-col items-start px-4 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-800';
 </script>
 
 <template>
     <div class="space-y-6">
-      <!-- Bank & Payment Accounts Dashboard Cards -->
-      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
-          <div>
-            <div class="flex items-center gap-2.5">
-              <span class="p-2 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl text-lg">🏦</span>
-              <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Bank &amp; Payment Accounts Hub</h3>
-            </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Multi-Bank &amp; Payment Gateway Management (High Street Banks, Stripe, PayPal, SumUp)</p>
-          </div>
-          <div v-if="canManageBilling" class="relative connect-bank-dropdown-container">
-            <button
-              type="button"
-              @click.stop="showConnectBankDropdown = !showConnectBankDropdown"
-              class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition-all cursor-pointer font-extrabold text-xs flex items-center gap-2"
-            >
-              <span>💳 Connect bank / API</span>
-              <span class="text-[10px]">▾</span>
-            </button>
-
-            <div
-              v-if="showConnectBankDropdown"
-              class="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 z-40 text-xs font-semibold text-slate-800 dark:text-slate-100 space-y-1 divide-y divide-slate-100 dark:divide-slate-800"
-            >
-              <div class="px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                Bank Account &amp; Gateways
-              </div>
-
-              <div class="py-1">
-                <button
-                  type="button"
-                  @click="showBankAccountModal = true; showConnectBankDropdown = false"
-                  class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <span class="text-base">🏦</span>
-                  <div>
-                    <span class="font-bold text-slate-900 dark:text-white block">High Street Bank Account</span>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Current, Savings or Cash Account</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  @click="showGoCardlessModal = true; showConnectBankDropdown = false"
-                  class="w-full text-left px-4 py-2 hover:bg-amber-50/70 dark:hover:bg-amber-950/70 flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <span class="text-base">🟡</span>
-                  <div>
-                    <span class="font-bold text-slate-900 dark:text-white block">GoCardless Direct Debit API</span>
-                    <span class="text-[10px] text-amber-700 dark:text-amber-300 font-medium">Direct Debit Mandates &amp; Feed</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  @click="showStripeModal = true; showConnectBankDropdown = false"
-                  class="w-full text-left px-4 py-2 hover:bg-blue-50/70 dark:hover:bg-blue-950/70 flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <span class="text-base">💜</span>
-                  <div>
-                    <span class="font-bold text-slate-900 dark:text-white block">Stripe API</span>
-                    <span class="text-[10px] text-blue-700 dark:text-blue-300 font-medium">Card Payments &amp; Payout Feed</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  @click="showSumUpModal = true; showConnectBankDropdown = false"
-                  class="w-full text-left px-4 py-2 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/70 flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <span class="text-base">💚</span>
-                  <div>
-                    <span class="font-bold text-slate-900 dark:text-white block">SumUp Card Reader API</span>
-                    <span class="text-[10px] text-emerald-700 dark:text-emerald-300 font-medium">Card Terminal Sales Feed</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  @click="showPayPalModal = true; showConnectBankDropdown = false"
-                  class="w-full text-left px-4 py-2 hover:bg-blue-50/70 dark:hover:bg-blue-950/70 flex items-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <span class="text-base">🟦</span>
-                  <div>
-                    <span class="font-bold text-slate-900 dark:text-white block">PayPal Merchant API</span>
-                    <span class="text-[10px] text-blue-700 dark:text-blue-300 font-medium">PayPal Checkout Feed</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            v-for="acc in (bankAccounts || [])"
-            :key="acc.id"
-            class="bg-slate-50/70 dark:bg-slate-800/70 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 p-5 shadow-sm hover:border-blue-300 dark:hover:border-blue-700/60 transition-all flex flex-col justify-between space-y-4"
-          >
+      <!-- Bank and payment accounts -->
+      <Card>
+        <div class="space-y-6">
+          <div class="flex flex-col justify-between gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center dark:border-slate-800">
             <div>
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 shadow-sm">
-                    <span v-if="acc.bank_name === 'GoCardless' || acc.gocardless_access_token">🟡</span>
-                    <span v-else-if="acc.bank_name === 'Stripe' || acc.stripe_secret_key">💜</span>
-                    <span v-else-if="acc.bank_name === 'SumUp' || acc.sumup_api_key">💚</span>
-                    <span v-else-if="acc.bank_name === 'PayPal' || acc.paypal_client_id">🟦</span>
-                    <span v-else-if="acc.account_type === 'payment_gateway'">💳</span>
-                    <span v-else-if="acc.account_type === 'merchant'">📱</span>
-                    <span v-else-if="acc.account_type === 'savings'">📈</span>
-                    <span v-else-if="acc.account_type === 'cash'">💵</span>
-                    <span v-else>🏦</span>
+              <h3 class="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+                <UiIcon name="bank" :size="20" class="text-slate-500 dark:text-slate-400" />
+                Bank and payment accounts
+              </h3>
+              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">High street bank accounts and payment providers (Stripe, PayPal, SumUp, GoCardless).</p>
+            </div>
+            <div v-if="canManageBilling" class="relative connect-bank-dropdown-container">
+              <Button :aria-expanded="Boolean(showConnectBankDropdown)" aria-haspopup="menu" @click.stop="showConnectBankDropdown = !showConnectBankDropdown">
+                <template #icon><UiIcon name="plus" /></template>
+                Add an account
+                <UiIcon name="chevron-down" />
+              </Button>
+
+              <div
+                v-if="showConnectBankDropdown"
+                role="menu"
+                class="absolute right-0 z-40 mt-1 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900"
+              >
+                <div class="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  Bank account and payment providers
+                </div>
+
+                <button type="button" role="menuitem" :class="MENU_ITEM" @click="showBankAccountModal = true; showConnectBankDropdown = false">
+                  <span class="font-medium text-slate-900 dark:text-white">Bank account</span>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">Current, savings or cash account</span>
+                </button>
+
+                <button type="button" role="menuitem" :class="MENU_ITEM" @click="showGoCardlessModal = true; showConnectBankDropdown = false">
+                  <span class="font-medium text-slate-900 dark:text-white">GoCardless</span>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">Direct debit mandates and collections</span>
+                </button>
+
+                <button type="button" role="menuitem" :class="MENU_ITEM" @click="showStripeModal = true; showConnectBankDropdown = false">
+                  <span class="font-medium text-slate-900 dark:text-white">Stripe</span>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">Card payments and payouts</span>
+                </button>
+
+                <button type="button" role="menuitem" :class="MENU_ITEM" @click="showSumUpModal = true; showConnectBankDropdown = false">
+                  <span class="font-medium text-slate-900 dark:text-white">SumUp card reader</span>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">Card terminal sales</span>
+                </button>
+
+                <button type="button" role="menuitem" :class="MENU_ITEM" @click="showPayPalModal = true; showConnectBankDropdown = false">
+                  <span class="font-medium text-slate-900 dark:text-white">PayPal</span>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">PayPal checkout payments</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Account cards -->
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div
+              v-for="acc in (bankAccounts || [])"
+              :key="acc.id"
+              class="flex flex-col justify-between space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 transition-colors hover:border-blue-300 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-blue-700/60"
+            >
+              <div>
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-center gap-2.5">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+                      <UiIcon v-if="acc.bank_name === 'GoCardless' || acc.gocardless_access_token" name="link" :size="20" />
+                      <UiIcon v-else-if="acc.bank_name === 'Stripe' || acc.stripe_secret_key" name="link" :size="20" />
+                      <UiIcon v-else-if="acc.bank_name === 'SumUp' || acc.sumup_api_key" name="link" :size="20" />
+                      <UiIcon v-else-if="acc.bank_name === 'PayPal' || acc.paypal_client_id" name="link" :size="20" />
+                      <UiIcon v-else-if="acc.account_type === 'payment_gateway'" name="link" :size="20" />
+                      <UiIcon v-else-if="acc.account_type === 'merchant'" name="receipt" :size="20" />
+                      <UiIcon v-else-if="acc.account_type === 'savings'" name="chart" :size="20" />
+                      <UiIcon v-else-if="acc.account_type === 'cash'" name="cash" :size="20" />
+                      <UiIcon v-else name="bank" :size="20" />
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-semibold leading-snug text-slate-900 dark:text-white">{{ acc.bank_name }}</h4>
+                      <p class="text-xs text-slate-500 dark:text-slate-400">{{ acc.account_name }}</p>
+                    </div>
+                  </div>
+
+                  <Badge :variant="acc.is_active ? 'success' : 'neutral'">{{ acc.is_active ? 'Active' : 'Inactive' }}</Badge>
+                </div>
+
+                <div class="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-2.5 text-xs dark:border-slate-800">
+                  <div>
+                    <span class="block text-slate-500 dark:text-slate-400">Account type</span>
+                    <span class="font-medium text-slate-700 dark:text-slate-200">{{ acc.formatted_account_type || acc.account_type }}</span>
                   </div>
                   <div>
-                    <h4 class="font-extrabold text-slate-900 dark:text-white text-sm leading-snug">{{ acc.bank_name }}</h4>
-                    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{{ acc.account_name }}</p>
+                    <span class="block text-slate-500 dark:text-slate-400">Nominal code</span>
+                    <span class="font-medium tabular-nums text-slate-700 dark:text-slate-200">Code {{ acc.account_code || '1000' }}</span>
+                  </div>
+                  <div v-if="acc.sort_code || acc.account_number" class="col-span-2 tabular-nums text-slate-500 dark:text-slate-400">
+                    <span>Sort code: {{ acc.sort_code || 'N/A' }}</span> · <span>Account: {{ acc.account_number || 'N/A' }}</span>
                   </div>
                 </div>
 
-                <span :class="['px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border', acc.is_active ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800']">
-                  {{ acc.is_active ? 'Active' : 'Inactive' }}
-                </span>
+                <!-- GoCardless feed -->
+                <div v-if="acc.bank_name === 'GoCardless' || acc.gocardless_access_token" class="mt-3 flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900">
+                  <div class="space-y-0.5">
+                    <span class="flex items-center gap-1.5 font-medium text-slate-900 dark:text-white">GoCardless <Badge variant="success">Connected</Badge></span>
+                    <span class="block text-slate-500 dark:text-slate-400">Environment: {{ acc.gocardless_environment || 'sandbox' }}</span>
+                  </div>
+                  <Button variant="secondary" size="sm" @click="syncGoCardlessNow(acc.id)">Sync now</Button>
+                </div>
+
+                <!-- Stripe feed -->
+                <div v-else-if="acc.bank_name === 'Stripe' || acc.stripe_secret_key" class="mt-3 flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900">
+                  <div class="space-y-0.5">
+                    <span class="flex items-center gap-1.5 font-medium text-slate-900 dark:text-white">Stripe <Badge variant="success">Connected</Badge></span>
+                    <span class="block text-slate-500 dark:text-slate-400">Balance and payout feed</span>
+                  </div>
+                  <Button variant="secondary" size="sm" @click="syncStripeNow(acc.id)">Sync now</Button>
+                </div>
+
+                <!-- SumUp feed -->
+                <div v-else-if="acc.bank_name === 'SumUp' || acc.sumup_api_key" class="mt-3 flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900">
+                  <div class="space-y-0.5">
+                    <span class="flex items-center gap-1.5 font-medium text-slate-900 dark:text-white">SumUp <Badge variant="success">Connected</Badge></span>
+                    <span class="block text-slate-500 dark:text-slate-400">Card reader feed</span>
+                  </div>
+                  <Button variant="secondary" size="sm" @click="syncSumUpNow(acc.id)">Sync now</Button>
+                </div>
+
+                <!-- PayPal feed -->
+                <div v-else-if="acc.bank_name === 'PayPal' || acc.paypal_client_id" class="mt-3 flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900">
+                  <div class="space-y-0.5">
+                    <span class="flex items-center gap-1.5 font-medium text-slate-900 dark:text-white">PayPal <Badge variant="success">Connected</Badge></span>
+                    <span class="block text-slate-500 dark:text-slate-400">Environment: {{ acc.paypal_environment || 'live' }}</span>
+                  </div>
+                  <Button variant="secondary" size="sm" @click="syncPayPalNow(acc.id)">Sync now</Button>
+                </div>
+
+                <div class="mt-3 space-y-1.5 rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900">
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-500 dark:text-slate-400">Statement balance</span>
+                    <span class="font-semibold tabular-nums text-slate-900 dark:text-white">{{ acc.formatted_statement_balance || ($cs + '0.00') }}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-500 dark:text-slate-400">Ledger balance (code {{ acc.account_code || '1000' }})</span>
+                    <span class="font-medium tabular-nums text-slate-700 dark:text-slate-200">{{ acc.formatted_ledger_balance || ($cs + '0.00') }}</span>
+                  </div>
+                </div>
               </div>
 
-              <div class="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-800/60 grid grid-cols-2 gap-2 text-[11px]">
-                <div>
-                  <span class="text-[9px] font-bold text-slate-400 uppercase block">Account Type</span>
-                  <span class="font-bold text-slate-700 dark:text-slate-200">{{ acc.formatted_account_type || acc.account_type }}</span>
-                </div>
-                <div>
-                  <span class="text-[9px] font-bold text-slate-400 uppercase block">Nominal Code</span>
-                  <span class="font-mono font-bold text-blue-600 dark:text-blue-400">Code {{ acc.account_code || '1000' }}</span>
-                </div>
-                <div v-if="acc.sort_code || acc.account_number" class="col-span-2 text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                  <span>Sort: {{ acc.sort_code || 'N/A' }}</span> | <span>Acc: {{ acc.account_number || 'N/A' }}</span>
-                </div>
+              <div class="flex items-center justify-between gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+                <Button variant="secondary" size="sm" @click="navigateTo('reconciliation', null, acc.id)">
+                  Reconcile
+                  <Badge :variant="acc.unreconciled_count > 0 ? 'warning' : 'neutral'">{{ acc.unreconciled_count || 0 }} to match</Badge>
+                </Button>
+
+                <Button variant="ghost" size="sm" @click="toggleBankAccountActive(acc.id)">
+                  {{ acc.is_active ? 'Deactivate' : 'Activate' }}
+                </Button>
               </div>
-
-              <!-- GoCardless API Badge -->
-              <div v-if="acc.bank_name === 'GoCardless' || acc.gocardless_access_token" class="mt-2.5 p-2 bg-amber-50/90 dark:bg-amber-950/90 rounded-xl border border-amber-200 dark:border-amber-800/60 flex items-center justify-between text-[11px]">
-                <div>
-                  <span class="font-bold text-amber-900 dark:text-amber-200 block">🟡 GoCardless API Active ({{ acc.gocardless_environment || 'sandbox' }})</span>
-                  <span class="text-[10px] text-amber-700 dark:text-amber-300 font-medium">Direct Debit Payment Feed</span>
-                </div>
-                <button
-                  type="button"
-                  @click="syncGoCardlessNow(acc.id)"
-                  class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] rounded-xl shadow-sm transition-all cursor-pointer"
-                >
-                  Sync API now
-                </button>
-              </div>
-
-              <!-- Stripe API Badge -->
-              <div v-else-if="acc.bank_name === 'Stripe' || acc.stripe_secret_key" class="mt-2.5 p-2 bg-blue-50/90 dark:bg-blue-950/90 rounded-xl border border-blue-200 dark:border-blue-800/60 flex items-center justify-between text-[11px]">
-                <div>
-                  <span class="font-bold text-blue-900 dark:text-blue-200 block">🟢 Stripe API Sync Active</span>
-                  <span class="text-[10px] text-blue-700 dark:text-blue-300 font-medium">Balance &amp; Payout Feed</span>
-                </div>
-                <button
-                  type="button"
-                  @click="syncStripeNow(acc.id)"
-                  class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-xl shadow-sm transition-all cursor-pointer"
-                >
-                  Sync API now
-                </button>
-              </div>
-
-              <!-- SumUp API Badge -->
-              <div v-else-if="acc.bank_name === 'SumUp' || acc.sumup_api_key" class="mt-2.5 p-2 bg-emerald-50/90 dark:bg-emerald-950/90 rounded-xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-[11px]">
-                <div>
-                  <span class="font-bold text-emerald-900 dark:text-emerald-200 block">🟢 SumUp API Sync Active</span>
-                  <span class="text-[10px] text-emerald-700 dark:text-emerald-300 font-medium">Card Reader Feed</span>
-                </div>
-                <button
-                  type="button"
-                  @click="syncSumUpNow(acc.id)"
-                  class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-xl shadow-sm transition-all cursor-pointer"
-                >
-                  Sync API now
-                </button>
-              </div>
-
-              <!-- PayPal API Badge -->
-              <div v-else-if="acc.bank_name === 'PayPal' || acc.paypal_client_id" class="mt-2.5 p-2 bg-blue-50/90 dark:bg-blue-950/90 rounded-xl border border-blue-200 dark:border-blue-800/60 flex items-center justify-between text-[11px]">
-                <div>
-                  <span class="font-bold text-blue-900 dark:text-blue-200 block">🟢 PayPal API Sync Active</span>
-                  <span class="text-[10px] text-blue-700 dark:text-blue-300 font-medium">Env: {{ acc.paypal_environment || 'live' }}</span>
-                </div>
-                <button
-                  type="button"
-                  @click="syncPayPalNow(acc.id)"
-                  class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-xl shadow-sm transition-all cursor-pointer"
-                >
-                  Sync API now
-                </button>
-              </div>
-
-              <div class="mt-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800/80 space-y-1.5 text-xs">
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-500 dark:text-slate-400">Statement Balance</span>
-                  <span class="font-black text-slate-900 dark:text-white">{{ acc.formatted_statement_balance || ($cs + '0.00') }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-500 dark:text-slate-400">Ledger Balance (Code {{ acc.account_code || '1000' }})</span>
-                  <span class="font-bold text-blue-700 dark:text-blue-300">{{ acc.formatted_ledger_balance || ($cs + '0.00') }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-200/60 dark:border-slate-800/60 text-xs">
-              <button
-                type="button"
-                @click="navigateTo('reconciliation', null, acc.id)"
-                :class="['px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer', acc.unreconciled_count > 0 ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm' : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-100']"
-              >
-                <span>⚡ Reconcile ({{ acc.unreconciled_count || 0 }})</span>
-              </button>
-
-              <button
-                type="button"
-                @click="toggleBankAccountActive(acc.id)"
-                class="px-2.5 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 cursor-pointer"
-              >
-                {{ acc.is_active ? 'Deactivate' : 'Activate' }}
-              </button>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
-
-      <!-- General Ledger Journal Entries -->
-      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-4">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+      <!-- General ledger journal entries -->
+      <Card padding="none" class="overflow-hidden">
+        <div class="flex items-center justify-between gap-4 border-b border-slate-200 p-6 dark:border-slate-800">
           <div>
-            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">General Ledger Journal Entries</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Historical double-entry records posted to the ledger.</p>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">General ledger journal entries</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Double-entry records posted to the ledger.</p>
           </div>
-          <Link
-            :href="route('admin.accounting.journal.create', club.slug)"
-            class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all"
-          >
-            + Add journal entry
-          </Link>
+          <Button variant="secondary" size="sm" :href="route('admin.accounting.journal.create', club.slug)">
+            <template #icon><UiIcon name="plus" /></template>
+            Add journal entry
+          </Button>
         </div>
 
-        <div class="p-6 space-y-4">
-          <div v-if="!journalEntries.length" class="text-center py-12 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-            <span class="text-3xl block mb-2">📖</span>
-            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">No Journal Entries Recorded</span>
-            <span class="text-[11px] text-slate-400">Click "Post Journal Entry" above to add your first double-entry transaction.</span>
+        <div class="space-y-4 p-6">
+          <div v-if="!journalEntries.length" class="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-12 text-center dark:border-slate-800 dark:bg-slate-800/50">
+            <UiIcon name="document" :size="20" class="mx-auto mb-2 text-slate-400" />
+            <span class="block text-sm font-medium text-slate-700 dark:text-slate-200">No journal entries yet</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400">Use "Add journal entry" above to post your first double-entry transaction.</span>
           </div>
 
           <div v-else class="space-y-4">
             <div
               v-for="entry in journalEntries"
               :key="entry.id"
-              class="bg-slate-50/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-3"
+              class="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50"
             >
-              <div class="flex items-center justify-between text-xs border-b border-slate-200/60 dark:border-slate-800/60 pb-2">
+              <div class="flex items-center justify-between gap-3 border-b border-slate-200 pb-2 text-xs dark:border-slate-800">
                 <div class="flex items-center gap-3">
-                  <span class="font-mono font-black text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800/60">
+                  <span class="font-semibold tabular-nums text-slate-700 dark:text-slate-200">
                     {{ entry.reference_number }}
                   </span>
-                  <span class="font-bold text-slate-900 dark:text-white">{{ entry.description }}</span>
+                  <span class="font-medium text-slate-900 dark:text-white">{{ entry.description }}</span>
                 </div>
-                <div class="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-[11px] font-medium">
-                  <span>📅 {{ entry.entry_date }}</span>
-                  <span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 font-bold uppercase text-[9px]">
-                    {{ entry.status }}
-                  </span>
-                  <Link
-                    :href="route('admin.accounting.journal.edit', { clubSlug: club.slug, id: entry.id })"
-                    class="px-2 py-0.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 font-bold text-[10px] rounded-xl transition-colors"
-                  >
+                <div class="flex items-center gap-3 text-slate-500 dark:text-slate-400">
+                  <span class="flex items-center gap-1"><UiIcon name="calendar" /> {{ entry.entry_date }}</span>
+                  <Badge variant="success">{{ entry.status }}</Badge>
+                  <Button variant="secondary" size="sm" :href="route('admin.accounting.journal.edit', { clubSlug: club.slug, id: entry.id })">
                     Edit
-                  </Link>
+                  </Button>
                 </div>
               </div>
 
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
-                  <thead>
-                    <tr class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                      <th class="py-1">Account</th>
-                      <th class="py-1 text-right">Debit</th>
-                      <th class="py-1 text-right">Credit</th>
+                  <thead class="text-slate-500 dark:text-slate-400">
+                    <tr>
+                      <th scope="col" class="py-1 font-medium">Account</th>
+                      <th scope="col" class="py-1 text-right font-medium">Debit</th>
+                      <th scope="col" class="py-1 text-right font-medium">Credit</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-slate-200/40 dark:divide-slate-800/40 text-[11px] font-semibold">
+                  <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
                     <tr v-for="item in entry.items" :key="item.id">
-                      <td class="py-1.5 font-medium text-slate-800 dark:text-slate-100">
-                        <span class="font-mono font-bold text-slate-500 dark:text-slate-400 mr-2">{{ item.account_code }}</span>
+                      <td class="py-1.5 text-slate-800 dark:text-slate-100">
+                        <span class="mr-2 tabular-nums text-slate-500 dark:text-slate-400">{{ item.account_code }}</span>
                         <span>{{ item.account_name }}</span>
-                        <span v-if="item.memo" class="text-slate-400 ml-2 italic text-[10px]">({{ item.memo }})</span>
+                        <span v-if="item.memo" class="ml-2 italic text-slate-400">({{ item.memo }})</span>
                       </td>
-                      <td class="py-1.5 text-right font-mono text-slate-900 dark:text-white">
+                      <td class="py-1.5 text-right tabular-nums text-slate-900 dark:text-white">
                         {{ item.debit > 0 ? formatMoney(item.debit) : '-' }}
                       </td>
-                      <td class="py-1.5 text-right font-mono text-slate-900 dark:text-white">
+                      <td class="py-1.5 text-right tabular-nums text-slate-900 dark:text-white">
                         {{ item.credit > 0 ? formatMoney(item.credit) : '-' }}
                       </td>
                     </tr>
@@ -338,6 +265,6 @@ defineProps({
             </div>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
 </template>

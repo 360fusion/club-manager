@@ -1,6 +1,9 @@
 <script setup>
 import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
+import Card from '@/Components/Ui/Card.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Badge from '@/Components/Ui/Badge.vue';
 
 // The account_transactions section of Index.vue, in its own file so the page stays readable. State only this section uses lives here.
 const props = defineProps({
@@ -37,80 +40,74 @@ const removeAndRedoSelectedAccountTransactions = () => {
 
 <template>
     <div class="space-y-4">
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center justify-between gap-4">
-        <div>
-          <h4 class="font-black text-slate-900 dark:text-white text-sm">Internal System Account Transactions History</h4>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Internal bookkeeping entries created inside your books (bills, invoices, spend/receive money).</p>
+      <Card padding="sm">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Internal account transactions</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Entries created inside your books (bills, invoices, spend and receive money).</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span v-if="selectedAccountTxIds.length === 0" class="text-xs text-slate-500 dark:text-slate-400">Showing all internal transactions</span>
+            <Badge v-else variant="info">{{ selectedAccountTxIds.length }} transaction(s) selected</Badge>
+            <Button
+              v-if="selectedAccountTxIds.length > 0"
+              size="sm"
+              @click="removeAndRedoSelectedAccountTransactions"
+            >
+              Remove and redo ({{ selectedAccountTxIds.length }})
+            </Button>
+          </div>
         </div>
-        <div class="flex items-center gap-3">
-          <span v-if="selectedAccountTxIds.length === 0" class="text-xs text-slate-400">Showing all internal transactions</span>
-          <span v-else class="text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/60">
-            {{ selectedAccountTxIds.length }} transaction(s) selected
-          </span>
-          <button
-            v-if="selectedAccountTxIds.length > 0"
-            type="button"
-            @click="removeAndRedoSelectedAccountTransactions"
-            class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer flex items-center gap-1.5"
-          >
-            Remove &amp; redo ({{ selectedAccountTxIds.length }})
-          </button>
-        </div>
-      </div>
+      </Card>
 
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
-          <thead class="bg-slate-50 dark:bg-slate-800/50 text-[11px] font-bold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
+      <Card padding="none" class="overflow-x-auto">
+        <table class="w-full border-collapse text-left text-sm">
+          <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
             <tr>
-              <th class="py-2.5 px-3 w-8">
+              <th scope="col" class="w-8 p-3">
                 <input
                   type="checkbox"
+                  aria-label="Select all"
                   @change="toggleAccountTxSelectAll"
                   :checked="selectedAccountTxIds.length === filteredAccountTransactions.length && filteredAccountTransactions.length > 0"
-                  class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer"
+                  class="cursor-pointer rounded border-slate-300 text-blue-600 accent-blue-600 focus:ring-blue-500 dark:border-slate-700"
                 />
               </th>
-              <th class="py-2.5 px-3">Date</th>
-              <th class="py-2.5 px-3">Type</th>
-              <th class="py-2.5 px-3">Description</th>
-              <th class="py-2.5 px-3">Reference</th>
-              <th class="py-2.5 px-3 text-right">Spent</th>
-              <th class="py-2.5 px-3 text-right">Received</th>
-              <th class="py-2.5 px-3 text-center">Status</th>
+              <th scope="col" class="p-3 font-medium">Date</th>
+              <th scope="col" class="p-3 font-medium">Type</th>
+              <th scope="col" class="p-3 font-medium">Description</th>
+              <th scope="col" class="p-3 font-medium">Reference</th>
+              <th scope="col" class="p-3 text-right font-medium">Spent</th>
+              <th scope="col" class="p-3 text-right font-medium">Received</th>
+              <th scope="col" class="p-3 text-center font-medium">Status</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-            <tr v-for="tx in filteredAccountTransactions" :key="tx.id" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-colors">
-              <td class="py-2.5 px-3">
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+            <tr v-for="tx in filteredAccountTransactions" :key="tx.id" class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+              <td class="p-3">
                 <input
                   type="checkbox"
                   :value="tx.id"
                   v-model="selectedAccountTxIds"
-                  class="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500 cursor-pointer"
+                  :aria-label="`Select ${tx.description}`"
+                  class="cursor-pointer rounded border-slate-300 text-blue-600 accent-blue-600 focus:ring-blue-500 dark:border-slate-700"
                 />
               </td>
-              <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ tx.transaction_date }}</td>
-              <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 font-medium">{{ tx.type }}</td>
-              <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">{{ tx.description }}</td>
-              <td class="py-2.5 px-3 text-slate-500 dark:text-slate-400 font-mono text-[11px]">{{ tx.reference }}</td>
-              <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">{{ tx.spent }}</td>
-              <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ tx.received }}</td>
-              <td class="py-2.5 px-3 text-center whitespace-nowrap">
-                <span
-                  :class="[
-                    'px-2.5 py-0.5 text-[10px] font-black rounded-full uppercase tracking-wider',
-                    tx.status === 'Reconciled' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200'
-                  ]"
-                >
-                  {{ tx.status }}
-                </span>
+              <td class="whitespace-nowrap p-3 tabular-nums text-slate-600 dark:text-slate-300">{{ tx.transaction_date }}</td>
+              <td class="p-3 text-slate-600 dark:text-slate-300">{{ tx.type }}</td>
+              <td class="p-3 font-medium text-slate-900 dark:text-white">{{ tx.description }}</td>
+              <td class="p-3 text-xs tabular-nums text-slate-500 dark:text-slate-400">{{ tx.reference }}</td>
+              <td class="p-3 text-right font-medium tabular-nums text-slate-900 dark:text-white">{{ tx.spent }}</td>
+              <td class="p-3 text-right font-medium tabular-nums text-emerald-700 dark:text-emerald-400">{{ tx.received }}</td>
+              <td class="whitespace-nowrap p-3 text-center">
+                <Badge :variant="tx.status === 'Reconciled' ? 'success' : 'warning'">{{ tx.status }}</Badge>
               </td>
             </tr>
             <tr v-if="filteredAccountTransactions.length === 0">
-              <td colspan="8" class="py-8 text-center text-slate-400 italic">No internal account transactions recorded yet.</td>
+              <td colspan="8" class="py-8 text-center text-sm text-slate-500 dark:text-slate-400">No internal account transactions recorded yet.</td>
             </tr>
           </tbody>
         </table>
-      </div>
+      </Card>
     </div>
 </template>

@@ -1,94 +1,4 @@
 {
-  "resources/js/Components/Accounting/Modals/AccountModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Modals/AttachmentPreviewModal.vue": {
-    "emoji in a button or link": 4
-  },
-  "resources/js/Components/Accounting/Modals/BankAccountModal.vue": {
-    "emoji in a button or link": 2
-  },
-  "resources/js/Components/Accounting/Modals/DifferentBalancesModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Modals/GatewaySyncModal.vue": {
-    "emoji in a button or link": 2
-  },
-  "resources/js/Components/Accounting/Modals/GoCardlessModal.vue": {
-    "emoji in a button or link": 3
-  },
-  "resources/js/Components/Accounting/Modals/ImportStatementModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Modals/ManualEntryModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Modals/OpeningBalanceModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Modals/PayPalModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Modals/StatementLineDetailsModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Modals/StripeModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Modals/SumUpModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Modals/WhatsThisModal.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Reconciliation/GiftAidPanel.vue": {
-    "emoji in a button or link": 2
-  },
-  "resources/js/Components/Accounting/Reconciliation/ReconcilePanel.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Reports/ReconciliationSummaryReport.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Reports/TreasurerReport.vue": {
-    "emoji in a button or link": 2
-  },
-  "resources/js/Components/Accounting/Sections/AccountingSettingsPanel.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Sections/FixedAssetsReport.vue": {
-    "emoji in a button or link": 3
-  },
-  "resources/js/Components/Accounting/Sections/PurchasesTab.vue": {
-    "emoji in a button or link": 6
-  },
-  "resources/js/Components/Accounting/Sections/RecurringBillsReport.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Sections/SalesTab.vue": {
-    "emoji in a button or link": 6
-  },
-  "resources/js/Components/Accounting/Tabs/AccountingNavBar.vue": {
-    "emoji in a button or link": 9
-  },
-  "resources/js/Components/Accounting/Tabs/BankAccountsTab.vue": {
-    "emoji in a button or link": 2
-  },
-  "resources/js/Components/Accounting/Tabs/ChartOfAccountsTab.vue": {
-    "emoji in a button or link": 2
-  },
-  "resources/js/Components/Accounting/Tabs/ContactsTab.vue": {
-    "emoji in a button or link": 2
-  },
-  "resources/js/Components/Accounting/Tabs/HomeTab.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Components/Accounting/Tabs/ReconciliationTab.vue": {
-    "emoji in a button or link": 5
-  },
-  "resources/js/Components/Accounting/Tabs/ReportingTab.vue": {
-    "emoji in a button or link": 3
-  },
   "resources/js/Components/ContentPickerModal.vue": {
     "emoji in a button or link": 5
   },
@@ -130,12 +40,6 @@
   },
   "resources/js/Layouts/SuperAdminLayout.vue": {
     "emoji in a button or link": 13
-  },
-  "resources/js/Pages/Admin/Accounting/ContactForm.vue": {
-    "emoji in a button or link": 1
-  },
-  "resources/js/Pages/Admin/Accounting/Index.vue": {
-    "emoji in a button or link": 1
   },
   "resources/js/Pages/Admin/Analytics.vue": {
     "emoji in a button or link": 2

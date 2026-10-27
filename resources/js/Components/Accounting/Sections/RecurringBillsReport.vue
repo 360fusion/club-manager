@@ -2,6 +2,11 @@
 import { localDate } from '@/Utils/localDateTime';
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 // The recurring_bills section of Index.vue, in its own file so the page stays readable. State only this section uses lives here.
 const props = defineProps({
@@ -36,53 +41,63 @@ const submitRecurringBill = () => {
 
 <template>
     <div class="space-y-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:flex-row sm:items-center dark:border-slate-800 dark:bg-slate-800/50">
         <div>
-          <h3 class="text-xl font-black text-slate-900 dark:text-white">Recurring Vendor Bills</h3>
-          <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">A daily scheduled task turns a due schedule into a real bill automatically.</p>
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Recurring vendor bills</h3>
+          <p class="mt-0.5 text-sm text-slate-600 dark:text-slate-300">A daily scheduled task turns a due schedule into a real bill automatically.</p>
         </div>
-        <button type="button" @click="showAddRecurringBillForm = !showAddRecurringBillForm" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer">
-          ➕ Add schedule
-        </button>
+        <Button size="sm" :aria-expanded="showAddRecurringBillForm" @click="showAddRecurringBillForm = !showAddRecurringBillForm">
+          <template #icon><UiIcon name="plus" /></template>
+          Add schedule
+        </Button>
       </div>
 
-      <form v-if="showAddRecurringBillForm" @submit.prevent="submitRecurringBill" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-        <input v-model="recurringBillForm.vendor_name" placeholder="Vendor name" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl sm:col-span-2" />
-        <input v-model="recurringBillForm.category" placeholder="Category" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
-        <input v-model="recurringBillForm.amount" type="number" step="0.01" min="0.01" placeholder="Amount" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
-        <select v-model="recurringBillForm.frequency" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
-          <option value="monthly">Monthly</option>
-          <option value="quarterly">Quarterly</option>
-          <option value="annually">Annually</option>
-        </select>
-        <input v-model="recurringBillForm.next_run_date" type="date" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
-        <button type="submit" :disabled="recurringBillForm.processing" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50 sm:col-span-3">
-          Schedule recurring bill
-        </button>
+      <form v-if="showAddRecurringBillForm" class="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:grid-cols-3 dark:border-slate-800 dark:bg-slate-900" @submit.prevent="submitRecurringBill">
+        <Input v-model="recurringBillForm.vendor_name" class="sm:col-span-2" label="Vendor name" required :error="recurringBillForm.errors.vendor_name" />
+        <Input v-model="recurringBillForm.category" label="Category" :error="recurringBillForm.errors.category" />
+        <Input v-model="recurringBillForm.amount" type="number" step="0.01" min="0.01" label="Amount" :prefix="$cs" required :error="recurringBillForm.errors.amount" />
+        <Select
+          v-model="recurringBillForm.frequency"
+          label="Frequency"
+          :options="[{ value: 'monthly', label: 'Monthly' }, { value: 'quarterly', label: 'Quarterly' }, { value: 'annually', label: 'Annually' }]"
+          :error="recurringBillForm.errors.frequency"
+        />
+        <Input v-model="recurringBillForm.next_run_date" type="date" label="Next run" required :error="recurringBillForm.errors.next_run_date" />
+        <div class="sm:col-span-3">
+          <Button type="submit" :loading="recurringBillForm.processing">Schedule recurring bill</Button>
+        </div>
       </form>
 
-      <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
-            <tr><th class="py-2 px-3">Vendor</th><th class="py-2 px-3">Category</th><th class="py-2 px-3 text-right">Amount</th><th class="py-2 px-3">Frequency</th><th class="py-2 px-3">Next Run</th><th class="py-2 px-3 text-center">Status</th><th class="py-2 px-3"></th></tr>
+      <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
+        <table class="w-full text-left text-sm">
+          <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+            <tr>
+              <th scope="col" class="px-3 py-2.5 font-medium">Vendor</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Category</th>
+              <th scope="col" class="px-3 py-2.5 text-right font-medium">Amount</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Frequency</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Next run</th>
+              <th scope="col" class="px-3 py-2.5 text-center font-medium">Status</th>
+              <th scope="col" class="px-3 py-2.5"><span class="sr-only">Actions</span></th>
+            </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900">
+          <tbody class="divide-y divide-slate-100 bg-white text-slate-800 dark:divide-slate-800 dark:bg-slate-900 dark:text-slate-100">
             <tr v-for="t in recurringBillTemplates" :key="t.id">
-              <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">{{ t.vendor_name }}</td>
-              <td class="py-2 px-3">{{ t.category }}</td>
-              <td class="py-2 px-3 text-right font-mono">{{ t.formatted_amount }}</td>
-              <td class="py-2 px-3 capitalize">{{ t.frequency }}</td>
-              <td class="py-2 px-3 font-mono">{{ t.next_run_date }}</td>
-              <td class="py-2 px-3 text-center">
-                <span :class="['px-2 py-0.5 rounded-full text-[10px] font-black uppercase', t.is_active ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500']">{{ t.is_active ? 'Active' : 'Paused' }}</span>
+              <td class="px-3 py-2 font-medium text-slate-900 dark:text-white">{{ t.vendor_name }}</td>
+              <td class="px-3 py-2">{{ t.category }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ t.formatted_amount }}</td>
+              <td class="px-3 py-2 capitalize">{{ t.frequency }}</td>
+              <td class="px-3 py-2 tabular-nums">{{ t.next_run_date }}</td>
+              <td class="px-3 py-2 text-center">
+                <Badge :variant="t.is_active ? 'success' : 'neutral'">{{ t.is_active ? 'Active' : 'Paused' }}</Badge>
               </td>
-              <td class="py-2 px-3 text-right whitespace-nowrap">
-                <button type="button" @click="toggleRecurringBill(t.id)" class="text-[10px] font-extrabold text-blue-700 dark:text-blue-300 hover:underline cursor-pointer mr-2">{{ t.is_active ? 'Pause' : 'Resume' }}</button>
-                <button type="button" @click="deleteRecurringBill(t.id)" class="text-[10px] font-extrabold text-rose-700 dark:text-rose-300 hover:underline cursor-pointer">Remove</button>
+              <td class="whitespace-nowrap px-3 py-2 text-right">
+                <Button variant="ghost" size="sm" @click="toggleRecurringBill(t.id)">{{ t.is_active ? 'Pause' : 'Resume' }}</Button>
+                <button type="button" class="cursor-pointer rounded-xl px-3 py-1.5 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40" @click="deleteRecurringBill(t.id)">Remove</button>
               </td>
             </tr>
             <tr v-if="!recurringBillTemplates.length">
-              <td colspan="7" class="py-4 px-3 text-center text-slate-400 italic">No recurring bills scheduled.</td>
+              <td colspan="7" class="px-3 py-4 text-center text-slate-500 dark:text-slate-400">No recurring bills scheduled.</td>
             </tr>
           </tbody>
         </table>

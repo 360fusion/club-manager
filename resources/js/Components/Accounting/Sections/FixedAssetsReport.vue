@@ -1,4 +1,9 @@
 <script setup>
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { localDate } from '@/Utils/localDateTime';
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
@@ -36,6 +41,12 @@ const submitFixedAsset = () => {
   });
 };
 
+const depreciationMethodOptions = [
+  { value: 'straight_line', label: 'Straight line' },
+  { value: 'reducing_balance', label: 'Reducing balance' },
+  { value: 'none', label: 'No depreciation' },
+];
+
 const disposalForm = useForm({ disposal_date: localDate(), disposal_proceeds: 0 });
 
 const disposingAssetId = ref(null);
@@ -52,76 +63,75 @@ const disposeAsset = (assetId) => {
     <div class="space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
         <div>
-          <h3 class="text-xl font-black text-slate-900 dark:text-white">Fixed Asset Register</h3>
-          <p class="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">Cost, accumulated depreciation and net book value.</p>
+          <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Fixed asset register</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Cost, accumulated depreciation and net book value.</p>
         </div>
-        <div v-if="canManageBilling" class="flex items-center gap-2">
-          <input v-model="depreciationForm.period" placeholder="Period e.g. 2026" class="w-28 px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl" />
-          <button type="button" @click="runDepreciation" class="px-3 py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer">
-            📉 Run depreciation
-          </button>
-          <button type="button" @click="showAddAssetForm = !showAddAssetForm" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer">
-            ➕ Add asset
-          </button>
+        <div v-if="canManageBilling" class="flex flex-wrap items-center gap-2">
+          <Input v-model="depreciationForm.period" placeholder="Period e.g. 2026" aria-label="Depreciation period" class="w-36" />
+          <Button variant="secondary" @click="runDepreciation">
+            <template #icon><UiIcon name="chart" /></template>
+            Run depreciation
+          </Button>
+          <Button @click="showAddAssetForm = !showAddAssetForm">
+            <template #icon><UiIcon name="plus" /></template>
+            Add asset
+          </Button>
         </div>
       </div>
 
-      <form v-if="canManageBilling && showAddAssetForm" @submit.prevent="submitFixedAsset" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-        <input v-model="fixedAssetForm.name" placeholder="Asset name (e.g. Racing Eight)" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl sm:col-span-2" />
-        <input v-model="fixedAssetForm.category" placeholder="Category" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
-        <input v-model="fixedAssetForm.purchase_date" type="date" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
-        <input v-model="fixedAssetForm.purchase_cost" type="number" step="0.01" min="0" placeholder="Purchase cost" required class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
-        <select v-model="fixedAssetForm.depreciation_method" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl">
-          <option value="straight_line">Straight Line</option>
-          <option value="reducing_balance">Reducing Balance</option>
-          <option value="none">No Depreciation</option>
-        </select>
-        <input v-model="fixedAssetForm.useful_life_years" type="number" min="1" placeholder="Useful life (years)" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
-        <input v-model="fixedAssetForm.salvage_value" type="number" step="0.01" min="0" placeholder="Salvage value" class="px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl" />
-        <button type="submit" :disabled="fixedAssetForm.processing" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50 sm:col-span-3">
+      <form v-if="canManageBilling && showAddAssetForm" @submit.prevent="submitFixedAsset" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Input v-model="fixedAssetForm.name" label="Asset name" placeholder="e.g. racing eight" required class="sm:col-span-2" />
+        <Input v-model="fixedAssetForm.category" label="Category" placeholder="Category" />
+        <Input v-model="fixedAssetForm.purchase_date" type="date" label="Purchase date" required />
+        <Input v-model="fixedAssetForm.purchase_cost" type="number" step="0.01" min="0" label="Purchase cost" placeholder="Purchase cost" required />
+        <Select v-model="fixedAssetForm.depreciation_method" label="Depreciation method" :options="depreciationMethodOptions" />
+        <Input v-model="fixedAssetForm.useful_life_years" type="number" min="1" label="Useful life (years)" placeholder="Useful life (years)" />
+        <Input v-model="fixedAssetForm.salvage_value" type="number" step="0.01" min="0" label="Salvage value" placeholder="Salvage value" />
+        <Button type="submit" :disabled="fixedAssetForm.processing" class="sm:col-span-3">
           Register asset
-        </button>
+        </Button>
       </form>
 
       <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
         <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
+          <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
             <tr>
-              <th class="py-2 px-3">Asset</th>
-              <th class="py-2 px-3">Category</th>
-              <th class="py-2 px-3">Purchased</th>
-              <th class="py-2 px-3 text-right">Cost</th>
-              <th class="py-2 px-3 text-right">Acc. Depreciation</th>
-              <th class="py-2 px-3 text-right">Net Book Value</th>
-              <th class="py-2 px-3 text-center">Status</th>
-              <th class="py-2 px-3"></th>
+              <th scope="col" class="py-3 px-3 font-medium">Asset</th>
+              <th scope="col" class="py-3 px-3 font-medium">Category</th>
+              <th scope="col" class="py-3 px-3 font-medium">Purchased</th>
+              <th scope="col" class="py-3 px-3 font-medium text-right">Cost</th>
+              <th scope="col" class="py-3 px-3 font-medium text-right">Acc. depreciation</th>
+              <th scope="col" class="py-3 px-3 font-medium text-right">Net book value</th>
+              <th scope="col" class="py-3 px-3 font-medium text-center">Status</th>
+              <th scope="col" class="py-3 px-3"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900">
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900">
             <template v-for="asset in fixedAssets" :key="asset.id">
               <tr>
-                <td class="py-2 px-3 font-bold text-slate-900 dark:text-white">{{ asset.name }}</td>
+                <td class="py-2 px-3 font-medium text-slate-900 dark:text-white">{{ asset.name }}</td>
                 <td class="py-2 px-3">{{ asset.category }}</td>
-                <td class="py-2 px-3 font-mono">{{ asset.purchase_date }}</td>
-                <td class="py-2 px-3 text-right font-mono">{{ asset.formatted_purchase_cost }}</td>
-                <td class="py-2 px-3 text-right font-mono">{{ asset.formatted_accumulated_depreciation }}</td>
-                <td class="py-2 px-3 text-right font-mono font-bold">{{ asset.formatted_net_book_value }}</td>
+                <td class="py-2 px-3 tabular-nums">{{ asset.purchase_date }}</td>
+                <td class="py-2 px-3 text-right tabular-nums">{{ asset.formatted_purchase_cost }}</td>
+                <td class="py-2 px-3 text-right tabular-nums">{{ asset.formatted_accumulated_depreciation }}</td>
+                <td class="py-2 px-3 text-right tabular-nums font-semibold text-slate-900 dark:text-white">{{ asset.formatted_net_book_value }}</td>
                 <td class="py-2 px-3 text-center">
-                  <span v-if="asset.is_disposed" class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] font-black uppercase">Disposed {{ asset.disposal_date }}</span>
-                  <span v-else class="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-black uppercase">Active</span>
+                  <Badge v-if="asset.is_disposed">Disposed {{ asset.disposal_date }}</Badge>
+                  <Badge v-else variant="success">Active</Badge>
                 </td>
                 <td class="py-2 px-3 text-right">
                   <div class="flex items-center justify-end gap-2">
-                    <button v-if="canManageBilling && !asset.is_disposed" type="button" @click="disposingAssetId = disposingAssetId === asset.id ? null : asset.id" class="text-[10px] font-extrabold text-rose-700 dark:text-rose-300 hover:underline cursor-pointer">
+                    <button v-if="canManageBilling && !asset.is_disposed" type="button" @click="disposingAssetId = disposingAssetId === asset.id ? null : asset.id" class="text-xs font-medium text-rose-700 dark:text-rose-400 hover:underline">
                       Dispose
                     </button>
                     <button
                       type="button"
                       @click="openActivityLog('fixed_asset', asset.id, `Asset: ${asset.name}`)"
-                      title="View Activity Log"
-                      class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold rounded-xl transition-all cursor-pointer"
+                      title="View activity log"
+                      aria-label="View activity log"
+                      class="rounded-xl p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                     >
-                      🕘
+                      <UiIcon name="clock" />
                     </button>
                   </div>
                 </td>
@@ -129,21 +139,15 @@ const disposeAsset = (assetId) => {
               <tr v-if="disposingAssetId === asset.id">
                 <td colspan="8" class="py-3 px-3 bg-rose-50/50 dark:bg-rose-950/20">
                   <form @submit.prevent="disposeAsset(asset.id)" class="flex flex-wrap items-end gap-2">
-                    <div>
-                      <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-300">Disposal date</label>
-                      <input v-model="disposalForm.disposal_date" type="date" required class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg" />
-                    </div>
-                    <div>
-                      <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-300">Proceeds</label>
-                      <input v-model="disposalForm.disposal_proceeds" type="number" step="0.01" min="0" class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg" />
-                    </div>
-                    <button type="submit" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl cursor-pointer">Confirm disposal</button>
+                    <Input v-model="disposalForm.disposal_date" type="date" label="Disposal date" required />
+                    <Input v-model="disposalForm.disposal_proceeds" type="number" step="0.01" min="0" label="Proceeds" />
+                    <Button type="submit" variant="danger">Confirm disposal</Button>
                   </form>
                 </td>
               </tr>
             </template>
             <tr v-if="!fixedAssets.length">
-              <td colspan="8" class="py-4 px-3 text-center text-slate-400 italic">No fixed assets registered yet.</td>
+              <td colspan="8" class="py-4 px-3 text-center text-slate-500 dark:text-slate-400">No fixed assets registered yet.</td>
             </tr>
           </tbody>
         </table>

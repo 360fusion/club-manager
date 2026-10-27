@@ -59,7 +59,7 @@ const submit = () => {
 };
 
 const title = computed(() => (isEdit.value ? `Edit journal entry ${props.journalEntry.reference_number}` : 'Post a journal entry'));
-const cell = 'w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
+const cell = 'w-full rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white';
 </script>
 
 <template>
@@ -114,10 +114,10 @@ const cell = 'w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 t
                         </select>
                       </td>
                       <td class="p-2"><input v-model="item.memo" type="text" placeholder="Optional" :aria-label="`Memo, line ${index + 1}`" :class="cell" /></td>
-                      <td class="p-2"><input :value="item.debit" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal" :aria-label="`Debit, line ${index + 1}`" :class="[cell, 'text-right font-mono']" @input="setAmount(item, 'debit', $event.target.value)" /></td>
-                      <td class="p-2"><input :value="item.credit" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal" :aria-label="`Credit, line ${index + 1}`" :class="[cell, 'text-right font-mono']" @input="setAmount(item, 'credit', $event.target.value)" /></td>
+                      <td class="p-2"><input :value="item.debit" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal" :aria-label="`Debit, line ${index + 1}`" :class="[cell, 'text-right tabular-nums']" @input="setAmount(item, 'debit', $event.target.value)" /></td>
+                      <td class="p-2"><input :value="item.credit" type="number" step="0.01" min="0" placeholder="0.00" inputmode="decimal" :aria-label="`Credit, line ${index + 1}`" :class="[cell, 'text-right tabular-nums']" @input="setAmount(item, 'credit', $event.target.value)" /></td>
                       <td class="p-2 text-center">
-                        <button type="button" :disabled="form.items.length <= 2" :aria-label="`Remove line ${index + 1}`" class="rounded-lg p-1 text-slate-400 hover:text-rose-600 disabled:opacity-30 dark:hover:text-rose-400" @click="removeLine(index)">
+                        <button type="button" :disabled="form.items.length <= 2" :aria-label="`Remove line ${index + 1}`" class="rounded-xl p-1 text-slate-400 hover:text-rose-600 disabled:opacity-30 dark:hover:text-rose-400" @click="removeLine(index)">
                           <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" /></svg>
                         </button>
                       </td>
@@ -126,8 +126,8 @@ const cell = 'w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 t
                   <tfoot class="border-t border-slate-200 bg-slate-50 font-medium dark:border-slate-800 dark:bg-slate-800/50">
                     <tr>
                       <td colspan="2" class="px-3 py-2.5 text-right text-slate-600 dark:text-slate-300">Totals</td>
-                      <td class="px-3 py-2.5 text-right font-mono text-slate-900 dark:text-white">{{ $money(totalDebit) }}</td>
-                      <td class="px-3 py-2.5 text-right font-mono text-slate-900 dark:text-white">{{ $money(totalCredit) }}</td>
+                      <td class="px-3 py-2.5 text-right tabular-nums text-slate-900 dark:text-white">{{ $money(totalDebit) }}</td>
+                      <td class="px-3 py-2.5 text-right tabular-nums text-slate-900 dark:text-white">{{ $money(totalCredit) }}</td>
                       <td></td>
                     </tr>
                   </tfoot>

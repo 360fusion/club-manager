@@ -37,6 +37,9 @@ import { useBankConnections } from '@/Composables/useBankConnections';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Modal from '@/Components/Ui/Modal.vue';
 
 import { currencyCode, formatMoney } from '@/Utils/currency';
 const props = defineProps({
@@ -641,10 +644,9 @@ const getTypeBadge = (type) => {
       <AccountingNavBar :active-tab="activeTab" :can-manage-billing="canManageBilling" :club="club" :navigate-to="navigateTo" :open-opening-balance-modal="openOpeningBalanceModal" :reconciliation="reconciliation" :toggle-accounting-dropdown="toggleAccountingDropdown" v-model:show-accounting-dropdown="showAccountingDropdown" v-model:show-add-menu="showAddMenu" />
 
       <!-- Read-Only Access Notice (examiner role) -->
-      <div v-if="!canManageBilling" class="bg-blue-50 dark:bg-blue-950/30 rounded-2xl border border-blue-200 dark:border-blue-800/60 px-4 py-3 flex items-center gap-2.5 text-xs">
-        <span class="text-base">🔎</span>
-        <span class="font-semibold text-blue-800 dark:text-blue-200">You have read-only access to this club's accounting records. Actions that change the books are hidden.</span>
-      </div>
+      <Alert v-if="!canManageBilling" variant="info" title="Read-only access">
+        You can view this club's accounting records. Actions that change the books are hidden.
+      </Alert>
 
       <HomeTab v-if="activeTab === 'home'" :dismiss-onboarding="dismissOnboarding" :navigate-to="navigateTo" :onboarding="onboarding" :reconciliation="reconciliation" :show-onboarding="showOnboarding" :summary="summary" />
 
@@ -720,29 +722,19 @@ const getTypeBadge = (type) => {
     <AttachmentPreviewModal v-if="previewModal.show" :delete-attachment="deleteAttachment" :preview-modal="previewModal" :reset-zoom="resetZoom" :rotate-image="rotateImage" :rotation="rotation" :zoom-in="zoomIn" :zoom-level="zoomLevel" :zoom-out="zoomOut" @close="previewModal.show = false" />
 
     <!-- Modal 13: Activity Log -->
-    <div v-if="activityModal.show" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto" @click="activityModal.show = false">
-      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 my-8" @click.stop>
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div>
-            <h3 class="text-base font-black text-slate-900 dark:text-white">Activity Log</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">{{ activityModal.label }}</p>
+    <Modal :open="activityModal.show" title="Activity log" :subtitle="activityModal.label" size="md" @close="activityModal.show = false">
+      <p v-if="activityModal.loading" class="text-center py-8 text-sm text-slate-500 dark:text-slate-400">Loading…</p>
+      <p v-else-if="!activityModal.entries.length" class="text-center py-8 text-sm text-slate-500 dark:text-slate-400">No activity recorded yet.</p>
+      <ul v-else class="space-y-3 max-h-[60vh] overflow-y-auto">
+        <li v-for="entry in activityModal.entries" :key="entry.id" class="border border-slate-200 dark:border-slate-800 rounded-xl p-3">
+          <div class="flex items-center justify-between gap-2">
+            <Badge class="capitalize">{{ entry.action }}</Badge>
+            <span class="text-xs tabular-nums text-slate-500 dark:text-slate-400">{{ entry.created_at }}</span>
           </div>
-          <button type="button" @click="activityModal.show = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold text-sm cursor-pointer">✕</button>
-        </div>
-
-        <div v-if="activityModal.loading" class="text-center py-8 text-xs font-bold text-slate-400">Loading…</div>
-        <div v-else-if="!activityModal.entries.length" class="text-center py-8 text-xs font-bold text-slate-400">No activity recorded yet.</div>
-        <ul v-else class="space-y-3 max-h-[60vh] overflow-y-auto">
-          <li v-for="entry in activityModal.entries" :key="entry.id" class="border border-slate-100 dark:border-slate-800 rounded-xl p-3">
-            <div class="flex items-center justify-between gap-2">
-              <span class="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">{{ entry.action }}</span>
-              <span class="text-[10px] font-mono text-slate-400">{{ entry.created_at }}</span>
-            </div>
-            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 mt-1.5">{{ entry.summary }}</p>
-            <p class="text-[11px] text-slate-400 mt-0.5">by {{ entry.user_name }}</p>
-          </li>
-        </ul>
-      </div>
-    </div>
+          <p class="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1.5">{{ entry.summary }}</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">by {{ entry.user_name }}</p>
+        </li>
+      </ul>
+    </Modal>
   </AdminLayout>
 </template>

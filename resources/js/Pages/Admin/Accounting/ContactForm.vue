@@ -1,7 +1,16 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import PageHeader from '@/Components/Ui/PageHeader.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
+import StatCard from '@/Components/Ui/StatCard.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   club: {
@@ -20,6 +29,15 @@ const props = defineProps({
 
 const isEditing = computed(() => !!props.contact);
 const isMember  = computed(() => props.contact?.is_member === true);
+
+// The values are what is stored on the contact; only the labels are worded for people.
+const ROLE_OPTIONS = [
+  { value: 'Contractor / Coach', label: 'Contractor or coach' },
+  { value: 'Volunteer / Staff', label: 'Volunteer or staff' },
+  { value: 'Vendor Representative', label: 'Vendor representative' },
+  { value: 'Client / Customer', label: 'Client or customer' },
+  { value: 'Club Member', label: 'Club member' },
+];
 
 const form = useForm({
   first_name:     props.contact?.first_name     || '',
@@ -62,409 +80,186 @@ const deleteContact = () => {
 </script>
 
 <template>
-  <AdminLayout :club="club" :title="isEditing ? 'Edit Contact Details' : 'Add New Contact'" active-tab="accounting">
-    <Head :title="`${isEditing ? 'Edit Contact Details' : 'Add New Contact'} - ${club.name}`" />
+  <AdminLayout :club="club" :title="isEditing ? 'Edit contact details' : 'Add a contact'" active-tab="accounting">
+    <Head :title="`${isEditing ? 'Edit contact details' : 'Add a contact'} - ${club.name}`" />
 
-    <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
-      <!-- Top Breadcrumb & Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1" aria-label="Breadcrumb">
-            <Link
-              :href="route('admin.accounting.index', club.slug)"
-              class="hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              Accounting ERP
-            </Link>
-            <span>/</span>
-            <Link
-              :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })"
-              class="hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              Contacts directory
-            </Link>
-            <span>/</span>
-            <span class="text-slate-900 dark:text-white font-bold" aria-current="page">
-              {{ isEditing ? 'Edit Contact' : 'New Contact' }}
-            </span>
-          </nav>
-          <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            {{ isEditing ? 'Edit Contact Details' : 'Add New Directory Contact' }}
-          </h1>
-          <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
-            <span v-if="isMember">Update billing address, tax info, and notes for this club member.</span>
-            <span v-else-if="isEditing">Update address, tax information, role, and notes for this contact.</span>
-            <span v-else>Create a new contractor, client, or sponsor in your accounting directory.</span>
-          </p>
-        </div>
+    <div class="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <PageHeader
+        :title="isEditing ? 'Edit contact details' : 'Add a directory contact'"
+        :description="isMember ? 'Update billing address, tax info and notes for this club member.' : isEditing ? 'Update address, tax information, role and notes for this contact.' : 'Create a new contractor, client or sponsor in your accounting directory.'"
+        :breadcrumbs="[
+          { label: 'Accounting', href: route('admin.accounting.index', club.slug) },
+          { label: 'Contacts directory', href: route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' }) },
+          { label: isEditing ? 'Edit contact' : 'New contact' },
+        ]"
+      >
+        <template #actions>
+          <Button variant="ghost" size="sm" :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })">
+            <template #icon><UiIcon name="arrow-left" /></template>
+            Back to directory
+          </Button>
+          <Button v-if="isEditing && !isMember" variant="danger" size="sm" @click="deleteContact">
+            <template #icon><UiIcon name="trash" /></template>
+            Delete
+          </Button>
+        </template>
+      </PageHeader>
 
-        <div class="flex items-center gap-3">
-          <Link
-            :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })"
-            class="inline-flex items-center gap-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-colors"
-          >
-            ← Back to directory
-          </Link>
-          <button
-            v-if="isEditing && !isMember"
-            type="button"
-            @click="deleteContact"
-            class="inline-flex items-center gap-1 px-4 py-2 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-bold text-xs rounded-xl transition-colors cursor-pointer"
-          >
-            🗑️ Delete
-          </button>
-        </div>
-      </div>
-
-
-      <!-- ── Member Financial Overview ──────────────────────────────── -->
+      <!-- Member financial overview -->
       <div v-if="isMember && memberSummary" class="space-y-4">
 
-        <!-- Stat Cards Row -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <!-- Amount Owed -->
-          <div :class="[
-            'rounded-2xl border p-4 flex flex-col gap-1',
-            memberSummary.amount_owed > 0
-              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60'
-              : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'
-          ]">
-            <span class="text-[10px] font-extrabold uppercase tracking-wider" :class="memberSummary.amount_owed > 0 ? 'text-rose-500' : 'text-slate-400'">Amount Owed</span>
-            <span class="text-xl font-black" :class="memberSummary.amount_owed > 0 ? 'text-rose-700 dark:text-rose-300' : 'text-slate-400'">{{ memberSummary.amount_owed_formatted }}</span>
-            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{{ memberSummary.amount_owed > 0 ? 'Outstanding subs / invoices' : 'All paid up ✓' }}</span>
-          </div>
-
-          <!-- Credit Balance -->
-          <div :class="[
-            'rounded-2xl border p-4 flex flex-col gap-1',
-            memberSummary.credit_balance > 0
-              ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/60'
-              : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'
-          ]">
-            <span class="text-[10px] font-extrabold uppercase tracking-wider" :class="memberSummary.credit_balance > 0 ? 'text-blue-500' : 'text-slate-400'">Credit / Advance</span>
-            <span class="text-xl font-black" :class="memberSummary.credit_balance > 0 ? 'text-blue-700 dark:text-blue-300' : 'text-slate-400'">{{ memberSummary.credit_balance_formatted }}</span>
-            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Paid in advance / refunds</span>
-          </div>
-
-          <!-- Total Paid -->
-          <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-4 flex flex-col gap-1">
-            <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-500">Total Paid</span>
-            <span class="text-xl font-black text-emerald-700 dark:text-emerald-300">{{ memberSummary.total_paid_formatted }}</span>
-            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Lifetime contributions</span>
-          </div>
-
-          <!-- Last Payment -->
-          <div class="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-2xl p-4 flex flex-col gap-1">
-            <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-500">Last Payment</span>
-            <span class="text-base font-black text-blue-700 dark:text-blue-300">{{ memberSummary.last_payment_amount ?? '—' }}</span>
-            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{{ memberSummary.last_payment_date ?? 'No payments yet' }}</span>
-          </div>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard
+            label="Amount owed"
+            :value="memberSummary.amount_owed_formatted"
+            :caption="memberSummary.amount_owed > 0 ? 'Outstanding subs or invoices' : 'All paid up'"
+          />
+          <StatCard label="Credit or advance" :value="memberSummary.credit_balance_formatted" caption="Paid in advance or refunds" />
+          <StatCard label="Total paid" :value="memberSummary.total_paid_formatted" caption="Lifetime contributions" />
+          <StatCard label="Last payment" :value="memberSummary.last_payment_amount ?? '—'" :caption="memberSummary.last_payment_date ?? 'No payments yet'" />
         </div>
 
-        <!-- Membership Plan + Member Since Row -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <!-- Active Plan -->
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-start gap-3">
-            <span class="text-2xl">🎫</span>
-            <div>
-              <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-0.5">Membership Plan</p>
-              <p v-if="memberSummary.membership_plan" class="text-sm font-extrabold text-slate-900 dark:text-white">
-                {{ memberSummary.membership_plan }}
-              </p>
-              <p v-else class="text-sm font-bold text-slate-400">No active plan</p>
-              <p v-if="memberSummary.membership_plan" class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                {{ memberSummary.membership_price }} / {{ memberSummary.membership_period }}
-                <span v-if="memberSummary.membership_renews"> · Renews {{ memberSummary.membership_renews }}</span>
-              </p>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Card padding="sm">
+            <div class="flex items-start gap-3">
+              <span class="mt-0.5 text-slate-400 dark:text-slate-500"><UiIcon name="tag" :size="20" /></span>
+              <div>
+                <p class="mb-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">Membership plan</p>
+                <p v-if="memberSummary.membership_plan" class="text-sm font-semibold text-slate-900 dark:text-white">
+                  {{ memberSummary.membership_plan }}
+                </p>
+                <p v-else class="text-sm text-slate-500 dark:text-slate-400">No active plan</p>
+                <p v-if="memberSummary.membership_plan" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  {{ memberSummary.membership_price }} / {{ memberSummary.membership_period }}
+                  <span v-if="memberSummary.membership_renews"> · Renews {{ memberSummary.membership_renews }}</span>
+                </p>
+              </div>
             </div>
-          </div>
+          </Card>
 
-          <!-- Member Since -->
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-start gap-3">
-            <span class="text-2xl">📅</span>
-            <div>
-              <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-0.5">Member Since</p>
-              <p class="text-sm font-extrabold text-slate-900 dark:text-white">{{ memberSummary.member_since ?? 'Unknown' }}</p>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ memberSummary.invoice_count }} invoice(s) on record</p>
+          <Card padding="sm">
+            <div class="flex items-start gap-3">
+              <span class="mt-0.5 text-slate-400 dark:text-slate-500"><UiIcon name="calendar" :size="20" /></span>
+              <div>
+                <p class="mb-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">Member since</p>
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ memberSummary.member_since ?? 'Unknown' }}</p>
+                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ memberSummary.invoice_count }} invoice(s) on record</p>
+              </div>
             </div>
-          </div>
+          </Card>
         </div>
 
-        <!-- Unpaid Invoices breakdown -->
-        <div v-if="memberSummary.unpaid_invoices?.length" class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-2xl overflow-hidden">
-          <div class="px-4 py-3 border-b border-rose-200 dark:border-rose-800/60 flex items-center gap-2">
-            <span class="text-xs font-extrabold text-rose-700 dark:text-rose-300 uppercase tracking-wider">⚠️ Outstanding Invoices</span>
+        <!-- Unpaid invoices -->
+        <div v-if="memberSummary.unpaid_invoices?.length" class="overflow-hidden rounded-2xl border border-rose-200 bg-rose-50 dark:border-rose-800/50 dark:bg-rose-950/40">
+          <div class="flex items-center gap-2 border-b border-rose-200 px-4 py-3 text-rose-700 dark:border-rose-800/50 dark:text-rose-300">
+            <UiIcon name="warning" />
+            <h3 class="text-sm font-semibold">Outstanding invoices</h3>
           </div>
           <table class="w-full text-left">
-            <thead>
-              <tr class="text-[10px] font-extrabold text-rose-500 uppercase tracking-wider border-b border-rose-100 dark:border-rose-900/40">
-                <th class="px-4 py-2">Invoice</th>
-                <th class="px-4 py-2">Description</th>
-                <th class="px-4 py-2">Issued</th>
-                <th class="px-4 py-2 text-right">Amount</th>
+            <thead class="border-b border-rose-100 text-xs text-rose-700 dark:border-rose-900/40 dark:text-rose-300">
+              <tr>
+                <th scope="col" class="px-4 py-2 font-medium">Invoice</th>
+                <th scope="col" class="px-4 py-2 font-medium">Description</th>
+                <th scope="col" class="px-4 py-2 font-medium">Issued</th>
+                <th scope="col" class="px-4 py-2 text-right font-medium">Amount</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-rose-100">
-              <tr v-for="inv in memberSummary.unpaid_invoices" :key="inv.id" class="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                <td class="px-4 py-2.5 font-mono text-[11px] text-slate-500 dark:text-slate-400">{{ inv.invoice_number }}</td>
+            <tbody class="divide-y divide-rose-100 dark:divide-rose-900/40">
+              <tr v-for="inv in memberSummary.unpaid_invoices" :key="inv.id" class="text-sm text-slate-700 dark:text-slate-200">
+                <td class="px-4 py-2.5 font-mono text-xs text-slate-500 dark:text-slate-400">{{ inv.invoice_number }}</td>
                 <td class="px-4 py-2.5">{{ inv.title }}</td>
                 <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400">{{ inv.created_at }}</td>
-                <td class="px-4 py-2.5 text-right font-extrabold text-rose-700 dark:text-rose-300">{{ inv.amount }}</td>
+                <td class="px-4 py-2.5 text-right font-semibold tabular-nums text-rose-700 dark:text-rose-300">{{ inv.amount }}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
       </div>
-      <!-- ─────────────────────────────────────────────────────────────── -->
 
-      <!-- Main Contact Form Card -->
-      <form @submit.prevent="submitForm" class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div class="p-6 sm:p-8 space-y-6">
+      <!-- Contact form -->
+      <form @submit.prevent="submitForm">
+        <Card padding="lg">
+          <div class="space-y-8">
 
-          <!-- Section 1: Name & Classification -->
-          <div class="space-y-4">
-            <h2 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
-              1. Name & Classification
-            </h2>
+            <section class="space-y-4">
+              <h3 class="border-b border-slate-200 pb-2 text-base font-semibold text-slate-900 dark:border-slate-800 dark:text-white">Name and classification</h3>
 
-            <!-- Row 1: First + Middle + Last -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-              <div>
-                <label for="contact-first-name" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
-                  First Name <span class="text-rose-500">*</span>
-                </label>
-                <input
-                  id="contact-first-name"
-                  v-model="form.first_name"
-                  type="text"
-                  placeholder="e.g. Robert"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                  autocomplete="given-name"
-                />
-                <p v-if="form.errors.first_name" class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ form.errors.first_name }}</p>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Input v-model="form.first_name" label="First name" placeholder="e.g. Robert" required autocomplete="given-name" :error="form.errors.first_name" />
+                <Input v-model="form.middle_names" label="Middle names" placeholder="e.g. James" autocomplete="additional-name" :error="form.errors.middle_names" />
+                <Input v-model="form.last_name" label="Surname" placeholder="e.g. Sterling" autocomplete="family-name" :error="form.errors.last_name" />
               </div>
 
-              <div>
-                <label for="contact-middle-names" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
-                  Middle Name(s)
-                </label>
-                <input
-                  id="contact-middle-names"
-                  v-model="form.middle_names"
-                  type="text"
-                  placeholder="e.g. James"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="additional-name"
-                />
-                <p v-if="form.errors.middle_names" class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ form.errors.middle_names }}</p>
-              </div>
-
-              <div>
-                <label for="contact-last-name" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
-                  Surname
-                </label>
-                <input
-                  id="contact-last-name"
-                  v-model="form.last_name"
-                  type="text"
-                  placeholder="e.g. Sterling"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="family-name"
-                />
-                <p v-if="form.errors.last_name" class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ form.errors.last_name }}</p>
-              </div>
-            </div>
-
-            <!-- Row 2: Preferred name -->
-            <div class="sm:w-1/2">
-              <label for="contact-preferred-name" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
-                Preferred / Display Name
-                <span class="ml-1 text-slate-400 font-medium">(nickname or how they like to be addressed)</span>
-              </label>
-              <input
-                id="contact-preferred-name"
+              <Input
                 v-model="form.preferred_name"
-                type="text"
+                class="sm:w-1/2"
+                label="Preferred or display name"
+                hint="A nickname, or how they like to be addressed."
                 placeholder="e.g. Bob"
-                class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 autocomplete="nickname"
+                :error="form.errors.preferred_name"
               />
-              <p v-if="form.errors.preferred_name" class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ form.errors.preferred_name }}</p>
-            </div>
 
-            <!-- Role / Category Select -->
-            <div>
-              <label for="contact-role" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">
-                Relationship / Role Category <span class="text-rose-500">*</span>
-              </label>
-              <!-- Locked badge for members -->
-              <div v-if="isMember" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs font-extrabold text-emerald-800 dark:text-emerald-200">
-                💳 Club Member
+              <div v-if="isMember" class="space-y-1.5">
+                <p class="text-xs font-medium text-slate-700 dark:text-slate-300">Relationship or role</p>
+                <Badge variant="success">Club member</Badge>
               </div>
-              <select
+              <Select
                 v-else
-                id="contact-role"
                 v-model="form.role"
-                class="w-full sm:w-1/2 px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                class="sm:w-1/2"
+                label="Relationship or role"
+                :options="ROLE_OPTIONS"
                 required
-              >
-                <option value="Contractor / Coach">Contractor / Coach</option>
-                <option value="Volunteer / Staff">Volunteer / Staff</option>
-                <option value="Vendor Representative">Vendor Representative</option>
-                <option value="Client / Customer">Client / Customer</option>
-                <option value="Club Member">Club Member</option>
-              </select>
-              <p v-if="form.errors.role" class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ form.errors.role }}</p>
-            </div>
-          </div>
+                :error="form.errors.role"
+              />
+            </section>
 
-          <!-- Section 2: Contact Methods & Tax Info -->
-          <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <h2 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
-              2. Contact Details
-            </h2>
+            <section class="space-y-4">
+              <h3 class="border-b border-slate-200 pb-2 text-base font-semibold text-slate-900 dark:border-slate-800 dark:text-white">Contact details</h3>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label for="contact-email" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Email Address</label>
-                <input
-                  id="contact-email"
-                  v-model="form.email"
-                  type="email"
-                  placeholder="robert@example.co.uk"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="email"
-                />
-                <p v-if="form.errors.email" class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ form.errors.email }}</p>
+              <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <Input v-model="form.email" type="email" label="Email address" placeholder="robert@example.co.uk" autocomplete="email" :error="form.errors.email" />
+                <Input v-model="form.phone" label="Phone number" placeholder="+44 7700 900123" autocomplete="tel" :error="form.errors.phone" />
+              </div>
+            </section>
+
+            <section class="space-y-4">
+              <h3 class="border-b border-slate-200 pb-2 text-base font-semibold text-slate-900 dark:border-slate-800 dark:text-white">Billing address</h3>
+
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Input v-model="form.address_line_1" label="Address line 1" placeholder="14 Boathouse Lane" autocomplete="address-line1" :error="form.errors.address_line_1" />
+                <Input v-model="form.address_line_2" label="Address line 2" placeholder="Abingdon Road" autocomplete="address-line2" :error="form.errors.address_line_2" />
               </div>
 
-              <div>
-                <label for="contact-phone" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Phone Number</label>
-                <input
-                  id="contact-phone"
-                  v-model="form.phone"
-                  type="text"
-                  placeholder="+44 7700 900123"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="tel"
-                />
-                <p v-if="form.errors.phone" class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ form.errors.phone }}</p>
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Input v-model="form.city" label="City or town" placeholder="Oxford" autocomplete="address-level2" :error="form.errors.city" />
+                <Input v-model="form.postcode" label="Postcode or ZIP" placeholder="OX2 0ES" autocomplete="postal-code" :error="form.errors.postcode" />
+                <Input v-model="form.country" label="Country" placeholder="United Kingdom" autocomplete="country-name" :error="form.errors.country" />
               </div>
+            </section>
 
+            <section class="space-y-4">
+              <h3 class="border-b border-slate-200 pb-2 text-base font-semibold text-slate-900 dark:border-slate-800 dark:text-white">Internal bookkeeping notes and payment terms</h3>
 
-            </div>
-          </div>
-
-          <!-- Section 3: Billing Address -->
-          <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <h2 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
-              3. Billing Address
-            </h2>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label for="address-line-1" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Address Line 1</label>
-                <input
-                  id="address-line-1"
-                  v-model="form.address_line_1"
-                  type="text"
-                  placeholder="14 Boathouse Lane"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="address-line1"
-                />
-              </div>
-
-              <div>
-                <label for="address-line-2" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Address Line 2</label>
-                <input
-                  id="address-line-2"
-                  v-model="form.address_line_2"
-                  type="text"
-                  placeholder="Abingdon Road"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="address-line2"
-                />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label for="city" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">City / Town</label>
-                <input
-                  id="city"
-                  v-model="form.city"
-                  type="text"
-                  placeholder="Oxford"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="address-level2"
-                />
-              </div>
-
-              <div>
-                <label for="postcode" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Postcode / Zip</label>
-                <input
-                  id="postcode"
-                  v-model="form.postcode"
-                  type="text"
-                  placeholder="OX2 0ES"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="postal-code"
-                />
-              </div>
-
-              <div>
-                <label for="country" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Country</label>
-                <input
-                  id="country"
-                  v-model="form.country"
-                  type="text"
-                  placeholder="United Kingdom"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="country-name"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 4: Internal Notes -->
-          <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <h2 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
-              4. Internal Bookkeeping Notes & Payment Terms
-            </h2>
-
-            <div>
-              <label for="contact-notes" class="block text-xs font-bold text-slate-800 dark:text-slate-100 mb-1">Notes & Terms</label>
-              <textarea
-                id="contact-notes"
+              <Textarea
                 v-model="form.notes"
-                rows="3"
+                label="Notes and terms"
+                :rows="3"
                 placeholder="e.g. Membership since 2021. Direct debit set up. Payment terms Net 30."
-                class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              ></textarea>
-            </div>
+                :error="form.errors.notes"
+              />
+            </section>
           </div>
-        </div>
 
-        <!-- Footer Actions Bar -->
-        <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <Link
-            :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })"
-            class="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl shadow-sm transition-colors"
-          >
-            Cancel & return
-          </Link>
-
-          <button
-            type="submit"
-            :disabled="form.processing"
-            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-colors cursor-pointer flex items-center gap-2"
-          >
-            <span v-if="form.processing" class="animate-spin">⌛</span>
-            <span>{{ isEditing ? 'Update contact details' : 'Save contact to directory' }}</span>
-          </button>
-        </div>
+          <template #footer>
+            <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <Button variant="ghost" :href="route('admin.accounting.index', { clubSlug: club.slug, tab: 'contacts' })">Cancel</Button>
+              <Button type="submit" :loading="form.processing">{{ isEditing ? 'Update contact details' : 'Save contact to directory' }}</Button>
+            </div>
+          </template>
+        </Card>
       </form>
     </div>
   </AdminLayout>

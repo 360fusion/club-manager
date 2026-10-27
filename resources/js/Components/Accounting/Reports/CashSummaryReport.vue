@@ -9,17 +9,17 @@ defineProps({
 
 <template>
     <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h4 class="text-base font-extrabold text-slate-900 dark:text-white">Cash & Bank Accounts Summary</h4>
-        <span class="text-xs font-black text-blue-800 dark:text-blue-200 font-mono">Net Cash Reserve: {{ formatMoney(reports.cash_summary.total_cash_on_hand) }}</span>
+      <div class="flex items-center justify-between gap-2">
+        <h4 class="text-base font-semibold text-slate-900 dark:text-white">Cash and bank accounts summary</h4>
+        <span class="text-xs font-medium text-slate-600 dark:text-slate-300 tabular-nums">Net cash reserve: {{ formatMoney(reports.cash_summary.total_cash_on_hand) }}</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-        <div v-for="acc in reports.cash_summary.accounts" :key="acc.code" class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div v-for="acc in reports.cash_summary.accounts" :key="acc.code" class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between gap-3">
           <div>
-            <span class="font-mono font-bold text-blue-700 dark:text-blue-300 block">{{ acc.code }}</span>
-            <span class="font-bold text-slate-900 dark:text-white text-sm block">{{ acc.name }}</span>
+            <span class="tabular-nums text-slate-500 dark:text-slate-400 block">{{ acc.code }}</span>
+            <span class="font-medium text-slate-900 dark:text-white text-sm block">{{ acc.name }}</span>
           </div>
-          <span class="text-base font-black font-mono text-emerald-700 dark:text-emerald-300">{{ formatMoney(acc.balance) }}</span>
+          <span class="text-base font-semibold tabular-nums text-slate-900 dark:text-white">{{ formatMoney(acc.balance) }}</span>
         </div>
       </div>
     </div>

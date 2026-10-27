@@ -1,5 +1,10 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import Card from '@/Components/Ui/Card.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 // settings section of Index.vue, kept in its own file so the page stays readable. It only reads what it is given.
 defineProps({
@@ -22,260 +27,218 @@ defineProps({
     settings: { type: [Object, Array, Function, String, Number, Boolean], default: undefined },
     vatLocked: { type: [Object, Array, Function, String, Number, Boolean], default: undefined }
 });
+
+const VAT_SCHEMES = [
+    { value: 'standard', label: 'Standard VAT accounting' },
+    { value: 'flat_rate', label: 'Flat rate scheme' },
+    { value: 'cash_accounting', label: 'Cash accounting scheme' },
+    { value: 'annual_accounting', label: 'Annual accounting scheme' },
+];
+
+const PANEL = 'space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-800/50';
+const PANEL_TITLE = 'flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white';
+const LABEL = 'block text-xs font-medium text-slate-500 dark:text-slate-400';
+const CHECKBOX = 'rounded border-slate-300 text-blue-600 accent-blue-600 focus:ring-blue-500 dark:border-slate-700';
 </script>
 
 <template>
-    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-6">
-      <div class="border-b border-slate-100 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h3 class="text-lg font-black text-slate-900 dark:text-white">Financial & Accounting Settings</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Configure company address, VAT registration numbers, invoicing rules, and billing defaults.</p>
-        </div>
-        <Link
-          :href="route('admin.settings.show', club.slug) + '#accounting'"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5 self-start sm:self-auto"
-        >
-          <span>⚙️ Full system settings</span>
-        </Link>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
-        <!-- Card 1: Company & Address Profile -->
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🏢</span>
-            <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">Company & Address</h4>
+    <Card>
+      <div class="space-y-6">
+        <div class="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+          <div>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Financial and accounting settings</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Address, VAT registration, invoicing rules and billing defaults.</p>
           </div>
-          <div class="space-y-2 text-slate-600 dark:text-slate-300">
-            <div>
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Organization Name</span>
-              <span class="font-bold text-slate-900 dark:text-white">{{ club.name }}</span>
-            </div>
-            <div>
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Registered Address</span>
-              <span v-if="settings.address_line_1">{{ settings.address_line_1 }}</span>
-              <span v-if="settings.city" class="block">{{ settings.city }}, {{ settings.postcode }}</span>
-              <span class="block text-slate-500 dark:text-slate-400 font-mono text-[10px]">{{ settings.country || 'United Kingdom' }}</span>
-              <span v-if="!settings.address_line_1 && !settings.city" class="text-slate-400 italic">Not set</span>
-            </div>
-            <div>
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Contact Information</span>
-              <span class="block font-mono">{{ settings.contact_email || 'Not set' }}</span>
-              <span class="block font-mono text-slate-500 dark:text-slate-400">{{ settings.phone || 'Not set' }}</span>
-            </div>
-            <form v-if="canManageBilling" @submit.prevent="submitFinancialYearEnd" class="pt-2 border-t border-slate-200 dark:border-slate-800">
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">Financial Year End</span>
-              <div class="flex items-center gap-2">
-                <select
-                  v-model.number="financialYearEndForm.financial_year_end_month"
-                  class="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option v-for="(name, idx) in ['January','February','March','April','May','June','July','August','September','October','November','December']" :key="idx" :value="idx + 1">{{ name }}</option>
-                </select>
-                <button
-                  type="submit"
-                  :disabled="financialYearEndForm.processing"
-                  class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-            <div v-else class="pt-2 border-t border-slate-200 dark:border-slate-800">
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Financial Year End</span>
-              <span class="font-bold text-slate-900 dark:text-white">{{ ['January','February','March','April','May','June','July','August','September','October','November','December'][(settings.financial_year_end_month || 4) - 1] }}</span>
-            </div>
-          </div>
+          <Button variant="secondary" size="sm" class="self-start sm:self-auto" :href="route('admin.settings.show', club.slug) + '#accounting'">
+            <template #icon><UiIcon name="settings" /></template>
+            All club settings
+          </Button>
         </div>
 
-        <!-- Card 2: VAT & Tax Registration -->
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">📋</span>
-            <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">VAT & Tax Configuration</h4>
-          </div>
-          <form @submit.prevent="submitVatSettings" class="space-y-3 text-slate-600 dark:text-slate-300">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                v-model="vatSettingsForm.enabled"
-                :disabled="vatLocked || !canManageBilling"
-                class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
-              />
-              <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">This club is VAT registered</span>
-            </label>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400">Most small lodges/clubs stay under the UK VAT registration threshold and should leave this off. Enable it only once actually registered with HMRC.</p>
-
-            <template v-if="vatSettingsForm.enabled">
+        <div class="grid grid-cols-1 gap-6 text-sm md:grid-cols-3">
+          <!-- Company and address -->
+          <div :class="PANEL">
+            <h4 :class="PANEL_TITLE"><UiIcon name="building" class="text-slate-500 dark:text-slate-400" /> Company and address</h4>
+            <div class="space-y-2 text-slate-600 dark:text-slate-300">
               <div>
-                <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">VAT Scheme</span>
-                <select
-                  v-model="vatSettingsForm.scheme"
-                  :disabled="vatLocked || !canManageBilling"
-                  class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="standard">Standard VAT Accounting</option>
-                  <option value="flat_rate">Flat Rate Scheme</option>
-                  <option value="cash_accounting">Cash Accounting Scheme</option>
-                  <option value="annual_accounting">Annual Accounting Scheme</option>
-                </select>
+                <span :class="LABEL">Organisation name</span>
+                <span class="font-medium text-slate-900 dark:text-white">{{ club.name }}</span>
               </div>
-              <div v-if="vatSettingsForm.scheme === 'flat_rate'">
-                <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">Flat Rate %</span>
+              <div>
+                <span :class="LABEL">Registered address</span>
+                <span v-if="settings.address_line_1">{{ settings.address_line_1 }}</span>
+                <span v-if="settings.city" class="block">{{ settings.city }}, {{ settings.postcode }}</span>
+                <span class="block text-xs text-slate-500 dark:text-slate-400">{{ settings.country || 'United Kingdom' }}</span>
+                <span v-if="!settings.address_line_1 && !settings.city" class="italic text-slate-400">Not set</span>
+              </div>
+              <div>
+                <span :class="LABEL">Contact details</span>
+                <span class="block">{{ settings.contact_email || 'Not set' }}</span>
+                <span class="block text-slate-500 dark:text-slate-400">{{ settings.phone || 'Not set' }}</span>
+              </div>
+              <form v-if="canManageBilling" class="border-t border-slate-200 pt-2 dark:border-slate-800" @submit.prevent="submitFinancialYearEnd">
+                <label for="financial-year-end-month" :class="[LABEL, 'mb-1']">Financial year end</label>
+                <div class="flex items-center gap-2">
+                  <select
+                    id="financial-year-end-month"
+                    v-model.number="financialYearEndForm.financial_year_end_month"
+                    class="flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  >
+                    <option v-for="(name, idx) in ['January','February','March','April','May','June','July','August','September','October','November','December']" :key="idx" :value="idx + 1">{{ name }}</option>
+                  </select>
+                  <Button type="submit" variant="secondary" size="sm" :loading="financialYearEndForm.processing">Save</Button>
+                </div>
+              </form>
+              <div v-else class="border-t border-slate-200 pt-2 dark:border-slate-800">
+                <span :class="LABEL">Financial year end</span>
+                <span class="font-medium text-slate-900 dark:text-white">{{ ['January','February','March','April','May','June','July','August','September','October','November','December'][(settings.financial_year_end_month || 4) - 1] }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- VAT and tax -->
+          <div :class="PANEL">
+            <h4 :class="PANEL_TITLE"><UiIcon name="clipboard" class="text-slate-500 dark:text-slate-400" /> VAT and tax</h4>
+            <form class="space-y-3 text-slate-600 dark:text-slate-300" @submit.prevent="submitVatSettings">
+              <label class="flex cursor-pointer items-center gap-2">
                 <input
-                  type="number" step="0.01" min="0" max="100"
-                  v-model="vatSettingsForm.flat_rate_percent"
+                  v-model="vatSettingsForm.enabled"
+                  type="checkbox"
                   :disabled="vatLocked || !canManageBilling"
-                  class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  :class="CHECKBOX"
                 />
-              </div>
-              <div>
-                <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">VAT Registration Number</span>
-                <input
-                  type="text"
+                <span class="font-medium text-slate-800 dark:text-slate-100">This club is VAT registered</span>
+              </label>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Most small lodges and clubs stay under the UK VAT registration threshold and should leave this off. Turn it on only once registered with HMRC.</p>
+
+              <template v-if="vatSettingsForm.enabled">
+                <Select v-model="vatSettingsForm.scheme" label="VAT scheme" :options="VAT_SCHEMES" :disabled="vatLocked || !canManageBilling" />
+                <Input
+                  v-if="vatSettingsForm.scheme === 'flat_rate'"
+                  v-model="vatSettingsForm.flat_rate_percent"
+                  type="number" step="0.01" min="0" max="100"
+                  label="Flat rate (%)"
+                  :disabled="vatLocked || !canManageBilling"
+                />
+                <Input
                   v-model="vatSettingsForm.vat_number"
+                  label="VAT registration number"
                   :disabled="!canManageBilling"
                   placeholder="GB 123 4567 89"
-                  class="w-full px-3 py-2 text-sm font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <Input
+                  v-model="vatSettingsForm.default_rate"
+                  type="number" step="0.01" min="0" max="100"
+                  label="Default VAT rate (%)"
+                  :disabled="vatLocked || !canManageBilling"
+                />
+              </template>
+
+              <Alert v-if="vatLocked" variant="warning">This club already has VAT-inclusive bills or invoices on its books, so whether VAT is on and which scheme is used are locked.</Alert>
+
+              <Button v-if="canManageBilling" type="submit" variant="secondary" size="sm" :loading="vatSettingsForm.processing">Save VAT settings</Button>
+
+              <div>
+                <span :class="LABEL">Currency</span>
+                <span class="font-medium text-slate-900 dark:text-white">{{ $page.props.currency.code }} ({{ $cs }})</span>
+              </div>
+            </form>
+          </div>
+
+          <!-- Invoicing and dues -->
+          <div :class="PANEL">
+            <h4 :class="PANEL_TITLE"><UiIcon name="receipt" class="text-slate-500 dark:text-slate-400" /> Invoicing and dues</h4>
+            <div class="space-y-2 text-slate-600 dark:text-slate-300">
+              <div>
+                <span :class="LABEL">Invoices are created</span>
+                <span class="font-medium text-slate-900 dark:text-white">{{ settings.auto_invoice_days_before || 7 }} days before the due date</span>
               </div>
               <div>
-                <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">Default VAT Rate %</span>
-                <input
-                  type="number" step="0.01" min="0" max="100"
-                  v-model="vatSettingsForm.default_rate"
-                  :disabled="vatLocked || !canManageBilling"
-                  class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <span :class="LABEL">Overdue grace period</span>
+                <span class="font-medium text-slate-900 dark:text-white">{{ settings.dues_grace_period_days || 14 }} days</span>
               </div>
-            </template>
-
-            <p v-if="vatLocked" class="text-[10px] text-amber-700 dark:text-amber-300 font-semibold">This club already has VAT-inclusive bills or invoices on its books, so whether VAT is on and which scheme is used are locked.</p>
-
-            <button
-              v-if="canManageBilling"
-              type="submit"
-              :disabled="vatSettingsForm.processing"
-              class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50"
-            >
-              Save VAT settings
-            </button>
-
-            <div>
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Currency</span>
-              <span class="font-mono font-bold text-emerald-700 dark:text-emerald-300">{{ $page.props.currency.code }} ({{ $cs }})</span>
-            </div>
-          </form>
-        </div>
-
-        <!-- Card 3: Invoicing Setup & Footer Notes -->
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🧾</span>
-            <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">Invoicing & Dues Setup</h4>
-          </div>
-          <div class="space-y-2 text-slate-600 dark:text-slate-300">
-            <div>
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Auto-Invoicing Lead Time</span>
-              <span class="font-bold text-slate-900 dark:text-white">{{ settings.auto_invoice_days_before || 7 }} Days before due date</span>
-            </div>
-            <div>
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Overdue Grace Period</span>
-              <span class="font-bold text-amber-800 dark:text-amber-200">{{ settings.dues_grace_period_days || 14 }} Days</span>
-            </div>
-            <div>
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px]">Receipt & Invoice Notes</span>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400 italic">"{{ settings.receipt_footer_notes || 'Thank you for supporting our club.' }}"</p>
+              <div>
+                <span :class="LABEL">Receipt and invoice notes</span>
+                <p class="text-xs italic text-slate-500 dark:text-slate-400">"{{ settings.receipt_footer_notes || 'Thank you for supporting our club.' }}"</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Card 4: Approval Threshold -->
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🔏</span>
-            <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">Approval Threshold</h4>
-          </div>
-          <form v-if="canManageBilling" @submit.prevent="submitApprovalThreshold" class="space-y-3 text-slate-600 dark:text-slate-300">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                v-model="approvalThresholdForm.enabled"
-                class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
-              />
-              <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">Hold large bills/invoices for a second sign-off</span>
-            </label>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400">A bill or invoice at or above the amount is held as "Pending Approval" — no ledger entry is posted — until a different admin or treasurer approves it.</p>
-            <div v-if="approvalThresholdForm.enabled">
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">Threshold Amount ({{ $cs }})</span>
-              <input
-                type="number" step="0.01" min="0.01"
+          <!-- Approval threshold -->
+          <div :class="PANEL">
+            <h4 :class="PANEL_TITLE"><UiIcon name="lock" class="text-slate-500 dark:text-slate-400" /> Approval threshold</h4>
+            <form v-if="canManageBilling" class="space-y-3 text-slate-600 dark:text-slate-300" @submit.prevent="submitApprovalThreshold">
+              <label class="flex cursor-pointer items-center gap-2">
+                <input
+                  v-model="approvalThresholdForm.enabled"
+                  type="checkbox"
+                  :class="CHECKBOX"
+                />
+                <span class="font-medium text-slate-800 dark:text-slate-100">Hold large bills and invoices for a second sign-off</span>
+              </label>
+              <p class="text-xs text-slate-500 dark:text-slate-400">A bill or invoice at or above the amount waits as "pending approval", with nothing posted to the ledger, until a different admin or treasurer approves it.</p>
+              <Input
+                v-if="approvalThresholdForm.enabled"
                 v-model="approvalThresholdForm.amount"
-                placeholder="e.g. 500.00"
-                class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                type="number" step="0.01" min="0.01"
+                label="Threshold amount"
+                :prefix="$cs"
+                placeholder="For example 500.00"
+                :error="approvalThresholdForm.errors.amount"
               />
-              <p v-if="approvalThresholdForm.errors.amount" class="text-[10px] text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ approvalThresholdForm.errors.amount }}</p>
+              <Button type="submit" variant="secondary" size="sm" :loading="approvalThresholdForm.processing">Save</Button>
+            </form>
+            <div v-else class="space-y-2 text-slate-600 dark:text-slate-300">
+              <span class="block font-medium text-slate-900 dark:text-white">
+                {{ approvalThreshold.enabled ? `On — ${$cs}${numberFormat(approvalThreshold.amount, 2)} and above` : 'Off' }}
+              </span>
             </div>
-            <button
-              type="submit"
-              :disabled="approvalThresholdForm.processing"
-              class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50"
-            >
-              Save
-            </button>
-          </form>
-          <div v-else class="space-y-2 text-slate-600 dark:text-slate-300">
-            <span class="font-bold text-slate-900 dark:text-white block">
-              {{ approvalThreshold.enabled ? `Enabled — ${$cs}${numberFormat(approvalThreshold.amount, 2)} and above` : 'Off' }}
-            </span>
+          </div>
+
+          <!-- Charity Commission -->
+          <div :class="PANEL">
+            <h4 :class="PANEL_TITLE"><UiIcon name="heart" class="text-slate-500 dark:text-slate-400" /> Charity Commission</h4>
+            <form v-if="canManageBilling" class="space-y-3 text-slate-600 dark:text-slate-300" @submit.prevent="submitCharityCommission">
+              <label class="flex cursor-pointer items-center gap-2">
+                <input v-model="charityCommissionForm.registered" type="checkbox" :class="CHECKBOX" />
+                <span class="font-medium text-slate-800 dark:text-slate-100">Our charity or benevolent fund is separately registered</span>
+              </label>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Turns on the independent examiner's report, which registered charities file each year.</p>
+              <Input
+                v-if="charityCommissionForm.registered"
+                v-model="charityCommissionForm.charity_number"
+                label="Registered charity number"
+                :error="charityCommissionForm.errors.charity_number"
+              />
+              <Button type="submit" variant="secondary" size="sm" :loading="charityCommissionForm.processing">Save</Button>
+            </form>
+            <span v-else class="block font-medium text-slate-900 dark:text-white">{{ charityCommission.registered ? `Registered — ${charityCommission.charity_number}` : 'Not registered' }}</span>
           </div>
         </div>
 
-        <!-- Card 5: Charity Commission -->
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🤝</span>
-            <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">Charity Commission</h4>
-          </div>
-          <form v-if="canManageBilling" @submit.prevent="submitCharityCommission" class="space-y-3 text-slate-600 dark:text-slate-300">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" v-model="charityCommissionForm.registered" class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500" />
-              <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">Our Charity / Benevolent Fund is separately registered</span>
-            </label>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400">Turns on the Independent Examiner's Report, which registered charities file each year.</p>
-            <div v-if="charityCommissionForm.registered">
-              <span class="font-bold text-slate-800 dark:text-slate-100 block text-[11px] mb-1">Registered Charity Number</span>
-              <input type="text" v-model="charityCommissionForm.charity_number" class="w-full px-3 py-2 text-sm font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <p v-if="charityCommissionForm.errors.charity_number" class="text-[10px] text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ charityCommissionForm.errors.charity_number }}</p>
-            </div>
-            <button type="submit" :disabled="charityCommissionForm.processing" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-extrabold rounded-xl transition-all cursor-pointer disabled:opacity-50">Save</button>
-          </form>
-          <span v-else class="font-bold text-slate-900 dark:text-white block">{{ charityCommission.registered ? `Registered — ${charityCommission.charity_number}` : 'Not registered' }}</span>
-        </div>
-      </div>
-
-      <div v-if="canExportAllData" class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 text-xs">
-        <div>
-          <span class="font-black text-slate-900 dark:text-white block">Export all accounting data</span>
-          <span class="text-slate-500 dark:text-slate-400">Every ledger, bill, invoice, bank line, member and committee record as CSV files in one zip. Passwords and API keys are left out.</span>
-        </div>
-        <a :href="route('admin.accounting.export_all', club.slug)" class="px-3.5 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm whitespace-nowrap">⬇️ Download zip</a>
-      </div>
-
-      <div class="p-4 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-800/60 flex items-center justify-between text-xs">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">⚙️</span>
+        <div v-if="canExportAllData" class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-800 dark:bg-slate-800/50">
           <div>
-            <span class="font-black text-blue-900 dark:text-blue-200 block">Edit Organization Settings & Billing Rules</span>
-            <span class="text-blue-700 dark:text-blue-300">Update company address, VAT registration number, logos, and role permission matrix.</span>
+            <span class="block font-medium text-slate-900 dark:text-white">Export all accounting data</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400">Every ledger, bill, invoice, bank line, member and committee record as CSV files in one zip. Passwords and API keys are left out.</span>
           </div>
+          <a
+            :href="route('admin.accounting.export_all', club.slug)"
+            class="inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          ><UiIcon name="download" /> Download zip</a>
         </div>
-        <Link
-          :href="route('admin.settings.show', club.slug) + '#accounting'"
-          class="px-3.5 py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl shadow-sm transition-all whitespace-nowrap"
-        >
-          Edit settings →
-        </Link>
+
+        <div class="flex items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm dark:border-blue-800/60 dark:bg-blue-950/40">
+          <div class="flex items-center gap-3">
+            <UiIcon name="settings" :size="20" class="text-blue-700 dark:text-blue-300" />
+            <div>
+              <span class="block font-medium text-blue-900 dark:text-blue-200">Organisation settings and billing rules</span>
+              <span class="text-xs text-blue-700 dark:text-blue-300">Change the address, VAT registration number, logos and who can do what.</span>
+            </div>
+          </div>
+          <Button variant="secondary" size="sm" class="shrink-0" :href="route('admin.settings.show', club.slug) + '#accounting'">
+            Edit settings
+          </Button>
+        </div>
       </div>
-    </div>
+    </Card>
 </template>

@@ -4,6 +4,17 @@ import BankStatementsPanel from '@/Components/Accounting/Reconciliation/BankStat
 import CashCodingPanel from '@/Components/Accounting/Reconciliation/CashCodingPanel.vue';
 import ReconcilePanel from '@/Components/Accounting/Reconciliation/ReconcilePanel.vue';
 import AccountTransactionsPanel from '@/Components/Accounting/Sections/AccountTransactionsPanel.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Select from '@/Components/Ui/Select.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
+
+const transactionTypeOptions = [
+    { value: 'all', label: 'All lines (spent and received)' },
+    { value: 'spent', label: 'Spent only (outgoing)' },
+    { value: 'received', label: 'Received only (incoming)' },
+];
 
 // The bank reconciliation workspace of the accounting screen: balance header, sub-tabs, filters and the five panels. It reads the page's figures
 // as props and hands back the state it changes (the open sub-tab, filters, menus and selections) through v-model.
@@ -74,37 +85,32 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
   <div class="space-y-4">
     
     <!-- Remembered matches -->
-    <details v-if="(reconciliation?.match_rules || []).length" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm text-xs">
-      <summary class="cursor-pointer font-extrabold text-slate-700 dark:text-slate-200">🔁 Remembered matches ({{ reconciliation.match_rules.length }})</summary>
+    <details v-if="(reconciliation?.match_rules || []).length" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-xs">
+      <summary class="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-200"><span class="inline-flex items-center gap-1.5 align-middle"><UiIcon name="refresh" /> Remembered matches ({{ reconciliation.match_rules.length }})</span></summary>
       <p class="mt-2 text-slate-500 dark:text-slate-400">Recurring payees are suggested first once you have matched them. Forget one if it was a mistake.</p>
       <ul class="mt-2 divide-y divide-slate-100 dark:divide-slate-800">
         <li v-for="rule in reconciliation.match_rules" :key="rule.id" class="py-2 flex items-center justify-between gap-3">
           <span class="min-w-0">
-            <span class="font-mono font-bold text-slate-900 dark:text-white block truncate">{{ rule.pattern }}</span>
+            <span class="font-mono font-medium text-slate-900 dark:text-white block truncate">{{ rule.pattern }}</span>
             <span class="text-slate-500 dark:text-slate-400">{{ rule.match_type === 'charity_relief' ? 'Charity relief' : `Ledger ${rule.nominal_code}` }} · used {{ rule.hit_count }}×</span>
           </span>
-          <button type="button" @click="forgetMatchRule(rule.id)" class="px-2.5 py-1 text-[10px] font-extrabold text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 rounded-xl cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-950/40">Forget</button>
+          <Button variant="secondary" size="sm" @click="forgetMatchRule(rule.id)">Forget</Button>
         </li>
       </ul>
     </details>
 
     <!-- Top Bank Account Balance Header Bar -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div class="space-y-2">
         <div class="flex items-center gap-3">
-          <span class="text-xl">
-            <span v-if="activeBankAccount?.bank_name === 'GoCardless' || activeBankAccount?.gocardless_access_token">🟡</span>
-            <span v-else-if="activeBankAccount?.bank_name === 'Stripe' || activeBankAccount?.stripe_secret_key">💜</span>
-            <span v-else-if="activeBankAccount?.bank_name === 'SumUp' || activeBankAccount?.sumup_api_key">💚</span>
-            <span v-else-if="activeBankAccount?.bank_name === 'PayPal' || activeBankAccount?.paypal_client_id">🟦</span>
-            <span v-else>💳</span>
-          </span>
+          <UiIcon name="bank" :size="20" class="text-slate-500 dark:text-slate-400" />
 
           <!-- Bank Account Selector Dropdown -->
           <div class="relative">
             <select
               v-model="selectedBankAccountId"
-              class="bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-black text-base rounded-xl px-3 py-1.5 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              aria-label="Bank account"
+              class="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-sm font-semibold px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
             >
               <option
                 v-for="acc in (bankAccounts || [])"
@@ -117,42 +123,35 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-4 text-xs font-semibold">
+        <div class="flex flex-wrap items-center gap-4 text-xs">
           <div>
-            <span class="font-extrabold text-slate-900 dark:text-white text-sm">{{ activeBankAccount?.formatted_statement_balance || ($cs + '0.00') }}</span>
-            <span class="text-slate-500 dark:text-slate-400 ml-1">Statement Balance</span>
+            <span class="font-semibold tabular-nums text-slate-900 dark:text-white text-sm">{{ activeBankAccount?.formatted_statement_balance || ($cs + '0.00') }}</span>
+            <span class="text-slate-500 dark:text-slate-400 ml-1">Statement balance</span>
           </div>
           <div class="border-l border-slate-200 dark:border-slate-800 pl-4">
-            <span class="font-extrabold text-slate-900 dark:text-white text-sm">{{ activeBankAccount?.formatted_ledger_balance || ($cs + '0.00') }}</span>
-            <span class="text-slate-500 dark:text-slate-400 ml-1">Balance in System</span>
-            <a href="#" @click.prevent="showDifferentBalancesModal = true" class="text-blue-600 dark:text-blue-400 hover:underline ml-1 text-[11px] font-bold">— Different balances?</a>
+            <span class="font-semibold tabular-nums text-slate-900 dark:text-white text-sm">{{ activeBankAccount?.formatted_ledger_balance || ($cs + '0.00') }}</span>
+            <span class="text-slate-500 dark:text-slate-400 ml-1">Balance in system</span>
+            <a href="#" @click.prevent="showDifferentBalancesModal = true" class="text-blue-600 dark:text-blue-400 hover:underline ml-1 font-medium">Different balances?</a>
           </div>
         </div>
-        <a href="#" @click.prevent="showWhatsThisModal = true" class="text-blue-600 dark:text-blue-400 text-xs font-semibold hover:underline inline-block mt-0.5">What's this?</a>
+        <a href="#" @click.prevent="showWhatsThisModal = true" class="text-blue-600 dark:text-blue-400 text-xs font-medium hover:underline inline-block mt-0.5">What's this?</a>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
-        <button
-          type="button"
-          @click="navigateTo('reporting', 'reconciliation_summary')"
-          class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline mr-2 cursor-pointer"
-        >
+      <div class="flex flex-wrap items-center gap-2 self-start md:self-auto">
+        <Button variant="ghost" size="sm" @click="navigateTo('reporting', 'reconciliation_summary')">
+          <template #icon><UiIcon name="chart" /></template>
           Reconciliation report
-        </button>
+        </Button>
 
         <div class="relative manage-account-container">
-          <button
-            type="button"
-            @click.stop="showManageAccountMenu = !showManageAccountMenu"
-            class="px-3 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1 cursor-pointer"
-          >
-            <span>Manage account</span>
-            <span>▾</span>
-          </button>
-          <div v-if="showManageAccountMenu" class="absolute right-0 mt-1 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg py-1 z-30 text-xs font-semibold text-slate-700 dark:text-slate-200">
-            <button type="button" @click="showImportModal = true; showManageAccountMenu = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">📂 Import bank statement</button>
-            <button type="button" @click="reconSubTab = 'bank_statements'; showManageAccountMenu = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">📜 Bank statement history</button>
-            <button type="button" @click="reconSubTab = 'cash_coding'; showManageAccountMenu = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/50">⚡ Bulk cash coding</button>
+          <Button variant="secondary" size="sm" :aria-expanded="showManageAccountMenu" aria-haspopup="menu" @click.stop="showManageAccountMenu = !showManageAccountMenu">
+            Manage account
+            <UiIcon name="chevron-down" :size="14" />
+          </Button>
+          <div v-if="showManageAccountMenu" role="menu" class="absolute right-0 mt-1 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 z-30 text-sm text-slate-700 dark:text-slate-200">
+            <button type="button" role="menuitem" @click="showImportModal = true; showManageAccountMenu = false" class="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800"><UiIcon name="upload" /> Import bank statement</button>
+            <button type="button" role="menuitem" @click="reconSubTab = 'bank_statements'; showManageAccountMenu = false" class="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800"><UiIcon name="document" /> Bank statement history</button>
+            <button type="button" role="menuitem" @click="reconSubTab = 'cash_coding'; showManageAccountMenu = false" class="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800"><UiIcon name="lightning" /> Bulk cash coding</button>
           </div>
         </div>
       </div>
@@ -160,14 +159,15 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
 
 
     <!-- Sub-Tab Navigation Bar & Compact View Toggle -->
-    <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
-      <div class="flex items-center gap-1 overflow-x-auto text-xs font-bold">
+    <div class="border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
+      <div class="flex items-center gap-1 overflow-x-auto text-sm font-medium">
         <button
           type="button"
           @click="reconSubTab = 'reconcile'"
+          :aria-current="reconSubTab === 'reconcile' ? 'page' : undefined"
           :class="[
-            'px-4 py-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap',
-            reconSubTab === 'reconcile' ? 'border-blue-600 text-blue-700 dark:text-blue-300 font-extrabold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
+            'px-4 py-2.5 -mb-px border-b-2 transition-colors cursor-pointer whitespace-nowrap',
+            reconSubTab === 'reconcile' ? 'border-blue-600 text-blue-700 dark:text-blue-300' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
           ]"
         >
           Reconcile ({{ filteredUnmatchedTx.length }})
@@ -176,9 +176,10 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
         <button
           type="button"
           @click="reconSubTab = 'cash_coding'"
+          :aria-current="reconSubTab === 'cash_coding' ? 'page' : undefined"
           :class="[
-            'px-4 py-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap',
-            reconSubTab === 'cash_coding' ? 'border-blue-600 text-blue-700 dark:text-blue-300 font-extrabold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
+            'px-4 py-2.5 -mb-px border-b-2 transition-colors cursor-pointer whitespace-nowrap',
+            reconSubTab === 'cash_coding' ? 'border-blue-600 text-blue-700 dark:text-blue-300' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
           ]"
         >
           Cash coding
@@ -187,9 +188,10 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
         <button
           type="button"
           @click="reconSubTab = 'bank_statements'"
+          :aria-current="reconSubTab === 'bank_statements' ? 'page' : undefined"
           :class="[
-            'px-4 py-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap',
-            reconSubTab === 'bank_statements' ? 'border-blue-600 text-blue-700 dark:text-blue-300 font-extrabold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
+            'px-4 py-2.5 -mb-px border-b-2 transition-colors cursor-pointer whitespace-nowrap',
+            reconSubTab === 'bank_statements' ? 'border-blue-600 text-blue-700 dark:text-blue-300' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
           ]"
         >
           Bank statements
@@ -198,9 +200,10 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
         <button
           type="button"
           @click="reconSubTab = 'account_transactions'"
+          :aria-current="reconSubTab === 'account_transactions' ? 'page' : undefined"
           :class="[
-            'px-4 py-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap',
-            reconSubTab === 'account_transactions' ? 'border-blue-600 text-blue-700 dark:text-blue-300 font-extrabold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
+            'px-4 py-2.5 -mb-px border-b-2 transition-colors cursor-pointer whitespace-nowrap',
+            reconSubTab === 'account_transactions' ? 'border-blue-600 text-blue-700 dark:text-blue-300' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
           ]"
         >
           Account transactions
@@ -209,73 +212,60 @@ const statementLinesFilter = defineModel('statementLinesFilter', { type: [String
         <button
           type="button"
           @click="reconSubTab = 'gift_aid'"
+          :aria-current="reconSubTab === 'gift_aid' ? 'page' : undefined"
           :class="[
-            'px-4 py-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5',
-            reconSubTab === 'gift_aid' ? 'border-amber-600 text-amber-800 dark:text-amber-200 font-extrabold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
+            'px-4 py-2.5 -mb-px border-b-2 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5',
+            reconSubTab === 'gift_aid' ? 'border-blue-600 text-blue-700 dark:text-blue-300' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
           ]"
         >
-          <span>🏛️ Gift Aid &amp; Relief Chest</span>
-          <span v-if="reconciliation?.gift_aid_summary?.pending_claim_count > 0" class="px-1.5 py-0.5 text-[10px] font-black rounded-full bg-amber-500 text-slate-950">
-            {{ reconciliation.gift_aid_summary.pending_claim_count }}
-          </span>
+          <span>Gift Aid and Relief Chest</span>
+          <Badge v-if="reconciliation?.gift_aid_summary?.pending_claim_count > 0" variant="warning">
+            {{ reconciliation.gift_aid_summary.pending_claim_count }} to claim
+          </Badge>
         </button>
       </div>
     </div>
 
     <!-- Search & Filter Toolbar -->
     <div class="space-y-2">
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800">
         <div class="relative w-full sm:flex-1">
           <input
             v-model="reconSearch"
             type="text"
-            placeholder="Search for Payee, Amount, Reference, Description, Cheque No., or Analysis Code"
-            class="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            aria-label="Search bank lines"
+            placeholder="Search by payee, amount, reference, description, cheque number or analysis code"
+            class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
-          <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
+          <UiIcon name="search" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         </div>
 
         <button
           type="button"
           @click="showFilterPanel = !showFilterPanel"
+          :aria-pressed="showFilterPanel"
           :class="[
-            'px-3.5 py-1.5 font-extrabold text-xs rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap',
-            showFilterPanel ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700/60' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            'px-3 py-1.5 text-xs font-medium rounded-xl border transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap',
+            showFilterPanel ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
           ]"
         >
-          <span>🔻 Filter</span>
+          <UiIcon name="filter" />
+          <span>Filter</span>
         </button>
       </div>
 
       <!-- Expandable Filter Panel -->
-      <div v-if="showFilterPanel" class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-        <div>
-          <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Transaction Type</label>
-          <select v-model="filterType" class="w-full p-1.5 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-900">
-            <option value="all">All Lines (Spent &amp; Received)</option>
-            <option value="spent">Spent Only (Outgoing)</option>
-            <option value="received">Received Only (Incoming)</option>
-          </select>
-        </div>
+      <div v-if="showFilterPanel" class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <Select v-model="filterType" label="Transaction type" :options="transactionTypeOptions" />
 
-        <div>
-          <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Min Amount ({{ $cs }})</label>
-          <input v-model="filterMinAmount" type="number" step="0.01" placeholder="0.00" class="w-full p-1.5 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-900" />
-        </div>
+        <Input v-model="filterMinAmount" :label="`Min amount (${$cs})`" type="number" step="0.01" placeholder="0.00" />
 
-        <div>
-          <label class="font-bold text-slate-700 dark:text-slate-200 block mb-1">Max Amount ({{ $cs }})</label>
-          <input v-model="filterMaxAmount" type="number" step="0.01" placeholder="9999.00" class="w-full p-1.5 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-900" />
-        </div>
+        <Input v-model="filterMaxAmount" :label="`Max amount (${$cs})`" type="number" step="0.01" placeholder="9999.00" />
 
         <div class="flex items-end">
-          <button
-            type="button"
-            @click="filterType = 'all'; filterMinAmount = ''; filterMaxAmount = ''; reconSearch = ''"
-            class="w-full py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 font-bold rounded"
-          >
+          <Button variant="secondary" size="sm" block @click="filterType = 'all'; filterMinAmount = ''; filterMaxAmount = ''; reconSearch = ''">
             Reset filters
-          </button>
+          </Button>
         </div>
       </div>
     </div>

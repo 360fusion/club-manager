@@ -1,5 +1,5 @@
 <script setup>
-
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 // A dialog of the accounting screen, in its own file so the page stays readable.
 defineEmits(['close']);
@@ -17,117 +17,124 @@ defineProps({
 </script>
 
 <template>
+    <!-- A full-screen dark viewer, wider than the kit Modal allows, so it keeps its own frame. -->
     <div
-      class="fixed inset-0 z-50 flex flex-col bg-slate-950/90 backdrop-blur-md p-4 sm:p-6 text-white"
+      class="fixed inset-0 z-50 flex flex-col bg-slate-950/90 p-4 text-white backdrop-blur-md sm:p-6"
       @click="$emit('close')"
     >
       <div
-        class="flex-1 flex flex-col max-w-6xl w-full mx-auto bg-slate-900 dark:bg-slate-700 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden"
+        class="mx-auto flex w-full max-w-6xl flex-1 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl dark:bg-slate-700"
         @click.stop
       >
-        <!-- Modal Toolbar Header -->
-        <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <!-- Toolbar -->
+        <div class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/90 px-6 py-4">
           <div class="flex items-center gap-3">
-            <span class="text-xl">📎</span>
+            <span class="text-slate-400"><UiIcon name="document" :size="20" /></span>
             <div>
-              <h3 class="text-sm font-black text-white tracking-tight">{{ previewModal.title }}</h3>
-              <p class="text-[11px] font-mono text-slate-400">{{ previewModal.fileName }}</p>
+              <h3 class="text-sm font-semibold text-white">{{ previewModal.title }}</h3>
+              <p class="font-mono text-xs text-slate-400">{{ previewModal.fileName }}</p>
             </div>
           </div>
 
           <!-- Controls -->
-          <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
-            <!-- Zoom Controls -->
-            <div class="flex items-center bg-slate-800 rounded-xl p-1 border border-slate-700">
+          <div class="flex flex-wrap items-center gap-2 text-xs font-medium">
+            <!-- Zoom controls -->
+            <div class="flex items-center rounded-xl border border-slate-700 bg-slate-800 p-1">
               <button
                 type="button"
+                title="Zoom out"
+                aria-label="Zoom out"
+                class="cursor-pointer rounded-xl px-2.5 py-1 text-slate-200 transition-colors hover:bg-slate-700"
                 @click="zoomOut"
-                title="Zoom Out"
-                class="px-2.5 py-1 hover:bg-slate-700 text-slate-200 rounded-xl transition-colors cursor-pointer"
               >
-                🔍−
+                −
               </button>
-              <span class="px-2.5 font-mono text-[11px] text-blue-400 w-12 text-center">
+              <span class="w-12 px-2.5 text-center text-xs tabular-nums text-blue-400">
                 {{ Math.round(zoomLevel * 100) }}%
               </span>
               <button
                 type="button"
+                title="Zoom in"
+                aria-label="Zoom in"
+                class="cursor-pointer rounded-xl px-2.5 py-1 text-slate-200 transition-colors hover:bg-slate-700"
                 @click="zoomIn"
-                title="Zoom In"
-                class="px-2.5 py-1 hover:bg-slate-700 text-slate-200 rounded-xl transition-colors cursor-pointer"
               >
-                🔍+
+                +
               </button>
               <button
                 type="button"
+                title="Reset the zoom"
+                class="ml-1 cursor-pointer rounded-xl border-l border-slate-700 px-2.5 py-1 text-xs text-slate-300 transition-colors hover:bg-slate-700"
                 @click="resetZoom"
-                title="Reset Zoom"
-                class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors cursor-pointer border-l border-slate-700 ml-1 text-[11px]"
               >
-                ↺ Reset
+                Reset
               </button>
             </div>
 
-            <!-- Rotate control (Image only) -->
+            <!-- Rotate control (image only) -->
             <button
               v-if="!previewModal.mimeType.includes('pdf')"
               type="button"
+              title="Rotate the image"
+              class="flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-slate-200 transition-colors hover:bg-slate-700"
               @click="rotateImage"
-              title="Rotate Image"
-              class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
             >
-              ↻ Rotate
+              <UiIcon name="refresh" />
+              Rotate
             </button>
 
-            <!-- Open in New Tab -->
+            <!-- Open in a new tab -->
             <a
               :href="previewModal.url"
               target="_blank"
-              class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
+              class="flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-slate-200 transition-colors hover:bg-slate-700"
             >
-              ↗ New tab
+              <UiIcon name="external-link" />
+              New tab
             </a>
 
-            <!-- Delete Attachment -->
+            <!-- Delete the attachment -->
             <button
               type="button"
+              class="flex cursor-pointer items-center gap-1.5 rounded-xl border border-transparent bg-rose-600 px-3 py-1.5 text-white transition-colors hover:bg-rose-500"
               @click="deleteAttachment"
-              class="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-xl transition-colors cursor-pointer flex items-center gap-1 font-extrabold"
             >
-              🗑 Delete
+              <UiIcon name="trash" />
+              Delete
             </button>
 
-            <!-- Close Modal -->
+            <!-- Close -->
             <button
               type="button"
+              aria-label="Close"
+              class="ml-2 cursor-pointer rounded-xl bg-slate-800 p-1.5 text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
               @click="$emit('close')"
-              class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors font-bold text-sm cursor-pointer ml-2"
             >
-              ✕
+              <UiIcon name="x" />
             </button>
           </div>
         </div>
 
-        <!-- Document / Image Viewer Canvas -->
-        <div class="flex-1 bg-slate-950 overflow-auto flex items-center justify-center p-6 relative">
-          <!-- Image View -->
+        <!-- Document or image viewer -->
+        <div class="relative flex flex-1 items-center justify-center overflow-auto bg-slate-950 p-6">
+          <!-- Image view -->
           <div
             v-if="!previewModal.mimeType.includes('pdf')"
-            class="transition-transform duration-150 ease-out origin-center flex items-center justify-center"
+            class="flex origin-center items-center justify-center transition-transform duration-150 ease-out"
             :style="{ transform: `scale(${zoomLevel}) rotate(${rotation}deg)` }"
           >
             <img
               :src="previewModal.url"
               :alt="previewModal.title"
-              class="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl border border-slate-800"
+              class="max-h-[75vh] max-w-full rounded-xl border border-slate-800 object-contain shadow-2xl"
             />
           </div>
 
-          <!-- PDF View -->
+          <!-- PDF view -->
           <iframe
             v-else
             :src="previewModal.url"
-            class="w-full h-[75vh] rounded-2xl bg-white dark:bg-slate-900 border border-slate-800 shadow-2xl transition-transform duration-150 ease-out origin-center"
+            class="h-[75vh] w-full origin-center rounded-2xl border border-slate-800 bg-white shadow-2xl transition-transform duration-150 ease-out dark:bg-slate-900"
             :style="{ transform: `scale(${zoomLevel})` }"
           ></iframe>
         </div>

@@ -146,8 +146,8 @@ const title = computed(() => (isEdit.value ? `Edit invoice ${props.invoice.invoi
 
             <div v-if="!isEdit" class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-300">
               <p class="mb-1 font-medium text-slate-900 dark:text-white">When you issue it, the ledger records:</p>
-              <div class="flex justify-between font-mono"><span>Debit Accounts receivable (1200)</span><span>{{ formatMoney(form.amount) }}</span></div>
-              <div class="flex justify-between font-mono"><span>Credit Membership income (4000)</span><span>{{ formatMoney(form.amount) }}</span></div>
+              <div class="flex justify-between"><span>Debit accounts receivable (1200)</span><span class="tabular-nums">{{ formatMoney(form.amount) }}</span></div>
+              <div class="flex justify-between"><span>Credit membership income (4000)</span><span class="tabular-nums">{{ formatMoney(form.amount) }}</span></div>
             </div>
           </div>
 
