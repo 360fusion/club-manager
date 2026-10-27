@@ -1,7 +1,13 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
+import PageHeader from '@/Components/Ui/PageHeader.vue';
+import StatCard from '@/Components/Ui/StatCard.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     australianGrandLodges: { type: Array, default: () => [] },
@@ -109,115 +115,92 @@ function dbEntry(code) {
 
         <div class="space-y-6">
 
-            <!-- Page Header -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5 dark:border-slate-800">
-                <div>
-                    <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">
-                        <Link :href="route('superadmin.dashboard')" class="hover:text-slate-900 transition dark:hover:text-white">Dashboard</Link>
-                        <span>/</span>
-                        <span class="text-emerald-700 font-bold dark:text-emerald-400">Australian Grand Lodges</span>
-                    </div>
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2 dark:text-white">
-                        <span>🦘</span>
-                        <span>Australian Grand Lodges</span>
-                    </h1>
-                    <p class="text-xs text-slate-500 mt-0.5 dark:text-slate-400">
-                        Australia has no national Grand Lodge. Each state operates a fully independent, sovereign Grand Lodge in amity with UGLE.
-                    </p>
-                </div>
-            </div>
+            <PageHeader
+                title="Australian Grand Lodges"
+                description="Australia has no national Grand Lodge. Each state operates a fully independent, sovereign Grand Lodge in amity with UGLE."
+                :breadcrumbs="[{ label: 'Dashboard', href: route('superadmin.dashboard') }, { label: 'Australian Grand Lodges' }]"
+            />
 
-            <!-- KPI Cards -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1 dark:bg-slate-900 dark:border-slate-800">
-                    <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block dark:text-emerald-400">State Grand Lodges</span>
-                    <span class="text-2xl font-black text-slate-900 block dark:text-white">6</span>
-                    <span class="text-[11px] text-slate-500 block font-medium dark:text-slate-400">Fully sovereign bodies</span>
-                </div>
-                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1 dark:bg-slate-900 dark:border-slate-800">
-                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block dark:text-blue-400">In Database</span>
-                    <span class="text-2xl font-black text-slate-900 block dark:text-white">{{ australianGrandLodges.length }}</span>
-                    <span class="text-[11px] text-slate-500 block font-medium dark:text-slate-400">of 6 seeded</span>
-                </div>
-                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1 dark:bg-slate-900 dark:border-slate-800">
-                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block dark:text-blue-400">Total Registered Lodges</span>
-                    <span class="text-2xl font-black text-slate-900 block dark:text-white">
-                        {{ australianGrandLodges.reduce((sum, gl) => sum + (gl.clubs_count || 0), 0) || '—' }}
-                    </span>
-                    <span class="text-[11px] text-slate-500 block font-medium dark:text-slate-400">Across all Australian states</span>
-                </div>
-                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg space-y-1 dark:bg-slate-900 dark:border-slate-800">
-                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block dark:text-blue-400">Coordination Body</span>
-                    <span class="text-sm font-black text-slate-900 block leading-tight dark:text-white">Australasian Masonic Forum</span>
-                    <span class="text-[11px] text-slate-500 block font-medium dark:text-slate-400">Advisory only, no authority</span>
+                <StatCard label="State Grand Lodges" :value="6" caption="Fully sovereign bodies" />
+                <StatCard label="In database" :value="australianGrandLodges.length" caption="of 6 seeded" />
+                <StatCard
+                    label="Total registered lodges"
+                    :value="australianGrandLodges.reduce((sum, gl) => sum + (gl.clubs_count || 0), 0) || '—'"
+                    caption="Across all Australian states"
+                />
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Coordination body</p>
+                    <p class="mt-1 text-sm font-semibold leading-tight text-slate-900 dark:text-white">Australasian Masonic Forum</p>
+                    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Advisory only, no authority</p>
                 </div>
             </div>
 
-            <!-- Search Bar -->
-            <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-lg dark:bg-slate-900 dark:border-slate-800">
+            <Card padding="sm">
                 <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                     <div class="relative flex-1 max-w-md">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs dark:text-slate-400">
-                            🔍
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                            <UiIcon name="search" />
                         </div>
                         <input
                             v-model="searchQuery"
                             type="text"
-                            placeholder="Search by state, code, city, or name..."
-                            class="w-full bg-slate-100 border border-slate-300 text-slate-900 placeholder-slate-400 text-xs rounded-xl pl-9 pr-8 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder-slate-500"
+                            aria-label="Search Grand Lodges"
+                            placeholder="Search by state, code, city or name..."
+                            class="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-9 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder-slate-500"
                         />
                         <button
                             v-if="searchQuery"
                             @click="searchQuery = ''"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-900 text-xs dark:text-slate-400 dark:hover:text-white"
+                            type="button"
+                            aria-label="Clear search"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white"
                         >
-                            ✕
+                            <UiIcon name="x" />
                         </button>
                     </div>
-                    <div class="text-xs text-slate-500 font-medium dark:text-slate-400">
-                        Showing <strong class="text-slate-900 dark:text-white">{{ filteredLodges.length }}</strong> of 6 Grand Lodges
+                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                        Showing <span class="font-semibold text-slate-900 dark:text-white">{{ filteredLodges.length }}</span> of 6 Grand Lodges
                     </div>
                 </div>
-            </div>
+            </Card>
 
-            <!-- Table -->
-            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xl dark:bg-slate-900 dark:border-slate-800">
-                <div class="p-4 border-b border-slate-200 flex items-center justify-between dark:border-slate-800">
+            <Card padding="none" class="overflow-hidden">
+                <div class="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 dark:border-slate-800">
                     <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400">
-                        Showing {{ filteredLodges.length }} of 6 Australian State Grand Lodges
+                        Showing {{ filteredLodges.length }} of 6 Australian state Grand Lodges
                     </h2>
-                    <span v-if="australianGrandLodges.length < 6" class="text-[10px] text-amber-700 font-semibold dark:text-amber-400">
-                        ⚠️ {{ 6 - australianGrandLodges.length }} not yet in database
-                    </span>
+                    <Badge v-if="australianGrandLodges.length < 6" variant="warning">
+                        <UiIcon name="warning" :size="16" />
+                        {{ 6 - australianGrandLodges.length }} not yet in database
+                    </Badge>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-500 uppercase tracking-wider dark:bg-slate-900/60 dark:border-slate-800 dark:text-slate-400">
-                                <th class="py-3 px-4">Grand Lodge</th>
-                                <th class="py-3 px-3">State / Territory</th>
-                                <th class="py-3 px-3">Code</th>
-                                <th class="py-3 px-3">HQ City</th>
-                                <th class="py-3 px-3">Est.</th>
-                                <th class="py-3 px-3">Approx. Lodges</th>
-                                <th class="py-3 px-3">Database</th>
-                                <th class="py-3 px-3">Website</th>
+                    <table class="w-full text-left text-sm">
+                        <thead class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                            <tr>
+                                <th scope="col" class="py-3 px-4 font-medium">Grand Lodge</th>
+                                <th scope="col" class="py-3 px-3 font-medium">State or territory</th>
+                                <th scope="col" class="py-3 px-3 font-medium">Code</th>
+                                <th scope="col" class="py-3 px-3 font-medium">HQ city</th>
+                                <th scope="col" class="py-3 px-3 font-medium">Est.</th>
+                                <th scope="col" class="py-3 px-3 font-medium">Approx. lodges</th>
+                                <th scope="col" class="py-3 px-3 font-medium">Database</th>
+                                <th scope="col" class="py-3 px-3 font-medium">Website</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 text-xs dark:divide-slate-800">
-                            <tr v-for="gl in filteredLodges" :key="gl.code" class="hover:bg-slate-50 transition group dark:hover:bg-slate-800/40">
+                            <tr v-for="gl in filteredLodges" :key="gl.code" class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/40">
 
                                 <!-- Name -->
                                 <td class="py-3.5 px-4">
-                                    <div class="font-bold text-slate-900 group-hover:text-emerald-700 transition dark:text-white dark:group-hover:text-emerald-400">{{ gl.name }}</div>
+                                    <div class="font-semibold text-slate-900 dark:text-white">{{ gl.name }}</div>
                                 </td>
 
                                 <!-- State -->
                                 <td class="py-3.5 px-3">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800/50">
-                                        🇦🇺 {{ gl.stateCode }}
-                                    </span>
+                                    <Badge>{{ gl.stateCode }}</Badge>
                                     <div class="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">{{ gl.state }}</div>
                                 </td>
 
@@ -238,53 +221,40 @@ function dbEntry(code) {
 
                                 <!-- Lodge Count -->
                                 <td class="py-3.5 px-3">
-                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60">
-                                        {{ gl.lodgeCount }}
-                                    </span>
+                                    <Badge variant="info">{{ gl.lodgeCount }}</Badge>
                                 </td>
 
                                 <!-- DB Status -->
                                 <td class="py-3.5 px-3">
-                                    <span v-if="dbEntry(gl.code)" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800/50">
-                                        ✓ Seeded
-                                    </span>
-                                    <span v-else class="px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-bold rounded border border-rose-200 dark:bg-rose-950/50 dark:text-rose-400 dark:border-rose-800/50">
-                                        ✗ Missing
-                                    </span>
+                                    <Badge v-if="dbEntry(gl.code)" variant="success">Seeded</Badge>
+                                    <Badge v-else variant="danger">Missing</Badge>
                                 </td>
 
                                 <!-- Website -->
                                 <td class="py-3.5 px-3">
                                     <a :href="gl.website" target="_blank" rel="noopener" class="text-blue-600 hover:underline flex items-center gap-1 whitespace-nowrap dark:text-blue-400">
                                         <span>Website</span>
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                                        </svg>
+                                        <UiIcon name="external-link" />
                                     </a>
                                 </td>
                             </tr>
 
                             <tr v-if="filteredLodges.length === 0">
-                                <td colspan="8" class="py-12 px-4 text-center text-slate-500 space-y-2 dark:text-slate-400">
-                                    <span class="text-2xl block">🔍</span>
-                                    <p class="font-bold text-sm text-slate-700 dark:text-slate-300">No Grand Lodges found matching your search</p>
+                                <td colspan="8" class="py-12 px-4 text-center text-slate-500 dark:text-slate-400">
+                                    <span class="mb-2 flex justify-center text-slate-400 dark:text-slate-500"><UiIcon name="search" :size="20" /></span>
+                                    <p class="font-medium text-sm text-slate-700 dark:text-slate-300">No Grand Lodges found matching your search</p>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </Card>
 
-            <!-- Info footer -->
-            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 dark:bg-amber-950/30 dark:border-amber-800/40">
-                <span class="text-lg mt-0.5">ℹ️</span>
-                <p class="text-xs text-amber-800 leading-relaxed dark:text-amber-300">
-                    <span class="font-bold text-amber-700 dark:text-amber-400">Note:</span>
-                    These six Grand Lodges are all fully sovereign — equivalent in standing to UGLE itself. They are not subordinate to UGLE or to each other.
-                    Lodges in each state hold their warrant directly from their state Grand Lodge.
-                    All six are in amity with UGLE and coordinate via the <span class="font-semibold text-slate-900 dark:text-white">Australasian Masonic Forum</span> (advisory only).
-                </p>
-            </div>
+            <Alert variant="info" title="Note">
+                These six Grand Lodges are all fully sovereign — equivalent in standing to UGLE itself. They are not subordinate to UGLE or to each other.
+                Lodges in each state hold their warrant directly from their state Grand Lodge.
+                All six are in amity with UGLE and coordinate via the <span class="font-semibold">Australasian Masonic Forum</span> (advisory only).
+            </Alert>
 
         </div>
     </SuperAdminLayout>

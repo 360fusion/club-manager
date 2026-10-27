@@ -2,11 +2,13 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import FlashMessages from '@/Components/Ui/FlashMessages.vue';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 defineProps({
   title: {
     type: String,
-    default: 'Superadmin Console',
+    default: 'Superadmin console',
   },
 });
 
@@ -24,17 +26,17 @@ const user = page.props.auth?.user;
       <div class="space-y-6">
         <!-- Logo Header -->
         <div class="flex items-center gap-3 px-3 py-2 border-b border-slate-200 pb-4 dark:border-slate-800">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-blue-500 flex items-center justify-center text-slate-900 font-black text-sm shadow-sm dark:text-white">
+          <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
             SA
           </div>
           <div>
-            <span class="font-extrabold tracking-wider text-sm uppercase text-slate-900 block dark:text-white">SUPERADMIN</span>
-            <span class="text-[10px] text-blue-600 font-semibold block dark:text-blue-400">Platform Control Center</span>
+            <span class="font-semibold tracking-wider text-sm uppercase text-slate-900 block dark:text-white">Superadmin</span>
+            <span class="text-[11px] text-slate-500 font-medium block dark:text-slate-400">Platform control centre</span>
           </div>
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="space-y-1 text-xs font-bold">
+        <nav class="space-y-1 text-xs font-medium">
           <Link
             :href="route('superadmin.dashboard')"
             :class="[
@@ -42,7 +44,7 @@ const user = page.props.auth?.user;
               $page.url === '/superadmin' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">📊</span>
+            <UiIcon name="chart" />
             <span>Platform overview</span>
           </Link>
 
@@ -53,7 +55,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/club-types') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">🏛️</span>
+            <UiIcon name="tag" />
             <span>Club types &amp; orders</span>
           </Link>
 
@@ -64,7 +66,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/grand-lodges') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">👑</span>
+            <UiIcon name="bank" />
             <span>Grand Lodges &amp; country heads</span>
           </Link>
 
@@ -75,7 +77,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/provinces') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">🗺️</span>
+            <UiIcon name="shield" />
             <span>Provinces UK&amp;I</span>
           </Link>
 
@@ -86,7 +88,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/districts') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">🌍</span>
+            <UiIcon name="globe" />
             <span>Districts &amp; groups</span>
           </Link>
 
@@ -97,7 +99,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/lodge-claims') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">🔑</span>
+            <UiIcon name="key" />
             <span>Lodge claims</span>
             <span v-if="$page.props.pendingLodgeClaims" class="ml-auto rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white">{{ $page.props.pendingLodgeClaims }}</span>
           </Link>
@@ -109,7 +111,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/lodge-corrections') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">✏️</span>
+            <UiIcon name="pencil" />
             <span>Suggested fixes</span>
             <span v-if="$page.props.pendingLodgeCorrections" class="ml-auto rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white">{{ $page.props.pendingLodgeCorrections }}</span>
           </Link>
@@ -121,7 +123,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/lodges') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">📜</span>
+            <UiIcon name="document" />
             <span>Lodge directory</span>
           </Link>
 
@@ -132,7 +134,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/masonic-halls') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">🏛️</span>
+            <UiIcon name="building" />
             <span>Masonic halls</span>
           </Link>
 
@@ -143,7 +145,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/australian-grand-lodges') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">🦘</span>
+            <UiIcon name="award" />
             <span>Australian Grand Lodges</span>
           </Link>
 
@@ -154,7 +156,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/us-grand-lodges') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">🇺🇸</span>
+            <UiIcon name="award" />
             <span>US Grand Lodges</span>
           </Link>
 
@@ -165,7 +167,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/email-templates') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">✉️</span>
+            <UiIcon name="mail" />
             <span>Default email templates</span>
           </Link>
 
@@ -176,7 +178,7 @@ const user = page.props.auth?.user;
               $page.url.startsWith('/superadmin/platform-payments') ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
             ]"
           >
-            <span class="text-base">💳</span>
+            <UiIcon name="cash" />
             <span>Platform payments</span>
           </Link>
         </nav>
@@ -189,24 +191,20 @@ const user = page.props.auth?.user;
       <!-- User Profile Footer -->
       <div class="pt-4 border-t border-slate-200 space-y-3 dark:border-slate-800">
         <div class="px-3">
-          <div class="text-xs font-bold text-slate-900 truncate dark:text-white">{{ user?.name || 'Superadmin' }}</div>
-          <div class="text-[10px] text-blue-600 font-medium truncate dark:text-blue-400">{{ user?.email }}</div>
+          <div class="text-xs font-semibold text-slate-900 truncate dark:text-white">{{ user?.name || 'Superadmin' }}</div>
+          <div class="text-[11px] text-slate-500 truncate dark:text-slate-400">{{ user?.email }}</div>
         </div>
 
         <div class="space-y-2">
-          <Link
-            :href="route('home')"
-            class="flex items-center justify-center gap-2 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
-          >
-            <span>← Return to app</span>
-          </Link>
+          <Button variant="secondary" size="sm" block :href="route('home')">
+            <template #icon><UiIcon name="arrow-left" :size="14" /></template>
+            Return to app
+          </Button>
           <form method="POST" action="/logout" class="block">
-            <button
-              type="submit"
-              class="flex items-center justify-center gap-2 w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition border border-rose-200 dark:bg-rose-950/50 dark:hover:bg-rose-900/40 dark:text-rose-400 dark:border-rose-800/50"
-            >
-              <span>🚪 Log out</span>
-            </button>
+            <Button type="submit" variant="ghost" size="sm" block>
+              <template #icon><UiIcon name="logout" :size="14" /></template>
+              Log out
+            </Button>
           </form>
         </div>
       </div>

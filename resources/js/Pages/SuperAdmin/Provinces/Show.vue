@@ -1,6 +1,12 @@
 <script setup>
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Input from '@/Components/Ui/Input.vue';
+import PageHeader from '@/Components/Ui/PageHeader.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   province: {
@@ -43,309 +49,255 @@ function handleSwitchProvince(event) {
     router.get(route('superadmin.provinces.show', selectedId));
   }
 }
-
-function getCountryFlag(country) {
-  switch (country) {
-    case 'Scotland': return '🏴󠁧󠁢󠁳󠁣󠁴󠁿';
-    case 'Wales': return '🏴󠁧󠁢󠁷󠁬󠁳󠁿';
-    case 'Ireland': return '🇮🇪';
-    case 'Malta': return '🇲🇹';
-    case 'Isle of Man': return '🇮🇲';
-    case 'Channel Islands': return '🇯🇪';
-    default: return '🏴󠁧󠁢󠁥󠁮󠁧󠁿';
-  }
-}
 </script>
 
 <template>
-  <SuperAdminLayout :title="`${province.name} - Province Specification`">
+  <SuperAdminLayout :title="province.name">
     <Head :title="`Superadmin - ${province.name}`" />
 
-    <div class="space-y-8">
-      
-      <!-- Top Header & Breadcrumb Banner -->
-      <div class="bg-gradient-to-r from-white via-blue-50 to-blue-50 p-8 rounded-3xl border border-blue-200 shadow-2xl text-slate-900 space-y-6 dark:from-slate-900 dark:via-blue-950 dark:to-blue-950 dark:border-blue-800/60 dark:text-white">
-        
-        <!-- Breadcrumbs & Province Switcher -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-blue-200 pb-4 dark:border-blue-800/60">
-          <div class="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-            <Link :href="route('superadmin.dashboard')" class="hover:text-slate-900 transition dark:hover:text-white">Dashboard</Link>
-            <span>/</span>
-            <Link :href="route('superadmin.provinces.index')" class="hover:text-slate-900 transition dark:hover:text-white">Masonic provinces</Link>
-            <span>/</span>
-            <span class="text-blue-700 font-bold dark:text-blue-300">{{ province.name }}</span>
-          </div>
+    <div class="space-y-6">
+      <PageHeader
+        :title="province.name"
+        :breadcrumbs="[
+          { label: 'Dashboard', href: route('superadmin.dashboard') },
+          { label: 'Masonic provinces', href: route('superadmin.provinces.index') },
+          { label: province.name },
+        ]"
+      >
+        <template #actions>
+          <a
+            v-if="province.website_url"
+            :href="province.website_url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
+          >
+            <UiIcon name="external-link" />
+            Visit website
+          </a>
+          <Button :href="route('superadmin.provinces.edit', province.id)">
+            <template #icon><UiIcon name="pencil" /></template>
+            Edit province
+          </Button>
+        </template>
+      </PageHeader>
 
-          <!-- Quick Province Switcher -->
-          <div class="flex items-center gap-2">
-            <label class="text-xs font-bold text-slate-700 whitespace-nowrap dark:text-slate-300">Switch Province:</label>
-            <select
-              :value="province.id"
-              @change="handleSwitchProvince"
-              class="bg-white border border-blue-300 text-slate-900 text-xs font-bold rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-xs truncate dark:bg-slate-900 dark:border-blue-700 dark:text-white"
-            >
-              <option v-for="p in allProvinces" :key="p.id" :value="p.id">
-                {{ getCountryFlag(p.country) }} {{ p.name }}
-              </option>
-            </select>
-          </div>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-wrap items-center gap-2">
+          <Badge class="font-mono">Code: {{ province.code }}</Badge>
+          <Badge>{{ province.country || 'England' }}</Badge>
+          <Badge v-if="province.grand_lodge" variant="info">{{ province.grand_lodge.short_name || province.grand_lodge.name }}</Badge>
+          <Badge variant="info">{{ province.clubs_count || province.clubs?.length || 0 }} associated lodges</Badge>
         </div>
 
-        <!-- Title & Action Buttons -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div class="space-y-2">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-wider rounded-full border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60">
-                🏛️ Masonic Province Specification
-              </span>
-              <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-xs font-mono font-bold rounded-lg border border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-                Code: {{ province.code }}
-              </span>
-              <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200 flex items-center gap-1 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60">
-                <span>{{ getCountryFlag(province.country || 'England') }}</span>
-                <span>{{ province.country || 'England' }}</span>
-              </span>
-              <span v-if="province.grand_lodge" class="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60">
-                👑 {{ province.grand_lodge.short_name || province.grand_lodge.name }}
-              </span>
-              <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-700">
-                {{ province.clubs_count || province.clubs?.length || 0 }} Associated Lodges
-              </span>
-            </div>
-
-            <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">{{ province.name }}</h1>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-3">
-            <Link
-              :href="route('superadmin.provinces.edit', province.id)"
-              class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center gap-2"
-            >
-              <span>✏️ Edit province info</span>
-            </Link>
-            <a
-              v-if="province.website_url"
-              :href="province.website_url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-sm transition flex items-center gap-2"
-            >
-              <span>🌐 Visit website</span>
-              <span>↗</span>
-            </a>
-          </div>
+        <div class="flex items-center gap-2">
+          <label for="province-switcher" class="text-xs font-medium text-slate-700 whitespace-nowrap dark:text-slate-300">Switch province</label>
+          <select
+            id="province-switcher"
+            :value="province.id"
+            @change="handleSwitchProvince"
+            class="max-w-xs truncate rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+          >
+            <option v-for="p in allProvinces" :key="p.id" :value="p.id">
+              {{ p.name }}
+            </option>
+          </select>
         </div>
       </div>
 
-      <!-- Main Specifications & Details Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        <!-- Left Column: Executive Leadership & Contact/Address Info -->
         <div class="lg:col-span-6 space-y-6">
-          
-          <!-- Executive Leadership -->
-          <div class="bg-white/90 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900/90 dark:border-slate-800">
-            <h3 class="text-sm font-black text-blue-600 uppercase tracking-wider flex items-center gap-2 border-b border-slate-200 pb-3 dark:text-blue-400 dark:border-slate-800">
-              <span>👑</span>
-              <span>Provincial Executive Leadership</span>
-            </h3>
+          <Card>
+            <template #header>
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white">Provincial executive</h3>
+            </template>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="bg-slate-100 p-4 rounded-2xl border border-slate-200 space-y-1 dark:bg-slate-800 dark:border-slate-800">
-                <span class="text-[10px] text-amber-700 font-bold uppercase tracking-wider block dark:text-amber-400">Provincial Grand Master</span>
-                <span class="font-extrabold text-slate-900 text-base block dark:text-white">
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Provincial Grand Master</dt>
+                <dd class="mt-1 font-semibold text-slate-900 dark:text-white">
                   {{ province.provincial_grand_master || 'Not specified' }}
-                </span>
+                </dd>
               </div>
 
-              <div class="bg-slate-100 p-4 rounded-2xl border border-slate-200 space-y-1 dark:bg-slate-800 dark:border-slate-800">
-                <span class="text-[10px] text-blue-600 font-bold uppercase tracking-wider block dark:text-blue-400">Provincial Grand Secretary</span>
-                <span class="font-extrabold text-slate-900 text-base block dark:text-white">
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Provincial Grand Secretary</dt>
+                <dd class="mt-1 font-semibold text-slate-900 dark:text-white">
                   {{ province.provincial_grand_secretary || 'Not specified' }}
-                </span>
+                </dd>
               </div>
-            </div>
-          </div>
+            </dl>
+          </Card>
 
-          <!-- Official Office Address & Contact Details -->
-          <div class="bg-white/90 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900/90 dark:border-slate-800">
-            <h3 class="text-sm font-black text-blue-600 uppercase tracking-wider flex items-center gap-2 border-b border-slate-200 pb-3 dark:text-blue-400 dark:border-slate-800">
-              <span>📍</span>
-              <span>Provincial Headquarters Office &amp; Address</span>
-            </h3>
+          <Card class="space-y-4">
+            <template #header>
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white">Provincial office and address</h3>
+            </template>
 
-            <!-- Address block -->
-            <div class="bg-slate-100 p-4 rounded-2xl border border-slate-200 space-y-2 dark:bg-slate-800 dark:border-slate-800">
-              <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block dark:text-slate-400">Official Postal Address</span>
-              
-              <div v-if="province.address_line_1 || province.town || province.postcode" class="text-xs text-slate-900 space-y-0.5 font-medium leading-relaxed dark:text-white">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2 dark:border-slate-800 dark:bg-slate-950/40">
+              <span class="text-xs font-medium text-slate-500 block dark:text-slate-400">Postal address</span>
+
+              <div v-if="province.address_line_1 || province.town || province.postcode" class="text-sm text-slate-900 space-y-0.5 leading-relaxed dark:text-white">
                 <div v-if="province.address_line_1">{{ province.address_line_1 }}</div>
                 <div v-if="province.address_line_2">{{ province.address_line_2 }}</div>
                 <div v-if="province.town">{{ province.town }}</div>
                 <div v-if="province.county">{{ province.county }}</div>
-                <div v-if="province.postcode" class="font-mono text-blue-700 font-bold dark:text-blue-300">{{ province.postcode }}</div>
+                <div v-if="province.postcode" class="font-mono">{{ province.postcode }}</div>
                 <div class="text-slate-500 dark:text-slate-400">{{ province.country || 'United Kingdom' }}</div>
               </div>
-              <div v-else class="text-xs text-slate-500 italic dark:text-slate-400">No office address recorded for this province.</div>
+              <div v-else class="text-sm text-slate-500 dark:text-slate-400">No office address recorded for this province.</div>
             </div>
 
-            <!-- Contact & Social Links Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div class="bg-slate-100 p-3.5 rounded-2xl border border-slate-200 space-y-1 dark:bg-slate-800 dark:border-slate-800">
-                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block dark:text-slate-400">Telephone</span>
-                <a v-if="province.telephone" :href="`tel:${province.telephone}`" class="font-bold text-slate-900 hover:text-blue-700 block font-mono dark:text-white dark:hover:text-blue-300">
-                  📞 {{ province.telephone }}
-                </a>
-                <span v-else class="text-slate-500 italic block dark:text-slate-400">—</span>
-              </div>
-
-              <div class="bg-slate-100 p-3.5 rounded-2xl border border-slate-200 space-y-1 dark:bg-slate-800 dark:border-slate-800">
-                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block dark:text-slate-400">Email Address</span>
-                <a v-if="province.email" :href="`mailto:${province.email}`" class="font-bold text-blue-600 hover:text-blue-700 block truncate dark:text-blue-400 dark:hover:text-blue-300">
-                  ✉️ {{ province.email }}
-                </a>
-                <span v-else class="text-slate-500 italic block dark:text-slate-400">—</span>
-              </div>
-
-              <div class="bg-slate-100 p-3.5 rounded-2xl border border-slate-200 space-y-1 dark:bg-slate-800 dark:border-slate-800">
-                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block dark:text-slate-400">Official Website</span>
-                <a v-if="province.website_url" :href="province.website_url" target="_blank" class="font-bold text-blue-600 hover:text-blue-700 block truncate dark:text-blue-400 dark:hover:text-blue-300">
-                  🌐 {{ province.website_url }} ↗
-                </a>
-                <span v-else class="text-slate-500 italic block dark:text-slate-400">—</span>
-              </div>
-
-              <div class="bg-slate-100 p-3.5 rounded-2xl border border-slate-200 space-y-1 dark:bg-slate-800 dark:border-slate-800">
-                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block dark:text-slate-400">Social Channels</span>
-                <div class="flex items-center gap-3 pt-0.5">
-                  <a v-if="province.twitter_url" :href="province.twitter_url" target="_blank" class="text-blue-700 hover:underline font-bold dark:text-blue-400">
-                    Twitter / X ↗
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 space-y-1 dark:border-slate-800 dark:bg-slate-950/40">
+                <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Telephone</dt>
+                <dd>
+                  <a v-if="province.telephone" :href="`tel:${province.telephone}`" class="font-mono font-medium text-slate-900 hover:text-blue-700 dark:text-white dark:hover:text-blue-300">
+                    {{ province.telephone }}
                   </a>
-                  <a v-if="province.facebook_url" :href="province.facebook_url" target="_blank" class="text-blue-700 hover:underline font-bold dark:text-blue-300">
-                    Facebook ↗
-                  </a>
-                  <span v-if="!province.twitter_url && !province.facebook_url" class="text-slate-500 italic dark:text-slate-400">—</span>
-                </div>
+                  <span v-else class="text-slate-500 dark:text-slate-400">—</span>
+                </dd>
               </div>
-            </div>
 
-          </div>
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 space-y-1 dark:border-slate-800 dark:bg-slate-950/40">
+                <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Email address</dt>
+                <dd class="truncate">
+                  <a v-if="province.email" :href="`mailto:${province.email}`" class="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                    {{ province.email }}
+                  </a>
+                  <span v-else class="text-slate-500 dark:text-slate-400">—</span>
+                </dd>
+              </div>
 
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 space-y-1 dark:border-slate-800 dark:bg-slate-950/40">
+                <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Official website</dt>
+                <dd class="min-w-0">
+                  <a v-if="province.website_url" :href="province.website_url" target="_blank" class="flex min-w-0 items-center gap-1 font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                    <span class="truncate">{{ province.website_url }}</span>
+                    <UiIcon name="external-link" :size="14" />
+                  </a>
+                  <span v-else class="text-slate-500 dark:text-slate-400">—</span>
+                </dd>
+              </div>
+
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 space-y-1 dark:border-slate-800 dark:bg-slate-950/40">
+                <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Social channels</dt>
+                <dd class="flex items-center gap-3 pt-0.5">
+                  <a v-if="province.twitter_url" :href="province.twitter_url" target="_blank" class="inline-flex items-center gap-1 font-medium text-blue-600 hover:underline dark:text-blue-400">
+                    Twitter / X
+                    <UiIcon name="external-link" :size="14" />
+                  </a>
+                  <a v-if="province.facebook_url" :href="province.facebook_url" target="_blank" class="inline-flex items-center gap-1 font-medium text-blue-600 hover:underline dark:text-blue-400">
+                    Facebook
+                    <UiIcon name="external-link" :size="14" />
+                  </a>
+                  <span v-if="!province.twitter_url && !province.facebook_url" class="text-slate-500 dark:text-slate-400">—</span>
+                </dd>
+              </div>
+            </dl>
+          </Card>
         </div>
 
-        <!-- Right Column: Jurisdiction Overview & Registered Lodges -->
         <div class="lg:col-span-6 space-y-6">
-          
-          <!-- Jurisdiction & Description -->
-          <div class="bg-white/90 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-3 dark:bg-slate-900/90 dark:border-slate-800">
-            <h3 class="text-sm font-black text-emerald-700 uppercase tracking-wider flex items-center gap-2 border-b border-slate-200 pb-3 dark:text-emerald-400 dark:border-slate-800">
-              <span>📖</span>
-              <span>Jurisdiction Overview &amp; Regional Scope</span>
-            </h3>
+          <Card class="space-y-3">
+            <template #header>
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white">Jurisdiction and regional scope</h3>
+            </template>
 
-            <div class="grid grid-cols-2 gap-3 text-xs">
-              <div class="bg-slate-100 p-3.5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-800">
-                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block dark:text-slate-400">Geographic Region</span>
-                <span class="font-extrabold text-slate-900 text-sm block mt-0.5 dark:text-white">{{ province.region || '—' }}</span>
+            <dl class="grid grid-cols-2 gap-3 text-sm">
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-950/40">
+                <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Geographic region</dt>
+                <dd class="mt-0.5 font-semibold text-slate-900 dark:text-white">{{ province.region || '—' }}</dd>
               </div>
 
-              <div class="bg-slate-100 p-3.5 rounded-2xl border border-slate-200 dark:bg-slate-800 dark:border-slate-800">
-                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block dark:text-slate-400">Sovereign Grand Lodge</span>
-                <span class="font-extrabold text-slate-900 text-sm block mt-0.5 dark:text-white">{{ province.grand_lodge?.name || 'UGLE' }}</span>
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-950/40">
+                <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Sovereign Grand Lodge</dt>
+                <dd class="mt-0.5 font-semibold text-slate-900 dark:text-white">{{ province.grand_lodge?.name || 'UGLE' }}</dd>
               </div>
-            </div>
+            </dl>
 
-            <div class="bg-slate-100 p-4 rounded-2xl border border-slate-200 space-y-1 dark:bg-slate-800 dark:border-slate-800">
-              <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block dark:text-slate-400">Province Notes &amp; History</span>
-              <p class="text-xs text-slate-700 leading-relaxed font-medium dark:text-slate-300">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-1 dark:border-slate-800 dark:bg-slate-950/40">
+              <span class="text-xs font-medium text-slate-500 block dark:text-slate-400">Notes and history</span>
+              <p class="text-sm text-slate-700 leading-relaxed dark:text-slate-300">
                 {{ province.description || 'No detailed background notes recorded for this province.' }}
               </p>
             </div>
-          </div>
+          </Card>
 
-          <!-- Provincial admins -->
-          <div class="bg-white/90 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900/90 dark:border-slate-800">
-            <div class="border-b border-slate-200 pb-3 dark:border-slate-800">
-              <h3 class="text-sm font-black text-slate-900 dark:text-white">Provincial admins</h3>
+          <Card class="space-y-4">
+            <template #header>
+              <h3 class="text-base font-semibold text-slate-900 dark:text-white">Provincial admins</h3>
               <p class="text-xs text-slate-500 dark:text-slate-400">They review suggested fixes to this province's lodge listings, from My lodges in the members area. They see no other province.</p>
-            </div>
+            </template>
 
-            <ul v-if="admins.length" class="divide-y divide-slate-200 text-xs dark:divide-slate-800">
+            <ul v-if="admins.length" class="divide-y divide-slate-200 text-sm dark:divide-slate-800">
               <li v-for="admin in admins" :key="admin.id" class="flex items-center justify-between gap-3 py-2">
-                <span><strong class="text-slate-900 dark:text-white">{{ admin.name }}</strong> <span class="text-slate-500 dark:text-slate-400">{{ admin.email }}</span></span>
-                <button type="button" class="text-rose-600 font-bold hover:underline dark:text-rose-400" @click="removeAdmin(admin)">Remove</button>
+                <span><strong class="font-medium text-slate-900 dark:text-white">{{ admin.name }}</strong> <span class="text-slate-500 dark:text-slate-400">{{ admin.email }}</span></span>
+                <Button variant="danger" size="sm" @click="removeAdmin(admin)">Remove</Button>
               </li>
             </ul>
-            <p v-else class="text-xs text-slate-500 dark:text-slate-400">No one yet.</p>
+            <p v-else class="text-sm text-slate-500 dark:text-slate-400">No one yet.</p>
 
-            <form class="flex flex-wrap items-start gap-2" @submit.prevent="addAdmin">
-              <div class="flex-1 min-w-56">
-                <label for="province-admin-email" class="sr-only">Email address</label>
-                <input id="province-admin-email" v-model="adminForm.email" type="email" required placeholder="Their account email address" class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-md px-3 py-2 text-xs dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
-                <p v-if="adminForm.errors.email" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ adminForm.errors.email }}</p>
-              </div>
-              <button type="submit" :disabled="adminForm.processing" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-md disabled:opacity-60">Add admin</button>
+            <form class="flex flex-wrap items-end gap-2" @submit.prevent="addAdmin">
+              <Input
+                v-model="adminForm.email"
+                type="email"
+                label="Email address"
+                placeholder="Their account email address"
+                :error="adminForm.errors.email"
+                required
+                class="flex-1 min-w-56"
+              />
+              <Button type="submit" variant="secondary" :loading="adminForm.processing">Add admin</Button>
             </form>
-          </div>
+          </Card>
 
-          <!-- Associated Registered Lodges -->
-          <div class="bg-white/90 border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900/90 dark:border-slate-800">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
-              <div>
-                <h3 class="text-sm font-black text-slate-900 flex items-center gap-2 dark:text-white">
-                  <span>🏰</span>
-                  <span>Registered Lodges in {{ province.name }}</span>
-                </h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Lodges and chapters operating within this province.</p>
+          <Card class="space-y-4">
+            <template #header>
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <h3 class="text-base font-semibold text-slate-900 dark:text-white">Registered lodges in {{ province.name }}</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Lodges and chapters operating within this province.</p>
+                </div>
+                <span class="text-xs font-medium text-slate-500 whitespace-nowrap dark:text-slate-400">{{ province.clubs?.length || 0 }} lodge(s)</span>
               </div>
-              <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Total {{ province.clubs?.length || 0 }} lodge(s)</span>
-            </div>
+            </template>
 
-            <div v-if="province.clubs?.length" class="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs max-h-80 overflow-y-auto dark:border-slate-800">
-              <table class="w-full text-left border-collapse text-xs">
+            <div v-if="province.clubs?.length" class="border border-slate-200 rounded-xl overflow-hidden max-h-80 overflow-y-auto dark:border-slate-800">
+              <table class="w-full text-left border-collapse text-sm">
                 <thead>
-                  <tr class="bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-wider border-b border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-800">
-                    <th class="py-3 px-4">Lodge Name &amp; No.</th>
-                    <th class="py-3 px-3">Order Type</th>
-                    <th class="py-3 px-3 text-center">Active Members</th>
-                    <th class="py-3 px-4 text-right">Action</th>
+                  <tr class="bg-slate-50 text-slate-500 text-xs border-b border-slate-200 dark:bg-slate-900/60 dark:text-slate-400 dark:border-slate-800">
+                    <th scope="col" class="py-3 px-4 font-medium">Lodge name and no.</th>
+                    <th scope="col" class="py-3 px-3 font-medium">Order type</th>
+                    <th scope="col" class="py-3 px-3 text-center font-medium">Active members</th>
+                    <th scope="col" class="py-3 px-4 text-right font-medium">Action</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 text-slate-700 dark:divide-slate-800 dark:text-slate-300">
                   <tr v-for="c in province.clubs" :key="c.id" class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/40">
-                    <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">
+                    <td class="py-3 px-4 font-medium text-slate-900 dark:text-white">
                       {{ c.name }} <span v-if="c.lodge_number" class="text-slate-500 font-normal dark:text-slate-400">No. {{ c.lodge_number }}</span>
                     </td>
                     <td class="py-3 px-3">
-                      <span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-black rounded border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60">
-                        {{ c.club_type?.name || 'Craft Lodge' }}
-                      </span>
+                      <Badge>{{ c.club_type?.name || 'Craft Lodge' }}</Badge>
                     </td>
-                    <td class="py-3 px-3 text-center font-bold text-slate-900 dark:text-white">{{ c.users_count || 0 }}</td>
+                    <td class="py-3 px-3 text-center font-medium text-slate-900 dark:text-white">{{ c.users_count || 0 }}</td>
                     <td class="py-3 px-4 text-right">
-                      <Link
-                        :href="route('admin.club_acc.charity.index', c.slug)"
-                        class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] rounded transition"
-                      >
-                        Workspace →
-                      </Link>
+                      <Button variant="secondary" size="sm" :href="route('admin.club_acc.charity.index', c.slug)">Workspace</Button>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <div v-else class="p-6 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-1 dark:bg-slate-900/60 dark:border-slate-800">
-              <span class="text-xl block">🏛️</span>
-              <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300">No Lodges Registered in this Province Yet</h4>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400">New lodges assigned to {{ province.name }} will appear here.</p>
+            <div v-else class="p-6 text-center bg-slate-50 rounded-xl border border-slate-200 space-y-1 dark:bg-slate-950/40 dark:border-slate-800">
+              <span class="flex justify-center text-slate-400"><UiIcon name="building" :size="20" /></span>
+              <h4 class="text-sm font-medium text-slate-700 dark:text-slate-300">No lodges registered in this province yet</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400">New lodges assigned to {{ province.name }} will appear here.</p>
             </div>
-          </div>
-
+          </Card>
         </div>
-
       </div>
-
     </div>
   </SuperAdminLayout>
 </template>

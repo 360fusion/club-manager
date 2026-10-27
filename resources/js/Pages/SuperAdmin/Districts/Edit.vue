@@ -1,6 +1,13 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Input from '@/Components/Ui/Input.vue';
+import PageHeader from '@/Components/Ui/PageHeader.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     district: { type: Object, required: true },
@@ -32,6 +39,12 @@ const form = useForm({
 function submitUpdate() {
     form.put(route('superadmin.districts.update', props.district.id));
 }
+
+const TYPE_OPTIONS = [
+    { value: 'district', label: 'District Grand Lodge' },
+    { value: 'group', label: 'Group of lodges' },
+    { value: 'dormant', label: 'Dormant' },
+];
 </script>
 
 <template>
@@ -39,296 +52,126 @@ function submitUpdate() {
         <Head :title="`Edit - ${district.name}`" />
 
         <div class="space-y-8 max-w-5xl mx-auto">
+            <PageHeader
+                :title="`Edit ${district.name}`"
+                description="Update official details, executive leaders, contact information and online presence."
+                :breadcrumbs="[
+                    { label: 'Dashboard', href: route('superadmin.dashboard') },
+                    { label: 'Districts and groups', href: route('superadmin.districts.index') },
+                    { label: district.name, href: route('superadmin.districts.show', district.id) },
+                    { label: 'Edit' },
+                ]"
+            >
+                <template #actions>
+                    <Button variant="secondary" :href="route('superadmin.districts.show', district.id)">
+                        <template #icon><UiIcon name="arrow-left" /></template>
+                        Cancel and go back
+                    </Button>
+                </template>
+            </PageHeader>
 
-            <!-- Header & Breadcrumbs -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5 dark:border-slate-800">
-                <div>
-                    <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">
-                        <Link :href="route('superadmin.dashboard')" class="hover:text-slate-900 transition dark:hover:text-white">Dashboard</Link>
-                        <span>/</span>
-                        <Link :href="route('superadmin.districts.index')" class="hover:text-slate-900 transition dark:hover:text-white">Districts &amp; groups</Link>
-                        <span>/</span>
-                        <Link :href="route('superadmin.districts.show', district.id)" class="hover:text-slate-900 transition dark:hover:text-white">{{ district.name }}</Link>
-                        <span>/</span>
-                        <span class="text-blue-600 font-bold dark:text-blue-400">Edit</span>
-                    </div>
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight dark:text-white">Edit {{ district.name }}</h1>
-                    <p class="text-xs text-slate-500 mt-0.5 dark:text-slate-400">Update official details, executive leaders, contact information, and online presence.</p>
-                </div>
-
-                <Link
-                    :href="route('superadmin.districts.show', district.id)"
-                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl border border-slate-300 transition flex-shrink-0 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
-                >
-                    ← Cancel &amp; back
-                </Link>
-            </div>
-
-            <!-- Edit Form -->
             <form @submit.prevent="submitUpdate" class="space-y-8">
-
-                <!-- Section 1: Classification -->
-                <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-                    <h3 class="text-xs font-extrabold text-blue-600 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-blue-400 dark:border-slate-800">
-                        <span>🌍</span>
-                        <span>Identification &amp; Classification</span>
+                <Card class="space-y-4">
+                    <h3 class="text-base font-semibold text-slate-900 border-b border-slate-200 pb-3 dark:text-white dark:border-slate-800">
+                        Identification and classification
                     </h3>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Official Name</label>
-                            <input
-                                v-model="form.name"
-                                type="text"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                                required
-                            />
-                            <p v-if="form.errors.name" class="text-rose-700 mt-1 dark:text-rose-400">{{ form.errors.name }}</p>
-                        </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Input v-model="form.name" label="Official name" :error="form.errors.name" required />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Type</label>
-                            <select
-                                v-model="form.type"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 cursor-pointer font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                                required
-                            >
-                                <option value="district">District Grand Lodge</option>
-                                <option value="group">Group of Lodges</option>
-                                <option value="dormant">Dormant</option>
-                            </select>
-                        </div>
+                        <Select v-model="form.type" label="Type" :options="TYPE_OPTIONS" :error="form.errors.type" required />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Governing Grand Lodge</label>
+                        <div class="space-y-1.5">
+                            <label for="edit-grand-lodge" class="block text-xs font-medium text-slate-700 dark:text-slate-300">Governing Grand Lodge</label>
                             <select
+                                id="edit-grand-lodge"
                                 v-model="form.grand_lodge_id"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 cursor-pointer font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                             >
-                                <option :value="null">— None / Independent —</option>
+                                <option :value="null">None (independent)</option>
                                 <option v-for="gl in grandLodges" :key="gl.id" :value="gl.id">
                                     {{ gl.name }} ({{ gl.short_name || gl.country }})
                                 </option>
                             </select>
+                            <p v-if="form.errors.grand_lodge_id" class="text-xs text-rose-600 dark:text-rose-400">{{ form.errors.grand_lodge_id }}</p>
                         </div>
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">System Code Key</label>
-                            <input
-                                v-model="form.code"
-                                type="text"
-                                placeholder="e.g. singapore"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                                required
-                            />
-                            <p v-if="form.errors.code" class="text-rose-700 mt-1 dark:text-rose-400">{{ form.errors.code }}</p>
-                        </div>
+                        <Input v-model="form.code" label="System code key" placeholder="e.g. singapore" class="font-mono" :error="form.errors.code" required />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Country</label>
-                            <input
-                                v-model="form.country"
-                                type="text"
-                                placeholder="e.g. Singapore"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.country" label="Country" placeholder="e.g. Singapore" :error="form.errors.country" />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Geographic Region</label>
-                            <input
-                                v-model="form.region"
-                                type="text"
-                                placeholder="e.g. South East Asia"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.region" label="Geographic region" placeholder="e.g. South East Asia" :error="form.errors.region" />
                     </div>
-                </div>
+                </Card>
 
-                <!-- Section 2: Executive Leadership -->
-                <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-                    <h3 class="text-xs font-extrabold text-amber-700 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-amber-400 dark:border-slate-800">
-                        <span>👑</span>
-                        <span>District Executive Rulers</span>
+                <Card class="space-y-4">
+                    <h3 class="text-base font-semibold text-slate-900 border-b border-slate-200 pb-3 dark:text-white dark:border-slate-800">
+                        District executive rulers
                     </h3>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">District Grand Master</label>
-                            <input
-                                v-model="form.district_grand_master"
-                                type="text"
-                                placeholder="e.g. W. Bro. John Smith"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Input v-model="form.district_grand_master" label="District Grand Master" placeholder="e.g. W. Bro. John Smith" :error="form.errors.district_grand_master" />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">District Grand Secretary</label>
-                            <input
-                                v-model="form.district_grand_secretary"
-                                type="text"
-                                placeholder="e.g. W. Bro. James Brown"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.district_grand_secretary" label="District Grand Secretary" placeholder="e.g. W. Bro. James Brown" :error="form.errors.district_grand_secretary" />
                     </div>
-                </div>
+                </Card>
 
-                <!-- Section 3: Office Address & Contact -->
-                <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-                    <h3 class="text-xs font-extrabold text-blue-600 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-blue-400 dark:border-slate-800">
-                        <span>📍</span>
-                        <span>Office Address &amp; Contact Information</span>
+                <Card class="space-y-4">
+                    <h3 class="text-base font-semibold text-slate-900 border-b border-slate-200 pb-3 dark:text-white dark:border-slate-800">
+                        Office address and contact information
                     </h3>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Address Line 1</label>
-                            <input
-                                v-model="form.address_line_1"
-                                type="text"
-                                placeholder="e.g. 10 Marina Boulevard"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Input v-model="form.address_line_1" label="Address line 1" placeholder="e.g. 10 Marina Boulevard" :error="form.errors.address_line_1" />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Address Line 2 (Optional)</label>
-                            <input
-                                v-model="form.address_line_2"
-                                type="text"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.address_line_2" label="Address line 2 (optional)" :error="form.errors.address_line_2" />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Town / City</label>
-                            <input
-                                v-model="form.town"
-                                type="text"
-                                placeholder="e.g. Singapore City"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.town" label="Town / city" placeholder="e.g. Singapore City" :error="form.errors.town" />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">County / State / Province</label>
-                            <input
-                                v-model="form.county"
-                                type="text"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.county" label="County / state / province" :error="form.errors.county" />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Postal Code</label>
-                            <input
-                                v-model="form.postcode"
-                                type="text"
-                                placeholder="e.g. 018983"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.postcode" label="Postal code" placeholder="e.g. 018983" class="font-mono" :error="form.errors.postcode" />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Telephone Number</label>
-                            <input
-                                v-model="form.telephone"
-                                type="text"
-                                placeholder="e.g. +65 6123 4567"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.telephone" label="Telephone number" placeholder="e.g. +65 6123 4567" class="font-mono" :error="form.errors.telephone" />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Official Email Address</label>
-                            <input
-                                v-model="form.email"
-                                type="email"
-                                placeholder="e.g. secretary@freemasons.org.sg"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.email" type="email" label="Official email address" placeholder="e.g. secretary@freemasons.org.sg" :error="form.errors.email" />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Official Website URL</label>
-                            <input
-                                v-model="form.website_url"
-                                type="url"
-                                placeholder="https://www.freemasons.org.sg"
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.website_url" type="url" label="Official website URL" placeholder="https://www.freemasons.org.sg" class="font-mono" :error="form.errors.website_url" />
                     </div>
-                </div>
+                </Card>
 
-                <!-- Section 4: Social Media -->
-                <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-                    <h3 class="text-xs font-extrabold text-blue-700 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-blue-400 dark:border-slate-800">
-                        <span>🌐</span>
-                        <span>Social Media Handles &amp; Portals</span>
+                <Card class="space-y-4">
+                    <h3 class="text-base font-semibold text-slate-900 border-b border-slate-200 pb-3 dark:text-white dark:border-slate-800">
+                        Social media handles and portals
                     </h3>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Twitter / X URL</label>
-                            <input
-                                v-model="form.twitter_url"
-                                type="url"
-                                placeholder="https://x.com/..."
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Input v-model="form.twitter_url" type="url" label="Twitter / X URL" placeholder="https://x.com/..." class="font-mono" :error="form.errors.twitter_url" />
 
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Facebook Page URL</label>
-                            <input
-                                v-model="form.facebook_url"
-                                type="url"
-                                placeholder="https://facebook.com/..."
-                                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            />
-                        </div>
+                        <Input v-model="form.facebook_url" type="url" label="Facebook page URL" placeholder="https://facebook.com/..." class="font-mono" :error="form.errors.facebook_url" />
                     </div>
-                </div>
+                </Card>
 
-                <!-- Section 5: Description & Notes -->
-                <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-                    <h3 class="text-xs font-extrabold text-emerald-700 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-emerald-400 dark:border-slate-800">
-                        <span>📖</span>
-                        <span>Overview, Background &amp; Notes</span>
+                <Card class="space-y-4">
+                    <h3 class="text-base font-semibold text-slate-900 border-b border-slate-200 pb-3 dark:text-white dark:border-slate-800">
+                        Overview, background and notes
                     </h3>
 
-                    <div class="text-xs">
-                        <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Description &amp; Historical Notes</label>
-                        <textarea
-                            v-model="form.description"
-                            rows="4"
-                            placeholder="Enter historical background, status notes (e.g. dormant reason), number of lodges, charity activities, etc."
-                            class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 font-medium leading-relaxed dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                        ></textarea>
-                    </div>
-                </div>
+                    <Textarea
+                        v-model="form.description"
+                        label="Description and historical notes"
+                        :rows="4"
+                        placeholder="Enter historical background, status notes (e.g. dormant reason), number of lodges, charity activities, etc."
+                        :error="form.errors.description"
+                    />
+                </Card>
 
-                <!-- Action Bar -->
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-                    <Link
-                        :href="route('superadmin.districts.show', district.id)"
-                        class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
-                    >
-                        Cancel
-                    </Link>
-                    <button
-                        type="submit"
-                        :disabled="form.processing"
-                        class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-2"
-                    >
-                        <span>{{ form.processing ? 'Saving...' : 'Save changes' }}</span>
-                    </button>
+                    <Button variant="secondary" :href="route('superadmin.districts.show', district.id)">Cancel</Button>
+                    <Button type="submit" :loading="form.processing">
+                        {{ form.processing ? 'Saving...' : 'Save changes' }}
+                    </Button>
                 </div>
-
             </form>
         </div>
     </SuperAdminLayout>

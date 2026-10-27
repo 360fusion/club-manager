@@ -1,6 +1,13 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Input from '@/Components/Ui/Input.vue';
+import PageHeader from '@/Components/Ui/PageHeader.vue';
+import Select from '@/Components/Ui/Select.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   province: {
@@ -47,293 +54,136 @@ function submitUpdate() {
   <SuperAdminLayout :title="`Edit ${province.name}`">
     <Head :title="`Edit - ${province.name}`" />
 
-    <div class="space-y-8 max-w-5xl mx-auto">
-      
-      <!-- Top Header & Breadcrumbs -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5 dark:border-slate-800">
-        <div>
-          <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">
-            <Link :href="route('superadmin.dashboard')" class="hover:text-slate-900 transition dark:hover:text-white">Dashboard</Link>
-            <span>/</span>
-            <Link :href="route('superadmin.provinces.index')" class="hover:text-slate-900 transition dark:hover:text-white">Provinces</Link>
-            <span>/</span>
-            <Link :href="route('superadmin.provinces.show', province.id)" class="hover:text-slate-900 transition dark:hover:text-white">{{ province.name }}</Link>
-            <span>/</span>
-            <span class="text-blue-600 font-bold dark:text-blue-400">Edit</span>
+    <div class="space-y-6 max-w-5xl mx-auto">
+      <PageHeader
+        :title="`Edit ${province.name}`"
+        description="Update the office address, executive, contact details and websites."
+        :breadcrumbs="[
+          { label: 'Dashboard', href: route('superadmin.dashboard') },
+          { label: 'Provinces', href: route('superadmin.provinces.index') },
+          { label: province.name, href: route('superadmin.provinces.show', province.id) },
+          { label: 'Edit' },
+        ]"
+      >
+        <template #actions>
+          <Button variant="secondary" :href="route('superadmin.provinces.show', province.id)">
+            <template #icon><UiIcon name="arrow-left" /></template>
+            Back to province
+          </Button>
+        </template>
+      </PageHeader>
+
+      <form @submit.prevent="submitUpdate" class="space-y-6">
+        <Card>
+          <template #header>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Identification and Grand Lodge</h3>
+          </template>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input v-model="form.name" label="Official name" required />
+
+            <Select
+              v-model.number="form.grand_lodge_id"
+              label="Governing Grand Lodge"
+              :options="grandLodges.map(gl => ({ value: gl.id, label: `${gl.name} (${gl.short_name || gl.country})` }))"
+            />
+
+            <Select
+              v-model="form.country"
+              label="Country"
+              :options="countriesList.map(c => ({ value: c, label: c }))"
+              required
+            />
+
+            <Input v-model="form.region" label="Geographic region" placeholder="e.g. South West, East Midlands, Lothians" />
           </div>
-          <h1 class="text-2xl font-bold text-slate-900 tracking-tight dark:text-white">Edit {{ province.name }}</h1>
-          <p class="text-xs text-slate-500 mt-0.5 dark:text-slate-400">Update official office address, executive leaders, contact details, and web portals.</p>
-        </div>
+        </Card>
 
-        <Link
-          :href="route('superadmin.provinces.show', province.id)"
-          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl border border-slate-300 transition dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
-        >
-          ← Cancel &amp; back to province
-        </Link>
-      </div>
+        <Card>
+          <template #header>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Provincial executive</h3>
+          </template>
 
-      <!-- Edit Form -->
-      <form @submit.prevent="submitUpdate" class="space-y-8">
-        
-        <!-- Section 1: Basic Classification -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-          <h3 class="text-xs font-extrabold text-blue-600 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-blue-400 dark:border-slate-800">
-            <span>🏛️</span>
-            <span>Basic Identification &amp; Grand Lodge</span>
-          </h3>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Province Official Name</label>
-              <input
-                v-model="form.name"
-                type="text"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                required
-              />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Governing Sovereign Grand Lodge</label>
-              <select
-                v-model="form.grand_lodge_id"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 cursor-pointer font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              >
-                <option v-for="gl in grandLodges" :key="gl.id" :value="gl.id">
-                  {{ gl.name }} ({{ gl.short_name || gl.country }})
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Country Jurisdiction</label>
-              <select
-                v-model="form.country"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 cursor-pointer font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                required
-              >
-                <option v-for="c in countriesList" :key="c" :value="c">{{ c }}</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Geographic Region</label>
-              <input
-                v-model="form.region"
-                type="text"
-                placeholder="e.g. South West, East Midlands, Lothians"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input v-model="form.provincial_grand_master" label="Provincial Grand Master" placeholder="e.g. David G. Maskell" />
+            <Input v-model="form.provincial_grand_secretary" label="Provincial Grand Secretary" placeholder="e.g. Trevor Conroy" />
           </div>
-        </div>
+        </Card>
 
-        <!-- Section 2: Executive Leadership -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-          <h3 class="text-xs font-extrabold text-amber-700 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-amber-400 dark:border-slate-800">
-            <span>👑</span>
-            <span>Provincial Executive Rulers</span>
-          </h3>
+        <Card>
+          <template #header>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Office address and contact details</h3>
+          </template>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Provincial Grand Master</label>
-              <input
-                v-model="form.provincial_grand_master"
-                type="text"
-                placeholder="e.g. David G. Maskell"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Provincial Grand Secretary</label>
-              <input
-                v-model="form.provincial_grand_secretary"
-                type="text"
-                placeholder="e.g. Trevor Conroy"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input v-model="form.address_line_1" label="Address line 1" placeholder="e.g. 7 New Bridge Street" />
+            <Input v-model="form.address_line_2" label="Address line 2 (optional)" />
+            <Input v-model="form.town" label="Town or city" placeholder="e.g. Truro, Oxford, Durham" />
+            <Input v-model="form.county" label="County" placeholder="e.g. Cornwall, Oxfordshire" />
+            <Input v-model="form.postcode" label="Postcode" placeholder="e.g. TR1 2AA, OX2 7PP" class="font-mono" />
+            <Input v-model="form.telephone" label="Telephone number" placeholder="e.g. 01872 276191" class="font-mono" />
+            <Input v-model="form.email" type="email" label="Official email address" placeholder="e.g. secretary@cornwallfreemasons.org.uk" />
+            <Input v-model="form.website_url" type="url" label="Official website URL" placeholder="https://pglcornwall.org.uk" class="font-mono" />
           </div>
-        </div>
+        </Card>
 
-        <!-- Section 3: Official Headquarters Address & Contact -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-          <h3 class="text-xs font-extrabold text-blue-600 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-blue-400 dark:border-slate-800">
-            <span>📍</span>
-            <span>Provincial Office Address &amp; Contact Information</span>
-          </h3>
+        <Card>
+          <template #header>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Dues rates (per member, per year)</h3>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Lodges under this Province see what they owe on their accounting worksheet. Leave a rate empty if it is not set: lodges then see "rate not set" rather than a zero.</p>
+          </template>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Address Line 1</label>
-              <input
-                v-model="form.address_line_1"
-                type="text"
-                placeholder="e.g. 7 New Bridge Street"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Address Line 2 (Optional)</label>
-              <input
-                v-model="form.address_line_2"
-                type="text"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Town / City</label>
-              <input
-                v-model="form.town"
-                type="text"
-                placeholder="e.g. Truro, Oxford, Durham"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">County</label>
-              <input
-                v-model="form.county"
-                type="text"
-                placeholder="e.g. Cornwall, Oxfordshire"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Postal Code</label>
-              <input
-                v-model="form.postcode"
-                type="text"
-                placeholder="e.g. TR1 2AA, OX2 7PP"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Telephone Number</label>
-              <input
-                v-model="form.telephone"
-                type="text"
-                placeholder="e.g. 01872 276191"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Official Email Address</label>
-              <input
-                v-model="form.email"
-                type="email"
-                placeholder="e.g. secretary@cornwallfreemasons.org.uk"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Official Website URL</label>
-              <input
-                v-model="form.website_url"
-                type="url"
-                placeholder="https://pglcornwall.org.uk"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              v-model.number="form.per_capita_rate"
+              type="number"
+              step="0.01"
+              min="0"
+              label="Per-capita rate"
+              :error="form.errors.per_capita_rate"
+              class="font-mono"
+            />
+            <Input
+              v-model.number="form.festival_contribution_rate"
+              type="number"
+              step="0.01"
+              min="0"
+              label="Festival contribution rate"
+              :error="form.errors.festival_contribution_rate"
+              class="font-mono"
+            />
           </div>
-        </div>
+        </Card>
 
-        <!-- Section: Dues Rates -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-          <h3 class="text-xs font-extrabold text-blue-700 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-blue-400 dark:border-slate-800">
-            <span>💷</span>
-            <span>Dues Rates (per member, per year)</span>
-          </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Lodges under this Province see what they owe on their accounting worksheet. Leave a rate empty if it is not set: lodges then see "rate not set" rather than a zero.</p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Per-Capita Rate</label>
-              <input v-model="form.per_capita_rate" type="number" step="0.01" min="0" class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-mono dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
-              <p v-if="form.errors.per_capita_rate" class="text-rose-500 font-semibold mt-1">{{ form.errors.per_capita_rate }}</p>
-            </div>
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Festival Contribution Rate</label>
-              <input v-model="form.festival_contribution_rate" type="number" step="0.01" min="0" class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 font-mono dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
-              <p v-if="form.errors.festival_contribution_rate" class="text-rose-500 font-semibold mt-1">{{ form.errors.festival_contribution_rate }}</p>
-            </div>
+        <Card>
+          <template #header>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Social media</h3>
+          </template>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input v-model="form.twitter_url" type="url" label="Twitter / X URL" placeholder="https://x.com/CornwallMasons" class="font-mono" />
+            <Input v-model="form.facebook_url" type="url" label="Facebook page URL" placeholder="https://facebook.com/CornwallFreemasons" class="font-mono" />
           </div>
-        </div>
+        </Card>
 
-        <!-- Section 4: Social Media Links -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-          <h3 class="text-xs font-extrabold text-blue-700 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-blue-400 dark:border-slate-800">
-            <span>🌐</span>
-            <span>Social Media Handles &amp; Portals</span>
-          </h3>
+        <Card>
+          <template #header>
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Summary and background</h3>
+          </template>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Twitter / X URL</label>
-              <input
-                v-model="form.twitter_url"
-                type="url"
-                placeholder="https://x.com/CornwallMasons"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
+          <Textarea
+            v-model="form.description"
+            label="Description and history"
+            placeholder="Historical background, number of lodges, charity relief notes and so on"
+          />
+        </Card>
 
-            <div>
-              <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Facebook Page URL</label>
-              <input
-                v-model="form.facebook_url"
-                type="url"
-                placeholder="https://facebook.com/CornwallFreemasons"
-                class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-xl px-3.5 py-2.5 font-mono focus:ring-2 focus:ring-blue-500 font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 5: Overview & Description -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-          <h3 class="text-xs font-extrabold text-emerald-700 uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center gap-2 dark:text-emerald-400 dark:border-slate-800">
-            <span>📖</span>
-            <span>Province Summary &amp; Background Notes</span>
-          </h3>
-
-          <div class="text-xs">
-            <label class="block font-bold text-slate-700 mb-1 dark:text-slate-300">Province Description &amp; History</label>
-            <textarea
-              v-model="form.description"
-              rows="4"
-              placeholder="Enter historical background, number of lodges, charity relief notes, etc."
-              class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 font-medium leading-relaxed dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-            ></textarea>
-          </div>
-        </div>
-
-        <!-- Bottom Action Bar -->
         <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-          <Link
-            :href="route('superadmin.provinces.show', province.id)"
-            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
-          >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            :disabled="form.processing"
-            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-2"
-          >
-            <span>{{ form.processing ? 'Saving...' : 'Save province changes' }}</span>
-          </button>
+          <Button variant="secondary" :href="route('superadmin.provinces.show', province.id)">Cancel</Button>
+          <Button type="submit" :loading="form.processing">
+            {{ form.processing ? 'Saving...' : 'Save province changes' }}
+          </Button>
         </div>
-
       </form>
     </div>
   </SuperAdminLayout>

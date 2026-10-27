@@ -1,8 +1,16 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import OrderColourPicker from '@/Components/OrderColourPicker.vue';
+import PageHeader from '@/Components/Ui/PageHeader.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import Textarea from '@/Components/Ui/Textarea.vue';
+import Modal from '@/Components/Ui/Modal.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { orderColour, ORDER_COLOURS } from '@/Utils/orderColour';
 
 const props = defineProps({
@@ -97,109 +105,79 @@ function removeRulerField(index) {
 </script>
 
 <template>
-    <SuperAdminLayout title="Masonic Orders & Club Types Configuration">
-        <Head title="Superadmin - Masonic Orders" />
+    <SuperAdminLayout title="Masonic orders and club types">
+        <Head title="Superadmin - Masonic orders" />
 
         <div class="space-y-6">
-            <!-- Header section -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5 dark:border-slate-800">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight dark:text-white">Masonic Orders & Club Types</h1>
-                    <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">Configure preset ladders, dynamic terminology, and Provincial Rulers for each Masonic Order.</p>
-                </div>
-                <button
-                    @click="showCreateModal = true"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-sm shadow-sm transition inline-flex items-center gap-2"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add Masonic order preset
-                </button>
-            </div>
+            <PageHeader title="Masonic orders and club types" description="Set the preset ladders, terminology and Provincial rulers for each Masonic order.">
+                <template #actions>
+                    <Button @click="showCreateModal = true">
+                        <template #icon><UiIcon name="plus" /></template>
+                        Add a Masonic order preset
+                    </Button>
+                </template>
+            </PageHeader>
 
-            <!-- Main grid -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Left panel: List of Orders -->
-                <div class="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-4 shadow-xl dark:bg-slate-900 dark:border-slate-800">
-                    <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2 dark:text-slate-400">Configured Orders ({{ clubTypes.length }})</h2>
+                <Card padding="sm" class="lg:col-span-4">
+                    <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2 dark:text-slate-400">Configured orders ({{ clubTypes.length }})</h2>
                     <div class="space-y-2">
-                        <div
+                        <button
                             v-for="ct in clubTypes"
                             :key="ct.id"
-                            @click="selectClubType(ct)"
+                            type="button"
                             :class="[
-                                'p-3.5 rounded-lg border cursor-pointer transition-all duration-150',
+                                'block w-full text-left p-3.5 rounded-xl border transition-colors',
                                 selectedType && selectedType.id === ct.id
-                                    ? 'bg-blue-50 border-blue-400 text-slate-900 shadow-md dark:bg-blue-950/60 dark:border-blue-600 dark:text-white'
+                                    ? 'bg-blue-50 border-blue-400 text-slate-900 dark:bg-blue-950/60 dark:border-blue-600 dark:text-white'
                                     : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-400 hover:text-slate-900 dark:bg-slate-900/60 dark:border-slate-800 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white'
                             ]"
+                            @click="selectClubType(ct)"
                         >
                             <div class="flex items-center justify-between">
                                 <span class="flex items-center gap-2 text-sm font-semibold"><span :class="['h-2.5 w-2.5 shrink-0 rounded-full', orderColour(ct.colour).dot]" aria-hidden="true" />{{ ct.name }}</span>
-                                <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">{{ ct.code }}</span>
+                                <Badge class="font-mono">{{ ct.code }}</Badge>
                             </div>
                             <div class="flex items-center gap-3 mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                <span>{{ ct.default_officer_roles?.length || 0 }} Officer Roles</span>
-                                <span>•</span>
-                                <span>{{ ct.default_ranks?.length || 0 }} Ranks</span>
+                                <span>{{ ct.default_officer_roles?.length || 0 }} officer roles</span>
+                                <span aria-hidden="true">•</span>
+                                <span>{{ ct.default_ranks?.length || 0 }} ranks</span>
                             </div>
-                        </div>
+                        </button>
                     </div>
-                </div>
+                </Card>
 
-                <!-- Right panel: Selected Order Details & Editor -->
-                <div v-if="selectedType" class="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-6 shadow-xl space-y-6 dark:bg-slate-900 dark:border-slate-800">
-                    <div class="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
+                <Card v-if="selectedType" class="lg:col-span-8 space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4 dark:border-slate-800">
                         <div>
                             <div class="flex items-center gap-3">
                                 <span :class="['h-4 w-4 shrink-0 rounded-full', orderColour(selectedType.colour).dot]" :title="ORDER_COLOURS.find((c) => c.key === selectedType.colour)?.label" aria-hidden="true" />
-                                <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ selectedType.name }}</h2>
-                                <span class="text-xs font-mono text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full dark:text-blue-400 dark:bg-blue-950/60 dark:border-blue-800/60">{{ selectedType.code }}</span>
+                                <h2 class="text-xl font-semibold text-slate-900 dark:text-white">{{ selectedType.name }}</h2>
+                                <Badge variant="info" class="font-mono">{{ selectedType.code }}</Badge>
                             </div>
-                            <p class="text-xs text-slate-500 mt-1 dark:text-slate-400">Configure default terminology, executive positions, and module access.</p>
+                            <p class="text-xs text-slate-500 mt-1 dark:text-slate-400">Set the default terminology, executive positions and module access.</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <Link
-                                :href="route('superadmin.club_types.show', selectedType.id)"
-                                class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl border border-blue-300 transition flex items-center gap-1 dark:bg-blue-950/60 dark:hover:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700"
-                            >
-                                <span>View order page</span>
-                                <span>↗</span>
-                            </Link>
-                            <button
-                                v-if="!isEditing"
-                                @click="isEditing = true"
-                                class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium text-xs rounded-xl border border-slate-300 transition dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
-                            >
+                            <Button variant="secondary" size="sm" :href="route('superadmin.club_types.show', selectedType.id)">View order page</Button>
+                            <Button v-if="!isEditing" variant="secondary" size="sm" @click="isEditing = true">
+                                <template #icon><UiIcon name="pencil" :size="14" /></template>
                                 Edit preset
-                            </button>
+                            </Button>
                             <template v-else>
-                                <button
-                                    @click="isEditing = false"
-                                    class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-xl border border-slate-300 transition dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    @click="updateClubType"
-                                    :disabled="editForm.processing"
-                                    class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs rounded-xl transition"
-                                >
+                                <Button variant="ghost" size="sm" @click="isEditing = false">Cancel</Button>
+                                <Button size="sm" :disabled="editForm.processing" @click="updateClubType">
                                     {{ editForm.processing ? 'Saving...' : 'Save changes' }}
-                                </button>
+                                </Button>
                             </template>
                         </div>
                     </div>
 
-                    <!-- Display Mode vs Edit Mode -->
                     <div class="space-y-6">
-                        <!-- Description & Official Website Section -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4 dark:bg-slate-900/60 dark:border-slate-800">
-                            <h3 class="text-xs font-semibold text-blue-600 uppercase tracking-wider dark:text-blue-400">Order Information & Official Links</h3>
+                        <section class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4 dark:bg-slate-900/60 dark:border-slate-800">
+                            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Order information and official links</h3>
                             <div class="space-y-3 text-sm">
                                 <div>
-                                    <label class="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Order Colour</label>
+                                    <p class="block text-xs font-medium text-slate-700 mb-1.5 dark:text-slate-300">Order colour</p>
                                     <OrderColourPicker v-if="isEditing" v-model="editForm.colour" />
                                     <div v-else class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
                                         <span :class="['h-4 w-4 rounded-full', orderColour(selectedType.colour).dot]" aria-hidden="true" />
@@ -207,211 +185,124 @@ function removeRulerField(index) {
                                         <span class="text-slate-500 dark:text-slate-400">· used for date tiles, calendars and chips for every club in this order</span>
                                     </div>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Order Description</label>
-                                    <textarea
-                                        v-if="isEditing"
-                                        v-model="editForm.description"
-                                        rows="3"
-                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
-                                        placeholder="Enter background context, degree progression, and eligibility requirements..."
-                                    ></textarea>
-                                    <p v-else class="text-xs text-slate-700 leading-relaxed dark:text-slate-300">{{ selectedType.description || 'No description added yet.' }}</p>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Official Website URL</label>
-                                    <input
-                                        v-if="isEditing"
-                                        v-model="editForm.website_url"
-                                        type="url"
-                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
-                                        placeholder="e.g. https://markmasonshall.org"
-                                    />
-                                    <div v-else class="flex items-center gap-2">
-                                        <a
-                                            v-if="selectedType.website_url"
-                                            :href="selectedType.website_url"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            class="text-xs text-blue-600 hover:text-blue-700 font-mono underline flex items-center gap-1 dark:text-blue-400 dark:hover:text-blue-300"
-                                        >
-                                            <span>{{ selectedType.website_url }}</span>
-                                            <span>↗</span>
-                                        </a>
-                                        <span v-else class="text-xs text-slate-500 italic dark:text-slate-400">No official website link configured.</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Terminology Section -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4 dark:bg-slate-900/60 dark:border-slate-800">
-                            <h3 class="text-xs font-semibold text-blue-600 uppercase tracking-wider dark:text-blue-400">Dynamic Terminology Mappings</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Entity Term (e.g. Lodge / Chapter / Conclave)</label>
-                                    <input
-                                        v-if="isEditing"
-                                        v-model="editForm.terminology.club"
-                                        type="text"
-                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
-                                    />
-                                    <span v-else class="font-medium text-slate-800 dark:text-slate-200">{{ selectedType.terminology?.club || 'Lodge' }}</span>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Presiding Officer Term (e.g. Worshipful Master / M.E.Z.)</label>
-                                    <input
-                                        v-if="isEditing"
-                                        v-model="editForm.terminology.master"
-                                        type="text"
-                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
-                                    />
-                                    <span v-else class="font-medium text-slate-800 dark:text-slate-200">{{ selectedType.terminology?.master || 'Worshipful Master' }}</span>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Summons / Circular Document Term</label>
-                                    <input
-                                        v-if="isEditing"
-                                        v-model="editForm.terminology.summons"
-                                        type="text"
-                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
-                                    />
-                                    <span v-else class="font-medium text-slate-800 dark:text-slate-200">{{ selectedType.terminology?.summons || 'Summons' }}</span>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Members Collective Term (e.g. Brethren / Companions / Knights)</label>
-                                    <input
-                                        v-if="isEditing"
-                                        v-model="editForm.terminology.members"
-                                        type="text"
-                                        class="w-full bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
-                                    />
-                                    <span v-else class="font-medium text-slate-800 dark:text-slate-200">{{ selectedType.terminology?.members || 'Brethren' }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Provincial Rulers Schema -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3 dark:bg-slate-900/60 dark:border-slate-800">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-xs font-semibold text-blue-600 uppercase tracking-wider dark:text-blue-400">Provincial Executive & Rulers Schema</h3>
-                                <button
+                                <Textarea
                                     v-if="isEditing"
-                                    @click="addRulerField"
-                                    type="button"
-                                    class="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 dark:text-blue-400 dark:hover:text-blue-300"
-                                >
-                                    + Add field
-                                </button>
+                                    v-model="editForm.description"
+                                    :rows="3"
+                                    label="Order description"
+                                    placeholder="Background, degree progression and eligibility requirements..."
+                                />
+                                <div v-else>
+                                    <p class="block text-xs font-medium text-slate-700 mb-1.5 dark:text-slate-300">Order description</p>
+                                    <p class="text-xs text-slate-700 leading-relaxed dark:text-slate-300">{{ selectedType.description || 'No description added yet.' }}</p>
+                                </div>
+                                <Input
+                                    v-if="isEditing"
+                                    v-model="editForm.website_url"
+                                    type="url"
+                                    label="Official website URL"
+                                    placeholder="e.g. https://markmasonshall.org"
+                                />
+                                <div v-else>
+                                    <p class="block text-xs font-medium text-slate-700 mb-1.5 dark:text-slate-300">Official website URL</p>
+                                    <a
+                                        v-if="selectedType.website_url"
+                                        :href="selectedType.website_url"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-mono underline dark:text-blue-400 dark:hover:text-blue-300"
+                                    >
+                                        <span>{{ selectedType.website_url }}</span>
+                                        <UiIcon name="external-link" :size="12" />
+                                    </a>
+                                    <span v-else class="text-xs text-slate-500 italic dark:text-slate-400">No official website link set.</span>
+                                </div>
                             </div>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Specifies executive ruler titles rendered on the Province Settings page for clubs of this type.</p>
+                        </section>
+
+                        <section class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4 dark:bg-slate-900/60 dark:border-slate-800">
+                            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Terminology</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                <Input v-if="isEditing" v-model="editForm.terminology.club" label="Name for the body (e.g. Lodge, Chapter, Conclave)" />
+                                <div v-else>
+                                    <p class="block text-xs font-medium text-slate-700 mb-1.5 dark:text-slate-300">Name for the body (e.g. Lodge, Chapter, Conclave)</p>
+                                    <span class="font-medium text-slate-800 dark:text-slate-200">{{ selectedType.terminology?.club || 'Lodge' }}</span>
+                                </div>
+                                <Input v-if="isEditing" v-model="editForm.terminology.master" label="Presiding officer (e.g. Worshipful Master, M.E.Z.)" />
+                                <div v-else>
+                                    <p class="block text-xs font-medium text-slate-700 mb-1.5 dark:text-slate-300">Presiding officer (e.g. Worshipful Master, M.E.Z.)</p>
+                                    <span class="font-medium text-slate-800 dark:text-slate-200">{{ selectedType.terminology?.master || 'Worshipful Master' }}</span>
+                                </div>
+                                <Input v-if="isEditing" v-model="editForm.terminology.summons" label="Summons or circular" />
+                                <div v-else>
+                                    <p class="block text-xs font-medium text-slate-700 mb-1.5 dark:text-slate-300">Summons or circular</p>
+                                    <span class="font-medium text-slate-800 dark:text-slate-200">{{ selectedType.terminology?.summons || 'Summons' }}</span>
+                                </div>
+                                <Input v-if="isEditing" v-model="editForm.terminology.members" label="Members together (e.g. Brethren, Companions, Knights)" />
+                                <div v-else>
+                                    <p class="block text-xs font-medium text-slate-700 mb-1.5 dark:text-slate-300">Members together (e.g. Brethren, Companions, Knights)</p>
+                                    <span class="font-medium text-slate-800 dark:text-slate-200">{{ selectedType.terminology?.members || 'Brethren' }}</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 dark:bg-slate-900/60 dark:border-slate-800">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-base font-semibold text-slate-900 dark:text-white">Provincial executive and rulers</h3>
+                                <Button v-if="isEditing" variant="ghost" size="sm" @click="addRulerField">
+                                    <template #icon><UiIcon name="plus" :size="14" /></template>
+                                    Add a field
+                                </Button>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">The ruler titles shown on the Province settings page for clubs of this type.</p>
 
                             <div v-if="isEditing" class="space-y-2">
                                 <div v-for="(ruler, idx) in editForm.rulers_schema" :key="idx" class="flex items-center gap-2">
-                                    <input
-                                        v-model="editForm.rulers_schema[idx]"
-                                        type="text"
-                                        class="flex-1 bg-white border border-slate-300 text-slate-900 text-xs rounded-md px-3 py-1.5 focus:ring-1 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-white"
-                                    />
-                                    <button @click="removeRulerField(idx)" type="button" class="text-rose-700 hover:text-rose-800 p-1 dark:text-rose-400 dark:hover:text-rose-300">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                    </button>
+                                    <Input v-model="editForm.rulers_schema[idx]" class="flex-1" :aria-label="`Ruler title ${idx + 1}`" />
+                                    <Button variant="ghost" size="sm" :aria-label="`Remove ${ruler}`" @click="removeRulerField(idx)">
+                                        <UiIcon name="trash" />
+                                    </Button>
                                 </div>
                             </div>
                             <div v-else class="flex flex-wrap gap-2 pt-1">
-                                <span
-                                    v-for="(ruler, idx) in selectedType.rulers_schema || []"
-                                    :key="idx"
-                                    class="text-xs font-medium px-3 py-1 bg-slate-100 text-slate-700 rounded-full border border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                                >
-                                    {{ ruler }}
-                                </span>
-                                <span v-if="!selectedType.rulers_schema?.length" class="text-xs text-slate-500 italic dark:text-slate-400">No specific ruler fields defined.</span>
+                                <Badge v-for="(ruler, idx) in selectedType.rulers_schema || []" :key="idx">{{ ruler }}</Badge>
+                                <span v-if="!selectedType.rulers_schema?.length" class="text-xs text-slate-500 italic dark:text-slate-400">No ruler fields set.</span>
                             </div>
-                        </div>
+                        </section>
 
-                        <!-- Default Officer Ladder -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3 dark:bg-slate-900/60 dark:border-slate-800">
-                            <h3 class="text-xs font-semibold text-blue-600 uppercase tracking-wider dark:text-blue-400">Default Officer Progression Ladder</h3>
+                        <section class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 dark:bg-slate-900/60 dark:border-slate-800">
+                            <h3 class="text-base font-semibold text-slate-900 dark:text-white">Default officer ladder</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700 dark:text-slate-300">
                                 <div
                                     v-for="role in selectedType.default_officer_roles || []"
                                     :key="role.id"
-                                    class="p-2 bg-white border border-slate-200 rounded flex items-center justify-between dark:bg-slate-900 dark:border-slate-800"
+                                    class="p-2 bg-white border border-slate-200 rounded-xl flex items-center justify-between dark:bg-slate-900 dark:border-slate-800"
                                 >
                                     <span class="font-medium">{{ role.title }} ({{ role.short_code }})</span>
-                                    <span v-if="role.is_executive" class="text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded font-mono dark:bg-amber-950/30 dark:text-amber-400">Key Officer</span>
+                                    <Badge v-if="role.is_executive" variant="warning">Key officer</Badge>
                                 </div>
-                                <span v-if="!selectedType.default_officer_roles?.length" class="text-xs text-slate-500 italic col-span-2 dark:text-slate-400">No pre-configured officer roles set.</span>
+                                <span v-if="!selectedType.default_officer_roles?.length" class="text-xs text-slate-500 italic col-span-2 dark:text-slate-400">No officer roles set up.</span>
                             </div>
-                        </div>
+                        </section>
                     </div>
-                </div>
+                </Card>
             </div>
         </div>
 
-        <!-- Create Club Type Modal -->
-        <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm dark:bg-black/70">
-            <div class="bg-white border border-slate-200 rounded-xl p-6 w-full max-w-lg shadow-2xl space-y-4 dark:bg-slate-900 dark:border-slate-800">
-                <div class="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Create Masonic Order Preset</h3>
-                    <button @click="showCreateModal = false" class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">✕</button>
+        <Modal :open="showCreateModal" title="Create a Masonic order preset" size="lg" @close="showCreateModal = false">
+            <form class="space-y-4" @submit.prevent="submitCreate">
+                <Input v-model="createForm.name" label="Order name" placeholder="e.g. Knights Templar Preceptory" required />
+                <Input v-model="createForm.code" label="System code" placeholder="e.g. kt_preceptory" class="font-mono" required />
+                <div>
+                    <p class="block text-xs font-medium text-slate-700 mb-1.5 dark:text-slate-300">Order colour</p>
+                    <OrderColourPicker v-model="createForm.colour" />
                 </div>
-
-                <form @submit.prevent="submitCreate" class="space-y-4 text-xs">
-                    <div>
-                        <label class="block font-medium text-slate-700 mb-1 dark:text-slate-300">Order Name</label>
-                        <input
-                            v-model="createForm.name"
-                            type="text"
-                            placeholder="e.g. Knights Templar Preceptory"
-                            class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-md px-3 py-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label class="block font-medium text-slate-700 mb-1 dark:text-slate-300">System Code Key</label>
-                        <input
-                            v-model="createForm.code"
-                            type="text"
-                            placeholder="e.g. kt_preceptory"
-                            class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-md px-3 py-2 font-mono focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label class="block font-medium text-slate-700 mb-1 dark:text-slate-300">Order Colour</label>
-                        <OrderColourPicker v-model="createForm.colour" />
-                    </div>
-                    <div>
-                        <label class="block font-medium text-slate-700 mb-1 dark:text-slate-300">Presiding Officer Term</label>
-                        <input
-                            v-model="createForm.terminology.master"
-                            type="text"
-                            placeholder="e.g. Eminent Preceptor"
-                            class="w-full bg-slate-100 border border-slate-300 text-slate-900 rounded-md px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                        />
-                    </div>
-                    <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-                        <button
-                            type="button"
-                            @click="showCreateModal = false"
-                            class="px-4 py-2 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            :disabled="createForm.processing"
-                            class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-500"
-                        >
-                            Create order
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <Input v-model="createForm.terminology.master" label="Presiding officer" placeholder="e.g. Eminent Preceptor" />
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+                    <Button variant="secondary" @click="showCreateModal = false">Cancel</Button>
+                    <Button type="submit" :disabled="createForm.processing">Create order</Button>
+                </div>
+            </form>
+        </Modal>
     </SuperAdminLayout>
 </template>
