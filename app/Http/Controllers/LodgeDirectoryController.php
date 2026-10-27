@@ -123,6 +123,8 @@ class LodgeDirectoryController extends Controller
                 'claim' => $request->user() ? $this->claimFor($lodge, $request->user()->id) : null,
                 'correction_waiting' => $viewer !== null && $lodge->corrections()->where('user_id', $viewer->id)->open()->exists(),
                 'last_verified_at' => $lodge->last_verified_at?->toDateString(),
+                // The managing lodge's secretary, owners and admins can confirm the listing is right.
+                'can_confirm' => $club !== null && ClubAccess::can($viewer, $club, 'manage_meetings'),
                 'references' => LodgeReferenceLinks::forLodge($lodge),
                 'upcoming' => $expected,
                 'confirmed' => $confirmed,

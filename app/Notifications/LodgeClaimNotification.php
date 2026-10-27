@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Mail\LodgeClaimMail;
+use App\Models\Lodge;
 use App\Models\LodgeClaim;
 use Illuminate\Notifications\Notification;
 
@@ -96,6 +97,30 @@ class LodgeClaimNotification extends Notification
             'members.lodges',
             [],
             'See your claims',
+        );
+    }
+
+    /**
+     * The yearly question to a managing lodge's officers: is the directory listing still right? A lodge with one admin
+     * is also asked to add a second, so it cannot be locked out when that person moves on.
+     */
+    public static function yearlyCheck(Lodge $lodge, bool $onlyOneAdmin): self
+    {
+        $details = collect([
+            $lodge->meets_text ? 'Meets: '.$lodge->meets_text.'.' : 'No meeting dates are listed.',
+            $lodge->masonicHall ? 'Hall: '.$lodge->masonicHall->name.'.' : null,
+            'If anything has changed, suggest a fix; if it is all right, press "This listing is right" on the page.',
+            $onlyOneAdmin ? 'You are the only admin of '.$lodge->club->name.': please add a second, so the lodge is never locked out.' : null,
+        ])->filter()->implode(' ');
+
+        return new self(
+            ClubNotification::NOTICE,
+            'Is the listing for '.$lodge->displayName().' still right?',
+            $details,
+            $lodge->displayName(),
+            'lodges.show',
+            ['slug' => $lodge->slug],
+            'Check the listing',
         );
     }
 

@@ -25,3 +25,5 @@ Schedule::command('app:generate-recurring-bills')->dailyAt('06:00')->withoutOver
 // Re-fetches the ~3,900 pages lodge directory details came from (one a second, about an hour) and flags changed ones;
 // it never edits a lodge. A shared province list flags every lodge on it when any part of the page changes.
 Schedule::command('lodges:check-sources')->weeklyOn(0, '02:00')->withoutOverlapping()->runInBackground();
+// Asks each lodge that manages its directory listing, once a year, whether the listing is still right.
+Schedule::command('lodges:remind-secretaries')->dailyAt('09:30')->withoutOverlapping();

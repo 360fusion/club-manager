@@ -44,6 +44,8 @@ function subscribe(bulletin) {
 function setCalendar(event) {
     router.patch(route('lodges.follow.update', props.lodge.slug), { in_calendar: event.target.checked }, { preserveScroll: true });
 }
+
+const confirmListing = () => router.post(route('lodges.listing_checked', props.lodge.slug), {}, { preserveScroll: true });
 </script>
 
 <template>
@@ -217,6 +219,12 @@ function setCalendar(event) {
                 </section>
 
                 <ReferenceLinks :groups="lodge.references" :checked-on="lodge.last_verified_at" />
+
+                <section v-if="lodge.can_confirm" class="rounded-xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Your lodge's listing</h2>
+                    <p class="mt-2 text-slate-600 dark:text-slate-400">If the meeting dates and hall above are right, say so and the listing shows it was checked today. If not, suggest a fix below.</p>
+                    <button type="button" class="mt-3 rounded-xl border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" @click="confirmListing">This listing is right</button>
+                </section>
 
                 <section class="rounded-xl border border-slate-200 bg-white p-5 text-sm dark:border-slate-800 dark:bg-slate-900">
                     <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Something wrong?</h2>

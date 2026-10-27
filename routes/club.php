@@ -47,6 +47,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LodgeClaimController;
 use App\Http\Controllers\LodgeCorrectionController;
 use App\Http\Controllers\LodgeFollowController;
+use App\Http\Controllers\LodgeListingCheckController;
 use App\Http\Controllers\LodgeVisitorController;
 use App\Http\Controllers\MediaAdminController;
 use App\Http\Controllers\MediaBulkController;
@@ -281,6 +282,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/lodges/{slug}/claim', [LodgeClaimController::class, 'store'])->middleware('throttle:6,1')->name('lodges.claim.store');
     Route::post('/members/lodges/claims/{id}/respond', [LodgeClaimController::class, 'respond'])->middleware('throttle:20,1')->name('lodges.claim.respond');
     Route::delete('/members/lodges/claims/{id}', [LodgeClaimController::class, 'destroy'])->middleware('throttle:20,1')->name('lodges.claim.withdraw');
+    Route::post('/lodges/{slug}/listing-checked', LodgeListingCheckController::class)->middleware('throttle:20,1')->name('lodges.listing_checked');
     Route::get('/lodges/{slug}/suggest-fix', [LodgeCorrectionController::class, 'create'])->name('lodges.correction');
     Route::post('/lodges/{slug}/suggest-fix', [LodgeCorrectionController::class, 'store'])->middleware('throttle:6,1')->name('lodges.correction.store');
     Route::post('/lodges/{slug}/follow', [LodgeFollowController::class, 'store'])->middleware('throttle:60,1')->name('lodges.follow');

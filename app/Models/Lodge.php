@@ -37,6 +37,7 @@ class Lodge extends Model
         'description',
         'source_url',
         'last_verified_at',
+        'secretary_reminded_at',
     ];
 
     protected function casts(): array
@@ -44,6 +45,7 @@ class Lodge extends Model
         return [
             'claimed_at' => 'datetime',
             'last_verified_at' => 'datetime',
+            'secretary_reminded_at' => 'datetime',
         ];
     }
 
