@@ -184,10 +184,12 @@ class PublicSiteController extends Controller
         $id = $club->settings['not_found_page_id'] ?? null;
 
         $page = $id
-            ? Page::where('club_id', $club->id)->live()->where('is_members_only', false)->find($id)
+            ? Page::where('club_id', $club->id)->live()->where('is_members_only', false)->find((int) $id)
             : null;
 
-        abort_unless($page, 404);
+        if (! $page) {
+            abort(404);
+        }
 
         return $this->renderPage($club, $page, $viewer, 404);
     }

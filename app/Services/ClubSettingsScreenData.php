@@ -10,6 +10,7 @@ use App\Models\MasonicHall;
 use App\Models\Province;
 use App\Support\Currencies;
 use App\Support\MasonicRanks;
+use Illuminate\Support\Collection;
 
 /**
  * Everything the club settings screen is given: the club with its relations, the settings with their defaults, the
@@ -180,6 +181,7 @@ class ClubSettingsScreenData
 
         $userAccounts = $club->users->keyBy('id');
 
+        /** @var Collection<int, array<string, mixed>> $members */
         $members = $domainMembers->map(function ($m) use ($userAccounts) {
             $user = $m->user_id ? $userAccounts->get($m->user_id) : null;
 

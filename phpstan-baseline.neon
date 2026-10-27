@@ -355,18 +355,6 @@ parameters:
 			path: app/Http/Controllers/CharityAdminController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Event\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/ClubController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,App\\Models\\EventRegistration\>\:\:flatMap\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/ClubController.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -565,12 +553,6 @@ parameters:
 			path: app/Http/Controllers/MemberProfileController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Club\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/MemberSubscriptionsController.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>color" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -679,12 +661,6 @@ parameters:
 			path: app/Http/Controllers/PageAdminController.php
 
 		-
-			message: '#^Method App\\Http\\Controllers\\PageAdminController\:\:trashedPages\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, array\{id\: int, title\: string, deleted_at\: non\-falsy\-string\|null\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Http/Controllers/PageAdminController.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -693,12 +669,6 @@ parameters:
 		-
 			message: '#^Cannot call method format\(\) on string\.$#'
 			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/PageSiteSettingsController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\PageSiteSettingsController\:\:trashedPages\(\) should return Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> but returns Illuminate\\Support\\Collection\<int, array\{id\: int, title\: string, deleted_at\: non\-falsy\-string\|null\}\>\.$#'
-			identifier: return.type
 			count: 1
 			path: app/Http/Controllers/PageSiteSettingsController.php
 
@@ -728,12 +698,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$boolean of function abort_if expects bool, App\\Models\\User\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/PublicSiteController.php
-
-		-
-			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, App\\Models\\Page\|Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), App\\Models\\Page\>\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Http/Controllers/PublicSiteController.php
@@ -779,12 +743,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 2
 			path: app/Http/Controllers/SuperAdminController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\Lodge\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/SuperAdminLodgeController.php
 
 		-
 			message: '#^Left side of && is always true\.$#'
@@ -841,12 +799,6 @@ parameters:
 			path: app/Models/NewsTag.php
 
 		-
-			message: '#^Method App\\Models\\NewsTag\:\:browsableFor\(\) should return Illuminate\\Support\\Collection\<int, array\{name\: string, slug\: string, color\: string\|null, count\: int\}\> but returns Illuminate\\Support\\Collection\<int, array\{name\: mixed, slug\: mixed, color\: mixed, count\: int\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/NewsTag.php
-
-		-
 			message: '#^Method App\\Models\\SignatureRequest\:\:signable\(\) should return Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<App\\Contracts\\Signable&Illuminate\\Database\\Eloquent\\Model, \$this\(App\\Models\\SignatureRequest\)\> but returns Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, \$this\(App\\Models\\SignatureRequest\)\>\.$#'
 			identifier: return.type
 			count: 1
@@ -887,12 +839,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/AnnualTreasurerReportService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Club\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Services/ClubDirectoryService.php
 
 		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
@@ -997,12 +943,6 @@ parameters:
 			path: app/Services/Events/EventRegistrationService.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Accounting\\JournalEntry\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Services/LedgerScreenData.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -1049,12 +989,6 @@ parameters:
 			identifier: ternary.alwaysTrue
 			count: 1
 			path: app/Services/MemberInbox.php
-
-		-
-			message: '#^Method App\\Services\\Newsletters\\NewsletterAudience\:\:recipients\(\) should return Illuminate\\Support\\Collection\<int, array\{email\: string, name\: string\|null, user_id\: int\|null, subscription_id\: int\|null, visitor\: bool\}\> but returns Illuminate\\Support\\Collection\<int, array\{email\: mixed, name\: mixed, user_id\: mixed, subscription_id\: int\|null, visitor\: bool\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Services/Newsletters/NewsletterAudience.php
 
 		-
 			message: '#^Call to an undefined method Laravel\\Cashier\\Subscription\:\:paymentMethodUpdateUrl\(\)\.$#'

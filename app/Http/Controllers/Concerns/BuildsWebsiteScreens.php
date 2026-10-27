@@ -34,7 +34,7 @@ trait BuildsWebsiteScreens
     }
 
     /**
-     * @return Collection<int, array<string, mixed>>
+     * @return Collection<int, array{id: int, title: string, deleted_at: string|null}>
      */
     protected function trashedPages(Club $club)
     {
