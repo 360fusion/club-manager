@@ -63,8 +63,6 @@ A lodge saves its domain and adds the DNS record; once Check Now finds it ("Acti
 
 Still to do in the app (not built):
 
-- [ ] Emails (booking links, newsletters) still use `APP_URL`; they work, and forward to the domain if the lodge chose that.
-- [ ] `robots.txt` on a lodge domain is the main site's file from `public/` (Caddy serves it before PHP).
 - [ ] Set `CLUB_DOMAIN_TARGET` in each server's `.env` to the hostname lodges point their domain at (defaults to `manager.360fusionhosting.co.uk`).
 
 For now (Forge, a handful of lodges): add each Active lodge domain as an alias on the Forge site (Site → Domains) and issue a Let's Encrypt certificate that includes it (Site → SSL). No Caddy needed. One Let's Encrypt certificate covers all the aliases, so a lodge domain that stops pointing here can make the renewal fail for all of them; move to Caddy or Cloudflare for SaaS before there are many.

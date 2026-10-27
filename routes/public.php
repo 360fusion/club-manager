@@ -78,7 +78,7 @@ Route::any('/clubs/{legacySlug}/{path?}', LegacyClubUrlController::class)
 // Caddy asks this before issuing a certificate for a lodge's own domain (answers the server itself only).
 Route::get('/internal/domain-allowed', ClubDomainAllowedController::class)->name('internal.domain_allowed');
 
-// What search engines read (robots.txt is a file in public/): before /{slug} and the /site/{club} routes.
+// What search engines read (robots.txt is a file in public/, shared by every host): before /{slug} and the /site/{club} routes.
 Route::get('/sitemap.xml', [SearchIndexController::class, 'index'])->name('sitemap.index');
 
 // The public lodge directory. Before the /site/{club} and /{slug} routes, and "lodges" is a reserved club slug.
