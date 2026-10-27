@@ -75,6 +75,17 @@ class ClubCustomDomainTest extends TestCase
             ->assertRedirect('/history?ref=news');
     }
 
+    public function test_an_old_site_address_cannot_be_used_to_send_visitors_to_another_website(): void
+    {
+        foreach (['//evil.example', '///evil.example'] as $tail) {
+            $location = $this->get('http://'.self::DOMAIN.'/site/lodge-of-fraternity'.$tail)
+                ->assertStatus(301)
+                ->headers->get('Location');
+
+            $this->assertSame('/evil.example', $location, "the redirect for {$tail} must stay on the lodge's own domain");
+        }
+    }
+
     public function test_signing_in_on_a_lodge_domain_goes_to_the_main_address(): void
     {
         $this->get('http://'.self::DOMAIN.'/login')

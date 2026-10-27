@@ -55,8 +55,9 @@ class IdentifyTenantByDomain
         if ($path === $prefix || str_starts_with($path, $prefix.'/')) {
             // Links built for the main address still work here; a page visit lands on the clean address, while
             // forms keep posting to their /site/{club} route.
+            // Leading slashes are collapsed so "//other.example" cannot become a protocol-relative redirect off this domain.
             return $request->isMethodSafe()
-                ? new RedirectResponse((substr($path, strlen($prefix)) ?: '/').$query, 301)
+                ? new RedirectResponse('/'.ltrim(substr($path, strlen($prefix)), '/\\').$query, 301)
                 : $next($request);
         }
 
