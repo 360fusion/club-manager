@@ -108,6 +108,14 @@ class ClubAdminAuthorizationTest extends TestCase
         $this->actingAs($user)->get("/{$this->alpha->slug}/admin/accounting")->assertForbidden();
     }
 
+    public function test_the_secretary_may_manage_meetings(): void
+    {
+        // The screens call the coach role "Secretary" for a lodge.
+        $user = $this->makeClubAdmin(User::factory()->create(), $this->alpha, 'coach');
+
+        $this->actingAs($user)->get("/{$this->alpha->slug}/admin/meetings")->assertSuccessful();
+    }
+
     public function test_club_can_widen_a_capability_through_its_permission_matrix(): void
     {
         $user = $this->makeClubAdmin(User::factory()->create(), $this->alpha, 'coach');

@@ -22,7 +22,7 @@ return [
         'manage_meetings' => [
             'label' => 'Meetings & Summonses',
             'description' => 'Create, edit, generate recurring rules, and publish summonses for lodge/club meetings',
-            'roles' => ['owner', 'admin', 'secretary'],
+            'roles' => ['owner', 'admin', 'coach'],
         ],
         'manage_events' => [
             'label' => 'Events',

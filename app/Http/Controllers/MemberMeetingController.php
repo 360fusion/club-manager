@@ -49,7 +49,7 @@ class MemberMeetingController extends Controller
             ->with('guests')
             ->first() : null;
 
-        $secretaryUser = $club->users()->wherePivot('role', ClubRole::Secretary->value)->first() ?: $club->users->first();
+        $secretaryUser = $club->users()->wherePivot('role', ClubRole::Coach->value)->first() ?: $club->users->first();
         $worshipfulMaster = $club->users()->wherePivot('role', 'master')->first() ?: $club->users->first();
 
         $charityGrants = CharityGrant::where('club_id', $club->id)
