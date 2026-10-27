@@ -39,11 +39,17 @@ class LodgeDirectoryController extends Controller
         if (($place = trim((string) ($filters['near'] ?? ''))) !== '') {
             // Looked up only when the search is sent (never while typing), and at most 20 times a minute per visitor,
             // as OpenStreetMap's usage policy asks.
-            $result = RateLimiter::attempt('lodge-near:'.$request->ip(), 20, fn () => $geocoder->search($place, 1, MasonicHall::SEARCH_COUNTRIES));
-            $spot = is_array($result) ? ($result['results'][0] ?? null) : null;
+            $limiter = 'lodge-near:'.$request->ip();
+            $tooMany = RateLimiter::tooManyAttempts($limiter, 20);
+
+            if (! $tooMany) {
+                RateLimiter::hit($limiter);
+            }
+
+            $spot = $tooMany ? null : ($geocoder->search($place, 1, MasonicHall::SEARCH_COUNTRIES)['results'][0] ?? null);
 
             if ($spot === null) {
-                $near['error'] = $result === false ? 'Too many place searches. Try again in a minute.' : "We couldn't find that place. Try a postcode or a town.";
+                $near['error'] = $tooMany ? 'Too many place searches. Try again in a minute.' : "We couldn't find that place. Try a postcode or a town.";
             } else {
                 $near['place'] = $spot['name'];
                 $distances = MasonicHall::withinMiles($spot['lat'], $spot['lng'], (int) ($filters['within'] ?? 10));
