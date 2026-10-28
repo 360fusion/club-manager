@@ -4,6 +4,7 @@
 // the block says so); in the builder it shows straight away.
 import { computed, ref } from 'vue';
 import TileMap from '@/Components/Blocks/TileMap.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { hasCoordinates, osmLargerUrl, osmDirectionsUrl, MAP_HEIGHTS } from '@/Utils/osmMap';
 
 const props = defineProps({
@@ -49,7 +50,7 @@ const label = computed(() => props.block.location_name || props.block.address ||
                         :radius="radiusMd"
                     />
                     <div v-else class="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
-                        <span class="text-4xl" aria-hidden="true">📍</span>
+                        <UiIcon name="globe" :size="20" :class="theme.bodyText" />
                         <p :class="['text-sm max-w-xs', theme.bodyText]">The map is loaded from {{ block.map_style && block.map_style !== 'street' ? 'Esri' : 'OpenStreetMap' }} when you choose to show it.</p>
                         <button type="button" :class="['py-2.5 px-5 font-bold text-sm shadow-lg hover:scale-105 transition-transform cursor-pointer', radiusMd, theme.heroCta]" @click="loaded = true">Show the map</button>
                     </div>

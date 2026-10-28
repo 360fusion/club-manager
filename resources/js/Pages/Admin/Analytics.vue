@@ -154,20 +154,20 @@ defineProps({
 
             <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 font-medium pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
               <div class="flex items-center gap-3">
-                <span class="flex items-center gap-1">📅 {{ m.meeting_date }} at {{ m.starts_at }}</span>
-                <span v-if="m.venue" class="hidden sm:flex items-center gap-1 text-slate-400">📍 {{ m.venue }}</span>
+                <span class="flex items-center gap-1"><UiIcon name="calendar" /> {{ m.meeting_date }} at {{ m.starts_at }}</span>
+                <span v-if="m.venue" class="hidden sm:flex items-center gap-1 text-slate-400"><UiIcon name="building" /> {{ m.venue }}</span>
               </div>
               <div class="flex items-center gap-2 text-[11px] font-bold">
-                <span class="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60">🍽️ {{ m.dining_count }} Dining</span>
-                <span class="text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-lg border border-rose-200 dark:border-rose-800/60">✉️ {{ m.apologies_count }} Apologies</span>
+                <span class="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60">{{ m.dining_count }} dining</span>
+                <span class="text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-lg border border-rose-200 dark:border-rose-800/60">{{ m.apologies_count }} apologies</span>
               </div>
             </div>
           </div>
         </div>
 
         <div v-else class="p-8 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
-          <div class="text-2xl">📜</div>
-          <div class="font-bold text-slate-700 dark:text-slate-200 text-sm">No Upcoming Meetings Scheduled</div>
+          <div class="flex justify-center text-slate-400"><UiIcon name="document" :size="20" /></div>
+          <div class="font-semibold text-slate-700 dark:text-slate-200 text-sm">No upcoming meetings scheduled</div>
           <p class="text-slate-400 max-w-xs mx-auto">Generate season schedules or create individual summonses for your club.</p>
           <Link :href="route('admin.meetings.create', { clubSlug: club.slug })" class="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition-all">
             <UiIcon name="plus" class="inline-block align-text-bottom" /> Add meeting

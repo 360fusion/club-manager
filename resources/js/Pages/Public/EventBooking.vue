@@ -3,6 +3,10 @@ import { computed, ref } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import PaymentSummary from '@/Components/Events/PaymentSummary.vue';
 import SiteShell from '@/Components/Site/SiteShell.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   club: Object,
@@ -51,23 +55,23 @@ const cancelBooking = () => {
       </div>
 
       <template v-else>
-        <div v-if="flash" class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-800 dark:text-emerald-200" role="status">{{ flash }}</div>
-        <div v-if="returned === 'success'" class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-800 dark:text-emerald-200" role="status">Thank you. Your payment is being confirmed and will show here in a moment. Refresh if it hasn't yet.</div>
-        <div v-else-if="returned === 'cancelled'" class="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200" role="status">Payment cancelled. You have not been charged, and you can pay any time from this page.</div>
-        <div v-if="error" class="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-700 dark:text-rose-300" role="alert">{{ error }}</div>
+        <Alert v-if="flash" variant="success">{{ flash }}</Alert>
+        <Alert v-if="returned === 'success'" variant="success">Thank you. Your payment is being confirmed and will show here in a moment. Refresh if it hasn't yet.</Alert>
+        <Alert v-else-if="returned === 'cancelled'" variant="warning">Payment cancelled. You have not been charged, and you can pay any time from this page.</Alert>
+        <Alert v-if="error" variant="danger" role="alert">{{ error }}</Alert>
 
         <div :class="['border p-6 space-y-4', theme.radiusLg || 'rounded-2xl', theme.cardBg]">
           <div>
             <p :class="['text-xs font-bold uppercase tracking-wider', theme.accentText]">Your booking</p>
             <h1 :class="['mt-1 text-2xl sm:text-3xl font-black', theme.headingText]">{{ event.title }}</h1>
-            <span v-if="cancelled" class="mt-2 inline-block rounded bg-rose-500/20 px-2 py-0.5 text-xs font-bold text-rose-700 dark:text-rose-300">Cancelled</span>
-            <span v-else-if="waiting" class="mt-2 inline-block rounded bg-[var(--cm-accent)]/15 px-2 py-0.5 text-xs font-bold">On the waiting list</span>
-            <span v-else class="mt-2 inline-block rounded bg-emerald-500/20 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">Confirmed</span>
+            <Badge v-if="cancelled" variant="danger" class="mt-2">Cancelled</Badge>
+            <Badge v-else-if="waiting" variant="warning" class="mt-2">On the waiting list</Badge>
+            <Badge v-else variant="success" class="mt-2">Confirmed</Badge>
           </div>
 
           <div :class="['space-y-1 text-sm', theme.bodyText]">
-            <div>📅 {{ event.starts_at }}</div>
-            <div v-if="event.location">📍 {{ event.location }}</div>
+            <div class="flex items-start gap-2"><UiIcon name="calendar" class="mt-0.5 opacity-70" /><span>{{ event.starts_at }}</span></div>
+            <div v-if="event.location" class="flex items-start gap-2"><UiIcon name="building" class="mt-0.5 opacity-70" /><span>{{ event.location }}</span></div>
             <div>Booked by {{ contactName }}</div>
           </div>
 
@@ -87,7 +91,7 @@ const cancelBooking = () => {
 
           <p v-if="event.cancellation_policy" class="border-t border-current/10 pt-4 text-xs opacity-70">{{ event.cancellation_policy }}</p>
 
-          <button v-if="!cancelled" type="button" class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-xs font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-500/20" @click="cancelBooking">Cancel my booking</button>
+          <Button v-if="!cancelled" variant="danger" size="sm" @click="cancelBooking">Cancel my booking</Button>
         </div>
       </template>
     </div>

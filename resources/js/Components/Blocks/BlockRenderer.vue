@@ -4,6 +4,7 @@
 import { ref, computed } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import ObfuscatedEmail from '@/Components/ObfuscatedEmail.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { parseYouTubeUrl, youtubeEmbedUrl, youtubeThumbnail } from '@/Utils/youtube';
 import CtaBannerBlock from '@/Components/Blocks/CtaBannerBlock.vue';
 import FaqBlock from '@/Components/Blocks/FaqBlock.vue';
@@ -283,7 +284,7 @@ const submitContactForm = (block) => {
                     block.style === 'important' ? 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-200' :
                     block.style === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-200' :
                     'bg-[var(--cm-accent)]/10 border-[var(--cm-accent)]/30 text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)]']">
-                    <h4 v-if="block.title" class="font-extrabold text-base flex items-center gap-2"><span>📢</span> {{ block.title }}</h4>
+                    <h4 v-if="block.title" class="font-extrabold text-base flex items-center gap-2"><UiIcon :name="block.style === 'success' ? 'check' : (block.style === 'warning' || block.style === 'important') ? 'warning' : 'info'" /> {{ block.title }}</h4>
                     <p class="text-sm font-medium leading-relaxed">{{ block.text }}</p>
                 </div>
             </section>
@@ -292,7 +293,7 @@ const submitContactForm = (block) => {
             <section v-else-if="block.type === 'button' && (block.url || !interactive)" class="max-w-4xl mx-auto">
                 <div :class="['flex', block.align === 'left' ? 'justify-start' : block.align === 'right' ? 'justify-end' : 'justify-center']">
                     <component :is="interactive ? 'a' : 'span'" :href="interactive ? resolveUrl(block.url) : undefined" :class="['py-3 px-6 font-bold text-sm shadow-lg hover:scale-105 transition-all', radiusMd, theme.heroCta]">
-                        {{ block.label || 'Learn More →' }}
+                        {{ block.label || 'Learn more →' }}
                     </component>
                 </div>
             </section>
@@ -378,7 +379,7 @@ const submitContactForm = (block) => {
 
             <!-- 7. Membership pricing -->
             <section v-else-if="block.type === 'pricing_cards'" class="max-w-6xl mx-auto space-y-6">
-                <h2 :class="['text-2xl sm:text-3xl font-extrabold text-center', theme.headingText]">{{ block.heading || 'Membership Options & Dues' }}</h2>
+                <h2 :class="['text-2xl sm:text-3xl font-extrabold text-center', theme.headingText]">{{ block.heading || 'Membership options & dues' }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div v-for="plan in membershipPlans" :key="plan.id" :class="['p-6 space-y-4 flex flex-col justify-between', radiusLg, theme.cardBg]">
                         <div>
@@ -403,12 +404,12 @@ const submitContactForm = (block) => {
                 <div v-for="d in donations" :key="d.id" :class="['p-8 sm:p-10 space-y-6', radiusLg, theme.heroBg]">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[var(--cm-accent)]/10 text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] border border-[var(--cm-accent)]/20 uppercase tracking-wider">🎁 Active Fundraising Campaign</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[var(--cm-accent)]/10 text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] border border-[var(--cm-accent)]/20 uppercase tracking-wider inline-flex items-center gap-1.5"><UiIcon name="gift" /> Active fundraising campaign</span>
                             <h2 class="text-2xl sm:text-3xl font-black mt-2">{{ d.campaign_name }}</h2>
                             <p class="text-sm mt-1 max-w-2xl opacity-90">{{ d.description }}</p>
                         </div>
                         <button type="button" :disabled="!interactive" @click="openDonation(d)" class="py-3.5 px-6 rounded-2xl bg-[var(--cm-accent)] hover:brightness-110 text-[var(--cm-on-accent)] font-bold text-sm shadow-xl shadow-[var(--cm-accent)]/20 hover:scale-105 transition-transform disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed">
-                            💖 Make a Contribution
+                            Make a contribution
                         </button>
                     </div>
                     <div class="space-y-2">
@@ -487,11 +488,11 @@ const submitContactForm = (block) => {
 
             <!-- 10. Upcoming events -->
             <section v-else-if="block.type === 'events_calendar'" class="space-y-6">
-                <h2 :class="['text-2xl font-bold', theme.headingText]">{{ block.heading || 'Upcoming Events & Formal Dinners' }}</h2>
+                <h2 :class="['text-2xl font-bold', theme.headingText]">{{ block.heading || 'Upcoming events & formal dinners' }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div v-for="e in upcomingEvents" :key="e.id" :class="['p-6 space-y-4', radiusMd, theme.cardBg]">
                         <h3 :class="['text-lg font-bold', theme.headingText]">{{ e.title }}</h3>
-                        <p :class="['text-xs', theme.bodyText]">📍 {{ e.location }} • 🕒 {{ e.starts_at }}</p>
+                        <p :class="['text-xs flex flex-wrap items-center gap-x-3 gap-y-1', theme.bodyText]"><span class="inline-flex items-center gap-1.5"><UiIcon name="building" />{{ e.location }}</span><span class="inline-flex items-center gap-1.5"><UiIcon name="clock" />{{ e.starts_at }}</span></p>
                         <Link v-if="interactive" :href="`/site/${club.slug}/events/${e.slug}`" :class="['block w-full py-2.5 px-4 bg-black/10 dark:bg-white/10 text-center font-bold text-xs', radiusMd]">Event details & booking →</Link>
                     </div>
                 </div>
@@ -501,18 +502,18 @@ const submitContactForm = (block) => {
             <section v-else-if="block.type === 'contact_details'" class="py-8 space-y-10 text-center">
                 <div class="max-w-3xl mx-auto space-y-3">
                     <span v-if="block.eyebrow" class="text-xs font-bold text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] uppercase tracking-widest block">{{ block.eyebrow }}</span>
-                    <h2 :class="['text-3xl sm:text-5xl font-extrabold tracking-tight', theme.headingText]">{{ block.title || 'Get in Touch' }}</h2>
+                    <h2 :class="['text-3xl sm:text-5xl font-extrabold tracking-tight', theme.headingText]">{{ block.title || 'Get in touch' }}</h2>
                     <div class="w-12 h-1 bg-[var(--cm-accent)] mx-auto my-4 rounded-full"></div>
                     <p v-if="block.description" :class="['text-sm sm:text-base leading-relaxed max-w-2xl mx-auto', theme.bodyText]">{{ block.description }}</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                     <div v-for="card in [
-                        { icon: '✉️', heading: block.email_heading || 'Email', value: block.email || club.contact_email, kind: 'email' },
-                        { icon: '📅', heading: block.times_heading || 'Meeting Times', value: block.times || club.meeting_formula, kind: 'text' },
-                        { icon: '📍', heading: block.location_heading || 'Location', value: block.location || club.address, kind: 'text' },
+                        { icon: 'mail', heading: block.email_heading || 'Email', value: block.email || club.contact_email, kind: 'email' },
+                        { icon: 'calendar', heading: block.times_heading || 'Meeting times', value: block.times || club.meeting_formula, kind: 'text' },
+                        { icon: 'building', heading: block.location_heading || 'Location', value: block.location || club.address, kind: 'text' },
                     ]" :key="card.heading" :class="['p-8 text-center space-y-4 transition-all', radiusMd, theme.cardBg]">
-                        <div class="w-14 h-14 rounded-full bg-[var(--cm-accent)]/10 border border-[var(--cm-accent)]/30 text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] flex items-center justify-center mx-auto text-xl">{{ card.icon }}</div>
+                        <div class="w-14 h-14 rounded-full bg-[var(--cm-accent)]/10 border border-[var(--cm-accent)]/30 text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] flex items-center justify-center mx-auto text-xl"><UiIcon :name="card.icon" :size="20" /></div>
                         <h3 :class="['font-bold text-lg', theme.headingText]">{{ card.heading }}</h3>
                         <ObfuscatedEmail v-if="card.kind === 'email' && card.value" :email="card.value" custom-class="text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)] hover:underline font-semibold text-sm sm:text-base break-all cursor-pointer transition-colors" />
                         <p v-else-if="card.value" :class="['text-sm whitespace-pre-line leading-relaxed', theme.bodyText]">{{ card.value }}</p>
@@ -524,30 +525,30 @@ const submitContactForm = (block) => {
             <!-- 12. Contact form -->
             <section v-else-if="block.type === 'contact_form'" class="py-8 space-y-8 max-w-3xl mx-auto">
                 <div class="text-center space-y-3">
-                    <h2 :class="['text-3xl sm:text-5xl font-extrabold tracking-tight', theme.headingText]">{{ block.heading || 'Send Us a Message' }}</h2>
+                    <h2 :class="['text-3xl sm:text-5xl font-extrabold tracking-tight', theme.headingText]">{{ block.heading || 'Send us a message' }}</h2>
                     <div class="w-12 h-1 bg-[var(--cm-accent)] mx-auto my-2 rounded-full"></div>
                     <p v-if="block.subtitle" :class="['text-sm sm:text-base leading-relaxed max-w-xl mx-auto', theme.bodyText]">{{ block.subtitle }}</p>
                 </div>
 
                 <div v-if="interactive && contactSuccessMap[block.id]" :class="['p-4 sm:p-5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-sm font-semibold flex items-center gap-3', radiusMd]">
-                    <span class="text-xl">✅</span><span>{{ contactSuccessMap[block.id] }}</span>
+                    <UiIcon name="check" :size="20" /><span>{{ contactSuccessMap[block.id] }}</span>
                 </div>
 
                 <form @submit.prevent="submitContactForm(block)" :class="['p-6 sm:p-10 shadow-2xl space-y-6 text-sm', radiusLg, theme.cardBg]">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label :for="`contact-name-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Your Name <span v-if="block.name_required" class="text-rose-500">*</span></label>
+                            <label :for="`contact-name-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Your name <span v-if="block.name_required" class="text-rose-500">*</span></label>
                             <input :id="`contact-name-${block.id}`" v-model="contactForm.name" type="text" :disabled="!interactive" :required="interactive && block.name_required !== false" placeholder="e.g. John Doe" :class="['w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 p-3.5 focus:border-[var(--cm-accent)] focus:ring-1 focus:ring-[var(--cm-accent)] transition-colors disabled:opacity-70 disabled:cursor-not-allowed', radiusMd]" />
                             <span v-if="contactForm.errors.name" class="text-xs text-rose-500 mt-1 block" role="alert">{{ contactForm.errors.name }}</span>
                         </div>
                         <div>
-                            <label :for="`contact-email-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Email Address <span v-if="block.email_required !== false" class="text-rose-500">*</span></label>
+                            <label :for="`contact-email-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Email address <span v-if="block.email_required !== false" class="text-rose-500">*</span></label>
                             <input :id="`contact-email-${block.id}`" v-model="contactForm.email" type="email" :disabled="!interactive" :required="interactive && block.email_required !== false" placeholder="e.g. john@example.org" :class="['w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 p-3.5 focus:border-[var(--cm-accent)] focus:ring-1 focus:ring-[var(--cm-accent)] transition-colors disabled:opacity-70 disabled:cursor-not-allowed', radiusMd]" />
                             <span v-if="contactForm.errors.email" class="text-xs text-rose-500 mt-1 block" role="alert">{{ contactForm.errors.email }}</span>
                         </div>
                     </div>
                     <div>
-                        <label :for="`contact-phone-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Phone Number <span v-if="block.phone_required" class="text-rose-500">*</span></label>
+                        <label :for="`contact-phone-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Phone number <span v-if="block.phone_required" class="text-rose-500">*</span></label>
                         <input :id="`contact-phone-${block.id}`" v-model="contactForm.phone" type="tel" :disabled="!interactive" :required="interactive && !!block.phone_required" placeholder="e.g. +44 7123 456789" :class="['w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 p-3.5 focus:border-[var(--cm-accent)] focus:ring-1 focus:ring-[var(--cm-accent)] transition-colors disabled:opacity-70 disabled:cursor-not-allowed', radiusMd]" />
                         <span v-if="contactForm.errors.phone" class="text-xs text-rose-500 mt-1 block" role="alert">{{ contactForm.errors.phone }}</span>
                     </div>
@@ -557,9 +558,9 @@ const submitContactForm = (block) => {
                         <span v-if="contactForm.errors.message" class="text-xs text-rose-500 mt-1 block" role="alert">{{ contactForm.errors.message }}</span>
                     </div>
                     <button type="submit" :disabled="!interactive || contactForm.processing" :class="['w-full py-4 font-black text-sm uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed', radiusMd, theme.heroCta]">
-                        <span>{{ contactForm.processing ? 'Sending Message...' : (block.button_text || 'Send Message') }}</span><span>→</span>
+                        <span>{{ contactForm.processing ? 'Sending message...' : (block.button_text || 'Send message') }}</span><span>→</span>
                     </button>
-                    <p v-if="!interactive" class="text-[11px] text-center opacity-70">🔒 Submissions will route to: <strong>{{ block.recipient_email || club.contact_email || club.email || 'not set yet' }}</strong><span v-if="block.cc_emails"> (CC: {{ block.cc_emails }})</span></p>
+                    <p v-if="!interactive" class="text-[11px] text-center opacity-70">Submissions will route to: <strong>{{ block.recipient_email || club.contact_email || club.email || 'not set yet' }}</strong><span v-if="block.cc_emails"> (CC: {{ block.cc_emails }})</span></p>
                 </form>
             </section>
         </div>
@@ -580,25 +581,25 @@ const submitContactForm = (block) => {
             >
                 <div class="flex items-start justify-between border-b border-neutral-200 dark:border-neutral-800 pb-4">
                     <div>
-                        <h3 id="donation-modal-title" class="text-xl font-bold text-neutral-900 dark:text-white">Make a Donation</h3>
+                        <h3 id="donation-modal-title" class="text-xl font-bold text-neutral-900 dark:text-white">Make a donation</h3>
                         <p class="text-xs text-[var(--cm-accent-deep)] dark:text-[var(--cm-accent-bright)]">{{ activeDonation?.campaign_name }}</p>
                     </div>
-                    <button type="button" @click="showDonationModal = false" class="text-neutral-400 hover:text-neutral-700 dark:hover:text-white font-bold" aria-label="Close">✕</button>
+                    <button type="button" @click="showDonationModal = false" class="text-neutral-400 hover:text-neutral-700 dark:hover:text-white font-bold" aria-label="Close"><UiIcon name="x" /></button>
                 </div>
                 <form @submit.prevent="submitDonation" class="space-y-4 text-sm">
                     <div>
-                        <label for="donation-donor-name" class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Your Full Name</label>
+                        <label for="donation-donor-name" class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Your full name</label>
                         <input id="donation-donor-name" v-model="donationForm.donor_name" type="text" required placeholder="e.g. Jane Smith" class="w-full bg-neutral-50 dark:bg-[var(--cm-night-soft)] border border-neutral-200 dark:border-neutral-700 rounded-xl p-3 text-neutral-900 dark:text-white" />
                     </div>
                     <div>
-                        <label for="donation-donor-email" class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Email Address</label>
+                        <label for="donation-donor-email" class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Email address</label>
                         <input id="donation-donor-email" v-model="donationForm.donor_email" type="email" required placeholder="e.g. jane@example.com" class="w-full bg-neutral-50 dark:bg-[var(--cm-night-soft)] border border-neutral-200 dark:border-neutral-700 rounded-xl p-3 text-neutral-900 dark:text-white" />
                     </div>
                     <div>
-                        <label for="donation-amount" class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Donation Amount ({{ $cs }})</label>
+                        <label for="donation-amount" class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Donation amount ({{ $cs }})</label>
                         <input id="donation-amount" v-model="donationForm.amount" type="number" min="1" required class="w-full bg-neutral-50 dark:bg-[var(--cm-night-soft)] border border-neutral-200 dark:border-neutral-700 rounded-xl p-3 text-neutral-900 dark:text-white font-bold text-lg" />
                     </div>
-                    <button type="submit" :disabled="donationForm.processing" class="w-full py-3.5 rounded-xl bg-[var(--cm-accent)] hover:brightness-110 text-[var(--cm-on-accent)] font-bold text-sm shadow-lg shadow-[var(--cm-accent)]/20 disabled:opacity-60">Confirm & Process Donation</button>
+                    <button type="submit" :disabled="donationForm.processing" class="w-full py-3.5 rounded-xl bg-[var(--cm-accent)] hover:brightness-110 text-[var(--cm-on-accent)] font-bold text-sm shadow-lg shadow-[var(--cm-accent)]/20 disabled:opacity-60">Confirm & process donation</button>
                 </form>
             </div>
         </div>

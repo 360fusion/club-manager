@@ -3,6 +3,7 @@ import { formatBytes } from '@/Utils/fileSize';
 // Downloads: a list or cards of documents. Uploaded files are served by the site's own gated route, so a
 // members-only block never exposes a file address; link items open wherever they point.
 import { computed, ref } from 'vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     block: { type: Object, required: true },
@@ -16,8 +17,8 @@ const props = defineProps({
 const query = ref('');
 
 const TYPES = {
-    pdf: ['PDF', '📄'], doc: ['DOC', '📝'], docx: ['DOC', '📝'], rtf: ['DOC', '📝'], txt: ['TXT', '📝'],
-    xls: ['XLS', '📊'], xlsx: ['XLS', '📊'], csv: ['CSV', '📊'], ppt: ['PPT', '📽️'], pptx: ['PPT', '📽️'], zip: ['ZIP', '🗜️'],
+    pdf: ['PDF', 'document'], doc: ['DOC', 'document'], docx: ['DOC', 'document'], rtf: ['DOC', 'document'], txt: ['TXT', 'document'],
+    xls: ['XLS', 'chart'], xlsx: ['XLS', 'chart'], csv: ['CSV', 'chart'], ppt: ['PPT', 'document'], pptx: ['PPT', 'document'], zip: ['ZIP', 'archive'],
 };
 
 const extension = (item) => {
@@ -25,7 +26,7 @@ const extension = (item) => {
     const match = String(name || '').toLowerCase().match(/\.([a-z0-9]{2,5})$/);
     return match ? match[1] : '';
 };
-const kind = (item) => TYPES[extension(item)] || (item.source === 'link' ? ['LINK', '🔗'] : ['FILE', '📎']);
+const kind = (item) => TYPES[extension(item)] || (item.source === 'link' ? ['LINK', 'link'] : ['FILE', 'document']);
 const titleOf = (item) => item.title || item.file_name || 'Untitled document';
 const href = (item) => (item.source === 'upload' ? `/site/${props.club.slug}/files/${item.media_id}` : props.resolveUrl(item.url));
 const dateOf = (item) => (item.added_at ? new Date(`${item.added_at}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
@@ -62,7 +63,7 @@ const buttonLabel = computed(() => props.block.button_label || 'Download');
         </div>
 
         <div v-if="block.locked" :class="['p-6 border flex items-center gap-4', radiusMd, theme.cardBg]">
-            <span class="text-3xl" aria-hidden="true">🔒</span>
+            <UiIcon name="lock" :size="20" />
             <div class="space-y-1">
                 <p :class="['font-bold', theme.headingText]">These documents are for members.</p>
                 <p :class="['text-sm', theme.bodyText]"><a href="/login" class="underline font-semibold">Log in</a> to view them.</p>
@@ -79,7 +80,7 @@ const buttonLabel = computed(() => props.block.button_label || 'Download');
                 <div :class="cards ? 'grid gap-4 sm:grid-cols-2' : 'space-y-3'">
                     <div v-for="item in group.list" :key="item.id" :class="['p-4 border flex gap-4', cards ? 'flex-col' : 'flex-col sm:flex-row sm:items-center', radiusMd, theme.cardBg]">
                         <div class="flex items-start gap-3 flex-1 min-w-0">
-                            <span class="text-2xl leading-none" aria-hidden="true">{{ kind(item)[1] }}</span>
+                            <UiIcon :name="kind(item)[1]" :size="20" class="mt-0.5" />
                             <div class="min-w-0 space-y-1">
                                 <p :class="['font-bold break-words', theme.headingText]">{{ titleOf(item) }}</p>
                                 <p v-if="item.description" :class="['text-sm whitespace-pre-line', theme.bodyText]">{{ item.description }}</p>

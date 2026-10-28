@@ -7,6 +7,7 @@ import PublicFooter from '@/Components/Site/PublicFooter.vue';
 import AnnouncementBar from '@/Components/Site/AnnouncementBar.vue';
 import CookieNotice from '@/Components/Site/CookieNotice.vue';
 import LatestNewsSidebar from '@/Components/Site/LatestNewsSidebar.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { themeClasses, withSiteStyle, DEFAULT_THEME_KEY } from '@/Support/siteThemes';
 
 const props = defineProps({
@@ -65,18 +66,18 @@ const getSiteUrl = (urlPath) => {
 
         <!-- Theme Preview Top Bar -->
         <div v-if="previewTheme" class="bg-amber-400 text-amber-950 px-4 py-2.5 text-center text-xs font-bold sticky top-0 z-[100] flex items-center justify-center gap-3 shadow-md border-b border-amber-500/30">
-            <span>👁️ Theme Preview Mode: <strong>{{ currentThemeKey }}</strong></span>
+            <span class="inline-flex items-center gap-1.5"><UiIcon name="eye" />Theme preview mode: <strong>{{ currentThemeKey }}</strong></span>
             <span class="text-[11px] opacity-80">(This theme is currently being previewed and is not applied live to visitors.)</span>
-            <Link :href="`/${club.slug}/admin/pages`" class="ml-2 px-2.5 py-1 rounded bg-amber-950 text-white font-bold hover:bg-black transition-colors text-[11px]">
-                ⚙️ Back to Website Builder
+            <Link :href="`/${club.slug}/admin/pages`" class="ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-950 text-white font-medium hover:bg-amber-900 transition-colors text-[11px]">
+                <UiIcon name="arrow-left" />Back to website builder
             </Link>
         </div>
 
         <AnnouncementBar :announcement="site.announcement" :club-slug="club.slug" />
 
         <!-- Draft preview of a page that may not be live yet -->
-        <div v-if="preview" class="bg-violet-600 text-white px-4 py-2.5 text-center text-xs font-bold sticky top-0 z-[100] shadow-md">
-            🔒 Draft preview<span v-if="preview.has_draft"> of the unpublished draft</span>. <span v-if="!preview.is_live" class="opacity-90">This page is not live, so only people with this link can see it.</span><span v-else class="opacity-90">Visitors see the live page.</span>
+        <div v-if="preview" class="bg-[var(--cm-accent-deep)] text-white px-4 py-2.5 text-center text-xs font-bold sticky top-0 z-[100] shadow-md">
+            <UiIcon name="lock" class="inline-block align-[-3px] mr-1" />Draft preview<span v-if="preview.has_draft"> of the unpublished draft</span>. <span v-if="!preview.is_live" class="opacity-90">This page is not live, so only people with this link can see it.</span><span v-else class="opacity-90">Visitors see the live page.</span>
         </div>
 
         <!-- Public Website Header / Nav (a page can show only the logo, or no header at all) -->

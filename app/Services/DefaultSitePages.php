@@ -70,7 +70,7 @@ class DefaultSitePages
                     ],
                     [
                         'type' => 'events_calendar',
-                        'heading' => 'Upcoming Events & Meetings',
+                        'heading' => 'Upcoming events and meetings',
                     ],
                 ],
             ],
@@ -109,7 +109,7 @@ class DefaultSitePages
                     ],
                     [
                         'type' => 'pricing_cards',
-                        'heading' => 'Membership Options & Dues',
+                        'heading' => 'Membership options and dues',
                     ],
                     [
                         'type' => 'rich_text',
@@ -153,12 +153,12 @@ class DefaultSitePages
                     [
                         'type' => 'contact_details',
                         'eyebrow' => 'CONTACT',
-                        'title' => 'Get in Touch',
+                        'title' => 'Get in touch',
                         'description' => 'Whether you\'re interested in joining '.$club->name.', a visiting member, or simply want to learn more, we\'d be delighted to hear from you.',
                     ],
                     [
                         'type' => 'contact_form',
-                        'heading' => 'Send Us a Message',
+                        'heading' => 'Send us a message',
                         'subtitle' => 'Have questions or need assistance? Fill out the form below.',
                         'recipient_email' => $club->settings['contact_email'] ?? $club->email,
                         'cc_emails' => '',

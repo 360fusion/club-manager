@@ -1,5 +1,9 @@
 <script setup>
 import { useForm, Head } from '@inertiajs/vue3';
+import Alert from '@/Components/Ui/Alert.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   email: String,
@@ -21,18 +25,19 @@ const submit = () => {
 </script>
 
 <template>
-  <Head title="Reset Password" />
+  <Head title="Reset password" />
 
-  <div class="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 text-slate-100 font-sans">
-    <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl shadow-blue-950/40 space-y-6">
-      
+  <!-- The card is always dark, so the kit components take their dark look inside it. -->
+  <div class="dark min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 text-slate-100 font-sans">
+    <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl shadow-blue-950/40 space-y-6">
+
       <!-- Header -->
       <div class="text-center space-y-2">
-        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-2xl mb-2">
-          🔒
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-2">
+          <UiIcon name="lock" :size="20" />
         </div>
-        <h1 class="text-2xl font-black bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-          Set New Password
+        <h1 class="text-2xl font-semibold text-white">
+          Set a new password
         </h1>
         <p class="text-xs text-slate-400">
           Enter your email and choose a strong new password for your account.
@@ -40,58 +45,39 @@ const submit = () => {
       </div>
 
       <!-- Errors -->
-      <div v-if="Object.keys(form.errors).length" class="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs space-y-1">
+      <Alert v-if="Object.keys(form.errors).length" variant="danger">
         <div v-for="(error, key) in form.errors" :key="key">{{ error }}</div>
-      </div>
+      </Alert>
 
       <!-- Form -->
       <form @submit.prevent="submit" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-            Email Address
-          </label>
-          <input
-            v-model="form.email"
-            type="email"
-            required
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-          />
-        </div>
+        <Input
+          v-model="form.email"
+          label="Email address"
+          type="email"
+          required
+        />
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-            New Password
-          </label>
-          <input
-            v-model="form.password"
-            type="password"
-            required
-            autofocus
-            placeholder="••••••••"
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-          />
-        </div>
+        <Input
+          v-model="form.password"
+          label="New password"
+          type="password"
+          required
+          autofocus
+          placeholder="••••••••"
+        />
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-            Confirm New Password
-          </label>
-          <input
-            v-model="form.password_confirmation"
-            type="password"
-            required
-            placeholder="••••••••"
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-          />
-        </div>
+        <Input
+          v-model="form.password_confirmation"
+          label="Confirm new password"
+          type="password"
+          required
+          placeholder="••••••••"
+        />
 
-        <button
-          type="submit"
-          :disabled="form.processing"
-          class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 mt-2"
-        >
-          {{ form.processing ? 'Resetting...' : 'Reset password & login' }}
-        </button>
+        <Button type="submit" size="lg" block :loading="form.processing" class="mt-2">
+          {{ form.processing ? 'Resetting...' : 'Reset password and log in' }}
+        </Button>
       </form>
     </div>
   </div>

@@ -202,8 +202,7 @@
                 <div class="badge-rule">UGLE Rule 153, 158 & 159 Compliant Agenda Pack</div>
             </td>
             <td style="width: 25%; text-align: right; vertical-align: middle;">
-                <div style="font-size: 28pt;">🏛️</div>
-                <div style="font-size: 8pt; color: #64748b; font-weight: bold; margin-top: 4px;">
+                <div style="font-size: 8pt; color: #64748b; font-weight: bold;">
                     PACK REF: COM-{{ str_pad($meeting->id, 4, '0', STR_PAD_LEFT) }}
                 </div>
             </td>

@@ -3,6 +3,7 @@
 // an admin can scan a whole page quickly. Nothing here is editable and nothing is written back to `block`.
 import { computed } from 'vue';
 import TileMap from '@/Components/Blocks/TileMap.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { hasCoordinates } from '@/Utils/osmMap';
 import { parseYouTubeUrl, youtubeThumbnail } from '@/Utils/youtube';
 
@@ -113,7 +114,7 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
                 <span v-if="block.members_only" class="ml-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-[10px] uppercase">Members only</span>
             </p>
             <ul v-if="items.length" :class="BODY">
-                <li v-for="item in items.slice(0, LIST_PREVIEW)" :key="item.id" class="truncate">📄 {{ item.title || item.file_name || item.url || 'Untitled' }}</li>
+                <li v-for="item in items.slice(0, LIST_PREVIEW)" :key="item.id" class="truncate">{{ item.title || item.file_name || item.url || 'Untitled' }}</li>
             </ul>
             <p v-else :class="[MUTED, EMPTY]">No files yet.</p>
             <p v-if="items.length > LIST_PREVIEW" :class="MUTED">+{{ items.length - LIST_PREVIEW }} more</p>
@@ -123,7 +124,7 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
         <div v-else-if="type === 'faq'" class="space-y-1">
             <p :class="HEADING">{{ block.heading || 'FAQ' }}</p>
             <ul v-if="filled(items, 'question').length" :class="BODY">
-                <li v-for="item in filled(items, 'question').slice(0, LIST_PREVIEW)" :key="item.id" class="truncate">❓ {{ item.question }}</li>
+                <li v-for="item in filled(items, 'question').slice(0, LIST_PREVIEW)" :key="item.id" class="truncate">{{ item.question }}</li>
             </ul>
             <p v-else :class="[MUTED, EMPTY]">No questions yet.</p>
             <p v-if="filled(items, 'question').length > LIST_PREVIEW" :class="MUTED">+{{ filled(items, 'question').length - LIST_PREVIEW }} more</p>
@@ -218,7 +219,7 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
 
         <!-- Events calendar -->
         <div v-else-if="type === 'calendar'" class="space-y-0.5">
-            <p :class="HEADING">🗓️ {{ block.heading || 'Events calendar' }}</p>
+            <p :class="HEADING">{{ block.heading || 'Events calendar' }}</p>
             <p :class="MUTED">{{ block.default_view === 'list' ? `List of the next ${block.list_length || 10} events` : 'Month grid' }}</p>
         </div>
 
@@ -232,16 +233,16 @@ const THUMB = 'rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border bor
         <!-- Dynamic feeds -->
         <div v-else-if="dynamicNote" class="space-y-0.5">
             <p :class="HEADING">{{ block.heading || 'Section' }}</p>
-            <p :class="MUTED">⚡ {{ dynamicNote }}</p>
+            <p :class="MUTED">{{ dynamicNote }}</p>
         </div>
 
         <!-- Contact details -->
         <div v-else-if="type === 'contact_details'" class="space-y-1">
             <p v-if="block.eyebrow" :class="[MUTED, 'uppercase tracking-wider font-bold']">{{ block.eyebrow }}</p>
             <p :class="HEADING">{{ block.title || 'Contact details' }}</p>
-            <p v-if="block.email" :class="BODY">✉️ {{ block.email }}</p>
-            <p v-if="block.times" :class="[BODY, 'line-clamp-2']">🕖 {{ block.times }}</p>
-            <p v-if="block.location" :class="[BODY, 'line-clamp-2']">📍 {{ block.location }}</p>
+            <p v-if="block.email" :class="BODY"><UiIcon name="mail" class="inline align-text-bottom mr-1" />{{ block.email }}</p>
+            <p v-if="block.times" :class="[BODY, 'line-clamp-2']"><UiIcon name="clock" class="inline align-text-bottom mr-1" />{{ block.times }}</p>
+            <p v-if="block.location" :class="[BODY, 'line-clamp-2']"><UiIcon name="building" class="inline align-text-bottom mr-1" />{{ block.location }}</p>
         </div>
 
         <!-- Contact form -->

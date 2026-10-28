@@ -91,7 +91,7 @@
 
             <div class="meeting-card">
                 <div style="font-weight: bold; font-size: 14px; color: #0f172a; margin-bottom: 8px;">
-                    📅 {{ $meeting->title }}
+                    {{ $meeting->title }}
                 </div>
                 <div><strong>Date & Time:</strong> {{ $meeting->meeting_date ? $meeting->meeting_date->format('l, jS F Y \a\t H:i') : 'TBD' }}</div>
                 <div><strong>Venue:</strong> {{ $meeting->location ?: 'Lodge Committee Room' }}</div>
@@ -101,7 +101,7 @@
             </div>
 
             <div class="attachment-notice">
-                📎 An official formatted copy of the Executive Agenda Pack (PDF) is attached to this email for your reference.
+                A formatted copy of the executive agenda pack (PDF) is attached to this email for your reference.
             </div>
         </div>
 

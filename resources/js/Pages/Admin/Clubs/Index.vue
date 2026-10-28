@@ -1,7 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Card from '@/Components/Ui/Card.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   clubs: {
@@ -39,168 +42,132 @@ const filteredMemberClubs = computed(() => {
 
 <template>
   <AdminLayout title="Clubs" active-tab="clubs">
-    
+
     <div class="space-y-8">
-      
-      <!-- Top Action & Summary Header -->
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-        <div>
-          <div class="flex items-center gap-3">
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white">My Clubs & Workspaces</h2>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-              {{ clubs.length }} Joined Clubs
-            </span>
+
+      <!-- Top action and summary header -->
+      <Card>
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <div class="flex flex-wrap items-center gap-3">
+              <h2 class="text-xl font-bold text-slate-900 dark:text-white">My clubs and workspaces</h2>
+              <Badge variant="info">{{ clubs.length }} joined clubs</Badge>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage and access all sports clubs, rowing boathouses, and community organizations linked to your account.</p>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage and access all sports clubs, rowing boathouses, and community organizations linked to your account.</p>
-        </div>
 
-        <div class="flex items-center gap-3">
-          <Link
-            href="/"
-            class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center gap-1.5"
-          >
-            <span>+ Join or register club</span>
-          </Link>
+          <Button href="/">
+            <template #icon><UiIcon name="plus" /></template>
+            Join or register a club
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      <!-- Search Bar -->
-      <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <!-- Search bar -->
+      <Card padding="sm" class="flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div class="relative w-full sm:w-80">
-          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><UiIcon name="search" /></span>
           <input
             v-model="searchQuery"
             type="text"
+            aria-label="Search clubs"
             placeholder="Search clubs by name or type..."
-            class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            class="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder-slate-500"
           />
         </div>
 
-        <div class="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+        <div class="text-xs text-slate-500 dark:text-slate-400">
           Showing <strong class="text-slate-900 dark:text-white">{{ filteredAdminClubs.length + filteredMemberClubs.length }}</strong> of <strong class="text-slate-900 dark:text-white">{{ clubs.length }}</strong> clubs
         </div>
-      </div>
+      </Card>
 
-      <!-- SECTION 1: CLUBS YOU MANAGE (ADMIN / OWNER) -->
+      <!-- Section 1: clubs you manage (admin / owner) -->
       <div class="space-y-4">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-blue-600"></div>
-            <h3 class="text-base font-bold text-slate-900 dark:text-white">Clubs You Manage (Admin Role)</h3>
-          </div>
-          <span class="text-xs font-semibold text-slate-400">{{ filteredAdminClubs.length }} Clubs</span>
+          <h3 class="text-base font-semibold text-slate-900 dark:text-white">Clubs you manage (admin role)</h3>
+          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ filteredAdminClubs.length }} clubs</span>
         </div>
 
         <div v-if="filteredAdminClubs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
+          <Card
             v-for="club in filteredAdminClubs"
             :key="club.id"
-            class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-300 dark:hover:border-blue-700/60 transition-all flex flex-col justify-between space-y-6 group"
+            class="flex flex-col justify-between space-y-6 transition-colors hover:border-blue-300 dark:hover:border-blue-700/60"
           >
             <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 tracking-wider">
-                  {{ club.type_name }}
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                  {{ club.role }}
-                </span>
+              <div class="flex items-center justify-between gap-2">
+                <Badge>{{ club.type_name }}</Badge>
+                <Badge variant="info" class="capitalize">{{ club.role }}</Badge>
               </div>
 
               <div>
-                <h4 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ club.name }}</h4>
-                <p class="text-xs text-slate-400 mt-1">Slug: <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300 font-mono">{{ club.slug }}</code></p>
+                <h4 class="text-lg font-semibold text-slate-900 dark:text-white">{{ club.name }}</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Slug: <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300 font-mono">{{ club.slug }}</code></p>
               </div>
 
-              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <div class="text-[10px] uppercase font-bold text-slate-400">Total Members</div>
-                  <div class="text-sm font-black text-slate-900 dark:text-white mt-0.5">{{ club.members_count }}</div>
+              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800 text-xs">
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div class="text-[10px] uppercase tracking-wider font-medium text-slate-500 dark:text-slate-400">Total members</div>
+                  <div class="text-sm font-semibold text-slate-900 dark:text-white mt-0.5">{{ club.members_count }}</div>
                 </div>
-                <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <div class="text-[10px] uppercase font-bold text-slate-400">Scheduled Events</div>
-                  <div class="text-sm font-black text-slate-900 dark:text-white mt-0.5">{{ club.events_count }}</div>
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div class="text-[10px] uppercase tracking-wider font-medium text-slate-500 dark:text-slate-400">Scheduled events</div>
+                  <div class="text-sm font-semibold text-slate-900 dark:text-white mt-0.5">{{ club.events_count }}</div>
                 </div>
               </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
-              <Link
-                :href="route('admin.analytics', { slug: club.slug })"
-                class="flex-1 text-center py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all"
-              >
-                Admin portal &rarr;
-              </Link>
-              <Link
-                :href="route('member.dashboard', { slug: club.slug })"
-                class="flex-1 text-center py-2.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold rounded-xl transition-all"
-              >
-                Member view &rarr;
-              </Link>
+            <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
+              <Button variant="secondary" size="sm" class="flex-1" :href="route('admin.analytics', { slug: club.slug })">Admin portal &rarr;</Button>
+              <Button variant="secondary" size="sm" class="flex-1" :href="route('member.dashboard', { slug: club.slug })">Member view &rarr;</Button>
             </div>
-          </div>
+          </Card>
         </div>
 
-        <div v-else class="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200/80 dark:border-slate-800/80 text-slate-400 text-xs">
-          No clubs managed with administrative permissions found.
-        </div>
+        <Card v-else class="text-center">
+          <p class="text-sm text-slate-500 dark:text-slate-400">No clubs managed with administrative permissions found.</p>
+        </Card>
       </div>
 
-      <!-- SECTION 2: CLUBS YOU BELONG TO (MEMBER / COACH / TREASURER) -->
+      <!-- Section 2: clubs you belong to (member / coach / treasurer) -->
       <div class="space-y-4 pt-4">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-            <h3 class="text-base font-bold text-slate-900 dark:text-white">Clubs You Belong To (Member / Athlete Role)</h3>
-          </div>
-          <span class="text-xs font-semibold text-slate-400">{{ filteredMemberClubs.length }} Clubs</span>
+          <h3 class="text-base font-semibold text-slate-900 dark:text-white">Clubs you belong to (member / athlete role)</h3>
+          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ filteredMemberClubs.length }} clubs</span>
         </div>
 
         <div v-if="filteredMemberClubs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
+          <Card
             v-for="club in filteredMemberClubs"
             :key="club.id"
-            class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-300 dark:hover:border-emerald-700/60 transition-all flex flex-col justify-between space-y-6 group"
+            class="flex flex-col justify-between space-y-6 transition-colors hover:border-blue-300 dark:hover:border-blue-700/60"
           >
             <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 tracking-wider">
-                  {{ club.type_name }}
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800">
-                  {{ club.role }}
-                </span>
+              <div class="flex items-center justify-between gap-2">
+                <Badge>{{ club.type_name }}</Badge>
+                <Badge class="capitalize">{{ club.role }}</Badge>
               </div>
 
               <div>
-                <h4 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ club.name }}</h4>
+                <h4 class="text-lg font-semibold text-slate-900 dark:text-white">{{ club.name }}</h4>
                 <div class="flex items-center gap-2 mt-1.5">
-                  <span v-if="club.member_number" class="text-xs font-mono font-semibold px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-md border border-slate-200 dark:border-slate-800">
+                  <span v-if="club.member_number" class="text-xs font-mono px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-md border border-slate-200 dark:border-slate-800">
                     {{ club.member_number }}
                   </span>
-                  <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 uppercase">
-                    {{ club.status }}
-                  </span>
+                  <Badge :variant="club.status === 'active' ? 'success' : 'neutral'" class="capitalize">{{ club.status }}</Badge>
                 </div>
               </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-              <Link
-                :href="route('member.dashboard', { slug: club.slug })"
-                class="block w-full text-center py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all"
-              >
-                Enter member portal &rarr;
-              </Link>
+            <div class="pt-4 border-t border-slate-200 dark:border-slate-800">
+              <Button variant="secondary" size="sm" block :href="route('member.dashboard', { slug: club.slug })">Enter member portal &rarr;</Button>
             </div>
-          </div>
+          </Card>
         </div>
 
-        <div v-else class="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200/80 dark:border-slate-800/80 text-slate-400 text-xs">
-          No additional member clubs found.
-        </div>
+        <Card v-else class="text-center">
+          <p class="text-sm text-slate-500 dark:text-slate-400">No additional member clubs found.</p>
+        </Card>
       </div>
 
     </div>

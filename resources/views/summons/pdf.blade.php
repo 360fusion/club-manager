@@ -271,16 +271,16 @@
   <!-- Top Floating Action Toolbar (Hidden during Print) -->
   <div class="no-print" style="position: fixed; top: 0; left: 0; right: 0; background: #0f172a; color: #ffffff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; z-index: 99999; box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, sans-serif;">
     <div style="display: flex; align-items: center; gap: 12px;">
-      <span style="font-weight: 800; font-size: 14px; color: #f8fafc;">📜 {{ $meeting->title }} — Summons PDF Preview</span>
-      <span style="background: #1e293b; color: #94a3b8; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600;">Double-Sided A4 Landscape Duplex</span>
+      <span style="font-weight: 600; font-size: 14px; color: #f8fafc;">{{ $meeting->title }} — summons PDF preview</span>
+      <span style="background: #1e293b; color: #94a3b8; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 500;">Double-sided A4 landscape</span>
     </div>
 
     <div style="display: flex; align-items: center; gap: 10px;">
-      <button onclick="window.print()" style="background: #3b82f6; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all;">
-        🖨️ Print Double-Sided (Duplex A4)
+      <button onclick="window.print()" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all;">
+        Print double-sided (duplex A4)
       </button>
-      <a href="{{ route('admin.meetings.pdf', ['clubSlug' => $club->slug, 'id' => $meeting->id, 'download' => 1]) }}" style="background: #10b981; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: all;">
-        📥 Download Summons (.pdf)
+      <a href="{{ route('admin.meetings.pdf', ['clubSlug' => $club->slug, 'id' => $meeting->id, 'download' => 1]) }}" style="background: #1e293b; color: #f8fafc; border: 1px solid #334155; padding: 8px 16px; border-radius: 8px; font-weight: 500; font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: all;">
+        Download summons (PDF)
       </a>
     </div>
   </div>
@@ -289,8 +289,8 @@
 
   <!-- SIDE 1 (FRONT / OUTER SHEET) -->
   <div class="no-print side-banner">
-    <div>📄 SIDE 1 (FRONT / OUTER SHEET)</div>
-    <span>Double-Sided Print Side A: Right Half = Front Cover | Left Half = Membership Roll</span>
+    <div>Side 1 (front, outer sheet)</div>
+    <span>Right half: front cover. Left half: membership roll.</span>
   </div>
 
   <div class="page-container">
@@ -380,8 +380,8 @@
 
   <!-- SIDE 2 (BACK / INSIDE SHEET) -->
   <div class="no-print side-banner">
-    <div>📄 SIDE 2 (BACK / INNER SHEET)</div>
-    <span>Double-Sided Print Side B: Left Half = Officers for Year | Right Half = Summons Letter & Agenda</span>
+    <div>Side 2 (back, inner sheet)</div>
+    <span>Left half: officers for the year. Right half: summons letter and agenda.</span>
   </div>
 
   <div class="page-container">

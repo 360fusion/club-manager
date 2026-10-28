@@ -3,6 +3,7 @@
 // dates already worked out in the club's timezone, so the grid never shifts with the visitor's own timezone.
 import { computed, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     block: { type: Object, required: true },
@@ -132,14 +133,14 @@ const go = (month) => {
                             {{ longDate(event.start_date) }}<span v-if="block.show_times !== false && event.time"> · {{ event.time }}</span>
                             <span v-if="event.is_recurring"> · repeats</span>
                         </p>
-                        <p v-if="block.show_location !== false && event.location" :class="['text-xs', theme.bodyText]">📍 {{ event.location }}</p>
+                        <p v-if="block.show_location !== false && event.location" :class="['text-xs flex items-center gap-1.5', theme.bodyText]"><UiIcon name="building" />{{ event.location }}</p>
                         <p v-if="block.show_price && event.price" :class="['text-xs font-semibold', theme.accentText]">{{ event.price }}</p>
                     </div>
                 </component>
             </div>
 
             <p v-if="block.show_subscribe !== false && calendar.subscribe_url" class="text-sm">
-                <component :is="interactive ? 'a' : 'span'" :href="interactive ? calendar.subscribe_url : undefined" :class="['font-semibold underline', theme.accentText]">📅 Add to your calendar (.ics)</component>
+                <component :is="interactive ? 'a' : 'span'" :href="interactive ? calendar.subscribe_url : undefined" :class="['font-semibold underline', theme.accentText]">Add to your calendar (.ics)</component>
             </p>
         </template>
     </section>

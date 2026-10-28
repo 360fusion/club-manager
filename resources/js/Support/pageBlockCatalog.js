@@ -104,7 +104,7 @@ export const newBlock = (type, { club, clubAddresses, websiteSettings }) => {
     } else if (type === 'notice') {
         block = { id, type: 'notice', style: 'info', title: 'Important Notice', text: '' };
     } else if (type === 'button') {
-        block = { id, type: 'button', label: 'Learn More →', url: '', align: 'center' };
+        block = { id, type: 'button', label: 'Learn more →', url: '', align: 'center' };
     } else if (type === 'youtube') {
         block = {
             id,
@@ -203,21 +203,21 @@ export const newBlock = (type, { club, clubAddresses, websiteSettings }) => {
     } else if (type === 'news_feed' || type === 'news_list') {
         block = { id, type: 'news_feed', heading: 'Latest Club News', columns: '3', limit: 6 };
     } else if (type === 'events_calendar') {
-        block = { id, type: 'events_calendar', heading: 'Upcoming Events & Meetings', limit: 3 };
+        block = { id, type: 'events_calendar', heading: 'Upcoming events and meetings', limit: 3 };
     } else if (type === 'pricing_cards') {
-        block = { id, type: 'pricing_cards', heading: 'Membership Options & Dues' };
+        block = { id, type: 'pricing_cards', heading: 'Membership options and dues' };
     } else if (type === 'donation_campaign') {
-        block = { id, type: 'donation_campaign', heading: 'Active Fundraising Campaign' };
+        block = { id, type: 'donation_campaign', heading: 'Active fundraising campaign' };
     } else if (type === 'contact_details') {
         block = {
             id,
             type: 'contact_details',
             eyebrow: 'CONTACT',
-            title: 'Get in Touch',
+            title: 'Get in touch',
             description: `Whether you're interested in joining ${club.name}, a visiting member, or simply want to learn more, we'd be delighted to hear from you.`,
             email_heading: 'Email',
             email: '',
-            times_heading: 'Meeting Times',
+            times_heading: 'Meeting times',
             times: websiteSettings?.meeting_formula || club.settings?.meeting_formula || '7:00 pm, 4th Thursday\nSept–Nov & Jan–May\nInstallation: April, 5:30 pm',
             location_heading: 'Location',
             location: websiteSettings?.address || club.address || '',
@@ -226,7 +226,7 @@ export const newBlock = (type, { club, clubAddresses, websiteSettings }) => {
         block = {
             id,
             type: 'contact_form',
-            heading: 'Send Us a Message',
+            heading: 'Send us a message',
             subtitle: 'Have questions or need assistance? Fill out the form below.',
             recipient_email: '',
             cc_emails: '',

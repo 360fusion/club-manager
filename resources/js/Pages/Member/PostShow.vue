@@ -2,6 +2,8 @@
 import { Head, Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import NewsTagPill from '@/Components/NewsTagPill.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
   club: Object,
@@ -19,17 +21,17 @@ const postUrl = (id) => route('member.posts.show', { slug: props.club.slug, id }
 
 const getFileIcon = (mimeOrName) => {
   const name = (mimeOrName || '').toLowerCase();
-  if (name.includes('pdf')) return '📄';
-  if (name.includes('image') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) return '🖼️';
-  if (name.includes('sheet') || name.endsWith('.xls') || name.endsWith('.xlsx') || name.endsWith('.csv')) return '📊';
-  if (name.includes('word') || name.endsWith('.doc') || name.endsWith('.docx')) return '📝';
-  if (name.endsWith('.zip') || name.endsWith('.rar')) return '📦';
-  return '📎';
+  if (name.includes('pdf')) return 'document';
+  if (name.includes('image') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'photo';
+  if (name.includes('sheet') || name.endsWith('.xls') || name.endsWith('.xlsx') || name.endsWith('.csv')) return 'chart';
+  if (name.includes('word') || name.endsWith('.doc') || name.endsWith('.docx')) return 'document';
+  if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder';
+  return 'download';
 };
 </script>
 
 <template>
-  <MembersLayout title="News Article" :club="isMember ? club : null" :member-role="memberRole">
+  <MembersLayout title="News article" :club="isMember ? club : null" :member-role="memberRole">
     <Head :title="`${post.title} - ${club.name}`" />
 
     <div class="max-w-6xl mx-auto space-y-6">
@@ -38,16 +40,16 @@ const getFileIcon = (mimeOrName) => {
         <Link
           v-if="!isMember && lodgeSlug"
           :href="route('lodges.show', lodgeSlug)"
-          class="inline-flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
         >
-          ← {{ club.name }}
+          <UiIcon name="arrow-left" /> {{ club.name }}
         </Link>
         <Link
           v-else
           :href="route('member.dashboard', club.slug)"
-          class="inline-flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
         >
-          ← Back to portal dashboard
+          <UiIcon name="arrow-left" /> Back to portal dashboard
         </Link>
       </div>
 
@@ -57,17 +59,15 @@ const getFileIcon = (mimeOrName) => {
         
         <!-- Header -->
         <div class="space-y-3">
-          <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <span class="px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold border border-blue-100 dark:border-blue-900/40 uppercase tracking-wider text-[10px]">
-              📰 News Bulletin
-            </span>
+          <div class="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+            <Badge variant="info">News bulletin</Badge>
             <span>•</span>
             <span>Published {{ post.published_at }}</span>
             <span>•</span>
             <span>By {{ post.author_name }}</span>
           </div>
 
-          <h1 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-tight">
+          <h1 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
             {{ post.title }}
           </h1>
 
@@ -145,8 +145,8 @@ const getFileIcon = (mimeOrName) => {
                 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/60 text-blue-900 dark:text-blue-200'
               ]"
             >
-              <h4 class="font-bold text-sm flex items-center gap-1.5">
-                <span>{{ block.style === 'warning' ? '⚠️' : block.style === 'important' ? '🚨' : block.style === 'success' ? '✅' : '💡' }}</span>
+              <h4 class="font-semibold text-sm flex items-center gap-1.5">
+                <UiIcon :name="block.style === 'warning' ? 'warning' : block.style === 'success' ? 'check' : 'info'" />
                 {{ block.title }}
               </h4>
               <p class="leading-relaxed font-medium">{{ block.text }}</p>
@@ -181,8 +181,8 @@ const getFileIcon = (mimeOrName) => {
 
         <!-- Downloadable Attachments Section -->
         <div v-if="post.attachments && post.attachments.length" class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
-          <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-            <span>📎</span> Downloadable Files & Documents ({{ post.attachments.length }})
+          <h4 class="text-xs font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+            <UiIcon name="download" /> Downloadable files and documents ({{ post.attachments.length }})
           </h4>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -194,16 +194,16 @@ const getFileIcon = (mimeOrName) => {
               class="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 transition-all text-xs group"
             >
               <div class="flex items-center gap-3 overflow-hidden">
-                <span class="text-xl">{{ getFileIcon(att.mime_type || att.name) }}</span>
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 border border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700"><UiIcon :name="getFileIcon(att.mime_type || att.name)" :size="20" /></span>
                 <div class="truncate">
-                  <span class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate block">
+                  <span class="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate block">
                     {{ att.name }}
                   </span>
-                  <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">{{ att.size || 'Download File' }}</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{{ att.size || 'Download file' }}</span>
                 </div>
               </div>
-              <span class="text-blue-600 dark:text-blue-400 font-bold group-hover:translate-x-0.5 transition-transform">
-                Download ↓
+              <span class="inline-flex shrink-0 items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
+                Download <UiIcon name="download" />
               </span>
             </a>
           </div>

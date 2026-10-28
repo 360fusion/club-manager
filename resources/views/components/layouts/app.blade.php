@@ -425,17 +425,11 @@
             <!-- Main Slot Content -->
             <div class="p-6 md:p-10 max-w-7xl 2xl:max-w-[1536px] w-full mx-auto space-y-8 flex-1">
                 @if (session()->has('success'))
-                    <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center gap-2 shadow-sm">
-                        <span>✅</span>
-                        <span>{{ session('success') }}</span>
-                    </div>
+                    <x-notice variant="success">{{ session('success') }}</x-notice>
                 @endif
 
                 @if (session()->has('error'))
-                    <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 text-xs font-bold flex items-center gap-2 shadow-sm">
-                        <span>⚠️</span>
-                        <span>{{ session('error') }}</span>
-                    </div>
+                    <x-notice variant="danger" role="alert">{{ session('error') }}</x-notice>
                 @endif
 
                 {{ $slot }}

@@ -1,5 +1,9 @@
 <script setup>
 import { useForm, Head } from '@inertiajs/vue3';
+import Alert from '@/Components/Ui/Alert.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
 
 const props = defineProps({
   club: {
@@ -35,23 +39,24 @@ const submit = () => {
 <template>
   <Head :title="`Join ${club.name}`" />
 
-  <div class="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 text-slate-100 font-sans">
-    <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
-      
-      <!-- Club Header & Welcome Banner -->
+  <!-- The card is always dark, so the kit components take their dark look inside it. -->
+  <div class="dark min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 text-slate-100 font-sans">
+    <div class="w-full max-w-md bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
+
+      <!-- Club header and welcome -->
       <div class="text-center space-y-3">
         <div v-if="club.logo_url" class="inline-block mb-1">
           <img :src="club.logo_url" :alt="club.name" class="h-14 max-w-44 object-contain mx-auto" />
         </div>
-        <div v-else class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-2xl font-black mb-1">
+        <div v-else class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-2xl font-semibold mb-1">
           {{ club.name.substring(0, 2).toUpperCase() }}
         </div>
 
         <div>
-          <span class="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
-            {{ isExistingUser ? 'Existing Account Access' : 'Official Member Invitation' }}
-          </span>
-          <h1 class="text-2xl font-black text-white mt-2">
+          <Badge variant="info">
+            {{ isExistingUser ? 'Existing account access' : 'Official member invitation' }}
+          </Badge>
+          <h1 class="text-2xl font-semibold text-white mt-2">
             {{ isExistingUser ? `Welcome back, ${user.name}!` : `Welcome to ${club.name}!` }}
           </h1>
           <p v-if="club.tagline" class="text-xs text-slate-400 mt-0.5">
@@ -60,12 +65,12 @@ const submit = () => {
         </div>
       </div>
 
-      <!-- Invited User Context Box -->
+      <!-- Invited user -->
       <div class="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-1">
-        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-          {{ isExistingUser ? 'Confirm Access For' : 'Invited Member' }}
+        <div class="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+          {{ isExistingUser ? 'Confirm access for' : 'Invited member' }}
         </div>
-        <div class="font-bold text-sm text-slate-100">{{ user.name }}</div>
+        <div class="font-semibold text-sm text-slate-100">{{ user.name }}</div>
         <div class="text-xs font-mono text-blue-400">{{ user.email }}</div>
         <p v-if="isExistingUser" class="text-[11px] text-slate-400 pt-1">
           You already have an active Club Manager account. Enter your password to log in and access <strong>{{ club.name }}</strong>.
@@ -73,47 +78,33 @@ const submit = () => {
       </div>
 
       <!-- Errors -->
-      <div v-if="Object.keys(form.errors).length" class="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs space-y-1">
+      <Alert v-if="Object.keys(form.errors).length" variant="danger">
         <div v-for="(error, key) in form.errors" :key="key">{{ error }}</div>
-      </div>
+      </Alert>
 
-      <!-- Password Form -->
+      <!-- Password form -->
       <form @submit.prevent="submit" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-            {{ isExistingUser ? 'Enter Account Password' : 'Choose Account Password' }}
-          </label>
-          <input
-            v-model="form.password"
-            type="password"
-            required
-            autofocus
-            :placeholder="isExistingUser ? 'Your account password...' : 'Min. 8 characters...'"
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-          />
-        </div>
+        <Input
+          v-model="form.password"
+          :label="isExistingUser ? 'Your account password' : 'Choose a password'"
+          type="password"
+          required
+          autofocus
+          :placeholder="isExistingUser ? 'Your account password...' : 'Min. 8 characters...'"
+        />
 
-        <div v-if="!isExistingUser">
-          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-            Confirm Password
-          </label>
-          <input
-            v-model="form.password_confirmation"
-            type="password"
-            required
-            placeholder="Confirm password..."
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-          />
-        </div>
+        <Input
+          v-if="!isExistingUser"
+          v-model="form.password_confirmation"
+          label="Confirm password"
+          type="password"
+          required
+          placeholder="Confirm password..."
+        />
 
-        <button
-          type="submit"
-          :disabled="form.processing"
-          class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50 mt-2 cursor-pointer flex items-center justify-center gap-2"
-        >
-          <span>{{ isExistingUser ? `Log in & access ${club.name}` : 'Activate account & enter member portal' }}</span>
-          <span>&rarr;</span>
-        </button>
+        <Button type="submit" size="lg" block :loading="form.processing" class="mt-2">
+          {{ isExistingUser ? `Log in and access ${club.name}` : 'Activate account and enter member portal' }}
+        </Button>
       </form>
     </div>
   </div>

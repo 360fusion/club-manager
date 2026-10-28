@@ -3,6 +3,9 @@ import { computed, ref, watch } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import PaymentChoice from '@/Components/Events/PaymentChoice.vue';
 import SiteShell from '@/Components/Site/SiteShell.vue';
+import Alert from '@/Components/Ui/Alert.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 import { useEventQuote } from '@/Composables/useEventQuote';
 import { formatMoney } from '@/Utils/currency';
 
@@ -78,7 +81,7 @@ const submit = () => {
   });
 };
 
-const field = 'w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[var(--cm-accent)] focus:ring-2 focus:ring-[var(--cm-accent)]/25';
+const field = 'w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-[var(--cm-accent)] focus:ring-2 focus:ring-[var(--cm-accent)]/25';
 const label = 'block text-[11px] font-semibold opacity-70 uppercase tracking-wider mb-1';
 const errorText = 'text-xs text-rose-600 dark:text-rose-400';
 </script>
@@ -90,27 +93,27 @@ const errorText = 'text-xs text-rose-600 dark:text-rose-400';
     <div class="mx-auto max-w-5xl px-6 py-10 space-y-6">
       <Link :href="`/site/${club.slug}`" :class="['text-xs font-semibold hover:underline', theme.accentText]">&larr; {{ club.name }}</Link>
 
-      <div v-if="flash" class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-800 dark:text-emerald-200" role="status">{{ flash }}</div>
+      <Alert v-if="flash" variant="success">{{ flash }}</Alert>
 
       <!-- Event details -->
       <div :class="['border p-6 space-y-4', theme.radiusLg || 'rounded-2xl', theme.cardBg]">
         <div>
           <p :class="['text-xs font-bold uppercase tracking-wider', theme.accentText]">{{ club.name }}</p>
           <h1 :class="['text-2xl sm:text-3xl font-black mt-1', theme.headingText]">{{ event.title }}</h1>
-          <span v-if="event.status === 'cancelled'" class="mt-2 inline-block rounded bg-rose-500/20 px-2 py-0.5 text-xs font-bold text-rose-700 dark:text-rose-300">Cancelled</span>
+          <Badge v-if="event.status === 'cancelled'" variant="danger" class="mt-2">Cancelled</Badge>
         </div>
 
         <div :class="['grid gap-2 text-sm sm:grid-cols-2', theme.bodyText]">
-          <div>📅 {{ event.starts_at }}<span v-if="event.ends_at"> to {{ event.ends_at }}</span></div>
-          <div v-if="event.location">📍 {{ event.location }}</div>
-          <div v-if="event.requires_payment && (Number(event.price) > 0 || tiers.length)">🎟️
+          <div class="flex items-start gap-2"><UiIcon name="calendar" class="mt-0.5 opacity-70" /><span>{{ event.starts_at }}<span v-if="event.ends_at"> to {{ event.ends_at }}</span></span></div>
+          <div v-if="event.location" class="flex items-start gap-2"><UiIcon name="building" class="mt-0.5 opacity-70" /><span>{{ event.location }}</span></div>
+          <div v-if="event.requires_payment && (Number(event.price) > 0 || tiers.length)" class="flex items-start gap-2"><UiIcon name="tag" class="mt-0.5 opacity-70" /><span>
             <template v-if="event.advertised && event.advertised.mode === 'all_in' && !tiers.length">
               {{ formatMoney(event.advertised.headline) }}<span v-if="event.advertised.has_saving" class="text-emerald-600 dark:text-emerald-400"> (or {{ formatMoney(event.advertised.lowest) }} if you pay online)</span>
             </template>
             <template v-else-if="tiers.length">{{ tiers.map((t) => `${t.name} ${$cs}${t.price}`).join(' · ') }}</template>
             <template v-else>{{ $cs }}{{ event.price }}</template>
-          </div>
-          <div v-if="event.places_left !== null">👥 {{ event.places_left > 0 ? `${event.places_left} places left` : 'Fully booked' }}</div>
+          </span></div>
+          <div v-if="event.places_left !== null" class="flex items-start gap-2"><UiIcon name="users" class="mt-0.5 opacity-70" /><span>{{ event.places_left > 0 ? `${event.places_left} places left` : 'Fully booked' }}</span></div>
         </div>
 
         <p v-if="event.description" :class="['whitespace-pre-line text-sm', theme.bodyText]">{{ event.description }}</p>
@@ -137,11 +140,11 @@ const errorText = 'text-xs text-rose-600 dark:text-rose-400';
       <!-- Booking -->
       <form v-if="bookingOpen" :class="['border p-6 space-y-5', theme.radiusLg || 'rounded-2xl', theme.cardBg]" @submit.prevent="submit">
         <h2 :class="['text-lg font-bold', theme.headingText]">Book your place</h2>
-        <p v-if="full" class="rounded-lg bg-[var(--cm-accent)]/10 p-3 text-xs">This event is full, but you can join the waiting list. We'll email you if a place opens up.</p>
+        <p v-if="full" class="rounded-xl bg-[var(--cm-accent)]/10 p-3 text-xs">This event is full, but you can join the waiting list. We'll email you if a place opens up.</p>
 
-        <div v-if="form.errors.capacity || form.errors.registration || form.errors.booking_closed || form.errors.attendees" class="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-semibold text-rose-700 dark:text-rose-300" role="alert">
+        <Alert v-if="form.errors.capacity || form.errors.registration || form.errors.booking_closed || form.errors.attendees" variant="danger" role="alert">
           {{ form.errors.capacity || form.errors.registration || form.errors.booking_closed || form.errors.attendees }}
-        </div>
+        </Alert>
 
         <!-- Hidden from people; bots tend to fill it in -->
         <div class="absolute -left-[9999px]" aria-hidden="true">
@@ -213,8 +216,8 @@ const errorText = 'text-xs text-rose-600 dark:text-rose-400';
           </div>
         </div>
 
-        <button v-if="event.max_guests > 0" type="button" :disabled="!canAddGuest" class="text-sm font-semibold hover:underline disabled:opacity-50" :class="theme.accentText" @click="addGuest">
-          + Add a guest <span class="font-normal opacity-60">({{ form.attendees.length - 1 }} of {{ event.max_guests }})</span>
+        <button v-if="event.max_guests > 0" type="button" :disabled="!canAddGuest" class="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline disabled:opacity-50" :class="theme.accentText" @click="addGuest">
+          <UiIcon name="plus" /> Add a guest <span class="font-normal opacity-60">({{ form.attendees.length - 1 }} of {{ event.max_guests }})</span>
         </button>
 
         <div v-if="event.requires_payment" class="space-y-3">

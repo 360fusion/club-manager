@@ -1,5 +1,7 @@
 <script setup>
 // The files attached to a news article, as download links under the article. Built by the server, like PostHeaderBlock.
+import UiIcon from '@/Components/Ui/UiIcon.vue';
+
 defineProps({
     block: { type: Object, required: true },
     theme: { type: Object, required: true },
@@ -8,11 +10,10 @@ defineProps({
 
 const icon = (file) => {
     const name = `${file.mime_type || ''} ${file.name || ''}`.toLowerCase();
-    if (name.includes('pdf')) return '📄';
-    if (name.includes('image') || /\.(png|jpe?g|gif|webp)\b/.test(name)) return '🖼️';
-    if (name.includes('sheet') || /\.(xlsx?|csv)\b/.test(name)) return '📊';
-    if (name.includes('word') || /\.docx?\b/.test(name)) return '📝';
-    return '📎';
+    if (name.includes('pdf')) return 'document';
+    if (name.includes('image') || /\.(png|jpe?g|gif|webp)\b/.test(name)) return 'photo';
+    if (name.includes('sheet') || /\.(xlsx?|csv)\b/.test(name)) return 'chart';
+    return 'document';
 };
 </script>
 
@@ -21,7 +22,7 @@ const icon = (file) => {
         <h2 :class="['text-sm font-semibold uppercase tracking-[0.15em]', theme.accentText]">Files &amp; documents</h2>
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <a v-for="(file, i) in block.items" :key="i" :href="file.url" target="_blank" rel="noopener" :class="['flex items-center gap-3 p-4 text-sm', radiusMd, theme.cardBg]">
-                <span class="text-xl" aria-hidden="true">{{ icon(file) }}</span>
+                <UiIcon :name="icon(file)" :size="20" />
                 <span class="min-w-0">
                     <span :class="['block truncate font-semibold', theme.headingText]">{{ file.name }}</span>
                     <span v-if="file.size" :class="['text-xs', theme.bodyText]">{{ file.size }}</span>

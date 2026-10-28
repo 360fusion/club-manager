@@ -1,5 +1,9 @@
 <script setup>
 import { useForm, Head, Link } from '@inertiajs/vue3';
+import Alert from '@/Components/Ui/Alert.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Input from '@/Components/Ui/Input.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 defineProps({
   status: String,
@@ -15,61 +19,47 @@ const submit = () => {
 </script>
 
 <template>
-  <Head title="Forgot Password" />
+  <Head title="Forgot password" />
 
-  <div class="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 text-slate-100 font-sans">
-    <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl shadow-blue-950/40 space-y-6">
-      
+  <!-- The card is always dark, so the kit components take their dark look inside it. -->
+  <div class="dark min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 text-slate-100 font-sans">
+    <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl shadow-blue-950/40 space-y-6">
+
       <!-- Header -->
       <div class="text-center space-y-2">
-        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-2xl mb-2">
-          🔑
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-2">
+          <UiIcon name="key" :size="20" />
         </div>
-        <h1 class="text-2xl font-black bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-          Forgot Password?
+        <h1 class="text-2xl font-semibold text-white">
+          Forgot your password?
         </h1>
         <p class="text-xs text-slate-400">
           Enter your registered email address and we'll send you a password reset link.
         </p>
       </div>
 
-      <!-- Status Notification -->
-      <div v-if="status" class="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-medium text-center">
-        {{ status }}
-      </div>
-
-      <!-- Errors -->
-      <div v-if="form.errors.email" class="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs text-center font-medium">
-        {{ form.errors.email }}
-      </div>
+      <!-- Status notification -->
+      <Alert v-if="status" variant="success">{{ status }}</Alert>
 
       <!-- Form -->
       <form @submit.prevent="submit" class="space-y-5">
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-            Email Address
-          </label>
-          <input
-            v-model="form.email"
-            type="email"
-            required
-            autofocus
-            placeholder="admin@example.com"
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
-          />
-        </div>
+        <Input
+          v-model="form.email"
+          label="Email address"
+          type="email"
+          required
+          autofocus
+          placeholder="admin@example.com"
+          :error="form.errors.email"
+        />
 
-        <button
-          type="submit"
-          :disabled="form.processing"
-          class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50"
-        >
+        <Button type="submit" size="lg" block :loading="form.processing">
           {{ form.processing ? 'Sending link...' : 'Send password reset link' }}
-        </button>
+        </Button>
 
         <div class="text-center pt-2">
-          <Link :href="route('login')" class="text-xs text-slate-400 hover:text-white transition-colors">
-            &larr; Back to login
+          <Link :href="route('login')" class="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors">
+            <UiIcon name="arrow-left" /> Back to login
           </Link>
         </div>
       </form>

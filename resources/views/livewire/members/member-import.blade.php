@@ -36,7 +36,7 @@
                 @foreach($steps as $key => $label)
                     @php $i = array_search($key, $stepKeys, true); @endphp
                     <li class="flex items-center gap-2 rounded-xl border px-3 py-2.5 {{ $i === $stepIndex ? 'border-slate-900 bg-slate-900 text-white dark:border-slate-700 dark:bg-slate-700' : ($i < $stepIndex ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-200' : 'border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400') }}" @if($i === $stepIndex) aria-current="step" @endif>
-                        <span class="flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold {{ $i === $stepIndex ? 'bg-white/20' : 'bg-white/60 dark:bg-slate-900/40' }}" aria-hidden="true">{{ $i < $stepIndex ? '✓' : $i + 1 }}</span>
+                        <span class="flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold {{ $i === $stepIndex ? 'bg-white/20' : 'bg-white/60 dark:bg-slate-900/40' }}" aria-hidden="true">@if($i < $stepIndex)<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>@else{{ $i + 1 }}@endif</span>
                         <span>{{ $label }}@if($i < $stepIndex)<span class="sr-only"> (done)</span>@endif</span>
                     </li>
                 @endforeach

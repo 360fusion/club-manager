@@ -1,6 +1,8 @@
 <script setup>
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
@@ -22,95 +24,69 @@ const filterClubs = () => {
     if (selectedType.value === 'all') return props.clubs;
     return props.clubs.filter(c => c.type_code === selectedType.value);
 };
-
-const getBadgeColor = (typeCode) => {
-    switch (typeCode) {
-        case 'rowing': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-        case 'rugby': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-        case 'tennis': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-        default: return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-    }
-};
-
-const getIcon = (typeCode) => {
-    switch (typeCode) {
-        case 'rowing': return '🌊';
-        case 'rugby': return '🏉';
-        case 'tennis': return '🎾';
-        default: return '🏆';
-    }
-};
 </script>
 
 <template>
-    <Head title="Club Manager Hub - Multi-Tenant Platform" />
+    <Head title="Club Manager hub - Multi-tenant platform" />
 
-    <div class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-500 selection:text-white">
-        <!-- Background Gradient Glows -->
+    <!-- The landing page is always dark, so the kit components take their dark look on it. -->
+    <div class="dark min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-500 selection:text-white">
+        <!-- Background gradient glows -->
         <div class="fixed inset-0 overflow-hidden pointer-events-none">
             <div class="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
             <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl"></div>
-            <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"></div>
         </div>
 
-        <!-- Header / Navbar -->
+        <!-- Header / navbar -->
         <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-slate-800/80">
             <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 via-blue-500 to-emerald-400 flex items-center justify-center text-xl font-bold shadow-lg shadow-blue-500/20">
-                        ⚡
+                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <UiIcon name="lightning" :size="20" />
                     </div>
-                    <div>
-                        <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-xl tracking-tight text-white">
                             ClubManager
                         </span>
-                        <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                            PostgreSQL Powered
-                        </span>
+                        <Badge variant="info">PostgreSQL powered</Badge>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-4 text-sm font-medium">
-                    <Link :href="`/${defaultClubSlug}/admin/pages`" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <Link :href="`/${defaultClubSlug}/admin/pages`" class="text-slate-300 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
                         <UiIcon name="palette" class="inline-block align-text-bottom" /> CMS pages
                     </Link>
-                    <a :href="`/site/${defaultClubSlug}`" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <a :href="`/site/${defaultClubSlug}`" target="_blank" class="text-slate-300 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
                         <UiIcon name="globe" class="inline-block align-text-bottom" /> Live site
                     </a>
-                    <Link :href="`/${defaultClubSlug}/admin/subscriptions`" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <Link :href="`/${defaultClubSlug}/admin/subscriptions`" class="text-slate-300 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
                         <UiIcon name="cash" class="inline-block align-text-bottom" /> Subscriptions
                     </Link>
-                    <Link href="/admin/profile" class="text-slate-300 hover:text-white transition-colors text-xs font-semibold flex items-center gap-1">
+                    <Link href="/admin/profile" class="text-slate-300 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
                         <UiIcon name="settings" class="inline-block align-text-bottom" /> Profile & 2FA
                     </Link>
                     <template v-if="currentUser">
-                        <span class="text-xs font-bold text-slate-300 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-                            👋 {{ currentUser.name }}
+                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
+                            <UiIcon name="user" /> {{ currentUser.name }}
                         </span>
                     </template>
                     <template v-else>
-                        <Link href="/register" class="px-3 py-1.5 rounded-xl bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 border border-blue-500/30 text-xs font-semibold transition-all">
-                            Register
-                        </Link>
-                        <Link href="/login" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20">
-                            Log in
-                        </Link>
+                        <Button variant="secondary" size="sm" href="/register">Register</Button>
+                        <Button size="sm" href="/login">Log in</Button>
                     </template>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
+        <!-- Main content -->
         <main class="relative z-10 max-w-7xl mx-auto px-6 py-12 space-y-12">
-            
-            <!-- Logged In User Workspace Hub -->
-            <div v-if="currentUser && userClubs.length > 0" class="bg-slate-900/90 border border-blue-500/30 rounded-3xl p-8 shadow-2xl backdrop-blur-xl space-y-6">
+
+            <!-- Logged-in user's workspaces -->
+            <div v-if="currentUser && userClubs.length > 0" class="bg-slate-900/90 border border-blue-500/30 rounded-2xl p-8 shadow-2xl backdrop-blur-xl space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
                     <div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <h2 class="text-2xl font-black text-white tracking-tight">My Active Workspaces</h2>
-                        </div>
+                        <h2 class="text-2xl font-semibold text-white tracking-tight">My active workspaces</h2>
                         <p class="text-xs text-slate-400 mt-1">You belong to {{ userClubs.length }} club workspaces across different roles.</p>
                     </div>
                 </div>
@@ -123,98 +99,96 @@ const getIcon = (typeCode) => {
                     >
                         <div class="space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30 tracking-wider">
-                                    {{ userClub.role }}
-                                </span>
-                                <span v-if="userClub.member_number" class="text-xs font-mono font-semibold text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                                <Badge variant="info" class="capitalize">{{ userClub.role }}</Badge>
+                                <span v-if="userClub.member_number" class="text-xs font-mono font-medium text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
                                     {{ userClub.member_number }}
                                 </span>
                             </div>
 
-                            <h3 class="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">{{ userClub.name }}</h3>
-                            <p class="text-xs text-slate-400">Status: <strong class="text-emerald-400 uppercase tracking-wider">{{ userClub.status }}</strong></p>
+                            <h3 class="text-xl font-semibold text-white group-hover:text-blue-400 transition-colors">{{ userClub.name }}</h3>
+                            <p class="text-xs text-slate-400">Status: <Badge :variant="userClub.status === 'active' ? 'success' : userClub.status === 'pending' ? 'warning' : 'neutral'" class="capitalize">{{ userClub.status }}</Badge></p>
                         </div>
 
                         <div class="pt-4 border-t border-slate-900 flex items-center gap-2">
-                            <Link
+                            <Button
                                 v-if="['admin', 'owner'].includes(userClub.role)"
+                                variant="secondary"
+                                block
                                 :href="route('admin.analytics', { slug: userClub.slug })"
-                                class="flex-1 text-center py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition-all"
                             >
-                                Open admin dashboard &rarr;
-                            </Link>
-                            <Link
+                                Open admin dashboard
+                            </Button>
+                            <Button
                                 v-else
+                                variant="secondary"
+                                block
                                 :href="route('member.dashboard', { slug: userClub.slug })"
-                                class="flex-1 text-center py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all"
                             >
-                                Enter member portal &rarr;
-                            </Link>
+                                Enter member portal
+                            </Button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="text-center max-w-3xl mx-auto space-y-6">
                 <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/80 border border-slate-800 text-xs font-medium text-slate-300 backdrop-blur-md">
-                    <span>🚀 Multi-Type Club Management Architecture</span>
+                    <UiIcon name="sparkles" class="text-gold-400" />
+                    <span>Multi-type club management</span>
                 </div>
 
-                <h1 class="text-4xl sm:text-6xl font-black tracking-tight leading-tight">
-                    One Platform. <br />
-                    <span class="bg-gradient-to-r from-blue-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent">
-                        Tailored for Every Club Type.
+                <h1 class="text-4xl sm:text-6xl font-semibold tracking-tight leading-tight">
+                    One platform. <br />
+                    <span class="text-blue-400">
+                        Tailored for every club type.
                     </span>
                 </h1>
 
                 <p class="text-slate-400 text-lg sm:text-xl leading-relaxed">
-                    Rowing clubs need boat allocations and erg splits. Rugby clubs need pitch bookings and 15-player lineups. 
+                    Rowing clubs need boat allocations and erg splits. Rugby clubs need pitch bookings and 15-player lineups.
                     ClubManager dynamically activates domain-specific feature modules per organization.
                 </p>
 
-                <!-- Filter Pills -->
+                <!-- Filter pills -->
                 <div class="pt-6 flex flex-wrap items-center justify-center gap-2">
-                    <button 
+                    <button
                         @click="selectedType = 'all'"
-                        :class="selectedType === 'all' 
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 border-blue-500' 
+                        :class="selectedType === 'all'
+                            ? 'bg-blue-600 text-white border-blue-500'
                             : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700'"
-                        class="px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200"
+                        class="px-4 py-2 rounded-xl text-sm font-medium border transition-colors"
                     >
                         All clubs ({{ clubs.length }})
                     </button>
-                    <button 
-                        v-for="type in clubTypes" 
+                    <button
+                        v-for="type in clubTypes"
                         :key="type.code"
                         @click="selectedType = type.code"
-                        :class="selectedType === type.code 
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 border-blue-500' 
+                        :class="selectedType === type.code
+                            ? 'bg-blue-600 text-white border-blue-500'
                             : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700'"
-                        class="px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 flex items-center gap-2"
+                        class="px-4 py-2 rounded-xl text-sm font-medium border transition-colors"
                     >
-                        <span>{{ getIcon(type.code) }}</span>
-                        <span>{{ type.name }}</span>
+                        {{ type.name }}
                     </button>
                 </div>
             </div>
 
-            <!-- Club Cards Grid -->
+            <!-- Club cards grid -->
             <div class="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div 
-                    v-for="club in filterClubs()" 
+                <div
+                    v-for="club in filterClubs()"
                     :key="club.id"
                     class="group relative rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/10 flex flex-col justify-between"
                 >
                     <div>
                         <div class="flex items-start justify-between gap-4 mb-4">
-                            <div class="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                {{ getIcon(club.type_code) }}
+                            <div class="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700/60 text-slate-300 flex items-center justify-center">
+                                <UiIcon name="building" :size="20" />
                             </div>
-                            <span :class="['px-3 py-1 rounded-full text-xs font-semibold border', getBadgeColor(club.type_code)]">
-                                {{ club.type_name }}
-                            </span>
+                            <Badge variant="info">{{ club.type_name }}</Badge>
                         </div>
 
-                        <h3 class="text-xl font-bold text-slate-100 group-hover:text-blue-300 transition-colors">
+                        <h3 class="text-xl font-semibold text-slate-100 group-hover:text-blue-300 transition-colors">
                             {{ club.name }}
                         </h3>
                         <p v-if="club.tagline" class="mt-1 text-xs italic text-slate-400">
@@ -224,41 +198,37 @@ const getIcon = (typeCode) => {
                         <!-- Stats row -->
                         <div class="mt-4 py-3 px-4 rounded-xl bg-slate-950/60 border border-slate-800/60 flex items-center justify-between text-xs text-slate-300">
                             <div>
-                                <span class="text-slate-400">Active Members:</span> 
-                                <span class="font-bold text-white ml-1">{{ club.members_count }}</span>
+                                <span class="text-slate-400">Active members:</span>
+                                <span class="font-semibold text-white ml-1">{{ club.members_count }}</span>
                             </div>
                             <div class="h-3 w-px bg-slate-800"></div>
                             <div>
-                                <span class="text-slate-400">Membership Tiers:</span> 
-                                <span class="font-bold text-white ml-1">{{ club.plans_count }}</span>
+                                <span class="text-slate-400">Membership tiers:</span>
+                                <span class="font-semibold text-white ml-1">{{ club.plans_count }}</span>
                             </div>
                         </div>
 
-                        <!-- Active Feature Modules Pills -->
+                        <!-- Enabled feature modules -->
                         <div class="mt-5 space-y-2">
-                            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                Enabled Feature Modules:
+                            <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                                Enabled feature modules
                             </div>
                             <div class="flex flex-wrap gap-1.5">
-                                <span 
-                                    v-for="mod in club.enabled_modules" 
+                                <span
+                                    v-for="mod in club.enabled_modules"
                                     :key="mod"
-                                    class="px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700/60 text-xs font-mono"
+                                    class="px-2.5 py-1 rounded-full bg-slate-800/90 text-slate-300 border border-slate-700/60 text-xs font-mono"
                                 >
-                                    ⚡ {{ mod }}
+                                    {{ mod }}
                                 </span>
                             </div>
                         </div>
                     </div>
 
                     <div class="mt-8 pt-4 border-t border-slate-800/80">
-                        <Link 
-                            :href="`/${club.slug}/overview`"
-                            class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 group/btn transition-all"
-                        >
-                            <span>Enter club hub</span>
-                            <span class="group-hover/btn:translate-x-1 transition-transform">→</span>
-                        </Link>
+                        <Button variant="secondary" block :href="`/${club.slug}/overview`">
+                            Enter club hub
+                        </Button>
                     </div>
                 </div>
             </div>

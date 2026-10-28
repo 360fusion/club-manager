@@ -5,6 +5,7 @@
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import SiteAccountMenu from '@/Components/Site/SiteAccountMenu.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const props = defineProps({
     club: { type: Object, required: true },
@@ -54,7 +55,7 @@ const isActiveNavItem = (item) => props.currentPage?.slug === item.slug || (prop
                         class="w-10 h-10 rounded-xl object-cover shadow-lg group-hover:scale-105 transition-transform"
                     />
                     <div v-else class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[var(--cm-accent)] to-[var(--cm-accent-deep)] flex items-center justify-center font-bold text-white shadow-lg shadow-[var(--cm-accent)]/20 group-hover:scale-105 transition-transform">
-                        🏆
+                        <UiIcon name="award" :size="20" />
                     </div>
                 </template>
                 <div>

@@ -1,7 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Badge from '@/Components/Ui/Badge.vue';
+import Button from '@/Components/Ui/Button.vue';
+import Card from '@/Components/Ui/Card.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 import EmailTemplateEditor from '@/Components/EmailTemplateEditor.vue';
 
 const props = defineProps({
@@ -36,22 +40,25 @@ const reset = () => {
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 class="text-xl font-bold text-slate-900 dark:text-white">Email wording</h2>
-          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Change what the emails your lodge sends say. Anything you don't change uses the standard wording.</p>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Change what the emails your lodge sends say. Anything you don't change uses the standard wording.</p>
         </div>
-        <Link :href="route('admin.events.index', { clubSlug: club.slug })" class="self-start rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">&larr; Back to events</Link>
+        <Button variant="secondary" size="sm" class="self-start" :href="route('admin.events.index', { clubSlug: club.slug })">
+          <template #icon><UiIcon name="arrow-left" /></template>
+          Back to events
+        </Button>
       </div>
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div class="space-y-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-4">
-          <button v-for="template in templates" :key="template.key" type="button" :class="['w-full rounded-xl border p-3 text-left text-sm transition-all', selectedKey === template.key ? 'border-blue-400 bg-blue-50 dark:border-blue-600 dark:bg-blue-950/60' : 'border-slate-200 bg-slate-50 hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900/60']" @click="selectedKey = template.key">
-            <span class="font-semibold text-slate-900 dark:text-white">{{ template.name }}</span>
-            <span v-if="template.customised" class="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Customised</span>
+        <Card padding="sm" class="space-y-2 self-start lg:col-span-4">
+          <button v-for="template in templates" :key="template.key" type="button" :class="['flex w-full flex-wrap items-center gap-2 rounded-xl border p-3 text-left text-sm transition-colors', selectedKey === template.key ? 'border-blue-400 bg-blue-50 dark:border-blue-600 dark:bg-blue-950/60' : 'border-slate-200 bg-slate-50 hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900/60']" @click="selectedKey = template.key">
+            <span class="font-medium text-slate-900 dark:text-white">{{ template.name }}</span>
+            <Badge v-if="template.customised" variant="info">Customised</Badge>
           </button>
-        </div>
+        </Card>
 
         <div v-if="selected" class="lg:col-span-8">
           <EmailTemplateEditor :template="selected" :processing="form.processing" :errors="form.errors" :can-reset="selected.customised" @save="send('put', 'update', $event)" @test="send('post', 'test', $event)" @reset="reset" />
-          <p v-if="selected.required_placeholder" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">This email must keep <span class="font-mono">&#123;&#123; {{ selected.required_placeholder }} &#125;&#125;</span> so the link in the email keeps working.</p>
+          <p v-if="selected.required_placeholder" class="mt-2 text-xs text-slate-500 dark:text-slate-400">This email must keep <span class="font-mono">&#123;&#123; {{ selected.required_placeholder }} &#125;&#125;</span> so the link in the email keeps working.</p>
         </div>
       </div>
     </div>

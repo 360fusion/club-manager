@@ -1,6 +1,9 @@
 <script setup>
 import { ref } from 'vue';
 import { useForm, Head } from '@inertiajs/vue3';
+import Alert from '@/Components/Ui/Alert.vue';
+import Button from '@/Components/Ui/Button.vue';
+import UiIcon from '@/Components/Ui/UiIcon.vue';
 
 const useRecoveryCode = ref(false);
 
@@ -17,18 +20,19 @@ const submit = () => {
 </script>
 
 <template>
-  <Head title="Two-Factor Verification" />
+  <Head title="Two-factor verification" />
 
-  <div class="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 text-slate-100 font-sans">
-    <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl shadow-blue-950/40 space-y-6">
-      
+  <!-- The card is always dark, so the kit components take their dark look inside it. -->
+  <div class="dark min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 text-slate-100 font-sans">
+    <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl shadow-blue-950/40 space-y-6">
+
       <!-- Header -->
       <div class="text-center space-y-2">
-        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-2xl mb-2">
-          🔐
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-2">
+          <UiIcon name="shield" :size="20" />
         </div>
-        <h1 class="text-2xl font-black bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-          Two-Factor Authentication
+        <h1 class="text-2xl font-semibold text-white">
+          Two-factor authentication
         </h1>
         <p class="text-xs text-slate-400">
           {{ useRecoveryCode ? 'Enter one of your emergency recovery codes.' : 'Enter the 6-digit verification code from your authenticator app.' }}
@@ -36,56 +40,48 @@ const submit = () => {
       </div>
 
       <!-- Errors -->
-      <div v-if="form.errors.code" class="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs text-center font-medium">
-        {{ form.errors.code }}
-      </div>
+      <Alert v-if="form.errors.code || form.errors.recovery_code" variant="danger">{{ form.errors.code || form.errors.recovery_code }}</Alert>
 
-      <!-- Form -->
+      <!-- Form. The code fields stay raw inputs (styled like the kit's) so the code can be centred in a monospace face. -->
       <form @submit.prevent="submit" class="space-y-5">
-        <div v-if="!useRecoveryCode">
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-            6-Digit Authenticator Code
+        <div v-if="!useRecoveryCode" class="space-y-1.5">
+          <label for="two-factor-code" class="block text-xs font-medium text-slate-300">
+            6-digit authenticator code
           </label>
           <input
+            id="two-factor-code"
             v-model="form.code"
             type="text"
             inputmode="numeric"
             autofocus
             placeholder="123456"
             maxlength="6"
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-center text-xl font-mono tracking-widest text-white focus:outline-none focus:border-blue-500 transition-colors"
+            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-center text-xl font-mono tracking-widest text-white placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
 
-        <div v-else>
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-            Emergency Recovery Code
+        <div v-else class="space-y-1.5">
+          <label for="two-factor-recovery-code" class="block text-xs font-medium text-slate-300">
+            Emergency recovery code
           </label>
           <input
+            id="two-factor-recovery-code"
             v-model="form.recovery_code"
             type="text"
             autofocus
             placeholder="abcdef-12345"
-            class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-center font-mono text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-center font-mono text-sm text-white placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
 
-        <button
-          type="submit"
-          :disabled="form.processing"
-          class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-500 hover:to-blue-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50"
-        >
-          {{ form.processing ? 'Verifying...' : 'Verify code & sign in' }}
-        </button>
+        <Button type="submit" size="lg" block :loading="form.processing">
+          {{ form.processing ? 'Verifying...' : 'Verify code and sign in' }}
+        </Button>
 
         <div class="text-center pt-2">
-          <button
-            type="button"
-            @click="useRecoveryCode = !useRecoveryCode; form.reset()"
-            class="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
-          >
+          <Button variant="ghost" size="sm" @click="useRecoveryCode = !useRecoveryCode; form.reset()">
             {{ useRecoveryCode ? 'Use 6-digit authenticator code instead' : 'Use an emergency recovery code' }}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
