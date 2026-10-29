@@ -138,7 +138,7 @@ class AccountingService
             throw new InvalidArgumentException("Journal entry is not balanced. Total Debits ({$club->currencySymbol()}{$totalDebit}) must equal Total Credits ({$club->currencySymbol()}{$totalCredit}).");
         }
 
-        $entryYear = (int) date('Y', strtotime($data['entry_date'] ?? date('Y-m-d')));
+        $entryYear = $club->financialYearFor($data['entry_date'] ?? now());
         if ($club->financialYearIsClosed($entryYear) && ! (auth()->user()?->is_super_admin)) {
             throw new InvalidArgumentException("The books for {$entryYear} are closed. Reopen the financial year before posting to it.");
         }
@@ -188,8 +188,8 @@ class AccountingService
             throw new InvalidArgumentException('Journal entry must be balanced. Total Debit ('.Currencies::format($totalDebit, $club).') does not equal Total Credit ('.Currencies::format($totalCredit, $club).').');
         }
 
-        $existingYear = (int) $entry->entry_date->format('Y');
-        $newYear = (int) date('Y', strtotime($data['entry_date'] ?? $entry->entry_date->format('Y-m-d')));
+        $existingYear = $club->financialYearFor($entry->entry_date);
+        $newYear = $club->financialYearFor($data['entry_date'] ?? $entry->entry_date);
         if ((! (auth()->user()?->is_super_admin)) && ($club->financialYearIsClosed($existingYear) || $club->financialYearIsClosed($newYear))) {
             throw new InvalidArgumentException("The books for {$existingYear} are closed. Reopen the financial year before editing this entry.");
         }

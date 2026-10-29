@@ -24,15 +24,17 @@ class SubscriptionBillingService
         $effectiveDueDate = $dueDate ?? Carbon::create($billingYear, 4, 1);
 
         $activeMembers = Member::where('club_id', $clubId)
-            ->active()
+            ->subscribing()
             ->with(['subscriptionTier'])
             ->get();
+        $defaultTier = SubscriptionTier::where('club_id', $clubId)->active()->first();
 
         $createdCount = 0;
         $skippedCount = 0;
+        $noRateCount = 0;
         $totalBilled = 0.0;
 
-        DB::transaction(function () use ($activeMembers, $clubId, $billingYear, $effectiveDueDate, &$createdCount, &$skippedCount, &$totalBilled) {
+        DB::transaction(function () use ($activeMembers, $clubId, $billingYear, $effectiveDueDate, $defaultTier, &$createdCount, &$skippedCount, &$noRateCount, &$totalBilled) {
             foreach ($activeMembers as $member) {
                 // Check if invoice already generated for this billing year
                 $exists = MemberSubscription::where('member_id', $member->id)
@@ -53,10 +55,13 @@ class SubscriptionBillingService
                     $amount = (float) $member->subscriptionTier->annual_amount;
                 } elseif ($member->membership_status === MembershipStatus::Honorary) {
                     $amount = 0.0;
+                } elseif ($defaultTier) {
+                    $amount = (float) $defaultTier->annual_amount;
                 } else {
-                    // Default fallback standard dues tier if available
-                    $defaultTier = SubscriptionTier::where('club_id', $clubId)->active()->first();
-                    $amount = $defaultTier ? (float) $defaultTier->annual_amount : 160.00;
+                    // No tier, no override and no tier set up: never invent an amount.
+                    $noRateCount++;
+
+                    continue;
                 }
 
                 $status = ($amount == 0.0 || $member->membership_status === MembershipStatus::Honorary)
@@ -86,6 +91,7 @@ class SubscriptionBillingService
         return [
             'created_count' => $createdCount,
             'skipped_count' => $skippedCount,
+            'no_rate_count' => $noRateCount,
             'total_billed' => $totalBilled,
         ];
     }
@@ -133,18 +139,23 @@ class SubscriptionBillingService
     }
 
     /**
-     * Audit unpaid subscriptions under UGLE Rule 181 arrears policy.
+     * Unpaid subscriptions more than $graceDays past due, without changing anything.
+     */
+    public function overdueSubscriptions(Club|int $club, int $graceDays = 90): Collection
+    {
+        return MemberSubscription::where('club_id', $club instanceof Club ? $club->id : $club)
+            ->unpaid()
+            ->where('due_date', '<', Carbon::now()->subDays($graceDays))
+            ->with(['member', 'tier'])
+            ->get();
+    }
+
+    /**
+     * Audit unpaid subscriptions under UGLE Rule 181 arrears policy, marking each overdue one with an arrears warning.
      */
     public function checkRule181Arrears(Club|int $club, int $graceDays = 90): Collection
     {
-        $clubId = $club instanceof Club ? $club->id : $club;
-        $cutoffDate = Carbon::now()->subDays($graceDays);
-
-        $overdueSubscriptions = MemberSubscription::where('club_id', $clubId)
-            ->unpaid()
-            ->where('due_date', '<', $cutoffDate)
-            ->with(['member', 'tier'])
-            ->get();
+        $overdueSubscriptions = $this->overdueSubscriptions($club, $graceDays);
 
         foreach ($overdueSubscriptions as $sub) {
             if ($sub->status !== SubscriptionStatus::ArrearsWarning) {

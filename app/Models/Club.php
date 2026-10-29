@@ -8,6 +8,8 @@ use App\Support\MasonicRanks;
 use App\Support\Months;
 use App\Support\OrderColours;
 use App\Support\ReservedClubSlugs;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Database\Factories\ClubFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -497,6 +499,39 @@ class Club extends Model implements HasMedia
      * AccountingPeriodClose) — new journal entries dated inside a closed year are
      * blocked for normal admins, mirroring vatSettingsAreLocked()'s shape.
      */
+    /**
+     * The month (1-12) the lodge's financial year ends in: April unless the treasurer chose another.
+     */
+    public function financialYearEndMonth(): int
+    {
+        $month = (int) ($this->settings['financial_year_end_month'] ?? 4);
+
+        return $month >= 1 && $month <= 12 ? $month : 4;
+    }
+
+    /**
+     * Financial years are numbered by the calendar year they end in: with an April year end,
+     * 2026 runs from 1 May 2025 to 30 April 2026.
+     */
+    public function financialYearFor(CarbonInterface|string $date): int
+    {
+        $date = Carbon::parse($date);
+
+        return $date->month > $this->financialYearEndMonth() ? $date->year + 1 : $date->year;
+    }
+
+    /**
+     * The first and last day of financial year $year (see financialYearFor()).
+     *
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    public function financialYearRange(int $year): array
+    {
+        $end = Carbon::create($year, $this->financialYearEndMonth(), 1)->endOfMonth();
+
+        return [$end->copy()->addDay()->subYear()->startOfDay(), $end];
+    }
+
     public function financialYearIsClosed(int $year): bool
     {
         return DB::table('accounting_period_closes')

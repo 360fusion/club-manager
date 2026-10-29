@@ -147,10 +147,10 @@ class AccountingAdminController extends Controller
                 'disposal_proceeds' => $asset->disposal_proceeds !== null ? (float) $asset->disposal_proceeds : null,
             ]);
 
-        $budgetYear = (int) ($request->query('budget_year') ?: now()->year);
+        $budgetYear = (int) ($request->query('budget_year') ?: $club->financialYearFor(now()));
         $budgetVsActual = $this->budgetService->getBudgetVsActual($club, $budgetYear);
 
-        $treasurerReportYear = (int) ($request->query('treasurer_report_year') ?: now()->year);
+        $treasurerReportYear = (int) ($request->query('treasurer_report_year') ?: $club->financialYearFor(now()));
         $annualTreasurerReport = $this->annualTreasurerReportService->build($club, $treasurerReportYear);
 
         $recurringBillTemplates = RecurringBillTemplate::where('club_id', $club->id)

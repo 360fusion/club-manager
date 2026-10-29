@@ -44,6 +44,7 @@
     <div class="header">
         <div class="club-name">{{ $report['club_name'] }}</div>
         <div class="report-title">Annual Treasurer's Report — Financial Year {{ $report['financial_year'] }}</div>
+        <div>{{ $report['period_start'] }} to {{ $report['period_end'] }}</div>
         <span class="status-badge {{ $report['is_closed'] ? 'status-closed' : 'status-open' }}">
             {{ $report['is_closed'] ? 'Books Closed' : 'Books Open — Draft' }}
         </span>

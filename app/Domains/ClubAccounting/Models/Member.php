@@ -148,6 +148,17 @@ class Member extends Model
         ]);
     }
 
+    /**
+     * Members who are billed dues (Honorary members get a waived line), unlike active(), which also lists Historical members.
+     */
+    public function scopeSubscribing(Builder $query): Builder
+    {
+        return $query->whereIn('membership_status', array_map(
+            fn (MembershipStatus $status) => $status->value,
+            array_filter(MembershipStatus::cases(), fn (MembershipStatus $status) => $status->isSubscribing()),
+        ));
+    }
+
     public function scopeOfficers(Builder $query): Builder
     {
         return $query->where('current_office', '!=', LodgeOffice::Member->value);

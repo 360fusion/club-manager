@@ -54,7 +54,9 @@ class BudgetDomainTest extends TestCase
         $expenseAcc = Account::where('club_id', $this->club->id)->where('code', '5000')->firstOrFail();
         $untouchedAcc = Account::where('club_id', $this->club->id)->where('code', '5100')->firstOrFail();
 
-        $this->budgetService->setBudgetLines($this->club, 2026, [
+        // The dues payment is posted today, so the budget is for the financial year that contains today.
+        $year = $this->club->financialYearFor(now());
+        $this->budgetService->setBudgetLines($this->club, $year, [
             ['account_id' => $duesAcc->id, 'budgeted_amount' => 1000.00],
             ['account_id' => $expenseAcc->id, 'budgeted_amount' => 500.00],
         ]);
@@ -63,14 +65,14 @@ class BudgetDomainTest extends TestCase
         $this->accountingService->recordMemberDuesPayment($this->club, 800.00, 'Dues');
         $this->accountingService->postJournalEntry($this->club, [
             'description' => 'Hall hire',
-            'entry_date' => '2026-06-01',
+            'entry_date' => now()->toDateString(),
             'items' => [
                 ['account_id' => $expenseAcc->id, 'debit' => 650.00, 'credit' => 0],
                 ['account_id' => $this->accountingService->getAccount($this->club, '1000')->id, 'debit' => 0, 'credit' => 650.00],
             ],
         ]);
 
-        $result = $this->budgetService->getBudgetVsActual($this->club, 2026);
+        $result = $this->budgetService->getBudgetVsActual($this->club, $year);
 
         $duesRow = collect($result['rows'])->firstWhere('code', '4000');
         $this->assertEquals(1000.00, $duesRow['budgeted']);

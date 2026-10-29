@@ -27,7 +27,7 @@ class BudgetService
     }
 
     /**
-     * Budget vs actual for every revenue/expense account for a calendar year, with
+     * Budget vs actual for every revenue/expense account for a financial year, with
      * variance and variance %. Accounts with neither a budget nor any activity that
      * year are left out.
      *
@@ -46,7 +46,7 @@ class BudgetService
         $totalBudgeted = 0.0;
         $totalActual = 0.0;
 
-        $actuals = Account::actualsForYear($accounts, $year);
+        $actuals = Account::actualsForYear($accounts, $club, $year);
 
         foreach ($accounts as $account) {
             $budgeted = (float) ($budgets[$account->id]->budgeted_amount ?? 0);

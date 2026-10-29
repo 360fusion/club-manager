@@ -166,8 +166,8 @@ class MeetingFinancialReturnTest extends TestCase
 
         $report = app(AccountingReports::class)->getComparativeIncomeExpenditureData($this->club);
 
-        $this->assertEquals((string) (now()->year - 1), $report['prior_year_label']);
-        $this->assertEquals((string) now()->year, $report['current_year_label']);
+        $this->assertEquals((string) ($this->club->financialYearFor(now()) - 1), $report['prior_year_label']);
+        $this->assertEquals((string) $this->club->financialYearFor(now()), $report['current_year_label']);
         $this->assertCount(5, $report['rows']);
         $this->assertGreaterThan(0, $report['current_totals']['income']);
         $this->assertGreaterThan(0, $report['current_balance_carried_forward']);

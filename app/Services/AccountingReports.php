@@ -397,7 +397,7 @@ class AccountingReports
      */
     public function getComparativeIncomeExpenditureData(Club $club): array
     {
-        $currentYear = (int) now()->year;
+        $currentYear = $club->financialYearFor(now());
         $priorYear = $currentYear - 1;
 
         $current = $this->comparativeIncomeExpenditureFiguresForYear($club, $currentYear);
@@ -446,19 +446,22 @@ class AccountingReports
      */
     private function comparativeIncomeExpenditureFiguresForYear(Club $club, int $year): array
     {
+        $range = $club->financialYearRange($year);
+        $days = array_map(fn ($day) => $day->toDateString(), $range);
+
         $subsIncome = (float) Invoice::where('club_id', $club->id)
             ->where('status', DocumentStatus::Paid->value)
-            ->whereYear('paid_at', $year)
+            ->whereBetween('paid_at', $range)
             ->sum('amount');
 
         $subsExpenditure = (float) Bill::where('club_id', $club->id)
             ->where('status', DocumentStatus::Paid->value)
-            ->whereYear('paid_at', $year)
+            ->whereBetween('paid_at', $range)
             ->sum('amount');
 
         $returns = MeetingFinancialReturn::where('club_id', $club->id)
             ->where('is_draft', false)
-            ->whereYear('return_date', $year)
+            ->whereBetween('return_date', $days)
             ->get();
 
         return [
@@ -499,7 +502,7 @@ class AccountingReports
         if ($reportKey === 'budget_vs_actual') {
             return $this->csvFromRows(
                 ['Code', 'Name', 'Type', 'Budgeted', 'Actual', 'Variance'],
-                collect(app(BudgetService::class)->getBudgetVsActual($club, $budgetYear ?? (int) now()->year)['rows'])
+                collect(app(BudgetService::class)->getBudgetVsActual($club, $budgetYear ?? $club->financialYearFor(now()))['rows'])
                     ->map(fn ($r) => [$r['code'], $r['name'], $r['type'], $r['budgeted'], $r['actual'], $r['variance']])
             );
         }
@@ -587,7 +590,7 @@ class AccountingReports
         }
 
         $report = $reportKey === 'budget_vs_actual'
-            ? app(BudgetService::class)->getBudgetVsActual($club, $budgetYear ?? (int) now()->year)
+            ? app(BudgetService::class)->getBudgetVsActual($club, $budgetYear ?? $club->financialYearFor(now()))
             : $this->getReportsData($club)[$reportKey];
 
         return ['pdf.accounting.report', [

@@ -36,6 +36,7 @@ defineProps({
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
         <div>
           <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Annual Treasurer's report — {{ annualTreasurerReport.financial_year }}</h3>
+          <p v-if="annualTreasurerReport.period_start" class="text-sm text-slate-600 dark:text-slate-300 mt-1">{{ annualTreasurerReport.period_start }} to {{ annualTreasurerReport.period_end }}</p>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap items-center gap-2">
             <Badge :variant="annualTreasurerReport.is_closed ? 'success' : 'warning'">
               {{ annualTreasurerReport.is_closed ? 'Books closed' : 'Books open — draft' }}

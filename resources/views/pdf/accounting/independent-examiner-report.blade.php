@@ -34,7 +34,7 @@
     </div>
 
     <div class="section-title">Independent Examiner's Report to the Trustees</div>
-    <p>I report on the accounts of the charity for the year ended {{ $report['financial_year'] }}, which are set out below.</p>
+    <p>I report on the accounts of the charity for the year ended {{ $report['period_end'] }}, which are set out below.</p>
 
     <p><strong>Respective responsibilities of the trustees and the examiner.</strong> The charity's trustees are responsible for the preparation of the accounts. The charity's trustees consider that an audit is not required for this year under section 144 of the Charities Act 2011 (the Act) and that an independent examination is needed. It is my responsibility to examine the accounts under section 145 of the Act, to follow the procedures laid down in the general Directions given by the Charity Commission under section 145(5)(b) of the Act, and to state whether particular matters have come to my attention.</p>
 

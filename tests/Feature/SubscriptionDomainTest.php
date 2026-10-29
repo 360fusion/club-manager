@@ -132,6 +132,19 @@ class SubscriptionDomainTest extends TestCase
         ]);
     }
 
+    public function test_billing_run_skips_historical_members_and_never_invents_an_amount(): void
+    {
+        $this->member1->update(['membership_status' => MembershipStatus::Historical]);
+        $this->member2->update(['subscription_tier_id' => null]);
+        SubscriptionTier::where('club_id', $this->club->id)->update(['is_active' => false]);
+
+        $result = (new SubscriptionBillingService)->generateAnnualBillingRun($this->club, 2026);
+
+        $this->assertSame(0, $result['created_count']);
+        $this->assertSame(1, $result['no_rate_count']);
+        $this->assertDatabaseCount('club_acc_member_subscriptions', 0);
+    }
+
     public function test_record_payment_updates_subscription_status(): void
     {
         $service = new SubscriptionBillingService;

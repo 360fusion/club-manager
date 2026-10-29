@@ -105,7 +105,7 @@ class SubscriptionIndex extends Component
             Carbon::parse($this->billing_due_date)
         );
 
-        session()->flash('success', "Annual billing run completed for {$this->billing_year}: {$result['created_count']} new invoices created (".Currencies::format($result['total_billed'], $club)." total billed), {$result['skipped_count']} existing skipped.");
+        session()->flash('success', "Annual billing run completed for {$this->billing_year}: {$result['created_count']} new invoices created (".Currencies::format($result['total_billed'], $club)." total billed), {$result['skipped_count']} existing skipped.".($result['no_rate_count'] ? " {$result['no_rate_count']} members were not billed because they have no subscription tier and no tier is set up." : ''));
         $this->showBillingModal = false;
         $this->selectedYear = $this->billing_year;
     }

@@ -46,21 +46,24 @@ class AnnualTreasurerReportService
         $generalFund = $this->fundReceiptsAndPayments($club, $year, $accounts->reject(fn ($a) => in_array($a->code, self::CHARITY_LEDGER_CODES, true)));
         $ledgerCharityFund = $this->fundReceiptsAndPayments($club, $year, $accounts->filter(fn ($a) => in_array($a->code, self::CHARITY_LEDGER_CODES, true)));
 
-        $collections = CharityCollection::where('club_id', $club->id)->whereYear('created_at', $year)->get();
+        [$yearStart, $yearEnd] = $club->financialYearRange($year);
+        $collections = CharityCollection::where('club_id', $club->id)->whereBetween('created_at', [$yearStart, $yearEnd])->get();
         $grants = CharityGrant::where('club_id', $club->id)
             ->where('approval_status', GrantApprovalStatus::Disbursed)
-            ->whereYear('updated_at', $year)
+            ->whereBetween('updated_at', [$yearStart, $yearEnd])
             ->get();
 
         $bankAccounts = BankAccount::where('club_id', $club->id)->with('account')->get();
 
-        $arrears = $this->subscriptionBillingService->checkRule181Arrears($club);
+        $arrears = $this->subscriptionBillingService->overdueSubscriptions($club);
 
         $auditSignOff = AccountingYearAudit::where('club_id', $club->id)->where('financial_year', $year)->with(['auditorOne', 'auditorTwo'])->first();
 
         return [
             'club_name' => $club->name,
             'financial_year' => $year,
+            'period_start' => $yearStart->format('j F Y'),
+            'period_end' => $yearEnd->format('j F Y'),
             'is_closed' => $club->financialYearIsClosed($year),
             'general_fund' => $generalFund,
             'charity_fund' => [
@@ -194,7 +197,7 @@ class AnnualTreasurerReportService
      */
     private function fundReceiptsAndPayments(Club $club, int $year, $accounts): array
     {
-        $actuals = Account::actualsForYear($accounts, $year);
+        $actuals = Account::actualsForYear($accounts, $club, $year);
 
         $rows = $accounts->map(function (Account $account) use ($actuals) {
             $actual = $actuals[$account->id] ?? 0.0;
@@ -220,7 +223,7 @@ class AnnualTreasurerReportService
 
     public function toCsv(array $report): string
     {
-        $csv = Csv::line(['Annual Treasurer\'s Report', $report['club_name'], (string) $report['financial_year']]);
+        $csv = Csv::line(['Annual Treasurer\'s Report', $report['club_name'], (string) $report['financial_year'], $report['period_start'].' to '.$report['period_end']]);
         $csv .= Csv::line([]);
 
         $csv .= Csv::line(['GENERAL FUND']);

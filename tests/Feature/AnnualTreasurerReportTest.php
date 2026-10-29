@@ -6,9 +6,11 @@ use App\Domains\ClubAccounting\Enums\CollectionType;
 use App\Domains\ClubAccounting\Enums\GrantApprovalStatus;
 use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Enums\MembershipStatus;
+use App\Domains\ClubAccounting\Enums\SubscriptionStatus;
 use App\Domains\ClubAccounting\Models\CharityCollection;
 use App\Domains\ClubAccounting\Models\CharityGrant;
 use App\Domains\ClubAccounting\Models\Member;
+use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Models\Accounting\Account;
 use App\Models\Club;
 use App\Models\ClubType;
@@ -62,7 +64,7 @@ class AnnualTreasurerReportTest extends TestCase
 
     public function test_report_separates_general_fund_from_charity_fund_and_totals_charity_collections_and_grants(): void
     {
-        Carbon::setTestNow('2026-06-01');
+        Carbon::setTestNow('2026-03-20');
 
         $bankAcc = Account::where('club_id', $this->club->id)->where('code', '1000')->firstOrFail();
         $duesAcc = Account::where('club_id', $this->club->id)->where('code', '4000')->firstOrFail();
@@ -70,7 +72,7 @@ class AnnualTreasurerReportTest extends TestCase
 
         // General Fund income (dues).
         $this->accountingService->postJournalEntry($this->club, [
-            'entry_date' => '2026-05-01',
+            'entry_date' => '2026-03-01',
             'description' => 'Dues',
             'items' => [
                 ['account_id' => $bankAcc->id, 'debit' => 500, 'credit' => 0],
@@ -80,7 +82,7 @@ class AnnualTreasurerReportTest extends TestCase
 
         // Charity-coded ledger income (raffle), which should NOT appear in the General Fund total.
         $this->accountingService->postJournalEntry($this->club, [
-            'entry_date' => '2026-05-10',
+            'entry_date' => '2026-03-10',
             'description' => 'Raffle',
             'items' => [
                 ['account_id' => $bankAcc->id, 'debit' => 80, 'credit' => 0],
@@ -124,6 +126,24 @@ class AnnualTreasurerReportTest extends TestCase
         $this->assertFalse($report['is_closed']);
 
         Carbon::setTestNow();
+    }
+
+    public function test_opening_the_report_lists_arrears_without_changing_any_subscription(): void
+    {
+        $member = Member::create([
+            'club_id' => $this->club->id, 'first_name' => 'Owen', 'last_name' => 'Late', 'masonic_rank' => 'Bro',
+            'membership_status' => MembershipStatus::Active, 'current_office' => LodgeOffice::Member,
+        ]);
+        $overdue = MemberSubscription::create([
+            'club_id' => $this->club->id, 'member_id' => $member->id, 'billing_year' => 2025,
+            'due_date' => Carbon::now()->subDays(120), 'amount_due' => 100, 'amount_paid' => 0,
+            'status' => SubscriptionStatus::Unpaid, 'invoice_reference' => 'INV-2025-LATE',
+        ]);
+
+        $report = $this->reportService->build($this->club, 2026);
+
+        $this->assertSame(1, $report['membership']['in_arrears_count']);
+        $this->assertSame(SubscriptionStatus::Unpaid, $overdue->fresh()->status);
     }
 
     public function test_report_reflects_closed_year_and_signed_off_audit(): void

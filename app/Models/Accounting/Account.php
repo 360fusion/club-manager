@@ -87,7 +87,7 @@ class Account extends Model
      * @param  iterable<Account>  $accounts
      * @return array<int, float> account id => amount
      */
-    public static function actualsForYear(iterable $accounts, int $year): array
+    public static function actualsForYear(iterable $accounts, Club $club, int $year): array
     {
         $accounts = collect($accounts);
 
@@ -98,7 +98,7 @@ class Account extends Model
         $rows = DB::table('accounting_journal_items as items')
             ->join('accounting_journal_entries as entries', 'entries.id', '=', 'items.journal_entry_id')
             ->where('entries.status', '!=', 'void')
-            ->whereYear('entries.entry_date', $year)
+            ->whereBetween('entries.entry_date', array_map(fn ($day) => $day->toDateString(), $club->financialYearRange($year)))
             ->whereIn('items.account_id', $accounts->pluck('id'))
             ->groupBy('items.account_id')
             ->selectRaw('items.account_id, sum(items.debit) as debit, sum(items.credit) as credit')

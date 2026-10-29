@@ -86,7 +86,7 @@ class AccountingExportController extends Controller
         $club = $this->findClub($clubSlug);
         ClubAccess::authorize($request->user(), $club, 'view_accounting');
 
-        $year = (int) ($request->query('year') ?: now()->year);
+        $year = (int) ($request->query('year') ?: $club->financialYearFor(now()));
         $report = $this->annualTreasurerReportService->build($club, $year);
         $cs = $club->currencySymbol();
         $viewData = compact('report', 'cs');
@@ -137,7 +137,7 @@ class AccountingExportController extends Controller
         $club = $this->findClub($clubSlug);
         ClubAccess::authorize($request->user(), $club, 'view_accounting');
 
-        $year = (int) ($request->query('year') ?: now()->year);
+        $year = (int) ($request->query('year') ?: $club->financialYearFor(now()));
         $report = $this->annualTreasurerReportService->build($club, $year);
         $csv = $this->annualTreasurerReportService->toCsv($report);
 
@@ -202,7 +202,7 @@ class AccountingExportController extends Controller
         ClubAccess::authorize($request->user(), $club, 'view_accounting');
         abort_unless($club->charityCommissionSettings()['registered'], 404);
 
-        $year = (int) ($request->query('year') ?: now()->year);
+        $year = (int) ($request->query('year') ?: $club->financialYearFor(now()));
         $viewData = $this->annualTreasurerReportService->independentExaminerReportData($club, $year) + ['cs' => $club->currencySymbol()];
 
         return $this->renderAccountingPdf($request, 'pdf.accounting.independent-examiner-report', $viewData, "Independent-Examiners-Report-{$club->slug}-{$year}.pdf");
