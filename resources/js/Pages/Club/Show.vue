@@ -137,7 +137,7 @@ const primaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl 
                     <Button variant="secondary" size="sm" :href="`/${club.slug}/admin/posts`">
                         <UiIcon name="document" /> Blog & news
                     </Button>
-                    <Button variant="secondary" size="sm" :href="`/${club.slug}/admin/memberships`">
+                    <Button variant="secondary" size="sm" :href="`/${club.slug}/admin/dues-subscriptions`">
                         <UiIcon name="users" /> Memberships
                     </Button>
                     <Button variant="secondary" size="sm" :href="`/${club.slug}/admin/pages`">

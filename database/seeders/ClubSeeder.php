@@ -333,7 +333,7 @@ class ClubSeeder extends Seeder
                     'title' => 'Brotherly Love, Relief & Truth',
                     'subtitle' => 'Official website of The Lodge of Fraternity.',
                     'cta_text' => 'Join the Club',
-                    'cta_link' => '/pages/join-us',
+                    'cta_link' => '/site/lodge-of-fraternity/join-us',
                 ],
                 [
                     'type' => 'donation_campaign',

@@ -24,7 +24,7 @@ const side = computed(() => navMode.value === 'side');
 const currentRole = computed(() => (page.props.auth?.clubs ?? []).find((club) => club.slug === slug.value)?.role ?? 'member');
 const isStaff = computed(() => Boolean(props.club) && currentRole.value !== 'member');
 // Coaches are not allowed the analytics dashboard, so send them to events instead.
-const adminHome = computed(() => (currentRole.value === 'coach' ? route('admin.events.index', { slug: slug.value }) : route('admin.analytics', { slug: slug.value })));
+const adminHome = computed(() => (currentRole.value === 'coach' ? route('admin.events.index', { clubSlug: slug.value }) : route('admin.analytics', { slug: slug.value })));
 
 // Only the notices that no form field shows itself; field errors stay next to their fields.
 const NOTICE_KEYS = ['cutoff', 'booking_closed', 'rsvp'];
