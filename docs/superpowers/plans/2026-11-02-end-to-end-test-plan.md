@@ -394,3 +394,70 @@ Not run: H1.1, H1.4 to H1.6, H2.3, H3.6, H3.7, H4.5, H4.6, H5.3, H5.4, H5.6, H6.
 **Fixed after Phase H (retested in the e2e app):** F16 (balance sheet now shows "Surplus (deficit) to date" in equity: assets £77.17 = liabilities £0 + equity £77.17), F12 (statement import has a bank account picker, required when there are several; the lines and the import batch store the account), F13 (reconciliation posts to the line's own bank account's ledger account: a £0.50 savings line debited 1010, not 1000), F14 (the nominal list is the lodge's own income accounts for money in and expense accounts for money out, a code outside it is refused, and nothing is created as "General Account"). Still open: F11, F15, F17 to F20.
 
 **Fixed after Phase H, second round (retested in the e2e app):** F15 (a bill is charged to the expense account its category belongs to: Bar & Dining Supplies to 5200, Utilities & Fuel to 5100, Admin and Insurance to 5300, a category named like one of the lodge's expense accounts to that account, anything else to 5000), F17 (unreadable dates and amounts are listed in the import preview and not imported; an unreadable amount is no longer a £0.00 line; the success message says how many rows were left out), F18 (an unbalanced or closed-year journal now shows the message: web requests go back with the error, JSON gets a 422; `LedgerRuleException`). Still open: F11, F19, F20.
+
+### Phase D results (run 2 Nov 2026, e2e database, Mailpit)
+
+Setup used: a platform superadmin `super@e2e.test` created in the database (the seed has none), event capacity raised to 10, one digest channel switched on, a lodge contact address set for the contact-form tests.
+
+| ID | Result | Note |
+|---|---|---|
+| D1 | PASS | Superadmin edited the "booking confirmation" template; the test send came to the superadmin with placeholders shown as `[name]`; a real booking then used the new subject and wording with every placeholder filled. |
+| D2 | PASS | Lodge override saved for that lodge only; the next booking used the lodge wording and sender name. Refused with a clear message: a guest email asking for `{{payment_details}}` or `{{manage_url}}`, a booking email that drops `{{manage_url}}`, an empty body. An unknown template key returns 404. `<script>` was stripped from the saved body. |
+| D3 | PARTIAL | Content and links checked for: verification, reset, invitation, summons (earlier), booking (member and guest), payment received, refund, place available, payment reminder, newsletter, digest, contact form. Not run: signature request, committee agenda pack, lodge claim. |
+| D4 | PASS | Newsletter to a non-mandatory type reached the 7 active members in the chosen roles (not the treasurer, not the invitee who had not accepted yet) plus 1 test copy; 20 delivery rows for 3 sends, none failed. `<script>`, `onerror` and `javascript:` links were removed. Every email carries a browser-copy link, an unsubscribe link and `List-Unsubscribe` one-click headers. The unsubscribe link asks for confirmation first (mail scanners cannot trigger it), then works and offers "Subscribe again". The opted-out member was left out of the next newsletter. A mandatory type cannot be switched off from the link ("official notice"). A sent newsletter cannot be resent or edited. |
+| D5 | PASS with F22 | Digest: "No approved updates waiting" blocks a run unless `--force`; with it, 4 emails to the members of the digest channel's default role, and a second run in the same hour sent nothing more. |
+| D6 | FAIL (F23) / PASS | With a contact address set: the message goes to the lodge, an outsider as recipient or cc is ignored (an active member as cc is allowed), the visitor's email is the reply-to, injected HTML is escaped, and the form is rate limited (429). With no contact address set it says "sent successfully" but nothing arrives (F23). |
+| C5.2 | PASS | Payment reminders: 3 sent for unpaid bookings with a due date (due soon and overdue), none for paid or cancelled, none on a second run. |
+
+**Email findings (not fixed)**
+- **F21 Low.** Booking again after replying "can't go" sends no confirmation email: it is only sent when the booking record is new (`MemberRsvpController`).
+- **F22 Low.** The weekly digest lists committee meetings only, not published lodge meetings, though its subtitle says "Upcoming Meetings".
+- **F23 Medium.** Public contact form with no contact address configured for the lodge: the visitor is told the message was sent, but each email fails in the queue ("An email must have a To, Cc or Bcc header") and the message is lost. Nothing tells the lodge.
+- **F24 Low.** Payment reminders say what is owed and the due date but give no link or way to pay, and an overdue reminder reads the same as a due-soon one ("due by 1 Nov").
+- **F3 again.** A superadmin created without a verified email got one verification email per failed login attempt.
+
+**Fixed after Phase D (retested in the e2e app):** F23 (a contact form with no address to send to now shows "This lodge has not set up an address for messages yet, so yours could not be sent." under the message box and queues nothing) and F3 (signing in again while unverified sends one confirmation link per 5 minutes; three attempts gave one email, and the message says to check the inbox). Still open: F11, F19 to F22, F24, and the low items F4 to F10.
+
+**Fixed after Phase H, third round (retested in the e2e app):** F11 (opening Bank accounts no longer creates a "High Street Bank" account; a lodge with none sees "No bank accounts yet" with an add button, Bath RFC stayed at 0 accounts after a visit, and the first account a lodge adds takes the chart's "Operating Bank Account" 1000 so the cash reports keep working), F19 (a refused file shows "Bank statement file must be a CSV, TXT, or OFX format export."; a file with no transactions in it shows "No transactions were found in that file..." and no empty preview; the size limit has its own message). **F20 was not a bug:** "Ignore line" asks a browser confirm box ("Mark this bank statement transaction line as ignored?") that the automated click had dismissed; with the box accepted the line became `ignored`. Still open: F4 to F10, F21, F22, F24.
+
+**Fixed after the email and accounting runs, low findings (retested where it can be seen):**
+- F4: the platform name defaults to "ClubManager" (`config/app.php`, `.env.example`). A server's own `.env` still wins: set `APP_NAME=ClubManager` on staging and production, or mail subjects and footers keep saying "Laravel".
+- F5: the plain member role is labelled "Member", not "Media manager", on the users list, user profile and roles settings.
+- F6: meeting times read "18:30" and "17:30" everywhere (summons, RSVP page, events list, dashboard, PDF). Checked on the summons page.
+- F7: the waiting-list email says "(1 person)" or "(3 people)"; a migration rewords the platform wording and any lodge's own copy. The other gaps in F7 (no email when waitlisted, cancelling, or after an RSVP) are new emails, not fixes, and are left.
+- F21: booking again after "can't go" or cancelling sends the confirmation; editing a booking still does not.
+- F22: the weekly digest lists published lodge meetings (not drafts) together with committee meetings.
+- F24: an overdue reminder says "which is now overdue (it was due on ...)". The reminder had no way to pay because that lodge had no payment option set up; with one set, the bank details or a pay link appear.
+- **Not bugs:** F9 (the cooldown message does show, as a red banner at the top of the page; it was off screen because I had scrolled), F10 (the stale "Logged out successfully." came from my test script's own logout request).
+- **Left alone:** F8 (membership approval is in-app only) needs a new email and template, so it is a feature, not a fix.
+
+### Phase F results, part 1 (run 2 Nov 2026, e2e database, Mailpit)
+
+| ID | Result | Note |
+|---|---|---|
+| F-subs 1 | PASS with F25 | Fee tier "Full member" £160 saved. The annual billing run for 2026 with no tiers billed nobody and said "5 members were not billed because they have no subscription tier and no tier is set up", although the page said "Default £160.00 rate will apply" (F25). |
+| F-subs 2 | PASS | With a tier set: 5 invoices, £800.00; the same run again created 0 and skipped 5. Due date defaults to 1 April of the year. |
+| F-subs 3 | FAIL (F27) | A £500 payment against a £160 dues invoice was accepted (paid £500, status "paid"); "Outstanding" then showed £300 instead of £640. Zero or negative amounts are refused. |
+| F-subs 4 | FAIL (F26) | Neither the billing run nor the recorded payment posted anything to the ledger (journal count unchanged), though the page header mentions "accounts receivable ledger integration". |
+| F-subs 5 | PASS | Rule 181 audit flagged the 4 unpaid members, dues page shows them with the warning status. |
+| F-comm 1 | PASS | Committee meeting created (draft) with default date, title and venue; roll-call and agenda item added; candidate vetting and accounts audit panels show. |
+| F-comm 2 | FAIL (F28) | "Send to 5 selected" with the PDF attached: no emails, every one failed to queue ("Unable to JSON encode payload ... Malformed UTF-8"), the error is only logged, and the roll-call still shows "Pack sent". With the PDF switched off the same send delivered 4 emails (the member with no email address was skipped without a word). |
+| F-char | PASS with F29, F30 | Collection (£120 cash, £30 cheque) and grant (£100) saved and appear in the treasurer report (collections £150, grants disbursed £100). Negative and zero amounts refused. An unknown collection type or grant status gives a server error (F29). A grant went from "proposed" straight to "disbursed" with no check of the order (F29). Charity money never posts to the ledger (F30; it is reported in its own fund). |
+| F-sign | PASS | Year audit sign-off request emailed both auditors with a private link; signing by typed name works and shows "Signed, thank you"; reopening the link shows it is signed. An auditor who is not in the lodge is refused (404). |
+
+**Findings (not fixed)**
+- **F28 High.** Committee agenda pack emails with the PDF attached cannot be sent on the database queue: the raw PDF is put into the job and fails JSON encoding. The failure is swallowed and the page says "Pack sent". The existing test passes only because tests use a queue that does not encode (it logs the same error). Fix direction: attach the PDF inside the mailable when it is sent (build it from the meeting id) instead of passing the bytes, report how many were really queued, and say which people have no email address.
+- **F26 Medium.** Dues billing and manually recorded dues payments are not in the books (no ledger entries). Only a bank line reconciled to a subscription posts. Reports and the balance sheet therefore miss dues income and receivables.
+- **F27 Medium.** A dues payment can exceed what is owed, and totals then hide the real outstanding balance. Refuse it, or cap it and record a credit.
+- **F25 Low.** The subscriptions page tells the lodge a default £160 rate applies when no tier exists; the billing run (correctly) bills nobody. Change the wording.
+- **F29 Low to medium.** Charity collection type and grant status are only checked as text, so a wrong value is a server error instead of a form message; use the enums in the rules. A grant can also be moved straight to "disbursed".
+- **F30 Info.** Charity collections and grants are not in the ledger. If that is intended, say so on the charity page.
+
+Not run in part 1: candidate pipeline screens, officers roster, live minute taker, notices of motion, Phases E and G.
+
+**Fixed after Phase F part 1 (retested in the e2e app):** F28. Agenda packs with the PDF attached now go out: the PDF is made once and kept in the cache, and each queued email picks it up when it is sent (the job no longer carries the raw bytes). In the e2e app, 4 emails arrived, each with the 10 KB PDF attached, and no failed jobs. The roll-call is marked "Pack sent" only for people whose email was really queued, and the page says how many selected people could not be emailed (no email address, or no account yet). Two new tests fail on the old code. Note for deploys: restart the queue worker after deploying, or it keeps running the old mail class (I saw four jobs fail that way before restarting the e2e worker).
+
+**Fixed after Phase F part 1, second item (retested in the e2e app):** F26 and F27.
+- F27: a dues payment of more than is owed is refused ("That is more than the £160.00 still owed on this subscription.", shown on the amount field; nothing is saved or posted), and so is a payment on a waived subscription. The bank reconciliation screens show the same message as an error if a bank line is larger than what is owed.
+- F26: dues are now in the books. The billing run posts Accounts Receivable up and Membership Dues Income up for each member billed; a recorded payment posts cash up and the receivable down (to the ledger account of the bank account when it came from a reconciled bank line, else the main bank account, dated the day of the bank line); waiving takes the unpaid part of the income and the receivable back out. Matching a bank line to a subscription no longer adds the income a second time. In the e2e app: Bob's £160 bill and £60 payment and Dan's £160 bill and waiver all appear as balanced journals, and assets (£237.67) equal liabilities (£125.00) plus equity (£112.67).
+- **Older dues are not backfilled.** Subscriptions billed before this change reach the books the first time something is paid or waived against them, not before. A lodge that has used dues billing would need a one-off catch-up to see earlier billings in the reports. Alice's £500 on a £160 invoice in the e2e data is from before the fix and is still overpaid.
