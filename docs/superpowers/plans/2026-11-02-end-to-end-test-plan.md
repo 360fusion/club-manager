@@ -461,3 +461,29 @@ Not run in part 1: candidate pipeline screens, officers roster, live minute take
 - F27: a dues payment of more than is owed is refused ("That is more than the £160.00 still owed on this subscription.", shown on the amount field; nothing is saved or posted), and so is a payment on a waived subscription. The bank reconciliation screens show the same message as an error if a bank line is larger than what is owed.
 - F26: dues are now in the books. The billing run posts Accounts Receivable up and Membership Dues Income up for each member billed; a recorded payment posts cash up and the receivable down (to the ledger account of the bank account when it came from a reconciled bank line, else the main bank account, dated the day of the bank line); waiving takes the unpaid part of the income and the receivable back out. Matching a bank line to a subscription no longer adds the income a second time. In the e2e app: Bob's £160 bill and £60 payment and Dan's £160 bill and waiver all appear as balanced journals, and assets (£237.67) equal liabilities (£125.00) plus equity (£112.67).
 - **Older dues are not backfilled.** Subscriptions billed before this change reach the books the first time something is paid or waived against them, not before. A lodge that has used dues billing would need a one-off catch-up to see earlier billings in the reports. Alice's £500 on a £160 invoice in the e2e data is from before the fix and is still overpaid.
+
+### Phase E and G results (run 2 Nov 2026, e2e database)
+
+Setup: the directory data was loaded into the e2e database (19 grand lodges, 70 provinces, 945 halls, 9,688 lodges); the lodge claim below created a second managed lodge, Apollo Lodge.
+
+| ID | Result | Note |
+|---|---|---|
+| G1 | PASS | All 15 superadmin pages (plus the club type detail and the payments export) return 200 for a superadmin; a lodge admin and a member are sent away from every one. |
+| E6a | PASS | Public lodge directory: search by name and number, "meeting this week" filter, province filter, 120 requests per minute rate limit. Hostile input (quotes, `<script>`, over-long, array parameters, bad day or range) gives results or a clean redirect, never an error or reflected markup. A lodge page, its `.ics` calendar, unknown lodge and hall (404) all behave. "Near me" needs an outside geocoding service and was not exercised. |
+| E6b | PASS | Claiming a lodge: wrong role, no confirmation, a too-short message and a second claim by the same person are all refused with messages; a valid claim emails the superadmin and notifies them. "More information needed" emails the claimant the question; approving as "new" creates the lodge's club, makes the claimant its owner and emails "You now manage Apollo Lodge"; approving again is refused. |
+| E6c | PASS | Visiting a lodge: past date, more than a year ahead, missing home lodge and a repeat request for the same date are refused; a valid request emails the lodge secretary; asking to visit an unmanaged lodge is a 404. Following a lodge works. |
+| E2 | PASS with F32 | Website pages: scripts, `onerror`, iframes and `javascript:` links are stripped from text blocks and a button's `javascript:` address is emptied; nothing runs on the public page. A draft page is a 404 and a members-only page sends visitors to log in. A bad slug is refused; a duplicate slug is a server error (F32). |
+| E4 | PASS | Media uploads: a PNG is accepted; SVG, HTML, `.php`, PHP disguised as `.jpg`, `shell.php.png`, a file over 10 MB and an image over 6000 px are all refused with a clear message. |
+| G4 | PASS with F33 | API: no token 401, wrong password 401, three bad tries then 429, good login returns a token, the token reads the user and a club, a made-up token is 401. The user endpoint returns more than it should (F33). |
+| G5 | PASS with F35 | 403 and 404 answer correctly and show no trace; a post with no CSRF token is redirected back, not run. The error pages are Laravel's plain default look (F35). |
+| G-sec | PASS | Security headers present on public pages (nosniff, frame options, referrer and permissions policy, a report-only content policy); non-production copies send `noindex`. |
+
+**Findings (not fixed)**
+- **F32 Medium.** Saving a page with a slug the lodge already uses gives a database error (HTTP 500) instead of a "that address is taken" message.
+- **F33 Low to medium.** `/api/v1/user` returns the whole user record: `calendar_token` (the secret behind the calendar feed), `stripe_id`, card type and last four digits, `is_super_admin` and `two_factor_confirmed_at`. Return only what an app needs (id, name, email, avatar).
+- **F35 Low.** 403 and 404 pages are Laravel's unbranded defaults.
+- **Note.** The content policy is report-only and allows inline and eval scripts; fine as a first step, worth tightening later.
+
+Not run in Phases E and G: the website builder screens themselves (drag and drop, every block's editor, page history restore, themes, header and footer), posts and news, the public calendar, custom domains, "near me", the superadmin editing screens (grand lodge, province, district, hall, lodge, club type edits), platform payments settings, and cross-lodge id tampering inside Livewire requests.
+
+**Fixed after Phases E and G (retested in the e2e app):** F32 (saving a page with an address the lodge already uses, including one in the trash, now answers "A page with this address already exists (it may be in the trash). Choose another address." as a form error; a page can still be saved under its own address, and another lodge may use the same one) and F33 (`/api/v1/user` returns only id, name, email and avatar). Both have a test that fails on the old code. Still open: F35 (unbranded 403 and 404 pages), F29, F25, F30, F8 and the other missing emails, and the dues backfill.
