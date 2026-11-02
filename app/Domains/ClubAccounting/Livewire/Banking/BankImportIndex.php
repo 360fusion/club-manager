@@ -54,6 +54,7 @@ class BankImportIndex extends Component
             'statementFile' => 'required|file|mimes:csv,txt,ofx,qfx|max:10240',
         ], [
             'statementFile.mimes' => 'Bank statement file must be a CSV, TXT, or OFX format export.',
+            'statementFile.max' => 'That file is too large. Statements can be up to 10 MB.',
         ]);
 
         $club = $this->getClub();
@@ -62,6 +63,13 @@ class BankImportIndex extends Component
 
         try {
             $this->previewBundle = $parserService->parseFile($realPath, $originalName, $club->id);
+            if ($this->previewBundle['total_lines'] === 0 && empty($this->previewBundle['skipped_rows'])) {
+                $this->addError('statementFile', 'No transactions were found in that file. Is it a bank statement export (CSV or OFX)?');
+                $this->reset(['statementFile', 'previewBundle']);
+
+                return;
+            }
+
             $this->bankAccountId ??= $parserService->soleActiveBankAccountId($club->id);
             $this->showPreviewModal = true;
         } catch (\Exception $e) {

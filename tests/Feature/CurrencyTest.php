@@ -127,12 +127,12 @@ class CurrencyTest extends TestCase
         $admin = $this->admin($club);
 
         Livewire::actingAs($admin)->test(BankAccountsIndex::class, ['clubSlug' => 'dublin'])
-            ->assertSee('€')
             ->set('bank_name', 'AIB')
             ->set('account_name', 'Lodge account')
             ->set('account_type', 'current')
             ->set('currency', 'USD')
-            ->call('saveBankAccount');
+            ->call('saveBankAccount')
+            ->assertSee('€');
 
         $this->assertSame(['EUR'], BankAccount::where('club_id', $club->id)->pluck('currency')->unique()->values()->all());
     }

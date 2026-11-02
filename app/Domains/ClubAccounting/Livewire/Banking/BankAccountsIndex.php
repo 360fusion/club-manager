@@ -34,27 +34,6 @@ class BankAccountsIndex extends Component
     {
         $this->clubSlug = $clubSlug;
         $this->currency = $this->getClub()->currencyCode();
-        $this->ensureDefaultAccountExists();
-    }
-
-    public function ensureDefaultAccountExists(): void
-    {
-        $club = $this->getClub();
-        if (BankAccount::where('club_id', $club->id)->count() === 0) {
-            $ledgerAcc = Account::where('club_id', $club->id)->where('code', '1000')->first();
-            BankAccount::create([
-                'club_id' => $club->id,
-                'account_id' => $ledgerAcc?->id,
-                'bank_name' => 'High Street Bank',
-                'account_name' => 'Main Operating Account',
-                'account_type' => 'current',
-                'account_number' => '12345678',
-                'sort_code' => '20-00-00',
-                'currency' => $club->currencyCode(),
-                'opening_balance' => 0.00,
-                'is_active' => true,
-            ]);
-        }
     }
 
     public function openCreateModal(): void
@@ -92,7 +71,11 @@ class BankAccountsIndex extends Component
             $codeNum += 10;
         }
 
-        $ledgerAcc = Account::create([
+        // The first account is the lodge's main bank account, so it takes the chart's "Operating Bank Account" (1000), which the cash reports read.
+        $ledgerAcc = BankAccount::where('club_id', $club->id)->doesntExist()
+            ? Account::where('club_id', $club->id)->where('code', '1000')->where('type', 'asset')->first()
+            : null;
+        $ledgerAcc ??= Account::create([
             'club_id' => $club->id,
             'code' => (string) $codeNum,
             'name' => "{$this->bank_name} — {$this->account_name}",

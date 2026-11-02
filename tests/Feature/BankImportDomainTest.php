@@ -96,6 +96,20 @@ class BankImportDomainTest extends TestCase
         $this->assertSame(['The date could not be read.', 'The amount could not be read.'], array_column($bundle['skipped_rows'], 'reason'));
     }
 
+    public function test_files_that_are_not_statements_are_refused_with_a_message(): void
+    {
+        $this->actingAs($this->adminUser);
+        $upload = fn (string $name, string $content) => Livewire::test(BankImportIndex::class, ['clubSlug' => $this->club->slug])
+            ->set('statementFile', UploadedFile::fake()->createWithContent($name, $content));
+
+        $upload('evil.svg', '<svg xmlns="http://www.w3.org/2000/svg"></svg>')->assertHasErrors('statementFile')->assertSet('showPreviewModal', false)->assertSee('must be a CSV, TXT, or OFX');
+        $upload('page.html', '<html></html>')->assertHasErrors('statementFile')->assertSet('showPreviewModal', false);
+        $upload('notes.csv', 'hello world, this is not a statement')
+            ->assertHasErrors('statementFile')
+            ->assertSet('showPreviewModal', false)
+            ->assertSee('No transactions were found');
+    }
+
     public function test_the_import_preview_warns_about_rows_that_will_not_be_imported(): void
     {
         $this->actingAs($this->adminUser);

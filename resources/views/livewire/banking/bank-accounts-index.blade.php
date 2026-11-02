@@ -21,7 +21,7 @@
 
     <!-- Bank Accounts Card Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach ($bankAccounts as $acc)
+        @forelse ($bankAccounts as $acc)
             <x-card class="flex flex-col justify-between space-y-5">
                 <div>
                     <!-- Account Top Row: Bank Name, Status Badge -->
@@ -75,7 +75,13 @@
                     </x-button>
                 </div>
             </x-card>
-        @endforeach
+        @empty
+            <x-card class="md:col-span-2 lg:col-span-3 space-y-3 text-center">
+                <p class="text-sm font-medium text-slate-900 dark:text-white">No bank accounts yet</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Add the lodge's bank account to import statements and reconcile them.</p>
+                <div><x-button wire:click="openCreateModal">Add a bank or payment account</x-button></div>
+            </x-card>
+        @endforelse
     </div>
 
     <!-- Create Bank Account Modal -->

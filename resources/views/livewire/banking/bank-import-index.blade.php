@@ -23,6 +23,9 @@
     @if (session()->has('error'))
         <x-notice variant="danger">{{ session('error') }}</x-notice>
     @endif
+    @error('statementFile')
+        <x-notice variant="danger" role="alert">{{ $message }}</x-notice>
+    @enderror
 
     <!-- Upload Indicator Loading Bar -->
     <div wire:loading wire:target="statementFile" class="w-full">

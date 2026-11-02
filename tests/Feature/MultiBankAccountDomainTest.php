@@ -46,24 +46,26 @@ class MultiBankAccountDomainTest extends TestCase
         $accService->seedDefaultAccounts($this->club);
     }
 
-    public function test_auto_provisions_default_operating_bank_account_on_mount(): void
+    public function test_a_lodge_with_no_bank_account_sees_none_until_it_adds_one_and_the_first_takes_the_operating_ledger_account(): void
     {
         $this->actingAs($this->adminUser);
 
-        Livewire::test(BankAccountsIndex::class, ['clubSlug' => $this->club->slug])
-            ->assertStatus(200);
+        $page = Livewire::test(BankAccountsIndex::class, ['clubSlug' => $this->club->slug])
+            ->assertStatus(200)
+            ->assertSee('No bank accounts yet');
+        $this->assertDatabaseCount('club_acc_bank_accounts', 0);
 
-        $this->assertDatabaseHas('club_acc_bank_accounts', [
-            'club_id' => $this->club->id,
-            'bank_name' => 'High Street Bank',
-            'account_name' => 'Main Operating Account',
-            'account_type' => 'current',
-        ]);
+        $page->set('bank_name', 'Lloyds')->set('account_name', 'Current')->set('account_type', 'current')->set('opening_balance', 0)->call('saveBankAccount')->assertHasNoErrors();
+
+        $first = BankAccount::where('club_id', $this->club->id)->firstOrFail();
+        $this->assertSame('1000', Account::find($first->account_id)->code);
+        $this->assertSame(1, Account::where('club_id', $this->club->id)->where('code', '1000')->count());
     }
 
     public function test_can_create_new_stripe_payment_gateway_account_and_link_nominal_code(): void
     {
         $this->actingAs($this->adminUser);
+        BankAccount::create(['club_id' => $this->club->id, 'account_id' => Account::where('club_id', $this->club->id)->where('code', '1000')->value('id'), 'bank_name' => 'Lloyds', 'account_name' => 'Current', 'account_type' => 'current', 'is_active' => true]);
 
         Livewire::test(BankAccountsIndex::class, ['clubSlug' => $this->club->slug])
             ->set('bank_name', 'Stripe')
