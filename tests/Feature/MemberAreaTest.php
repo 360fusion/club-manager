@@ -8,6 +8,7 @@ use App\Enums\Visibility;
 use App\Mail\MeetingSummonsMail;
 use App\Models\Club;
 use App\Models\ClubType;
+use App\Models\DefaultEmailTemplate;
 use App\Models\Event;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
@@ -421,6 +422,66 @@ class MemberAreaTest extends TestCase
 
         Mail::assertQueued(MeetingSummonsMail::class, 2);
         $this->get(route('summons.rsvp.show', ['token' => $token]))->assertInertia(fn ($page) => $page->component('Summons/Rsvp'));
+    }
+
+    public function test_the_summons_email_reads_properly_with_the_seeded_wording_and_always_carries_the_reply_link(): void
+    {
+        $template = DefaultEmailTemplate::create([
+            'template_key' => 'meeting_summons',
+            'name' => 'Meeting Summons Circular',
+            'subject' => '{{club_name}} - Official Summons for {{meeting_title}} ({{meeting_date}})',
+            'body_html' => '<p>Dear Brother {{member_name}},</p><p>You are hereby summoned to attend the {{meeting_title}} of {{club_name}} on <strong>{{meeting_date}}</strong> starting at <strong>{{starts_at}}</strong> at {{venue}}.</p>',
+            'available_placeholders' => ['member_name', 'club_name', 'meeting_title', 'meeting_date', 'starts_at', 'venue'],
+        ]);
+        $meeting = $this->meeting($this->oxford, ['status' => 'draft']);
+        $link = route('summons.rsvp.show', ['token' => 'private-token']);
+
+        $html = (new MeetingSummonsMail($this->oxford, $meeting, $this->member, 'private-token'))->render();
+
+        $this->assertStringNotContainsString('{{', $html);
+        $this->assertStringContainsString('19:00', $html);
+        $this->assertStringContainsString($link, $html, 'the wording had no link of its own, so one is added');
+
+        $template->update(['body_html' => '<p>Dear {{member_name}}, your link: {{rsvp_url}}</p>']);
+        $this->assertSame(1, substr_count((new MeetingSummonsMail($this->oxford, $meeting, $this->member, 'private-token'))->render(), $link), 'a template that has the link keeps just one');
+    }
+
+    public function test_a_plain_member_is_not_sent_other_peoples_details_with_the_summons_or_the_events_page(): void
+    {
+        $other = $this->join($this->oxford, null, 'coach');
+        $other->forceFill(['calendar_token' => 'other-calendar-secret', 'stripe_id' => 'cus_other_secret'])->save();
+        $this->member->forceFill(['calendar_token' => 'my-calendar-secret'])->save();
+        $meeting = $this->meeting($this->oxford);
+        Event::create(['club_id' => $this->oxford->id, 'title' => 'Hidden draft dinner', 'slug' => 'hidden-draft', 'starts_at' => now()->addWeek(), 'status' => 'draft', 'visibility' => Visibility::Club]);
+
+        foreach ([route('member.meetings.summons', ['slug' => 'oxford-lodge', 'id' => $meeting->id]), route('member.events', ['slug' => 'oxford-lodge']), route('member.dashboard', ['slug' => 'oxford-lodge'])] as $url) {
+            $page = $this->actingAs($this->member)->get($url)->assertOk();
+            foreach (['other-calendar-secret', 'cus_other_secret', 'my-calendar-secret', 'invitation_token', 'Hidden draft dinner'] as $secret) {
+                $page->assertDontSee($secret, false);
+            }
+        }
+    }
+
+    public function test_a_pending_member_sees_the_waiting_notice_only_and_a_past_member_is_sent_to_the_public_site(): void
+    {
+        $pending = $this->join($this->oxford, null, 'member', 'pending');
+        $past = $this->join($this->oxford, null, 'member', 'past');
+        $this->meeting($this->oxford, ['title' => 'Private summons title']);
+
+        $this->actingAs($pending)->get(route('member.dashboard', ['slug' => 'oxford-lodge']))->assertOk()->assertDontSee('Private summons title', false)
+            ->assertInertia(fn (Assert $page) => $page->where('isPending', true)->has('meetings', 0));
+        $this->actingAs($pending)->get(route('member.events', ['slug' => 'oxford-lodge']))->assertRedirect(route('public.site', ['clubSlug' => 'oxford-lodge']));
+
+        foreach (['member.dashboard', 'member.events'] as $name) {
+            $this->actingAs($past)->get(route($name, ['slug' => 'oxford-lodge']))->assertRedirect(route('public.site', ['clubSlug' => 'oxford-lodge']));
+        }
+    }
+
+    public function test_a_member_can_download_the_summons_pdf(): void
+    {
+        $meeting = $this->meeting($this->oxford);
+
+        $this->actingAs($this->member)->get(route('member.meetings.pdf', ['slug' => 'oxford-lodge', 'id' => $meeting->id]))->assertOk();
     }
 
     public function test_news_and_events_notify_members_of_that_club_only(): void

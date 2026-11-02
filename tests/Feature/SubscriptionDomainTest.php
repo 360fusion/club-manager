@@ -263,6 +263,23 @@ class SubscriptionDomainTest extends TestCase
         $this->assertSame('2026-10-05', $payment->entry_date->toDateString());
     }
 
+    public function test_a_tier_can_only_be_given_to_a_member_from_the_same_lodge(): void
+    {
+        $this->actingAs($this->adminUser);
+        $other = Club::create(['name' => 'Other Lodge', 'slug' => 'other-lodge', 'club_type_id' => $this->club->club_type_id, 'is_active' => true]);
+        $foreignTier = SubscriptionTier::create(['club_id' => $other->id, 'name' => 'Secret tier', 'annual_amount' => 999.00, 'is_active' => true]);
+        $component = fn () => Livewire::test(SubscriptionIndex::class, ['clubSlug' => $this->club->slug]);
+
+        $component()->call('assignTierToMember', $this->member1->id, $this->countryTier->id);
+        $this->assertSame($this->countryTier->id, $this->member1->fresh()->subscription_tier_id);
+
+        $component()->call('assignTierToMember', $this->member1->id, $foreignTier->id)->assertNotFound();
+        $this->assertSame($this->countryTier->id, $this->member1->fresh()->subscription_tier_id, 'another lodge\'s tier is refused');
+
+        $component()->call('assignTierToMember', $this->member1->id, null);
+        $this->assertNull($this->member1->fresh()->subscription_tier_id);
+    }
+
     public function test_rule_181_arrears_audit_flags_overdue_members(): void
     {
         // Overdue subscription past 90 days

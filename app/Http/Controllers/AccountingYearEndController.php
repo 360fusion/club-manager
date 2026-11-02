@@ -61,7 +61,11 @@ class AccountingYearEndController extends Controller
         $auditorOne = User::whereHas('clubs', fn ($q) => $q->where('clubs.id', $club->id))->findOrFail($validated['auditor_one_user_id']);
         $auditorTwo = User::whereHas('clubs', fn ($q) => $q->where('clubs.id', $club->id))->findOrFail($validated['auditor_two_user_id']);
 
-        $audit = app(FinancialYearService::class)->requestYearAudit($club, (int) $validated['financial_year'], $auditorOne, $auditorTwo, $validated['notes'] ?? null);
+        try {
+            $audit = app(FinancialYearService::class)->requestYearAudit($club, (int) $validated['financial_year'], $auditorOne, $auditorTwo, $validated['notes'] ?? null);
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         $this->signatureRequestService->requestIfOpen($audit, 'year_audit_auditor_one', $auditorOne, $auditorOne->name, $auditorOne->email, $request->user());
         $this->signatureRequestService->requestIfOpen($audit, 'year_audit_auditor_two', $auditorTwo, $auditorTwo->name, $auditorTwo->email, $request->user());

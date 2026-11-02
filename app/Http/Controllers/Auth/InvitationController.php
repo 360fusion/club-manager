@@ -115,6 +115,11 @@ class InvitationController extends Controller
 
         $this->invitations->linkMatchingMember($club, $user);
 
+        // Accepting is not a sign-in: someone with two-factor on signs in the normal way and passes that step.
+        if ($user->two_factor_confirmed_at) {
+            return redirect()->route('login')->with('success', "Your membership of {$club->name} is confirmed. Sign in to continue.");
+        }
+
         Auth::login($user);
 
         return redirect()->route('member.dashboard', ['slug' => $club->slug])

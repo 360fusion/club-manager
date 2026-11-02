@@ -134,8 +134,8 @@ class EventRegistrationService
         if ($going) {
             $this->applyPricing($event, $registration, $attendees, $data, $existing, $organiser !== null);
 
-            if ($organiser && $existing && (float) $registration->amount_paid > 0 && (float) $registration->total !== (float) $previousTotal) {
-                throw ValidationException::withMessages(['registration' => 'This booking already has a payment on it, so a change that alters the price is not allowed. Adjust the payment first.']);
+            if ($existing && (float) $registration->amount_paid > 0 && ($organiser ? (float) $registration->total !== (float) $previousTotal : (float) $registration->total < (float) $previousTotal)) {
+                throw ValidationException::withMessages(['registration' => $organiser ? 'This booking already has a payment on it, so a change that alters the price is not allowed. Adjust the payment first.' : 'This booking already has a payment on it, so it cannot be made cheaper here. Please contact the organiser.']);
             }
         }
 

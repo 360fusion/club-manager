@@ -7,6 +7,7 @@ use App\Support\ClubDomain;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -36,6 +37,10 @@ class IdentifyTenantByDomain
         $club = Club::where('custom_domain', $host)->where('domain_status', 'active')->first();
 
         if (! $club) {
+            // Any other Host header is whatever the sender typed. Links in emails (password reset, verification, booking
+            // links) must never be built from it, so they are made from the app's own address instead.
+            URL::forceRootUrl(rtrim((string) config('app.url'), '/'));
+
             return $this->forwardToDomain($request) ?? $next($request);
         }
 

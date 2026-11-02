@@ -114,6 +114,10 @@ class AccountingBillController extends Controller
             return redirect()->back()->with('error', 'Paid bills cannot be deleted. Void or adjust via journal entry.');
         }
 
+        if ($reason = $this->accountingService->postedDocumentLockReason($club, 'VendorBill', $bill->id)) {
+            return redirect()->back()->with('error', "Vendor bill {$bill->bill_number} cannot be deleted. {$reason}");
+        }
+
         if ($bill->media_id && $bill->media) {
             $bill->media->forceDelete();
         }
@@ -144,6 +148,10 @@ class AccountingBillController extends Controller
             default => [DocumentStatus::Draft->value, DocumentStatus::Unpaid->value],
         };
 
+        if ($reason = $this->accountingService->postedDocumentLockReason($club, 'VendorBill', $bill->id)) {
+            return redirect()->back()->with('error', "Vendor bill {$bill->bill_number} cannot be changed. {$reason}");
+        }
+
         $validated = $request->validate([
             'vendor_name' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
@@ -167,6 +175,11 @@ class AccountingBillController extends Controller
                 ])
                 ->toMediaCollection('accounting', 'local');
             $validated['media_id'] = $media->id;
+        }
+
+        // What was posted to the books cannot be quietly rewritten: delete it and record a new bill instead.
+        if (in_array($bill->status, [DocumentStatus::Unpaid->value, DocumentStatus::Paid->value], true) && round((float) $validated['amount'], 2) !== round((float) $bill->amount, 2)) {
+            return redirect()->back()->with('error', "Vendor bill {$bill->bill_number} is already in the books, so its amount cannot be changed. Delete it and record a new bill.");
         }
 
         $wasDraft = $bill->status === DocumentStatus::Draft->value;

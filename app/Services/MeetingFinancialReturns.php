@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\LedgerRuleException;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\MeetingFinancialReturn;
 use App\Models\Club;
@@ -21,6 +22,11 @@ class MeetingFinancialReturns
     public function postMeetingFinancialReturn(Club $club, Meeting $meeting, array $data): MeetingFinancialReturn
     {
         return DB::transaction(function () use ($club, $meeting, $data) {
+            $alreadyPosted = MeetingFinancialReturn::where('club_id', $club->id)->where('meeting_id', $meeting->id)->where('is_draft', false)->lockForUpdate()->exists();
+            if ($alreadyPosted) {
+                throw new LedgerRuleException('The financial return for this meeting has already been posted to the books. Correct it with a journal entry rather than submitting it again.');
+            }
+
             $diningFee = (float) ($data['dining_fee_per_head'] ?? 0);
             $paidDiners = (int) ($data['paid_diners_count'] ?? 0);
             $waivedDiners = (int) ($data['waived_diners_count'] ?? 0);

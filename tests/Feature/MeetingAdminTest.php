@@ -42,6 +42,33 @@ class MeetingAdminTest extends TestCase
         $this->assertSame(['7:00pm', null], [$meeting->fresh()->starts_at, $meeting->fresh()->rehearsal_starts_at]);
     }
 
+    public function test_the_private_reply_link_needs_an_active_member_and_shows_only_what_the_page_needs(): void
+    {
+        $clubType = ClubType::create(['name' => 'Masonic Lodge', 'code' => 'masonic', 'available_modules' => ['meetings'], 'default_settings' => []]);
+        $club = Club::create(['club_type_id' => $clubType->id, 'name' => 'Apollo Lodge No. 357', 'slug' => 'apollo-link', 'status' => 'active']);
+        $meeting = Meeting::create(['club_id' => $club->id, 'title' => 'Regular', 'meeting_date' => '2026-12-20', 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Dark suit', 'rsvp_cutoff_at' => Carbon::now()->addDays(10), 'almoner_notice' => 'PRIVATE-ALMONER-NOTE']);
+        $tokens = new RsvpTokenService;
+        $linkFor = function (string $status) use ($club, $meeting, $tokens) {
+            $user = User::factory()->create();
+            $user->forceFill(['calendar_token' => 'secret-calendar-'.$status, 'stripe_id' => 'cus_'.$status])->save();
+            if ($status !== 'stranger') {
+                $club->users()->attach($user->id, ['role' => 'member', 'status' => $status]);
+            }
+
+            return '/summons/rsvp/'.$tokens->createTokenForUser($meeting, $user, Carbon::now()->addDays(5));
+        };
+
+        $page = $this->get($linkFor('active'))->assertOk();
+        $page->assertInertia(fn ($p) => $p->component('Summons/Rsvp'));
+        foreach (['secret-calendar-active', 'cus_active', 'PRIVATE-ALMONER-NOTE', 'token_hash'] as $private) {
+            $page->assertDontSee($private, false);
+        }
+
+        foreach (['pending', 'past', 'stranger'] as $status) {
+            $this->get($linkFor($status))->assertInertia(fn ($p) => $p->component('Summons/Expired'));
+        }
+    }
+
     public function test_rsvp_token_generation_and_validation()
     {
         $clubType = ClubType::create([
@@ -58,6 +85,7 @@ class MeetingAdminTest extends TestCase
             'status' => 'active',
         ]);
         $user = User::factory()->create();
+        $club->users()->attach($user->id, ['role' => 'member', 'status' => 'active']);
         $meeting = Meeting::create([
             'club_id' => $club->id,
             'title' => 'Regular Meeting No. 452',
@@ -95,6 +123,7 @@ class MeetingAdminTest extends TestCase
             'status' => 'active',
         ]);
         $user = User::factory()->create(['name' => 'John Doe']);
+        $club->users()->attach($user->id, ['role' => 'member', 'status' => 'active']);
         $meeting = Meeting::create([
             'club_id' => $club->id,
             'title' => 'Regular Meeting No. 452',

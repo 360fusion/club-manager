@@ -311,11 +311,13 @@ class AccountingReports
         }
 
         $invoices = Invoice::where('club_id', $club->id)
+            ->whereIn('status', [DocumentStatus::Unpaid->value, DocumentStatus::Paid->value])
             ->whereNotNull('vat_amount')
             ->whereBetween('created_at', [$quarterStart, $quarterEnd])
             ->get();
 
         $bills = Bill::where('club_id', $club->id)
+            ->whereIn('status', [DocumentStatus::Unpaid->value, DocumentStatus::Paid->value])
             ->whereNotNull('vat_amount')
             ->whereBetween('created_at', [$quarterStart, $quarterEnd])
             ->get();

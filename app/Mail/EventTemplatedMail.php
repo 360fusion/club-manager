@@ -39,7 +39,7 @@ abstract class EventTemplatedMail extends Mailable implements ShouldQueue
     /**
      * @return array{subject: string, body: string}
      */
-    private function filled(): array
+    protected function filled(): array
     {
         $values = $this->values();
 

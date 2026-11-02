@@ -171,6 +171,8 @@ class SubscriptionIndex extends Component
     {
         $club = $this->getClub();
         $member = Member::where('club_id', $club->id)->findOrFail($memberId);
+        // The tier id comes from the browser: it must be one of this lodge's own.
+        $tierId = $tierId === null ? null : SubscriptionTier::where('club_id', $club->id)->findOrFail($tierId)->id;
         $member->update(['subscription_tier_id' => $tierId]);
 
         session()->flash('success', "Updated subscription tier assignment for '{$member->full_name}'.");

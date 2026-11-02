@@ -195,6 +195,26 @@ class EventRegistrationServiceTest extends TestCase
         $this->service->register($event, $this->member('Other'), ['attendees' => [['name' => 'Other', 'ticket_tier_id' => $guestTier->id]]]);
     }
 
+    public function test_a_member_cannot_change_the_price_of_a_booking_that_already_has_a_payment(): void
+    {
+        $event = $this->event(['requires_payment' => true]);
+        EventTicketTier::create(['event_id' => $event->id, 'name' => 'Member', 'price' => 20, 'max_quantity' => 0, 'audience' => 'member']);
+        EventTicketTier::create(['event_id' => $event->id, 'name' => 'Guest', 'price' => 30, 'max_quantity' => 0, 'audience' => 'guest']);
+        $user = $this->member();
+
+        $registration = $this->service->register($event, $user, ['attendees' => [['name' => 'Me'], ['name' => 'G', 'is_guest' => true]]]);
+        $this->assertEquals(50, $registration->total);
+        $registration->update(['amount_paid' => 20, 'payment_status' => 'partial']);
+
+        try {
+            $this->service->register($event, $user, ['attendees' => [['name' => 'Me']]]);
+            $this->fail('Dropping the guest changes the price, which has a payment on it.');
+        } catch (ValidationException) {
+            $this->assertEquals(50, $registration->fresh()->total);
+            $this->assertCount(2, $registration->fresh()->attendees);
+        }
+    }
+
     public function test_drafts_cancelled_events_and_closed_bookings_refuse_registrations(): void
     {
         $user = $this->member();

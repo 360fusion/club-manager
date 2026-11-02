@@ -10,6 +10,7 @@ use App\Services\AccountingService;
 use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -73,40 +74,47 @@ class AccountingInvoiceController extends Controller
         $status = $isDraft ? DocumentStatus::Draft->value : $this->accountingService->issuedStatusFor($club, $amount);
         $vat = $this->accountingService->resolveVatFields($club, $amount, $request->float('vat_rate') ?: null);
 
-        $invCount = Invoice::where('club_id', $club->id)->count() + 1;
-        $invNum = 'INV-'.date('Y').'-'.str_pad((string) $invCount, 4, '0', STR_PAD_LEFT);
+        // Numbering, saving and posting to the ledger happen together: a failure leaves nothing half saved.
+        $invoice = DB::transaction(function () use ($club, $request, $validated, $title, $vat, $status) {
+            $invNum = $this->accountingService->nextDocumentNumber($club, Invoice::class, 'invoice_number', 'INV');
 
-        $mediaId = null;
-        if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
-            $media = $club->addMedia($request->file('attachment'))
-                ->withCustomProperties([
-                    'is_accounting_protected' => true,
-                    'source' => 'accounting',
-                    'invoice_number' => $invNum,
-                    'invoice_title' => $title,
-                ])
-                ->toMediaCollection('accounting', 'local');
-            $mediaId = $media->id;
-        }
+            $mediaId = null;
+            if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
+                $media = $club->addMedia($request->file('attachment'))
+                    ->withCustomProperties([
+                        'is_accounting_protected' => true,
+                        'source' => 'accounting',
+                        'invoice_number' => $invNum,
+                        'invoice_title' => $title,
+                    ])
+                    ->toMediaCollection('accounting', 'local');
+                $mediaId = $media->id;
+            }
 
-        $invoice = Invoice::create([
-            'club_id' => $club->id,
-            'created_by' => $request->user()->id,
-            'user_id' => $validated['user_id'],
-            'invoice_number' => $invNum,
-            'title' => $title,
-            'amount' => $vat['amount'],
-            'net_amount' => $vat['net_amount'],
-            'vat_rate' => $vat['vat_rate'],
-            'vat_amount' => $vat['vat_amount'],
-            'status' => $status,
-            'media_id' => $mediaId,
-            'due_date' => $validated['due_date'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-        ]);
+            $invoice = Invoice::create([
+                'club_id' => $club->id,
+                'created_by' => $request->user()->id,
+                'user_id' => $validated['user_id'],
+                'invoice_number' => $invNum,
+                'title' => $title,
+                'amount' => $vat['amount'],
+                'net_amount' => $vat['net_amount'],
+                'vat_rate' => $vat['vat_rate'],
+                'vat_amount' => $vat['vat_amount'],
+                'status' => $status,
+                'media_id' => $mediaId,
+                'due_date' => $validated['due_date'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            if ($status === DocumentStatus::Unpaid->value) {
+                $this->accountingService->postMemberInvoiceIssuedJournal($club, $invoice);
+            }
+
+            return $invoice;
+        });
 
         if ($status === DocumentStatus::Unpaid->value) {
-            $this->accountingService->postMemberInvoiceIssuedJournal($club, $invoice);
             $msg = 'Invoice created and posted to Accounts Receivable.';
         } elseif ($status === DocumentStatus::PendingApproval->value) {
             $msg = 'Invoice created — it is over the approval threshold, so another admin or treasurer needs to approve it before it is posted.';
@@ -126,11 +134,15 @@ class AccountingInvoiceController extends Controller
 
         if ($invoice->status === DocumentStatus::Draft->value) {
             $newStatus = $this->accountingService->issuedStatusFor($club, (float) $invoice->amount);
-            $invoice->update(['status' => $newStatus]);
+            DB::transaction(function () use ($club, $invoice, $newStatus) {
+                $invoice->update(['status' => $newStatus]);
+
+                if ($newStatus === DocumentStatus::Unpaid->value) {
+                    $this->accountingService->postMemberInvoiceIssuedJournal($club, $invoice);
+                }
+            });
 
             if ($newStatus === DocumentStatus::Unpaid->value) {
-                $this->accountingService->postMemberInvoiceIssuedJournal($club, $invoice);
-
                 return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} published and posted to Accounts Receivable.");
             }
 
@@ -170,6 +182,10 @@ class AccountingInvoiceController extends Controller
             default => [DocumentStatus::Draft->value, DocumentStatus::Unpaid->value],
         };
 
+        if ($reason = $this->accountingService->postedDocumentLockReason($club, 'Invoice', $invoice->id)) {
+            return redirect()->back()->with('error', "Invoice {$invoice->invoice_number} cannot be changed. {$reason}");
+        }
+
         $validated = $request->validate([
             'user_id' => ['required', Rule::exists('club_user', 'user_id')->where('club_id', $club->id)],
             'title' => ['required', 'string', 'max:255'],
@@ -193,6 +209,11 @@ class AccountingInvoiceController extends Controller
                 ])
                 ->toMediaCollection('accounting', 'local');
             $validated['media_id'] = $media->id;
+        }
+
+        // What was posted to the books cannot be quietly rewritten: delete it and raise a new one instead.
+        if (in_array($invoice->status, [DocumentStatus::Unpaid->value, DocumentStatus::Paid->value], true) && round((float) $validated['amount'], 2) !== round((float) $invoice->amount, 2)) {
+            return redirect()->back()->with('error', "Invoice {$invoice->invoice_number} is already in the books, so its amount cannot be changed. Delete it and raise a new invoice.");
         }
 
         $wasDraft = $invoice->status === DocumentStatus::Draft->value;
@@ -236,6 +257,10 @@ class AccountingInvoiceController extends Controller
 
         if ($invoice->status === DocumentStatus::Paid->value) {
             return redirect()->back()->with('error', 'Paid invoices cannot be deleted.');
+        }
+
+        if ($reason = $this->accountingService->postedDocumentLockReason($club, 'Invoice', $invoice->id)) {
+            return redirect()->back()->with('error', "Invoice {$invoice->invoice_number} cannot be deleted. {$reason}");
         }
 
         if ($invoice->media_id && $invoice->media) {

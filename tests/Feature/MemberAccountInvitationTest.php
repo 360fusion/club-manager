@@ -98,6 +98,20 @@ class MemberAccountInvitationTest extends TestCase
         $this->assertSame($existing->id, $member->fresh()->user_id);
     }
 
+    public function test_accepting_an_invitation_does_not_sign_in_someone_who_uses_two_factor(): void
+    {
+        Mail::fake();
+        $existing = User::factory()->create(['email' => 'twofa@example.com', 'password' => 'secret-pass-123']);
+        $existing->forceFill(['two_factor_secret' => encrypt('SECRET'), 'two_factor_confirmed_at' => now()])->save();
+        $member = $this->member(['email' => 'twofa@example.com']);
+        $sent = $this->service->invite($member, $this->club, $this->admin);
+
+        $this->post($sent['url'], ['password' => 'secret-pass-123'])->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->assertSame('active', $this->pivot($member)->status, 'the membership is still confirmed');
+    }
+
     public function test_someone_already_active_at_the_club_keeps_their_access_and_role(): void
     {
         Mail::fake();

@@ -135,10 +135,12 @@ class EventBookingPaymentTest extends TestCase
         $registration = $this->book(['payment_method' => $this->methods['bank']->id]);
         $registration->update(['amount_paid' => 102, 'payment_status' => 'paid']);
 
-        $smaller = $this->book(['payment_method' => $this->methods['bank']->id, 'attendees' => [['name' => 'Mia Member']]]);
-        $this->assertSame('52.00', $smaller->total);
-        $this->assertSame('102.00', $smaller->amount_paid);
-        $this->assertSame('paid', $smaller->payment_status, 'paid more than the new total');
+        try {
+            $this->book(['payment_method' => $this->methods['bank']->id, 'attendees' => [['name' => 'Mia Member']]]);
+            $this->fail('A member cannot make a paid booking cheaper: the organiser has to settle the difference.');
+        } catch (ValidationException) {
+            $this->assertSame('102.00', $registration->fresh()->total);
+        }
 
         $bigger = $this->book(['payment_method' => $this->methods['bank']->id, 'attendees' => [['name' => 'Mia Member'], ['name' => 'A', 'is_guest' => true], ['name' => 'B', 'is_guest' => true]]]);
         $this->assertSame('152.00', $bigger->total);

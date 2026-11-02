@@ -52,6 +52,9 @@ class RsvpTokenService
             return null;
         }
 
-        return $rsvp;
+        // A link only works for someone who is (still) an active member or registered visitor of the lodge.
+        $isActive = $rsvp->user->clubs()->where('clubs.id', $rsvp->meeting->club_id)->wherePivot('status', 'active')->exists();
+
+        return $isActive ? $rsvp : null;
     }
 }

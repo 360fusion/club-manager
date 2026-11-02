@@ -21,6 +21,7 @@ use App\Services\Signatures\SignatureRequestService;
 use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Accounting settings: chart of accounts, opening balances, VAT, commission, approval threshold, year end and the independent examiner request. Split out of AccountingAdminController; the URLs, route names and permissions are unchanged.
@@ -38,18 +39,20 @@ class AccountingSettingsController extends Controller
 
         $validated = $request->validated();
 
-        $account = Account::create([
-            'club_id' => $club->id,
-            'code' => $validated['code'],
-            'name' => $validated['name'],
-            'type' => $validated['type'],
-            'currency' => $club->currencyCode(),
-            'is_active' => true,
-        ]);
+        DB::transaction(function () use ($club, $validated) {
+            $account = Account::create([
+                'club_id' => $club->id,
+                'code' => $validated['code'],
+                'name' => $validated['name'],
+                'type' => $validated['type'],
+                'currency' => $club->currencyCode(),
+                'is_active' => true,
+            ]);
 
-        if (! empty($validated['opening_balance']) && (float) $validated['opening_balance'] != 0) {
-            $this->accountingService->setOpeningBalance($club, $account, (float) $validated['opening_balance'], $validated['as_of_date'] ?? null);
-        }
+            if (! empty($validated['opening_balance']) && (float) $validated['opening_balance'] != 0) {
+                $this->accountingService->setOpeningBalance($club, $account, (float) $validated['opening_balance'], $validated['as_of_date'] ?? null);
+            }
+        });
 
         return redirect()->back()->with('success', 'Account added to Chart of Accounts with opening balance.');
     }
@@ -62,9 +65,11 @@ class AccountingSettingsController extends Controller
 
         $account = Account::where('club_id', $club->id)->where('id', $validated['account_id'])->firstOrFail();
 
-        $this->accountingService->setOpeningBalance($club, $account, (float) $validated['opening_balance'], $validated['as_of_date'] ?? null);
+        $entry = $this->accountingService->setOpeningBalance($club, $account, (float) $validated['opening_balance'], $validated['as_of_date'] ?? null);
 
-        return redirect()->back()->with('success', "Opening balance updated for {$account->code} - {$account->name}.");
+        return redirect()->back()->with('success', $entry
+            ? "Opening balance set for {$account->code} - {$account->name}."
+            : "{$account->code} - {$account->name} already has that opening balance.");
     }
 
     public function updateVatSettings(UpdateVatSettingsRequest $request, string $clubSlug): RedirectResponse

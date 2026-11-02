@@ -9,11 +9,13 @@ use App\Exceptions\LedgerRuleException;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
+use App\Models\Accounting\JournalItem;
 use App\Models\Accounting\LedgerAuditLog;
 use App\Models\Club;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Support\Currencies;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -312,13 +314,48 @@ class AccountingService
     }
 
     /**
+     * The next document number for a lodge, such as INV-2026-0007: one more than the highest already used that year.
+     * It takes a lock on the lodge, so two people raising documents at once cannot be given the same number; call it
+     * inside the transaction that saves the document.
+     *
+     * @param  class-string<Model>  $model
+     */
+    public function nextDocumentNumber(Club $club, string $model, string $column, string $prefix): string
+    {
+        Club::whereKey($club->id)->lockForUpdate()->first();
+
+        $stem = $prefix.'-'.date('Y').'-';
+        $highest = $model::where('club_id', $club->id)->where($column, 'like', $stem.'%')->pluck($column)
+            ->map(fn ($number) => (int) substr((string) $number, strlen($stem)))->max() ?? 0;
+
+        return $stem.str_pad((string) ($highest + 1), 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Why a bill or invoice that is already in the books cannot be changed or deleted, or null when it can: its entry
+     * is in a financial year that has been closed (a superadmin may still act).
+     */
+    public function postedDocumentLockReason(Club $club, string $sourceType, int $documentId): ?string
+    {
+        $entry = JournalEntry::where('club_id', $club->id)->where('source_type', $sourceType)->where('source_id', $documentId)
+            ->where('status', '!=', DocumentStatus::Void->value)->orderBy('entry_date')->first();
+
+        if ($entry === null || auth()->user()?->is_super_admin) {
+            return null;
+        }
+
+        $year = $club->financialYearFor($entry->entry_date);
+
+        return $club->financialYearIsClosed($year) ? "It was posted in {$year}, and the books for {$year} are closed." : null;
+    }
+
+    /**
      * Create Vendor Bill (Accounts Payable) & Post to Ledger
      */
     public function createVendorBill(Club $club, array $data, $attachmentFile = null): Bill
     {
         return DB::transaction(function () use ($club, $data, $attachmentFile) {
-            $billCount = Bill::where('club_id', $club->id)->count() + 1;
-            $billNum = $data['bill_number'] ?? 'BILL-'.date('Y').'-'.str_pad((string) $billCount, 4, '0', STR_PAD_LEFT);
+            $billNum = $data['bill_number'] ?? $this->nextDocumentNumber($club, Bill::class, 'bill_number', 'BILL');
 
             $mediaId = null;
             if ($attachmentFile && $attachmentFile->isValid()) {
@@ -489,6 +526,11 @@ class AccountingService
             return;
         }
 
+        // A draft or a bill waiting for approval is not in the books yet; paying it would skip the approval and record no expense.
+        if ($bill->status !== DocumentStatus::Unpaid->value) {
+            throw new LedgerRuleException("Bill {$bill->bill_number} has to be issued and approved before it can be paid.");
+        }
+
         DB::transaction(function () use ($bill, $actor) {
             $bill->update([
                 'status' => DocumentStatus::Paid->value,
@@ -522,6 +564,10 @@ class AccountingService
     {
         if ($invoice->status === DocumentStatus::Paid->value) {
             return;
+        }
+
+        if ($invoice->status !== DocumentStatus::Unpaid->value) {
+            throw new LedgerRuleException("Invoice {$invoice->invoice_number} has to be issued and approved before it can be paid.");
         }
 
         DB::transaction(function () use ($invoice, $actor) {
@@ -580,34 +626,39 @@ class AccountingService
     }
 
     /**
-     * Set opening balance / carry-over amount for an account.
+     * Sets (not adds to) an account's opening balance: the entries already posted for it are counted and only the
+     * difference is posted, so saving the form twice changes nothing and a lower figure reduces it. A negative
+     * figure is a balance on the other side (an overdrawn bank account, say). Returns null when nothing changes.
      */
     public function setOpeningBalance(Club $club, Account $account, float $amount, ?string $asOfDate = null): ?JournalEntry
     {
-        if ($amount == 0) {
-            return null;
-        }
-
         $retainedEarningsAcc = $this->getAccount($club, '3000');
         $asOfDate = $asOfDate ?: date('Y-01-01');
 
         $isDebitAccount = in_array($account->type, ['asset', 'expense']);
 
-        $items = [];
-        if ($isDebitAccount) {
-            $items[] = ['account_id' => $account->id, 'debit' => abs($amount), 'credit' => 0, 'memo' => "Opening Carry-Over Balance ({$account->code})"];
-            $items[] = ['account_id' => $retainedEarningsAcc->id, 'debit' => 0, 'credit' => abs($amount), 'memo' => 'Prior Year Retained Reserves'];
-        } else {
-            $items[] = ['account_id' => $retainedEarningsAcc->id, 'debit' => abs($amount), 'credit' => 0, 'memo' => 'Prior Year Retained Reserves'];
-            $items[] = ['account_id' => $account->id, 'debit' => 0, 'credit' => abs($amount), 'memo' => "Opening Carry-Over Balance ({$account->code})"];
+        $posted = JournalItem::where('account_id', $account->id)
+            ->whereHas('journalEntry', fn ($q) => $q->where('club_id', $club->id)->where('source_type', 'OpeningBalance')->where('source_id', $account->id))
+            ->get();
+        $current = (float) $posted->sum($isDebitAccount ? 'debit' : 'credit') - (float) $posted->sum($isDebitAccount ? 'credit' : 'debit');
+
+        $change = round($amount - $current, 2);
+        if ($change == 0) {
+            return null;
         }
+
+        $accountSide = ($change > 0) === $isDebitAccount ? 'debit' : 'credit';
+        $reservesSide = $accountSide === 'debit' ? 'credit' : 'debit';
 
         return $this->postJournalEntry($club, [
             'entry_date' => $asOfDate,
             'description' => "Opening Balance / Carry Over: {$account->code} - {$account->name}",
             'source_type' => 'OpeningBalance',
             'source_id' => $account->id,
-            'items' => $items,
+            'items' => [
+                ['account_id' => $account->id, $accountSide => abs($change), 'memo' => "Opening Carry-Over Balance ({$account->code})"],
+                ['account_id' => $retainedEarningsAcc->id, $reservesSide => abs($change), 'memo' => 'Prior Year Retained Reserves'],
+            ],
         ]);
     }
 }

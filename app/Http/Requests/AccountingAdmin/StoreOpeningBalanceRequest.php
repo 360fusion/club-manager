@@ -17,7 +17,7 @@ class StoreOpeningBalanceRequest extends ClubRequest
         return [
             'account_id' => ['required', 'exists:accounting_accounts,id'],
             'opening_balance' => ['required', 'numeric', 'max:99999999.99'],
-            'as_of_date' => ['nullable', 'date'],
+            'as_of_date' => ['nullable', 'date', 'after_or_equal:2000-01-01', 'before_or_equal:today'],
         ];
     }
 }

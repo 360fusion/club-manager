@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Exceptions\LedgerRuleException;
 use App\Models\Accounting\RecurringBillTemplate;
 use App\Models\Club;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 /**
@@ -43,22 +45,27 @@ class RecurringBillService
         $totalBilled = 0.0;
 
         foreach ($query->get() as $template) {
-            DB::transaction(function () use ($template, &$createdCount, &$totalBilled) {
-                $templateClub = $template->club;
+            try {
+                DB::transaction(function () use ($template, &$createdCount, &$totalBilled) {
+                    $templateClub = $template->club;
 
-                $this->accountingService->createVendorBill($templateClub, [
-                    'vendor_name' => $template->vendor_name,
-                    'category' => $template->category,
-                    'amount' => (float) $template->amount,
-                    'due_date' => $template->next_run_date->copy()->addDays(14)->format('Y-m-d'),
-                    'notes' => trim(($template->notes ?? '').' (recurring: '.$template->frequency.')'),
-                ]);
+                    $this->accountingService->createVendorBill($templateClub, [
+                        'vendor_name' => $template->vendor_name,
+                        'category' => $template->category,
+                        'amount' => (float) $template->amount,
+                        'due_date' => $template->next_run_date->copy()->addDays(14)->format('Y-m-d'),
+                        'notes' => trim(($template->notes ?? '').' (recurring: '.$template->frequency.')'),
+                    ]);
 
-                $template->update(['next_run_date' => $this->nextRunAfter($template->next_run_date, $template->frequency)]);
+                    $template->update(['next_run_date' => $this->nextRunAfter($template->next_run_date, $template->frequency)]);
 
-                $createdCount++;
-                $totalBilled += (float) $template->amount;
-            });
+                    $createdCount++;
+                    $totalBilled += (float) $template->amount;
+                });
+            } catch (LedgerRuleException $e) {
+                // One lodge's closed year or bad template must not stop everyone else's bills; it is tried again next run.
+                Log::warning("Recurring bill template {$template->id} skipped: {$e->getMessage()}");
+            }
         }
 
         return ['created_count' => $createdCount, 'total_billed' => round($totalBilled, 2)];

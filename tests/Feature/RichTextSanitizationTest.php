@@ -119,6 +119,28 @@ class RichTextSanitizationTest extends TestCase
         $this->assertStringNotContainsString('onerror', $blocks[1]['content']);
     }
 
+    public function test_text_and_address_fields_holding_a_list_or_a_bad_address_are_emptied_not_stored(): void
+    {
+        $page = Page::create([
+            'club_id' => $this->club->id,
+            'title' => 'Landing',
+            'slug' => 'landing-lists',
+            'blocks' => [
+                ['type' => 'text', 'content' => ['<img src=x onerror=alert(1)>']],
+                ['type' => 'media_text', 'body' => ['<script>alert(1)</script>'], 'image_url' => ['javascript:alert(2)']],
+                ['type' => 'youtube', 'button_url' => ['javascript:alert(3)']],
+                ['type' => 'post_header', 'back_url' => 'javascript:alert(4)'],
+                ['type' => 'text', 'content' => '<p>Fine</p>'],
+            ],
+        ]);
+
+        $stored = json_encode($page->fresh()->blocks);
+
+        $this->assertStringNotContainsString('onerror', $stored);
+        $this->assertStringNotContainsString('alert', $stored);
+        $this->assertStringContainsString('Fine', $stored);
+    }
+
     public function test_empty_content_is_left_alone(): void
     {
         $post = Post::create([

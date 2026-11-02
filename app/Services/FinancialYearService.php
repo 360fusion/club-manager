@@ -53,6 +53,12 @@ class FinancialYearService
             throw new InvalidArgumentException('The two auditors must be different people.');
         }
 
+        $existing = AccountingYearAudit::where('club_id', $club->id)->where('financial_year', $year)->first();
+
+        if ($existing?->signed_off_at !== null) {
+            throw new InvalidArgumentException("The {$year} accounts have already been signed off, so the auditors cannot be changed.");
+        }
+
         return AccountingYearAudit::updateOrCreate(
             ['club_id' => $club->id, 'financial_year' => $year],
             [

@@ -59,7 +59,7 @@ class MemberProfileController extends Controller
         ]);
 
         return Inertia::render('Member/Dues', [
-            'club' => $club,
+            'club' => $club->only(['id', 'name', 'slug', 'lodge_number']),
             'memberRole' => $memberPivot->role ?? 'member',
             'memberNumber' => $memberPivot->member_number ?? 'MEM-1001',
             'plans' => $plans,
@@ -81,7 +81,7 @@ class MemberProfileController extends Controller
         $accMember = $user ? Member::where('club_id', $club->id)->where('user_id', $user->id)->first() : null;
 
         return Inertia::render('Member/Profile', [
-            'club' => $club,
+            'club' => $club->only(['id', 'name', 'slug', 'lodge_number']),
             'user' => $user ? [
                 'id' => $user->id,
                 'name' => $user->name,

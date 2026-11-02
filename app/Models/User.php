@@ -25,7 +25,7 @@ use Laravel\Sanctum\HasApiTokens;
 // 'is_super_admin' is deliberately NOT fillable: it must never be settable from
 // request input. Grant it explicitly via forceFill or the superadmin:grant command.
 #[Fillable(['name', 'email', 'avatar_url', 'password'])]
-#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'calendar_token', 'stripe_id', 'pm_type', 'pm_last_four', 'trial_ends_at'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */

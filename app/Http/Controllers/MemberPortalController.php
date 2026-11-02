@@ -27,16 +27,14 @@ class MemberPortalController extends Controller
     public function show(string $slug): Response|RedirectResponse
     {
         $user = Auth::user();
-        $club = Club::where('slug', $slug)
-            ->with(['membershipPlans', 'events.menuItems', 'events.ticketTiers'])
-            ->firstOrFail();
+        $club = Club::where('slug', $slug)->firstOrFail();
 
         // Get user's membership pivot status
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
         $isPending = $memberPivot && $memberPivot->status === 'pending';
 
-        // The club root is the member area. Everyone else sees the public website.
-        if ($memberPivot === null && ! $user?->is_super_admin) {
+        // The club root is the member area. Everyone else, and past members, see the public website.
+        if (($memberPivot === null || ! in_array($memberPivot->status, ['active', 'pending'], true)) && ! $user?->is_super_admin) {
             return redirect()->route('public.site', ['clubSlug' => $club->slug]);
         }
 
@@ -50,9 +48,10 @@ class MemberPortalController extends Controller
         $attendedCount = $userRsvps->where('status', 'attending')->count() + $userRsvps->filter(fn ($r) => $r->booker()?->checked_in_at !== null)->count();
         $attendanceRate = $totalRsvps > 0 ? round(($attendedCount / $totalRsvps) * 100, 1) : 100.0;
 
-        // Published Meetings & Summons for the member
+        // Someone still waiting for approval sees the waiting notice and none of the lodge's summonses, events or circulars.
         $meetings = Meeting::where('club_id', $club->id)
             ->where('status', 'published')
+            ->when($isPending, fn ($query) => $query->whereRaw('1 = 0'))
             ->orderBy('meeting_date', 'asc')
             ->get()
             ->map(function ($meeting) use ($user) {
@@ -88,6 +87,7 @@ class MemberPortalController extends Controller
         $eventModels = Event::where('club_id', $club->id)
             ->published()
             ->visibleTo($user)
+            ->when($isPending, fn ($query) => $query->whereRaw('1 = 0'))
             ->with(['menuItems', 'ticketTiers', 'club'])
             ->orderBy('starts_at', 'asc')
             ->get();
@@ -98,6 +98,7 @@ class MemberPortalController extends Controller
         $role = $memberPivot->role ?? 'member';
         $newsletters = Newsletter::where('club_id', $club->id)
             ->where('status', 'sent')
+            ->when($isPending, fn ($query) => $query->whereRaw('1 = 0'))
             ->orderByDesc('sent_at')
             ->get()
             ->filter(function ($n) use ($role) {
@@ -114,7 +115,7 @@ class MemberPortalController extends Controller
             ->values();
 
         return Inertia::render('Member/Dashboard', [
-            'club' => $club,
+            'club' => $club->only(['id', 'name', 'slug', 'lodge_number']),
             'isPending' => $isPending,
             'memberRole' => $role,
             'memberNumber' => $memberPivot->member_number ?? 'MEM-1001',
@@ -133,13 +134,12 @@ class MemberPortalController extends Controller
     public function events(Request $request, string $slug): Response|RedirectResponse
     {
         $user = Auth::user();
-        $club = Club::where('slug', $slug)
-            ->with(['events.menuItems', 'events.ticketTiers'])
-            ->firstOrFail();
+        $club = Club::where('slug', $slug)->firstOrFail();
 
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 
-        if ($memberPivot === null && ! $user?->is_super_admin) {
+        // Summonses and bookings are for active members only, like the other member pages.
+        if (($memberPivot === null || $memberPivot->status !== 'active') && ! $user?->is_super_admin) {
             return redirect()->route('public.site', ['clubSlug' => $club->slug]);
         }
 
@@ -187,7 +187,7 @@ class MemberPortalController extends Controller
         $events = $eventModels->map(fn (Event $event) => EventPayload::forMember($event, $eventRegistrations->get($event->id)));
 
         return Inertia::render('Member/Events', [
-            'club' => $club,
+            'club' => $club->only(['id', 'name', 'slug', 'lodge_number']),
             'memberRole' => $memberPivot->role ?? 'member',
             'meetings' => $meetings,
             'events' => $events,
@@ -227,7 +227,7 @@ class MemberPortalController extends Controller
         $memberPivot = $user ? $user->clubs()->where('clubs.id', $club->id)->first()?->pivot : null;
 
         return Inertia::render('Member/PostShow', [
-            'club' => $club,
+            'club' => $club->only(['id', 'name', 'slug', 'lodge_number']),
             'memberRole' => $memberPivot->role ?? 'member',
             'isMember' => $memberPivot !== null || (bool) $user?->is_super_admin,
             'lodgeSlug' => $club->lodge?->slug,

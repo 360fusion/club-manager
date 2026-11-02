@@ -35,10 +35,11 @@ class PasswordlessRsvpController extends Controller
 
         return Inertia::render('Summons/Rsvp', [
             'token' => $token,
-            'club' => $club,
-            'user' => $user,
-            'meeting' => $meeting,
-            'rsvp' => $rsvp->load('guests'),
+            // Only what the page shows: the link is in an email, so nothing else about the person, lodge or meeting goes with it.
+            'club' => ['name' => $club->name],
+            'user' => ['name' => $user->name],
+            'meeting' => $meeting->only(['id', 'title', 'meeting_date', 'starts_at', 'rehearsal_starts_at', 'venue', 'dress_code', 'dining_cost_member', 'bank_sort_code', 'bank_account_number', 'payment_link']),
+            'rsvp' => $rsvp->load('guests')->only(['attendance_status', 'dietary_requirements', 'apology_reason', 'payment_reference', 'guests']),
             'isCutoffPassed' => $isCutoffPassed,
             'isVisitor' => $isVisitor,
             'visitorHomeClub' => $visitorHomeClub,

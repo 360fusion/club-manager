@@ -25,7 +25,7 @@ class SanitizedHtmlBlocks implements CastsAttributes
     /**
      * Block fields rendered into href/src attributes; only safe URL schemes are kept.
      */
-    private const URL_KEYS = ['url', 'cta_link', 'link', 'href', 'src', 'image_url', 'cta_url', 'cover_url', 'button_url', 'button2_url', 'bg_image', 'side_image_url', 'cta2_link'];
+    private const URL_KEYS = ['url', 'cta_link', 'link', 'href', 'src', 'image_url', 'cta_url', 'cover_url', 'button_url', 'button2_url', 'bg_image', 'side_image_url', 'cta2_link', 'back_url'];
 
     public function get(Model $model, string $key, mixed $value, array $attributes): ?array
     {
@@ -62,6 +62,14 @@ class SanitizedHtmlBlocks implements CastsAttributes
     private function sanitizeRecursively(array $blocks): array
     {
         foreach ($blocks as $key => $value) {
+            // Text and address fields hold text. Anything else there (a list, say) would skip the checks below and
+            // still be written to the page, so it is emptied.
+            if ((in_array($key, self::HTML_KEYS, true) || in_array($key, self::URL_KEYS, true)) && $value !== null && ! is_string($value)) {
+                $blocks[$key] = '';
+
+                continue;
+            }
+
             if (is_array($value)) {
                 $blocks[$key] = $this->sanitizeRecursively($value);
 

@@ -426,6 +426,16 @@ class SecurityAuditTest extends TestCase
         Notification::assertSentToTimes($user, VerifyEmail::class, 1);
     }
 
+    public function test_links_are_built_from_the_app_address_even_when_the_host_header_is_forged(): void
+    {
+        config(['app.url' => 'https://app.example.test']);
+
+        $this->get('https://evil.example/login')->assertOk();
+
+        $this->assertSame('https://app.example.test/reset-password/abc', url('/reset-password/abc'));
+        $this->assertStringNotContainsString('evil.example', route('login'));
+    }
+
     public function test_registration_needs_a_confirmed_email_and_does_not_reveal_existing_accounts(): void
     {
         config(['auth.require_email_verification' => true]);

@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Club;
 use App\Models\Meeting;
 use App\Models\User;
+use Illuminate\Mail\Mailables\Content;
 
 /**
  * Tells a member a summons has been published and gives them their private, passwordless RSVP link.
@@ -25,7 +26,6 @@ class MeetingSummonsMail extends EventTemplatedMail
         return $this->club;
     }
 
-    // shortcut: no editable template row yet, so the built-in wording below is always used; add a `meeting_summons` template when a lodge needs to reword it.
     protected function templateKey(): string
     {
         return 'meeting_summons';
@@ -39,12 +39,28 @@ class MeetingSummonsMail extends EventTemplatedMail
                 'club_name' => $this->club->name,
                 'meeting_title' => $this->meeting->title,
                 'meeting_date' => $this->meeting->meeting_date->format('l j F Y'),
-                'meeting_time' => substr((string) $this->meeting->starts_at, 0, 5),
+                'meeting_time' => $this->meeting->starts_at ?? '',
+                'starts_at' => $this->meeting->starts_at ?? '',
                 'venue' => (string) $this->meeting->venue,
                 'rsvp_url' => route('summons.rsvp.show', ['token' => $this->rsvpToken]),
             ],
             'html' => [],
         ];
+    }
+
+    /**
+     * Whatever the wording, the member's private reply link is always in the email: it is added when the template lacks it.
+     */
+    public function content(): Content
+    {
+        $body = $this->filled()['body'];
+        $url = $this->values()['text']['rsvp_url'];
+
+        if (! str_contains($body, $url)) {
+            $body .= '<p><a href="'.e($url).'">Reply to the summons</a>: say whether you are attending, dining, or sending apologies. This link is private to you and works until the day of the meeting.</p>';
+        }
+
+        return new Content(html: 'emails.templated', with: ['bodyHtml' => $body]);
     }
 
     protected function fallbackSubject(): string
