@@ -3,6 +3,7 @@
 namespace App\Domains\ClubAccounting\Mail;
 
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
+use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -11,6 +12,7 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 
 class CommitteeAgendaPackMailable extends Mailable
 {
@@ -25,11 +27,11 @@ class CommitteeAgendaPackMailable extends Mailable
         public User $recipient,
         public string $customSubject,
         public string $customBodyHtml,
-        public ?string $pdfBinary = null,
+        public ?string $pdfCacheKey = null,
         public ?string $pdfFilename = null,
     ) {
         $this->emailSubject = $this->customSubject;
-        $this->attachPdf = ! empty($this->pdfBinary);
+        $this->attachPdf = $this->pdfCacheKey !== null;
     }
 
     public function envelope(): Envelope
@@ -63,15 +65,21 @@ class CommitteeAgendaPackMailable extends Mailable
         );
     }
 
+    /**
+     * The PDF is not carried in the queued job (raw bytes cannot be JSON encoded): it is read from the cache, where the
+     * sender put it once for everyone, or built again if that copy has gone.
+     */
     public function attachments(): array
     {
-        if ($this->pdfBinary) {
-            return [
-                Attachment::fromData(fn () => $this->pdfBinary, $this->pdfFilename ?: 'Agenda-Pack.pdf')
-                    ->withMime('application/pdf'),
-            ];
+        if ($this->pdfCacheKey === null) {
+            return [];
         }
 
-        return [];
+        return [
+            Attachment::fromData(
+                fn () => base64_decode(Cache::get($this->pdfCacheKey) ?? base64_encode(app(CommitteePackCompilerService::class)->compilePdf($this->meeting))),
+                $this->pdfFilename ?: 'Agenda-Pack.pdf',
+            )->withMime('application/pdf'),
+        ];
     }
 }

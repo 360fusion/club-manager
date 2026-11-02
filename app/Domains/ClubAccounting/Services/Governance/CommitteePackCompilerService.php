@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Support\RichTextSanitizer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -178,10 +179,12 @@ class CommitteePackCompilerService
             return 0;
         }
 
-        $pdfBinary = null;
+        // One PDF for everyone, kept in the cache for the queued emails to pick up (as text: the bytes cannot go in a job).
+        $pdfCacheKey = null;
         $pdfFilename = null;
         if ($attachPdf) {
-            $pdfBinary = $this->compilePdf($meeting);
+            $pdfCacheKey = 'agenda-pack-pdf:'.Str::uuid();
+            Cache::put($pdfCacheKey, base64_encode($this->compilePdf($meeting)), now()->addDay());
             $pdfFilename = 'Agenda-Pack-'.Str::slug($meeting->title).'-'.($meeting->meeting_date->format('Y-m-d')).'.pdf';
         }
 
@@ -191,6 +194,7 @@ class CommitteePackCompilerService
             ->get();
         $customEmailBody = RichTextSanitizer::sanitize($customEmailBody) ?? '';
         $dispatchedCount = 0;
+        $queuedUserIds = [];
 
         foreach ($recipients as $recipient) {
             try {
@@ -199,18 +203,19 @@ class CommitteePackCompilerService
                     recipient: $recipient,
                     customSubject: $emailSubject,
                     customBodyHtml: $customEmailBody,
-                    pdfBinary: $pdfBinary,
+                    pdfCacheKey: $pdfCacheKey,
                     pdfFilename: $pdfFilename,
                 ));
                 $dispatchedCount++;
+                $queuedUserIds[] = $recipient->id;
             } catch (\Throwable $e) {
                 Log::error("Failed to queue agenda pack email to {$recipient->email}: ".$e->getMessage());
             }
         }
 
-        // Update pack_sent_at timestamp on attendee records
+        // Only the people whose email was really queued are marked as sent.
         ClubCommitteeAttendee::where('committee_meeting_id', $meeting->id)
-            ->whereIn('user_id', $recipientMemberIds)
+            ->whereIn('user_id', $queuedUserIds)
             ->update(['pack_sent_at' => Carbon::now()]);
 
         if ($dispatchedCount > 0) {

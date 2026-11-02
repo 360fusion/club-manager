@@ -797,6 +797,47 @@ TEXT;
         $this->assertNotNull($attendee->fresh()->pack_sent_at);
     }
 
+    public function test_the_agenda_pack_with_its_pdf_goes_through_the_real_queue_and_arrives_with_the_pdf_attached(): void
+    {
+        config(['queue.default' => 'database']);
+        $meeting = ClubCommitteeMeeting::create(['club_id' => $this->club->id, 'title' => 'Queue Test Meeting', 'meeting_date' => Carbon::now()->addDays(3), 'status' => CommitteeMeetingStatus::Draft]);
+        $attendee = ClubCommitteeAttendee::create(['committee_meeting_id' => $meeting->id, 'user_id' => $this->member1->id, 'name' => $this->member1->name, 'role_title' => 'Secretary', 'attendance_type' => AttendanceType::Present]);
+
+        $sent = app(CommitteePackCompilerService::class)->dispatchPack($meeting, [$this->member1->id], 'Official Agenda Pack', '<p>Attached.</p>', true);
+
+        $this->assertSame(1, $sent, 'a job holding the raw PDF cannot be JSON encoded, so nothing used to be queued');
+        $this->assertDatabaseCount('jobs', 1);
+        $this->assertNotNull($attendee->fresh()->pack_sent_at);
+
+        $this->artisan('queue:work', ['--once' => true, '--queue' => 'default'])->assertSuccessful();
+
+        $messages = Mail::mailer()->getSymfonyTransport()->messages();
+        $this->assertCount(1, $messages);
+        $raw = $messages[0]->getOriginalMessage()->toString();
+        $this->assertStringContainsString('application/pdf', $raw);
+        $this->assertStringContainsString('Agenda-Pack-queue-test-meeting', $raw);
+    }
+
+    public function test_the_modal_says_who_could_not_be_emailed_and_only_marks_the_others_as_sent(): void
+    {
+        Mail::fake();
+        $this->actingAs($this->admin);
+        $meeting = ClubCommitteeMeeting::create(['club_id' => $this->club->id, 'title' => 'Partial Send Meeting', 'meeting_date' => Carbon::now()->addDays(2), 'status' => CommitteeMeetingStatus::Scheduled]);
+        $reachable = ClubCommitteeAttendee::create(['committee_meeting_id' => $meeting->id, 'user_id' => $this->member2->id, 'name' => $this->member2->name, 'role_title' => 'Treasurer', 'attendance_type' => AttendanceType::Present]);
+        $noAccount = ClubCommitteeAttendee::create(['committee_meeting_id' => $meeting->id, 'user_id' => null, 'name' => 'Noemail Nate', 'role_title' => 'Member', 'attendance_type' => AttendanceType::Present]);
+
+        Livewire::test(AgendaPackPreviewModal::class, ['clubSlug' => $this->club->slug, 'meetingId' => $meeting->id])
+            ->call('openModal')
+            ->set('emailSubject', 'Pack')
+            ->set('emailBody', 'Please review.')
+            ->call('sendAgendaPack')
+            ->assertDispatched('notify', fn ($name, $params) => ($params[0]['type'] ?? null) === 'error' && str_contains($params[0]['message'] ?? '', '1 selected person could not be emailed'));
+
+        $this->assertNotNull($reachable->fresh()->pack_sent_at);
+        $this->assertNull($noAccount->fresh()->pack_sent_at);
+        Mail::assertQueuedCount(1);
+    }
+
     public function test_agenda_pack_preview_modal_flow(): void
     {
         Mail::fake();

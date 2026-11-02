@@ -5,7 +5,6 @@ namespace App\Domains\ClubAccounting\Livewire\Committee;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Models\Club;
-use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -139,17 +138,16 @@ class AgendaPackPreviewModal extends Component
             attachPdf: $this->includePdfAttachment,
         );
 
-        $meeting->attendees()->whereIn('id', $this->selectedRecipientIds)
-            ->update(['pack_sent_at' => Carbon::now()]);
-
         $this->isSending = false;
         $this->isOpen = false;
 
-        $message = "Agenda Pack successfully dispatched to {$sentCount} committee ".Str::plural('member', $sentCount).'.';
-        session()->flash('success', $message);
+        $notSent = $selectedAttendees->count() - $sentCount;
+        $message = "Agenda Pack successfully dispatched to {$sentCount} committee ".Str::plural('member', $sentCount).'.'
+            .($notSent > 0 ? " {$notSent} selected ".Str::plural('person', $notSent).' could not be emailed (no email address on record, or no account yet).' : '');
+        session()->flash($notSent > 0 ? 'error' : 'success', $message);
 
         $this->dispatch('notify', [
-            'type' => 'success',
+            'type' => $notSent > 0 ? 'error' : 'success',
             'message' => $message,
             'sent_count' => $sentCount,
         ]);
