@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Enums\DocumentStatus;
+use App\Exceptions\LedgerRuleException;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
@@ -19,6 +20,17 @@ use InvalidArgumentException;
 class AccountingService
 {
     public const INDEPENDENT_EXAMINER_PURPOSE = 'independent_examiner_report';
+
+    /**
+     * Where a bill category from the bill form is charged, when it is not the name of one of the lodge's own expense accounts.
+     * Anything not listed (maintenance, boat yard, events, other) goes to 5000.
+     */
+    public const BILL_CATEGORY_ACCOUNTS = [
+        'Bar & Dining Supplies' => '5200',
+        'Admin & Software Subscriptions' => '5300',
+        'Insurance & Legal Fees' => '5300',
+        'Utilities & Fuel' => '5100',
+    ];
 
     /**
      * Default Chart of Accounts Template
@@ -127,7 +139,7 @@ class AccountingService
     {
         $items = $data['items'] ?? [];
         if (count($items) < 2) {
-            throw new InvalidArgumentException('A journal entry must contain at least 2 line items.');
+            throw new LedgerRuleException('A journal entry must contain at least 2 line items.');
         }
 
         // Every line is rounded to the penny the way the ledger stores it, so what is checked is what is saved.
@@ -135,12 +147,12 @@ class AccountingService
         $totalCredit = array_sum(array_map(fn ($i) => round((float) ($i['credit'] ?? 0), 2), $items));
 
         if (round($totalDebit - $totalCredit, 2) !== 0.0) {
-            throw new InvalidArgumentException("Journal entry is not balanced. Total Debits ({$club->currencySymbol()}{$totalDebit}) must equal Total Credits ({$club->currencySymbol()}{$totalCredit}).");
+            throw new LedgerRuleException("Journal entry is not balanced. Total Debits ({$club->currencySymbol()}{$totalDebit}) must equal Total Credits ({$club->currencySymbol()}{$totalCredit}).");
         }
 
         $entryYear = $club->financialYearFor($data['entry_date'] ?? now());
         if ($club->financialYearIsClosed($entryYear) && ! (auth()->user()?->is_super_admin)) {
-            throw new InvalidArgumentException("The books for {$entryYear} are closed. Reopen the financial year before posting to it.");
+            throw new LedgerRuleException("The books for {$entryYear} are closed. Reopen the financial year before posting to it.");
         }
 
         return DB::transaction(function () use ($club, $data, $items) {
@@ -185,13 +197,13 @@ class AccountingService
         $totalCredit = array_sum(array_map(fn ($i) => round((float) ($i['credit'] ?? 0), 2), $items));
 
         if (round($totalDebit - $totalCredit, 2) !== 0.0) {
-            throw new InvalidArgumentException('Journal entry must be balanced. Total Debit ('.Currencies::format($totalDebit, $club).') does not equal Total Credit ('.Currencies::format($totalCredit, $club).').');
+            throw new LedgerRuleException('Journal entry must be balanced. Total Debit ('.Currencies::format($totalDebit, $club).') does not equal Total Credit ('.Currencies::format($totalCredit, $club).').');
         }
 
         $existingYear = $club->financialYearFor($entry->entry_date);
         $newYear = $club->financialYearFor($data['entry_date'] ?? $entry->entry_date);
         if ((! (auth()->user()?->is_super_admin)) && ($club->financialYearIsClosed($existingYear) || $club->financialYearIsClosed($newYear))) {
-            throw new InvalidArgumentException("The books for {$existingYear} are closed. Reopen the financial year before editing this entry.");
+            throw new LedgerRuleException("The books for {$existingYear} are closed. Reopen the financial year before editing this entry.");
         }
 
         $beforeItems = $entry->items()->get(['account_id', 'debit', 'credit', 'memo'])->toArray();
@@ -349,13 +361,25 @@ class AccountingService
     }
 
     /**
+     * The expense account a bill is charged to: one of the lodge's expense accounts named like the bill's category,
+     * else the account the category normally belongs to, else Facility & Clubhouse Maintenance.
+     */
+    public function expenseAccountForBill(Club $club, Bill $bill): Account
+    {
+        $named = Account::where('club_id', $club->id)->where('type', 'expense')->where('is_active', true)
+            ->whereRaw('lower(name) = ?', [mb_strtolower((string) $bill->category)])->first();
+
+        return $named ?? $this->getAccount($club, self::BILL_CATEGORY_ACCOUNTS[$bill->category] ?? '5000');
+    }
+
+    /**
      * Post the "bill issued" ledger entry (Debit Expense, [Debit VAT Control], Credit
      * Accounts Payable) — shared by createVendorBill() and by publishing/editing a
      * draft bill into 'unpaid', so VAT is only ever computed once, at creation time.
      */
     public function postVendorBillIssuedJournal(Club $club, Bill $bill): void
     {
-        $expenseAcc = $this->getAccount($club, '5000');
+        $expenseAcc = $this->expenseAccountForBill($club, $bill);
         $apAcc = $this->getAccount($club, '2000');
 
         $items = [

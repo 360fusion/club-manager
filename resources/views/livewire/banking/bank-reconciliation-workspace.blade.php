@@ -267,11 +267,9 @@
                     <!-- Nominal Ledger Allocation -->
                     <div class="space-y-3">
                         <x-select label="Nominal ledger account code" wire:model="manualNominalCode">
-                            <option value="4000">4000 - General donations &amp; dues</option>
-                            <option value="4100">4100 - Dining &amp; festive board fees</option>
-                            <option value="7000">7000 - Rent &amp; temple premises</option>
-                            <option value="7100">7100 - Catering &amp; hospitality dues</option>
-                            <option value="8000">8000 - Charity relief chest contribution</option>
+                            @foreach($nominalAccounts as $account)
+                                <option value="{{ $account->code }}">{{ $account->code }} - {{ $account->name }}</option>
+                            @endforeach
                         </x-select>
 
                         <x-button block wire:click="executeManualAllocation(0, 'ledger_account')">

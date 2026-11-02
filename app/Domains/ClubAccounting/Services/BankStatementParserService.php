@@ -3,6 +3,7 @@
 namespace App\Domains\ClubAccounting\Services;
 
 use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
+use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Models\Club;
@@ -72,13 +73,13 @@ class BankStatementParserService
         $colBalance = $this->findColumnIndex($headers, ['balance', 'account balance', 'running balance']);
 
         $parsedLines = [];
+        $skippedRows = [];
         $totalAmount = 0.0;
         $duplicateCount = 0;
         $existingHashes = $this->getExistingHashes($clubId);
 
-        for ($i = $headerIndex + 1; $i < count($rows); $i++) {
-            $row = $rows[$i];
-            if (count($row) < 2) {
+        foreach ($rows as $i => $row) {
+            if ($i <= $headerIndex || count($row) < 2) {
                 continue;
             }
 
@@ -89,14 +90,31 @@ class BankStatementParserService
 
             $parsedDate = $this->parseDate($dateStr);
             if (! $parsedDate) {
+                $skippedRows[] = $this->skippedRow($i + 1, $row, 'The date could not be read.');
+
                 continue;
             }
 
             $description = $colDesc !== null ? trim($row[$colDesc] ?? '') : 'Bank Transaction';
             $reference = $colRef !== null ? trim($row[$colRef] ?? '') : null;
 
-            // Calculate Amount
-            $amount = 0.0;
+            // Calculate Amount: every cell that holds an amount must be readable, and a line must have one.
+            $amountCells = [];
+            if ($colAmount !== null && isset($row[$colAmount]) && trim($row[$colAmount]) !== '') {
+                $amountCells = [trim($row[$colAmount])];
+            } else {
+                foreach ([$colPaidIn, $colPaidOut] as $col) {
+                    if ($col !== null && trim($row[$col] ?? '') !== '') {
+                        $amountCells[] = trim($row[$col]);
+                    }
+                }
+            }
+            if ($amountCells === [] || array_filter($amountCells, fn ($cell) => ! $this->isAmount($cell)) !== []) {
+                $skippedRows[] = $this->skippedRow($i + 1, $row, $amountCells === [] ? 'The line has no amount.' : 'The amount could not be read.');
+
+                continue;
+            }
+
             if ($colAmount !== null && isset($row[$colAmount]) && trim($row[$colAmount]) !== '') {
                 $amount = $this->cleanAmount($row[$colAmount]);
             } else {
@@ -139,6 +157,7 @@ class BankStatementParserService
             'total_lines' => count($linesList),
             'new_lines_count' => count($linesList) - $duplicateCount,
             'duplicate_lines_count' => $duplicateCount,
+            'skipped_rows' => $skippedRows,
             'total_amount' => $totalAmount,
         ];
     }
@@ -165,18 +184,26 @@ class BankStatementParserService
         }
 
         $parsedLines = [];
+        $skippedRows = [];
         $totalAmount = 0.0;
         $duplicateCount = 0;
         $existingHashes = $this->getExistingHashes($clubId);
 
-        foreach ($transactions[1] ?? [] as $trnXml) {
+        foreach ($transactions[1] ?? [] as $n => $trnXml) {
             $dateStr = $this->extractOfxTag($trnXml, 'DTPOSTED');
             $parsedDate = $this->parseOfxDate($dateStr);
             if (! $parsedDate) {
+                $skippedRows[] = $this->skippedRow($n + 1, [trim(preg_replace('/\s+/', ' ', strip_tags($trnXml)))], 'The date could not be read.', 'Transaction');
+
                 continue;
             }
 
             $amountStr = $this->extractOfxTag($trnXml, 'TRNAMT');
+            if (! $this->isAmount($amountStr)) {
+                $skippedRows[] = $this->skippedRow($n + 1, [trim(preg_replace('/\s+/', ' ', strip_tags($trnXml)))], 'The amount could not be read.', 'Transaction');
+
+                continue;
+            }
             $amount = floatval($amountStr);
 
             $name = $this->extractOfxTag($trnXml, 'NAME') ?: $this->extractOfxTag($trnXml, 'MEMO') ?: 'Bank Transaction';
@@ -215,6 +242,7 @@ class BankStatementParserService
             'total_lines' => count($linesList),
             'new_lines_count' => count($linesList) - $duplicateCount,
             'duplicate_lines_count' => $duplicateCount,
+            'skipped_rows' => $skippedRows,
             'total_amount' => $totalAmount,
         ];
     }
@@ -234,17 +262,18 @@ class BankStatementParserService
     /**
      * Persist parsed bundle into database tables (`club_acc_bank_imports` & `club_acc_bank_transactions`).
      */
-    public function importParsedBundle(Club|int $club, array $parsedBundle, ?int $importedByMemberId = null): BankImport
+    public function importParsedBundle(Club|int $club, array $parsedBundle, ?int $importedByMemberId = null, ?int $bankAccountId = null): BankImport
     {
         $clubId = $club instanceof Club ? $club->id : $club;
 
-        return DB::transaction(function () use ($clubId, $parsedBundle, $importedByMemberId) {
+        return DB::transaction(function () use ($clubId, $parsedBundle, $importedByMemberId, $bankAccountId) {
             $newLines = array_filter($parsedBundle['lines'], fn ($l) => empty($l['is_duplicate']));
             $totalLines = count($newLines);
             $totalAmount = array_reduce($newLines, fn ($acc, $l) => $acc + (float) $l['amount'], 0.0);
 
             $importBatch = BankImport::create([
                 'club_id' => $clubId,
+                'bank_account_id' => $bankAccountId,
                 'filename' => $parsedBundle['filename'] ?? 'statement.csv',
                 'account_number' => $parsedBundle['account_number'] ?? null,
                 'sort_code' => $parsedBundle['sort_code'] ?? null,
@@ -256,6 +285,7 @@ class BankStatementParserService
             foreach ($newLines as $line) {
                 BankTransaction::create([
                     'club_id' => $clubId,
+                    'bank_account_id' => $bankAccountId,
                     'bank_import_id' => $importBatch->id,
                     'transaction_date' => $line['transaction_date'],
                     'raw_description' => $line['raw_description'],
@@ -269,6 +299,16 @@ class BankStatementParserService
 
             return $importBatch->fresh();
         });
+    }
+
+    /**
+     * The account a statement belongs to when no one chose: the club's only active bank account, if it has just one.
+     */
+    public function soleActiveBankAccountId(int $clubId): ?int
+    {
+        $ids = BankAccount::where('club_id', $clubId)->where('is_active', true)->pluck('id');
+
+        return $ids->count() === 1 ? $ids->first() : null;
     }
 
     private function getExistingHashes(int $clubId): array
@@ -292,6 +332,25 @@ class BankStatementParserService
         }
 
         return null;
+    }
+
+    /**
+     * Whether a cell is a money amount: some digits, with only currency signs, commas, spaces, brackets and a sign around them.
+     */
+    private function isAmount(string $val): bool
+    {
+        return preg_match('/\d/', $val) === 1 && preg_match('/^[\s£$€+\-(]*(\d[\d,]*(\.\d+)?|\.\d+)[\s)]*(CR|DR)?$/i', trim($val)) === 1;
+    }
+
+    /**
+     * A row the file held but that could not be read, for showing to the person importing.
+     *
+     * @param  list<string|null>  $cells
+     * @return array{line: int, text: string, reason: string, kind: string}
+     */
+    private function skippedRow(int $line, array $cells, string $reason, string $kind = 'Line'): array
+    {
+        return ['line' => $line, 'text' => mb_substr(implode(', ', array_map('strval', $cells)), 0, 120), 'reason' => $reason, 'kind' => $kind];
     }
 
     private function cleanAmount(string $val): float

@@ -3,6 +3,7 @@
 namespace App\Domains\ClubAccounting\Livewire\Banking;
 
 use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
+use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Services\BankStatementParserService;
@@ -29,6 +30,8 @@ class BankImportIndex extends Component
     public ?array $previewBundle = null;
 
     public bool $showPreviewModal = false;
+
+    public ?int $bankAccountId = null;
 
     public function mount(string $clubSlug): void
     {
@@ -59,6 +62,7 @@ class BankImportIndex extends Component
 
         try {
             $this->previewBundle = $parserService->parseFile($realPath, $originalName, $club->id);
+            $this->bankAccountId ??= $parserService->soleActiveBankAccountId($club->id);
             $this->showPreviewModal = true;
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to parse bank statement file: '.$e->getMessage());
@@ -72,11 +76,21 @@ class BankImportIndex extends Component
             return;
         }
 
+        $this->resetErrorBag('bankAccountId');
         $club = $this->getClub();
 
-        $importBatch = $parserService->importParsedBundle($club, $this->previewBundle);
+        $accounts = BankAccount::where('club_id', $club->id)->where('is_active', true)->get();
+        if ($accounts->isNotEmpty() && ! $accounts->contains('id', $this->bankAccountId)) {
+            $this->addError('bankAccountId', 'Choose which bank account this statement is for.');
 
-        session()->flash('success', "Bank statement '{$importBatch->filename}' imported successfully! {$importBatch->total_lines} new transaction lines staged for reconciliation.");
+            return;
+        }
+
+        $importBatch = $parserService->importParsedBundle($club, $this->previewBundle, null, $accounts->isNotEmpty() ? $this->bankAccountId : null);
+
+        $skipped = count($this->previewBundle['skipped_rows'] ?? []);
+        session()->flash('success', "Bank statement '{$importBatch->filename}' imported successfully! {$importBatch->total_lines} new transaction lines staged for reconciliation."
+            .($skipped > 0 ? " {$skipped} row(s) in the file could not be read and were not imported." : ''));
 
         $this->cancelPreview();
     }
@@ -148,6 +162,7 @@ class BankImportIndex extends Component
             'unmatchedCount' => $unmatchedCount,
             'matchedCount' => $matchedCount,
             'totalNetAmount' => $totalNetAmount,
+            'bankAccounts' => BankAccount::where('club_id', $club->id)->where('is_active', true)->orderBy('account_name')->get(),
             'statuses' => BankTransactionStatus::cases(),
         ])->layout('components.layouts.app', [
             'title' => 'Bank Statement Import Engine — '.$club->name,

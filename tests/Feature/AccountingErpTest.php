@@ -1027,6 +1027,48 @@ class AccountingErpTest extends TestCase
         $this->assertEquals(750.00, $reports['aged_payables']['total']);
     }
 
+    public function test_a_vendor_bill_is_charged_to_the_expense_account_its_category_belongs_to(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $charged = function (string $category): array {
+            $bill = $this->accountingService->createVendorBill($this->club, ['vendor_name' => 'Supplier', 'category' => $category, 'amount' => 100.00, 'due_date' => '2026-10-20']);
+
+            return JournalEntry::where('source_type', 'VendorBill')->where('source_id', $bill->id)->firstOrFail()
+                ->items->where('debit', '>', 0)->map(fn ($item) => $item->account->code)->values()->all();
+        };
+
+        $this->assertSame(['5200'], $charged('Bar & Dining Supplies'));
+        $this->assertSame(['5100'], $charged('Utilities & Fuel'));
+        $this->assertSame(['5300'], $charged('Admin & Software Subscriptions'));
+        $this->assertSame(['5200'], $charged('catering & food supplies'), 'the name of one of the lodge\'s own expense accounts');
+        $this->assertSame(['5000'], $charged('Other Operating Expenses'));
+        $this->assertSame(['5000'], $charged('Something nobody has heard of'));
+    }
+
+    public function test_balance_sheet_counts_the_surplus_so_assets_equal_liabilities_plus_equity(): void
+    {
+        $this->accountingService->seedDefaultAccounts($this->club);
+        $account = fn (string $code) => Account::where('club_id', $this->club->id)->where('code', $code)->first()->id;
+
+        $this->accountingService->postJournalEntry($this->club, ['description' => 'Dues', 'entry_date' => '2026-10-05', 'items' => [
+            ['account_id' => $account('1000'), 'debit' => 120.00, 'credit' => 0],
+            ['account_id' => $account('4000'), 'debit' => 0, 'credit' => 120.00],
+        ]]);
+        $this->accountingService->postJournalEntry($this->club, ['description' => 'Hall hire', 'entry_date' => '2026-10-07', 'items' => [
+            ['account_id' => $account('5000'), 'debit' => 80.00, 'credit' => 0],
+            ['account_id' => $account('1000'), 'debit' => 0, 'credit' => 80.00],
+        ]]);
+
+        $sheet = app(AccountingReports::class)->getReportsData($this->club)['balance_sheet'];
+
+        $this->assertEquals(40.00, $sheet['total_assets']);
+        $this->assertEquals(40.00, $sheet['total_equity']);
+        $this->assertEquals($sheet['total_assets'], $sheet['total_liabilities'] + $sheet['total_equity']);
+        $surplusRow = $sheet['equity']->last();
+        $this->assertSame('Surplus (deficit) to date', $surplusRow['name']);
+        $this->assertEquals(40.00, $surplusRow['balance']);
+    }
+
     private function addLodgeMember(string $email, MembershipStatus $status = MembershipStatus::Active): Member
     {
         return Member::create([

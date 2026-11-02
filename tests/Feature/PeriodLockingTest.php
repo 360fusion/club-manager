@@ -64,6 +64,31 @@ class PeriodLockingTest extends TestCase
         $this->assertSame(['2026-01-01', '2026-12-31'], array_map(fn ($d) => $d->toDateString(), $this->club->financialYearRange(2026)));
     }
 
+    public function test_an_unbalanced_entry_or_a_closed_year_answers_with_a_message_not_a_server_error(): void
+    {
+        app(FinancialYearService::class)->closeFinancialYear($this->club, 2026, $this->adminUser);
+        $bankAcc = Account::where('club_id', $this->club->id)->where('code', '1000')->firstOrFail();
+        $duesAcc = Account::where('club_id', $this->club->id)->where('code', '4000')->firstOrFail();
+        $entry = fn (string $date, float $credit) => ['entry_date' => $date, 'description' => 'Dues', 'items' => [
+            ['account_id' => $bankAcc->id, 'debit' => 50, 'credit' => 0],
+            ['account_id' => $duesAcc->id, 'debit' => 0, 'credit' => $credit],
+        ]];
+        $url = route('admin.accounting.journal.store', ['clubSlug' => $this->club->slug]);
+        $this->actingAs($this->adminUser);
+
+        $this->from('/back')->post($url, $entry('2026-04-30', 50))
+            ->assertRedirect('/back')
+            ->assertSessionHas('error', fn ($message) => str_contains($message, 'books for 2026 are closed'));
+        $this->from('/back')->post($url, $entry('2026-06-01', 40))
+            ->assertRedirect('/back')
+            ->assertSessionHas('error', fn ($message) => str_contains($message, 'is not balanced'));
+        $this->postJson($url, $entry('2026-06-01', 40))
+            ->assertStatus(422)
+            ->assertJsonPath('errors.ledger.0', fn ($message) => str_contains($message, 'is not balanced'));
+
+        $this->assertDatabaseCount('accounting_journal_entries', 0);
+    }
+
     public function test_closing_a_financial_year_blocks_only_the_dates_inside_it(): void
     {
         app(FinancialYearService::class)->closeFinancialYear($this->club, 2026, $this->adminUser);

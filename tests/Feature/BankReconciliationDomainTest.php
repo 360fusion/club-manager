@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Enums\LodgeOffice;
 use App\Domains\ClubAccounting\Enums\MembershipStatus;
 use App\Domains\ClubAccounting\Enums\SubscriptionStatus;
 use App\Domains\ClubAccounting\Livewire\Banking\BankReconciliationWorkspace;
+use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Models\BankImport;
 use App\Domains\ClubAccounting\Models\BankMatchRule;
 use App\Domains\ClubAccounting\Models\BankTransaction;
@@ -15,7 +16,9 @@ use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Models\SubscriptionTier;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
 use App\Domains\ClubAccounting\Services\SubscriptionBillingService;
+use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
+use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Invoice;
@@ -450,5 +453,34 @@ class BankReconciliationDomainTest extends TestCase
         $this->assertSame(0, BankMatchRule::count());
         $next = $this->statementLine('DD Anglian Water 9999', -42.00, 'rule-hash-6');
         $this->assertEmpty(array_filter($matcher->suggestMatches($next), fn ($m) => ($m['remembered'] ?? false)));
+    }
+
+    public function test_manual_allocation_offers_only_the_lodges_own_accounts_and_posts_to_the_lines_bank_account(): void
+    {
+        app(AccountingService::class)->seedDefaultAccounts($this->club);
+        $savingsLedger = Account::create(['club_id' => $this->club->id, 'code' => '1010', 'name' => 'Savings', 'type' => 'asset', 'is_active' => true]);
+        $savings = BankAccount::create(['club_id' => $this->club->id, 'account_id' => $savingsLedger->id, 'bank_name' => 'Lloyds', 'account_name' => 'Savings', 'account_type' => 'savings', 'is_active' => true]);
+        $interest = $this->statementLine('INTEREST PAID', 0.42, 'nominal-hash-1');
+        $interest->update(['bank_account_id' => $savings->id]);
+
+        $this->actingAs($this->adminUser);
+        $workspace = Livewire::test(BankReconciliationWorkspace::class, ['clubSlug' => $this->club->slug])
+            ->call('openManualDrawer', $interest->id)
+            ->set('manualAllocationType', 'ledger_account')
+            ->assertSee('4500 - Donations &amp; Bequests', false)
+            ->assertDontSee('Rent &amp; temple premises', false)
+            ->assertSet('manualNominalCode', '4000');
+
+        // An expense account is not a place to put money received, and a code the club does not have is refused.
+        $workspace->set('manualNominalCode', '5000')->call('executeManualAllocation', 0)->assertHasErrors('manualNominalCode');
+        $workspace->set('manualNominalCode', '7100')->call('executeManualAllocation', 0)->assertHasErrors('manualNominalCode');
+        $this->assertSame(BankTransactionStatus::Unmatched, $interest->fresh()->status);
+        $this->assertNull(Account::where('club_id', $this->club->id)->where('code', '7100')->first());
+
+        $workspace->set('manualNominalCode', '4500')->call('executeManualAllocation', 0)->assertHasNoErrors();
+
+        $this->assertSame(BankTransactionStatus::Matched, $interest->fresh()->status);
+        $entry = JournalEntry::where('club_id', $this->club->id)->where('source_type', 'bank_transaction')->where('source_id', $interest->id)->firstOrFail();
+        $this->assertEqualsCanonicalizing([$savingsLedger->id, Account::where('club_id', $this->club->id)->where('code', '4500')->value('id')], $entry->items->pluck('account_id')->all());
     }
 }

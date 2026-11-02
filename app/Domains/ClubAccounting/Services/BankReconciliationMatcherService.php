@@ -425,7 +425,9 @@ class BankReconciliationMatcherService
             }
 
             // Post double-entry journal entry to general ledger if not already posted
-            $bankAcc = Account::where('club_id', $club->id)->where('code', '1000')->first();
+            // The money moves in the ledger account of the bank account the line belongs to; lines with none use the main bank account.
+            $bankAcc = ($transaction->bankAccount?->account_id ? Account::where('club_id', $club->id)->find($transaction->bankAccount->account_id) : null)
+                ?? Account::where('club_id', $club->id)->where('code', '1000')->first();
             $offsetAcc = Account::where('club_id', $club->id)->where('code', $targetCode)->first();
             if (! $offsetAcc) {
                 $offsetAcc = Account::create([

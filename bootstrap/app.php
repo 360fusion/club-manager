@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\LedgerRuleException;
 use App\Http\Middleware\EnsureUserCanAdministerClub;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\IdentifyTenantByDomain;
@@ -46,4 +47,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // A rule of the books the user broke (unbalanced entry, closed year): tell them, rather than a server error.
+        $exceptions->render(function (LedgerRuleException $e, Request $request) {
+            if ($request->hasHeader('X-Livewire')) {
+                return null;
+            }
+
+            return $request->expectsJson()
+                ? response()->json(['message' => $e->getMessage(), 'errors' => ['ledger' => [$e->getMessage()]]], 422)
+                : back()->with('error', $e->getMessage())->withErrors(['ledger' => $e->getMessage()])->withInput();
+        });
     })->create();

@@ -181,6 +181,17 @@
         @if ($showPreviewModal)
         <x-modal :show="$showPreviewModal" title="Statement preview" subtitle="File: {{ $previewBundle['filename'] }}" size="xl" close="cancelPreview">
             <div class="space-y-5">
+                @if($bankAccounts->isNotEmpty())
+                    <x-select label="Bank account this statement is for" wire:model="bankAccountId">
+                        @if($bankAccounts->count() > 1)
+                            <option value="">Choose an account</option>
+                        @endif
+                        @foreach($bankAccounts as $bankAccount)
+                            <option value="{{ $bankAccount->id }}">{{ $bankAccount->bank_name }} - {{ $bankAccount->account_name }}</option>
+                        @endforeach
+                    </x-select>
+                @endif
+
                 <!-- Summary Bar -->
                 <div class="grid grid-cols-3 gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs">
                     <div>
@@ -198,6 +209,17 @@
                         <span class="text-lg font-bold text-slate-900 dark:text-white">{{ $previewBundle['duplicate_lines_count'] }}</span>
                     </div>
                 </div>
+
+                @if(! empty($previewBundle['skipped_rows']))
+                    <x-notice variant="danger" role="alert">
+                        <strong>{{ count($previewBundle['skipped_rows']) }}</strong> row(s) in the file could not be read and will <strong>not</strong> be imported. Check them against the statement before you import.
+                        <ul class="mt-2 list-disc pl-5 space-y-1">
+                            @foreach(array_slice($previewBundle['skipped_rows'], 0, 10) as $skippedRow)
+                                <li>{{ $skippedRow['kind'] }} {{ $skippedRow['line'] }}: {{ $skippedRow['reason'] }} <span class="font-mono">{{ $skippedRow['text'] }}</span></li>
+                            @endforeach
+                        </ul>
+                    </x-notice>
+                @endif
 
                 @if($previewBundle['duplicate_lines_count'] > 0)
                     <x-notice variant="warning">

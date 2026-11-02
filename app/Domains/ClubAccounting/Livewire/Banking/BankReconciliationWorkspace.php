@@ -6,9 +6,11 @@ use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
 use App\Enums\DocumentStatus;
+use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
 use App\Models\Invoice;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -76,13 +78,36 @@ class BankReconciliationWorkspace extends Component
         $this->selectedTransactionId = $tx->id;
         $this->manualAllocationType = $tx->amount > 0 ? 'member_subscription' : 'supplier_bill';
         $this->manualSearch = '';
+        $this->manualNominalCode = (string) $this->nominalAccountsFor($tx)->first()?->code;
         $this->showManualDrawer = true;
+    }
+
+    /**
+     * The club's own income accounts for money in and expense accounts for money out.
+     *
+     * @return Collection<int, Account>
+     */
+    private function nominalAccountsFor(BankTransaction $tx): Collection
+    {
+        return Account::where('club_id', $tx->club_id)
+            ->where('is_active', true)
+            ->where('type', $tx->amount > 0 ? 'revenue' : 'expense')
+            ->orderBy('code')
+            ->get();
     }
 
     public function executeManualAllocation(int $targetId, BankReconciliationMatcherService $matcher): void
     {
         $club = $this->getClub();
         $tx = BankTransaction::where('club_id', $club->id)->findOrFail($this->selectedTransactionId);
+
+        $this->resetErrorBag('manualNominalCode');
+
+        if ($this->manualAllocationType === 'ledger_account' && ! $this->nominalAccountsFor($tx)->contains('code', $this->manualNominalCode)) {
+            $this->addError('manualNominalCode', 'Choose one of the lodge\'s own accounts.');
+
+            return;
+        }
 
         $matcher->reconcileTransaction($tx, $this->manualAllocationType, $targetId, [
             'nominal_code' => $this->manualNominalCode,
@@ -169,6 +194,7 @@ class BankReconciliationWorkspace extends Component
             'selectedTx' => $selectedTx,
             'suggestedMatches' => $suggestedMatches,
             'manualCandidates' => $manualCandidates,
+            'nominalAccounts' => $selectedTx && $this->showManualDrawer ? $this->nominalAccountsFor($selectedTx) : collect(),
             'unmatchedCount' => $unmatchedCount,
             'reconciledCount' => $reconciledCount,
         ])->layout('components.layouts.app', [

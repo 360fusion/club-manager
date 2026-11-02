@@ -65,7 +65,8 @@ class AccountingReports
         return [
             'total_assets' => round($totalAssets, 2),
             'total_liabilities' => round($totalLiabilities, 2),
-            'total_equity' => round($totalEquity, 2),
+            // Income less spending is part of equity until it is moved to retained earnings, so assets = liabilities + equity holds.
+            'total_equity' => round($totalEquity + $netIncome, 2),
             'total_revenue' => round($totalRevenue, 2),
             'total_expenses' => round($totalExpenses, 2),
             'net_income' => round($netIncome, 2),
@@ -194,7 +195,8 @@ class AccountingReports
         $balanceSheet = [
             'assets' => $accounts->where('type', 'asset')->values()->map(fn ($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
             'liabilities' => $accounts->where('type', 'liability')->values()->map(fn ($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
-            'equity' => $accounts->where('type', 'equity')->values()->map(fn ($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)]),
+            'equity' => $accounts->where('type', 'equity')->values()->map(fn ($a) => ['code' => $a->code, 'name' => $a->name, 'balance' => round($a->balance, 2)])
+                ->when($summary['net_income'] != 0, fn ($rows) => $rows->push(['code' => '', 'name' => 'Surplus (deficit) to date', 'balance' => $summary['net_income']])),
             'total_assets' => $summary['total_assets'],
             'total_liabilities' => $summary['total_liabilities'],
             'total_equity' => $summary['total_equity'],

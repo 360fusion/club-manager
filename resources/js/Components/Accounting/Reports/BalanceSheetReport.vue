@@ -46,8 +46,8 @@ defineProps({
         <Card padding="sm" class="space-y-3">
           <h5 class="text-sm font-semibold text-slate-900 dark:text-white">Club equity</h5>
           <div class="space-y-1.5">
-            <div v-for="e in reports.balance_sheet.equity" :key="e.code" class="flex justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1">
-              <span class="text-slate-700 dark:text-slate-200">{{ e.code }} - {{ e.name }}</span>
+            <div v-for="e in reports.balance_sheet.equity" :key="e.code || e.name" class="flex justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1">
+              <span class="text-slate-700 dark:text-slate-200">{{ e.code ? `${e.code} - ${e.name}` : e.name }}</span>
               <span class="tabular-nums font-medium text-slate-900 dark:text-white">{{ formatMoney(e.balance) }}</span>
             </div>
           </div>

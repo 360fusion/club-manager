@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domains\ClubAccounting\Enums\BankTransactionStatus;
 use App\Domains\ClubAccounting\Livewire\Banking\BankImportIndex;
+use App\Domains\ClubAccounting\Models\BankAccount;
 use App\Domains\ClubAccounting\Services\BankStatementParserService;
 use App\Models\Club;
 use App\Models\ClubType;
@@ -59,6 +60,51 @@ class BankImportDomainTest extends TestCase
 
         $this->assertEquals(160.00, $bundle['lines'][0]['amount']);
         $this->assertEquals(-85.50, $bundle['lines'][1]['amount']);
+    }
+
+    public function test_rows_with_an_unreadable_date_or_amount_are_reported_not_dropped_or_made_zero(): void
+    {
+        $csv = "Date,Description,Reference,Paid In,Paid Out,Balance\n"
+            ."05/10/2026,Good subs,A1,120.00,,\n"
+            ."not-a-date,Bad date,A2,10.00,,\n"
+            ."06/11/2026,Bad amount,A3,abc,,\n"
+            ."07/11/2026,No amount,A4,,,\n"
+            ."08/11/2026,Formatted,A5,\"£1,234.50\",,\n"
+            ."09/11/2026,Small,A6,.50,,\n";
+
+        $bundle = (new BankStatementParserService)->parseCsv($csv, 'mixed.csv', $this->club->id);
+
+        $this->assertSame(['Good subs', 'Formatted', 'Small'], array_column($bundle['lines'], 'raw_description'));
+        $this->assertSame([1234.50, 0.50], [$bundle['lines'][1]['amount'], $bundle['lines'][2]['amount']]);
+        $this->assertSame(
+            [[3, 'The date could not be read.'], [4, 'The amount could not be read.'], [5, 'The line has no amount.']],
+            array_map(fn ($row) => [$row['line'], $row['reason']], $bundle['skipped_rows']),
+        );
+    }
+
+    public function test_ofx_transactions_with_an_unreadable_date_or_amount_are_reported(): void
+    {
+        $ofx = "<OFX><BANKTRANLIST>\n"
+            ."<STMTTRN><TRNTYPE>CREDIT<DTPOSTED>20261102<TRNAMT>60.00<FITID>1<NAME>Good</STMTTRN>\n"
+            ."<STMTTRN><TRNTYPE>CREDIT<DTPOSTED>soon<TRNAMT>5.00<FITID>2<NAME>Bad date</STMTTRN>\n"
+            ."<STMTTRN><TRNTYPE>CREDIT<DTPOSTED>20261103<TRNAMT>lots<FITID>3<NAME>Bad amount</STMTTRN>\n"
+            .'</BANKTRANLIST></OFX>';
+
+        $bundle = (new BankStatementParserService)->parseOfx($ofx, 'mixed.ofx', $this->club->id);
+
+        $this->assertCount(1, $bundle['lines']);
+        $this->assertSame(['The date could not be read.', 'The amount could not be read.'], array_column($bundle['skipped_rows'], 'reason'));
+    }
+
+    public function test_the_import_preview_warns_about_rows_that_will_not_be_imported(): void
+    {
+        $this->actingAs($this->adminUser);
+        $file = UploadedFile::fake()->createWithContent('statement.csv', "Date,Description,Amount\n2026-09-15,Subs,160.00\nnot-a-date,Oops,5.00\n");
+
+        Livewire::test(BankImportIndex::class, ['clubSlug' => $this->club->slug])
+            ->set('statementFile', $file)
+            ->assertSee('could not be read and will')
+            ->assertSee('The date could not be read.');
     }
 
     public function test_can_parse_ofx_statement_file(): void
@@ -161,5 +207,48 @@ OFX;
             'amount' => 160.00,
             'status' => BankTransactionStatus::Unmatched->value,
         ]);
+    }
+
+    private function bankAccount(string $name): BankAccount
+    {
+        return BankAccount::create(['club_id' => $this->club->id, 'bank_name' => 'Lloyds', 'account_name' => $name, 'account_type' => 'current', 'is_active' => true]);
+    }
+
+    public function test_a_statement_is_filed_under_the_only_bank_account_without_asking(): void
+    {
+        $only = $this->bankAccount('Current');
+        $this->actingAs($this->adminUser);
+        $file = UploadedFile::fake()->createWithContent('statement.csv', "Date,Description,Amount\n2026-09-15,Lodge Subscriptions,160.00\n");
+
+        Livewire::test(BankImportIndex::class, ['clubSlug' => $this->club->slug])
+            ->set('statementFile', $file)
+            ->assertSet('bankAccountId', $only->id)
+            ->call('confirmImport')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('club_acc_bank_transactions', ['club_id' => $this->club->id, 'bank_account_id' => $only->id]);
+        $this->assertDatabaseHas('club_acc_bank_imports', ['club_id' => $this->club->id, 'bank_account_id' => $only->id]);
+    }
+
+    public function test_with_several_bank_accounts_the_import_must_say_which_one(): void
+    {
+        $this->bankAccount('Current');
+        $savings = $this->bankAccount('Savings');
+        $other = BankAccount::create(['club_id' => Club::create(['name' => 'Other', 'slug' => 'other', 'club_type_id' => $this->club->club_type_id, 'is_active' => true])->id, 'bank_name' => 'X', 'account_name' => 'Y', 'account_type' => 'current', 'is_active' => true]);
+        $this->actingAs($this->adminUser);
+        $file = UploadedFile::fake()->createWithContent('statement.csv', "Date,Description,Amount\n2026-09-15,Lodge Subscriptions,160.00\n");
+
+        $component = Livewire::test(BankImportIndex::class, ['clubSlug' => $this->club->slug])
+            ->set('statementFile', $file)
+            ->assertSet('bankAccountId', null)
+            ->call('confirmImport')
+            ->assertHasErrors('bankAccountId');
+        $this->assertDatabaseCount('club_acc_bank_transactions', 0);
+
+        $component->set('bankAccountId', $other->id)->call('confirmImport')->assertHasErrors('bankAccountId');
+        $this->assertDatabaseCount('club_acc_bank_transactions', 0);
+
+        $component->set('bankAccountId', $savings->id)->call('confirmImport')->assertHasNoErrors();
+        $this->assertDatabaseHas('club_acc_bank_transactions', ['club_id' => $this->club->id, 'bank_account_id' => $savings->id]);
     }
 }

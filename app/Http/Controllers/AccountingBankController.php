@@ -118,8 +118,10 @@ class AccountingBankController extends Controller
         $file = $request->file('statement_file');
 
         $bundle = $parser->parseFile($file->getRealPath(), $file->getClientOriginalName(), $club->id);
-        $parser->importParsedBundle($club, $bundle);
+        $parser->importParsedBundle($club, $bundle, null, $request->integer('bank_account_id') ?: $parser->soleActiveBankAccountId($club->id));
 
-        return redirect()->back()->with('success', "Imported {$bundle['new_lines_count']} new statement lines successfully!");
+        $skipped = count($bundle['skipped_rows']);
+
+        return redirect()->back()->with('success', "Imported {$bundle['new_lines_count']} new statement lines successfully!".($skipped > 0 ? " {$skipped} row(s) in the file could not be read and were not imported." : ''));
     }
 }
