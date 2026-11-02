@@ -64,6 +64,20 @@ class EventPaymentReminderTest extends TestCase
         $this->assertNotNull(EventRegistration::sole()->reminder_sent_at);
     }
 
+    public function test_an_overdue_reminder_says_it_is_overdue_and_a_due_soon_one_does_not(): void
+    {
+        $this->book();
+        $registration = EventRegistration::sole();
+
+        $registration->update(['due_at' => now()->addDays(2)]);
+        $soon = (new EventPaymentReminderMail($registration->fresh()))->render();
+        $this->assertStringContainsString('due by', $soon);
+        $this->assertStringNotContainsString('overdue', $soon);
+
+        $registration->update(['due_at' => now()->subDays(3)]);
+        $this->assertStringContainsString('now overdue', (new EventPaymentReminderMail($registration->fresh()))->render());
+    }
+
     public function test_nobody_is_reminded_too_early_twice_in_a_week_after_paying_or_after_the_event_is_off(): void
     {
         Mail::fake();

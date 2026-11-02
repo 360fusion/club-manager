@@ -50,6 +50,23 @@ class ContactFormTest extends TestCase
         });
     }
 
+    public function test_contact_form_does_not_claim_success_when_the_lodge_has_no_address_to_send_to(): void
+    {
+        Mail::fake();
+
+        $clubType = ClubType::create(['name' => 'Lodge', 'code' => 'lodge']);
+        $club = Club::create(['name' => 'Lodge of Fraternity', 'slug' => 'lodge-of-fraternity', 'club_type_id' => $clubType->id]);
+
+        $this->post(route('public.site.contact_form', ['clubSlug' => $club->slug]), [
+            'name' => 'Lord Edward Spencer',
+            'email' => 'edward@example.com',
+            'message' => 'May I visit?',
+            'recipient_email' => 'someone-else@example.org',
+        ])->assertSessionHasErrors('message')->assertSessionMissing('success');
+
+        Mail::assertNothingQueued();
+    }
+
     public function test_contact_form_validates_email_address(): void
     {
         Mail::fake();

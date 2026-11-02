@@ -197,7 +197,7 @@ const statusBadgeClass = (status) => {
             class="min-w-40"
             :model-value="member.role"
             :options="[
-              { value: 'member', label: 'Media manager' },
+              { value: 'member', label: 'Member' },
               { value: 'coach', label: 'Secretary' },
               { value: 'treasurer', label: 'Treasurer' },
               { value: 'admin', label: 'Admin' },

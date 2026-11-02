@@ -97,7 +97,7 @@ defineProps({
                 :aria-label="`Admin role for ${m.name}`"
                 class="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 transition-colors cursor-pointer focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
               >
-                <option value="member">Media manager</option>
+                <option value="member">Member</option>
                 <option value="coach">Secretary</option>
                 <option value="treasurer">Treasurer</option>
                 <option value="examiner">Examiner or auditor</option>

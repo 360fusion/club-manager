@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\MemberRsvp\UpdateMeetingRsvpRequest;
 use App\Http\Requests\MemberRsvp\UpdateRsvp2Request;
 use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Services\Events\EventMailer;
@@ -36,6 +37,8 @@ class MemberRsvpController extends Controller
 
         $validated = $request->validated();
 
+        $previousStatus = EventRegistration::where('event_id', $event->id)->where('user_id', $user->id)->value('status');
+
         $registration = $registrations->register($event, $user, [
             'status' => $validated['attendance_status'],
             'notes' => $validated['notes'] ?? null,
@@ -46,7 +49,9 @@ class MemberRsvpController extends Controller
 
         $registrations->sendGuestConfirmations($registration);
 
-        if ($registration->wasRecentlyCreated && in_array($registration->status, ['attending', 'waitlisted'], true)) {
+        // A first booking, or booking again after replying "can't go" or cancelling, is confirmed by email; changing a booking is not.
+        $isNewBooking = $registration->wasRecentlyCreated || in_array($previousStatus, ['declined', 'cancelled'], true);
+        if ($isNewBooking && in_array($registration->status, ['attending', 'waitlisted'], true)) {
             app(EventMailer::class)->memberBooked($registration);
         }
 

@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
@@ -123,6 +124,11 @@ class PublicSiteExtrasController extends Controller
         $recipientEmail = $club->settings['contact_email'] ?? $club->email;
         if (! empty($validated['recipient_email']) && $isAllowed($validated['recipient_email'])) {
             $recipientEmail = $validated['recipient_email'];
+        }
+
+        // With nowhere to send it the email would fail unseen in the queue, so tell the visitor instead of saying it was sent.
+        if (empty($recipientEmail)) {
+            throw ValidationException::withMessages(['message' => 'This lodge has not set up an address for messages yet, so yours could not be sent.']);
         }
 
         $ccEmails = [];

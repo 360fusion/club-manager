@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\ClubUpdate;
+use App\Models\Meeting;
 use App\Models\User;
 use App\Services\WeeklyUpdateDigestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -92,6 +93,22 @@ class WeeklyUpdateDigestTest extends TestCase
         $this->assertEquals('sent', $update->status);
         $this->assertNotNull($update->sent_at);
         $this->assertEquals($newsletter->id, $update->newsletter_id);
+    }
+
+    public function test_the_digest_lists_published_lodge_meetings_but_not_drafts(): void
+    {
+        $club = $this->createClub();
+        ClubUpdate::create(['club_id' => $club->id, 'author_id' => User::factory()->create()->id, 'title' => 'News', 'category' => 'provincial', 'summary' => 'Something.', 'status' => 'approved']);
+        $meeting = fn (string $title, string $status, int $days) => Meeting::create(['club_id' => $club->id, 'title' => $title, 'meeting_date' => now()->addDays($days)->toDateString(), 'starts_at' => '18:30:00', 'venue' => 'Masonic Hall, Oxford', 'dress_code' => 'Dark suit', 'status' => $status]);
+        $meeting('November Regular Meeting', 'published', 10);
+        $meeting('Secret Draft Meeting', 'draft', 11);
+
+        $newsletter = (new WeeklyUpdateDigestService)->dispatchWeeklyDigest($club);
+
+        $this->assertStringContainsString('November Regular Meeting', $newsletter->content);
+        $this->assertStringContainsString('6:30 PM', $newsletter->content);
+        $this->assertStringContainsString('Masonic Hall, Oxford', $newsletter->content);
+        $this->assertStringNotContainsString('Secret Draft Meeting', $newsletter->content);
     }
 
     public function test_artisan_command_sends_weekly_digest(): void

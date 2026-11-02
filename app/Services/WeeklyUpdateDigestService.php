@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Models\Club;
 use App\Models\ClubUpdate;
 use App\Models\Event;
+use App\Models\Meeting;
 use App\Models\Newsletter;
 use App\Models\NewsletterType;
 use App\Models\Post;
@@ -137,25 +138,34 @@ class WeeklyUpdateDigestService
 
         // 2. Upcoming Meetings (Next 30 Days)
         if ($includeMeetings) {
-            $upcomingMeetings = ClubCommitteeMeeting::where('club_id', $club->id)
-                ->where('meeting_date', '>=', Carbon::now())
-                ->where('meeting_date', '<=', Carbon::now()->addDays(30))
-                ->orderBy('meeting_date', 'asc')
-                ->get();
+            // Published lodge meetings and committee meetings, together, soonest first.
+            $upcomingMeetings = Meeting::where('club_id', $club->id)
+                ->where('status', 'published')
+                ->whereBetween('meeting_date', [Carbon::today(), Carbon::now()->addDays(30)])
+                ->get()
+                ->map(fn (Meeting $m) => ['title' => $m->title, 'date' => Carbon::parse($m->meeting_date->format('Y-m-d').' '.($m->starts_at ?: '00:00')), 'place' => $m->venue ?: 'Main Lodge Room', 'kind' => 'Lodge Meeting'])
+                ->concat(
+                    ClubCommitteeMeeting::where('club_id', $club->id)
+                        ->where('meeting_date', '>=', Carbon::now())
+                        ->where('meeting_date', '<=', Carbon::now()->addDays(30))
+                        ->get()
+                        ->map(fn (ClubCommitteeMeeting $m) => ['title' => $m->title, 'date' => Carbon::parse($m->meeting_date), 'place' => $m->location ?? 'Main Lodge Room', 'kind' => 'Lodge Committee Meeting'])
+                )
+                ->sortBy('date');
 
             if ($upcomingMeetings->isNotEmpty()) {
                 $html .= '<div style="margin-top: 24px;">';
                 $html .= '<h2 style="font-size: 16px; color: #334155; font-weight: 700; text-transform: uppercase; tracking: 1px; margin-bottom: 12px; border-left: 4px solid #059669; padding-left: 10px;">📅 Upcoming Lodge & Committee Meetings</h2>';
 
                 foreach ($upcomingMeetings as $meeting) {
-                    $mDate = Carbon::parse($meeting->meeting_date);
-                    $gCalUrl = self::generateGoogleCalendarUrl($meeting->title, $mDate, null, $meeting->location ?? 'Lodge Room', 'Lodge Committee Meeting');
+                    $mDate = $meeting['date'];
+                    $gCalUrl = self::generateGoogleCalendarUrl($meeting['title'], $mDate, null, $meeting['place'], $meeting['kind']);
 
                     $html .= '<div style="background: #ffffff; padding: 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0;">';
                     $html .= '<div style="display: flex; justify-content: space-between; align-items: center;">';
                     $html .= '<div>';
-                    $html .= '<h4 style="margin: 0; font-size: 14px; color: #0f172a;">'.e($meeting->title).'</h4>';
-                    $html .= '<p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">🗓️ '.$mDate->format('l, F j, Y \a\t g:i A').' • 📍 '.e($meeting->location ?? 'Main Lodge Room').'</p>';
+                    $html .= '<h4 style="margin: 0; font-size: 14px; color: #0f172a;">'.e($meeting['title']).'</h4>';
+                    $html .= '<p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">🗓️ '.$mDate->format('l, F j, Y \a\t g:i A').' • 📍 '.e($meeting['place']).'</p>';
                     $html .= '</div>';
                     $html .= '<div>';
                     $html .= '<a href="'.e($gCalUrl).'" target="_blank" style="font-size: 11px; font-weight: 700; color: #059669; background: #ecfdf5; padding: 5px 10px; border-radius: 6px; text-decoration: none;">+ Add to Calendar</a>';

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Accounting\MeetingFinancialReturn;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -65,6 +66,29 @@ class Meeting extends Model
         'dining_cost_guest' => 'decimal:2',
         'officers_roster' => 'array',
     ];
+
+    /**
+     * Times are kept to the second by the database but meant to the minute: "18:30", not "18:30:00".
+     *
+     * @return Attribute<?string, ?string>
+     */
+    protected function startsAt(): Attribute
+    {
+        return Attribute::get(fn (?string $value) => $this->withoutSeconds($value));
+    }
+
+    /**
+     * @return Attribute<?string, ?string>
+     */
+    protected function rehearsalStartsAt(): Attribute
+    {
+        return Attribute::get(fn (?string $value) => $this->withoutSeconds($value));
+    }
+
+    private function withoutSeconds(?string $time): ?string
+    {
+        return $time !== null && preg_match('/^\d{1,2}:\d{2}:\d{2}$/', $time) ? substr($time, 0, -3) : $time;
+    }
 
     /**
      * @return BelongsTo<Club, $this>

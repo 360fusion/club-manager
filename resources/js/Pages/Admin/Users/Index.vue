@@ -330,7 +330,7 @@ const submitAddMember = () => {
             <option value="coach">Secretary</option>
             <option value="treasurer">Treasurer</option>
             <option value="examiner">Examiner / auditor</option>
-            <option value="member">Media manager</option>
+            <option value="member">Member</option>
           </select>
 
           <select
@@ -432,7 +432,7 @@ const submitAddMember = () => {
                       roleBadgeClass(m.role)
                     ]"
                   >
-                    <option value="member">Media manager</option>
+                    <option value="member">Member</option>
                     <option value="coach">Secretary</option>
                     <option value="treasurer">Treasurer</option>
                     <option value="examiner">Examiner / auditor</option>
@@ -592,7 +592,7 @@ const submitAddMember = () => {
             v-model="addForm.role"
             label="Club role"
             :options="[
-              { value: 'member', label: 'Media manager' },
+              { value: 'member', label: 'Member' },
               { value: 'coach', label: 'Secretary' },
               { value: 'treasurer', label: 'Treasurer' },
               { value: 'examiner', label: 'Examiner / auditor' },

@@ -42,7 +42,9 @@ class EventPaymentReminderMail extends Mailable implements ShouldQueue
             'event_title' => $event->title,
             'event_day' => $event->starts_at->format('l j F Y'),
             'amount_due' => Currencies::symbolFor($event->club).number_format((float) $payment['balance'], 2),
-            'due_text' => $payment['due_at'] ? ', due by '.$payment['due_at'] : '',
+            'due_text' => $payment['due_at']
+                ? ($this->registration->due_at?->isPast() ? ', which is now overdue (it was due on '.$payment['due_at'].')' : ', due by '.$payment['due_at'])
+                : '',
         ], [
             'pay_link' => $this->registration->user_id && $payment['online']['can_pay']
                 ? '<p><a href="'.e(route('member.events', ['slug' => $event->club->slug])).'">Pay online now</a></p>'

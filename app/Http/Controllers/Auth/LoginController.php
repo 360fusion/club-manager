@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\EmailVerification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,10 +37,16 @@ class LoginController extends Controller
             $user = User::where('email', $request->email)->first();
 
             if (EmailVerification::required() && ! $user->hasVerifiedEmail()) {
-                $user->sendEmailVerificationNotification();
+                // One link every few minutes however often they try, so signing in over and over does not fill their inbox.
+                $sent = Cache::add('verification-link-sent:'.$user->id, true, now()->addMinutes(5));
+                if ($sent) {
+                    $user->sendEmailVerificationNotification();
+                }
 
                 return back()->withErrors([
-                    'email' => 'Please confirm your email address first. We have sent you a new confirmation link.',
+                    'email' => $sent
+                        ? 'Please confirm your email address first. We have sent you a new confirmation link.'
+                        : 'Please confirm your email address first. We sent you a confirmation link a few minutes ago, so check your inbox and spam folder.',
                 ]);
             }
 

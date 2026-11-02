@@ -214,5 +214,11 @@ class EventBookingHttpTest extends TestCase
 
         $this->book([], 'declined')->assertSessionHasNoErrors();
         Mail::assertQueued(EventBookingMail::class, 1);
+
+        // Booking again after saying "can't go" is a new booking and is confirmed; changing it afterwards is not.
+        $this->book([$this->person('Mia Member')])->assertSessionHasNoErrors();
+        Mail::assertQueued(EventBookingMail::class, 2);
+        $this->book([$this->person('Mia Member'), $this->person('Gary', true)])->assertSessionHasNoErrors();
+        Mail::assertQueued(EventBookingMail::class, 2);
     }
 }

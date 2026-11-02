@@ -138,6 +138,14 @@ class EventEmailTemplateTest extends TestCase
         Mail::assertQueued(EventPlaceAvailableMail::class, fn ($mail) => $mail->hasTo($waiting->email) && str_contains($mail->render(), 'now confirmed'));
     }
 
+    public function test_the_waiting_list_email_counts_people_in_words_that_fit_the_number(): void
+    {
+        $this->assertStringContainsString('(2 people)', (new EventPlaceAvailableMail($this->registration))->render());
+
+        $this->registration->attendees()->where('is_guest', true)->delete();
+        $this->assertStringContainsString('(1 person)', (new EventPlaceAvailableMail($this->registration->fresh()))->render());
+    }
+
     public function test_the_new_event_emails_fall_back_to_built_in_wording_when_their_templates_are_removed_and_a_broken_mailer_never_blocks_a_payment(): void
     {
         DefaultEmailTemplate::whereIn('template_key', ['event_payment_received', 'event_refund', 'event_place_available'])->delete();

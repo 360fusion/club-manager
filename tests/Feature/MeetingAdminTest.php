@@ -30,6 +30,18 @@ class MeetingAdminTest extends TestCase
         $this->assertEquals('2026-05-29', $lastFriday->format('Y-m-d'));
     }
 
+    public function test_meeting_times_read_back_to_the_minute(): void
+    {
+        $clubType = ClubType::create(['name' => 'Masonic Lodge', 'code' => 'masonic', 'available_modules' => ['meetings'], 'default_settings' => []]);
+        $club = Club::create(['club_type_id' => $clubType->id, 'name' => 'Apollo Lodge No. 357', 'slug' => 'apollo-times', 'status' => 'active']);
+
+        $meeting = Meeting::create(['club_id' => $club->id, 'title' => 'Regular', 'meeting_date' => '2026-11-23', 'starts_at' => '18:30:00', 'rehearsal_starts_at' => '17:30:00', 'venue' => 'Hall', 'dress_code' => 'Dark suit', 'status' => 'draft']);
+        $this->assertSame(['18:30', '17:30'], [$meeting->fresh()->starts_at, $meeting->fresh()->rehearsal_starts_at]);
+
+        $meeting->update(['starts_at' => '7:00pm', 'rehearsal_starts_at' => null]);
+        $this->assertSame(['7:00pm', null], [$meeting->fresh()->starts_at, $meeting->fresh()->rehearsal_starts_at]);
+    }
+
     public function test_rsvp_token_generation_and_validation()
     {
         $clubType = ClubType::create([

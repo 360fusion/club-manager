@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\Club;
 use App\Models\EventRegistration;
+use Illuminate\Support\Str;
 
 /**
  * Tells a booker on the waiting list that a place has opened and they are now booked in.
@@ -39,7 +40,7 @@ class EventPlaceAvailableMail extends EventTemplatedMail
                 'event_title' => $event->title,
                 'event_date' => $event->starts_at->format('l j F Y, H:i'),
                 'event_location' => $event->formatted_location,
-                'people' => (string) $this->registration->attendees->count(),
+                'people' => $this->registration->attendees->count().' '.Str::plural('person', $this->registration->attendees->count()),
             ],
             'html' => ['pay_link' => $payLink],
         ];

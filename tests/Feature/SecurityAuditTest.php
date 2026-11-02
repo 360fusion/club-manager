@@ -413,6 +413,19 @@ class SecurityAuditTest extends TestCase
         $this->assertDatabaseMissing('club_acc_annual_officer_rosters', ['club_id' => $this->a->id, 'masonic_year' => '2026-2027']);
     }
 
+    public function test_signing_in_again_before_confirming_does_not_send_another_confirmation_email_straight_away(): void
+    {
+        config(['auth.require_email_verification' => true]);
+        Notification::fake();
+        $user = User::factory()->unverified()->create(['password' => 'a-long-safe-passphrase']);
+
+        foreach (range(1, 3) as $attempt) {
+            $this->post('/login', ['email' => $user->email, 'password' => 'a-long-safe-passphrase'])->assertSessionHasErrors('email');
+        }
+
+        Notification::assertSentToTimes($user, VerifyEmail::class, 1);
+    }
+
     public function test_registration_needs_a_confirmed_email_and_does_not_reveal_existing_accounts(): void
     {
         config(['auth.require_email_verification' => true]);
