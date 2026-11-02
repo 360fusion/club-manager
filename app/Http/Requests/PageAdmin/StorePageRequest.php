@@ -20,7 +20,7 @@ class StorePageRequest extends ClubRequest
         return [
             'id' => 'nullable|integer',
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|alpha_dash',
+            'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('pages', 'slug')->where('club_id', $this->club()->id)->ignore($this->integer('id') ?: null)],
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'share_image' => ['nullable', 'string', 'max:2048', UploadRules::IMAGE_URL],
@@ -36,5 +36,13 @@ class StorePageRequest extends ClubRequest
             'blocks' => 'array|max:200',
 
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return ['slug.unique' => 'A page with this address already exists (it may be in the trash). Choose another address.'];
     }
 }

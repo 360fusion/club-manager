@@ -59,6 +59,25 @@ class PageLifecycleTest extends TestCase
         return route('admin.pages.store', ['clubSlug' => $this->club->slug]);
     }
 
+    public function test_a_page_address_already_in_use_is_a_form_error_not_a_server_error(): void
+    {
+        $existing = $this->page();
+        $this->page(['title' => 'Old', 'slug' => 'old'])->delete();
+        $this->actingAs($this->admin);
+        $pagesBefore = Page::withTrashed()->where('club_id', $this->club->id)->count();
+        $save = fn (array $extra) => $this->post($this->saveUrl(), $extra + ['title' => 'New page', 'slug' => 'history', 'is_published' => true, 'blocks' => []]);
+
+        $save([])->assertSessionHasErrors('slug');
+        $save(['slug' => 'old'])->assertSessionHasErrors('slug');
+        $this->assertSame($pagesBefore, Page::withTrashed()->where('club_id', $this->club->id)->count());
+
+        // A page keeps its own address when it is saved again, and another lodge may use the same address.
+        $save(['id' => $existing->id, 'title' => 'History renamed'])->assertSessionHasNoErrors();
+        $this->assertSame('History renamed', $existing->fresh()->title);
+        Page::create(['club_id' => $this->otherClub->id, 'title' => 'Other', 'slug' => 'bath-only', 'is_published' => true, 'blocks' => []]);
+        $save(['slug' => 'bath-only'])->assertSessionHasNoErrors();
+    }
+
     // ---- Scheduling -----------------------------------------------------------
 
     public function test_a_page_is_only_visible_between_its_dates(): void
