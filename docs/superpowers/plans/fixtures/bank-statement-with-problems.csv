@@ -1,0 +1,6 @@
+Date,Description,Reference,Paid In,Paid Out,Balance
+05/10/2026,BACS M ARCHER SUBS 2026/27,SUBS-A1,120.00,,1120.00
+not-a-date,BAD DATE ROW,X1,10.00,,
+06/11/2026,BAD AMOUNT ROW,X2,abc,,
+08/11/2026,=HYPERLINK("http://example.com"),X3,,9.99,
+09/11/2026,"QUOTED, COMMA AND ""QUOTES""",X4,,12.00,

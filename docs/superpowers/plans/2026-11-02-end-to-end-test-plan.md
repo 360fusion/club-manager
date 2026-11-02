@@ -219,6 +219,67 @@ Walk each as Treasurer A with seeded numbers, checking arithmetic by hand once:
 - G4 Security: security headers present, upload rules, CSV formula injection in exports, rate limits on login and RSVP tokens, API token issue/use/revoke at `/api/v1`.
 - G5 Error pages: 403, 404, 419 (expired session while submitting a form: recovers cleanly), 500 page without debug leak.
 
+### Phase H. Accounting, bank import, reconciliation and reports (F15, F16)
+
+Run as the Treasurer (`treasurer@example.com` in the seeded data) so the role itself is tested. Screens: Accounting page tabs (Home, Sales, Purchases, Reporting, Accounting, Contacts, Reconciliation) and the banking pages `/{slug}/admin/bank-accounts`, `/bank-imports`, `/bank-reconciliation`. Dummy statements live in `docs/superpowers/plans/fixtures/`:
+
+| File | Use |
+|---|---|
+| `bank-statement-oct-2026.csv` | 7 clean lines. Credits £275.42, debits £235.50, net +£39.92. Running balance goes £1,000 to £1,039.92 (assumes a £1,000 opening balance). |
+| `bank-statement-with-problems.csv` | 1 good line, a bad date, a bad amount, a `=HYPERLINK(...)` description, a quoted line with a comma and quotes. |
+| `bank-statement-oct-2026.ofx` | 2 lines (one credit £60.00, one debit £22.75) in OFX format. |
+
+Hand-check list for the clean file: SUBS-A1 £120 in matches a £120 sales invoice to M Archer; HALL-OCT £80 out matches an £80 bill from Oxford Masonic Hall; DINNER £35 in matches Carol Cooper's event booking; FEE £5.50 out and INT £0.42 in are manual; 000123 £150 out matches a £150 catering bill; SUBS-A2 £120 in is left unmatched on purpose (no invoice).
+
+**H1 Set-up**
+- H1.1 Onboarding checklist on the Accounting home: add first bank account, set opening balance, set financial year end, review VAT. Each item ticks off when done; Dismiss hides the card and it stays hidden.
+- H1.2 Add the bank account "Lodge Current Account" (current, dummy sort code 00-00-00, account 00000000, GBP). Add a second (savings) account. Toggle one inactive: it disappears from import and reconcile choices. Missing name, bad type, and non-GBP in a GBP-locked club are refused.
+- H1.3 Chart of accounts: the 18 seeded accounts show. Add 4600 "Hall hire income" and 5400 "Bank charges". Duplicate code refused. Edit a name. Try to delete an account that has postings (must be refused or archived, never silently lose history), then restore or re-add it ("add back").
+- H1.4 Contacts: create customer "M Archer" and supplier "Oxford Masonic Hall"; edit; delete one that has documents (refused).
+- H1.5 Opening balance £1,000 on the bank account dated 1 Oct 2026. Expected: balanced journal, dashboard and balance sheet show £1,000 assets and £1,000 equity.
+- H1.6 Financial year end month set to April; check year labels on reports (year number is the calendar year the year ends in).
+
+**H2 Documents that the bank lines will match**
+- H2.1 Sales invoice £120 to M Archer: create, approve, publish, PDF opens. Appears in Sales and Aged receivables.
+- H2.2 Bills: £80 from Oxford Masonic Hall (5000), £150 from Catering Supplies Ltd (5200). Approve each. Attachment upload (PDF ok, SVG/HTML refused) and download only with billing permission.
+- H2.3 Approval threshold: set it below £100, then confirm the £150 bill needs approval by a second person.
+- H2.4 Manual journal: balanced entry saves; unbalanced refused; edit works.
+
+**H3 Bank statement import**
+- H3.1 Import `bank-statement-oct-2026.csv`: preview shows 7 lines, £275.42 in, £235.50 out, no duplicates. Confirm. Lines appear as unmatched in the right account.
+- H3.2 Import the same file again: every line flagged as a duplicate and none added twice.
+- H3.3 Import `bank-statement-with-problems.csv`: bad date and bad amount rows are reported (not silently imported or dropped); the good line is a duplicate; the quoted comma line imports intact; the `=HYPERLINK` description imports as text and is neutralised in any CSV export.
+- H3.4 Import the `.ofx` file: 2 lines, correct signs (credit positive, debit negative), dates read as 2 Nov and 3 Nov 2026.
+- H3.5 Refused uploads: empty file, `.svg`, `.html`, a PDF renamed `.csv`, a very large file. Clear error, nothing stored.
+- H3.6 Delete one line (restorable) and restore it; delete a whole import batch and check its lines and any matches are removed and the ledger is unchanged.
+- H3.7 Account choice: import into the savings account and check lines land there only.
+
+**H4 Reconciliation**
+- H4.1 Reconcile tab and `/bank-reconciliation` workspace list the unmatched lines. Suggestions: SUBS-A1 to the £120 invoice, HALL-OCT to the £80 bill, 000123 to the £150 bill, DINNER to Carol's booking. Accept each; the document becomes paid, a journal posts, the line shows reconciled.
+- H4.2 Manual allocation: FEE to 5400 Bank charges, INT to an income account, SUBS-A2 to member subscription or a nominal account. Check the journal debits and credits.
+- H4.3 Ignore a line and bring it back; ignored lines do not count as unreconciled.
+- H4.4 Match rule: create a rule from a line (e.g. text "INTEREST" to an income account), import `bank-statement-oct-2026.ofx` plus another interest line and confirm the rule applies; delete the rule.
+- H4.5 Wrong amounts: try matching the £120 line to a £150 bill (refused or flagged), and a part payment (invoice part-paid, balance correct).
+- H4.6 Undo: "remove and redo" an account transaction reopens the document and removes the journal.
+- H4.7 Reconciliation summary report: unreconciled count 0 once everything is done; bank ledger balance equals the statement closing balance (£1,039.92 for the clean file).
+- H4.8 Event bank reconciliation: Carol's booking becomes paid through the payment service (log row and `event_payment_log` entry, receipt email in Mailpit).
+
+**H5 Reports** (Accounting, then Reporting tab)
+- H5.1 Open every report: profit and loss, balance sheet, cash summary, account summary, aged receivables, aged payables, budget vs actual, comparative income and expenditure, executive summary, treasurer report, reconciliation summary, VAT return, provincial dues. None errors or shows blank when data exists.
+- H5.2 Hand-check figures after Phases H1 to H4: income = £120 + £35 + £120 + £0.42 (plus any accounted differently), expenses = £80 + £150 + £5.50, bank = £1,039.92, balance sheet assets = liabilities + equity.
+- H5.3 Date presets and custom range, including across the April financial year boundary and a leap-year range; labels use the year the financial year ends in.
+- H5.4 Budget: set a budget for 5200, confirm budget vs actual shows variance.
+- H5.5 Exports: CSV (opens in a spreadsheet, formula strings neutralised, commas quoted), PDF (loads, correct club name, currency symbol and totals), treasurer-report PDF and CSV, export-all.
+- H5.6 Currency: amounts show £ everywhere (screens, PDFs, CSV headers).
+
+**H6 Controls and safety**
+- H6.1 Period locking: lock a period, then try to post a journal or change a reconciled line inside it. Refused with a clear message; reopen and retry.
+- H6.2 Financial year close and reopen; independent examiner / auditor sign-off request sends an email (Mailpit) with a working link.
+- H6.3 Audit log: every manual change (journal, reconciliation, deletion) has a who/when/what entry.
+- H6.4 Permissions: admin, treasurer allowed; coach, member, an admin of another club, and a logged-out visitor are refused on every accounting, banking and report URL, including the Livewire update calls and report/PDF/export downloads.
+- H6.5 Isolation: with Lodge B data present, change ids in URLs and Livewire payloads (bank import, bank transaction, account, bill, attachment) to ones belonging to Lodge B. Expected: not found or refused, never data.
+- H6.6 Many rows: import a 500-line CSV and open reconcile and reports. Page loads in a few seconds with no per-row query blow-up.
+
 ---
 
 ## 4. Execution order and checkpoints
@@ -287,3 +348,49 @@ Real Stripe Connect, PayPal live, GoCardless and SumUp traffic, Caddy certificat
 **Not yet run:** A1.2 to A1.4, A1.6, A2.6 to A2.9, A3.3, A3.5 to A3.7, B1.2, B1.3, B1.5, B1.6, B2.2, B2.5 to B2.8, B3, C1.x, C2.2, C2.4, C2.6, C2.7, C3, C4.5 to C4.7, C5.2 to C5.5, Phases D to G. Seeded clubs were used instead of new Lodge A/B (the seeded "Lodge of Fraternity" is a rowing-type club, so masonic-only fields were not exercised).
 
 Seeded logins (e2e DB, from `ClubSeeder`): admin@example.com (superadmin), member@, coach@, treasurer@, pending@example.com. Personas in section 1 are still to be created.
+
+### Phase H results (run 2 Nov 2026 as treasurer@example.com on the e2e database)
+
+| ID | Result | Note / defect |
+|---|---|---|
+| H1.2 | PASS with F11 | Added "Lloyds / Lodge Savings Reserve": a ledger account 1010 "Lloyds — Lodge Savings Reserve" was created and linked. Blank sort code and account number are accepted. Opening the page the first time had already created a placeholder account (F11). |
+| H1.3 | PARTIAL | Added account 4600; duplicate code and an invalid type refused with 422. Delete/archive and restore not run. |
+| H2.1/H2.2 | PASS | Invoice £120 (member Alice Archer), bills £80 and £150 created and posted (journals balance). Approval threshold, attachments not run. |
+| H2.4 | PASS with F18 | Balanced journal posts; unbalanced refused but as an HTTP 500. |
+| H3.1 | PASS | `bank-statement-oct-2026.csv`: preview 7 lines, correct signs; 7 staged lines created. |
+| H3.2 | PASS | Same file again: 7 of 7 flagged duplicate, none added. |
+| H3.3 | FAIL (F17) | Bad-date row silently dropped (5 rows, 4 read, no warning); bad amount `abc` imported as a £0.00 line. Quoted comma/quotes line and `=HYPERLINK` text imported intact. Not confirmed into the books. |
+| H3.4 | PASS | OFX: 2 lines, +£60.00 and -£22.75, dates 2 and 3 Nov 2026. |
+| H3.5 | PARTIAL (F19) | Empty file, `.svg`, `.html` produce no preview and store nothing, but no visible message. A text file named `.csv` previews 0 lines. Large-file and PDF-renamed cases not run. |
+| H3.6, H3.7 | NOT RUN / FAIL (F12) | Import never asks for a bank account, so H3.7 cannot be done. |
+| H4.1 | PASS | Suggestions: £120 to invoice INV-2026-0002 (60%, by amount), £80 to Oxford Masonic Hall bill (100%), £150 to Catering Supplies bill (100%), £35 to Carol Cooper's booking EVT-1-00003 (80%, by name). Accepting each marks it paid and posts Dr 1000 / Cr the right account. |
+| H4.2 | PASS with F14 | Manual nominal allocation works; the list offered is wrong (F14). Bank charges to 7100 created "General Account (7100)". |
+| H4.3 | UNCONFIRMED (F20) | "Ignore line" click did not change the line's status. |
+| H4.4 | PARTIAL | Allocating a line saved a match rule (`bank charges monthly` to 7100, hit count 1). Applying the rule on a later import and deleting it not run. |
+| H4.7 | PARTIAL | All 9 lines reconciled. Ledger bank 1000 = £77.17 = sum of all 9 statement lines. Reconciliation summary report not opened. |
+| H4.8 | PASS | Reconciling the booking marked it paid through the payment service (`event_payment_log` row, source `bank_reconciliation`), Dr 1000 / Cr 4100 £35, and "Payment received" email to Carol arrived. |
+| H5.1 | PARTIAL | Report data loaded for all reports; opened balance sheet visually. Others via data only. |
+| H5.2 | FAIL (F16) | P&L correct: revenue £335.42, expenses £258.25, net £77.17 (matches bank movement). Balance sheet: assets £77.17 vs liabilities £0 and equity £0 under the heading "Assets = liabilities + equity". |
+| H5.5 | PASS | All 10 CSV exports, 9 PDFs, treasurer-report CSV and PDF, VAT and Gift Aid CSV return 200 with the right type. `export-all` is 403 for the treasurer. Treasurer report shows "Closing statement balance 0" because of F12. |
+| H6.1 | PASS with F18 | Closing financial year 2027 blocked a journal dated 2 Nov 2026 ("The books for 2027 are closed...") but as an HTTP 500. Reopen refused for non-superadmin (403) as designed; reopened with the service. |
+| H6.4 | PASS | Coach and plain member: 403 on all accounting, report, export, bank-account, import and reconciliation URLs. Lodge admin Carol: 403 on the other club's accounting and imports. |
+| H6.5 | PARTIAL | URL-level isolation checked above; id tampering inside Livewire payloads not run. |
+
+Not run: H1.1, H1.4 to H1.6, H2.3, H3.6, H3.7, H4.5, H4.6, H5.3, H5.4, H5.6, H6.2, H6.3, H6.6.
+
+**Accounting findings (not fixed)**
+- **F11 Medium.** Opening Bank accounts for the first time creates a placeholder "High Street Bank / Main Operating Account" with sort code 20-00-00 and account 12345678 (`BankAccountsIndex::ensureDefaultAccountExists`). Same kind of fake default as F2.
+- **F12 Medium.** Imported statement lines get no bank account (`bank_account_id` is null) and the import page never asks which account. The bank accounts page and the treasurer report show a statement balance of £0.
+- **F13 Medium.** Reconciliation always posts the cash side to ledger account 1000 (`BankReconciliationMatcherService`, about line 430), so a second bank account such as 1010 never receives any postings.
+- **F14 Medium.** The "Nominal code" list in the reconciliation workspace is a fixed list (4000, 4100, 7000, 7100, 8000), not the lodge's chart of accounts. Codes that do not exist are created on the fly as "General Account (7100)". There is no bank charges, interest or donations choice, so the £0.42 interest and £60 donation were recorded as Membership Dues Income.
+- **F15 Medium.** Every vendor bill debits 5000 Facility & Clubhouse Maintenance whatever its category (`AccountingService.php:358`): the £150 catering bill sits under Facility, and 5200 Catering stays £0.
+- **F16 High.** The balance sheet does not balance: it leaves the current-year surplus out of equity (assets £77.17, liabilities and equity £0.00).
+- **F17 Medium.** CSV import drops a row with an unreadable date without warning and imports an unreadable amount as £0.00.
+- **F18 Medium.** An unbalanced journal, and posting into a closed year, answer with HTTP 500 (`InvalidArgumentException`) instead of a form error.
+- **F19 Low.** Refused uploads show no visible error; a text file named `.csv` previews "0 lines".
+- **F20 Low, unconfirmed.** "Ignore line" did not change a line's status when clicked.
+- **Note.** The e2e seed has no platform superadmin (`admin@example.com` is a normal user there), so superadmin cases need a user created first.
+
+**Fixed after Phase H (retested in the e2e app):** F16 (balance sheet now shows "Surplus (deficit) to date" in equity: assets £77.17 = liabilities £0 + equity £77.17), F12 (statement import has a bank account picker, required when there are several; the lines and the import batch store the account), F13 (reconciliation posts to the line's own bank account's ledger account: a £0.50 savings line debited 1010, not 1000), F14 (the nominal list is the lodge's own income accounts for money in and expense accounts for money out, a code outside it is refused, and nothing is created as "General Account"). Still open: F11, F15, F17 to F20.
+
+**Fixed after Phase H, second round (retested in the e2e app):** F15 (a bill is charged to the expense account its category belongs to: Bar & Dining Supplies to 5200, Utilities & Fuel to 5100, Admin and Insurance to 5300, a category named like one of the lodge's expense accounts to that account, anything else to 5000), F17 (unreadable dates and amounts are listed in the import preview and not imported; an unreadable amount is no longer a £0.00 line; the success message says how many rows were left out), F18 (an unbalanced or closed-year journal now shows the message: web requests go back with the error, JSON gets a 422; `LedgerRuleException`). Still open: F11, F19, F20.
