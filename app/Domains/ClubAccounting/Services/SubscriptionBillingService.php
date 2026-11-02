@@ -7,7 +7,10 @@ use App\Domains\ClubAccounting\Enums\SubscriptionStatus;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Models\SubscriptionTier;
+use App\Exceptions\LedgerRuleException;
+use App\Models\Accounting\JournalEntry;
 use App\Models\Club;
+use App\Services\AccountingService;
 use App\Support\Currencies;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -70,7 +73,7 @@ class SubscriptionBillingService
 
                 $invoiceRef = sprintf('INV-%d-M%04d', $billingYear, $member->id);
 
-                MemberSubscription::create([
+                $subscription = MemberSubscription::create([
                     'club_id' => $clubId,
                     'member_id' => $member->id,
                     'tier_id' => $member->subscription_tier_id,
@@ -82,6 +85,8 @@ class SubscriptionBillingService
                     'invoice_reference' => $invoiceRef,
                     'notes' => "Annual Subscription Invoice {$billingYear}/".($billingYear + 1),
                 ]);
+
+                $this->postBillingToLedger($subscription);
 
                 $createdCount++;
                 $totalBilled += $amount;
@@ -97,11 +102,91 @@ class SubscriptionBillingService
     }
 
     /**
+     * What a member is billed goes into the books once: Accounts Receivable up, Membership Dues Income up. Subscriptions
+     * billed before this was done are caught up the first time something is paid or waived against them.
+     */
+    public function postBillingToLedger(MemberSubscription $subscription): void
+    {
+        $alreadyPosted = JournalEntry::where('club_id', $subscription->club_id)->where('source_type', 'MemberSubscription')->where('source_id', $subscription->id)->exists();
+        if ($alreadyPosted || (float) $subscription->amount_due <= 0) {
+            return;
+        }
+
+        $club = Club::findOrFail($subscription->club_id);
+        $ledger = app(AccountingService::class);
+        $ledger->postJournalEntry($club, [
+            'description' => "Annual subscription {$subscription->billing_year}/".($subscription->billing_year + 1).": {$subscription->member->full_name} ({$subscription->invoice_reference})",
+            'source_type' => 'MemberSubscription',
+            'source_id' => $subscription->id,
+            'items' => [
+                ['account_id' => $ledger->getAccount($club, '1200')->id, 'debit' => $subscription->amount_due, 'credit' => 0, 'memo' => $subscription->invoice_reference],
+                ['account_id' => $ledger->getAccount($club, '4000')->id, 'debit' => 0, 'credit' => $subscription->amount_due, 'memo' => 'Membership dues'],
+            ],
+        ]);
+    }
+
+    /**
+     * Writes off what is still owed: the income and the receivable it created are taken back out of the books.
+     */
+    public function waive(MemberSubscription $subscription): void
+    {
+        $balance = round(max(0.0, (float) $subscription->amount_due - (float) $subscription->amount_paid), 2);
+
+        DB::transaction(function () use ($subscription, $balance) {
+            if ($balance > 0) {
+                $this->postBillingToLedger($subscription);
+                $club = Club::findOrFail($subscription->club_id);
+                $ledger = app(AccountingService::class);
+                $ledger->postJournalEntry($club, [
+                    'description' => "Subscription waived: {$subscription->member->full_name} ({$subscription->invoice_reference})",
+                    'source_type' => 'MemberSubscriptionWaiver',
+                    'source_id' => $subscription->id,
+                    'items' => [
+                        ['account_id' => $ledger->getAccount($club, '4000')->id, 'debit' => $balance, 'credit' => 0, 'memo' => 'Dues waived'],
+                        ['account_id' => $ledger->getAccount($club, '1200')->id, 'debit' => 0, 'credit' => $balance, 'memo' => $subscription->invoice_reference],
+                    ],
+                ]);
+            }
+
+            $subscription->update([
+                'status' => SubscriptionStatus::Waived,
+                'notes' => trim(($subscription->notes ?? '')."\nDues waived by Lodge Secretary on ".Carbon::now()->format('Y-m-d')),
+            ]);
+        });
+    }
+
+    /**
      * Record payment received against a member subscription line.
      */
-    public function recordPayment(MemberSubscription $subscription, float $amount, ?string $reference = null, ?string $notes = null): MemberSubscription
+    /**
+     * The money received goes to $cashLedgerAccountId (the ledger account of the bank account it landed in, else the main
+     * bank account) and clears what the member owes. More than is owed is refused.
+     */
+    public function recordPayment(MemberSubscription $subscription, float $amount, ?string $reference = null, ?string $notes = null, ?int $cashLedgerAccountId = null, ?Carbon $paidOn = null): MemberSubscription
     {
-        return DB::transaction(function () use ($subscription, $amount, $reference, $notes) {
+        $club = Club::findOrFail($subscription->club_id);
+        $owed = $subscription->status === SubscriptionStatus::Waived ? 0.0 : max(0.0, (float) $subscription->amount_due - (float) $subscription->amount_paid);
+
+        if (round($amount, 2) > round($owed, 2)) {
+            throw new LedgerRuleException($owed > 0
+                ? 'That is more than the '.Currencies::format($owed, $club).' still owed on this subscription.'
+                : 'Nothing is owed on this subscription, so no payment can be recorded against it.');
+        }
+
+        return DB::transaction(function () use ($subscription, $amount, $reference, $notes, $club, $cashLedgerAccountId, $paidOn) {
+            $this->postBillingToLedger($subscription);
+            $ledger = app(AccountingService::class);
+            $ledger->postJournalEntry($club, [
+                'description' => "Subscription payment: {$subscription->member->full_name} ({$subscription->invoice_reference})",
+                'entry_date' => ($paidOn ?? Carbon::now())->toDateString(),
+                'source_type' => 'MemberSubscriptionPayment',
+                'source_id' => $subscription->id,
+                'items' => [
+                    ['account_id' => $cashLedgerAccountId ?? $ledger->getAccount($club, '1000')->id, 'debit' => $amount, 'credit' => 0, 'memo' => $reference],
+                    ['account_id' => $ledger->getAccount($club, '1200')->id, 'debit' => 0, 'credit' => $amount, 'memo' => 'Subscription '.$subscription->invoice_reference],
+                ],
+            ]);
+
             $newPaid = (float) $subscription->amount_paid + $amount;
             $due = (float) $subscription->amount_due;
 

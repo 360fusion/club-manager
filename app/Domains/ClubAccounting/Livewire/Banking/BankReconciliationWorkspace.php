@@ -6,6 +6,7 @@ use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
 use App\Enums\DocumentStatus;
+use App\Exceptions\LedgerRuleException;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Club;
@@ -64,7 +65,13 @@ class BankReconciliationWorkspace extends Component
         $club = $this->getClub();
         $tx = BankTransaction::where('club_id', $club->id)->findOrFail($transactionId);
 
-        $matcher->reconcileTransaction($tx, $matchType, $targetId);
+        try {
+            $matcher->reconcileTransaction($tx, $matchType, $targetId);
+        } catch (LedgerRuleException $e) {
+            session()->flash('error', $e->getMessage());
+
+            return;
+        }
 
         session()->flash('success', 'Transaction reconciled successfully!');
         $this->autoSelectFirstUnmatched();
@@ -109,9 +116,16 @@ class BankReconciliationWorkspace extends Component
             return;
         }
 
-        $matcher->reconcileTransaction($tx, $this->manualAllocationType, $targetId, [
-            'nominal_code' => $this->manualNominalCode,
-        ]);
+        try {
+            $matcher->reconcileTransaction($tx, $this->manualAllocationType, $targetId, [
+                'nominal_code' => $this->manualNominalCode,
+            ]);
+        } catch (LedgerRuleException $e) {
+            session()->flash('error', $e->getMessage());
+            $this->showManualDrawer = false;
+
+            return;
+        }
 
         session()->flash('success', 'Manual allocation reconciled for transaction.');
         $this->showManualDrawer = false;

@@ -368,8 +368,11 @@ class BankReconciliationMatcherService
                         $sub,
                         abs($amount),
                         $transaction->reference ?: 'Bank Import Match',
-                        $transaction->raw_description
+                        $transaction->raw_description,
+                        $transaction->bankAccount?->account_id,
+                        Carbon::parse($transaction->transaction_date),
                     );
+                    $ledgerAlreadyPosted = true;
                     $note .= " [Member Subscription Invoice: {$sub->invoice_reference}]";
                 }
                 $targetCode = '4000'; // Membership Dues Income

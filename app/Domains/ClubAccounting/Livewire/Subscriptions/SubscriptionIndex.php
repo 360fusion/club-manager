@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Models\SubscriptionTier;
 use App\Domains\ClubAccounting\Services\SubscriptionBillingService;
+use App\Exceptions\LedgerRuleException;
 use App\Models\Club;
 use App\Support\Currencies;
 use Carbon\Carbon;
@@ -99,11 +100,18 @@ class SubscriptionIndex extends Component
         ]);
 
         $club = $this->getClub();
-        $result = $billingService->generateAnnualBillingRun(
-            $club,
-            $this->billing_year,
-            Carbon::parse($this->billing_due_date)
-        );
+        try {
+            $result = $billingService->generateAnnualBillingRun(
+                $club,
+                $this->billing_year,
+                Carbon::parse($this->billing_due_date)
+            );
+        } catch (LedgerRuleException $e) {
+            session()->flash('error', $e->getMessage());
+            $this->showBillingModal = false;
+
+            return;
+        }
 
         session()->flash('success', "Annual billing run completed for {$this->billing_year}: {$result['created_count']} new invoices created (".Currencies::format($result['total_billed'], $club)." total billed), {$result['skipped_count']} existing skipped.".($result['no_rate_count'] ? " {$result['no_rate_count']} members were not billed because they have no subscription tier and no tier is set up." : ''));
         $this->showBillingModal = false;
@@ -191,25 +199,35 @@ class SubscriptionIndex extends Component
             'payment_notes' => 'nullable|string|max:10000',
         ]);
 
-        $billingService->recordPayment(
-            $sub,
-            (float) $this->payment_amount,
-            $this->payment_reference,
-            $this->payment_notes
-        );
+        try {
+            $billingService->recordPayment(
+                $sub,
+                (float) $this->payment_amount,
+                $this->payment_reference,
+                $this->payment_notes
+            );
+        } catch (LedgerRuleException $e) {
+            $this->addError('payment_amount', $e->getMessage());
+
+            return;
+        }
 
         session()->flash('success', 'Payment of '.Currencies::format((float) $this->payment_amount, $club)." recorded for {$sub->member->full_name}.");
         $this->showPaymentModal = false;
     }
 
-    public function waiveDues(int $subscriptionId): void
+    public function waiveDues(int $subscriptionId, SubscriptionBillingService $billingService): void
     {
         $club = $this->getClub();
         $sub = MemberSubscription::where('club_id', $club->id)->findOrFail($subscriptionId);
-        $sub->update([
-            'status' => SubscriptionStatus::Waived,
-            'notes' => trim(($sub->notes ?? '')."\nDues waived by Lodge Secretary on ".Carbon::now()->format('Y-m-d')),
-        ]);
+
+        try {
+            $billingService->waive($sub);
+        } catch (LedgerRuleException $e) {
+            session()->flash('error', $e->getMessage());
+
+            return;
+        }
 
         session()->flash('success', "Dues waived for {$sub->member->full_name}.");
     }
