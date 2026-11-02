@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Domains\ClubAccounting\Models\CharityGrant;
+use App\Enums\ClubMemberStatus;
 use App\Enums\ClubRole;
 use App\Http\Requests\MeetingAdmin\GenerateSeasonRequest;
+use App\Mail\MeetingSummonsMail;
 use App\Models\Meeting;
 use App\Models\RecurringRule;
 use App\Notifications\ClubNotification;
@@ -14,6 +16,7 @@ use App\Services\RsvpTokenService;
 use App\Support\NodeBinaries;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Spatie\LaravelPdf\Facades\Pdf;
 
@@ -99,19 +102,26 @@ class MeetingSummonsController extends Controller
             'summons_published_at' => Carbon::now(),
         ]);
 
+        if ($alreadyPublished) {
+            // A new token would replace the one already emailed, so links people hold would stop working.
+            return redirect()->back()->with('success', 'Summons updated. Members keep the RSVP links they were already sent.');
+        }
+
         $expiresAt = Carbon::parse($meeting->meeting_date)->endOfDay();
-        $members = $club->users;
+        $members = $club->users()
+            ->wherePivot('status', ClubMemberStatus::Active->value)
+            ->wherePivot('role', '!=', ClubRole::Visitor->value)
+            ->get();
 
         foreach ($members as $member) {
-            $tokenService->createTokenForUser($meeting, $member, $expiresAt);
+            $token = $tokenService->createTokenForUser($meeting, $member, $expiresAt);
+            Mail::to($member->email)->send(new MeetingSummonsMail($club, $meeting, $member, $token));
         }
 
-        if (! $alreadyPublished) {
-            app(ClubNotifier::class)->toMembers($club, ClubNotification::summons($meeting, $club), auth()->user());
-            app(ClubNotifier::class)->toFollowers($club, $meeting);
-        }
+        app(ClubNotifier::class)->toMembers($club, ClubNotification::summons($meeting, $club), auth()->user());
+        app(ClubNotifier::class)->toFollowers($club, $meeting);
 
-        return redirect()->back()->with('success', "Summons published! Passwordless RSVP tokens issued to {$members->count()} members.");
+        return redirect()->back()->with('success', "Summons published and emailed to {$members->count()} members, each with their own RSVP link.");
     }
 
     /**

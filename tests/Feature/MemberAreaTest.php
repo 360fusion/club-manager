@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Enums\Visibility;
+use App\Mail\MeetingSummonsMail;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Models\Event;
@@ -15,6 +16,7 @@ use App\Models\User;
 use App\Notifications\ClubNotification;
 use App\Support\IcsCalendar;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -390,6 +392,35 @@ class MemberAreaTest extends TestCase
         $this->assertCount(1, $this->member->notifications);
         $this->assertSame('summons', $this->member->notifications->first()->data['category']);
         $this->assertCount(0, $admin->notifications);
+    }
+
+    public function test_publishing_a_summons_emails_active_members_a_working_rsvp_link_once(): void
+    {
+        Mail::fake();
+        $admin = $this->join($this->oxford, null, 'admin');
+        $pending = $this->join($this->oxford, null, 'member', 'pending');
+        $past = $this->join($this->oxford, null, 'member', 'past');
+        $visitor = $this->join($this->oxford, null, 'visitor');
+        $meeting = $this->meeting($this->oxford, ['status' => 'draft']);
+        $publish = route('admin.meetings.publish', ['clubSlug' => 'oxford-lodge', 'id' => $meeting->id]);
+
+        $this->actingAs($admin)->post($publish);
+
+        Mail::assertQueued(MeetingSummonsMail::class, 2);
+        Mail::assertQueued(MeetingSummonsMail::class, fn ($mail) => $mail->hasTo($this->member->email));
+        foreach ([$pending, $past, $visitor] as $excluded) {
+            Mail::assertNotQueued(MeetingSummonsMail::class, fn ($mail) => $mail->hasTo($excluded->email));
+        }
+        $this->assertDatabaseMissing('meeting_rsvps', ['meeting_id' => $meeting->id, 'user_id' => $pending->id]);
+
+        $token = Mail::queued(MeetingSummonsMail::class, fn ($mail) => $mail->hasTo($this->member->email))->first()->rsvpToken;
+        $this->get(route('summons.rsvp.show', ['token' => $token]))->assertInertia(fn ($page) => $page->component('Summons/Rsvp'));
+
+        // Publishing again must not issue new links (they would replace the ones already sent) or send more mail.
+        $this->actingAs($admin)->post($publish);
+
+        Mail::assertQueued(MeetingSummonsMail::class, 2);
+        $this->get(route('summons.rsvp.show', ['token' => $token]))->assertInertia(fn ($page) => $page->component('Summons/Rsvp'));
     }
 
     public function test_news_and_events_notify_members_of_that_club_only(): void

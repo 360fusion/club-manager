@@ -336,7 +336,7 @@ const isPastMeeting = computed(() => {
     </div>
 
     <ConfirmDialog :open="confirmingPublish" title="Publish the summons?" confirm-label="Publish summons" variant="primary" :processing="publishing" @confirm="publishSummons" @close="confirmingPublish = false">
-      This publishes the summons and issues passwordless RSVP links to all {{ stats.total_members }} members.
+      This publishes the summons and emails every active member their own RSVP link.
     </ConfirmDialog>
 
     <Modal :open="showApologiesModal" title="Apologies for the minutes" @close="showApologiesModal = false">
