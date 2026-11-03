@@ -15,6 +15,7 @@ use App\Domains\ClubAccounting\Livewire\Members\MemberIndex;
 use App\Domains\ClubAccounting\Livewire\Members\MemberProfile;
 use App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
+use App\Http\Controllers\Account\ApiTokenController;
 use App\Http\Controllers\Account\DataPrivacyController;
 use App\Http\Controllers\AccountingAdminController;
 use App\Http\Controllers\AccountingAssetController;
@@ -466,6 +467,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/privacy/export', [DataPrivacyController::class, 'export'])->middleware('throttle:5,10')->name('account.privacy.export');
     Route::post('/members/privacy/close', [DataPrivacyController::class, 'close'])->middleware('throttle:5,10')->name('account.privacy.close');
     Route::delete('/members/privacy/close', [DataPrivacyController::class, 'cancel'])->name('account.privacy.cancel');
+
+    // The person's own API tokens.
+    Route::get('/members/api-tokens', [ApiTokenController::class, 'index'])->name('account.tokens.index');
+    Route::post('/members/api-tokens', [ApiTokenController::class, 'store'])->middleware('throttle:10,1')->name('account.tokens.store');
+    Route::delete('/members/api-tokens/{id}', [ApiTokenController::class, 'destroy'])->whereNumber('id')->name('account.tokens.destroy');
 
     // 2FA Profile Settings Routes
     Route::get('/members/security', [TwoFactorAuthController::class, 'show'])->name('admin.profile.two-factor');

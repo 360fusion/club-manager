@@ -57,6 +57,7 @@ const item = 'block rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 ho
             <Link :href="route('admin.profile.two-factor')" role="menuitem" :class="item" @click="open = false">Password and 2FA</Link>
             <Link :href="route('portal.subscriptions')" role="menuitem" :class="item" @click="open = false">Email subscriptions</Link>
             <Link :href="route('account.privacy')" role="menuitem" :class="item" @click="open = false">Data and privacy</Link>
+            <Link :href="route('account.tokens.index')" role="menuitem" :class="item" @click="open = false">API tokens</Link>
             <div v-if="adminClubs.length" class="border-t border-slate-100 pt-1 dark:border-slate-800">
                 <p class="px-3 pb-1 pt-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">{{ adminClubs.length === 1 ? 'Club admin' : 'Clubs you administer' }}</p>
                 <Link v-for="club in adminClubs" :key="club.id" :href="adminHref(club)" role="menuitem" class="flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-slate-800" @click="open = false">

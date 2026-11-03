@@ -12,7 +12,7 @@ class ReservedClubSlugs
      * @var list<string>
      */
     public const WORDS = [
-        'about', 'account', 'admin', 'api', 'assets', 'auth', 'blog', 'build', 'calendar', 'clubs',
+        'about', 'account', 'admin', 'api', 'api-tokens', 'assets', 'auth', 'blog', 'build', 'calendar', 'clubs',
         'committee', 'contact', 'css', 'dashboard', 'directory', 'docs', 'documents', 'dues', 'events',
         'favicon', 'fonts', 'forgot-password', 'halls', 'help', 'home', 'images', 'index', 'internal', 'js', 'livewire',
         'lodges', 'login', 'logout', 'meetings', 'members', 'new', 'news', 'notifications', 'portal', 'pricing',
