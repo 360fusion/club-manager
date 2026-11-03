@@ -19,6 +19,10 @@ defineProps({
     default: () => [],
   },
   recoveryCodesLeft: Number,
+  devices: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const confirmForm = useForm({
@@ -53,6 +57,13 @@ const sessionsForm = useForm({
 
 const signOutOtherDevices = () => {
   sessionsForm.post(route('admin.security.logout-others'), {
+    preserveScroll: true,
+    onFinish: () => sessionsForm.reset(),
+  });
+};
+
+const signOutDevice = (device) => {
+  sessionsForm.delete(route('account.devices.destroy', device.id), {
     preserveScroll: true,
     onFinish: () => sessionsForm.reset(),
   });
@@ -214,6 +225,17 @@ const generateNewRecoveryCodes = () => {
               Signed in on a shared or lost computer or phone? Sign out everywhere except here. Changing your password does this too.
             </p>
           </div>
+          <ul v-if="devices.length" class="divide-y divide-slate-200 rounded-xl border border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
+            <li v-for="device in devices" :key="device.id" class="flex flex-wrap items-center justify-between gap-2 p-3">
+              <span>
+                <span class="font-medium text-slate-900 dark:text-white">{{ device.device }}</span>
+                <Badge v-if="device.current" variant="success" class="ml-2">This device</Badge>
+                <span class="block text-xs text-slate-500 dark:text-slate-400">{{ device.ip }} · active {{ device.last_active }}</span>
+              </span>
+              <Button v-if="!device.current" type="button" variant="secondary" size="sm" :disabled="!sessionsForm.password" @click="signOutDevice(device)">Sign out</Button>
+            </li>
+          </ul>
+          <p v-if="devices.length > 1" class="text-xs text-slate-500 dark:text-slate-400">Type your password below to sign a single device out, or to sign out all of them.</p>
           <Input
             v-model="sessionsForm.password"
             type="password"

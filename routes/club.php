@@ -17,6 +17,7 @@ use App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Http\Controllers\Account\ApiTokenController;
 use App\Http\Controllers\Account\DataPrivacyController;
+use App\Http\Controllers\Account\DeviceController;
 use App\Http\Controllers\AccountingAdminController;
 use App\Http\Controllers\AccountingAssetController;
 use App\Http\Controllers\AccountingBankController;
@@ -467,6 +468,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/privacy/export', [DataPrivacyController::class, 'export'])->middleware('throttle:5,10')->name('account.privacy.export');
     Route::post('/members/privacy/close', [DataPrivacyController::class, 'close'])->middleware('throttle:5,10')->name('account.privacy.close');
     Route::delete('/members/privacy/close', [DataPrivacyController::class, 'cancel'])->name('account.privacy.cancel');
+
+    Route::delete('/members/security/devices/{id}', [DeviceController::class, 'destroy'])->middleware('throttle:10,1')->name('account.devices.destroy');
 
     // The person's own API tokens.
     Route::get('/members/api-tokens', [ApiTokenController::class, 'index'])->name('account.tokens.index');

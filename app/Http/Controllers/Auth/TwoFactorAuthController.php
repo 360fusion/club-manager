@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TwoFactorAuth\ConfirmRequest;
+use App\Support\DeviceSessions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,6 +41,7 @@ class TwoFactorAuthController extends Controller
             'secretKey' => $secretKey,
             'recoveryCodes' => $recoveryCodes,
             'recoveryCodesLeft' => $enabled && $confirmed ? count($user->recoveryCodes()) : 0,
+            'devices' => DeviceSessions::for($user, $request->session()->getId()),
         ]);
     }
 
