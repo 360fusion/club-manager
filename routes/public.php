@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Account\EmailChangeController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\InvitationController;
@@ -36,6 +37,7 @@ use Illuminate\Support\Facades\Route;
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'create'])->name('login');
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware(['signed', 'throttle:auth-forms'])->name('verification.verify');
+Route::get('/email/confirm/{id}/{hash}', [EmailChangeController::class, 'confirm'])->whereNumber('id')->middleware(['signed', 'throttle:auth-forms'])->name('account.email.confirm');
 Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:login');
 // Fortify's own routes post the code and send people back here by this name (its views are switched off).
 Route::get('/two-factor-challenge', [TwoFactorAuthController::class, 'showChallenge'])->name('two-factor.login');

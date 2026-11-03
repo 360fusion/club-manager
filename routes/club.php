@@ -18,6 +18,7 @@ use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
 use App\Http\Controllers\Account\ApiTokenController;
 use App\Http\Controllers\Account\DataPrivacyController;
 use App\Http\Controllers\Account\DeviceController;
+use App\Http\Controllers\Account\EmailChangeController;
 use App\Http\Controllers\AccountingAdminController;
 use App\Http\Controllers\AccountingAssetController;
 use App\Http\Controllers\AccountingBankController;
@@ -103,6 +104,7 @@ Route::middleware(['auth'])->group(function () {
     // Profile & Password Management Routes
     Route::get('/members/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/members/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/members/profile/email-change', [EmailChangeController::class, 'cancel'])->name('account.email.cancel');
     Route::put('/members/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     // Multi-Tenant Admin & Workspace Routes

@@ -32,6 +32,8 @@ const profileForm = useForm({
 });
 
 // A new sign-in address needs the current password, so the field only appears once the address is changed.
+const cancelEmailChange = () => router.delete(route('account.email.cancel'), { preserveScroll: true });
+
 const emailChanged = computed(() => profileForm.email.trim().toLowerCase() !== (props.user?.email || '').toLowerCase());
 
 const handleFileChange = (e) => {
@@ -140,6 +142,10 @@ const submitProfile = () => {
           <div class="space-y-4">
             <Input v-model="profileForm.name" label="Full name" required />
             <Input v-model="profileForm.email" type="email" label="Email address" :error="profileForm.errors.email" required />
+            <p v-if="user?.pending_email" class="text-xs text-amber-700 dark:text-amber-400">
+              Waiting for you to confirm <strong>{{ user.pending_email }}</strong>. Your sign-in email stays the same until you open the link we sent.
+              <button type="button" class="underline" @click="cancelEmailChange">Cancel the change</button>
+            </p>
             <Input
               v-if="emailChanged"
               v-model="profileForm.current_password"

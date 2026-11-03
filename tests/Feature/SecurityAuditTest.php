@@ -19,6 +19,7 @@ use App\Models\Meeting;
 use App\Models\MeetingRsvp;
 use App\Models\Page;
 use App\Models\User;
+use App\Notifications\ConfirmNewEmail;
 use App\Support\EmailVerification;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -512,7 +513,7 @@ class SecurityAuditTest extends TestCase
         $this->assertTrue(EmailVerification::required());
     }
 
-    public function test_profile_updates_reject_svg_avatars_and_reconfirm_changed_emails(): void
+    public function test_profile_updates_reject_svg_avatars_and_hold_changed_emails_until_confirmed(): void
     {
         Storage::fake('public');
         Notification::fake();
@@ -525,8 +526,10 @@ class SecurityAuditTest extends TestCase
         $this->actingAs($this->member)->post($url, $base + ['avatar_url' => 'javascript:alert(1)'])->assertSessionHasErrors('avatar_url');
 
         $this->actingAs($this->member)->post($url, ['name' => $this->member->name, 'email' => 'changed@example.test', 'current_password' => 'password']);
-        $this->assertFalse($this->member->fresh()->hasVerifiedEmail());
-        Notification::assertSentTo($this->member->fresh(), VerifyEmail::class);
+        // The new address is held and mailed a link; the old one stays the sign-in until the link is opened.
+        $this->assertSame('changed@example.test', $this->member->fresh()->pending_email);
+        $this->assertNotSame('changed@example.test', $this->member->fresh()->email);
+        Notification::assertSentOnDemand(ConfirmNewEmail::class, fn ($n, $channels, $notifiable) => $notifiable->routes['mail'] === 'changed@example.test');
     }
 
     public function test_the_members_events_page_does_not_show_other_clubs_meetings_to_outsiders(): void

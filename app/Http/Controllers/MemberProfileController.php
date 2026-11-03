@@ -6,7 +6,7 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Models\Club;
 use App\Models\Invoice;
 use App\Support\ClubAccess;
-use App\Support\EmailVerification;
+use App\Support\EmailChange;
 use App\Support\ImageDownscaler;
 use App\Support\UploadRules;
 use Illuminate\Http\RedirectResponse;
@@ -87,6 +87,7 @@ class MemberProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'avatar_url' => $user->avatar_url ? (str_starts_with($user->avatar_url, 'http') ? $user->avatar_url : asset('storage/'.$user->avatar_url)) : null,
+                'pending_email' => $user->pending_email,
                 'two_factor_enabled' => ! empty($user->two_factor_secret),
             ] : null,
             'memberRole' => $memberPivot->role ?? 'member',
@@ -135,7 +136,8 @@ class MemberProfileController extends Controller
             'dietary_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $user->fill($request->only('name', 'email'));
+        $user->fill($request->only('name'));
+        $emailHeld = strcasecmp((string) $request->input('email'), (string) $user->email) !== 0 && EmailChange::request($user, (string) $request->input('email'));
 
         if ($request->hasFile('avatar')) {
             ImageDownscaler::apply($request->file('avatar'), 800);
@@ -145,16 +147,10 @@ class MemberProfileController extends Controller
             $user->avatar_url = $request->avatar_url;
         }
 
-        $emailChanged = $user->isDirty('email');
-
-        if ($emailChanged && EmailVerification::required()) {
-            $user->email_verified_at = null;
-        }
-
         $user->save();
 
-        if ($emailChanged && EmailVerification::required()) {
-            $user->sendEmailVerificationNotification();
+        if ($emailHeld) {
+            EmailChange::sendLink($user);
         }
 
         // Update club-specific member pivot attributes
@@ -164,6 +160,6 @@ class MemberProfileController extends Controller
             'dietary_notes' => $request->input('dietary_notes'),
         ]);
 
-        return redirect()->back()->with('success', 'Profile and club membership preferences updated successfully.');
+        return redirect()->back()->with('success', $emailHeld ? "We sent a link to {$user->pending_email}. Your sign-in email stays {$user->email} until you open it." : 'Profile and club membership preferences updated successfully.');
     }
 }
