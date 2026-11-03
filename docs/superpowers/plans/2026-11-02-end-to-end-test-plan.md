@@ -619,3 +619,8 @@ Compared `~/Herd/launchpad` with club-manager (accounts, admin, website/API). No
 - `AuthenticateSession` (our subclass, skipped for non-session guards): a password change ends other sessions; "sign out other devices" button;
 - contact form: hidden honeypot, link-stuffed messages dropped silently, fixed success text (the browser no longer picks it), limits per IP, per IP per hour and per sender per hour.
 Not done from the comparison: audit log of superadmin actions, impersonation, `doctor`-style production check command, route classification test, feature flag screen, visitor sign-up verification, per-person activity page, API tokens and outbound webhooks, `security.txt`, signed private downloads.
+
+## Superadmin audit log and `app:doctor` (2026-11-03, from the launchpad comparison)
+- `superadmin_actions` (append-only) filled by the `RecordSuperAdminActions` middleware on the superadmin route group: who, route, submitted input, each model's before and after, secrets masked. Read at `/superadmin/audit-log` (nav: Audit log). Looking (GET) is not recorded. Impersonation, when built, hangs off this.
+- `php artisan app:doctor`: debug, key, https address, secure cookies, trusted proxies, database, mail driver and from address, queue driver and a waiting-job check for a stopped worker, failed jobs, pending migrations, storage link, platform payment settings, superadmins without 2FA. Exits 1 on production or with `--strict`.
+- Tests: `SuperAdminAuditLogTest`. Run `app:doctor --strict` after each deploy; run the migration first (new table).

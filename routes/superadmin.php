@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PlatformPaymentsAdminController;
+use App\Http\Controllers\SuperAdminAuditLogController;
 use App\Http\Controllers\SuperAdminClubTypeController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SuperAdminGrandLodgeController;
@@ -10,11 +11,13 @@ use App\Http\Controllers\SuperAdminLodgeController;
 use App\Http\Controllers\SuperAdminLodgeCorrectionController;
 use App\Http\Controllers\SuperAdminProvinceController;
 use App\Http\Middleware\EnsureUserIsSuperAdmin;
+use App\Http\Middleware\RecordSuperAdminActions;
 use Illuminate\Support\Facades\Route;
 
 // Platform super admin console.
 // Superadmin Management Console Routes
-Route::middleware(['auth', EnsureUserIsSuperAdmin::class])->group(function () {
+Route::middleware(['auth', EnsureUserIsSuperAdmin::class, RecordSuperAdminActions::class])->group(function () {
+    Route::get('/superadmin/audit-log', [SuperAdminAuditLogController::class, 'index'])->name('superadmin.audit_log.index');
     Route::get('/superadmin', [SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
     Route::get('/superadmin/club-types', [SuperAdminClubTypeController::class, 'clubTypesIndex'])->name('superadmin.club_types.index');
     Route::get('/superadmin/club-types/{id}', [SuperAdminClubTypeController::class, 'showClubType'])->name('superadmin.club_types.show');
