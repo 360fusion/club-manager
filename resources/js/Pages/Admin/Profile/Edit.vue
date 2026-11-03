@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useForm, router, Link } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
@@ -17,7 +17,11 @@ const profileForm = useForm({
   email: props.user.email,
   avatar_url: props.user.avatar_url || '',
   avatar: null,
+  current_password: '',
 });
+
+// A new sign-in address needs the current password, so the field only appears once the address is changed.
+const emailChanged = computed(() => profileForm.email.trim().toLowerCase() !== (props.user.email || '').toLowerCase());
 
 const passwordForm = useForm({
   current_password: '',
@@ -45,6 +49,7 @@ const updateProfile = () => {
       _method: 'put',
       name: profileForm.name,
       email: profileForm.email,
+      current_password: profileForm.current_password,
       avatar: profileForm.avatar,
     }, {
       preserveScroll: true,
@@ -165,6 +170,21 @@ const updatePassword = () => {
                 class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
               />
               <div v-if="profileForm.errors.email" class="text-xs text-rose-600 dark:text-rose-400 mt-1">{{ profileForm.errors.email }}</div>
+            </div>
+
+            <div v-if="emailChanged">
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Current password
+              </label>
+              <input
+                v-model="profileForm.current_password"
+                type="password"
+                autocomplete="current-password"
+                required
+                class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+              />
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Needed to change your sign-in email address.</p>
+              <div v-if="profileForm.errors.current_password" class="text-xs text-rose-600 dark:text-rose-400 mt-1">{{ profileForm.errors.current_password }}</div>
             </div>
           </div>
 

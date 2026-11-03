@@ -466,6 +466,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/members/security/confirm', [TwoFactorAuthController::class, 'confirm'])->name('admin.two-factor.confirm');
     Route::delete('/members/security/disable', [TwoFactorAuthController::class, 'disable'])->name('admin.two-factor.disable');
     Route::post('/members/security/recovery-codes', [TwoFactorAuthController::class, 'generateRecoveryCodes'])->name('admin.two-factor.recovery-codes');
+    Route::post('/members/security/other-sessions', [TwoFactorAuthController::class, 'logoutOtherSessions'])->name('admin.security.logout-others');
 
     // Member Portal & Self-Service Routes
     // Members area: everything across all of a member's clubs first, then one club.

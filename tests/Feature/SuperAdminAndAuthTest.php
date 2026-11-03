@@ -96,18 +96,15 @@ class SuperAdminAndAuthTest extends TestCase
             ->where('demoCredentials', null));
     }
 
-    public function test_make_me_superadmin_promotes_user_in_local_development(): void
+    public function test_there_is_no_web_route_that_makes_someone_a_superadmin_even_on_local(): void
     {
         $this->app['env'] = 'local';
-        // Switching to 'local' also switches the test-time CSRF skip off.
         $this->withoutMiddleware(PreventRequestForgery::class);
-
         $user = User::factory()->create(['is_super_admin' => false]);
 
-        $response = $this->actingAs($user)->post('/auth/make-me-superadmin');
-        $response->assertRedirect('/superadmin');
+        $this->actingAs($user)->post('/auth/make-me-superadmin');
 
-        $this->assertTrue($user->fresh()->is_super_admin);
+        $this->assertFalse($user->fresh()->is_super_admin, 'superadmins are made with `php artisan superadmin:grant`');
     }
 
     public function test_superadmin_can_manage_masonic_provinces(): void

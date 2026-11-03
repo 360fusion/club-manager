@@ -8,8 +8,6 @@ use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
 use App\Support\Currencies;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -62,26 +60,6 @@ class SuperAdminController extends Controller
             'clubsByType' => $clubsByType,
             'clubs' => $clubs,
         ]);
-    }
-
-    /**
-     * Developer utility helper route to promote the authenticated user to superadmin.
-     */
-    public function makeMeSuperAdmin(Request $request): RedirectResponse
-    {
-        // Local-only bootstrap helper. Exposing this anywhere else lets any
-        // authenticated user grant themselves full platform access.
-        // Use `php artisan superadmin:grant {email}` on deployed environments.
-        abort_unless(app()->isLocal(), 404);
-
-        $user = $request->user();
-        if ($user) {
-            $user->forceFill(['is_super_admin' => true])->save();
-
-            return redirect()->route('superadmin.dashboard')->with('success', 'You are now a Superadmin!');
-        }
-
-        return redirect()->route('login');
     }
 
     // ─── Districts & Groups ───────────────────────────────────────────────────

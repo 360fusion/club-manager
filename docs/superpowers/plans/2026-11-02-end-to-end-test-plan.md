@@ -608,3 +608,14 @@ Left (low): VAT return buckets by created date not issue date and omits refunded
 - Contact form takes recipient and cc from the client (members or lodge-domain addresses only) with no honeypot; public booking re-POST with someone's email rotates their link and re-sends mail.
 - No `AuthenticateSession`, so a password change does not end other sessions; email change and 2FA disable need no password.
 - Admin-made redirects accept any external URL; candidate reject/close/hold have no role check of their own; bank import preview bundle is client-writable; bank lines delete leaves journal entries; finalized committee minutes can be reopened; Browsershot rendering of club HTML not reviewed.
+
+## Launchpad comparison: account and admin security batch (2026-11-03)
+
+Compared `~/Herd/launchpad` with club-manager (accounts, admin, website/API). Not used as a dependency (its workspaces, Filament admin and routes clash with clubs, `club_user` and Fortify); patterns copied instead. Done, with tests in `AccountSecurityTest` and `ContactFormTest` (all fail on the old code):
+- superadmin area needs 2FA confirmed on every environment except local, testing and e2e; the `/auth/make-me-superadmin` route is removed (use `superadmin:grant`);
+- turning 2FA off, making new recovery codes and signing out other devices need the current password; Fortify's own 2FA routes need a confirmed password; its unused profile and password routes are off;
+- the security page shows the secret only during setup and recovery codes only once, right after they are made;
+- changing the sign-in email needs the current password (member and admin profile);
+- `AuthenticateSession` (our subclass, skipped for non-session guards): a password change ends other sessions; "sign out other devices" button;
+- contact form: hidden honeypot, link-stuffed messages dropped silently, fixed success text (the browser no longer picks it), limits per IP, per IP per hour and per sender per hour.
+Not done from the comparison: audit log of superadmin actions, impersonation, `doctor`-style production check command, route classification test, feature flag screen, visitor sign-up verification, per-person activity page, API tokens and outbound webhooks, `security.txt`, signed private downloads.

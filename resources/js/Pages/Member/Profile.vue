@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import MembersLayout from '@/Layouts/MembersLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
@@ -28,7 +28,11 @@ const profileForm = useForm({
   dietary_notes: props.memberProfile?.dietary_notes || '',
   avatar_url: props.user?.avatar_url || '',
   avatar: null,
+  current_password: '',
 });
+
+// A new sign-in address needs the current password, so the field only appears once the address is changed.
+const emailChanged = computed(() => profileForm.email.trim().toLowerCase() !== (props.user?.email || '').toLowerCase());
 
 const handleFileChange = (e) => {
   const file = e.target.files[0];
@@ -53,6 +57,7 @@ const submitProfile = () => {
       phone: profileForm.phone,
       emergency_contact: profileForm.emergency_contact,
       dietary_notes: profileForm.dietary_notes,
+      current_password: profileForm.current_password,
       avatar: profileForm.avatar,
     }, {
       preserveScroll: true,
@@ -134,7 +139,17 @@ const submitProfile = () => {
           <!-- Basic Info Inputs -->
           <div class="space-y-4">
             <Input v-model="profileForm.name" label="Full name" required />
-            <Input v-model="profileForm.email" type="email" label="Email address" required />
+            <Input v-model="profileForm.email" type="email" label="Email address" :error="profileForm.errors.email" required />
+            <Input
+              v-if="emailChanged"
+              v-model="profileForm.current_password"
+              type="password"
+              autocomplete="current-password"
+              label="Current password"
+              hint="Needed to change your sign-in email address."
+              :error="profileForm.errors.current_password"
+              required
+            />
           </div>
 
           <!-- Club Specific Details (Phone, Emergency Contact, Dietary) -->

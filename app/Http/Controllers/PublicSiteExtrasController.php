@@ -108,6 +108,12 @@ class PublicSiteExtrasController extends Controller
         $club = $this->findClub($clubSlug);
 
         $validated = $request->validated();
+        $thanks = 'Thank you! Your message has been sent successfully.';
+
+        // A filled hidden field, or a message stuffed with links, is a robot: it is told the message went, so it learns nothing.
+        if (filled($validated['website'] ?? null) || preg_match_all('#https?://|www\.#i', (string) ($validated['message'] ?? '')) > 2) {
+            return back()->with('success', $thanks);
+        }
 
         // Recipients are never taken on trust from the request. A form may only send to the
         // club's own contact addresses, to addresses on the club's own email domain, or to an
@@ -155,8 +161,6 @@ class PublicSiteExtrasController extends Controller
         }
         $mail->send($mailable);
 
-        $msg = $validated['success_message'] ?? 'Thank you! Your message has been sent successfully.';
-
-        return back()->with('success', $msg);
+        return back()->with('success', $thanks);
     }
 }

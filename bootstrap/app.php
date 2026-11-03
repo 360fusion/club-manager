@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\LedgerRuleException;
+use App\Http\Middleware\AuthenticateSession;
 use App\Http\Middleware\EnsureUserCanAdministerClub;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\IdentifyTenantByDomain;
@@ -30,6 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(IdentifyTenantByDomain::class);
 
         $middleware->web(append: [
+            // Signs out every other session once the password changes (after a reset, or "sign out other devices").
+            AuthenticateSession::class,
             SecurityHeaders::class,
             HandleInertiaRequests::class,
             // Self-activates on routes with a {clubSlug} parameter, so new

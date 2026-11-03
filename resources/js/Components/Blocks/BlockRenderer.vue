@@ -215,7 +215,7 @@ const submitDonation = () => {
 };
 
 // ---- contact form: one shared form, keyed success message per block (a page can have more than one) --------------
-const contactForm = useForm({ name: '', email: '', phone: '', message: '', recipient_email: '', cc_emails: '', success_message: '' });
+const contactForm = useForm({ name: '', email: '', phone: '', message: '', recipient_email: '', cc_emails: '', website: '' });
 const contactSuccessMap = ref({});
 
 const submitContactForm = (block) => {
@@ -223,12 +223,11 @@ const submitContactForm = (block) => {
 
     contactForm.recipient_email = block.recipient_email || props.club.contact_email || props.club.email || '';
     contactForm.cc_emails = block.cc_emails || '';
-    contactForm.success_message = block.success_message || 'Thank you! Your message has been sent successfully.';
 
     contactForm.post(`/site/${props.club.slug}/contact-form`, {
         preserveScroll: true,
         onSuccess: () => {
-            contactSuccessMap.value[block.id] = contactForm.success_message;
+            contactSuccessMap.value[block.id] = block.success_message || 'Thank you! Your message has been sent successfully.';
             contactForm.reset('name', 'email', 'phone', 'message');
         },
     });
@@ -535,6 +534,11 @@ const submitContactForm = (block) => {
                 </div>
 
                 <form @submit.prevent="submitContactForm(block)" :class="['p-6 sm:p-10 shadow-2xl space-y-6 text-sm', radiusLg, theme.cardBg]">
+                    <!-- Left empty by people; spam robots fill in every field. Kept off-screen rather than display:none, which some robots skip. -->
+                    <div class="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
+                        <label :for="`contact-website-${block.id}`">Website</label>
+                        <input :id="`contact-website-${block.id}`" v-model="contactForm.website" type="text" name="website" tabindex="-1" autocomplete="off" />
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                             <label :for="`contact-name-${block.id}`" class="block text-xs font-bold uppercase tracking-wider mb-2 opacity-80">Your name <span v-if="block.name_required" class="text-rose-500">*</span></label>

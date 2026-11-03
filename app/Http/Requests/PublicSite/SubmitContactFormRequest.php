@@ -21,7 +21,7 @@ class SubmitContactFormRequest extends ClubRequest
             'message' => 'nullable|string|max:5000',
             'recipient_email' => 'nullable|email|max:255',
             'cc_emails' => 'nullable|string|max:1000',
-            'success_message' => 'nullable|string|max:1000',
+            'website' => 'nullable|string|max:255',
         ];
     }
 }

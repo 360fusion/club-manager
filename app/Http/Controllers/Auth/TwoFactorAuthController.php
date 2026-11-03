@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TwoFactorAuth\ConfirmRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
@@ -24,15 +25,12 @@ class TwoFactorAuthController extends Controller
         $enabled = ! empty($user->two_factor_secret);
         $confirmed = ! empty($user->two_factor_confirmed_at);
 
-        $qrCodeSvg = null;
-        $secretKey = null;
-        $recoveryCodes = [];
-
-        if ($enabled) {
-            $qrCodeSvg = $user->twoFactorQrCodeSvg();
-            $secretKey = decrypt($user->two_factor_secret);
-            $recoveryCodes = $user->recoveryCodes();
-        }
+        // The secret is only needed while setting up, and recovery codes are shown once, right after they are made:
+        // anyone who later reaches an open session should not be able to read them off this page.
+        $pending = $enabled && ! $confirmed;
+        $qrCodeSvg = $pending ? $user->twoFactorQrCodeSvg() : null;
+        $secretKey = $pending ? decrypt($user->two_factor_secret) : null;
+        $recoveryCodes = $request->session()->get('recoveryCodes', []);
 
         return Inertia::render('Admin/Profile/TwoFactorSetting', [
             'user' => $user,
@@ -41,6 +39,7 @@ class TwoFactorAuthController extends Controller
             'qrCodeSvg' => $qrCodeSvg,
             'secretKey' => $secretKey,
             'recoveryCodes' => $recoveryCodes,
+            'recoveryCodesLeft' => $enabled && $confirmed ? count($user->recoveryCodes()) : 0,
         ]);
     }
 
@@ -62,7 +61,9 @@ class TwoFactorAuthController extends Controller
 
         $confirm($request->user(), $request->code);
 
-        return redirect()->back()->with('success', 'Two-Factor Authentication confirmed and activated!');
+        return redirect()->back()
+            ->with('success', 'Two-Factor Authentication confirmed and activated!')
+            ->with('recoveryCodes', $request->user()->fresh()->recoveryCodes());
     }
 
     /**
@@ -70,6 +71,8 @@ class TwoFactorAuthController extends Controller
      */
     public function disable(Request $request, DisableTwoFactorAuthentication $disable): RedirectResponse
     {
+        $request->validate(['password' => ['required', 'current_password']]);
+
         $disable($request->user());
 
         return redirect()->back()->with('success', 'Two-Factor Authentication disabled.');
@@ -80,9 +83,25 @@ class TwoFactorAuthController extends Controller
      */
     public function generateRecoveryCodes(Request $request, GenerateNewRecoveryCodes $generate): RedirectResponse
     {
+        $request->validate(['password' => ['required', 'current_password']]);
+
         $generate($request->user());
 
-        return redirect()->back()->with('success', 'New recovery codes generated.');
+        return redirect()->back()
+            ->with('success', 'New recovery codes generated. Store them now: they are not shown again.')
+            ->with('recoveryCodes', $request->user()->fresh()->recoveryCodes());
+    }
+
+    /**
+     * Sign out every other browser or phone signed in to this account (AuthenticateSession ends them on their next request).
+     */
+    public function logoutOtherSessions(Request $request): RedirectResponse
+    {
+        $request->validate(['password' => ['required', 'current_password']]);
+
+        Auth::logoutOtherDevices($request->password);
+
+        return redirect()->back()->with('success', 'You have been signed out everywhere else.');
     }
 
     /**

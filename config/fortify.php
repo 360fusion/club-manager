@@ -165,11 +165,15 @@ return [
         Features::registration(),
         Features::resetPasswords(),
         // Features::emailVerification(),
-        Features::updateProfileInformation(),
-        Features::updatePasswords(),
+        // Profile and password changes go through the app's own pages (ProfileController, MemberProfileController), which ask
+        // for the current password; Fortify's PUT /user/profile-information did not, so its routes stay off.
+        // Features::updateProfileInformation(),
+        // Features::updatePasswords(),
         Features::twoFactorAuthentication([
             'confirm' => true,
-            'confirmPassword' => false,
+            // The app manages 2FA at /members/security; Fortify's own /user/two-factor-* routes (which hand out the secret
+            // and recovery codes) need a recently confirmed password, see the password.confirm route in routes/public.php.
+            'confirmPassword' => true,
             // 'window' => 0,
         ]),
         // Switched off: nothing in the app offers passkeys, `User` does not implement Fortify's PasskeyUser contract and

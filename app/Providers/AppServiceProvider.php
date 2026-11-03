@@ -101,6 +101,12 @@ class AppServiceProvider extends ServiceProvider
         ]);
         RateLimiter::for('auth-forms', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
         RateLimiter::for('public-forms', fn (Request $request) => Limit::perMinute(6)->by($request->ip()));
+        // Contact forms send email to the lodge, so they are also held to an hourly limit per address and per sender.
+        RateLimiter::for('contact-form', fn (Request $request) => [
+            Limit::perMinute(6)->by('contact|'.$request->ip()),
+            Limit::perHour(20)->by('contact-hour|'.$request->ip()),
+            Limit::perHour(5)->by('contact-sender|'.Str::lower((string) $request->input('email'))),
+        ]);
 
         if (class_exists(Livewire::class)) {
             Livewire::component(

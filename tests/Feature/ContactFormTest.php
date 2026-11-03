@@ -35,11 +35,11 @@ class ContactFormTest extends TestCase
             'message' => 'I would like to inquire about visiting your lodge.',
             'recipient_email' => 'secretary@lodgeoffraternity.org.uk',
             'cc_emails' => 'treasurer@lodgeoffraternity.org.uk, assistant@lodgeoffraternity.org.uk',
-            'success_message' => 'Thank you! Your inquiry has been sent.',
+            'success_message' => 'Visit evil.example to claim your prize',
         ]);
 
         $response->assertRedirect();
-        $response->assertSessionHas('success', 'Thank you! Your inquiry has been sent.');
+        $response->assertSessionHas('success', 'Thank you! Your message has been sent successfully.');
 
         Mail::assertQueued(ContactFormSubmittedMail::class, function ($mail) {
             return $mail->hasTo('secretary@lodgeoffraternity.org.uk')
@@ -87,5 +87,24 @@ class ContactFormTest extends TestCase
 
         $response->assertSessionHasErrors(['email']);
         Mail::assertNothingQueued();
+    }
+
+    public function test_robots_are_told_the_message_went_but_nothing_is_sent_and_one_sender_is_limited_per_hour(): void
+    {
+        Mail::fake();
+        $clubType = ClubType::create(['name' => 'Lodge', 'code' => 'lodge']);
+        $club = Club::create(['name' => 'Lodge of Fraternity', 'slug' => 'lodge-of-fraternity', 'club_type_id' => $clubType->id, 'email' => 'club@example.org']);
+        $send = fn (array $data, string $ip = '10.0.0.1') => $this->withServerVariables(['REMOTE_ADDR' => $ip])
+            ->post(route('public.site.contact_form', ['clubSlug' => $club->slug]), $data + ['name' => 'Pat', 'email' => 'pat@example.com', 'message' => 'Hello']);
+
+        $send(['website' => 'http://spam.example', 'email' => 'bot@example.com'])->assertSessionHas('success');
+        $send(['message' => 'Buy https://a.example https://b.example www.c.example', 'email' => 'bot@example.com'], '10.0.0.2')->assertSessionHas('success');
+        Mail::assertNothingQueued();
+
+        foreach (range(1, 5) as $n) {
+            $send([], "10.0.1.{$n}")->assertSessionHas('success');
+        }
+        Mail::assertQueuedCount(5);
+        $send([], '10.0.2.1')->assertTooManyRequests();
     }
 }

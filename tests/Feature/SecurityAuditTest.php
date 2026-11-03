@@ -524,7 +524,7 @@ class SecurityAuditTest extends TestCase
         $this->actingAs($this->member)->post($url, $base + ['avatar' => UploadedFile::fake()->create('a.svg', 2, 'image/svg+xml')])->assertSessionHasErrors('avatar');
         $this->actingAs($this->member)->post($url, $base + ['avatar_url' => 'javascript:alert(1)'])->assertSessionHasErrors('avatar_url');
 
-        $this->actingAs($this->member)->post($url, ['name' => $this->member->name, 'email' => 'changed@example.test']);
+        $this->actingAs($this->member)->post($url, ['name' => $this->member->name, 'email' => 'changed@example.test', 'current_password' => 'password']);
         $this->assertFalse($this->member->fresh()->hasVerifiedEmail());
         Notification::assertSentTo($this->member->fresh(), VerifyEmail::class);
     }

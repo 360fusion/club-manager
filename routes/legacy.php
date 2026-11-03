@@ -2,14 +2,10 @@
 
 use App\Http\Controllers\ClubShortLinkController;
 use App\Http\Controllers\MemberCalendarController;
-use App\Http\Controllers\SuperAdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Old addresses that redirect, and the single-segment /{slug} route, which has to stay last.
-// Dev Utility Helper Route
-Route::post('/auth/make-me-superadmin', [SuperAdminController::class, 'makeMeSuperAdmin'])->middleware('auth')->name('auth.make_me_superadmin');
-
 // Old member addresses, from before everything moved under /members.
 Route::redirect('/members', '/members/dashboard', 301);
 Route::redirect('/portal/subscriptions', '/members/subscriptions', 301);

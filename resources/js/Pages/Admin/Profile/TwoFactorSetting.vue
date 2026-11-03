@@ -4,6 +4,7 @@ import MembersLayout from '@/Layouts/MembersLayout.vue';
 import Badge from '@/Components/Ui/Badge.vue';
 import Button from '@/Components/Ui/Button.vue';
 import Card from '@/Components/Ui/Card.vue';
+import Input from '@/Components/Ui/Input.vue';
 import PageHeader from '@/Components/Ui/PageHeader.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
 
@@ -17,6 +18,7 @@ defineProps({
     type: Array,
     default: () => [],
   },
+  recoveryCodesLeft: Number,
 });
 
 const confirmForm = useForm({
@@ -33,12 +35,34 @@ const confirm2FA = () => {
   });
 };
 
+// Turning 2FA off and making new codes both need the current password, so an unattended session cannot do either.
+const passwordForm = useForm({
+  password: '',
+});
+
 const disable2FA = () => {
-  router.delete(route('admin.two-factor.disable'));
+  passwordForm.delete(route('admin.two-factor.disable'), {
+    preserveScroll: true,
+    onFinish: () => passwordForm.reset(),
+  });
+};
+
+const sessionsForm = useForm({
+  password: '',
+});
+
+const signOutOtherDevices = () => {
+  sessionsForm.post(route('admin.security.logout-others'), {
+    preserveScroll: true,
+    onFinish: () => sessionsForm.reset(),
+  });
 };
 
 const generateNewRecoveryCodes = () => {
-  router.post(route('admin.two-factor.recovery-codes'));
+  passwordForm.post(route('admin.two-factor.recovery-codes'), {
+    preserveScroll: true,
+    onFinish: () => passwordForm.reset(),
+  });
 };
 </script>
 
@@ -158,6 +182,20 @@ const generateNewRecoveryCodes = () => {
             </div>
           </div>
 
+          <p v-if="!recoveryCodes.length" class="text-sm text-slate-500 dark:text-slate-400">
+            {{ recoveryCodesLeft }} unused recovery {{ recoveryCodesLeft === 1 ? 'code' : 'codes' }} left. Codes are only shown when they are made; regenerate them if you have lost them.
+          </p>
+
+          <Input
+            v-model="passwordForm.password"
+            type="password"
+            autocomplete="current-password"
+            label="Current password"
+            hint="Needed to regenerate codes or turn 2FA off."
+            :error="passwordForm.errors.password"
+            class="max-w-sm"
+          />
+
           <!-- Disable -->
           <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
             <Button variant="danger" size="sm" @click="disable2FA">
@@ -166,6 +204,29 @@ const generateNewRecoveryCodes = () => {
           </div>
         </div>
 
+      </Card>
+
+      <Card>
+        <form @submit.prevent="signOutOtherDevices" class="space-y-4">
+          <div>
+            <h3 class="font-semibold text-slate-900 dark:text-white text-sm">Other devices</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Signed in on a shared or lost computer or phone? Sign out everywhere except here. Changing your password does this too.
+            </p>
+          </div>
+          <Input
+            v-model="sessionsForm.password"
+            type="password"
+            autocomplete="current-password"
+            label="Current password"
+            :error="sessionsForm.errors.password"
+            class="max-w-sm"
+            required
+          />
+          <Button type="submit" variant="secondary" size="sm" :loading="sessionsForm.processing">
+            Sign out other devices
+          </Button>
+        </form>
       </Card>
     </div>
   </MembersLayout>

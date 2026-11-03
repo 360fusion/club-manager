@@ -54,6 +54,10 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])->nam
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'store'])->name('password.update')->middleware('throttle:auth-forms');
 
+// Fortify's own 2FA management routes send anyone without a recently confirmed password here. The app has no separate
+// confirm page: its security page asks for the password inline.
+Route::redirect('/user/confirm-password', '/members/security')->middleware('auth')->name('password.confirm');
+
 // Member Email Invitation Setup Routes
 Route::get('/{slug}/invite/{token}', [InvitationController::class, 'showForm'])->name('invitation.accept')->middleware('throttle:auth-forms');
 Route::post('/{slug}/invite/{token}', [InvitationController::class, 'accept'])->name('invitation.submit')->middleware('throttle:auth-forms');
@@ -109,7 +113,7 @@ Route::get('/site/{clubSlug}/sitemap.xml', [SearchIndexController::class, 'club'
 Route::get('/site/{clubSlug}/calendar.ics', [PublicSiteExtrasController::class, 'calendarFeed'])->middleware('throttle:60,1')->name('public.site.calendar_feed');
 // The page slug matches any depth so an old nested address (/about/history) can still be redirected.
 Route::get('/site/{clubSlug}/{pageSlug?}', [PublicSiteController::class, 'showPage'])->where('pageSlug', '.*')->name('public.site');
-Route::post('/site/{clubSlug}/contact-form', [PublicSiteExtrasController::class, 'submitContactForm'])->name('public.site.contact_form')->middleware('throttle:public-forms');
+Route::post('/site/{clubSlug}/contact-form', [PublicSiteExtrasController::class, 'submitContactForm'])->name('public.site.contact_form')->middleware('throttle:contact-form');
 
 Route::get('/{slug}/overview', [ClubController::class, 'show'])->name('clubs.show');
 Route::get('/{slug}/visitor-register', [VisitorRegistrationController::class, 'create'])->name('clubs.visitor.register');

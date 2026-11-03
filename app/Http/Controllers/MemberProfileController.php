@@ -126,6 +126,8 @@ class MemberProfileController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            // Changing the sign-in address hands over the account, so it needs the current password.
+            'current_password' => [Rule::requiredIf(fn () => strcasecmp((string) $request->input('email'), (string) $user->email) !== 0), 'nullable', 'string', 'current_password'],
             'avatar_url' => ['nullable', 'string', 'max:1000', 'regex:#^(https?://|avatars/)#i'],
             'avatar' => UploadRules::image(4096),
             'phone' => ['nullable', 'string', 'max:100'],
