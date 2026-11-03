@@ -5,14 +5,15 @@ namespace App\Support;
 /** The checks behind `billing:doctor`: is the app set up to take a club's subscription, and to be put live */
 final class BillingChecks
 {
-    /** @return list<array{name: string, ok: bool, detail: string}> */
+    /** @return list<array{name: string, ok: bool, detail: string, enforced: bool}> */
     public static function run(): array
     {
         $live = app()->isProduction();
         $note = $live ? '' : ' (not enforced outside production)';
         $checks = [];
-        $add = function (string $name, bool $ok, string $detail) use (&$checks) {
-            $checks[] = ['name' => $name, 'ok' => $ok, 'detail' => $detail];
+        // `enforced: false` marks a rule for live sites only: outside production it still reads No, but it does not fail billing:doctor.
+        $add = function (string $name, bool $ok, string $detail, bool $enforced = true) use (&$checks) {
+            $checks[] = ['name' => $name, 'ok' => $ok, 'detail' => $detail, 'enforced' => $enforced];
         };
 
         $add('Stripe keys', filled(config('cashier.key')) && filled(config('cashier.secret')), 'STRIPE_KEY and STRIPE_SECRET');
@@ -38,10 +39,10 @@ final class BillingChecks
             }
         }
 
-        $add('Security contact', ! $live || filled(config('app.security_contact')), 'SECURITY_CONTACT_EMAIL (shown at /.well-known/security.txt)'.$note);
-        $add('Debug mode off', ! $live || ! config('app.debug'), 'APP_DEBUG = '.(config('app.debug') ? 'true' : 'false').$note);
-        $add('Mail is sent', ! $live || ! in_array(config('mail.default'), ['log', 'array'], true), 'MAIL_MAILER = '.config('mail.default').$note);
-        $add('Database is PostgreSQL', ! $live || config('database.default') === 'pgsql', 'DB_CONNECTION = '.config('database.default').$note);
+        $add('Security contact', filled(config('app.security_contact')), 'SECURITY_CONTACT_EMAIL (shown at /.well-known/security.txt)'.$note, $live);
+        $add('Debug mode off', ! config('app.debug'), 'APP_DEBUG = '.(config('app.debug') ? 'true' : 'false').$note, $live);
+        $add('Mail is sent', ! in_array(config('mail.default'), ['log', 'array'], true), 'MAIL_MAILER = '.config('mail.default').$note, $live);
+        $add('Database is PostgreSQL', config('database.default') === 'pgsql', 'DB_CONNECTION = '.config('database.default').$note, $live);
 
         return $checks;
     }

@@ -29,7 +29,7 @@ final class MemberScope
      */
     public static function for(User $user, ?string $slug = null): self
     {
-        $memberClubs = $user->clubs()->with('clubType')->wherePivot('status', ClubMemberStatus::Active->value)->get();
+        $memberClubs = $user->clubs()->with('clubType')->wherePivot('status', ClubMemberStatus::Active->value)->orderBy('clubs.id')->get();
 
         if ($slug === null) {
             return new self($user, $memberClubs, null);

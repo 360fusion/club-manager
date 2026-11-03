@@ -294,11 +294,8 @@ const saveBusinessAccount = () => {
         <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
             <h3 class="text-base font-semibold text-slate-900 dark:text-white">SaaS platform invoices and receipts</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">View recent platform subscription payments and download tax receipts.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Recent platform subscription payments, each with a receipt from Stripe.</p>
           </div>
-          <Button variant="secondary" size="sm" class="shrink-0">
-            Download all receipts (PDF)
-          </Button>
         </div>
 
         <div class="overflow-x-auto">
