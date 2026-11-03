@@ -7,6 +7,7 @@ use App\Models\ClubType;
 use App\Models\Meeting;
 use App\Models\User;
 use App\Services\RsvpTokenService;
+use App\Support\ClubAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -52,7 +53,16 @@ class VisitorRegistrationTest extends TestCase
             'role' => 'visitor',
             'home_club_name' => 'Apollo Lodge',
             'home_club_number' => '357',
+            'status' => 'pending',
         ]);
+        $this->assertFalse(ClubAccess::isActiveMember($user, $club), 'a self-registered visitor is not a member until the lodge activates them');
+
+        $admin = User::factory()->create();
+        $this->makeClubAdmin($admin, $club);
+        $this->actingAs($admin)->post(route('clubs.members.approve', ['slug' => $club->slug, 'userId' => $user->id]))->assertRedirect();
+
+        $this->assertTrue(ClubAccess::isActiveMember($user->fresh(), $club));
+        $this->assertSame('visitor', $club->users()->where('users.id', $user->id)->first()->pivot->role);
     }
 
     public function test_visitor_rsvp_omits_apologies_option()

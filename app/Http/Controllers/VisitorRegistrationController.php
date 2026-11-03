@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ClubMemberStatus;
 use App\Http\Requests\VisitorRegistration\StoreVisitorRegistrationRequest;
 use App\Models\Club;
 use App\Models\User;
@@ -54,10 +55,11 @@ class VisitorRegistrationController extends Controller
                 'home_club_number' => $validated['home_club_number'] ?? null,
                 'phone' => $validated['phone'] ?? null,
                 'dietary_notes' => $validated['dietary_notes'] ?? null,
-                'status' => 'active',
+                // Anyone can fill this in with any email, so the lodge checks and activates them (Waiting for approval on the members page).
+                'status' => ClubMemberStatus::Pending->value,
             ]);
         }
 
-        return redirect()->back()->with('success', "Thank you! You have been registered as a Visitor for {$club->name}. You will receive meeting summonses and RSVP invites via email.");
+        return redirect()->back()->with('success', "Thank you! Your visitor request has been sent to {$club->name}. The lodge will check it and, once approved, you will receive meeting summonses and RSVP invites via email.");
     }
 }

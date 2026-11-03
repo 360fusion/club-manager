@@ -624,3 +624,6 @@ Not done from the comparison: audit log of superadmin actions, impersonation, `d
 - `superadmin_actions` (append-only) filled by the `RecordSuperAdminActions` middleware on the superadmin route group: who, route, submitted input, each model's before and after, secrets masked. Read at `/superadmin/audit-log` (nav: Audit log). Looking (GET) is not recorded. Impersonation, when built, hangs off this.
 - `php artisan app:doctor`: debug, key, https address, secure cookies, trusted proxies, database, mail driver and from address, queue driver and a waiting-job check for a stopped worker, failed jobs, pending migrations, storage link, platform payment settings, superadmins without 2FA. Exits 1 on production or with `--strict`.
 - Tests: `SuperAdminAuditLogTest`. Run `app:doctor --strict` after each deploy; run the migration first (new table).
+
+## Self-registration needs an admin (2026-11-03)
+Visitor sign-up (`/{slug}/visitor-register`) now creates the club membership as `pending` instead of `active`; the lodge checks it under Waiting for approval (members page / overview) and activates it with Approve, which keeps the visitor role. Joining through the main register form was already pending. Everything else that attaches someone as active is an admin action or an accepted invitation. Test: `VisitorRegistrationTest`.
