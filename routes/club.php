@@ -15,6 +15,7 @@ use App\Domains\ClubAccounting\Livewire\Members\MemberIndex;
 use App\Domains\ClubAccounting\Livewire\Members\MemberProfile;
 use App\Domains\ClubAccounting\Livewire\Subscriptions\SubscriptionIndex;
 use App\Domains\ClubAccounting\Models\ClubCommitteeMeeting;
+use App\Http\Controllers\Account\DataPrivacyController;
 use App\Http\Controllers\AccountingAdminController;
 use App\Http\Controllers\AccountingAssetController;
 use App\Http\Controllers\AccountingBankController;
@@ -459,6 +460,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/{clubSlug}/admin/billing/business-account', [BillingController::class, 'updateBusinessAccount'])->name('billing.business.update');
     Route::post('/{clubSlug}/admin/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/{clubSlug}/admin/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
+
+    // Data and privacy: download everything held about you, or close your account.
+    Route::get('/members/privacy', [DataPrivacyController::class, 'show'])->name('account.privacy');
+    Route::post('/members/privacy/export', [DataPrivacyController::class, 'export'])->middleware('throttle:5,10')->name('account.privacy.export');
+    Route::post('/members/privacy/close', [DataPrivacyController::class, 'close'])->middleware('throttle:5,10')->name('account.privacy.close');
+    Route::delete('/members/privacy/close', [DataPrivacyController::class, 'cancel'])->name('account.privacy.cancel');
 
     // 2FA Profile Settings Routes
     Route::get('/members/security', [TwoFactorAuthController::class, 'show'])->name('admin.profile.two-factor');

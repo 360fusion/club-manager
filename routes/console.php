@@ -27,3 +27,5 @@ Schedule::command('app:generate-recurring-bills')->dailyAt('06:00')->withoutOver
 Schedule::command('lodges:check-sources')->weeklyOn(0, '02:00')->withoutOverlapping()->runInBackground();
 // Asks each lodge that manages its directory listing, once a year, whether the listing is still right.
 Schedule::command('lodges:remind-secretaries')->dailyAt('09:30')->withoutOverlapping();
+// Blanks accounts whose owners asked to close them 30 or more days ago (see App\Support\AccountPurging).
+Schedule::command('accounts:purge-closed')->dailyAt('03:15')->withoutOverlapping();
