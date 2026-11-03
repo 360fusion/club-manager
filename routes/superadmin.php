@@ -9,6 +9,7 @@ use App\Http\Controllers\SuperAdminHallController;
 use App\Http\Controllers\SuperAdminLodgeClaimController;
 use App\Http\Controllers\SuperAdminLodgeController;
 use App\Http\Controllers\SuperAdminLodgeCorrectionController;
+use App\Http\Controllers\SuperAdminPlatformController;
 use App\Http\Controllers\SuperAdminProvinceController;
 use App\Http\Middleware\EnsureUserIsSuperAdmin;
 use App\Http\Middleware\RecordSuperAdminActions;
@@ -19,6 +20,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', EnsureUserIsSuperAdmin::class, RecordSuperAdminActions::class])->group(function () {
     Route::get('/superadmin/audit-log', [SuperAdminAuditLogController::class, 'index'])->name('superadmin.audit_log.index');
     Route::get('/superadmin', [SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
+    Route::get('/superadmin/users', [SuperAdminPlatformController::class, 'users'])->name('superadmin.users.index');
+    Route::get('/superadmin/clubs', [SuperAdminPlatformController::class, 'clubs'])->name('superadmin.clubs.index');
+    Route::get('/superadmin/stripe-events', [SuperAdminPlatformController::class, 'stripeEvents'])->name('superadmin.stripe_events.index');
+    Route::get('/superadmin/system-health', [SuperAdminPlatformController::class, 'health'])->name('superadmin.health.index');
     Route::get('/superadmin/club-types', [SuperAdminClubTypeController::class, 'clubTypesIndex'])->name('superadmin.club_types.index');
     Route::get('/superadmin/club-types/{id}', [SuperAdminClubTypeController::class, 'showClubType'])->name('superadmin.club_types.show');
     Route::post('/superadmin/club-types', [SuperAdminClubTypeController::class, 'storeClubType'])->name('superadmin.club_types.store');

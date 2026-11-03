@@ -5,6 +5,13 @@ import FlashMessages from '@/Components/Ui/FlashMessages.vue';
 import Button from '@/Components/Ui/Button.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
 
+const platformLinks = [
+  { route: 'superadmin.users.index', path: '/superadmin/users', icon: 'users', label: 'Users' },
+  { route: 'superadmin.clubs.index', path: '/superadmin/clubs', icon: 'building', label: 'Clubs and plans' },
+  { route: 'superadmin.stripe_events.index', path: '/superadmin/stripe-events', icon: 'receipt', label: 'Stripe events' },
+  { route: 'superadmin.health.index', path: '/superadmin/system-health', icon: 'shield', label: 'System health' },
+];
+
 defineProps({
   title: {
     type: String,
@@ -180,6 +187,19 @@ const user = page.props.auth?.user;
           >
             <UiIcon name="cash" />
             <span>Platform payments</span>
+          </Link>
+
+          <Link
+            v-for="item in platformLinks"
+            :key="item.route"
+            :href="route(item.route)"
+            :class="[
+              'flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all',
+              $page.url.startsWith(item.path) ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
+            ]"
+          >
+            <UiIcon :name="item.icon" />
+            <span>{{ item.label }}</span>
           </Link>
 
           <Link
