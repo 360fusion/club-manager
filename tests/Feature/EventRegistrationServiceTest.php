@@ -215,6 +215,36 @@ class EventRegistrationServiceTest extends TestCase
         }
     }
 
+    public function test_editing_a_booking_that_adds_nobody_keeps_its_place_when_the_event_is_over_capacity(): void
+    {
+        $event = $this->event(['capacity' => 4, 'waitlist_enabled' => true]);
+        $user = $this->member();
+        $registration = $this->service->register($event, $user, ['attendees' => [['name' => 'Me'], ['name' => 'G', 'is_guest' => true]]]);
+        $this->service->register($event, $this->member('Other'), ['attendees' => [['name' => 'Other'], ['name' => 'H', 'is_guest' => true]]]);
+        $event->update(['capacity' => 3]);
+
+        $edited = $this->service->register($event->fresh(), $user, ['contact_phone' => '0123', 'attendees' => [['name' => 'Me'], ['name' => 'G', 'is_guest' => true]]]);
+        $this->assertSame('attending', $edited->status);
+        $this->assertTrue($edited->is($registration));
+
+        $bigger = $this->service->register($event->fresh(), $user, ['attendees' => [['name' => 'Me'], ['name' => 'G', 'is_guest' => true], ['name' => 'K', 'is_guest' => true]]]);
+        $this->assertSame('waitlisted', $bigger->status, 'adding people still needs room');
+    }
+
+    public function test_a_member_can_change_a_note_on_a_paid_booking_after_the_organiser_lowered_the_price(): void
+    {
+        $event = $this->event(['requires_payment' => true]);
+        $tier = EventTicketTier::create(['event_id' => $event->id, 'name' => 'Member', 'price' => 20, 'max_quantity' => 0, 'audience' => 'member']);
+        $user = $this->member();
+        $registration = $this->service->register($event, $user, ['attendees' => [['name' => 'Me']]]);
+        $registration->update(['amount_paid' => 20, 'payment_status' => 'paid']);
+        $tier->update(['price' => 15]);
+
+        $edited = $this->service->register($event, $user, ['notes' => 'Quiet table please', 'attendees' => [['name' => 'Me']]]);
+
+        $this->assertSame('Quiet table please', $edited->notes);
+    }
+
     public function test_drafts_cancelled_events_and_closed_bookings_refuse_registrations(): void
     {
         $user = $this->member();

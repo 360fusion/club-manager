@@ -522,16 +522,19 @@ class AccountingService
      */
     public function markBillAsPaid(Bill $bill, ?User $actor = null): void
     {
-        if ($bill->status === DocumentStatus::Paid->value) {
-            return;
-        }
-
-        // A draft or a bill waiting for approval is not in the books yet; paying it would skip the approval and record no expense.
-        if ($bill->status !== DocumentStatus::Unpaid->value) {
-            throw new LedgerRuleException("Bill {$bill->bill_number} has to be issued and approved before it can be paid.");
-        }
-
+        // Checked on the locked row, so a double click or a second treasurer cannot pay it twice.
         DB::transaction(function () use ($bill, $actor) {
+            $status = Bill::whereKey($bill->id)->lockForUpdate()->value('status');
+
+            if ($status === DocumentStatus::Paid->value) {
+                return;
+            }
+
+            // A draft or a document waiting for approval is not in the books yet; paying it would skip the approval and record no entry.
+            if ($status !== DocumentStatus::Unpaid->value) {
+                throw new LedgerRuleException("Bill {$bill->bill_number} has to be issued and approved before it can be paid.");
+            }
+
             $bill->update([
                 'status' => DocumentStatus::Paid->value,
                 'paid_at' => now(),
@@ -562,15 +565,19 @@ class AccountingService
      */
     public function markInvoiceAsPaid(Invoice $invoice, ?User $actor = null): void
     {
-        if ($invoice->status === DocumentStatus::Paid->value) {
-            return;
-        }
-
-        if ($invoice->status !== DocumentStatus::Unpaid->value) {
-            throw new LedgerRuleException("Invoice {$invoice->invoice_number} has to be issued and approved before it can be paid.");
-        }
-
+        // Checked on the locked row, so a double click or a second treasurer cannot pay it twice.
         DB::transaction(function () use ($invoice, $actor) {
+            $status = Invoice::whereKey($invoice->id)->lockForUpdate()->value('status');
+
+            if ($status === DocumentStatus::Paid->value) {
+                return;
+            }
+
+            // A draft or a document waiting for approval is not in the books yet; paying it would skip the approval and record no entry.
+            if ($status !== DocumentStatus::Unpaid->value) {
+                throw new LedgerRuleException("Invoice {$invoice->invoice_number} has to be issued and approved before it can be paid.");
+            }
+
             $invoice->update([
                 'status' => DocumentStatus::Paid->value,
                 'paid_at' => now(),
@@ -632,33 +639,38 @@ class AccountingService
      */
     public function setOpeningBalance(Club $club, Account $account, float $amount, ?string $asOfDate = null): ?JournalEntry
     {
-        $retainedEarningsAcc = $this->getAccount($club, '3000');
-        $asOfDate = $asOfDate ?: date('Y-01-01');
+        // Two saves at once would each see the old figure and both post the difference.
+        return DB::transaction(function () use ($club, $account, $amount, $asOfDate) {
+            Club::whereKey($club->id)->lockForUpdate()->first();
 
-        $isDebitAccount = in_array($account->type, ['asset', 'expense']);
+            $retainedEarningsAcc = $this->getAccount($club, '3000');
+            $asOfDate = $asOfDate ?: date('Y-01-01');
 
-        $posted = JournalItem::where('account_id', $account->id)
-            ->whereHas('journalEntry', fn ($q) => $q->where('club_id', $club->id)->where('source_type', 'OpeningBalance')->where('source_id', $account->id))
-            ->get();
-        $current = (float) $posted->sum($isDebitAccount ? 'debit' : 'credit') - (float) $posted->sum($isDebitAccount ? 'credit' : 'debit');
+            $isDebitAccount = in_array($account->type, ['asset', 'expense']);
 
-        $change = round($amount - $current, 2);
-        if ($change == 0) {
-            return null;
-        }
+            $posted = JournalItem::where('account_id', $account->id)
+                ->whereHas('journalEntry', fn ($q) => $q->where('club_id', $club->id)->where('source_type', 'OpeningBalance')->where('source_id', $account->id))
+                ->get();
+            $current = (float) $posted->sum($isDebitAccount ? 'debit' : 'credit') - (float) $posted->sum($isDebitAccount ? 'credit' : 'debit');
 
-        $accountSide = ($change > 0) === $isDebitAccount ? 'debit' : 'credit';
-        $reservesSide = $accountSide === 'debit' ? 'credit' : 'debit';
+            $change = round($amount - $current, 2);
+            if ($change == 0) {
+                return null;
+            }
 
-        return $this->postJournalEntry($club, [
-            'entry_date' => $asOfDate,
-            'description' => "Opening Balance / Carry Over: {$account->code} - {$account->name}",
-            'source_type' => 'OpeningBalance',
-            'source_id' => $account->id,
-            'items' => [
-                ['account_id' => $account->id, $accountSide => abs($change), 'memo' => "Opening Carry-Over Balance ({$account->code})"],
-                ['account_id' => $retainedEarningsAcc->id, $reservesSide => abs($change), 'memo' => 'Prior Year Retained Reserves'],
-            ],
-        ]);
+            $accountSide = ($change > 0) === $isDebitAccount ? 'debit' : 'credit';
+            $reservesSide = $accountSide === 'debit' ? 'credit' : 'debit';
+
+            return $this->postJournalEntry($club, [
+                'entry_date' => $asOfDate,
+                'description' => "Opening Balance / Carry Over: {$account->code} - {$account->name}",
+                'source_type' => 'OpeningBalance',
+                'source_id' => $account->id,
+                'items' => [
+                    ['account_id' => $account->id, $accountSide => abs($change), 'memo' => "Opening Carry-Over Balance ({$account->code})"],
+                    ['account_id' => $retainedEarningsAcc->id, $reservesSide => abs($change), 'memo' => 'Prior Year Retained Reserves'],
+                ],
+            ]);
+        });
     }
 }

@@ -18,6 +18,7 @@ use App\Services\AccountingService;
 use App\Services\FinancialYearService;
 use App\Services\MeetingFinancialReturns;
 use App\Services\RecurringBillService;
+use App\Services\Signatures\SignatureRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -220,5 +221,60 @@ class MoneyIntegrityTest extends TestCase
         } finally {
             $this->assertSame($one->id, AccountingYearAudit::where('club_id', $this->club->id)->firstOrFail()->auditor_one_user_id);
         }
+    }
+
+    public function test_an_issued_document_cannot_be_moved_back_to_draft_and_republished(): void
+    {
+        $this->raiseInvoice($this->club, $this->admin, 100);
+        $invoice = Invoice::where('club_id', $this->club->id)->firstOrFail();
+
+        $this->actingAs($this->admin)->put(route('admin.accounting.invoices.update', ['clubSlug' => $this->club->slug, 'id' => $invoice->id]), [
+            'user_id' => $invoice->user_id, 'title' => 'Dues', 'amount' => 100, 'status' => 'draft',
+        ])->assertSessionHasErrors('status');
+
+        $this->assertSame('unpaid', $invoice->fresh()->status);
+        $this->assertSame(1, JournalEntry::where('club_id', $this->club->id)->where('source_type', 'Invoice')->count());
+    }
+
+    public function test_paying_from_a_stale_copy_does_not_pay_twice(): void
+    {
+        $this->raiseInvoice($this->club, $this->admin, 100);
+        $first = Invoice::where('club_id', $this->club->id)->firstOrFail();
+        $stale = Invoice::findOrFail($first->id);
+
+        $this->accounting->markInvoiceAsPaid($first);
+        $this->accounting->markInvoiceAsPaid($stale);
+
+        $this->assertSame(1, JournalEntry::where('club_id', $this->club->id)->where('source_type', 'InvoicePayment')->count());
+    }
+
+    public function test_a_posted_financial_return_cannot_be_reopened_as_a_draft(): void
+    {
+        $meeting = Meeting::create(['club_id' => $this->club->id, 'title' => 'Regular', 'meeting_date' => '2026-09-15', 'starts_at' => '18:30', 'venue' => 'Hall', 'dress_code' => 'Dark suits', 'status' => 'published']);
+        $returns = app(MeetingFinancialReturns::class);
+        $returns->postMeetingFinancialReturn($this->club, $meeting, ['dining_fee_per_head' => 30, 'paid_diners_count' => 10]);
+
+        try {
+            $returns->saveMeetingFinancialReturnDraft($this->club, $meeting, ['dining_fee_per_head' => 99, 'paid_diners_count' => 1]);
+            $this->fail('A posted return must stay posted.');
+        } catch (LedgerRuleException) {
+            $this->assertFalse((bool) $meeting->financialReturn()->first()?->is_draft);
+        }
+    }
+
+    public function test_auditors_cannot_be_swapped_while_one_has_an_open_request(): void
+    {
+        $one = User::factory()->create();
+        $two = User::factory()->create();
+        $three = User::factory()->create();
+        $service = app(FinancialYearService::class);
+
+        $audit = $service->requestYearAudit($this->club, 2026, $one, $two);
+        app(SignatureRequestService::class)->requestIfOpen($audit, 'year_audit_auditor_one', $one, $one->name, $one->email, $this->admin);
+
+        $service->requestYearAudit($this->club, 2026, $one, $two, 'same people, new note');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $service->requestYearAudit($this->club, 2026, $three, $two);
     }
 }

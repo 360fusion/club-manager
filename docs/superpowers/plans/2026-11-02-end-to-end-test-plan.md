@@ -574,3 +574,15 @@ Tests: `tests/Feature/MoneyIntegrityTest.php` (nine, all fail on the old code), 
 
 Not done: treasurer or secretary accepted as auditor, Gift Aid declarations, F126 (VAT quarter only), F128 (signed figures change), VAT rate validation, accounting screen N+1.
 Deploy note: restart the queue worker and run the migration (safe on existing data: the old index was stricter).
+
+## Round after the first reviews (security and correctness review of the money commit)
+
+Fixed here: F60 (installing a roster stands down officers not on it), F126 (an edit that adds nobody keeps its place at capacity), F123 was already fixed (member PDF test exists).
+From the reviews of the money fixes:
+- an issued (unpaid or paid) invoice or bill can no longer be saved as draft/unpaid, which re-posted it on republish; the update and its posting run in one transaction; the attachment is only replaced after the amount check;
+- paying checks the status on the locked row, so a double click pays once;
+- a posted financial return cannot be reopened as a draft; the club row is locked while posting;
+- replacing an auditor is refused while that auditor has a pending or signed request (cancel it first);
+- opening balance runs under the club lock; account add has the same date limits;
+- a member's edit that leaves people, tickets, promo and payment option unchanged is not refused when the organiser later lowered a price.
+Left (low): VAT return buckets by created date not issue date and omits refunded invoices; forced root URL on unknown hosts (`IdentifyTenantByDomain`); attachment files written inside a rolled-back transaction stay on disk; user-typed bill numbers can still duplicate; `InvalidArgumentException` not caught in the recurring bill and financial return paths.

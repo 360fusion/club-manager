@@ -174,7 +174,9 @@ class AccountingInvoiceController extends Controller
         $invoice = Invoice::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
         $invoiceStatusOptions = match ($invoice->status) {
-            DocumentStatus::Paid->value => [DocumentStatus::Draft->value, DocumentStatus::Unpaid->value, DocumentStatus::Paid->value],
+            // Once issued, a document keeps its status here: moving it back to draft would leave its posted entry behind and post it again.
+            DocumentStatus::Paid->value => [DocumentStatus::Paid->value],
+            DocumentStatus::Unpaid->value => [DocumentStatus::Unpaid->value],
             // unpaid is deliberately not offered here while pending_approval: that
             // transition only happens through approveInvoice(), which enforces a
             // different approver and posts the issued journal entry.
@@ -196,6 +198,11 @@ class AccountingInvoiceController extends Controller
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
         ]);
 
+        // What was posted to the books cannot be quietly rewritten: delete it and raise a new one instead.
+        if (in_array($invoice->status, [DocumentStatus::Unpaid->value, DocumentStatus::Paid->value], true) && round((float) $validated['amount'], 2) !== round((float) $invoice->amount, 2)) {
+            return redirect()->back()->with('error', "Invoice {$invoice->invoice_number} is already in the books, so its amount cannot be changed. Delete it and raise a new invoice.");
+        }
+
         if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
             if ($invoice->media_id && $invoice->media) {
                 $invoice->media->forceDelete();
@@ -211,11 +218,6 @@ class AccountingInvoiceController extends Controller
             $validated['media_id'] = $media->id;
         }
 
-        // What was posted to the books cannot be quietly rewritten: delete it and raise a new one instead.
-        if (in_array($invoice->status, [DocumentStatus::Unpaid->value, DocumentStatus::Paid->value], true) && round((float) $validated['amount'], 2) !== round((float) $invoice->amount, 2)) {
-            return redirect()->back()->with('error', "Invoice {$invoice->invoice_number} is already in the books, so its amount cannot be changed. Delete it and raise a new invoice.");
-        }
-
         $wasDraft = $invoice->status === DocumentStatus::Draft->value;
         $before = $invoice->only(['title', 'amount', 'status']);
         $vat = $this->accountingService->resolveVatFields($club, (float) $validated['amount'], $invoice->vat_rate !== null ? (float) $invoice->vat_rate : null);
@@ -227,25 +229,27 @@ class AccountingInvoiceController extends Controller
             ? $this->accountingService->issuedStatusFor($club, $vat['amount'])
             : $validated['status'];
 
-        $invoice->update([
-            'user_id' => $validated['user_id'],
-            'title' => $validated['title'],
-            'amount' => $vat['amount'],
-            'net_amount' => $vat['net_amount'],
-            'vat_rate' => $vat['vat_rate'],
-            'vat_amount' => $vat['vat_amount'],
-            'status' => $finalStatus,
-            'media_id' => $validated['media_id'] ?? $invoice->media_id,
-            // Left out of the request: kept. Sent empty: cleared.
-            'due_date' => array_key_exists('due_date', $validated) ? $validated['due_date'] : $invoice->due_date,
-            'notes' => array_key_exists('notes', $validated) ? $validated['notes'] : $invoice->notes,
-        ]);
+        DB::transaction(function () use ($club, $invoice, $validated, $vat, $finalStatus, $wasDraft, $before) {
+            $invoice->update([
+                'user_id' => $validated['user_id'],
+                'title' => $validated['title'],
+                'amount' => $vat['amount'],
+                'net_amount' => $vat['net_amount'],
+                'vat_rate' => $vat['vat_rate'],
+                'vat_amount' => $vat['vat_amount'],
+                'status' => $finalStatus,
+                'media_id' => $validated['media_id'] ?? $invoice->media_id,
+                // Left out of the request: kept. Sent empty: cleared.
+                'due_date' => array_key_exists('due_date', $validated) ? $validated['due_date'] : $invoice->due_date,
+                'notes' => array_key_exists('notes', $validated) ? $validated['notes'] : $invoice->notes,
+            ]);
 
-        $this->accountingService->log($club, 'invoice', $invoice->id, 'updated', "Invoice {$invoice->invoice_number} updated.", before: $before, after: $invoice->only(['title', 'amount', 'status']));
+            $this->accountingService->log($club, 'invoice', $invoice->id, 'updated', "Invoice {$invoice->invoice_number} updated.", before: $before, after: $invoice->only(['title', 'amount', 'status']));
 
-        if ($wasDraft && $finalStatus === DocumentStatus::Unpaid->value) {
-            $this->accountingService->postMemberInvoiceIssuedJournal($club, $invoice);
-        }
+            if ($wasDraft && $finalStatus === DocumentStatus::Unpaid->value) {
+                $this->accountingService->postMemberInvoiceIssuedJournal($club, $invoice);
+            }
+        });
 
         return redirect()->back()->with('success', "Invoice {$invoice->invoice_number} updated successfully.");
     }

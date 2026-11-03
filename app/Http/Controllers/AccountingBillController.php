@@ -11,6 +11,7 @@ use App\Services\AccountingService;
 use App\Support\ClubAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -140,7 +141,9 @@ class AccountingBillController extends Controller
         $bill = Bill::where('club_id', $club->id)->where('id', $id)->firstOrFail();
 
         $billStatusOptions = match ($bill->status) {
-            DocumentStatus::Paid->value => [DocumentStatus::Draft->value, DocumentStatus::Unpaid->value, DocumentStatus::Paid->value],
+            // Once issued, a document keeps its status here: moving it back to draft would leave its posted entry behind and post it again.
+            DocumentStatus::Paid->value => [DocumentStatus::Paid->value],
+            DocumentStatus::Unpaid->value => [DocumentStatus::Unpaid->value],
             // unpaid is deliberately not offered here while pending_approval: that
             // transition only happens through approveBill(), which enforces a
             // different approver and posts the issued journal entry.
@@ -162,6 +165,11 @@ class AccountingBillController extends Controller
             'attachment' => ['nullable', 'file', 'mimes:pdf,png,jpg,jpeg,webp', 'max:10240'],
         ]);
 
+        // What was posted to the books cannot be quietly rewritten: delete it and record a new bill instead.
+        if (in_array($bill->status, [DocumentStatus::Unpaid->value, DocumentStatus::Paid->value], true) && round((float) $validated['amount'], 2) !== round((float) $bill->amount, 2)) {
+            return redirect()->back()->with('error', "Vendor bill {$bill->bill_number} is already in the books, so its amount cannot be changed. Delete it and record a new bill.");
+        }
+
         if ($request->hasFile('attachment') && $request->file('attachment')->isValid()) {
             if ($bill->media_id && $bill->media) {
                 $bill->media->forceDelete();
@@ -177,11 +185,6 @@ class AccountingBillController extends Controller
             $validated['media_id'] = $media->id;
         }
 
-        // What was posted to the books cannot be quietly rewritten: delete it and record a new bill instead.
-        if (in_array($bill->status, [DocumentStatus::Unpaid->value, DocumentStatus::Paid->value], true) && round((float) $validated['amount'], 2) !== round((float) $bill->amount, 2)) {
-            return redirect()->back()->with('error', "Vendor bill {$bill->bill_number} is already in the books, so its amount cannot be changed. Delete it and record a new bill.");
-        }
-
         $wasDraft = $bill->status === DocumentStatus::Draft->value;
         $before = $bill->only(['vendor_name', 'amount', 'status']);
         $vat = $this->accountingService->resolveVatFields($club, (float) $validated['amount'], $bill->vat_rate !== null ? (float) $bill->vat_rate : null);
@@ -193,24 +196,26 @@ class AccountingBillController extends Controller
             ? $this->accountingService->issuedStatusFor($club, $vat['amount'])
             : $validated['status'];
 
-        $bill->update([
-            'vendor_name' => $validated['vendor_name'],
-            'category' => $validated['category'],
-            'amount' => $vat['amount'],
-            'net_amount' => $vat['net_amount'],
-            'vat_rate' => $vat['vat_rate'],
-            'vat_amount' => $vat['vat_amount'],
-            'due_date' => $validated['due_date'],
-            'notes' => $validated['notes'] ?? null,
-            'status' => $finalStatus,
-            'media_id' => $validated['media_id'] ?? $bill->media_id,
-        ]);
+        DB::transaction(function () use ($club, $bill, $validated, $vat, $finalStatus, $wasDraft, $before) {
+            $bill->update([
+                'vendor_name' => $validated['vendor_name'],
+                'category' => $validated['category'],
+                'amount' => $vat['amount'],
+                'net_amount' => $vat['net_amount'],
+                'vat_rate' => $vat['vat_rate'],
+                'vat_amount' => $vat['vat_amount'],
+                'due_date' => $validated['due_date'],
+                'notes' => $validated['notes'] ?? null,
+                'status' => $finalStatus,
+                'media_id' => $validated['media_id'] ?? $bill->media_id,
+            ]);
 
-        $this->accountingService->log($club, 'bill', $bill->id, 'updated', "Vendor bill {$bill->bill_number} updated.", before: $before, after: $bill->only(['vendor_name', 'amount', 'status']));
+            $this->accountingService->log($club, 'bill', $bill->id, 'updated', "Vendor bill {$bill->bill_number} updated.", before: $before, after: $bill->only(['vendor_name', 'amount', 'status']));
 
-        if ($wasDraft && $finalStatus === DocumentStatus::Unpaid->value) {
-            $this->accountingService->postVendorBillIssuedJournal($club, $bill);
-        }
+            if ($wasDraft && $finalStatus === DocumentStatus::Unpaid->value) {
+                $this->accountingService->postVendorBillIssuedJournal($club, $bill);
+            }
+        });
 
         return redirect()->back()->with('success', "Vendor bill {$bill->bill_number} updated successfully.");
     }

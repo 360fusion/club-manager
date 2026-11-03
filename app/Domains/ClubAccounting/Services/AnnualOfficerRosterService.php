@@ -176,6 +176,12 @@ class AnnualOfficerRosterService
             // Group assignments by member
             $memberAssignments = $roster->assignments()->get()->groupBy('member_id');
 
+            // Last year's officers who are not on this roster step down: otherwise two Worshipful Masters can exist.
+            Member::where('club_id', $roster->club_id)
+                ->whereNotIn('id', $memberAssignments->keys())
+                ->where('current_office', '!=', LodgeOffice::Member->value)
+                ->update(['current_office' => LodgeOffice::Member->value]);
+
             foreach ($memberAssignments as $memberId => $assignments) {
                 $member = Member::where('club_id', $roster->club_id)->find($memberId);
                 if (! $member) {

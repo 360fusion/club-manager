@@ -22,7 +22,9 @@ class MeetingFinancialReturns
     public function postMeetingFinancialReturn(Club $club, Meeting $meeting, array $data): MeetingFinancialReturn
     {
         return DB::transaction(function () use ($club, $meeting, $data) {
-            $alreadyPosted = MeetingFinancialReturn::where('club_id', $club->id)->where('meeting_id', $meeting->id)->where('is_draft', false)->lockForUpdate()->exists();
+            // Lock the club row: with no return saved yet there is no row of the return's own to lock.
+            Club::whereKey($club->id)->lockForUpdate()->first();
+            $alreadyPosted = MeetingFinancialReturn::where('club_id', $club->id)->where('meeting_id', $meeting->id)->where('is_draft', false)->exists();
             if ($alreadyPosted) {
                 throw new LedgerRuleException('The financial return for this meeting has already been posted to the books. Correct it with a journal entry rather than submitting it again.');
             }
@@ -153,6 +155,10 @@ class MeetingFinancialReturns
         $netDiningSurplus = round($totalDiningRevenue - $totalKitchenBill, 2);
         $totalCharity = round($raffleAmount + $almsAmount + $donationsAmount + $bequestAmount, 2);
         $netBankDeposit = round($totalDiningRevenue + $totalCharity, 2);
+
+        if (MeetingFinancialReturn::where('club_id', $club->id)->where('meeting_id', $meeting->id)->where('is_draft', false)->exists()) {
+            throw new LedgerRuleException('The financial return for this meeting has already been posted to the books, so it can no longer be saved as a draft.');
+        }
 
         $returnDate = ! empty($data['return_date'])
             ? date('Y-m-d', strtotime((string) $data['return_date']))

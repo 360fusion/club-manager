@@ -21,7 +21,7 @@ class StoreAccountRequest extends ClubRequest
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:asset,liability,equity,revenue,expense'],
             'opening_balance' => ['nullable', 'numeric', 'max:99999999.99'],
-            'as_of_date' => ['nullable', 'date'],
+            'as_of_date' => ['nullable', 'date', 'after_or_equal:2000-01-01', 'before_or_equal:today'],
         ];
     }
 }

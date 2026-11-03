@@ -90,7 +90,10 @@ class EventRegistrationService
         $attendees = $this->prepareAttendees($event, $user, $status, $data['attendees'] ?? [], $data['contact_name'] ?? $user?->name ?? '', $organiser !== null);
         $going = in_array($status, EventRegistration::HOLDING_PLACE, true);
 
-        if ($going && ! $overCapacity) {
+        // A booking that already holds its places keeps them when an edit adds nobody (lowering capacity later must not bump it).
+        $keepsPlaces = $existing && in_array($existing->status, EventRegistration::HOLDING_PLACE, true) && count($attendees) <= $existing->attendees()->count();
+
+        if ($going && ! $overCapacity && ! $keepsPlaces) {
             $status = $this->statusWithCapacity($event, $existing, $status, count($attendees));
         }
 
@@ -109,6 +112,7 @@ class EventRegistrationService
         }
 
         $alreadyEmailed = [];
+        $shapeBefore = $existing ? $this->bookingShape($existing->attendees->all(), $existing->promo_code, $existing->payment_method_id) : null;
 
         if ($existing) {
             $alreadyEmailed = $existing->attendees()->whereNotNull('notified_at')->whereNotNull('email')->pluck('email')->map(fn ($e) => strtolower($e))->all();
@@ -134,7 +138,7 @@ class EventRegistrationService
         if ($going) {
             $this->applyPricing($event, $registration, $attendees, $data, $existing, $organiser !== null);
 
-            if ($existing && (float) $registration->amount_paid > 0 && ($organiser ? (float) $registration->total !== (float) $previousTotal : (float) $registration->total < (float) $previousTotal)) {
+            if ($existing && (float) $registration->amount_paid > 0 && ($organiser ? (float) $registration->total !== (float) $previousTotal : ((float) $registration->total < (float) $previousTotal && $shapeBefore !== $this->bookingShape($attendees, $registration->promo_code, $registration->payment_method_id)))) {
                 throw ValidationException::withMessages(['registration' => $organiser ? 'This booking already has a payment on it, so a change that alters the price is not allowed. Adjust the payment first.' : 'This booking already has a payment on it, so it cannot be made cheaper here. Please contact the organiser.']);
             }
         }
@@ -571,6 +575,21 @@ class EventRegistrationService
     /**
      * attending/tentative, unless the event is full: waitlisted if it has one, otherwise refused.
      */
+    /**
+     * What a member can change about the price: who is coming on which ticket, the promo code and the payment option.
+     * An edit that leaves all of it alone (a dietary note, say) is never refused because the organiser lowered a price since.
+     *
+     * @param  list<EventAttendee|array<string, mixed>>  $attendees
+     * @return list<string>
+     */
+    private function bookingShape(array $attendees, ?string $promoCode, mixed $paymentMethodId): array
+    {
+        $people = array_map(fn ($a) => ($a['ticket_tier_id'] ?? $a->ticket_tier_id ?? '').'|'.(int) ($a['is_guest'] ?? $a->is_guest ?? false), $attendees);
+        sort($people);
+
+        return [...$people, 'promo:'.strtoupper((string) $promoCode), 'method:'.$paymentMethodId];
+    }
+
     private function statusWithCapacity(Event $event, ?EventRegistration $existing, string $status, int $headcount): string
     {
         if ($event->capacity === null) {

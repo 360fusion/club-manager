@@ -133,6 +133,22 @@ class AnnualOfficerRosterTest extends TestCase
         $this->assertContains(LodgeOffice::CharitySteward, $activeOffices);
     }
 
+    public function test_installing_next_years_roster_stands_down_officers_who_are_not_on_it(): void
+    {
+        $service = new AnnualOfficerRosterService;
+        $service->confirmRoster($service->saveRoster($this->club, '2026-2027', [
+            ['member_id' => $this->member1->id, 'office' => 'dc'],
+            ['member_id' => $this->member2->id, 'office' => 'sw'],
+        ], $this->meeting->id));
+
+        $service->confirmRoster($service->saveRoster($this->club, '2027-2028', [
+            ['member_id' => $this->member2->id, 'office' => 'sw'],
+        ], $this->meeting->id));
+
+        $this->assertEquals(LodgeOffice::Member, $this->member1->fresh()->current_office);
+        $this->assertEquals(LodgeOffice::SeniorWarden, $this->member2->fresh()->current_office);
+    }
+
     public function test_offices_loaded_for_a_list_match_the_single_lookup_in_a_fixed_number_of_queries(): void
     {
         $service = new AnnualOfficerRosterService;

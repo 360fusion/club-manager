@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\SignatureRequestStatus;
 use App\Models\Accounting\AccountingPeriodClose;
 use App\Models\Accounting\AccountingYearAudit;
 use App\Models\Accounting\IndependentExaminerReport;
 use App\Models\Club;
+use App\Models\SignatureRequest;
 use App\Models\User;
 use InvalidArgumentException;
 
@@ -57,6 +59,18 @@ class FinancialYearService
 
         if ($existing?->signed_off_at !== null) {
             throw new InvalidArgumentException("The {$year} accounts have already been signed off, so the auditors cannot be changed.");
+        }
+
+        $changedPurposes = array_keys(array_filter([
+            'year_audit_auditor_one' => $existing && $existing->auditor_one_user_id !== $auditorOne->id,
+            'year_audit_auditor_two' => $existing && $existing->auditor_two_user_id !== $auditorTwo->id,
+        ]));
+        $hasOpenRequest = $changedPurposes !== [] && SignatureRequest::where('signable_type', $existing->getMorphClass())->where('signable_id', $existing->getKey())
+            ->whereIn('purpose', $changedPurposes)
+            ->whereIn('status', [SignatureRequestStatus::Pending, SignatureRequestStatus::Signed])->exists();
+
+        if ($hasOpenRequest) {
+            throw new InvalidArgumentException('An auditor has already been asked to sign (or has signed). Cancel their request before choosing someone else.');
         }
 
         return AccountingYearAudit::updateOrCreate(
