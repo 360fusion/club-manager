@@ -38,6 +38,7 @@ final class BillingChecks
             }
         }
 
+        $add('Security contact', ! $live || filled(config('app.security_contact')), 'SECURITY_CONTACT_EMAIL (shown at /.well-known/security.txt)'.$note);
         $add('Debug mode off', ! $live || ! config('app.debug'), 'APP_DEBUG = '.(config('app.debug') ? 'true' : 'false').$note);
         $add('Mail is sent', ! $live || ! in_array(config('mail.default'), ['log', 'array'], true), 'MAIL_MAILER = '.config('mail.default').$note);
         $add('Database is PostgreSQL', ! $live || config('database.default') === 'pgsql', 'DB_CONNECTION = '.config('database.default').$note);

@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Where to report a security problem; /.well-known/security.txt is only served when this is set.
+    'security_contact' => env('SECURITY_CONTACT_EMAIL'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

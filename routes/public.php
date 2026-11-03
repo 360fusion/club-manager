@@ -24,6 +24,7 @@ use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\PublicSiteExtrasController;
 use App\Http\Controllers\SearchIndexController;
+use App\Http\Controllers\SecurityTxtController;
 use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\StripeConnectWebhookController;
 use App\Http\Controllers\StripeWebhookController;
@@ -85,6 +86,7 @@ Route::get('/internal/domain-allowed', ClubDomainAllowedController::class)->name
 
 // What search engines read (robots.txt is a file in public/, shared by every host): before /{slug} and the /site/{club} routes.
 Route::get('/sitemap.xml', [SearchIndexController::class, 'index'])->name('sitemap.index');
+Route::get('/.well-known/security.txt', SecurityTxtController::class)->name('security.txt');
 
 // The public lodge directory. Before the /site/{club} and /{slug} routes, and "lodges" is a reserved club slug.
 Route::get('/lodges', [LodgeDirectoryController::class, 'index'])->middleware('throttle:120,1')->name('lodges.index');
