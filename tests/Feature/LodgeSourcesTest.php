@@ -54,7 +54,7 @@ class LodgeSourcesTest extends TestCase
 
         $shared = LodgeSource::where('kind', LodgeSource::PROVINCE_LIST)->firstOrFail();
         $this->assertGreaterThan(1, LodgeSource::where('url', $shared->url)->count());
-        $this->assertSame(0, LodgeSource::where('kind', LodgeSource::PROVINCE_PAGE)->groupBy('url')->havingRaw('count(*) > 1')->get()->count());
+        $this->assertSame(0, LodgeSource::where('kind', LodgeSource::PROVINCE_PAGE)->select('url')->groupBy('url')->havingRaw('count(*) > 1')->get()->count());
     }
 
     public function test_a_lodge_listed_only_by_the_directory_gets_only_a_directory_source(): void

@@ -350,6 +350,7 @@ class Member extends Model
 
         $assignments = AnnualOfficerAssignment::whereIn('roster_id', $latestRosterByClub->values())
             ->whereIn('member_id', $members->pluck('id'))
+            ->orderBy('id')
             ->get()
             ->groupBy(fn ($assignment) => $assignment->roster_id.':'.$assignment->member_id);
 
@@ -374,7 +375,7 @@ class Member extends Model
             ->first();
 
         return $this->officesFrom($latestRoster
-            ? AnnualOfficerAssignment::where('roster_id', $latestRoster->id)->where('member_id', $this->id)->get()
+            ? AnnualOfficerAssignment::where('roster_id', $latestRoster->id)->where('member_id', $this->id)->orderBy('id')->get()
             : null);
     }
 

@@ -82,10 +82,10 @@ class Post extends Model implements HasMedia
             ->when($search !== '', function (Builder $q) use ($search) {
                 $like = '%'.addcslashes($search, '%_\\').'%';
                 $q->where(function (Builder $q) use ($like) {
-                    $q->where('posts.title', 'like', $like)
-                        ->orWhere('posts.excerpt', 'like', $like)
-                        ->orWhere('posts.content', 'like', $like)
-                        ->orWhere('posts.blocks', 'like', $like);
+                    $q->whereLike('posts.title', $like)
+                        ->orWhereLike('posts.excerpt', $like)
+                        ->orWhereLike('posts.content', $like)
+                        ->orWhereLike('posts.blocks', $like);
                 });
             })
             ->when($tags !== [], fn (Builder $q) => $q->whereHas('tags', fn (Builder $t) => $t->whereIn('news_tags.slug', $tags)))

@@ -21,6 +21,7 @@ class CommitteeNotesParserService
     public function parse(string $rawNotes, int $clubId, ?ClubCommitteeMeeting $meeting = null): array
     {
         $clubMembers = User::whereHas('clubs', fn ($q) => $q->where('clubs.id', $clubId))
+            ->orderBy('id')
             ->get(['id', 'name', 'email']);
 
         $lines = explode("\n", $rawNotes);

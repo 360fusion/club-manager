@@ -50,7 +50,7 @@ class PagePlacesController extends Controller
         $like = '%'.addcslashes($term, '\\%_').'%';
 
         $places = MasonicHall::query()
-            ->where(fn ($q) => $q->where('name', 'like', $like)->orWhere('town', 'like', $like)->orWhere('postcode', 'like', $like)->orWhere('address_line_1', 'like', $like))
+            ->where(fn ($q) => $q->whereLike('name', $like)->orWhereLike('town', $like)->orWhereLike('postcode', $like)->orWhereLike('address_line_1', $like))
             ->orderBy('name')
             ->limit(8)
             ->get()

@@ -23,7 +23,7 @@ class SuperAdminPlatformController extends Controller
         $search = trim((string) $request->query('q'));
 
         $users = User::query()->withCount('clubs')
-            ->when($search !== '', fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%")))
+            ->when($search !== '', fn ($q) => $q->where(fn ($q) => $q->whereLike('name', "%{$search}%")->orWhereLike('email', "%{$search}%")))
             ->orderBy('id', 'desc')->paginate(25)->withQueryString()
             ->through(fn (User $u) => [
                 'id' => $u->id,
@@ -52,7 +52,7 @@ class SuperAdminPlatformController extends Controller
         $search = trim((string) $request->query('q'));
 
         $clubs = Club::query()->withCount(['users' => fn ($q) => $q->where('club_user.status', 'active')])
-            ->when($search !== '', fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('slug', 'like', "%{$search}%")))
+            ->when($search !== '', fn ($q) => $q->where(fn ($q) => $q->whereLike('name', "%{$search}%")->orWhereLike('slug', "%{$search}%")))
             ->orderBy('id', 'desc')->paginate(25)->withQueryString()
             ->through(function (Club $c) {
                 $subscription = $c->subscription('default');

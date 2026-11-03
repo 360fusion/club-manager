@@ -39,7 +39,9 @@ class MeetingAdminTest extends TestCase
         $this->assertSame(['18:30', '17:30'], [$meeting->fresh()->starts_at, $meeting->fresh()->rehearsal_starts_at]);
 
         $meeting->update(['starts_at' => '7:00pm', 'rehearsal_starts_at' => null]);
-        $this->assertSame(['7:00pm', null], [$meeting->fresh()->starts_at, $meeting->fresh()->rehearsal_starts_at]);
+        // SQLite keeps what was typed; PostgreSQL's time column turns it into 19:00. Either reads back as seven in the evening.
+        $this->assertContains($meeting->fresh()->starts_at, ['7:00pm', '19:00']);
+        $this->assertNull($meeting->fresh()->rehearsal_starts_at);
     }
 
     public function test_the_private_reply_link_needs_an_active_member_and_shows_only_what_the_page_needs(): void

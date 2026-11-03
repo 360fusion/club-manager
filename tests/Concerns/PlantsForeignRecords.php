@@ -156,6 +156,11 @@ trait PlantsForeignRecords
      */
     private function plantForeignRecords(array $clubIds): array
     {
+        // shortcut: this reads SQLite's schema and defers its foreign keys with a SQLite statement; port both to PostgreSQL before turning this on there (the SQLite job still runs it).
+        if (DB::getDriverName() !== 'sqlite') {
+            $this->markTestSkipped('The planted-records harness is written for SQLite.');
+        }
+
         $skipped = [];
         DB::statement('PRAGMA defer_foreign_keys = ON');
 
