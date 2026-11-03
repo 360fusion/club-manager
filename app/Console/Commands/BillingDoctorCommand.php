@@ -17,6 +17,6 @@ class BillingDoctorCommand extends Command
 
         $this->table(['Check', 'OK', 'Detail'], array_map(fn ($c) => [$c['name'], $c['ok'] ? 'yes' : 'NO', $c['detail']], $checks));
 
-        return collect($checks)->every(fn ($c) => $c['ok'] || ! $c['enforced']) ? self::SUCCESS : self::FAILURE;
+        return collect($checks)->every('ok') ? self::SUCCESS : self::FAILURE;
     }
 }

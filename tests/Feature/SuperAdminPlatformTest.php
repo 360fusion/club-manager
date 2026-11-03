@@ -3,20 +3,18 @@
 namespace Tests\Feature;
 
 use App\Models\Club;
-use App\Models\SuperAdminAction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
-use LogicException;
 use Tests\TestCase;
 
-/** The platform lists a superadmin runs the service from, and the log of what they change */
+/** The platform lists a superadmin runs the service from (the log of what they change is SuperAdminAuditLogTest) */
 class SuperAdminPlatformTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const PAGES = ['superadmin.users.index', 'superadmin.clubs.index', 'superadmin.stripe_events.index', 'superadmin.actions.index', 'superadmin.health.index'];
+    private const PAGES = ['superadmin.users.index', 'superadmin.clubs.index', 'superadmin.stripe_events.index', 'superadmin.health.index'];
 
     private function superadmin(): User
     {
@@ -81,57 +79,12 @@ class SuperAdminPlatformTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page->where('rows.0.type', 'invoice.paid')->where('rows.0.stripe_id', 'evt_seen'));
     }
 
-    public function test_changes_and_exports_are_logged_but_looking_is_not(): void
-    {
-        $admin = $this->superadmin();
-        $club = Club::factory()->create();
-
-        $this->actingAs($admin)->get(route('superadmin.users.index'))->assertOk();
-        $this->assertSame(0, SuperAdminAction::count());
-
-        $this->actingAs($admin)->get(route('superadmin.platform_payments.export'));
-        $this->assertDatabaseHas('superadmin_actions', ['user_id' => $admin->id, 'route_name' => 'superadmin.platform_payments.export', 'method' => 'GET']);
-
-        $this->actingAs($admin)->put(route('superadmin.platform_payments.update', $club->id), ['commission_percent' => 7, 'commission_fixed' => 0.5]);
-        $this->assertDatabaseHas('superadmin_actions', ['user_id' => $admin->id, 'route_name' => 'superadmin.platform_payments.update', 'method' => 'PUT']);
-    }
-
-    public function test_the_log_does_not_keep_what_was_typed(): void
-    {
-        $admin = $this->superadmin();
-        $club = Club::factory()->create();
-
-        $this->actingAs($admin)->put(route('superadmin.platform_payments.update', $club->id), ['commission_percent' => 7.77, 'commission_fixed' => 0.5]);
-
-        $stored = json_encode(DB::table('superadmin_actions')->get());
-        $this->assertStringNotContainsString('7.77', $stored);
-    }
-
-    public function test_a_log_entry_cannot_be_changed_or_removed(): void
-    {
-        $admin = $this->superadmin();
-        $entry = SuperAdminAction::create(['user_id' => $admin->id, 'method' => 'POST', 'path' => '/superadmin/x', 'status' => 200]);
-
-        try {
-            $entry->update(['status' => 500]);
-            $this->fail('update should have been refused');
-        } catch (LogicException) {
-        }
-
-        try {
-            $entry->delete();
-            $this->fail('delete should have been refused');
-        } catch (LogicException) {
-        }
-
-        $this->assertSame(200, $entry->fresh()->status);
-    }
-
-    public function test_the_health_page_runs_the_billing_checks(): void
+    public function test_the_health_page_shows_the_live_site_checks_and_the_billing_ones(): void
     {
         config(['cashier.secret' => null]);
 
         $this->actingAs($this->superadmin())->get(route('superadmin.health.index'))
-            ->assertInertia(fn (AssertableInertia $page) => $page->where('rows', fn ($rows) => collect($rows)->firstWhere('name', 'Stripe keys')['ok'] === false));
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('rows', fn ($rows) => collect($rows)->firstWhere('name', 'Stripe keys')['ok'] === false
+                && collect($rows)->contains('name', 'Debug off')));
     }
 }

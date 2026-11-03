@@ -54,6 +54,7 @@ final class HealthChecks
         $pending = array_diff(array_keys($migrator->getMigrationFiles($migrator->paths() + [database_path('migrations')])), $migrator->getRepository()->getRan());
         $add('Migrations', $pending === [], $pending === [] ? 'All have run' : count($pending).' not run yet (php artisan migrate --force)');
 
+        $add('Security contact', filled(config('app.security_contact')), 'SECURITY_CONTACT_EMAIL: shown at /.well-known/security.txt so people know where to report a problem');
         $add('Storage link', is_link(public_path('storage')) || is_dir(public_path('storage')), 'php artisan storage:link: uploaded photos and files are served from it');
 
         if (config('platform_payments.enabled')) {
