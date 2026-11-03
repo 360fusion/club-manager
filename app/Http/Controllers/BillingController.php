@@ -7,12 +7,16 @@ use App\Http\Requests\Billing\UpdateBusinessAccountRequest;
 use App\Http\Requests\Billing\UpdateProviderRequest;
 use App\Models\Club;
 use App\Services\Payment\PaymentManager;
+use App\Support\PlanCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Cashier\Subscription;
 
 class BillingController extends Controller
 {
@@ -42,38 +46,19 @@ class BillingController extends Controller
             'has_stripe_webhook_secret' => ! empty($settings['stripe_webhook_secret']),
         ];
 
+        $plan = PlanCatalog::forClub($club);
+        $subscription = $club->subscription('default');
+
         $currentPlan = [
-            'name' => 'Pro Club & Lodge Suite',
-            'status' => 'active',
-            'price' => '£29.00 / month',
-            'billing_cycle' => 'Monthly (Renews on 1st of each month)',
-            'next_billing_date' => now()->addDays(12)->format('j M Y'),
-            'modules' => ['Accounting ERP', 'Summonses & Meetings', 'Communications Hub', 'Member Portal', 'File Manager'],
+            'name' => $plan['name'],
+            'status' => $subscription ? $this->statusOf($subscription) : 'free',
+            'price' => null,
+            'billing_cycle' => $plan['period'] ? ucfirst($plan['period']) : 'No paid plan',
+            'next_billing_date' => $this->renewalDate($club, $subscription),
+            'modules' => $plan['modules'],
         ];
 
-        $billingHistory = [
-            [
-                'id' => 'INV-2026-009',
-                'date' => now()->subDays(18)->format('j M Y'),
-                'description' => 'Pro Suite Monthly Subscription',
-                'amount' => '£29.00',
-                'status' => 'paid',
-            ],
-            [
-                'id' => 'INV-2026-008',
-                'date' => now()->subDays(48)->format('j M Y'),
-                'description' => 'Pro Suite Monthly Subscription',
-                'amount' => '£29.00',
-                'status' => 'paid',
-            ],
-            [
-                'id' => 'INV-2026-007',
-                'date' => now()->subDays(78)->format('j M Y'),
-                'description' => 'Pro Suite Monthly Subscription',
-                'amount' => '£29.00',
-                'status' => 'paid',
-            ],
-        ];
+        $billingHistory = $this->invoices($club);
 
         return Inertia::render('Admin/Billing/Index', [
             'club' => tap($club, fn (Club $c) => $c->settings = Arr::except($settings, self::SECRET_KEYS)),
@@ -128,7 +113,9 @@ class BillingController extends Controller
 
             return redirect()->away($checkoutUrl);
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Checkout initialization notice: Gateway API keys pending. '.$e->getMessage());
+            Log::warning('Platform checkout failed', ['club' => $club->id, 'error' => $e->getMessage()]);
+
+            return redirect()->back()->with('error', 'Checkout could not be started. Check the Stripe keys and plan prices (php artisan billing:doctor), then try again.');
         }
     }
 
@@ -142,8 +129,59 @@ class BillingController extends Controller
 
             return redirect()->away($portalUrl);
         } catch (\Throwable $e) {
+            Log::warning('Billing portal failed', ['club' => $club->id, 'error' => $e->getMessage()]);
+
             return redirect()->route('billing.index', ['clubSlug' => $club->slug])
-                ->with('info', 'Customer Billing Portal notice: Live gateway keys pending. Business account and subscription settings can be managed directly on this page.');
+                ->with('info', 'The billing portal is not available yet: this club has no Stripe customer, or the Stripe keys are not set.');
+        }
+    }
+
+    private function statusOf(Subscription $subscription): string
+    {
+        return match (true) {
+            $subscription->onTrial() => 'trialing',
+            $subscription->onGracePeriod() => 'cancelling',
+            $subscription->active() => 'active',
+            default => 'inactive',
+        };
+    }
+
+    /** Stripe holds the renewal date, so ask it; a missing key or an outage leaves the line blank rather than breaking the page */
+    private function renewalDate(Club $club, ?Subscription $subscription): ?string
+    {
+        if (! $subscription?->active() || $subscription->onGracePeriod() || blank(config('cashier.secret'))) {
+            return $subscription?->ends_at?->format('j M Y');
+        }
+
+        try {
+            return Carbon::createFromTimestamp($subscription->asStripeSubscription()->items->data[0]->current_period_end)->format('j M Y');
+        } catch (\Throwable $e) {
+            Log::info('Could not read the renewal date from Stripe', ['club' => $club->id, 'error' => $e->getMessage()]);
+
+            return null;
+        }
+    }
+
+    /** @return list<array{id: string, date: string, description: string, amount: string, status: string, url: ?string}> */
+    private function invoices(Club $club): array
+    {
+        if (! $club->hasStripeId() || blank(config('cashier.secret'))) {
+            return [];
+        }
+
+        try {
+            return $club->stripeInvoices(true, ['limit' => 24])->map(fn ($invoice) => [
+                'id' => $invoice->number ?? $invoice->id,
+                'date' => $invoice->date()->format('j M Y'),
+                'description' => $invoice->lines->data[0]->description ?? 'Subscription',
+                'amount' => $invoice->total(),
+                'status' => (string) $invoice->status,
+                'url' => $invoice->hosted_invoice_url,
+            ])->all();
+        } catch (\Throwable $e) {
+            Log::info('Could not read invoices from Stripe', ['club' => $club->id, 'error' => $e->getMessage()]);
+
+            return [];
         }
     }
 }

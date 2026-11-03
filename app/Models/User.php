@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
-use Laravel\Cashier\Billable as StripeBillable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Paddle\Billable as PaddleBillable;
 use Laravel\Sanctum\HasApiTokens;
@@ -31,39 +30,8 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;
 
-    use PaddleBillable, StripeBillable {
-        StripeBillable::subscription insteadof PaddleBillable;
-        StripeBillable::subscriptions insteadof PaddleBillable;
-        StripeBillable::onTrial insteadof PaddleBillable;
-        StripeBillable::trialEndsAt insteadof PaddleBillable;
-        StripeBillable::hasExpiredTrial insteadof PaddleBillable;
-        StripeBillable::onGenericTrial insteadof PaddleBillable;
-        StripeBillable::hasExpiredGenericTrial insteadof PaddleBillable;
-        StripeBillable::subscribed insteadof PaddleBillable;
-        StripeBillable::subscribedToProduct insteadof PaddleBillable;
-        StripeBillable::subscribedToPrice insteadof PaddleBillable;
-        StripeBillable::onProduct insteadof PaddleBillable;
-        StripeBillable::onPrice insteadof PaddleBillable;
-        StripeBillable::checkout insteadof PaddleBillable;
-        StripeBillable::charge insteadof PaddleBillable;
-        StripeBillable::newSubscription insteadof PaddleBillable;
-
-        PaddleBillable::subscription as paddleSubscription;
-        PaddleBillable::subscriptions as paddleSubscriptions;
-        PaddleBillable::onTrial as paddleOnTrial;
-        PaddleBillable::trialEndsAt as paddleTrialEndsAt;
-        PaddleBillable::hasExpiredTrial as paddleHasExpiredTrial;
-        PaddleBillable::onGenericTrial as paddleOnGenericTrial;
-        PaddleBillable::hasExpiredGenericTrial as paddleHasExpiredGenericTrial;
-        PaddleBillable::subscribed as paddleSubscribed;
-        PaddleBillable::subscribedToProduct as paddleSubscribedToProduct;
-        PaddleBillable::subscribedToPrice as paddleSubscribedToPrice;
-        PaddleBillable::onProduct as paddleOnProduct;
-        PaddleBillable::onPrice as paddleOnPrice;
-        PaddleBillable::checkout as paddleCheckout;
-        PaddleBillable::charge as paddleCharge;
-        PaddleBillable::newSubscription as paddleNewSubscription;
-    }
+    // Stripe bills the club (see Club); only Paddle's trait is kept here.
+    use PaddleBillable;
 
     /**
      * Get the attributes that should be cast.

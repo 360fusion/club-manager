@@ -147,6 +147,9 @@ class AppServiceProvider extends ServiceProvider
             );
         }
 
+        // Stripe's customer is the club: it is the club that pays the platform.
+        \Laravel\Cashier\Cashier::useCustomerModel(Club::class);
+
         if (class_exists(Cashier::class)) {
             Cashier::useSubscriptionModel(PaddleSubscription::class);
             Cashier::useSubscriptionItemModel(PaddleSubscriptionItem::class);

@@ -19,6 +19,7 @@ use App\Http\Controllers\LodgeFeedController;
 use App\Http\Controllers\NewsletterPublicController;
 use App\Http\Controllers\PasswordlessRsvpController;
 use App\Http\Controllers\PayPalWebhookController;
+use App\Http\Controllers\PlatformStripeWebhookController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\PublicSiteExtrasController;
@@ -131,6 +132,7 @@ Route::post('/webhooks/stripe/{clubId}', [StripeWebhookController::class, 'handl
 Route::get('/webhooks/newsletters/unsubscribe/{token}', [NewsletterPublicController::class, 'unsubscribeForm'])->middleware('throttle:60,1')->name('newsletters.unsubscribe.form');
 Route::post('/webhooks/newsletters/unsubscribe/{token}', [NewsletterPublicController::class, 'unsubscribe'])->middleware('throttle:60,1')->name('newsletters.unsubscribe');
 Route::post('/webhooks/paypal/{clubId}', [PayPalWebhookController::class, 'handle'])->name('webhooks.paypal.club');
+Route::post('/webhooks/stripe-platform', [PlatformStripeWebhookController::class, 'handleWebhook'])->name('webhooks.stripe.platform');
 Route::post('/webhooks/stripe-connect', [StripeConnectWebhookController::class, 'handle'])->name('webhooks.stripe.connect');
 Route::post('/webhooks/gocardless/{clubId}', [GoCardlessWebhookController::class, 'handle'])
     ->name('webhooks.gocardless');

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import UiIcon from '@/Components/Ui/UiIcon.vue';
@@ -16,6 +16,14 @@ const props = defineProps({
   currentPlan: Object,
   billingHistory: Array,
 });
+
+const planBadge = computed(() => ({
+  active: { variant: 'success', text: 'Active subscription' },
+  trialing: { variant: 'info', text: 'Free trial' },
+  cancelling: { variant: 'warning', text: 'Cancelled, runs to the end of the period' },
+  inactive: { variant: 'warning', text: 'Subscription not active' },
+  free: { variant: 'info', text: 'No paid plan' },
+}[props.currentPlan.status] || { variant: 'info', text: props.currentPlan.status }));
 
 const successToast = ref('');
 const showSecretKeys = ref(false);
@@ -193,13 +201,12 @@ const saveBusinessAccount = () => {
         <Card class="md:col-span-2 space-y-5">
           <div class="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <Badge variant="info">Active platform subscription</Badge>
+              <Badge :variant="planBadge.variant">{{ planBadge.text }}</Badge>
               <h3 class="text-lg font-semibold text-slate-900 dark:text-white mt-2">{{ currentPlan.name }}</h3>
               <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ currentPlan.billing_cycle }}</p>
             </div>
             <div class="text-right space-y-1">
-              <span class="text-2xl font-bold text-slate-900 dark:text-white block">{{ currentPlan.price }}</span>
-              <Badge variant="success">Active and in good standing</Badge>
+              <span v-if="currentPlan.price" class="text-2xl font-bold text-slate-900 dark:text-white block">{{ currentPlan.price }}</span>
             </div>
           </div>
 
@@ -214,8 +221,8 @@ const saveBusinessAccount = () => {
             </div>
           </div>
 
-          <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-            <span>Next automated renewal date: <strong class="text-slate-900 dark:text-white">{{ currentPlan.next_billing_date }}</strong></span>
+          <div v-if="currentPlan.next_billing_date" class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+            <span>{{ currentPlan.status === 'cancelling' ? 'Access ends on' : 'Next automated renewal date' }}: <strong class="text-slate-900 dark:text-white">{{ currentPlan.next_billing_date }}</strong></span>
           </div>
         </Card>
 
@@ -313,15 +320,18 @@ const saveBusinessAccount = () => {
                 <td class="p-3 font-medium text-slate-800 dark:text-slate-100">{{ inv.description }}</td>
                 <td class="p-3 font-semibold text-slate-900 dark:text-white">{{ inv.amount }}</td>
                 <td class="p-3">
-                  <Badge variant="success" class="capitalize">
-                    <UiIcon name="check" :size="12" /> {{ inv.status }}
+                  <Badge :variant="inv.status === 'paid' ? 'success' : 'warning'" class="capitalize">
+                    <UiIcon v-if="inv.status === 'paid'" name="check" :size="12" /> {{ inv.status }}
                   </Badge>
                 </td>
                 <td class="p-3 text-right">
-                  <span class="text-blue-600 dark:text-blue-400 font-medium hover:underline cursor-pointer">
-                    PDF receipt
-                  </span>
+                  <a v-if="inv.url" :href="inv.url" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 font-medium hover:underline">
+                    View receipt
+                  </a>
                 </td>
+              </tr>
+              <tr v-if="!billingHistory.length">
+                <td colspan="6" class="p-6 text-center text-slate-500 dark:text-slate-400">No invoices yet.</td>
               </tr>
             </tbody>
           </table>

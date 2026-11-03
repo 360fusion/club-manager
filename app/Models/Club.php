@@ -64,6 +64,9 @@ class Club extends Model implements HasMedia
         PaddleBillable::checkout as paddleCheckout;
         PaddleBillable::charge as paddleCharge;
         PaddleBillable::newSubscription as paddleNewSubscription;
+
+        // Club::invoices() is the lodge's own accounting invoices, so Cashier's list of Stripe invoices needs another name.
+        StripeBillable::invoices as stripeInvoices;
     }
 
     protected $fillable = [

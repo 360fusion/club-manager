@@ -19,7 +19,7 @@ class PaddlePaymentGateway implements PaymentGatewayInterface
     {
         // Paddle Cashier checkout URL or transaction setup
         $checkout = $customer->subscribe($priceId, 'default')
-            ->returnTo(route('admin.memberships.index', ['clubSlug' => $customer->slug, 'status' => 'success']));
+            ->returnTo(route('billing.index', ['clubSlug' => $customer->slug, 'status' => 'success']));
 
         return $checkout->url();
     }
