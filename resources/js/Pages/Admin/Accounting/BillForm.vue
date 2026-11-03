@@ -52,7 +52,9 @@ const categoryOptions = computed(() => {
 // both post to the ledger; the edit form only moves a bill between the states that do not.
 const statusOptions = computed(() => {
   const status = props.bill?.status;
-  if (status === 'paid') return [{ value: 'draft', label: 'Draft' }, { value: 'unpaid', label: 'Unpaid' }, { value: 'paid', label: 'Paid' }];
+  // Once issued it stays issued: moving it back to draft would post it to the books a second time.
+  if (status === 'paid') return [{ value: 'paid', label: 'Paid' }];
+  if (status === 'unpaid') return [{ value: 'unpaid', label: 'Unpaid (awaiting payment)' }];
   if (status === 'pending_approval') return [{ value: 'draft', label: 'Draft' }, { value: 'pending_approval', label: 'Pending approval' }];
   return [{ value: 'draft', label: 'Draft' }, { value: 'unpaid', label: 'Unpaid (awaiting payment)' }];
 });

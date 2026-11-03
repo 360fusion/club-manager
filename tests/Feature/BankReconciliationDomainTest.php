@@ -16,6 +16,7 @@ use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Domains\ClubAccounting\Models\SubscriptionTier;
 use App\Domains\ClubAccounting\Services\BankReconciliationMatcherService;
 use App\Domains\ClubAccounting\Services\SubscriptionBillingService;
+use App\Exceptions\LedgerRuleException;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
@@ -216,6 +217,16 @@ class BankReconciliationDomainTest extends TestCase
 
         $matcher = new BankReconciliationMatcherService(new SubscriptionBillingService);
         $matcher->reconcileTransaction($tx, 'supplier_bill', $this->supplierBill->id);
+
+        // A matched line cannot be matched (and so paid) again, nor quietly ignored.
+        foreach ([fn () => $matcher->reconcileTransaction($tx->fresh(), 'supplier_bill', $this->supplierBill->id), fn () => $matcher->ignoreTransaction($tx->fresh())] as $again) {
+            try {
+                $again();
+                $this->fail('A reconciled line must stay reconciled.');
+            } catch (LedgerRuleException) {
+                $this->assertSame(BankTransactionStatus::Matched, $tx->fresh()->status);
+            }
+        }
 
         $this->supplierBill->refresh();
         $this->assertEquals('paid', $this->supplierBill->status);

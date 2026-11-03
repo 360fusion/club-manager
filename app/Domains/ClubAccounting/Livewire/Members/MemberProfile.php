@@ -149,8 +149,8 @@ class MemberProfile extends Component
             'masonic_rank' => 'required|in:'.implode(',', array_keys(Member::MASONIC_RANKS)),
             'grand_rank' => ['nullable', 'string', 'max:255', Rule::in(MasonicRanks::allowedValues($stored->club, MasonicRanks::GRAND, $stored->grand_rank))],
             'provincial_rank' => ['nullable', 'string', 'max:255', Rule::in(MasonicRanks::allowedValues($stored->club, MasonicRanks::PROVINCIAL, $stored->provincial_rank))],
-            'membership_status' => 'required|string|max:50',
-            'current_office' => 'nullable|string|max:50',
+            'membership_status' => ['required', Rule::enum(MembershipStatus::class)],
+            'current_office' => ['nullable', Rule::enum(LodgeOffice::class)],
             'date_of_initiation' => 'nullable|date',
             'date_of_passing' => 'nullable|date',
             'date_of_raising' => 'nullable|date',
@@ -199,35 +199,6 @@ class MemberProfile extends Component
                 'postcode' => $this->postcode ?: null,
                 'country' => $this->country ?: null,
             ]);
-        }
-
-        // Cross-club address sync for user account
-        if ($member->user_id) {
-            $siblings = Member::where('user_id', $member->user_id)
-                ->where('id', '!=', $member->id)
-                ->get();
-
-            foreach ($siblings as $sibling) {
-                $sibling->update([
-                    'address_line_1' => $this->address_line_1 ?: null,
-                    'address_line_2' => $this->address_line_2 ?: null,
-                    'city' => $this->city ?: null,
-                    'county' => $this->county ?: null,
-                    'postcode' => $this->postcode ?: null,
-                    'country' => $this->country ?: null,
-                ]);
-
-                if ($sibling->customerAccount) {
-                    $sibling->customerAccount->update([
-                        'address_line_1' => $this->address_line_1 ?: null,
-                        'address_line_2' => $this->address_line_2 ?: null,
-                        'city' => $this->city ?: null,
-                        'state' => $this->county ?: null,
-                        'postcode' => $this->postcode ?: null,
-                        'country' => $this->country ?: null,
-                    ]);
-                }
-            }
         }
 
         $this->isEditing = false;

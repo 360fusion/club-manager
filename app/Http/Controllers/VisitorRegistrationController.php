@@ -21,7 +21,7 @@ class VisitorRegistrationController extends Controller
         $club = $this->findClub($clubSlug);
 
         return Inertia::render('Public/VisitorRegister', [
-            'club' => $club,
+            'club' => $club->only(['name', 'slug']),
         ]);
     }
 

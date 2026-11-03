@@ -226,7 +226,8 @@ class MemberFormPage extends Component
     }
 
     /**
-     * Keep the ledger contact, and the same person's other lodge records, in step with this address.
+     * Keep the ledger contact in step with this address. Another lodge's records of the same person are that lodge's
+     * to change: an admin here could otherwise rewrite them by adding a member with someone else's email.
      */
     private function syncAddressElsewhere(Member $member): void
     {
@@ -245,16 +246,6 @@ class MemberFormPage extends Component
                 'state' => $this->county ?: null,
             ]);
         }
-
-        if (! $member->user_id) {
-            return;
-        }
-
-        Member::where('user_id', $member->user_id)->where('id', '!=', $member->id)->get()->each(function (Member $sibling) use ($address) {
-            $sibling->update($address + ['county' => $this->county ?: null]);
-
-            $sibling->customerAccount?->update($address + ['state' => $this->county ?: null]);
-        });
     }
 
     private function invitationNote(Member $member, Club $club): string

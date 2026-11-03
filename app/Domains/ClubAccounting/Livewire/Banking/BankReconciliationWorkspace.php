@@ -137,7 +137,13 @@ class BankReconciliationWorkspace extends Component
         $club = $this->getClub();
         $tx = BankTransaction::where('club_id', $club->id)->findOrFail($transactionId);
 
-        $matcher->ignoreTransaction($tx);
+        try {
+            $matcher->ignoreTransaction($tx);
+        } catch (LedgerRuleException $e) {
+            session()->flash('error', $e->getMessage());
+
+            return;
+        }
 
         session()->flash('success', 'Transaction line marked as ignored.');
         $this->autoSelectFirstUnmatched();

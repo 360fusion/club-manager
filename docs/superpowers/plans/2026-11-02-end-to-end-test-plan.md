@@ -586,3 +586,25 @@ From the reviews of the money fixes:
 - opening balance runs under the club lock; account add has the same date limits;
 - a member's edit that leaves people, tickets, promo and payment option unchanged is not refused when the organiser later lowered a price.
 Left (low): VAT return buckets by created date not issue date and omits refunded invoices; forced root URL on unknown hosts (`IdentifyTenantByDomain`); attachment files written inside a rolled-back transaction stay on disk; user-typed bill numbers can still duplicate; `InvalidArgumentException` not caught in the recurring bill and financial return paths.
+
+## Whole-app checks (2026-11-03)
+
+**Ran clean:** `npm run lint` (warnings only), every `check:*` script, `npm audit` (0). `composer audit`: symfony/mime 8.1.7 has CVE-2026-45070 (medium, header injection), fixed in 8.1.10; not updated (dependency change needs approval).
+**Locks on PostgreSQL** (e2e, six parallel processes each): one invoice paid six times = 1 payment entry; six invoice numbers = 0001 to 0006, no duplicates; opening balance saved six times = 100, not 600. Journal references (`JE-…`) were numbered by count with no lock; `postJournalEntry` now takes the club row lock, six parallel postings got six distinct references.
+**Invoice/bill edit forms** now offer only the statuses the server accepts (issued stays issued). Not opened in the browser (needs an e2e login).
+
+**Fixed from the security reviews** (tests in `SecurityReviewFixesTest`, `BankReconciliationDomainTest`, all fail on the old code):
+- `/{slug}/overview` (public) sent every newsletter, drafts included, and every event's promo codes: newsletters dropped, codes only for event staff.
+- the visitor sign-up page sent the whole Club model with its settings: name and slug only.
+- an admin could remove an owner or any member with "reject request", and reactivate a past member with "approve": both only act on pending requests.
+- committee screen: a foreign lodge's member could be set as grant seconder; the Secretary role could mark a grant paid (now needs `manage_billing`); bad enum values gave 500s (also member profile status/office, agenda item type).
+- a matched bank line could be reconciled again (paying twice) or ignored without reversing: both refused.
+- an admin adding a member with someone else's email could rewrite that person's address in other lodges: the admin screens no longer sync addresses to other lodges.
+- forgot-password said whether an account exists: same reply either way.
+- login and API token limits also cap one IP at 30 a minute across all emails.
+
+**Open, needs a decision:**
+- Visitor sign-up makes an unverified `visitor` with `status=active`, and member pages check status only, so a self-registered visitor can read member-only pages and news. Decide what visitors may see.
+- Contact form takes recipient and cc from the client (members or lodge-domain addresses only) with no honeypot; public booking re-POST with someone's email rotates their link and re-sends mail.
+- No `AuthenticateSession`, so a password change does not end other sessions; email change and 2FA disable need no password.
+- Admin-made redirects accept any external URL; candidate reject/close/hold have no role check of their own; bank import preview bundle is client-writable; bank lines delete leaves journal entries; finalized committee minutes can be reopened; Browsershot rendering of club HTML not reviewed.

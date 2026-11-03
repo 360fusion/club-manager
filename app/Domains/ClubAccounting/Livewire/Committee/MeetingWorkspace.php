@@ -15,6 +15,7 @@ use App\Domains\ClubAccounting\Models\Member;
 use App\Domains\ClubAccounting\Services\Governance\CommitteePackCompilerService;
 use App\Models\Club;
 use App\Models\User;
+use App\Support\ClubAccess;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -125,7 +126,20 @@ class MeetingWorkspace extends Component
     {
         $meeting = $this->getMeeting();
         $grant = CharityGrant::where('club_id', $meeting->club_id)->findOrFail($grantId);
-        $statusEnum = GrantApprovalStatus::from($status);
+        $statusEnum = GrantApprovalStatus::tryFrom($status);
+
+        if (! $statusEnum) {
+            session()->flash('error', 'Choose one of the listed stages.');
+
+            return;
+        }
+
+        // Recording the money as paid out belongs to whoever looks after the lodge's accounts, not to the committee screen alone.
+        if ($statusEnum === GrantApprovalStatus::Disbursed && ! ClubAccess::can(auth()->user(), Club::findOrFail($meeting->club_id), 'manage_billing')) {
+            session()->flash('error', 'Only the Treasurer or an administrator can mark a grant as paid.');
+
+            return;
+        }
 
         $grant->update([
             'approval_status' => $statusEnum,
@@ -139,6 +153,12 @@ class MeetingWorkspace extends Component
     {
         $meeting = $this->getMeeting();
         $grant = CharityGrant::where('club_id', $meeting->club_id)->findOrFail($grantId);
+
+        if (! Member::where('club_id', $meeting->club_id)->whereKey($seconderId)->exists()) {
+            session()->flash('error', 'Choose a member of this lodge as the Seconder.');
+
+            return;
+        }
 
         if ($grant->proposer_member_id && $grant->proposer_member_id === $seconderId) {
             session()->flash('error', 'The Seconder must be a different Brother than the Proposer.');
@@ -204,7 +224,11 @@ class MeetingWorkspace extends Component
     public function setStatus(string $status): void
     {
         $meeting = $this->getMeeting();
-        $newStatus = CommitteeMeetingStatus::from($status);
+        $newStatus = CommitteeMeetingStatus::tryFrom($status);
+
+        if (! $newStatus) {
+            return;
+        }
 
         $meeting->update([
             'status' => $newStatus,
@@ -219,16 +243,16 @@ class MeetingWorkspace extends Component
         $attendee = ClubCommitteeAttendee::where('committee_meeting_id', $this->meetingId)
             ->findOrFail($attendeeId);
 
-        $attendee->update([
-            'attendance_type' => AttendanceType::from($type),
-        ]);
+        if ($attendanceType = AttendanceType::tryFrom($type)) {
+            $attendee->update(['attendance_type' => $attendanceType]);
+        }
     }
 
     public function addAgendaItem(): void
     {
         $this->validate([
             'agendaTitle' => 'required|string|max:255',
-            'agendaItemType' => 'required|string|max:50',
+            'agendaItemType' => ['required', Rule::enum(CommitteeItemType::class)],
             'agendaDescription' => 'nullable|string|max:10000',
         ]);
 

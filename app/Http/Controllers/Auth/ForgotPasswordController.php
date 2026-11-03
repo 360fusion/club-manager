@@ -25,10 +25,11 @@ class ForgotPasswordController extends Controller
             $request->only('email')
         );
 
-        if ($status === Password::RESET_LINK_SENT) {
-            return back()->with('status', __($status));
+        // Throttled requests still say so; otherwise the answer is the same whether or not the address has an account.
+        if ($status === Password::RESET_THROTTLED) {
+            return back()->withErrors(['email' => __($status)]);
         }
 
-        return back()->withErrors(['email' => __($status)]);
+        return back()->with('status', __(Password::RESET_LINK_SENT));
     }
 }

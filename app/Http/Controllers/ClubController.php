@@ -99,7 +99,7 @@ class ClubController extends Controller
     public function show(string $slug): Response
     {
         $club = Club::where('slug', $slug)
-            ->with(['clubType', 'membershipPlans', 'users', 'newsletters'])
+            ->with(['clubType', 'membershipPlans', 'users'])
             ->firstOrFail();
 
         $viewer = Auth::user();
@@ -146,13 +146,6 @@ class ClubController extends Controller
                     'author_name' => $post->author->name,
                     'published_at' => ($post->published_at ?? $post->created_at)?->format('j M Y'),
                 ]),
-                'newsletters' => $club->newsletters->map(fn ($n) => [
-                    'id' => $n->id,
-                    'subject' => $n->subject,
-                    'content' => $n->content,
-                    'target_roles' => $n->target_roles,
-                    'sent_at' => $n->sent_at?->format('j M Y, H:i'),
-                ]),
                 'events' => $visibleEvents->map(fn ($event) => [
                     'id' => $event->id,
                     'title' => $event->title,
@@ -176,7 +169,9 @@ class ClubController extends Controller
                         'sold_quantity' => $t->sold_quantity,
                         'available' => $t->max_quantity > 0 ? max(0, $t->max_quantity - $t->sold_quantity) : 'Unlimited',
                     ]),
-                    'promos' => $event->promos->map(fn ($p) => [
+                    // The codes themselves are for the organisers; a visitor types one in and it is checked when they book.
+                    'has_promos' => $event->promos->isNotEmpty(),
+                    'promos' => ! $isEventStaff ? [] : $event->promos->map(fn ($p) => [
                         'code' => $p->code,
                         'discount_type' => $p->discount_type,
                         'discount_amount' => $p->discount_amount,
@@ -229,7 +224,8 @@ class ClubController extends Controller
     public function approveMember(string $slug, int $userId)
     {
         $club = $this->findClub($slug);
-        $approved = $club->users()->updateExistingPivot($userId, ['status' => ClubMemberStatus::Active->value]);
+        // Only a request still waiting is approved here: a past member is restored, and roles are changed, on the members screens.
+        $approved = $club->users()->wherePivot('status', ClubMemberStatus::Pending->value)->updateExistingPivot($userId, ['status' => ClubMemberStatus::Active->value]);
 
         if ($approved && $member = User::find($userId)) {
             app(ClubNotifier::class)->toUser($member, ClubNotification::membershipApproved($club));
@@ -249,7 +245,9 @@ class ClubController extends Controller
     public function rejectMember(string $slug, int $userId)
     {
         $club = $this->findClub($slug);
-        $club->users()->detach($userId);
+        // Only a request still waiting can be turned down here, so an admin cannot remove an owner or an active member this way.
+        $removed = $club->users()->wherePivot('status', ClubMemberStatus::Pending->value)->detach($userId);
+        abort_unless($removed > 0, 404);
 
         return redirect()->back()->with('success', 'Member request removed.');
     }

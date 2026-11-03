@@ -7,6 +7,7 @@ use App\Domains\ClubAccounting\Models\BankMatchRule;
 use App\Domains\ClubAccounting\Models\BankTransaction;
 use App\Domains\ClubAccounting\Models\MemberSubscription;
 use App\Enums\DocumentStatus;
+use App\Exceptions\LedgerRuleException;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\Bill;
 use App\Models\Accounting\JournalEntry;
@@ -351,6 +352,11 @@ class BankReconciliationMatcherService
     public function reconcileTransaction(BankTransaction $transaction, string $matchType, int|string $targetId, array $options = []): bool
     {
         return DB::transaction(function () use ($transaction, $matchType, $targetId, $options) {
+            // Checked on the locked line: matching it again would record the payment a second time.
+            if (BankTransaction::whereKey($transaction->id)->lockForUpdate()->first()?->status === BankTransactionStatus::Matched) {
+                throw new LedgerRuleException('This bank line has already been reconciled.');
+            }
+
             $amount = (float) $transaction->amount;
             $club = Club::find($transaction->club_id);
             $accountingService = app(AccountingService::class);
@@ -496,6 +502,11 @@ class BankReconciliationMatcherService
      */
     public function ignoreTransaction(BankTransaction $transaction): bool
     {
+        // A reconciled line has its entry in the books; ignoring it would hide that entry without reversing it.
+        if ($transaction->status === BankTransactionStatus::Matched) {
+            throw new LedgerRuleException('This bank line has already been reconciled, so it cannot be ignored.');
+        }
+
         $transaction->update([
             'status' => BankTransactionStatus::Ignored,
         ]);

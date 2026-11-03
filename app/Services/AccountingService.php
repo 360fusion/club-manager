@@ -158,6 +158,8 @@ class AccountingService
         }
 
         return DB::transaction(function () use ($club, $data, $items) {
+            // The reference is the next number in the club's own sequence, so two postings at once must take turns.
+            Club::whereKey($club->id)->lockForUpdate()->first();
             $entryCount = JournalEntry::where('club_id', $club->id)->count() + 1;
             $ref = $data['reference_number'] ?? 'JE-'.date('Y').'-'.str_pad((string) $entryCount, 4, '0', STR_PAD_LEFT);
 

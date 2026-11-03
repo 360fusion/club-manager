@@ -60,7 +60,7 @@ const applyPromo = () => {
     if (match) {
         rsvpForm.value.discount = parseFloat(match.discount_amount);
     } else {
-        alert('Invalid promo code');
+        // Visitors are not sent the codes: the discount is checked and applied when the booking is made.
         rsvpForm.value.discount = 0;
     }
 };
@@ -336,7 +336,7 @@ const primaryLink = 'inline-flex items-center justify-center gap-1.5 rounded-xl 
                 </div>
 
                 <!-- Promo Code Box -->
-                <div v-if="selectedEvent?.promos.length > 0" class="flex items-end gap-2">
+                <div v-if="selectedEvent?.has_promos" class="flex items-end gap-2">
                     <Input v-model="rsvpForm.promo_code" label="Promo code" placeholder="EARLYBIRD10" class="flex-1 font-mono uppercase" />
                     <Button variant="secondary" @click="applyPromo">Apply</Button>
                 </div>
