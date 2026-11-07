@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Laravel\Cashier\Billable as StripeBillable;
 use Laravel\Paddle\Billable as PaddleBillable;
+use Launchpad\Models\Workspace;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -205,12 +206,19 @@ class Club extends Model implements HasMedia
         return $hall ? collect([$hall->name, $hall->address_line_1, $hall->town])->filter()->implode(', ') : '';
     }
 
+    /** The same row as Launchpad's team: its back end (activity log, webhooks, files, flags) is called with this */
+    public function asTeam(): Workspace
+    {
+        return Workspace::findOrFail($this->getKey());
+    }
+
     /**
      * @return BelongsToMany<User, $this>
      */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
+            ->using(ClubUser::class)
             ->withPivot(['role', 'rank', 'committee_role', 'member_number', 'status', 'phone', 'emergency_contact', 'dietary_notes', 'invitation_token', 'invited_at', 'invitation_accepted_at', 'invitation_reminded_at', 'invited_by'])
             ->withTimestamps();
     }

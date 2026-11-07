@@ -40,6 +40,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // club-manager has its own users columns and tables; it takes only the Launchpad migrations it needs (database/migrations)
+        \Launchpad\Launchpad::ignoreMigrations();
+
         // Both Cashier packages register a `stripe/webhook` route, and the Paddle one answers it with a controller
         // meant for a different provider. Lodges take card payments on their own Stripe account through
         // /webhooks/stripe/{club}, so neither package's routes are used.

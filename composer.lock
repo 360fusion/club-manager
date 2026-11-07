@@ -12,7 +12,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/ben/Herd/launchpad",
-                "reference": "0b891f168f62be4bd06b2c5175979cf20d24540f"
+                "reference": "1bce89ef11ab8f66e49539e3677dcc39b936a381"
             },
             "require": {
                 "bacon/bacon-qr-code": "^3.1",
