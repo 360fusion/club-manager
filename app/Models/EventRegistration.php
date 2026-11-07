@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Observers\EventRegistrationTeamEvents;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * One booking for an event: the booker plus their guests (attendees).
  */
+#[ObservedBy(EventRegistrationTeamEvents::class)]
 class EventRegistration extends Model
 {
     /** Statuses that take up a place at the event. */

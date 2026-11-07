@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Casts\SanitizedHtml;
 use App\Casts\SanitizedHtmlBlocks;
 use App\Models\Concerns\HasVisibility;
+use App\Observers\PostTeamEvents;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy(PostTeamEvents::class)]
 class Post extends Model implements HasMedia
 {
     use HasFactory, HasVisibility;

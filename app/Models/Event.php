@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\EventStatus;
 use App\Enums\Visibility;
 use App\Models\Concerns\HasVisibility;
+use App\Observers\EventTeamEvents;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
+#[ObservedBy(EventTeamEvents::class)]
 class Event extends Model
 {
     use HasFactory, HasVisibility;
