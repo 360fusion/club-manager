@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use App\Enums\ClubRole;
+use App\Support\ClubTeamEvents;
 use Illuminate\Database\Eloquent\Relations\Pivot;
-use Launchpad\Webhooks\Webhooks;
-use Launchpad\Workspaces\Activity;
 
 /**
  * A row of club_user. Being the pivot model of Club::users() and User::clubs() means every attach, detach, sync and pivot update fires
@@ -30,10 +29,9 @@ class ClubUser extends Pivot
 
     private function record(string $event, string $sentence): void
     {
-        $club = Club::find($this->club_id);
         $user = User::find($this->user_id);
 
-        if (! $club || ! $user) {
+        if (! $user) {
             return;
         }
 
@@ -43,8 +41,7 @@ class ClubUser extends Pivot
         // as the screens name it: the coach role is shown as Secretary
         $roleLabel = $role === ClubRole::Coach->value ? 'Secretary' : ucfirst((string) $role);
 
-        $team = $club->asTeam();
-        Activity::record($team, $event, strtr($sentence, [':name' => $user->name, ':role' => $roleLabel, ':status' => (string) $status]));
-        Webhooks::dispatch($team, $event, ['user_id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $role, 'status' => $status]);
+        ClubTeamEvents::record((int) $this->club_id, $event, strtr($sentence, [':name' => $user->name, ':role' => $roleLabel, ':status' => (string) $status]),
+            ['user_id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $role, 'status' => $status]);
     }
 }
