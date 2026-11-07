@@ -50,7 +50,7 @@ separate project.
    `DB::table('workspaces')` in Launchpad goes through the model's table. Launchpad's own tables keep the column name `workspace_id` (then
    pointing at `clubs.id`).
 3. **Feature flags do not take over the app's scope.** `Flags::register()` sets Pennant's default scope only if the app has not opted out
-   (`launchpad.features.set_default_scope`, default `true`). The app asks for Launchpad's flags with the team (`Feature::for($club->asTeam())`):
+   (`launchpad.features_default_scope`, default `true`). The app asks for Launchpad's flags with the team (`Feature::for($club->asTeam())`):
    Launchpad's flags are defined for its `Workspace`, and Pennant passes the scope straight to them, so asking with a `Club` is not possible
    (storing by morph alias, considered earlier, would not change that and is dropped).
 4. Already done: `Launchpad::ignoreMigrations()` and the `launchpad-migrations` publish tag (6b35a21).
@@ -63,7 +63,7 @@ Nothing about owners, members or roles changes in Launchpad: without its team pa
 ### Configuration
 
 - `Launchpad::ignoreMigrations()` in `AppServiceProvider::register()`.
-- `config/launchpad.php`: `workspaces.table` = `clubs`, `workspaces.pages` = `false`, `features.set_default_scope` = `false`; modules on:
+- `config/launchpad.php`: `workspaces.table` = `clubs`, `workspaces.pages` = `false`, `features_default_scope` = `false`; modules on:
   `workspaces`, `webhooks`, `files`; every other module off.
 - No Launchpad traits on `User` (the `memberships()` name clashes, and they are not needed).
 

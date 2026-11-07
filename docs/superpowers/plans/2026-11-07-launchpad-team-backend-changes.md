@@ -15,7 +15,7 @@
 ## Global Constraints
 
 - Nothing in Launchpad's code, tests, docs or commit messages names another product (Launchpad is a general starter).
-- Defaults unchanged: `workspaces.table` = `workspaces`, `workspaces.pages` = `true`, `features.set_default_scope` = `true`; the full suite passes untouched.
+- Defaults unchanged: `workspaces.table` = `workspaces`, `workspaces.pages` = `true`, `features_default_scope` = `true`; the full suite passes untouched.
 - `config/launchpad.php`, `routes/workspaces.php` and `src/LaunchpadServiceProvider.php` carry another session's uncommitted edits: stage only this plan's lines (build the staged file from `git show HEAD:<file>` plus this plan's edits), and run the suite on the staged tree before committing.
 - Each task is one commit, ending with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
@@ -74,17 +74,17 @@
 ### Task 3: Flags leave the app's default scope alone when asked
 
 **Files:**
-- Modify: `config/launchpad.php`: a `features` setting `'set_default_scope' => true,` (in the existing `features` block if there is one, else a new one) with a comment: "false: Launchpad does not make the current team Pennant's default scope; the app asks with Feature::for(\$team)"
-- Modify: `src/Features/Flags.php`, `register()`: `Feature::resolveScopeUsing(...)` only when `config('launchpad.features.set_default_scope', true)`
+- Modify: `config/launchpad.php`: a top-level `'features_default_scope' => true,` beside `'features' => []` (which is the list of flags itself), with a comment: "false: Launchpad does not make the current team Pennant's default scope; the app asks with Feature::for(\$team)"
+- Modify: `src/Features/Flags.php`, `register()`: `Feature::resolveScopeUsing(...)` only when `config('launchpad.features_default_scope', true)`
 - Test: `tests/Feature/FlagsScopeTest.php`
 
 **Interfaces:**
-- Produces: config key `launchpad.features.set_default_scope`.
+- Produces: config key `launchpad.features_default_scope`.
 
-- [ ] **Step 1: Write the failing test** `FlagsScopeTest`, with one Launchpad flag in config (`launchpad.features` flags so `Flags::all() !== []`, same shape as the existing flags tests) and `set_default_scope` = `false` in `defineEnvironment`; in the test, `Feature::define('who', fn ($scope) => $scope?->getKey())`, `actingAs($user)`:
+- [ ] **Step 1: Write the failing test** `FlagsScopeTest`, with one Launchpad flag in config (`launchpad.features` flags so `Flags::all() !== []`, same shape as the existing flags tests) and `features_default_scope` = `false` in `defineEnvironment`; in the test, `Feature::define('who', fn ($scope) => $scope?->getKey())`, `actingAs($user)`:
   - `test_pennants_own_default_scope_applies`: `Feature::value('who') === $user->getKey()`.
   - `test_a_team_flag_still_answers_for_a_team`: `Feature::for($team)->active('<the Launchpad flag key>')` returns that flag's configured answer.
 - [ ] **Step 2:** Run `vendor/bin/phpunit --filter FlagsScopeTest` → FAIL (`who` gets the current workspace, null).
 - [ ] **Step 3:** Implement the modification above.
 - [ ] **Step 4:** Run `vendor/bin/phpunit --filter "FlagsScopeTest|Flag"` → PASS; then `vendor/bin/phpunit` → all pass.
-- [ ] **Step 5:** One line in the flags part of `docs/building-on-launchpad.md` about `set_default_scope`. Commit.
+- [ ] **Step 5:** One line in the flags part of `docs/building-on-launchpad.md` about `features_default_scope`. Commit.
